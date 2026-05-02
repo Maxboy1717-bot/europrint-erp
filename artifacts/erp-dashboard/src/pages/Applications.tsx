@@ -2,6 +2,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { FileText, Plus, Trash2, Eye, CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react";
+import { PageState } from "@/components/ui/page-state";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,7 +104,7 @@ export default function Applications() {
   const [reviewResponse, setReviewResponse] = useState("");
   const [assignedTo, setAssignedTo] = useState<string>("");
 
-  const { data: applications = [], isLoading, error: applicationsError } = useQuery<Application[]>({
+  const { data: applications = [], isLoading, isError: isApplicationsError, refetch: refetchApplications, error: applicationsError } = useQuery<Application[]>({
     queryKey: ["/api/applications"],
     enabled: !!userId,
   });
@@ -552,11 +553,20 @@ export default function Applications() {
               <CardTitle>Mavjud arizalar</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <p className="text-muted-foreground">Yuklanmoqda...</p>
-              ) : applications.length === 0 ? (
-                <p className="text-muted-foreground">Hozircha ariza yo'q</p>
-              ) : (
+              <PageState
+                isLoading={isLoading}
+                isError={isApplicationsError}
+                isEmpty={applications.length === 0}
+                onRetry={refetchApplications}
+                skeleton="table"
+                skeletonRows={4}
+                skeletonColumns={4}
+                errorTitle="Arizalar yuklanmadi"
+                errorMessage="Server bilan bog'lanishda xatolik."
+                emptyIcon={FileText}
+                emptyTitle="Hozircha ariza yo'q"
+                emptyDescription="Yangi ariza shabloni yarating."
+              >
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -592,7 +602,7 @@ export default function Applications() {
                     ))}
                   </TableBody>
                 </Table>
-              )}
+              </PageState>
             </CardContent>
           </Card>
         </TabsContent>
