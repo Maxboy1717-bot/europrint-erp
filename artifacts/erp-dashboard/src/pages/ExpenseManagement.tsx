@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorState } from "@/components/ui/error-state";
+import { PageState } from "@/components/ui/page-state";
 import { Wallet, CheckCircle, XCircle, Clock, Send, DollarSign, FileText, Plus, Receipt, CreditCard, LucideIcon } from "lucide-react";
 
 interface ExpenseRequest {
@@ -220,14 +221,20 @@ export default function ExpenseManagement() {
               </Select>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Yuklanmoqda...</div>
-              ) : requests.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <Wallet className="w-12 h-12 mb-3 opacity-30" />
-                  <p>Hali so'rov mavjud emas</p>
-                </div>
-              ) : (
+              <PageState
+                isLoading={isLoading}
+                isError={isError}
+                isEmpty={requests.length === 0}
+                onRetry={refetch}
+                skeleton="table"
+                skeletonRows={5}
+                skeletonColumns={6}
+                errorTitle="So'rovlar yuklanmadi"
+                errorMessage="Server bilan bog'lanishda xatolik."
+                emptyIcon={Wallet}
+                emptyTitle="Hali so'rov mavjud emas"
+                emptyDescription="Yangi xarajat so'rovini yarating."
+              >
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -263,7 +270,7 @@ export default function ExpenseManagement() {
                     ))}
                   </TableBody>
                 </Table>
-              )}
+              </PageState>
             </CardContent>
           </Card>
         </TabsContent>

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, TrendingUp, TrendingDown, Minus, Award, Target, BarChart3, Star, Activity } from "lucide-react";
 import { ErrorState } from "@/components/ui/error-state";
+import { PageState } from "@/components/ui/page-state";
 
 interface EmployeeRatingItem {
   id: string;
@@ -148,11 +149,20 @@ export default function EmployeeRating() {
         <TabsContent value="ratings">
           <Card>
             <CardContent className="p-0">
-              {isLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Yuklanmoqda...</div>
-              ) : ratings.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground"><Users className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>Bu davr uchun reyting hali hisoblanmagan</p></div>
-              ) : (
+              <PageState
+                isLoading={isLoading}
+                isError={isError}
+                isEmpty={ratings.length === 0}
+                onRetry={refetch}
+                skeleton="table"
+                skeletonRows={5}
+                skeletonColumns={5}
+                errorTitle="Reytinglar yuklanmadi"
+                errorMessage="Server bilan bog'lanishda xatolik."
+                emptyIcon={Users}
+                emptyTitle="Reyting hali hisoblanmagan"
+                emptyDescription="Bu davr uchun ma'lumot yo'q. Boshqa davrni tanlab ko'ring."
+              >
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -203,7 +213,7 @@ export default function EmployeeRating() {
                     ))}
                   </TableBody>
                 </Table>
-              )}
+              </PageState>
             </CardContent>
           </Card>
         </TabsContent>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, Clock, ListChecks, FileQuestion, MoreVertical, Trash2, Pencil, Eye, Loader2, AlertCircle, Package } from "lucide-react";
+import { PageState } from "@/components/ui/page-state";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { AddTestDialog } from "@/components/AddTestDialog";
 import { SearchBar } from "@/components/SearchBar";
@@ -136,11 +137,18 @@ export default function Tests() {
         />
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          Yuklanmoqda...
-        </div>
-      ) : filteredTests.length > 0 ? (
+      <PageState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={filteredTests.length === 0}
+        onRetry={refetch}
+        skeleton="card"
+        errorTitle="Testlar yuklanmadi"
+        errorMessage="Server bilan bog'lanishda xatolik."
+        emptyIcon={FileQuestion}
+        emptyTitle="Testlar mavjud emas"
+        emptyDescription={search ? "Qidiruv natijasi topilmadi" : "Birinchi testni yaratib boshlang."}
+      >
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {(Array.isArray(filteredTests) ? filteredTests : []).map((test) => (
             <Card key={test.id} className="hover-elevate overflow-visible" data-testid={`card-test-${test.id}`}>
@@ -241,23 +249,7 @@ export default function Tests() {
             </Card>
           ))}
         </div>
-      ) : (
-        <Card className="text-center py-12">
-          <CardContent>
-            <FileQuestion className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Testlar mavjud emas</h3>
-            <p className="text-muted-foreground mb-4">
-              {search ? "Qidiruv natijasi topilmadi" : "Birinchi testni yaratib boshlang"}
-            </p>
-            {!search && (
-              <Button onClick={() => setShowAddDialog(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Test yaratish
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      </PageState>
 
       <AddTestDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
     </div>
