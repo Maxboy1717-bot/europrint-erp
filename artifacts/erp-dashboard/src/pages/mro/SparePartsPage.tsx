@@ -6,6 +6,7 @@ import { DedicatedPageShell, KpiCard, Section } from "@/components/DedicatedPage
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/ui/page-state";
 import { Search, Package, AlertTriangle, DollarSign } from "lucide-react";
 
 interface SparePart {
@@ -26,7 +27,7 @@ export default function SparePartsPage() {
   const { t } = useTranslation('mro' as 'admin');
   const [search, setSearch] = useState("");
 
-  const { data, isLoading } = useQuery<{ items: SparePart[] }>({
+  const { data, isLoading, isError, refetch } = useQuery<{ items: SparePart[] }>({
     queryKey: ["/api/mro/spare-parts", search],
     queryFn: () => apiRequest("GET", `/api/mro/spare-parts${search ? `?search=${encodeURIComponent(search)}` : ""}`),
   });
@@ -56,11 +57,17 @@ export default function SparePartsPage() {
             className="pl-8"
           />
         </div>
-        {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12" />)}</div>
-        ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">{t('spareParts.empty', "Ehtiyot qism yo'q")}</p>
-        ) : (
+        <PageState
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={items.length === 0}
+          onRetry={refetch}
+          skeleton="list"
+          errorTitle={t('common.error', "Xatolik yuz berdi")}
+          emptyIcon={Package}
+          emptyTitle={t('spareParts.empty', "Ehtiyot qism yo'q")}
+          emptyDescription="Yangi ehtiyot qismni qo'shish uchun yuqoridagi tugmadan foydalaning."
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50">
@@ -97,7 +104,7 @@ export default function SparePartsPage() {
               </tbody>
             </table>
           </div>
-        )}
+        </PageState>
       </Section>
     </DedicatedPageShell>
   );

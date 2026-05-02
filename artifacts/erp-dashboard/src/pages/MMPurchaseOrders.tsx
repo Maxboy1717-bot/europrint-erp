@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { PurchaseOrder, Vendor, RawMaterial, PurchaseOrderItem } from "@shared/schema";
 import { z } from "zod";
 import { ErrorState } from "@/components/ui/error-state";
+import { PageState } from "@/components/ui/page-state";
 import { PageHeader } from "@/components/ui/page-header";
 
 const poFormSchema = z.object({
@@ -225,15 +226,20 @@ export default function MMPurchaseOrders() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-on-surface-variant" data-testid="loading">
-              Yuklanmoqda...
-            </div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-8 text-on-surface-variant" data-testid="empty-state">
-              Xarid buyurtmalari topilmadi
-            </div>
-          ) : (
+          <PageState
+            isLoading={isLoading}
+            isError={isError}
+            isEmpty={filteredOrders.length === 0}
+            onRetry={refetch}
+            skeleton="table"
+            skeletonRows={5}
+            skeletonColumns={6}
+            errorTitle="Xarid buyurtmalari yuklanmadi"
+            errorMessage="Server bilan bog'lanishda xatolik."
+            emptyIcon={Package}
+            emptyTitle="Xarid buyurtmalari topilmadi"
+            emptyDescription="Yangi xarid buyurtmasini yarating."
+          >
             <Table data-testid="purchase-orders-table">
               <TableHeader>
                 <TableRow className="bg-surface-container hover:bg-surface-container border-none">
@@ -269,7 +275,7 @@ export default function MMPurchaseOrders() {
                 ))}
               </TableBody>
             </Table>
-          )}
+          </PageState>
         </CardContent>
       </Card>
 
