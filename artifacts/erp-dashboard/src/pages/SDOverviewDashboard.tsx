@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageState } from "@/components/ui/page-state";
 import { RefreshCw } from "lucide-react";
 import { 
   ShoppingCart, Package, Warehouse, Truck, AlertTriangle, DollarSign, ArrowRight, BarChart3,
@@ -60,7 +61,7 @@ const ACTION_ICONS: Record<string, typeof AlertTriangle> = {
 };
 
 export default function SDOverviewDashboard() {
-  const { data: overview, isLoading, refetch } = useQuery<OverviewDashboardData>({
+  const { data: overview, isLoading, isError, refetch } = useQuery<OverviewDashboardData>({
     queryKey: ["/api/sd/dashboard/overview"],
   });
 
@@ -114,9 +115,14 @@ export default function SDOverviewDashboard() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-12 text-on-surface-variant">Yuklanmoqda...</div>
-      ) : (
+      <PageState
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        skeleton="dashboard"
+        errorTitle="Dashboard yuklanmadi"
+        errorMessage="Server bilan bog'lanishda xatolik."
+      >
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
             {(Array.isArray(stats) ? stats : []).map(s => (
@@ -286,7 +292,7 @@ export default function SDOverviewDashboard() {
             </div>
           </div>
         </>
-      )}
+      </PageState>
     </div>
   );
 }

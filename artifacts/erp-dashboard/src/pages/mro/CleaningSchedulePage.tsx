@@ -4,6 +4,7 @@ import { useTranslation } from "@/lib/i18n";
 import { DedicatedPageShell, KpiCard, Section } from "@/components/DedicatedPageShell";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/ui/page-state";
 import { Sparkles, Calendar, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface CleaningTask {
@@ -27,7 +28,7 @@ const STATUS_CONFIG: Record<CleaningTask["status"], { label: string; className: 
 export default function CleaningSchedulePage() {
   const { t } = useTranslation('mro' as 'admin');
 
-  const { data, isLoading } = useQuery<{ items: CleaningTask[] }>({
+  const { data, isLoading, isError, refetch } = useQuery<{ items: CleaningTask[] }>({
     queryKey: ["/api/mro/cleaning/schedules"],
     queryFn: () => apiRequest("GET", "/api/mro/cleaning/schedules"),
   });
@@ -50,11 +51,17 @@ export default function CleaningSchedulePage() {
       </div>
 
       <Section title={t('cleaning.list', "Tozalash vazifalari")}>
-        {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}</div>
-        ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">{t('cleaning.empty', "Vazifa yo'q")}</p>
-        ) : (
+        <PageState
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={items.length === 0}
+          onRetry={refetch}
+          skeleton="list"
+          errorTitle={t('common.error', "Xatolik yuz berdi")}
+          emptyIcon={Sparkles}
+          emptyTitle={t('cleaning.empty', "Vazifa yo'q")}
+          emptyDescription="Tozalash jadvali bo'sh."
+        >
           <div className="space-y-2">
             {items.map((task) => {
               const cfg = STATUS_CONFIG[task.status];
@@ -78,7 +85,7 @@ export default function CleaningSchedulePage() {
               );
             })}
           </div>
-        )}
+        </PageState>
       </Section>
     </DedicatedPageShell>
   );
