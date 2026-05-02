@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { PageState } from "@/components/ui/page-state";
 import { FileText, Plus, Send, CheckCircle, Calculator, Package } from "lucide-react";
 import { fmt, QUOT_STATUS_LABELS, QUOT_STATUS_COLORS } from "@/lib/sd-helpers";
 
@@ -89,7 +90,7 @@ export default function SDSalesQuotes() {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data: quotations = [], isLoading } = useQuery<SdQuotationItem[]>({
+  const { data: quotations = [], isLoading, isError, refetch } = useQuery<SdQuotationItem[]>({
     queryKey: ["/api/sd/quotations"],
   });
 
@@ -412,15 +413,18 @@ export default function SDSalesQuotes() {
         </Dialog>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Yuklanmoqda...</div>
-      ) : (quotations as SdQuotationItem[]).length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Hozircha taklifnomalar yo'q</p>
-          <p className="text-sm mt-1">Yuqoridagi tugma orqali birinchi taklifnomani yarating</p>
-        </div>
-      ) : (
+      <PageState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={(quotations as SdQuotationItem[]).length === 0}
+        onRetry={refetch}
+        skeleton="list"
+        errorTitle="Taklifnomalar yuklanmadi"
+        errorMessage="Server bilan bog'lanishda xatolik. Qayta urinib ko'ring."
+        emptyIcon={FileText}
+        emptyTitle="Hozircha taklifnomalar yo'q"
+        emptyDescription="Yuqoridagi tugma orqali birinchi taklifnomani yarating."
+      >
         <div className="space-y-2">
           {(quotations as SdQuotationItem[]).map((q: SdQuotationItem) => (
             <Card key={q.id} className="hover-elevate" data-testid={`card-quotation-${q.id}`}>
@@ -476,7 +480,7 @@ export default function SDSalesQuotes() {
             </Card>
           ))}
         </div>
-      )}
+      </PageState>
     </div>
   );
 }
