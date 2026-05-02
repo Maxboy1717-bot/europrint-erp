@@ -1,0 +1,20 @@
+import { z } from "zod";
+
+export const CURRENCIES = [
+  { value: "UZS", label: "UZS (so'm)" },
+  { value: "USD", label: "USD ($)" },
+];
+
+export const dealFormSchema = z.object({
+  title: z.string().min(1, "Bitim nomi majburiy"),
+  opportunity: z.coerce.number().min(0, "Summa 0 dan katta bo'lishi kerak"),
+  currencyId: z.string().default("UZS"),
+  closeDate: z.string().optional(),
+  probability: z.coerce.number().min(0).max(100).optional(),
+  companyId: z.coerce.number().optional(),
+  contactId: z.coerce.number().optional(),
+  assignedById: z.string().optional(),
+  comments: z.string().optional(),
+});
+
+export type DealFormValues = z.infer<typeof dealFormSchema>;

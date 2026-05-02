@@ -1,0 +1,55 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Package, Layers, Box, CheckCircle } from "lucide-react";
+import { KpiCard } from "./KpiCard";
+import { fmtDate, type BasicInfo } from "./types";
+
+export function BasicTab({ basic }: { basic: BasicInfo }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard icon={Package} label="Material kodi" value={basic.kod || "—"} />
+        <KpiCard icon={Layers} label="Kategoriya" value={basic.category || "—"} />
+        <KpiCard icon={Box} label="O'lchov birligi" value={basic.unitOfMeasure || "—"} />
+        <KpiCard icon={CheckCircle} label="Holat" value={basic.isActive ? "Aktiv" : "Arxiv"}
+          color={basic.isActive ? "text-green-600" : "text-muted-foreground"} />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">Material haqida</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {([["Nomi (O'zbek)", basic.xomAshyo], ["Nomi (Rus)", basic.xomAshyoRu], ["Kategoriya", basic.category], ["O'lchov", basic.unitOfMeasure]] as [string, string | null | undefined][])
+              .filter(([, v]) => v).map(([l, v]) => (
+                <div key={l} className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground w-36 shrink-0">{l}:</span>
+                  <span className="font-medium">{v}</span>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">Texnik ma'lumotlar</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {([
+              ["Format A", basic.formatA ? `${basic.formatA} mm` : null],
+              ["Format B", basic.formatB ? `${basic.formatB} mm` : null],
+              ["Gramm", basic.grammage ? `${basic.grammage} g/m²` : null],
+              ["Yetkazib beruvchi", basic.supplierName],
+              ["Oxirgi xarid", fmtDate(basic.lastPurchaseDate)],
+            ] as [string, string | null][]).filter(([, v]) => v && v !== "—").map(([l, v]) => (
+              <div key={l} className="flex gap-2 text-sm">
+                <span className="text-muted-foreground w-36 shrink-0">{l}:</span>
+                <span className="font-medium">{v}</span>
+              </div>
+            ))}
+            {basic.description && (
+              <div className="pt-2 border-t">
+                <p className="text-xs text-muted-foreground mb-1">Tavsif</p>
+                <p className="text-sm">{basic.description}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

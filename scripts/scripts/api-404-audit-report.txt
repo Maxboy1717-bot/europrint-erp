@@ -1,0 +1,21 @@
+════════════════════════════════════════════════════════════════════════════════
+API 404 AUDIT REPORT
+Sana: 2026-04-15T14:11:23.835Z
+════════════════════════════════════════════════════════════════════════════════
+
+XULOSA:
+  Jami frontend API chaqiruvlari       : 0
+    - Yuqori ishonch (aniq URL)         : 0
+    - Past ishonch (dinamik/shartli)    : 0  ← SHOVQIN
+  Backend routlarda mos keladiganlar   : 0
+  Mos kelmaganlar — yuqori ishonch      : 0  ← ASOSIY
+  Mos kelmaganlar — past ishonch (shovq): 0
+  Qamrab olingan modullar               : 0
+
+────────────────────────────────────────────────────────────────────────────────
+MOS KELMAGANLAR (Modul bo'yicha guruhlanган):
+────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+BACKEND ROUTLAR RO'YXATI:
+────────────────────────────────────────────────────────────────────────────────

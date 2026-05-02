@@ -1,0 +1,14 @@
+/**
+ * AppShellModern header: h-14 (3.5rem). ModuleSidebar default: top-12 — moslashtirish.
+ */
+[data-erp-shell="modern"] aside.fixed.left-0.top-12 {
+  top: 3.5rem;
+  height: calc(100vh - 3.5rem);
+}
+
+/* Tailwind utility bg-white dark:bg-slate-950 ustidan tokenlar */
+[data-erp-shell="modern"] aside.fixed.left-0 {
+  background-color: hsl(var(--sidebar)) !important;
+  border-color: hsl(var(--sidebar-border)) !important;
+  color: hsl(var(--sidebar-foreground)) !important;
+}

@@ -1,0 +1,21 @@
+kind = "web"
+  previewPath = "/api"
+  title = "EuroPrint API Server"
+  version = "1.0.0"
+  id = "artifacts/api-server"
+
+  [[services]]
+  name = "api"
+  paths = ["/api"]
+  localPort = 8080
+
+  [services.development]
+  run = "pnpm --filter @europrint/api run dev:unsafe"
+
+  [services.production]
+  build = "pnpm --filter @europrint/api run build"
+  run = ["sh", "-c", "cd apps/api && exec node dist/main"]
+
+  [services.env]
+  PORT = "8080"
+  

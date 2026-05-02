@@ -1,0 +1,111 @@
+import { assertRequired } from '@common/assertions';
+import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger, BadRequestException } from '@nestjs/common';
+import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Throttle } from '@nestjs/throttler';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Roles } from '@common/decorators/roles.decorator';
+import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { CreateWorkCenterCommand } from '../application/commands/create-work-center.command';
+import { UpdateWorkCenterCommand } from '../application/commands/update-work-center.command';
+import { GetWorkCentersQuery } from '../application/queries/get-work-centers.query';
+import { GetWorkCentersStatsQuery } from '../application/queries/get-work-centers-stats.query';
+import {
+  CreateWorkCenterDto,
+  CreateWorkCenterDtoSchema,
+  UpdateWorkCenterDto,
+  UpdateWorkCenterDtoSchema,
+  GetWorkCentersDto,
+  GetWorkCentersDtoSchema,
+} from './dto/work-center.dto';
+
+enum Role {
+  SUPER_ADMIN = 'super_admin',
+  PRODUCTION_MANAGER = 'production_manager',
+}
+
+@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Controller('pp/work-centers')
+@UseGuards(RolesGuard)
+@UseInterceptors(AuditInterceptor)
+export class PpWorkCentersController {
+  private readonly logger = new Logger(PpWorkCentersController.name);
+
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
+
+  @Get()
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async getAll(@Body() dto?: GetWorkCentersDto) {
+    const validatedDto = GetWorkCentersDtoSchema.parse(dto || {});
+    this.logger.log('Getting work centers');
+    return unwrapOrThrow(await this.queryBus.execute(new GetWorkCentersQuery(validatedDto)));
+  }
+
+  @Get('/stats')
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async getStats() {
+    this.logger.log('Getting work center stats');
+    return unwrapOrThrow(await this.queryBus.execute(new GetWorkCentersStatsQuery()));
+  }
+
+  @Get(':id')
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async getById(@Param('id') id: string) {
+    this.logger.log('Getting work center by ID');
+    const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
+    assertOk(result);
+    const workCenter = result.data?.find((wc: Record<string, unknown>) => wc.id === id);
+    assertRequired(workCenter, 'Work center topilmadi');
+    return workCenter;
+  }
+
+  @Post()
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async create(@Body() dto: CreateWorkCenterDto) {
+    const validatedDto = CreateWorkCenterDtoSchema.parse(dto);
+    this.logger.log('Creating work center');
+    const command = new CreateWorkCenterCommand(
+      validatedDto.code,
+      validatedDto.name,
+      validatedDto.type,
+      validatedDto.capacity,
+      validatedDto.costPerHour,
+      validatedDto.certificationLmsCourseId,
+      validatedDto.department,
+    );
+    return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+
+  @Put(':id')
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async update(@Param('id') id: string, @Body() dto: UpdateWorkCenterDto) {
+    const validatedDto = UpdateWorkCenterDtoSchema.parse(dto);
+    this.logger.log('Updating work center');
+    const command = new UpdateWorkCenterCommand(
+      id,
+      validatedDto.code,
+      validatedDto.name,
+      validatedDto.type,
+      validatedDto.capacity,
+      validatedDto.costPerHour,
+      validatedDto.certificationLmsCourseId,
+      validatedDto.department,
+    );
+    return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+
+  @Patch(':id/toggle-active')
+  @Roles(Role.SUPER_ADMIN)
+  async toggleActive(@Param('id') id: string, @Body() dto: { isActive: boolean }) {
+    this.logger.log('Toggling work center active status');
+    const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
+    assertOk(result);
+    const existing = result.data?.find((wc: Record<string, unknown>) => wc.id === id);
+    assertRequired(existing, 'Work center topilmadi');
+    const command = new UpdateWorkCenterCommand(id);
+    return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+}

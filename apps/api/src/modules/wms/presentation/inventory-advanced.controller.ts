@@ -1,0 +1,48 @@
+import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Roles } from '@common/decorators/roles.decorator';
+import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { Role } from '@common/constants/roles.constants';
+import { InventoryAdvancedService } from '../application/inventory-advanced.service';
+
+import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
+import { unwrapOrInternal } from '@common/http-result';
+@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Controller('inventory/advanced')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_KEEPER)
+@UseInterceptors(AuditInterceptor)
+export class InventoryAdvancedController {
+  constructor(private readonly svc: InventoryAdvancedService) {}
+
+  @Get('analytics')
+  async getAnalytics() {
+    return unwrapOrInternal(await this.svc.getAnalytics());
+  }
+
+  @Get('counts')
+  async getCounts(
+    @Query('status') status?: string,
+    @Query('warehouseId') warehouseId?: string,
+    @Query('limit') limitParam?: string,
+    @Query('offset') offsetParam?: string,
+  ) {
+    const limit = Math.min(parseInt(limitParam ?? '50', 10) || 50, MAX_QUERY_LIMIT);
+    const offset = parseInt(offsetParam ?? '0', 10) || 0;
+    const result = await this.svc.getCounts(status, warehouseId, limit, offset);
+    const items = Array.isArray(result) ? result : (result?.items ?? []);
+    return { items, total: Array.isArray(items) ? items.length : 0 };
+  }
+
+  @Get('barcodes')
+  async getBarcodeAssignments(
+    @Query('limit') limitParam?: string,
+    @Query('offset') offsetParam?: string,
+  ) {
+    const limit = Math.min(parseInt(limitParam ?? '50', 10) || 50, MAX_QUERY_LIMIT);
+    const offset = parseInt(offsetParam ?? '0', 10) || 0;
+    return unwrapOrInternal(await this.svc.getBarcodeAssignments(limit, offset));
+  }
+}

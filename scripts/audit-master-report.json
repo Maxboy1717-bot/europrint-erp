@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-04-28T15:23:50Z",
+  "errors": 0,
+  "warnings": 0,
+  "arrayUnsafe": 0,
+  "faza": {
+    "faza1": true,
+    "faza23": true,
+    "faza45": true,
+    "faza6": true,
+    "faza7": true,
+    "faza8": true
+  }
+}

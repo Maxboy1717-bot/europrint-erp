@@ -1,0 +1,295 @@
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, XCircle, Clock, FileText, AlertTriangle, Gauge, Activity, Wrench, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { queryClient } from "@/lib/queryClient";
+
+interface DailyReport {
+  id: number;
+  report_date: string;
+  status: string;
+  tasks_completed?: string;
+  metrics?: string;
+  tomorrow_plan?: string;
+  submitted_at?: string;
+  is_auto_absent?: boolean;
+  is_machine_operator_report?: boolean;
+  gamification_points?: number;
+  hr_user_id?: number;
+  hr_updated_at?: string;
+  reason?: string;
+  hr_actor_name?: string;
+}
+
+interface Props {
+  employeeId: number | string;
+  isMachineOperator?: boolean;
+}
+
+function OperatorReportCard({ report }: { report: DailyReport }) {
+  let productionData: Record<string, unknown> = {};
+  try {
+    if (report.tasks_completed) {
+      const parsed = JSON.parse(report.tasks_completed);
+      if (typeof parsed === "object" && parsed !== null) {
+        productionData = parsed as Record<string, unknown>;
+      }
+    }
+  } catch {
+  }
+
+  const oee = (productionData.oee as number) ?? (productionData.today_oee as number) ?? null;
+  const produced = (productionData.produced as number) ?? (productionData.today_produced as number) ?? null;
+  const defects = (productionData.defects as number) ?? (productionData.today_defects as number) ?? null;
+  const target = (productionData.target as number) ?? (productionData.today_target as number) ?? null;
+  const shift = (productionData.shift as string) ?? (productionData.shift_type as string) ?? null;
+  const machineName = (productionData.machine_name as string) ?? null;
+  const downtime = (productionData.downtime_minutes as number) ?? null;
+  const tasksCompleted = (productionData.tasks_completed_count as number) ?? null;
+  const tasksTotal = (productionData.tasks_total as number) ?? null;
+  const defectRate = produced && defects !== null && produced > 0
+    ? ((defects / produced) * 100).toFixed(2)
+    : null;
+
+  const date = new Date(report.report_date);
+  const dateStr = date.toLocaleDateString("uz-UZ", { weekday: "short", day: "numeric", month: "short" });
+
+  let statusBadge;
+  if (report.is_auto_absent) {
+    statusBadge = <Badge className="bg-red-600 text-white text-xs shrink-0">❌ Sababsiz yo'qlik</Badge>;
+  } else if (report.status === "submitted") {
+    statusBadge = <Badge className="bg-green-600 text-white text-xs shrink-0">✅ Topshirildi</Badge>;
+  } else {
+    statusBadge = <Badge className="bg-amber-600 text-white text-xs shrink-0">⏳ Kutilmoqda</Badge>;
+  }
+
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+    <div className="p-4 rounded-lg border border-blue-200 bg-blue-50/30 dark:border-blue-800/40 dark:bg-blue-950/10">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <Wrench className="w-4 h-4 text-blue-500" />
+          <span className="font-semibold text-sm">{dateStr}</span>
+          {shift && <Badge variant="outline" className="text-xs">{shift}</Badge>}
+          {report.gamification_points ? (
+            <span className="text-xs text-green-600 font-medium">+{report.gamification_points} ball</span>
+          ) : null}
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          {statusBadge}
+          {report.hr_user_id && (
+            <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">HR o'zgartirdi</Badge>
+          )}
+        </div>
+      </div>
+
+      {machineName && (
+        <p className="text-xs text-muted-foreground mb-2">
+          <span className="font-medium">Dastgoh:</span> {machineName}
+        </p>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+        {oee !== null && (
+          <div className="bg-white/60 dark:bg-black/20 rounded-md p-2 text-center">
+            <Gauge className="w-4 h-4 mx-auto mb-0.5 text-blue-500" />
+            <p className={`font-bold ${oee >= 85 ? "text-green-600" : oee >= 70 ? "text-amber-600" : "text-red-600"}`}>
+              {oee.toFixed(1)}%
+            </p>
+            <p className="text-[10px] text-muted-foreground">OEE</p>
+          </div>
+        )}
+        {produced !== null && (
+          <div className="bg-white/60 dark:bg-black/20 rounded-md p-2 text-center">
+            <Activity className="w-4 h-4 mx-auto mb-0.5 text-green-500" />
+            <p className="font-bold text-green-700">{produced.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {target ? `${target.toLocaleString()} me'yordan` : "dona"}
+            </p>
+          </div>
+        )}
+        {defects !== null && (
+          <div className="bg-white/60 dark:bg-black/20 rounded-md p-2 text-center">
+            <XCircle className="w-4 h-4 mx-auto mb-0.5 text-red-500" />
+            <p className="font-bold text-red-600">{defects}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {defectRate !== null ? `${defectRate}% nuqson` : "nuqsonli"}
+            </p>
+          </div>
+        )}
+        {downtime !== null && (
+          <div className="bg-white/60 dark:bg-black/20 rounded-md p-2 text-center">
+            <Clock className="w-4 h-4 mx-auto mb-0.5 text-amber-500" />
+            <p className="font-bold text-amber-600">{downtime} daq</p>
+            <p className="text-[10px] text-muted-foreground">To'xtash</p>
+          </div>
+        )}
+      </div>
+
+      {tasksCompleted !== null && tasksTotal !== null && (
+        <p className="text-xs text-muted-foreground mt-2">
+          Vazifalar: {tasksCompleted}/{tasksTotal} {tasksCompleted >= tasksTotal ? "✅" : ""}
+        </p>
+      )}
+
+      {report.is_auto_absent && (
+        <p className="text-xs text-red-500 mt-2 italic">Hisobot topshirilmagan</p>
+      )}
+    </div>
+    </>
+  );
+}
+
+function OfficeReportCard({ report }: { report: DailyReport }) {
+  const date = new Date(report.report_date);
+  const dateStr = date.toLocaleDateString("uz-UZ", { weekday: "short", day: "numeric", month: "short" });
+
+  let statusBadge;
+  if (report.is_auto_absent) {
+    statusBadge = <Badge className="bg-red-600 text-white text-xs shrink-0">❌ Sababsiz yo'qlik</Badge>;
+  } else if (report.status === "submitted") {
+    statusBadge = <Badge className="bg-green-600 text-white text-xs shrink-0">✅ Topshirildi</Badge>;
+  } else {
+    statusBadge = <Badge className="bg-amber-600 text-white text-xs shrink-0">⏳ Kutilmoqda</Badge>;
+  }
+
+  return (
+    <div
+      className={`p-4 rounded-lg border transition-colors ${
+        report.is_auto_absent
+          ? "border-red-200 bg-red-50/50 dark:border-red-800/40 dark:bg-red-950/20"
+          : report.status === "submitted"
+          ? "border-green-200 bg-green-50/30 dark:border-green-800/40 dark:bg-green-950/10"
+          : "border-border bg-surface-container-low"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm text-on-surface">{dateStr}</span>
+          {report.gamification_points ? (
+            <span className="text-xs text-green-600 font-medium">+{report.gamification_points} ball</span>
+          ) : null}
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          {statusBadge}
+          {report.hr_user_id && (
+            <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
+              HR o'zgartirdi
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {report.tasks_completed && !report.is_machine_operator_report && (
+        <p className="text-xs text-on-surface-variant line-clamp-2 mb-1">
+          {report.tasks_completed}
+        </p>
+      )}
+
+      <div className="flex items-center gap-3 text-xs text-on-surface-variant/70">
+        {report.submitted_at && (
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {new Date(report.submitted_at).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        )}
+        {report.hr_user_id && report.hr_updated_at && (
+          <span className="text-amber-500 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" />
+            HR o'zgartirdi: {new Date(report.hr_updated_at).toLocaleDateString("uz-UZ", { day: "numeric", month: "short" })}
+          </span>
+        )}
+        {report.reason && (
+          <span className="text-on-surface-variant/70 italic truncate max-w-xs" title={report.reason}>
+            Sabab: {report.reason}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["/api/hr-v2/daily-reports/employee", employeeId],
+    queryFn: () =>
+      apiRequest("GET", `/api/hr-v2/daily-reports/employee?employeeId=${employeeId}&limit=30`),
+    enabled: !!employeeId,
+  });
+
+  const reports: DailyReport[] = Array.isArray(data) ? data : [];
+
+  const submitted = (Array.isArray(reports) ? reports : []).filter(r => r.status === "submitted" && !r.is_auto_absent).length;
+  const autoAbsent = (Array.isArray(reports) ? reports : []).filter(r => r.is_auto_absent).length;
+  const hrOverridden = (Array.isArray(reports) ? reports : []).filter(r => r.hr_user_id).length;
+  const totalPoints = (Array.isArray(reports) ? reports : []).reduce((sum, r) => sum + (r.gamification_points || 0), 0);
+
+  const isOperator = isMachineOperator ?? (Array.isArray(reports) ? reports : []).some(r => r.is_machine_operator_report);
+
+  return (
+    <div className="space-y-5">
+      {isOperator && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-800/40">
+          <Wrench className="w-4 h-4 text-blue-500 shrink-0" />
+          <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+            Dastgoh operatori — ishlab chiqarish hisobotlari ko'rsatilmoqda
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {([
+          { label: "Topshirilgan", value: submitted, icon: CheckCircle, color: "text-green-500", bg: "bg-green-50 dark:bg-green-950/30" },
+          { label: "Sababsiz yo'qlik", value: autoAbsent, icon: XCircle, color: "text-red-500", bg: "bg-red-50 dark:bg-red-950/30" },
+          { label: "HR o'zgartirdi", value: hrOverridden, icon: AlertTriangle, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
+          { label: "Jami ball", value: `+${totalPoints}`, icon: FileText, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30" },
+        ]).map(stat => (
+          <Card key={stat.label} className={`border-border/50 ${stat.bg}`}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <stat.icon className={`w-7 h-7 ${stat.color} shrink-0`} />
+              <div>
+                <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
+                <div className="text-xs text-on-surface-variant">{stat.label}</div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            {isOperator ? (
+              <><Wrench className="w-4 h-4 text-blue-500" />So'nggi 30 kun ishlab chiqarish hisobotlari</>
+            ) : (
+              <><FileText className="w-4 h-4 text-primary" />So'nggi 30 kun hisobotlari</>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {isLoading && (
+            <>{([1, 2, 3, 4, 5]).map(i => <Skeleton key={`k-${i}`} className="h-16 w-full" />)}</>
+          )}
+
+          {!isLoading && reports.length === 0 && (
+            <div className="text-center py-12 text-on-surface-variant">
+              <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Hali kunlik hisobot yuborilmagan</p>
+            </div>
+          )}
+
+          {(Array.isArray(reports) ? reports : []).map(r => {
+            if (r.is_machine_operator_report || isOperator) {
+              return <OperatorReportCard key={r.id} report={r} />;
+            }
+            return <OfficeReportCard key={r.id} report={r} />;
+          })}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

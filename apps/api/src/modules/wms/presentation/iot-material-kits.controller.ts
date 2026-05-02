@@ -1,0 +1,89 @@
+import {
+Body, Controller, Get, HttpCode, HttpStatus,
+  Param, Patch, Post, Query,
+  UseGuards, UseInterceptors, UsePipes,
+} from '@nestjs/common';
+import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
+import { WmsCreateMaterialKitSchema, WmsCreateMaterialKitDto, WmsGenerateMaterialKitSchema, WmsGenerateMaterialKitDto } from '../dto/wms.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Roles } from '@common/decorators/roles.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { unwrapOrThrow } from '@common/http-result';
+import { IotEnhancedService } from '../application/iot-enhanced.service';
+import { safeInt } from '../../hr/common/db-rows';
+import { AuthenticatedUser } from '@common/types/user.types';
+
+const IOT_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'production_manager', 'ERP_MANAGER'];
+const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager', 'ERP_MANAGER'];
+
+@ApiTags('IoT Material Kits')
+@ApiBearerAuth()
+@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('iot')
+export class IotMaterialKitsController {
+  constructor(private readonly svc: IotEnhancedService) {}
+
+  @Get('material-kits')
+  @Roles(...IOT_READ)
+  async getMaterialKits(@Query('status') status?: string) {
+    const r = await this.svc.getMaterialKits(status);
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
+  }
+
+  @Post('material-kits')
+  @UsePipes(new ZodValidationPipe(WmsCreateMaterialKitSchema))
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...IOT_WRITE)
+  async createMaterialKit(
+    @Body() body: WmsCreateMaterialKitDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return unwrapOrThrow(await this.svc.createMaterialKit(body, user?.id ?? null));
+  }
+
+  @Post('material-kits/generate')
+  @UsePipes(new ZodValidationPipe(WmsGenerateMaterialKitSchema))
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...IOT_WRITE)
+  async generateMaterialKit(
+    @Body() body: WmsGenerateMaterialKitDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const kit = await this.svc.generateMaterialKit(body, user?.id ?? null);
+    return { kit: unwrapOrThrow(kit) };
+  }
+
+  @Get('material-kits/:id')
+  @Roles(...IOT_READ)
+  async getMaterialKitById(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.getMaterialKitById(safeInt(id, 0)));
+  }
+
+  @Patch('material-kits/:id/prepare')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...IOT_WRITE)
+  async prepareMaterialKit(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.prepareMaterialKit(safeInt(id, 0)));
+  }
+
+  @Patch('material-kits/:id/ready')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...IOT_WRITE)
+  async readyMaterialKit(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.readyMaterialKit(safeInt(id, 0)));
+  }
+
+  @Get('material-kits/:id/items')
+  @Roles(...IOT_READ)
+  async getKitItems(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.getKitItems(safeInt(id, 0)));
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+
+# Test artifacts (generated, not committed)
+playwright-report/
+test-results/*.xml
+test-results/.last-run.json
+coverage/

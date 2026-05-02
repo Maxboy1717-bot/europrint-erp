@@ -1,0 +1,272 @@
+import { TashkentTimeService } from '@common/time';
+const _time = new TashkentTimeService();
+import { Injectable } from '@nestjs/common';
+import { eq, and, gte, desc, count, sql } from 'drizzle-orm';
+import {
+  db, cameras, camera_events, camera_safety_violations,
+  camera_quality_defects, camera_ai_configs,
+} from '@shared/db';
+import { Ok, Err, Result } from '@common/result';
+
+import { MS_PER_DAY } from '@common/constants/app.constants';
+export interface CameraAiSummary {
+  active_cameras: number;
+  open_violations: number;
+  open_defects: number;
+  open_events: number;
+}
+
+export interface SafetyTrendRow {
+  day: string;
+  violations: number;
+  high_severity: number;
+}
+
+export interface QualityAnalysisRow {
+  defect_type: string | null;
+  total: number;
+  open_count: number;
+  high_severity_count: number;
+}
+
+export interface ProductivityScoreRow {
+  camera_name: string | null;
+  location: string | null;
+  total_events: number;
+  violations: number;
+  productivity_score: number;
+}
+
+export interface MachineUtilizationRow {
+  camera_id: string | null;
+  camera_name: string | null;
+  event_count: number;
+  idle_events: number;
+  active_events: number;
+}
+
+export interface AnomalyEventRow {
+  id: number;
+  camera_id: string | null;
+  event_type: string | null;
+  description: string | null;
+  severity: string | null;
+  status: string | null;
+  created_at: Date | null;
+  camera_name: string | null;
+  location: string | null;
+}
+
+export interface ActiveCameraRow {
+  id: number;
+  name: string | null;
+  location: string | null;
+  is_active: boolean;
+  rtsp_url: string | null;
+}
+
+export interface CameraConfigData {
+  cameraId: string;
+  cameraName: string | null;
+  cameraCode: string | null;
+  triggerRules: Record<string, unknown>[];
+  zone: string | null;
+  alertThreshold: string | number;
+  isActive: boolean;
+}
+
+@Injectable()
+export class DrizzleCameraAiRepo {
+  async findSummary(): Promise<Result<CameraAiSummary>> {
+    try {
+      const [camCounts] = await db.select({
+        active_cameras: sql<number>`COUNT(*) FILTER (WHERE ${cameras.is_active} = true)`,
+      }).from(cameras);
+      const [violCounts] = await db.select({
+        open_violations: sql<number>`COUNT(*) FILTER (WHERE ${camera_safety_violations.status} = 'open')`,
+      }).from(camera_safety_violations);
+      const [defCounts] = await db.select({
+        open_defects: sql<number>`COUNT(*) FILTER (WHERE ${camera_quality_defects.status} = 'open')`,
+      }).from(camera_quality_defects);
+      const [evCounts] = await db.select({
+        open_events: sql<number>`COUNT(*) FILTER (WHERE ${camera_events.status} = 'new')`,
+      }).from(camera_events);
+      return Ok({ ...camCounts, ...violCounts, ...defCounts, ...evCounts });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async findSafetyTrends(days: number): Promise<Result<SafetyTrendRow[]>> {
+    try {
+      const since = new Date(Date.now() - days * MS_PER_DAY);
+      const rows = await db.select({
+        day: sql<string>`DATE_TRUNC('day', ${camera_safety_violations.detected_at})`,
+        violations: count(camera_safety_violations.id),
+        high_severity: sql<number>`COUNT(*) FILTER (WHERE ${camera_safety_violations.severity} = 'high')`,
+      })
+        .from(camera_safety_violations)
+        .where(gte(camera_safety_violations.detected_at, since))
+        .groupBy(sql`DATE_TRUNC('day', ${camera_safety_violations.detected_at})`)
+        .orderBy(sql`day ASC`);
+      return Ok(rows);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async findQualityAnalysis(): Promise<Result<QualityAnalysisRow[]>> {
+    try {
+      const rows = await db.select({
+        defect_type: camera_quality_defects.defect_type,
+        total: count(camera_quality_defects.id),
+        open_count: sql<number>`COUNT(*) FILTER (WHERE ${camera_quality_defects.status} = 'open')`,
+        high_severity_count: sql<number>`COUNT(*) FILTER (WHERE ${camera_quality_defects.severity} = 'high')`,
+      })
+        .from(camera_quality_defects)
+        .groupBy(camera_quality_defects.defect_type)
+        .orderBy(sql`total DESC`);
+      return Ok(rows);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async findProductivityScores(): Promise<Result<ProductivityScoreRow[]>> {
+    try {
+      const since = new Date(Date.now() - 30 * MS_PER_DAY);
+      const rows = await db.select({
+        camera_name: cameras.name,
+        location: cameras.location,
+        total_events: sql<number>`COUNT(DISTINCT ${camera_events.id})`,
+        violations: sql<number>`COUNT(DISTINCT ${camera_safety_violations.id})`,
+        productivity_score: sql<number>`ROUND(100.0 - (COUNT(DISTINCT ${camera_safety_violations.id})::float / GREATEST(COUNT(DISTINCT ${camera_events.id}), 1) * 100), 1)`,
+      })
+        .from(cameras)
+        .leftJoin(
+          camera_events,
+          and(sql`${cameras.id}::text = ${camera_events.camera_id}`, gte(camera_events.created_at, since)),
+        )
+        .leftJoin(
+          camera_safety_violations,
+          and(sql`${cameras.id}::text = ${camera_safety_violations.camera_id}`, gte(camera_safety_violations.detected_at, since)),
+        )
+        .where(eq(cameras.is_active, true))
+        .groupBy(cameras.id, cameras.name, cameras.location)
+        .orderBy(sql`productivity_score DESC`);
+      return Ok(rows);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async findMachineUtilization(): Promise<Result<MachineUtilizationRow[]>> {
+    try {
+      const since = new Date(Date.now() - 7 * MS_PER_DAY);
+      const rows = await db.select({
+        camera_id: camera_events.camera_id,
+        camera_name: cameras.name,
+        event_count: count(camera_events.id),
+        idle_events: sql<number>`COUNT(*) FILTER (WHERE ${camera_events.event_type} = 'idle')`,
+        active_events: sql<number>`COUNT(*) FILTER (WHERE ${camera_events.event_type} = 'active')`,
+      })
+        .from(camera_events)
+        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .where(gte(camera_events.created_at, since))
+        .groupBy(camera_events.camera_id, cameras.name)
+        .orderBy(sql`event_count DESC`);
+      return Ok(rows);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async findAnomalyDetection(): Promise<Result<AnomalyEventRow[]>> {
+    try {
+      const rows = await db.select({
+        id: camera_events.id,
+        camera_id: camera_events.camera_id,
+        event_type: camera_events.event_type,
+        description: camera_events.description,
+        severity: camera_events.severity,
+        status: camera_events.status,
+        created_at: camera_events.created_at,
+        camera_name: cameras.name,
+        location: cameras.location,
+      })
+        .from(camera_events)
+        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .where(
+          sql`${camera_events.severity} = 'high' OR ${camera_events.event_type} = 'anomaly'`,
+        )
+        .orderBy(desc(camera_events.created_at))
+        .limit(50);
+      return Ok(rows);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async listActiveCameras(): Promise<Result<ActiveCameraRow[]>> {
+    try {
+      const rows = await db.select({
+        id: cameras.id,
+        name: cameras.name,
+        location: cameras.location,
+        is_active: cameras.is_active,
+        rtsp_url: cameras.rtsp_url,
+      })
+        .from(cameras)
+        .where(eq(cameras.is_active, true))
+        .orderBy(cameras.name);
+      return Ok(rows);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async findCameraConfig(id: string): Promise<Result<CameraConfigData>> {
+    try {
+      const [cam] = await db.select({
+        id: cameras.id,
+        name: cameras.name,
+        code: cameras.code,
+      }).from(cameras).where(eq(cameras.id, parseInt(id, 10)));
+      if (!cam) return Err('Kamera topilmadi');
+      const [config] = await db.select()
+        .from(camera_ai_configs)
+        .where(eq(camera_ai_configs.camera_id, id));
+      const raw = config?.detection_types;
+      const triggerRules: Record<string, unknown>[] = raw
+        ? (typeof raw === 'string' ? JSON.parse(raw) : [])
+        : [];
+      return Ok({
+        cameraId: id,
+        cameraName: cam.name,
+        cameraCode: cam.code,
+        triggerRules,
+        zone: config?.zone ?? null,
+        alertThreshold: config?.alert_threshold ?? 0.8,
+        isActive: config?.is_active ?? true,
+      });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  async upsertCameraConfig(
+    id: string,
+    cameraName: string,
+    detectionTypes: string,
+    zone: string,
+    alertThreshold: number,
+    isActive: boolean,
+  ): Promise<Result<boolean>> {
+    try {
+      await db.insert(camera_ai_configs)
+        .values({
+          camera_id: id,
+          camera_name: cameraName,
+          detection_types: detectionTypes,
+          zone,
+          alert_threshold: String(alertThreshold),
+          is_active: isActive,
+        })
+        .onConflictDoUpdate({
+          target: camera_ai_configs.camera_id,
+          set: {
+            detection_types: detectionTypes,
+            zone,
+            alert_threshold: String(alertThreshold),
+            is_active: isActive,
+            updated_at: _time.now(),
+          },
+        });
+      return Ok(true);
+    } catch (e) { return Err((e as Error).message); }
+  }
+}

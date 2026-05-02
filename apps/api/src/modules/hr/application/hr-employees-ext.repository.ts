@@ -1,0 +1,167 @@
+import { TashkentTimeService } from '@common/time';
+const _time = new TashkentTimeService();
+import { Injectable } from '@nestjs/common';
+import { castTo } from '@common/db-rows';
+import { db , runQuery } from '@shared/db';
+import { sql, eq } from 'drizzle-orm';
+import { execHrEmployeeImport } from '@common/database/queries-remaining';
+import { safeCall, Result, Ok, Err } from '@common/result';
+import {
+  hrEmployees, hrDepartments, shift_schedules,
+  hr_conflict_reports, employee_360_assessments,
+} from '@shared/db';
+
+type Row = Record<string, unknown>;
+
+@Injectable()
+export class HrEmployeesExtRepository {
+  async updateProfileImage(id: number, imageUrl: string): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db.update(hrEmployees)
+        .set({ photo_url: imageUrl, updated_at: _time.now() })
+        .where(eq(hrEmployees.id, id))
+        .returning();
+      return castTo<Row>((rows[0] ?? {}));
+    }, 'DB_ERROR');
+  }
+
+  async assignOrgFunctions(id: number, departmentId?: string, positionId?: string): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db.update(hrEmployees).set({
+        department_id: sql`COALESCE(${departmentId ?? null}::integer, ${hrEmployees.department_id})`,
+        position_id:   sql`COALESCE(${positionId ?? null}::integer, ${hrEmployees.position_id})`,
+        updated_at:    _time.now(),
+      }).where(eq(hrEmployees.id, id)).returning();
+      return castTo<Row>((rows[0] ?? {}));
+    }, 'DB_ERROR');
+  }
+
+  async importEmployee(emp: Row): Promise<void> {
+    await execHrEmployeeImport(emp);
+  }
+
+  async getEmployeeAssets(id: number): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT id, employee_id, asset_type, asset_name, asset_code,
+               assigned_date, return_date, status, notes, created_at
+        FROM employee_assets
+        WHERE employee_id = ${id} AND deleted_at IS NULL
+        ORDER BY assigned_date DESC
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async assignAsset(id: number, assetType: unknown, assetName: unknown, assetCode: unknown, assignedDate: unknown, notes: unknown): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        INSERT INTO employee_assets (employee_id, asset_type, asset_name, asset_code, assigned_date, notes, status)
+        VALUES (${id}, ${assetType ?? 'equipment'}, ${assetName ?? ''}, ${assetCode ?? null}, ${assignedDate ?? null}, ${notes ?? null}, 'assigned')
+        RETURNING *
+      `);
+      return (rows.rows[0] ?? {}) as Row;
+    }, 'DB_ERROR');
+  }
+
+  async getEmployeeSwapRequests(employeeId: number, status?: string): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:           shift_schedules.id,
+        employee_id:  shift_schedules.employee_id,
+        shift_date:   shift_schedules.shift_date,
+        shift_type:   shift_schedules.shift_type,
+        start_time:   shift_schedules.start_time,
+        end_time:     shift_schedules.end_time,
+        status:       shift_schedules.status,
+        created_at:   shift_schedules.created_at,
+        employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+      })
+        .from(shift_schedules)
+        .innerJoin(hrEmployees, eq(hrEmployees.id, shift_schedules.employee_id))
+        .where(sql`
+          ${shift_schedules.employee_id} = ${employeeId} AND
+          (${status ?? null}::text IS NULL OR ${shift_schedules.status} = ${status ?? null})
+        `)
+        .orderBy(sql`${shift_schedules.shift_date} DESC`)
+        .limit(50);
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  async getEmployeeComplaints(employeeId: string): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const pat = `%${employeeId}%`;
+      const rows = await db.select({
+        id:          hr_conflict_reports.id,
+        party1:      hr_conflict_reports.party1,
+        party2:      hr_conflict_reports.party2,
+        description: hr_conflict_reports.description,
+        severity:    hr_conflict_reports.severity,
+        status:      hr_conflict_reports.status,
+        created_at:  hr_conflict_reports.created_at,
+      })
+        .from(hr_conflict_reports)
+        .where(sql`${hr_conflict_reports.party1}::text ILIKE ${pat} OR ${hr_conflict_reports.party2}::text ILIKE ${pat}`)
+        .orderBy(sql`${hr_conflict_reports.created_at} DESC`)
+        .limit(50);
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  async createComplaint(employeeId: string, party2: unknown, description: unknown, severity: unknown): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db.insert(hr_conflict_reports).values({
+        party1:      employeeId,
+        party2:      (party2 ?? '') as string,
+        description: (description ?? null) as string,
+        severity:    (severity ?? 'low') as string,
+        status:      'open',
+      }).returning();
+      return castTo<Row>((rows[0] ?? {}));
+    }, 'DB_ERROR');
+  }
+
+  async getAssessmentSkips(id: number): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:                employee_360_assessments.id,
+        employee_id:       employee_360_assessments.employee_id,
+        assessment_period: employee_360_assessments.assessment_period,
+        assessment_year:   employee_360_assessments.assessment_year,
+        status:            employee_360_assessments.status,
+        created_at:        employee_360_assessments.created_at,
+        employee_name:     sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+      })
+        .from(employee_360_assessments)
+        .innerJoin(hrEmployees, eq(hrEmployees.id, employee_360_assessments.employee_id))
+        .where(sql`${employee_360_assessments.employee_id} = ${id} AND ${employee_360_assessments.status} = 'skipped'`)
+        .orderBy(sql`${employee_360_assessments.created_at} DESC`)
+        .limit(50);
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  async getEmployeesList(limit = 100, offset = 0): Promise<Result<Row[]>> {
+    try {
+      const rows = await db
+        .select({
+          id: hrEmployees.id,
+          first_name: hrEmployees.first_name,
+          last_name: hrEmployees.last_name,
+          department_id: hrEmployees.department_id,
+          position_id: hrEmployees.position_id,
+          photo_url: hrEmployees.photo_url,
+          status: hrEmployees.status,
+        })
+        .from(hrEmployees)
+        .orderBy(sql`${hrEmployees.last_name} ASC`)
+        .limit(limit)
+        .offset(offset);
+      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
+      return Ok(castTo<Row[]>(rows));
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+}

@@ -1,0 +1,10 @@
+import { Result } from '@common/result';
+type Row = Record<string, unknown>;
+export interface IFinanceGlRepository {
+  findAllDocuments(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
+  findAllAccounts(): Promise<Result<object[]>>;
+  findAccountById(id: number): Promise<Result<object | null>>;
+  postDocument(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
+  seedAccounts(rows: Record<string, unknown>[]): Promise<Result<object[]>>;
+}
+export const FINANCE_GL_REPO = 'IFinanceGlRepository';

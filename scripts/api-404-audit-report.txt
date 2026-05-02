@@ -1,0 +1,3037 @@
+════════════════════════════════════════════════════════════════════════════════
+API 404 AUDIT REPORT
+Sana: 2026-04-28T15:29:19.677Z
+════════════════════════════════════════════════════════════════════════════════
+
+XULOSA:
+  Jami frontend API chaqiruvlari       : 3948
+    - Yuqori ishonch (aniq URL)         : 3903
+    - Past ishonch (dinamik/shartli)    : 45  ← SHOVQIN
+  Backend routlarda mos keladiganlar   : 3807
+  Mos kelmaganlar — yuqori ishonch      : 54  ← ASOSIY
+  Mos kelmaganlar — past ishonch (shovq): 10
+  Qamrab olingan modullar               : 35
+
+────────────────────────────────────────────────────────────────────────────────
+MOS KELMAGANLAR (Modul bo'yicha guruhlanган):
+────────────────────────────────────────────────────────────────────────────────
+
+┌── ACHIEVEMENTS (1 ta) ────────────────────────────────────────────────
+│   URL  : /api/achievements
+│   Fayl : artifacts/erp-dashboard/src/pages/lms-extended/GamificationTab.tsx:12
+│
+
+┌── AI-CAMERA (1 ta) ───────────────────────────────────────────────────
+│   URL  : /api/ai-camera/analyze-by-missions
+│   Fayl : artifacts/erp-dashboard/src/camera-ai-modern/api.ts:40
+│
+
+┌── ASSIGNMENTS (1 ta) ─────────────────────────────────────────────────
+│   URL  : /api/assignments
+│   Fayl : artifacts/erp-dashboard/src/components/AssignCourseDialog.tsx:65
+│
+
+┌── CAMERA-EMPLOYEE-RATINGS (1 ta) ─────────────────────────────────────
+│   URL  : /api/camera-employee-ratings
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-employee-ratings.tsx:56
+│
+
+┌── CAMERA-REPORTS (2 ta) ──────────────────────────────────────────────
+│   URL  : /api/camera-reports/generate-pdf?period=${reportPeriod}
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-reports.tsx:111
+│
+│   URL  : /api/camera-reports/generate-excel?period=${reportPeriod}
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-reports.tsx:132
+│
+
+┌── CAMERA-SETTINGS (1 ta) ─────────────────────────────────────────────
+│   URL  : /api/camera-settings
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-settings.tsx:52
+│
+
+┌── CAMERAS (1 ta) ─────────────────────────────────────────────────────
+│   URL  : /api/cameras
+│   Fayl : artifacts/erp-dashboard/src/camera-ai-modern/api.ts:5
+│
+
+┌── CRM (8 ta) ─────────────────────────────────────────────────────────
+│   URL  : /api/crm/ai/extended/chat/respond
+│   Fayl : artifacts/erp-dashboard/src/lib/api/ai.ts:69
+│
+│   URL  : /api/crm/ai/extended/auto-tasks/create
+│   Fayl : artifacts/erp-dashboard/src/lib/api/ai.ts:73
+│
+│   URL  : /api/crm/ai/extended/churn/analyze
+│   Fayl : artifacts/erp-dashboard/src/lib/api/ai.ts:75
+│
+│   URL  : /api/crm/ai/extended/voice/analyze-call
+│   Fayl : artifacts/erp-dashboard/src/lib/api/ai.ts:77
+│
+│   URL  : /api/crm/ai/create-task
+│   Fayl : artifacts/erp-dashboard/src/lib/api/api-coverage.ts:33
+│
+│   URL  : /api/crm/ai/churn
+│   Fayl : artifacts/erp-dashboard/src/lib/api/api-coverage.ts:35
+│
+│   URL  : /api/crm/ai/voice
+│   Fayl : artifacts/erp-dashboard/src/lib/api/api-coverage.ts:37
+│
+│   URL  : /api/crm/ai/nba/create-task
+│   Fayl : artifacts/erp-dashboard/src/pages/crm/AIAnalysisPanel.tsx:139
+│
+
+┌── DAILY-ATTENDANCE?DATE=${SELECTEDDATE} (1 ta) ───────────────────────
+│   URL  : /api/daily-attendance?date=${selectedDate}
+│   Fayl : artifacts/erp-dashboard/src/pages/EmployeeTrackingReport.tsx:171
+│
+
+┌── DEPARTMENTS (1 ta) ─────────────────────────────────────────────────
+│   URL  : /api/departments
+│   Fayl : artifacts/erp-dashboard/src/components/AddTestDialog.tsx:60
+│
+
+┌── EMPLOYEE-KPI (2 ta) ────────────────────────────────────────────────
+│   URL  : /api/employee-kpi/summary/top-performers?dateFrom=${selectedDate}&dateTo=${selectedDate}
+│   Fayl : artifacts/erp-dashboard/src/pages/EmployeeDailyKPIPanel.tsx:164
+│
+│   URL  : /api/employee-kpi/summary/department?dateFrom=${selectedDate}&dateTo=${selectedDate}
+│   Fayl : artifacts/erp-dashboard/src/pages/EmployeeDailyKPIPanel.tsx:186
+│
+
+┌── EMPLOYEE-PRODUCTIVITY (1 ta) ───────────────────────────────────────
+│   URL  : /api/employee-productivity
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-employees.tsx:58
+│
+
+┌── HR-CAPITAL (2 ta) ──────────────────────────────────────────────────
+│   URL  : /api/hr-capital/courses
+│   Fayl : artifacts/erp-dashboard/src/pages/HRCapitalCourses.tsx:96
+│
+│   URL  : /api/hr-capital/stats
+│   Fayl : artifacts/erp-dashboard/src/pages/HRCapitalCourses.tsx:102
+│
+
+┌── INTEGRATION (2 ta) ─────────────────────────────────────────────────
+│   URL  : /api/integration/requests/${id}/approve
+│   Fayl : artifacts/erp-dashboard/src/pages/MRODashboard.tsx:110
+│
+│   URL  : /api/integration/mro/pm-upcoming
+│   Fayl : artifacts/erp-dashboard/src/pages/MROExtended.tsx:112
+│
+
+┌── LMS-KNOWLEDGE (1 ta) ───────────────────────────────────────────────
+│   URL  : /api/lms-knowledge
+│   Fayl : artifacts/erp-dashboard/src/pages/lms-extended/KnowledgeBaseTab.tsx:17
+│
+
+┌── MACHINE-STATUS-CURRENT (1 ta) ──────────────────────────────────────
+│   URL  : /api/machine-status-current
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-machines.tsx:71
+│
+
+┌── MACHINE-STATUS-LOGS (1 ta) ─────────────────────────────────────────
+│   URL  : /api/machine-status-logs
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-machines.tsx:75
+│
+
+┌── MARKETING (8 ta) ───────────────────────────────────────────────────
+│   URL  : /api/marketing
+│   Fayl : artifacts/erp-dashboard/src/lib/api/misc.ts:230
+│
+│   URL  : /api/marketing/budget/${id}
+│   Fayl : artifacts/erp-dashboard/src/pages/MarketingBudget.tsx:41
+│
+│   URL  : /api/marketing/calendar/${id}
+│   Fayl : artifacts/erp-dashboard/src/pages/MarketingCalendar.tsx:48
+│
+│   URL  : /api/marketing/nps
+│   Fayl : artifacts/erp-dashboard/src/pages/MarketingDashboard.tsx:79
+│
+│   URL  : /api/marketing/ai-assistant
+│   Fayl : artifacts/erp-dashboard/src/pages/MarketingDashboard.tsx:235
+│
+│   URL  : /api/marketing/segments
+│   Fayl : artifacts/erp-dashboard/src/pages/MarketingDashboard.tsx:239
+│
+│   URL  : /api/marketing/exhibitions/${id}
+│   Fayl : artifacts/erp-dashboard/src/pages/MarketingExhibitions.tsx:80
+│
+│   URL  : /api/marketing/pr/${id}
+│   Fayl : artifacts/erp-dashboard/src/pages/MarketingPR.tsx:38
+│
+
+┌── MATERIAL-CARDS (1 ta) ──────────────────────────────────────────────
+│   URL  : /api/material-cards
+│   Fayl : artifacts/erp-dashboard/src/components/wms/barcode/QabulBolimi.tsx:34
+│
+
+┌── MENTORS (1 ta) ─────────────────────────────────────────────────────
+│   URL  : /api/mentors
+│   Fayl : artifacts/erp-dashboard/src/components/AddCourseDialog.tsx:109
+│
+
+┌── MODULES (1 ta) ─────────────────────────────────────────────────────
+│   URL  : /api/modules
+│   Fayl : artifacts/erp-dashboard/src/components/AddModuleDialog.tsx:43
+│
+
+┌── ORDER-STATUS (1 ta) ────────────────────────────────────────────────
+│   URL  : /api/order-status/${orderId}/machine-breakdown
+│   Fayl : artifacts/erp-dashboard/src/lib/api/misc.ts:306
+│
+
+┌── ORDERS-REGISTRY (1 ta) ─────────────────────────────────────────────
+│   URL  : /api/orders-registry
+│   Fayl : artifacts/erp-dashboard/src/pages/OrdersRegistry.tsx:77
+│
+
+┌── ORG-DEPARTMENTS (2 ta) ─────────────────────────────────────────────
+│   URL  : /api/org-departments
+│   Fayl : artifacts/erp-dashboard/src/components/AddCourseDialog.tsx:99
+│
+│   URL  : /api/org-departments/notify-vacancies
+│   Fayl : artifacts/erp-dashboard/src/pages/OrgStructureHierarchy.tsx:51
+│
+
+┌── POS (1 ta) ─────────────────────────────────────────────────────────
+│   URL  : /api/pos/sales
+│   Fayl : artifacts/erp-dashboard/src/lib/pos-sync.ts:48
+│
+
+┌── POSITIONS (1 ta) ───────────────────────────────────────────────────
+│   URL  : /api/positions
+│   Fayl : artifacts/erp-dashboard/src/components/AddTestDialog.tsx:64
+│
+
+┌── PROGRESS (1 ta) ────────────────────────────────────────────────────
+│   URL  : /api/progress
+│   Fayl : artifacts/erp-dashboard/src/pages/EmployeeStats.tsx:69
+│
+
+┌── QC (1 ta) ──────────────────────────────────────────────────────────
+│   URL  : /api/qc/control-charts
+│   Fayl : artifacts/erp-dashboard/src/pages/QCModule.tsx:188
+│
+
+┌── QUALITY-DEFECTS-CAMERA (1 ta) ──────────────────────────────────────
+│   URL  : /api/quality-defects-camera
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-quality.tsx:67
+│
+
+┌── QUESTIONNAIRE-QUESTIONS (1 ta) ─────────────────────────────────────
+│   URL  : /api/questionnaire-questions
+│   Fayl : artifacts/erp-dashboard/src/pages/QuestionnaireTemplates.tsx:159
+│
+
+┌── QUESTIONNAIRE-TEMPLATES (1 ta) ─────────────────────────────────────
+│   URL  : /api/questionnaire-templates
+│   Fayl : artifacts/erp-dashboard/src/pages/QuestionnaireTemplates.tsx:118
+│
+
+┌── QUESTIONS (1 ta) ───────────────────────────────────────────────────
+│   URL  : /api/questions
+│   Fayl : artifacts/erp-dashboard/src/components/AddQuestionDialog.tsx:34
+│
+
+┌── SAFETY-VIOLATIONS (1 ta) ───────────────────────────────────────────
+│   URL  : /api/safety-violations
+│   Fayl : artifacts/erp-dashboard/src/pages/camera-safety.tsx:63
+│
+
+┌── SYSTEM (1 ta) ──────────────────────────────────────────────────────
+│   URL  : /api/system/settings
+│   Fayl : artifacts/erp-dashboard/src/lib/api/api-coverage.ts:275
+│
+
+┌── VIDEO-PROGRESS (1 ta) ──────────────────────────────────────────────
+│   URL  : /api/video-progress
+│   Fayl : artifacts/erp-dashboard/src/pages/lms-extended/GamificationTab.tsx:16
+│
+
+────────────────────────────────────────────────────────────────────────────────
+PAST ISHONCH (SHOVQIN) — Dinamik/shartli URL patternlar (10 ta):
+Bu URLlar ternary operator yoki boshqa conditional ifodalar tufayli
+to'liq aniqlanmadi. Qo'lda tekshirish tavsiya etiladi.
+────────────────────────────────────────────────────────────────────────────────
+
+  [budgets${queryString ? ] — 1 ta
+    URL : /api/budgets${queryString ? 
+    Fayl: artifacts/erp-dashboard/src/pages/BudgetManagement.tsx:193
+  [chat] — 3 ta
+    URL : /api/chat/employees${q ? 
+    Fayl: artifacts/erp-dashboard/src/components/chat/ChatWidget.tsx:163
+    URL : /api/chat/rooms/${roomId}/files${filter !== "all" ? 
+    Fayl: artifacts/erp-dashboard/src/components/chat/page/SharedFiles.tsx:43
+    URL : /api/chat/employees${query ? 
+    Fayl: artifacts/erp-dashboard/src/hooks/chat/useRooms.ts:43
+  [equipment${params}] — 1 ta
+    URL : /api/equipment${params}
+    Fayl: artifacts/erp-dashboard/src/lib/api/pp.ts:41
+  [hr] — 1 ta
+    URL : /api/hr/alumni/${alumni?.id}/invite
+    Fayl: artifacts/erp-dashboard/src/pages/HRAlumni.tsx:64
+  [production] — 1 ta
+    URL : /api/production/orders/report/excel?${status !== "all" ? 
+    Fayl: artifacts/erp-dashboard/src/pages/ProductionReport.tsx:84
+  [qc] — 1 ta
+    URL : /api/qc/standards${params.toString() ? 
+    Fayl: artifacts/erp-dashboard/src/pages/qc/QCStandardsTab.tsx:76
+  [warehouse] — 1 ta
+    URL : /api/warehouse/material-kits/${selectedKit?.id}
+    Fayl: artifacts/erp-dashboard/src/pages/WarehouseMaterialKits.tsx:118
+  [warehouse-rental] — 1 ta
+    URL : /api/warehouse-rental/records${statusFilter ? 
+    Fayl: artifacts/erp-dashboard/src/pages/WarehouseRental.tsx:386
+
+────────────────────────────────────────────────────────────────────────────────
+BACKEND ROUTLAR RO'YXATI:
+────────────────────────────────────────────────────────────────────────────────
+
+  [360]
+    GET     /api/360/dashboard
+    GET     /api/360/feedback
+    GET     /api/360/assessments
+    GET     /api/360/responses
+
+  [3way-match]
+    GET     /api/3way-match/results
+    POST    /api/3way-match/perform
+
+  [abc-analysis]
+    GET     /api/abc-analysis/user
+
+  [accounting]
+    GET     /api/accounting/dashboard
+    GET     /api/accounting/accounts
+    GET     /api/accounting/gl-documents
+    GET     /api/accounting/periods
+    GET     /api/accounting/materials
+    GET     /api/accounting/materials/by-order
+    GET     /api/accounting/inventory-valuation
+    POST    /api/accounting/gl-documents
+    POST    /api/accounting/periods/:id/close
+
+  [adaptation]
+    GET     /api/adaptation/dashboard
+    GET     /api/adaptation/programs
+    GET     /api/adaptation/records
+    GET     /api/adaptation/cases
+    GET     /api/adaptation/new-employees/:id
+    GET     /api/adaptation/programs/:id
+    GET     /api/adaptation/new-employees
+    GET     /api/adaptation/feedback
+    GET     /api/adaptation/feedback/:id
+    GET     /api/adaptation/welcome-events
+    GET     /api/adaptation/welcome-events/:id
+    POST    /api/adaptation/programs
+    POST    /api/adaptation/feedback
+    POST    /api/adaptation/welcome-events
+    PUT     /api/adaptation/programs/:id
+    PUT     /api/adaptation/feedback/:id
+    DELETE  /api/adaptation/programs/:id
+
+  [admin]
+    GET     /api/admin/cron-status
+    GET     /api/admin/roles
+    GET     /api/admin/logs
+    GET     /api/admin/audit
+    GET     /api/admin/system
+    GET     /api/admin/system/alerts/:id
+    POST    /api/admin/login
+    GET     /api/admin/queues/status
+    GET     /api/admin/queues/failed
+    GET     /api/admin/queues/failed/:queue
+    POST    /api/admin/queues/retry/:queue/:jobId
+    GET     /api/admin/settings
+    PATCH   /api/admin/settings
+    GET     /api/admin/users
+    POST    /api/admin/users
+    PATCH   /api/admin/users/:id/role
+    DELETE  /api/admin/users/:id
+    GET     /api/admin/products
+    GET     /api/admin/products/:id
+    GET     /api/admin/categories
+    GET     /api/admin/categories/:id
+    POST    /api/admin/products
+    POST    /api/admin/categories
+    PUT     /api/admin/products/:id
+    PUT     /api/admin/categories/:id
+    DELETE  /api/admin/products/:id
+    DELETE  /api/admin/categories/:id
+    GET     /api/admin/customers
+    GET     /api/admin/customers/:id
+    GET     /api/admin/ecommerce/stats
+    PUT     /api/admin/customers/:id
+    GET     /api/admin/customer-orders
+    GET     /api/admin/customer-orders/:id
+    PUT     /api/admin/customer-orders/:id/status
+    PUT     /api/admin/customer-orders/:id
+    DELETE  /api/admin/customer-orders/:id
+
+  [ai]
+    GET     /api/ai/automation/status
+    POST    /api/ai/automation/run-all-pending
+    POST    /api/ai/crm/score-lead/:leadId
+    POST    /api/ai/crm/deal-probability/:dealId
+    POST    /api/ai/crm/churn-risk/:contactId
+    POST    /api/ai/crm/email-template
+    POST    /api/ai/crm/next-best-action/:dealId
+    GET     /api/ai/director/executive-summary
+    POST    /api/ai/director/kpi-explain
+    POST    /api/ai/director/risk-assess
+    POST    /api/ai/director/strategic-recommendations
+    GET     /api/ai/finance/anomalies
+    POST    /api/ai/finance/cashflow-forecast
+    POST    /api/ai/finance/budget-variance
+    POST    /api/ai/finance/classify-invoice
+    POST    /api/ai/finance/fraud-risk
+    POST    /api/ai/hr/screen/:candidateId
+    POST    /api/ai/hr/classify-productivity
+    POST    /api/ai/hr/interview-questions
+    POST    /api/ai/hr/analyze-tool-test/:toolTestId
+    POST    /api/ai/hr/onboarding-plan
+    POST    /api/ai/hr/performance-review/:employeeId
+    POST    /api/ai/marketing/generate-content
+    POST    /api/ai/marketing/ad-copy
+    POST    /api/ai/marketing/sentiment-analyze
+    POST    /api/ai/marketing/seo-optimize
+    POST    /api/ai/wms/reorder-point
+    POST    /api/ai/wms/optimize-stock
+    POST    /api/ai/wms/delivery-predict
+    POST    /api/ai/wms/route-optimize
+    GET     /api/ai/budget
+    POST    /api/ai/call
+
+  [ai-agents]
+    GET     /api/ai-agents/audit/stats
+    GET     /api/ai-agents/audit/:agent/decisions
+    GET     /api/ai-agents/audit/hard-block-stats
+    POST    /api/ai-agents/sales/evaluate
+    POST    /api/ai-agents/prepress/tech-card
+    POST    /api/ai-agents/planning/plan
+    POST    /api/ai-agents/mes/oee
+    POST    /api/ai-agents/mes/anomaly
+    POST    /api/ai-agents/qc/vision-analyze
+    POST    /api/ai-agents/logistics/vrp
+
+  [ai-camera]
+    GET     /api/ai-camera/dashboard
+    GET     /api/ai-camera/events
+    GET     /api/ai-camera/alerts
+
+  [ai-exam]
+    GET     /api/ai-exam/attempts
+    GET     /api/ai-exam/attempt/:id
+    POST    /api/ai-exam/assign
+    POST    /api/ai-exam/attempt
+    DELETE  /api/ai-exam/attempt/:id
+
+  [ai-hr]
+    GET     /api/ai-hr/interviews
+    GET     /api/ai-hr/dashboard
+    GET     /api/ai-hr/providers
+    GET     /api/ai-hr/usage/budget
+    GET     /api/ai-hr/tasks/:id
+    POST    /api/ai-hr/interviews
+
+  [ai-planning]
+    GET     /api/ai-planning/dashboard
+    GET     /api/ai-planning/plans
+    GET     /api/ai-planning/config
+    GET     /api/ai-planning/plans/:id
+    GET     /api/ai-planning/plans/:id/batch-groups
+    POST    /api/ai-planning/plans
+    POST    /api/ai-planning/generate
+    POST    /api/ai-planning/plans/:id/approve
+    POST    /api/ai-planning/plans/:id/reject
+    POST    /api/ai-planning/plans/:id/execute
+    POST    /api/ai-planning/plans/:id/reschedule
+    POST    /api/ai-planning/decisions/:id/accept
+    POST    /api/ai-planning/orders/:orderId/block-material
+    PUT     /api/ai-planning/config
+
+  [ai-reservation]
+    GET     /api/ai-reservation
+    GET     /api/ai-reservation/requests
+    GET     /api/ai-reservation/dashboard
+    GET     /api/ai-reservation/optimize
+    GET     /api/ai-reservation/batches
+    POST    /api/ai-reservation/request
+    POST    /api/ai-reservation/requests/:id/confirm
+    POST    /api/ai-reservation/requests/:id/cancel
+    POST    /api/ai-reservation/batches
+
+  [analytics]
+    GET     /api/analytics/engagement/active-users
+    GET     /api/analytics/engagement/activity-trend
+    GET     /api/analytics/engagement/retention
+    GET     /api/analytics/engagement/sessions
+    GET     /api/analytics/assessment/difficulty
+    GET     /api/analytics/assessment/discrimination
+    GET     /api/analytics/assessment/reliability
+    GET     /api/analytics/assessment/item-analysis
+    GET     /api/analytics/mentorships-stats
+    GET     /api/analytics/events-stats
+    GET     /api/analytics/applications-stats
+    GET     /api/analytics/surveys-stats
+    GET     /api/analytics/broadcasts-stats
+    GET     /api/analytics/skills-stats
+    GET     /api/analytics/employee-stats
+    GET     /api/analytics/ai-general-analysis
+    GET     /api/analytics/score-distribution
+    GET     /api/analytics/skills-matrix
+    GET     /api/analytics/stats
+    GET     /api/analytics/course-progress
+    GET     /api/analytics/user-activity
+    GET     /api/analytics/test-results
+    GET     /api/analytics/learning-outcomes
+    GET     /api/analytics/funnel
+    GET     /api/analytics/by-department
+    GET     /api/analytics/by-position
+    GET     /api/analytics/leaderboard/employees
+    GET     /api/analytics/leaderboard/departments
+    GET     /api/analytics/leaderboard/courses
+
+  [ap]
+    GET     /api/ap/aging
+    GET     /api/ap/overdue
+    POST    /api/ap/aging/recalculate
+
+  [application-responses]
+    GET     /api/application-responses
+    GET     /api/application-responses/:id
+    POST    /api/application-responses
+
+  [applications]
+    GET     /api/applications
+    GET     /api/applications/:id
+    POST    /api/applications
+    PUT     /api/applications/:id
+    DELETE  /api/applications/:id
+
+  [approval-workflow]
+    GET     /api/approval-workflow
+    GET     /api/approval-workflow/dashboard
+    GET     /api/approval-workflow/order
+    GET     /api/approval-workflow/pending
+    GET     /api/approval-workflow/history
+    GET     /api/approval-workflow/by-type
+    GET     /api/approval-workflow/:type/:docId/requests
+    GET     /api/approval-workflow/:id
+    POST    /api/approval-workflow/submit
+    POST    /api/approval-workflow/approve/:id
+    POST    /api/approval-workflow/reject/:id
+    POST    /api/approval-workflow/bulk-approve
+    POST    /api/approval-workflow
+    POST    /api/approval-workflow/:type/:id/approve
+    POST    /api/approval-workflow/:type/:id/reject
+
+  [ar]
+    GET     /api/ar/aging
+    GET     /api/ar/overdue
+    POST    /api/ar/aging/recalculate
+
+  [asset-management]
+    GET     /api/asset-management/assets
+    GET     /api/asset-management/assets/summary
+    GET     /api/asset-management/assets/:id
+    GET     /api/asset-management/maintenance
+    GET     /api/asset-management/disposals
+    GET     /api/asset-management/transfers
+    GET     /api/asset-management/insurance
+    GET     /api/asset-management/insurance/expiring-soon
+    POST    /api/asset-management/assets
+    POST    /api/asset-management/maintenance
+    POST    /api/asset-management/disposals
+    POST    /api/asset-management/transfers
+    PUT     /api/asset-management/assets/:id
+    PUT     /api/asset-management/assets/:id/depreciate
+    PUT     /api/asset-management/maintenance/:id/complete
+    DELETE  /api/asset-management/assets/:id
+
+  [assets]
+    GET     /api/assets
+    GET     /api/assets/employee
+    GET     /api/assets/employee/:employeeId
+    GET     /api/assets/:id
+    POST    /api/assets
+    POST    /api/assets/:id/assign
+    PUT     /api/assets/:id
+    PATCH   /api/assets/:id/return
+    PATCH   /api/assets/:id/report
+    DELETE  /api/assets/:id
+
+  [attempts]
+    GET     /api/attempts/all
+    GET     /api/attempts/retakes
+    GET     /api/attempts
+    POST    /api/attempts/:id/submit
+    POST    /api/attempts/:id/submit
+
+  [attendance]
+    GET     /api/attendance
+    GET     /api/attendance/user
+    GET     /api/attendance/zone-logs
+    GET     /api/attendance/stats
+
+  [auth]
+    GET     /api/auth/me
+    GET     /api/auth/health
+    POST    /api/auth/login
+    POST    /api/auth/logout
+    POST    /api/auth/verify-otp
+    POST    /api/auth/resend-otp
+    POST    /api/auth/refresh
+    PATCH   /api/auth/change-password
+    POST    /api/auth/refresh
+
+  [barcode-warehouse]
+    GET     /api/barcode-warehouse/dashboard
+    GET     /api/barcode-warehouse/barcodes
+    GET     /api/barcode-warehouse/picking-tasks
+    GET     /api/barcode-warehouse/print-queue
+    GET     /api/barcode-warehouse/exit-logs
+    GET     /api/barcode-warehouse/operator-balance
+    GET     /api/barcode-warehouse/cycle-counts
+    GET     /api/barcode-warehouse/cycle-count
+    GET     /api/barcode-warehouse/barcodes/scan/:id
+    GET     /api/barcode-warehouse/operator-debts
+    GET     /api/barcode-warehouse/debts/:id
+    POST    /api/barcode-warehouse/barcodes/:id/qc-decision
+    POST    /api/barcode-warehouse/barcodes/:id/qc
+    POST    /api/barcode-warehouse/cycle-counts/submit
+    POST    /api/barcode-warehouse/cycle-count/submit
+    POST    /api/barcode-warehouse/receive
+    POST    /api/barcode-warehouse/production-receive
+    POST    /api/barcode-warehouse/production-complete
+    POST    /api/barcode-warehouse/pick/:taskId
+    POST    /api/barcode-warehouse/picking/:taskId/complete
+    POST    /api/barcode-warehouse/exit/:id/notify-security
+    POST    /api/barcode-warehouse/issue
+    PATCH   /api/barcode-warehouse/barcodes/:id
+    PATCH   /api/barcode-warehouse/operator-balance/:id/resolve
+    PATCH   /api/barcode-warehouse/qc/:id
+    DELETE  /api/barcode-warehouse/barcodes/:id
+
+  [bot]
+    POST    /api/bot/:bot/webhook
+
+  [budgets]
+    GET     /api/budgets
+    GET     /api/budgets/:id/lines
+    POST    /api/budgets
+    POST    /api/budgets/:id/lines
+
+  [calendar-events]
+    GET     /api/calendar-events
+    GET     /api/calendar-events/upcoming
+    GET     /api/calendar-events/:id
+    POST    /api/calendar-events
+    PUT     /api/calendar-events/:id
+    DELETE  /api/calendar-events/:id
+
+  [camera]
+    GET     /api/camera/status
+    GET     /api/camera/list
+    GET     /api/camera/events
+    GET     /api/camera/zones
+    GET     /api/camera/recognition-stats
+    GET     /api/camera/recognition-logs
+    PATCH   /api/camera/recognition-logs/:id/flag
+    PATCH   /api/camera/recognition-logs/:id/unflag
+    GET     /api/camera/camera-events
+    GET     /api/camera/safety-violations
+    GET     /api/camera/quality-defects-camera
+    POST    /api/camera/camera-events
+    POST    /api/camera/safety-violations
+    POST    /api/camera/quality-defects-camera
+    PATCH   /api/camera/camera-events/:id
+    PATCH   /api/camera/quality-defects-camera/:id
+    GET     /api/camera/cameras
+    GET     /api/camera/cameras/:id
+    GET     /api/camera/cameras/:cameraId/zones
+    POST    /api/camera/cameras
+    POST    /api/camera/camera-zones
+    PATCH   /api/camera/cameras/:id
+    DELETE  /api/camera/cameras/:id
+
+  [camera-ai]
+    GET     /api/camera-ai/summary
+    GET     /api/camera-ai/safety-trends
+    GET     /api/camera-ai/quality-analysis
+    GET     /api/camera-ai/productivity-scores
+    GET     /api/camera-ai/machine-utilization
+    GET     /api/camera-ai/anomaly-detection
+    GET     /api/camera-ai/cameras
+    GET     /api/camera-ai/cameras/:id/trigger-rules
+    PUT     /api/camera-ai/cameras/:id/prompt
+    PUT     /api/camera-ai/cameras/:id/trigger-rules
+
+  [camera-alerts]
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts/:id
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts
+    GET     /api/camera-alerts
+    POST    /api/camera-alerts/:id/acknowledge
+    POST    /api/camera-alerts/:id/resolve
+    POST    /api/camera-alerts/analyze-by-missions
+    PUT     /api/camera-alerts
+
+  [camera-dashboard]
+    GET     /api/camera-dashboard/stats
+    GET     /api/camera-dashboard/pending-alerts
+    GET     /api/camera-dashboard/recent-events
+    GET     /api/camera-dashboard/top-employees
+    GET     /api/camera-dashboard/quality-stats
+    GET     /api/camera-dashboard/attendance-stats
+    GET     /api/camera-dashboard/production-stats
+    GET     /api/camera-dashboard/safety-stats
+    GET     /api/camera-dashboard/weekly-trend
+
+  [camera-heatmap]
+    GET     /api/camera-heatmap/data
+    GET     /api/camera-heatmap/employees
+    GET     /api/camera-heatmap/employee
+    GET     /api/camera-heatmap/employee/:id
+    POST    /api/camera-heatmap/generate-pdf
+    POST    /api/camera-heatmap/generate-excel
+
+  [candidates]
+    GET     /api/candidates
+    GET     /api/candidates/:id
+    POST    /api/candidates
+    PUT     /api/candidates/:id
+    DELETE  /api/candidates/:id
+
+  [cashflow]
+    GET     /api/cashflow/transactions
+    GET     /api/cashflow/daily-summary
+    GET     /api/cashflow/forecast
+    POST    /api/cashflow/transactions
+
+  [certificates]
+    GET     /api/certificates/user
+    GET     /api/certificates/expiring
+    GET     /api/certificates
+    GET     /api/certificates/:id/download
+    POST    /api/certificates
+
+  [cfo]
+    GET     /api/cfo/dashboard
+    GET     /api/cfo/cash-position
+    GET     /api/cfo/profitability
+    GET     /api/cfo/profitability-trend
+    GET     /api/cfo/financial-risk
+
+  [chat]
+    GET     /api/chat/notifications
+    GET     /api/chat/search
+    GET     /api/chat/message-tasks
+    GET     /api/chat/admin/rooms
+    GET     /api/chat/admin/rooms/:roomId/members
+    GET     /api/chat/admin/audit-logs
+    GET     /api/chat/admin/rooms/:roomId/members/:userId
+    POST    /api/chat/notifications/read-all
+    POST    /api/chat/message-tasks
+    POST    /api/chat/context-room
+    POST    /api/chat/admin/rooms/:roomId/archive
+    POST    /api/chat/messages/:id/pin
+    POST    /api/chat/messages/:id/star
+    PATCH   /api/chat/notifications/read-all
+    PATCH   /api/chat/notifications/:id/read
+    PATCH   /api/chat/admin/rooms/:roomId/members/:userId/role
+    DELETE  /api/chat/admin/rooms/:roomId/members/:userId
+    GET     /api/chat
+    GET     /api/chat/rooms
+    GET     /api/chat/rooms/:roomId/messages
+    GET     /api/chat/rooms/:roomId/members
+    GET     /api/chat/employees
+    GET     /api/chat/unread
+    GET     /api/chat/rooms/:roomId
+    GET     /api/chat/rooms/:roomId/pinned-messages
+    GET     /api/chat/rooms/:roomId/mute
+    POST    /api/chat/rooms/direct
+    POST    /api/chat/rooms/group
+    POST    /api/chat/rooms/:roomId/messages
+    POST    /api/chat/rooms/:roomId/read
+    POST    /api/chat/rooms/:roomId/mute
+    POST    /api/chat/rooms/:roomId/messages/:msgId/reactions
+    POST    /api/chat/rooms/:roomId/polls
+    POST    /api/chat/polls/:pollId/vote
+    POST    /api/chat/push/subscribe
+    POST    /api/chat/upload/request-url
+    POST    /api/chat/upload/complete
+    PATCH   /api/chat/rooms/:roomId/messages/:msgId
+    DELETE  /api/chat/rooms/:roomId/messages/:msgId
+    DELETE  /api/chat/rooms/:roomId/messages/:msgId/reactions/:emoji
+    DELETE  /api/chat/push/unsubscribe
+
+  [client-errors]
+    POST    /api/client-errors
+
+  [company-state]
+    GET     /api/company-state/current
+
+  [contact-settings]
+    GET     /api/contact-settings
+    PUT     /api/contact-settings
+
+  [coordination]
+    GET     /api/coordination/councils
+    GET     /api/coordination/dokla
+    GET     /api/coordination/rasporyazhenie
+    GET     /api/coordination/stats
+    POST    /api/coordination/dokla
+    POST    /api/coordination/rasporyazhenie
+    PATCH   /api/coordination/dokla/:id
+    PATCH   /api/coordination/rasporyazhenie/:id/done
+    PATCH   /api/coordination/rasporyazhenie/:id
+    DELETE  /api/coordination/dokla/:id
+    DELETE  /api/coordination/rasporyazhenie/:id
+
+  [core]
+    GET     /api/core/departments
+    GET     /api/core/departments/org-chart
+    GET     /api/core/departments/:id
+    POST    /api/core/departments
+    PUT     /api/core/departments/:id
+    DELETE  /api/core/departments/:id
+    GET     /api/core/panels/my
+    GET     /api/core/panels/default
+    POST    /api/core/panels/my
+    GET     /api/core/positions
+    GET     /api/core/positions/:id
+    POST    /api/core/positions
+    PUT     /api/core/positions/:id
+    DELETE  /api/core/positions/:id
+
+  [courses]
+    GET     /api/courses/completion-trend/:lang
+    GET     /api/courses/completion-trend
+    GET     /api/courses
+    GET     /api/courses/:id
+    POST    /api/courses
+    PUT     /api/courses/:id
+    DELETE  /api/courses/:id
+
+  [crm]
+    GET     /api/crm/invoices
+    GET     /api/crm/ai/dashboard-analysis
+    GET     /api/crm/supervisor/dashboard
+    GET     /api/crm/ai/supervisor-dashboard
+    GET     /api/crm/ai/nba/:entityType/:entityId
+    GET     /api/crm/ai/extended/insights
+    GET     /api/crm/segments
+    GET     /api/crm/activities
+    GET     /api/crm/activities/today
+    GET     /api/crm/activities/:id
+    POST    /api/crm/activities
+    PATCH   /api/crm/activities/:id/complete
+    PATCH   /api/crm/activities/:id
+    DELETE  /api/crm/activities/:id
+    GET     /api/crm/ai/autofill/:entityType/:id
+    GET     /api/crm/ai/churn-rescue/:entityType/:id
+    GET     /api/crm/ai/extended/auto-tasks/suggest
+    GET     /api/crm/ai/leads
+    GET     /api/crm/ai/nba
+    GET     /api/crm/ai/quick-score/:entityType/:id
+    POST    /api/crm/ai/autofill/:entityId
+    POST    /api/crm/ai/leads/:entityId/scoring-v2
+    GET     /api/crm/dashboard-analysis
+    POST    /api/crm/leads/:id/ai-analysis
+    POST    /api/crm/leads/:id/scoring-v2
+    POST    /api/crm/deals/:id/ai-forecast
+    POST    /api/crm/nba/:entityType/:entityId
+    POST    /api/crm/suggest-action
+    GET     /api/crm/funnel
+    GET     /api/crm/cohort
+    POST    /api/crm/rfm/cluster
+    POST    /api/crm/churn/predict
+    POST    /api/crm/churn/retrain
+    GET     /api/crm/quick-score/:entityType/:id
+    GET     /api/crm/supervisor-dashboard
+    GET     /api/crm/auto-lead/sources
+    POST    /api/crm/churn-rescue/:entityType/:id
+    POST    /api/crm/auto-lead/call
+    POST    /api/crm/auto-lead/form
+    POST    /api/crm/auto-lead/telegram
+    POST    /api/crm/auto-lead/website
+    POST    /api/crm/email/send
+    POST    /api/crm/meetings/schedule
+    POST    /api/crm/sms/send
+    POST    /api/crm/whatsapp/send
+    GET     /api/crm/companies
+    GET     /api/crm/companies/:id
+    GET     /api/crm/companies/:companyId/contacts/:contactId
+    GET     /api/crm/companies/:id/contacts
+    GET     /api/crm/companies/:id/deals
+    GET     /api/crm/companies/:id/credit
+    GET     /api/crm/lead-stages
+    GET     /api/crm/lead-stages/:id
+    POST    /api/crm/companies/check-duplicates
+    POST    /api/crm/companies
+    POST    /api/crm/lead-stages
+    PATCH   /api/crm/companies/:id
+    PATCH   /api/crm/companies/:id/credit-limit
+    PATCH   /api/crm/lead-stages/:id
+    DELETE  /api/crm/companies/:id
+    GET     /api/crm/contacts
+    GET     /api/crm/contacts/:id
+    POST    /api/crm/contacts/check-duplicates
+    POST    /api/crm/contacts
+    PATCH   /api/crm/contacts/:id
+    DELETE  /api/crm/contacts/:id
+    GET     /api/crm/custom-fields
+    POST    /api/crm/custom-fields
+    POST    /api/crm/custom-fields/reorder
+    PATCH   /api/crm/custom-fields/:id
+    DELETE  /api/crm/custom-fields/:id
+    GET     /api/crm/deals
+    GET     /api/crm/deals/:id
+    GET     /api/crm/deals/list
+    GET     /api/crm/deals/quick
+    POST    /api/crm/deals
+    POST    /api/crm/deals/:id/stage
+    PATCH   /api/crm/deals/:id/won
+    GET     /api/crm/comments
+    GET     /api/crm/history
+    GET     /api/crm/dashboard
+    GET     /api/crm/pipeline
+    GET     /api/crm/tasks
+    GET     /api/crm/proposals
+    GET     /api/crm/nba
+    GET     /api/crm
+    POST    /api/crm/comments
+    POST    /api/crm/tasks
+    GET     /api/crm/followup-activities
+    GET     /api/crm/followup-activities/today
+    POST    /api/crm/leads/:id/convert
+    PATCH   /api/crm/leads/:id
+    PATCH   /api/crm/leads/:id/stage
+    DELETE  /api/crm/leads/:id
+    GET     /api/crm/leads
+    GET     /api/crm/leads/quick
+    GET     /api/crm/leads/:id
+    GET     /api/crm/leads/:id/emails
+    POST    /api/crm/leads
+    PATCH   /api/crm/leads/:id/qualify
+
+  [crm-bitrix]
+    GET     /api/crm-bitrix/proposals
+    GET     /api/crm-bitrix/invoices
+    GET     /api/crm-bitrix/robots
+    GET     /api/crm-bitrix/robots/:id
+    POST    /api/crm-bitrix/robots
+    PUT     /api/crm-bitrix/robots/:id
+    PATCH   /api/crm-bitrix/robots/:id/toggle
+    DELETE  /api/crm-bitrix/robots/:id
+
+  [design]
+    GET     /api/design/orders
+    GET     /api/design/templates
+    GET     /api/design/dashboard/summary
+    GET     /api/design/orders/:orderId/revisions
+    POST    /api/design/generate
+    POST    /api/design/:id/verify
+    POST    /api/design/:id/mockup
+    POST    /api/design/:id/approve
+    POST    /api/design/:id/reject
+    PATCH   /api/design/orders/:orderId/status
+    PATCH   /api/design/notifications/:id/read
+    GET     /api/design
+    GET     /api/design/:id
+    GET     /api/design/notifications
+    GET     /api/design/statistics
+    GET     /api/design/tooling
+    GET     /api/design/tooling/:id/wear-forecast
+    GET     /api/design/orders/:id/messages
+    POST    /api/design
+    PATCH   /api/design/:id/status
+
+  [director]
+    GET     /api/director/approvals
+    GET     /api/director/approvals/pending
+    GET     /api/director/approvals/stats
+    GET     /api/director/approvals/history
+    POST    /api/director/approvals
+    PATCH   /api/director/approvals/:id/approve
+    PATCH   /api/director/approvals/:id/reject
+    GET     /api/director/dashboard
+    GET     /api/director/dashboard/kpis
+    GET     /api/director/dashboard/production-summary
+    GET     /api/director/dashboard/finance-summary
+    GET     /api/director/dashboard/hr-summary
+    GET     /api/director/wms-rental
+    GET     /api/director/company-state/history
+    GET     /api/director/ideal-vs-actual
+    POST    /api/director/orders/:id/vip
+    GET     /api/director/kpi
+    GET     /api/director/kpis
+    GET     /api/director/summary
+    GET     /api/director/production
+    GET     /api/director/hr
+    GET     /api/director/finance
+    GET     /api/director/alerts
+    GET     /api/director/ai-summary
+
+  [discipline]
+    GET     /api/discipline/user
+
+  [discipline-records]
+    GET     /api/discipline-records
+    GET     /api/discipline-records/:id
+    POST    /api/discipline-records
+    PUT     /api/discipline-records/:id
+    DELETE  /api/discipline-records/:id
+
+  [employee-files]
+    GET     /api/employee-files
+    GET     /api/employee-files/:id
+    POST    /api/employee-files
+    DELETE  /api/employee-files/:id
+
+  [employee-kpi]
+    GET     /api/employee-kpi
+    GET     /api/employee-kpi/zone-history/:employeeId
+    GET     /api/employee-kpi/employee-zone-history
+    GET     /api/employee-kpi/daily-attendance
+    GET     /api/employee-kpi/:id
+    GET     /api/employee-kpi
+    GET     /api/employee-kpi/:employeeId
+    GET     /api/employee-kpi
+    POST    /api/employee-kpi
+    POST    /api/employee-kpi/attendance
+    POST    /api/employee-kpi
+    PUT     /api/employee-kpi/:id
+    DELETE  /api/employee-kpi/:id
+
+  [employees]
+    GET     /api/employees
+    GET     /api/employees/for-face
+    GET     /api/employees/:id
+    GET     /api/employees/:id/assets
+    GET     /api/employees/:id/swap-requests
+    GET     /api/employees/:id/complaints
+    GET     /api/employees/:id/assessment-skips
+    GET     /api/employees/:id/bank-accounts
+    GET     /api/employees/:id/bonuses
+    GET     /api/employees/:id/business-trips
+    GET     /api/employees/:id/capital-profile
+    GET     /api/employees/:id/career
+    GET     /api/employees/:id/cash-advances
+    GET     /api/employees/:id/contracts
+    GET     /api/employees/:id/corporate-inventory
+    GET     /api/employees/:id/emergency-contacts
+    GET     /api/employees/:id/files
+    GET     /api/employees/:id/fines
+    GET     /api/employees/:id/leave-requests
+    GET     /api/employees/:id/monthly-report
+    GET     /api/employees/:id/org-structure
+    GET     /api/employees/:id/overtime
+    GET     /api/employees/:id/passport
+    GET     /api/employees/:id/payroll-summary
+    GET     /api/employees/:id/salary-history
+    GET     /api/employees/:id/sick-leaves
+    GET     /api/employees/:id/assessments
+    POST    /api/employees
+    POST    /api/employees/import
+    POST    /api/employees/:id/assign-org-functions
+    POST    /api/employees/:id/assets
+    POST    /api/employees/:id/complaints
+    POST    /api/employees/:id/corporate-inventory/:itemId/sign
+    POST    /api/employees/:id/corporate-inventory/:itemId/return
+    POST    /api/employees/:id/set-password
+    PUT     /api/employees/:id
+    PUT     /api/employees/:id/profile-image
+    PATCH   /api/employees/:id/profile-image
+    PATCH   /api/employees/:id/org-functions
+    PATCH   /api/employees/:id/status
+    DELETE  /api/employees/:id
+    DELETE  /api/employees/:id/assets/:assetId
+    DELETE  /api/employees/:id/files/:fileId
+
+  [employees-for-face]
+    GET     /api/employees-for-face
+
+  [equipment]
+    GET     /api/equipment
+    GET     /api/equipment/:id
+    POST    /api/equipment
+    PATCH   /api/equipment/:id
+
+  [erp]
+    GET     /api/erp/camera-reports/employees
+    GET     /api/erp/camera-reports/employees/:userId
+    GET     /api/erp/cameras/live-detections
+    GET     /api/erp/cameras/grouped-detections
+    GET     /api/erp/team-analytics/departments
+    GET     /api/erp/team-analytics/zone-activity
+    GET     /api/erp/team-analytics/zone-activity/:departmentId
+    GET     /api/erp/employee/:id/metrics
+    GET     /api/erp/employee/:id/transfer-history
+    GET     /api/erp/orders
+    GET     /api/erp/orders/:id
+    GET     /api/erp/work-centers
+    GET     /api/erp/work-centers/:id
+    GET     /api/erp/work-centers/:id/stats
+    GET     /api/erp/mrp-runs
+    GET     /api/erp/mrp-results
+    GET     /api/erp/purchase-requisitions
+    GET     /api/erp/dashboard-stats
+    POST    /api/erp/mrp-runs
+    POST    /api/erp/mrp-runs/:runId/calculate
+    PUT     /api/erp/orders/:id
+    PUT     /api/erp/work-centers/:id
+    GET     /api/erp/products
+    GET     /api/erp/products/:id
+    GET     /api/erp/bom-headers
+    GET     /api/erp/bom-headers/:id
+    GET     /api/erp/bom-headers/:bomId/explosion
+    GET     /api/erp/bom-items
+    GET     /api/erp/routings
+    GET     /api/erp/routings/:id
+    GET     /api/erp/routing-operations
+    POST    /api/erp/bom-items
+    PUT     /api/erp/products/:id
+    PUT     /api/erp/bom-items/:id
+    PUT     /api/erp/routing-operations/:id
+    GET     /api/erp/daily-reports
+    GET     /api/erp/daily-reports/:id
+    GET     /api/erp/production-facts
+    GET     /api/erp/production-plans
+    GET     /api/erp/downtime-logs
+    GET     /api/erp/downtime-logs/:id
+    GET     /api/erp/capacity
+    GET     /api/erp/capacity/load-analysis
+    GET     /api/erp/shift-calendars
+    GET     /api/erp/employee-work-centers
+    GET     /api/erp/employee-work-centers/:id
+    GET     /api/erp/work-center-capacity
+    PUT     /api/erp/production-plans/:id
+    PUT     /api/erp/downtime-logs/:id
+
+  [europrint-control]
+    GET     /api/europrint-control/director-kpis
+    GET     /api/europrint-control/director-summary
+    GET     /api/europrint-control/status-history
+    GET     /api/europrint-control/deleted-records
+    GET     /api/europrint-control/accountant/budgets
+    GET     /api/europrint-control/accountant/financial-summary
+    GET     /api/europrint-control/accountant/kpi-values
+    GET     /api/europrint-control/accountant/pending-payments
+    GET     /api/europrint-control/dashboard/accountant
+    POST    /api/europrint-control/deleted-records/:id/restore
+    GET     /api/europrint-control/business-rules
+    GET     /api/europrint-control/units
+    GET     /api/europrint-control/validation-rules
+    GET     /api/europrint-control/kpis
+    GET     /api/europrint-control/auditor-dashboard
+    GET     /api/europrint-control/sap-patterns-summary
+    GET     /api/europrint-control/all-rules-summary
+    GET     /api/europrint-control/logs
+    GET     /api/europrint-control/logs/:id
+    GET     /api/europrint-control/module-health
+    GET     /api/europrint-control/validation-summary
+    GET     /api/europrint-control/validation-results
+    GET     /api/europrint-control/audit-stats
+    GET     /api/europrint-control/audit-logs
+    GET     /api/europrint-control/action-types
+    GET     /api/europrint-control/source-types
+    GET     /api/europrint-control/menus
+    GET     /api/europrint-control/menus/:role
+    GET     /api/europrint-control/audit-action-types
+    GET     /api/europrint-control/audit-source-types
+
+  [exceptions]
+    GET     /api/exceptions
+    GET     /api/exceptions/stats
+    GET     /api/exceptions/:id
+    POST    /api/exceptions
+    POST    /api/exceptions/advance-bypass
+    POST    /api/exceptions/status-force
+    POST    /api/exceptions/design-reject
+    POST    /api/exceptions/advance-block
+    POST    /api/exceptions/material-shortage
+    POST    /api/exceptions/machine-breakdown
+    POST    /api/exceptions/qc-failed
+    POST    /api/exceptions/delivery-failed
+    POST    /api/exceptions/employee-absent
+    POST    /api/exceptions/material-not-returned
+    POST    /api/exceptions/cert-expiry-check
+
+  [export]
+    GET     /api/export/employees/csv
+    GET     /api/export/attendance/csv
+    GET     /api/export/discipline/csv
+    GET     /api/export/hr-stats/pdf
+    GET     /api/export/hr-stats/excel
+
+  [face-embeddings]
+    GET     /api/face-embeddings
+    DELETE  /api/face-embeddings/:id
+
+  [fi]
+    GET     /api/fi/accounting-periods
+    GET     /api/fi/payments
+    POST    /api/fi/accounting-periods
+    POST    /api/fi/accounting-periods/:id/close
+    POST    /api/fi/gl-documents/:id/post
+    POST    /api/fi/payments
+    GET     /api/fi/stats
+    GET     /api/fi/recent-transactions
+    GET     /api/fi/cost-centers
+    GET     /api/fi/cost-centers/:id
+    GET     /api/fi/profit-centers
+    GET     /api/fi/profit-centers/:id
+    GET     /api/fi/gl-documents
+    GET     /api/fi/gl-entries
+    GET     /api/fi/invoices
+    POST    /api/fi/cost-centers
+    POST    /api/fi/profit-centers
+    POST    /api/fi/gl-documents
+    PATCH   /api/fi/cost-centers/:id
+    PATCH   /api/fi/profit-centers/:id
+    DELETE  /api/fi/cost-centers/:id
+    DELETE  /api/fi/profit-centers/:id
+
+  [filters]
+    GET     /api/filters
+    POST    /api/filters
+    PUT     /api/filters/:id
+    DELETE  /api/filters/:id
+
+  [finance]
+    GET     /api/finance/advances
+    GET     /api/finance/advances/pending
+    POST    /api/finance/advances/request
+    POST    /api/finance/advances/override
+    GET     /api/finance/break-even
+    POST    /api/finance/break-even/cost-structure
+    GET     /api/finance/budgets
+    GET     /api/finance/budgets/stats
+    GET     /api/finance/budgets/:id
+    GET     /api/finance/budgets/:id/variance
+    POST    /api/finance/budgets
+    PATCH   /api/finance/budgets/:id/submit
+    PATCH   /api/finance/budgets/:id/approve
+    GET     /api/finance/cashflow/forecast
+    GET     /api/finance/cfo-config
+    PUT     /api/finance/cfo-config/:key
+    GET     /api/finance/gl
+    GET     /api/finance/gl/trial-balance
+    GET     /api/finance/gl/ledger/:accountCode
+    POST    /api/finance/gl/post-sales-invoice
+    POST    /api/finance/gl/post-payroll
+    GET     /api/finance/invoices
+    GET     /api/finance/invoices/:invoiceId
+    POST    /api/finance/invoices/create
+    POST    /api/finance/invoices/:invoiceId/post
+    GET     /api/finance/dashboard
+    GET     /api/finance/gl-entries
+    GET     /api/finance/gl-accounts
+    GET     /api/finance/exchange-rates
+    GET     /api/finance/transactions
+    GET     /api/finance/budget
+    GET     /api/finance/cash-flow
+    GET     /api/finance/reports
+    GET     /api/finance/accounts
+    GET     /api/finance/expenses
+    GET     /api/finance/expense-reports
+    GET     /api/finance/expense-reports/:id
+    GET     /api/finance/loans
+    GET     /api/finance/loans/:id
+    GET     /api/finance/gl-entries/:id/reverse
+    GET     /api/finance/accounting
+    GET     /api/finance/salary-benchmark/:userId
+    GET     /api/finance/payments
+    GET     /api/finance/payments/:invoiceId/outstanding
+    POST    /api/finance/payments/record
+    POST    /api/finance/payments/:paymentId/verify
+    POST    /api/finance/payments/:id/approve
+    GET     /api/finance/ratios
+    GET     /api/finance/standard-cost/:productId
+    GET     /api/finance/standard-cost/name/:productName
+    GET     /api/finance/standard-cost/name/:productName/periods
+    POST    /api/finance/standard-cost/name/:productName/calculate
+    GET     /api/finance/variance/:orderId
+    GET     /api/finance/salary-benchmark
+
+  [finance-extended]
+    GET     /api/finance-extended/finance-categories
+    GET     /api/finance-extended/finance-categories/:id
+    GET     /api/finance-extended/income-expense/summary
+    GET     /api/finance-extended/income-expense
+    GET     /api/finance-extended/inventory-counts
+    GET     /api/finance-extended/asset-inventory
+    GET     /api/finance-extended/asset-inventory/:id
+    GET     /api/finance-extended/daily-metrics
+    GET     /api/finance-extended/overtime
+    GET     /api/finance-extended/customs
+    GET     /api/finance-extended/insurance
+    GET     /api/finance-extended/ai-finance-insights
+    GET     /api/finance-extended/asset-inventory/summary
+    GET     /api/finance-extended/daily-metrics/today
+    GET     /api/finance-extended/payroll-calculations
+    GET     /api/finance-extended/payroll-contracts
+    GET     /api/finance-extended/payroll-tax-rules
+    GET     /api/finance-extended/tax-calendar
+    GET     /api/finance-extended/salary-benchmark/:id
+    POST    /api/finance-extended/finance-categories
+    POST    /api/finance-extended/income-expense
+    POST    /api/finance-extended/payroll/calculate
+    POST    /api/finance-extended/payroll/ai-calculate
+    PUT     /api/finance-extended/finance-categories/:id
+    PUT     /api/finance-extended/income-expense/:id
+    PATCH   /api/finance-extended/payroll-calculations/:id/approve
+    DELETE  /api/finance-extended/finance-categories/:id
+    DELETE  /api/finance-extended/income-expense/:id
+
+  [forecast]
+    POST    /api/forecast/:id/ema
+    POST    /api/forecast/:id/hw
+    POST    /api/forecast/:id/croston
+    POST    /api/forecast/:id/ensemble
+
+  [gl]
+    GET     /api/gl/accounts
+    POST    /api/gl/seed-accounts
+
+  [goals]
+    GET     /api/goals
+    GET     /api/goals/:id
+    POST    /api/goals
+    PUT     /api/goals/:id
+    DELETE  /api/goals/:id
+
+  [gpt]
+    GET     /api/gpt/status
+    GET     /api/gpt/chat
+    POST    /api/gpt/test
+
+  [guidelines]
+    GET     /api/guidelines
+    POST    /api/guidelines
+    PUT     /api/guidelines/:id
+    DELETE  /api/guidelines/:id
+
+  [hr]
+    GET     /api/hr/zno
+    POST    /api/hr/zno
+    PATCH   /api/hr/zno/:id/approve
+    PATCH   /api/hr/zno/:id/reject
+    PATCH   /api/hr/zno/:id
+    GET     /api/hr/zvs
+    POST    /api/hr/zvs
+    PATCH   /api/hr/zvs/:id/approve
+    PATCH   /api/hr/zvs/:id/reject
+    GET     /api/hr/attendance/live
+    GET     /api/hr/attendance/territory/logs
+    GET     /api/hr/attendance/face/health
+    GET     /api/hr/attendance/late-arrivals/today
+    POST    /api/hr/attendance/face/register
+    POST    /api/hr/attendance/territory
+    GET     /api/hr/discipline/catalog
+    GET     /api/hr/discipline/blocked
+    GET     /api/hr/discipline/check/:employeeId
+    GET     /api/hr/discipline/employee/:id
+    POST    /api/hr/discipline/catalog
+    POST    /api/hr/discipline
+    POST    /api/hr/discipline/block/:employeeId
+    POST    /api/hr/discipline/absence/:employeeId
+    PUT     /api/hr/discipline/catalog/:code
+    PATCH   /api/hr/discipline/unblock/:employeeId
+    PATCH   /api/hr/discipline/:id/acknowledge
+    PATCH   /api/hr/discipline/:id/approve
+    PATCH   /api/hr/discipline/absence/:id/excuse
+    DELETE  /api/hr/discipline/catalog/:code
+    GET     /api/hr/gamification/leaderboard
+    GET     /api/hr/gamification/my/badges
+    GET     /api/hr/gamification/my/points
+    GET     /api/hr/gamification/badges/catalog
+    GET     /api/hr/gamification/employee/:id/points
+    GET     /api/hr/gamification/employee/:id/badges
+    POST    /api/hr/gamification/badges/catalog
+    POST    /api/hr/gamification/award/points
+    POST    /api/hr/gamification/award/badge
+    GET     /api/hr/inspection/rooms
+    GET     /api/hr/inspection/rooms/:roomCode/history
+    GET     /api/hr/inspection/checklist-pdf/:id
+    GET     /api/hr/inspection/alerts
+    POST    /api/hr/inspection/rooms/:roomCode/reference-photo
+    POST    /api/hr/inspection/manual
+    POST    /api/hr/inspection/checklist
+    POST    /api/hr/offboarding/cases/:id/exit-interview
+    POST    /api/hr/offboarding/cases/:id/finalize
+    PATCH   /api/hr/offboarding/cases/:id/checklist/:itemId
+    GET     /api/hr/onboarding/plans
+    GET     /api/hr/onboarding/plans/:id
+    GET     /api/hr/onboarding/employee/:employeeId
+    GET     /api/hr/onboarding/job-descriptions
+    GET     /api/hr/onboarding/motivation/:employeeId
+    POST    /api/hr/onboarding/plans
+    POST    /api/hr/onboarding/plans/default-hr-manager
+    POST    /api/hr/onboarding/start
+    POST    /api/hr/onboarding/job-descriptions
+    POST    /api/hr/onboarding/motivation/:employeeId
+    PATCH   /api/hr/onboarding/:id/progress
+    PATCH   /api/hr/onboarding/:id/complete-probation
+    PATCH   /api/hr/onboarding/job-descriptions/:id/approve
+    GET     /api/hr/attendance/today
+    GET     /api/hr/attendance
+    GET     /api/hr/attendance/:employeeId/summary/:period
+    POST    /api/hr/attendance/check-in
+    POST    /api/hr/attendance/check-out
+    GET     /api/hr/360/review
+    GET     /api/hr/360/dept-summary
+    GET     /api/hr/conflict-reports
+    GET     /api/hr/employee-skills
+    GET     /api/hr/employee-skills/:employeeId
+    GET     /api/hr/health-checkups
+    GET     /api/hr/hrc-tests/sessions
+    GET     /api/hr/hrc-tests/tool-test/questions
+    GET     /api/hr/recruitment/vacancy/candidates
+    GET     /api/hr/discipline
+    GET     /api/hr/vacancies
+    GET     /api/hr/departments
+    GET     /api/hr/positions
+    GET     /api/hr/payroll-runs
+    GET     /api/hr/payroll-periods
+    GET     /api/hr/hrc-tests/employee/:employeeId/results
+    POST    /api/hr/360/review
+    POST    /api/hr/conflict-reports
+    POST    /api/hr/employee-skills
+    POST    /api/hr/health-checkups
+    POST    /api/hr/discipline-records
+    PATCH   /api/hr/hrc-tests/tool-test/questions/:id
+    DELETE  /api/hr/hrc-tests/tool-test/questions/:id
+    GET     /api/hr/brand-settings
+    GET     /api/hr/documents
+    GET     /api/hr/documents/admin/workflow-routes
+    GET     /api/hr/safety/trainings
+    GET     /api/hr/safety/hazard-zones
+    GET     /api/hr/safety/ppe-compliance
+    GET     /api/hr/leave-requests
+    GET     /api/hr/gamification/leaderboard/monthly
+    GET     /api/hr/milestones/generate
+    POST    /api/hr/safety/incidents
+    POST    /api/hr/safety/trainings
+    POST    /api/hr/safety/hazard-zones
+    POST    /api/hr/safety/ppe-compliance
+    POST    /api/hr/leave-requests
+    PATCH   /api/hr/brand-settings
+    DELETE  /api/hr/documents/:id
+    GET     /api/hr/resignation-stats
+    GET     /api/hr/resignation-stats/:lang
+    GET     /api/hr/risk-scores
+    GET     /api/hr/safety/summary
+    GET     /api/hr/safety/incidents
+    GET     /api/hr/offboarding/cases/stats
+    GET     /api/hr/safety
+    GET     /api/hr/contracts
+    GET     /api/hr/contracts/expiring
+    GET     /api/hr/courses
+    GET     /api/hr/stats
+    GET     /api/hr/birthdays
+    GET     /api/hr/birthdays/today
+    GET     /api/hr/birthdays/upcoming
+    GET     /api/hr/milestones/upcoming
+    GET     /api/hr/monthly-trend
+    GET     /api/hr/monthly-trend/:lang
+    GET     /api/hr/abc-analysis
+    GET     /api/hr/alerts
+    GET     /api/hr/discipline-records
+    GET     /api/hr/pip
+    GET     /api/hr/enps/surveys
+    GET     /api/hr/ai-interview/sessions
+    GET     /api/hr/daily-reports/stats
+    GET     /api/hr/adaptation/at-risk
+    GET     /api/hr/shifts/today
+    GET     /api/hr/milestones
+    GET     /api/hr/dashboard-stats
+    GET     /api/hr/adaptation
+    GET     /api/hr/adaptation/:id
+    GET     /api/hr/alumni
+    GET     /api/hr/alumni/:id
+    GET     /api/hr/daily-reports
+    GET     /api/hr/daily-reports/department
+    GET     /api/hr/daily-reports/my
+    GET     /api/hr/offboarding/cases
+    GET     /api/hr/offboarding/questions
+    GET     /api/hr/onboarding-checklists
+    GET     /api/hr/fp-cycle
+    GET     /api/hr/hrc-tests/employee
+    GET     /api/hr/hrc-tests/public
+    GET     /api/hr/hrc-tests/stats
+    GET     /api/hr/360/reviewable
+    GET     /api/hr/birthdays/settings
+    GET     /api/hr/birthdays/settings/:id
+    GET     /api/hr/ai-interview/session
+    GET     /api/hr/ai-interview/session/:id/review
+    GET     /api/hr/documents/employee
+    GET     /api/hr/documents/my
+    GET     /api/hr/documents/pending
+    GET     /api/hr/employee-corp
+    GET     /api/hr/employees/operator-stats
+    GET     /api/hr/enps/surveys/results
+    GET     /api/hr/abc-analysis/:id/calculate
+    POST    /api/hr/daily-reports
+    POST    /api/hr/birthdays/settings
+    GET     /api/hr/employees/:id/assets
+    GET     /api/hr/employees/:employeeId/swap-requests
+    GET     /api/hr/employees/:employeeId/complaints
+    GET     /api/hr/employees/:employeeId/assessment-skips
+    GET     /api/hr/employees/list/for-face
+    GET     /api/hr/employees/:employeeId/documents
+    GET     /api/hr/employees/:employeeId/documents/:docId
+    GET     /api/hr/employees/:employeeId/operator-stats
+    POST    /api/hr/employees/:id/profile-image
+    POST    /api/hr/employees/:id/assign-org-functions
+    POST    /api/hr/employees/import
+    POST    /api/hr/employees/:id/assets
+    POST    /api/hr/employees/:employeeId/complaints
+    DELETE  /api/hr/employees/:employeeId/documents/:docId
+    GET     /api/hr/employees
+    GET     /api/hr/employees/:id
+    GET     /api/hr/employees/:employeeId/kpi
+    POST    /api/hr/employees
+    POST    /api/hr/employees/:employeeId/salary-review
+    PUT     /api/hr/employees/:id
+    PATCH   /api/hr/employees/:id/status
+    GET     /api/hr/gsd/employees/:id
+    GET     /api/hr/gsd/employees/:id/history
+    GET     /api/hr/referrals
+    GET     /api/hr/referrals/boomerang
+    GET     /api/hr/skills
+    GET     /api/hr/milestones/:id/complete
+    POST    /api/hr/milestones/:id/complete
+    GET     /api/hr/leave
+    GET     /api/hr/leave/stats
+    GET     /api/hr/leave/balance/:employeeId
+    GET     /api/hr/leave/:id
+    POST    /api/hr/leave
+    PATCH   /api/hr/leave/:id/approve
+    PATCH   /api/hr/leave/:id/reject
+    PATCH   /api/hr/leave/:id/cancel
+    GET     /api/hr/payroll
+    GET     /api/hr/payroll/summary/:period
+    POST    /api/hr/payroll/calculate
+    POST    /api/hr/payroll/:payrollId/approve
+    POST    /api/hr/payroll/:payrollId/post-to-gl
+    GET     /api/hr/shifts/schedule
+    GET     /api/hr/shifts/swap-requests
+    POST    /api/hr/shifts/schedule
+    POST    /api/hr/shifts/swap-request
+    PATCH   /api/hr/shifts/swap-request/:id/approve
+    DELETE  /api/hr/shifts/:id
+    GET     /api/hr/recruitment/vacancies
+    GET     /api/hr/recruitment/vacancies/:id
+    GET     /api/hr/recruitment/vacancies/:id/market-analysis
+    GET     /api/hr/recruitment/vacancies/:id/portret
+    GET     /api/hr/recruitment/vacancies/:id/channels
+    GET     /api/hr/recruitment/pipeline
+    GET     /api/hr/recruitment/pipeline/:id/stage
+    GET     /api/hr/recruitment/pipeline/:id/roadmap
+    GET     /api/hr/recruitment/roadmaps
+    GET     /api/hr/recruitment/pipeline/:id/probation-journal
+    GET     /api/hr/recruitment/pipeline/:id/probation-dates
+    GET     /api/hr/recruitment/pipeline/:id/report
+    GET     /api/hr/recruitment/checklist-alerts
+    GET     /api/hr/recruitment/kpi
+    GET     /api/hr/recruitment/urgent
+    GET     /api/hr/recruitment/worker-type-stats
+    GET     /api/hr/recruitment/internal-board
+    POST    /api/hr/recruitment/vacancies/:id/channel-status
+    POST    /api/hr/recruitment/vacancies/:id/telegram-announce
+    POST    /api/hr/recruitment/vacancies/:id/alumni-notify
+    POST    /api/hr/recruitment/pipeline/:id/stage
+    POST    /api/hr/recruitment/pipeline/:id/probation-review
+    POST    /api/hr/recruitment/pipeline/:id/nda-request
+    POST    /api/hr/recruitment/pipeline/:id/offer
+    POST    /api/hr/recruitment/pipeline/:id/checklist
+    POST    /api/hr/recruitment/internal-apply/:id
+    GET     /api/hr/recruitment
+    GET     /api/hr/recruitment/funnel
+    GET     /api/hr/recruitment/funnel/kanban
+    GET     /api/hr/recruitment/funnel/:id
+    GET     /api/hr/recruitment/tool-test/candidate/:candidateId
+    GET     /api/hr/recruitment/productivity-interview/candidate/:candidateId
+    GET     /api/hr/recruitment/channel-analytics
+    GET     /api/hr/recruitment/statistics/weekly
+    GET     /api/hr/recruitment/health-check
+    GET     /api/hr/recruitment/references-check/funnel/:funnelId
+    GET     /api/hr/recruitment/job-offer/candidate/:candidateId
+    GET     /api/hr/recruitment/job-offer/:id
+    POST    /api/hr/recruitment/funnel
+    POST    /api/hr/recruitment/tool-test
+    POST    /api/hr/recruitment/tool-test/match
+    POST    /api/hr/recruitment/productivity-interview
+    POST    /api/hr/recruitment/job-offers
+    POST    /api/hr/recruitment/references-check
+    POST    /api/hr/recruitment/job-offer
+    PATCH   /api/hr/recruitment/funnel/:id/move
+    PATCH   /api/hr/recruitment/funnel/:id/screening
+    PATCH   /api/hr/recruitment/references-check/:id
+    PATCH   /api/hr/recruitment/job-offer/:id/status
+    GET     /api/hr/safety/department-summary
+    GET     /api/hr/safety/incidents/:id
+    GET     /api/hr/safety/hazard-zones/:id
+    POST    /api/hr/safety/export/pdf
+    PATCH   /api/hr/safety/incidents/:id
+    PATCH   /api/hr/safety/hazard-zones/:id
+
+  [hr-map]
+    GET     /api/hr-map/employees
+    GET     /api/hr-map/departments
+    GET     /api/hr-map/heatmap
+    GET     /api/hr-map/attendance-today
+    GET     /api/hr-map/transport-groups
+    GET     /api/hr-map/stats
+    GET     /api/hr-map/zones
+    POST    /api/hr-map/filter
+
+  [hr-v2]
+    GET     /api/hr-v2/chat/rooms/:roomId/pinned
+    GET     /api/hr-v2/chat/messages/:id/thread
+    POST    /api/hr-v2/chat/messages/:id/reactions
+    POST    /api/hr-v2/chat/polls
+    POST    /api/hr-v2/chat/polls/:pollId/vote
+    POST    /api/hr-v2/chat/messages/:id/thread
+    POST    /api/hr-v2/chat/messages/:id/forward
+    POST    /api/hr-v2/chat/upload/request-url
+    POST    /api/hr-v2/chat/upload/complete
+    PATCH   /api/hr-v2/chat/messages/:id/pin
+    GET     /api/hr-v2/ai-interview/sessions
+    GET     /api/hr-v2/ai-interview/stats
+    GET     /api/hr-v2/ai-interview/sessions/:id
+    GET     /api/hr-v2/ai-interview/session/:token/validate
+    GET     /api/hr-v2/ai-interview/questions
+    GET     /api/hr-v2/ai-interview/questions/for-job
+    POST    /api/hr-v2/ai-interview/sessions
+    POST    /api/hr-v2/ai-interview/session/:token/camera-rejected
+    POST    /api/hr-v2/ai-interview/session/:token/submit
+    POST    /api/hr-v2/ai-interview/questions
+    PATCH   /api/hr-v2/ai-interview/sessions/:id/results
+    DELETE  /api/hr-v2/ai-interview/questions/:id
+    GET     /api/hr-v2/career-path
+    GET     /api/hr-v2/career-path/department/:id/ladder
+    GET     /api/hr-v2/career-path/employee/:id
+    POST    /api/hr-v2/career-path
+    POST    /api/hr-v2/career-path/:id/steps
+    PATCH   /api/hr-v2/career-path/:id/steps/:stepId
+    GET     /api/hr-v2/daily-reports/stats
+    GET     /api/hr-v2/daily-reports/by-date
+    GET     /api/hr-v2/daily-reports/employee/:id
+    GET     /api/hr-v2/daily-reports/employee
+    GET     /api/hr-v2/daily-reports/department
+    POST    /api/hr-v2/daily-reports
+    PATCH   /api/hr-v2/daily-reports/:id/override
+    GET     /api/hr-v2/documents/employee/:employeeId
+    GET     /api/hr-v2/documents
+    GET     /api/hr-v2/documents/employee
+    GET     /api/hr-v2/documents/pending
+    GET     /api/hr-v2/documents/admin/workflow-routes
+    GET     /api/hr-v2/documents/admin/workflow-routes/:id
+    GET     /api/hr-v2/documents/:id
+    POST    /api/hr-v2/documents
+    PATCH   /api/hr-v2/documents/:id/submit
+    PATCH   /api/hr-v2/documents/steps/:stepId/approve
+    PATCH   /api/hr-v2/documents/steps/:stepId/reject
+    PATCH   /api/hr-v2/documents/admin/workflow-routes/:id/toggle
+    GET     /api/hr-v2/enps
+    GET     /api/hr-v2/enps/:id/results
+    GET     /api/hr-v2/enps/results
+    POST    /api/hr-v2/enps
+    POST    /api/hr-v2/enps/respond
+    PATCH   /api/hr-v2/enps/:id/launch
+    PATCH   /api/hr-v2/enps/:id/close
+    GET     /api/hr-v2/pip
+    GET     /api/hr-v2/pip/active
+    GET     /api/hr-v2/pip/:id
+    GET     /api/hr-v2/pip/employee/:id
+    POST    /api/hr-v2/pip
+    POST    /api/hr-v2/pip/:id/progress
+    PATCH   /api/hr-v2/pip/:id/acknowledge
+    GET     /api/hr-v2/reception/active
+    GET     /api/hr-v2/reception/stats
+    GET     /api/hr-v2/reception/log
+    GET     /api/hr-v2/reception/badge/:badge_number
+    POST    /api/hr-v2/reception/check-in
+    PATCH   /api/hr-v2/reception/:id/check-out
+    GET     /api/hr-v2/shifts/schedule
+    POST    /api/hr-v2/shifts
+    POST    /api/hr-v2/shifts/swap-request
+    PATCH   /api/hr-v2/shifts/:id/approve-swap
+    GET     /api/hr-v2/skills-matrix/catalog
+    GET     /api/hr-v2/skills-matrix/employee/:id
+    GET     /api/hr-v2/skills-matrix/gap-analysis/:employeeId
+    GET     /api/hr-v2/skills-matrix/team/:departmentId
+    POST    /api/hr-v2/skills-matrix/score
+    GET     /api/hr-v2/telegram-bots/status
+    POST    /api/hr-v2/telegram-bots/send
+    POST    /api/hr-v2/telegram-bots/broadcast
+    POST    /api/hr-v2/telegram-bots/internal-vacancy-published
+    POST    /api/hr-v2/telegram-bots/notify-employee
+    POST    /api/hr-v2/telegram-bots/notify-hr
+
+  [ideal-rasm]
+    GET     /api/ideal-rasm
+    PUT     /api/ideal-rasm
+    PUT     /api/ideal-rasm/:key
+
+  [insights]
+    GET     /api/insights
+    GET     /api/insights/dashboard
+    POST    /api/insights/generate
+    PATCH   /api/insights/:id/read
+
+  [integration]
+    GET     /api/integration/employee-complaints/:id
+    GET     /api/integration/employee-assessment-skips/:id
+    GET     /api/integration/swap-requests
+    GET     /api/integration/skill-gap/:id
+    GET     /api/integration/employee-mentorships/:id
+    GET     /api/integration/employee-mes-summary/:id
+    GET     /api/integration/employee-wms-summary/:id
+    GET     /api/integration/employee-complaints
+    GET     /api/integration/employee-assessment-skips
+    GET     /api/integration/skill-gap
+    GET     /api/integration/employee-mentorships
+    GET     /api/integration/employee-mes-summary
+    GET     /api/integration/employee-wms-summary
+    GET     /api/integration/expense
+    GET     /api/integration/invoice
+    POST    /api/integration/expense
+    POST    /api/integration/invoice
+    GET     /api/integration/hr-lms/position-skills
+    GET     /api/integration/hr-lms/employee-skills
+    GET     /api/integration/hr-lms/expiring-certifications
+    GET     /api/integration/hr-lms/stats
+    GET     /api/integration/employee-rating/ratings/:year/:month
+    GET     /api/integration/employee-rating/ratings
+    GET     /api/integration/employee-rating/goals
+    GET     /api/integration/employee-rating/stats
+    GET     /api/integration/vendor-performance
+    GET     /api/integration/vendor-performance/spend-analysis
+    GET     /api/integration/pm-upcoming
+    GET     /api/integration/pm-upcoming
+    GET     /api/integration/equipment
+    GET     /api/integration/requests
+    GET     /api/integration/items
+    GET     /api/integration/stats
+    GET     /api/integration/mro
+    GET     /api/integration/shifts
+    GET     /api/integration/expense/expense-requests/all
+    GET     /api/integration/expense/expense-requests
+    GET     /api/integration/expense/expense-stats
+    GET     /api/integration/expense/advance-payments
+    GET     /api/integration/gl/stock-gl-postings
+    GET     /api/integration/gl/stock-gl-postings/stats
+    GET     /api/integration/gl/gl-account-mapping
+    GET     /api/integration/invoice/vendor-invoices
+    GET     /api/integration/invoice/three-way-match/stats
+    GET     /api/integration/invoice/three-way-match/results
+    POST    /api/integration/equipment
+    POST    /api/integration/requests
+    POST    /api/integration/items
+    POST    /api/integration/expense/expense-requests
+    POST    /api/integration/invoice/three-way-match/:invoiceId
+    PUT     /api/integration/expense-requests/:id/approve
+    GET     /api/integration/mro/items
+    GET     /api/integration/mro/requests
+    GET     /api/integration/mro/equipment
+    GET     /api/integration/mro/stats
+    GET     /api/integration/mro/budgets
+    GET     /api/integration/mro/cleaning-schedules
+    GET     /api/integration/mro/utility-readings
+    GET     /api/integration/mro/facilities
+    POST    /api/integration/mro/items
+    POST    /api/integration/mro/requests
+    PUT     /api/integration/mro/:id/approve
+    PATCH   /api/integration/mro/:id/approve
+
+  [inventory]
+    GET     /api/inventory/advanced/analytics
+    GET     /api/inventory/advanced/counts
+    GET     /api/inventory/advanced/barcodes
+    GET     /api/inventory/materials
+    GET     /api/inventory/materials/:id/360-card
+    GET     /api/inventory/materials/low-stock
+    PUT     /api/inventory/materials/:id
+    DELETE  /api/inventory/materials/:id
+
+  [iot]
+    GET     /api/iot/dashboard
+    GET     /api/iot/alerts
+    GET     /api/iot/attendance/live
+    GET     /api/iot/room-inspections
+    GET     /api/iot/employee-health
+    GET     /api/iot/machine-status
+    GET     /api/iot/machine-status-logs
+    GET     /api/iot/safety-violations
+    GET     /api/iot/employee-productivity
+    GET     /api/iot/environment
+    GET     /api/iot/devices/:id/stats
+    GET     /api/iot/quality-defects
+    GET     /api/iot/recognition-stats
+    GET     /api/iot/energy-consumption
+    GET     /api/iot/temperature
+    GET     /api/iot/humidity
+    GET     /api/iot/pressure
+    GET     /api/iot/vibration
+    GET     /api/iot/gas-levels
+    GET     /api/iot/noise-levels
+    GET     /api/iot/production-metrics
+    GET     /api/iot/oee
+    GET     /api/iot/downtime
+    GET     /api/iot/shift-report
+    GET     /api/iot/maintenance-schedule
+    GET     /api/iot/sensors
+    GET     /api/iot/telemetry
+    GET     /api/iot/live-dashboard/summary
+    GET     /api/iot/downtime-reason-codes
+    GET     /api/iot/tablet/orders
+    GET     /api/iot/tablet/worker-schedule
+    GET     /api/iot/tablet/equipment
+    GET     /api/iot/tablet/shift
+    GET     /api/iot/tablet/sessions
+    GET     /api/iot/production-sessions/:id/crew
+    POST    /api/iot/alerts/:id/acknowledge
+    POST    /api/iot/tablet/sessions
+    POST    /api/iot/tablet/login
+    POST    /api/iot/tablet/sos-alert
+    POST    /api/iot/tablet/handover
+    POST    /api/iot/material-kit-items/:id/scan
+    POST    /api/iot/production-sessions/:id/start
+    POST    /api/iot/production-sessions/:id/stop
+    POST    /api/iot/production-sessions/:id/defect
+    POST    /api/iot/production-sessions/:id/evaluation
+    POST    /api/iot/production-sessions/:id/material-return
+    POST    /api/iot/production-sessions/:id/inline-qc
+    GET     /api/iot/devices
+    GET     /api/iot/devices/:id
+    GET     /api/iot/devices/:id/readings
+    GET     /api/iot/anomalies
+    GET     /api/iot/sensors/:id/oee
+    POST    /api/iot/devices
+    POST    /api/iot/devices/:id/readings
+    PATCH   /api/iot/devices/:id/thresholds
+    GET     /api/iot/dashboard/stats
+    GET     /api/iot/production-sessions
+    GET     /api/iot/downtime-events
+    GET     /api/iot/tablet/defect-reasons
+    GET     /api/iot/material-kits
+    GET     /api/iot/material-kits/:id
+    GET     /api/iot/material-kits/:id/items
+    POST    /api/iot/material-kits
+    POST    /api/iot/material-kits/generate
+    PATCH   /api/iot/material-kits/:id/prepare
+    PATCH   /api/iot/material-kits/:id/ready
+
+  [iot-enhanced]
+    GET     /api/iot-enhanced/orders-for-kits
+    GET     /api/iot-enhanced/material-kits
+    GET     /api/iot-enhanced/orders/:id/calculate-bom
+    GET     /api/iot-enhanced/material-kits/:id/items
+    GET     /api/iot-enhanced/orders
+    POST    /api/iot-enhanced/material-kits
+    POST    /api/iot-enhanced/material-kits/:id/items
+
+  [iot-sensors]
+    GET     /api/iot-sensors/dashboard
+    GET     /api/iot-sensors/live
+    GET     /api/iot-sensors/alerts
+    GET     /api/iot-sensors/oee
+    GET     /api/iot-sensors
+    GET     /api/iot-sensors/trends
+    GET     /api/iot-sensors/:id/history
+    GET     /api/iot-sensors/predictive-maintenance
+    PATCH   /api/iot-sensors/alerts/:alertId/resolve
+
+  [kaizen]
+    GET     /api/kaizen/suggestions
+    GET     /api/kaizen/suggestions/:id
+    GET     /api/kaizen/stats
+    POST    /api/kaizen/suggestions
+    PATCH   /api/kaizen/suggestions/:id
+    PATCH   /api/kaizen/suggestions/:id/status
+
+  [kanban]
+    GET     /api/kanban/boards
+    GET     /api/kanban/boards/:boardId
+    GET     /api/kanban/notifications/unread-count
+    GET     /api/kanban/notifications
+    GET     /api/kanban/templates
+    GET     /api/kanban/boards/:boardId/robots
+    POST    /api/kanban/boards
+    POST    /api/kanban/boards/:boardId/columns
+    POST    /api/kanban/boards/:boardId/cards
+    POST    /api/kanban/templates
+    POST    /api/kanban/templates/:templateId/apply
+    POST    /api/kanban/boards/:boardId/robots
+    PUT     /api/kanban/cards/:id
+    PUT     /api/kanban/cards/:id/move
+    PUT     /api/kanban/notifications/read-all
+    PUT     /api/kanban/notifications/:id/read
+    PUT     /api/kanban/templates/:id
+    PATCH   /api/kanban/boards/:boardId/columns/:columnId
+    DELETE  /api/kanban/boards/:boardId/columns/:columnId
+    DELETE  /api/kanban/cards/:id
+    DELETE  /api/kanban/templates/:id
+    GET     /api/kanban/cards/:id/checklists
+    GET     /api/kanban/checklists/:id/items
+    GET     /api/kanban/cards/:id/comments
+    GET     /api/kanban/cards/:id/watchers
+    GET     /api/kanban/sprint
+    GET     /api/kanban/cards/overdue
+    GET     /api/kanban/cards/by-employee/:employeeId
+    GET     /api/kanban/members
+    POST    /api/kanban/cards/:id/checklists
+    POST    /api/kanban/checklists/:id/items
+    POST    /api/kanban/cards/:id/comments
+    POST    /api/kanban/cards/:id/watchers
+    PUT     /api/kanban/checklists/:checklistId
+    PUT     /api/kanban/checklists/:checklistId/items/:itemId
+    PUT     /api/kanban/checklist-items/:itemId/toggle
+    DELETE  /api/kanban/checklists/:checklistId
+    DELETE  /api/kanban/checklists/:checklistId/items/:itemId
+    GET     /api/kanban/flows/:id
+    GET     /api/kanban/robots/:id
+    GET     /api/kanban/reports/employee-performance
+    GET     /api/kanban/reports/productivity
+    GET     /api/kanban/reports/overdue
+    GET     /api/kanban/analytics/summary
+    GET     /api/kanban/chat-messages/:id/files
+    GET     /api/kanban/results/:resultId/files
+    POST    /api/kanban/cards/:id/time-entries/start
+    POST    /api/kanban/cards/:id/time-entries/stop
+    PUT     /api/kanban/flows/:id
+    PUT     /api/kanban/robots/:id
+    PUT     /api/kanban/boards/:boardId
+    DELETE  /api/kanban/flows/:id
+    DELETE  /api/kanban/robots/:id
+    DELETE  /api/kanban/boards/:boardId
+    DELETE  /api/kanban/cards/:id/tags/:tagId
+    DELETE  /api/kanban/cards/:id/observers/:observerId
+    DELETE  /api/kanban/cards/:id/co-executors/:coExecutorId
+    DELETE  /api/kanban/result-files/:fileId
+    DELETE  /api/kanban/files/:fileId
+    GET     /api/kanban
+    GET     /api/kanban/:id
+    POST    /api/kanban
+    PATCH   /api/kanban/:id
+    DELETE  /api/kanban/:id
+    GET     /api/kanban/dashboard/team-metrics
+    GET     /api/kanban/employees
+    GET     /api/kanban/flows
+    GET     /api/kanban/resource-allocation
+    GET     /api/kanban/task-stats
+
+  [knowledge-base]
+    GET     /api/knowledge-base
+    GET     /api/knowledge-base/:id
+    POST    /api/knowledge-base
+    POST    /api/knowledge-base/upload
+    PUT     /api/knowledge-base/:id
+    PATCH   /api/knowledge-base/:id
+    DELETE  /api/knowledge-base/:id
+
+  [lessons]
+    GET     /api/lessons
+    GET     /api/lessons/:id
+    GET     /api/lessons
+    GET     /api/lessons/:id
+    POST    /api/lessons
+    POST    /api/lessons
+    PUT     /api/lessons/:id
+    DELETE  /api/lessons/:id
+
+  [lms]
+    GET     /api/lms/certificates/operator/:operatorId
+    GET     /api/lms/certificates/:employeeId
+    POST    /api/lms/certificates/issue
+    POST    /api/lms/certificates/:certificateId/revoke
+    POST    /api/lms/certificates/check-mes
+    GET     /api/lms/lessons/:id
+    GET     /api/lms/exams
+    GET     /api/lms/recent-activity/:lang
+    GET     /api/lms/recent-activity
+    GET     /api/lms/progress/my
+    POST    /api/lms/exams
+    POST    /api/lms/exams/:id/submit
+    POST    /api/lms/progress/complete
+    GET     /api/lms/courses
+    GET     /api/lms/courses/:id
+    POST    /api/lms/courses
+    POST    /api/lms/courses/enroll
+    GET     /api/lms/enrollments
+    GET     /api/lms/enrollments/my
+    GET     /api/lms/enrollments/stats
+    GET     /api/lms/enrollments/expiring-certificates
+    POST    /api/lms/enrollments
+    PATCH   /api/lms/enrollments/:id/progress
+    PATCH   /api/lms/enrollments/:id/complete
+
+  [logistics]
+    GET     /api/logistics
+    GET     /api/logistics/:id
+    POST    /api/logistics
+    PATCH   /api/logistics/:id/assign-driver
+    PATCH   /api/logistics/:id/complete
+
+  [machine-tasks]
+    GET     /api/machine-tasks
+    POST    /api/machine-tasks
+
+  [marketing]
+    GET     /api/marketing/social/posts
+    GET     /api/marketing/leads
+    GET     /api/marketing/leads/:id
+    GET     /api/marketing/email/templates
+    GET     /api/marketing/analytics/overview
+    GET     /api/marketing/analytics/campaigns
+    GET     /api/marketing/analytics/audience
+    GET     /api/marketing/analytics/conversion
+    GET     /api/marketing/funnel
+    GET     /api/marketing/reports
+    GET     /api/marketing/reports/:id
+    GET     /api/marketing/nps/stats
+    GET     /api/marketing/nps/monthly
+    GET     /api/marketing/churn-risk/ai-signal
+    GET     /api/marketing/ai/hot-leads
+    GET     /api/marketing/leads/sources/summary
+    GET     /api/marketing/leads/automation/overdue-leads
+    GET     /api/marketing/leads/:id/contacts
+    GET     /api/marketing/inbox/stats
+    GET     /api/marketing/inbox/conversations
+    GET     /api/marketing/inbox/conversations/:id/messages
+    GET     /api/marketing/ab-tests
+    GET     /api/marketing/competitors
+    GET     /api/marketing/churn-risk
+    GET     /api/marketing/budget
+    GET     /api/marketing/calendar
+    GET     /api/marketing/exhibitions
+    GET     /api/marketing/pr
+    GET     /api/marketing/settings
+    GET     /api/marketing/exhibitions/:id/leads
+    GET     /api/marketing/exhibitions/:id/qr
+    GET     /api/marketing/settings/social-api
+    GET     /api/marketing/website/blog
+    GET     /api/marketing/website/blog/:id
+    POST    /api/marketing/social/posts
+    POST    /api/marketing/leads
+    POST    /api/marketing/email/templates
+    POST    /api/marketing/content/ai-generate
+    POST    /api/marketing/leads/:id/convert-to-crm
+    POST    /api/marketing/inbox/conversations/:id/reply
+    POST    /api/marketing/inbox/ai-reply/:id
+    POST    /api/marketing/settings/social-api
+    POST    /api/marketing/settings/setup-telegram-webhook
+    POST    /api/marketing/website/blog/:id/publish
+    POST    /api/marketing/website/blog/ai-generate
+    PUT     /api/marketing/social/posts/:id
+    PUT     /api/marketing/leads/:id
+    PUT     /api/marketing/email/templates/:id
+    PATCH   /api/marketing/leads/:id/status
+    PATCH   /api/marketing/inbox/conversations/:id/status
+    PATCH   /api/marketing/website/blog/:id
+    DELETE  /api/marketing/social/posts/:id
+    DELETE  /api/marketing/email/templates/:id
+    DELETE  /api/marketing/settings/social-api/:id
+    GET     /api/marketing/campaigns/:id/stats
+    GET     /api/marketing/dashboard/stats
+    GET     /api/marketing/content/posts
+    GET     /api/marketing/content/posts/:id
+    GET     /api/marketing/content/calendar
+    GET     /api/marketing/content/analytics
+    GET     /api/marketing/social/accounts
+    POST    /api/marketing/content/posts
+    POST    /api/marketing/content/posts/:id/publish
+    POST    /api/marketing/social/accounts
+    PUT     /api/marketing/content/posts/:id
+    DELETE  /api/marketing/content/posts/:id
+    DELETE  /api/marketing/social/accounts/:id
+    GET     /api/marketing/campaigns
+    GET     /api/marketing/campaigns/:id
+    POST    /api/marketing/campaigns
+    POST    /api/marketing/campaigns/:id/launch
+    PATCH   /api/marketing/campaigns/:id
+    DELETE  /api/marketing/campaigns/:id
+
+  [material-balance]
+    GET     /api/material-balance/overview
+    GET     /api/material-balance/alerts
+    GET     /api/material-balance/internal-requests
+    GET     /api/material-balance/production
+    GET     /api/material-balance/:materialId/history
+    GET     /api/material-balance/:materialId/reconciliation
+    GET     /api/material-balance/warehouse/:warehouseId
+    POST    /api/material-balance/production/take
+    POST    /api/material-balance/production/use
+    POST    /api/material-balance/production/return
+    POST    /api/material-balance/negative-stock-check
+    PATCH   /api/material-balance/internal-requests/:id/approve
+    PATCH   /api/material-balance/internal-requests/:id/issue
+
+  [materials]
+    GET     /api/materials/cards
+    GET     /api/materials/cards/:id
+
+  [mentorships]
+    GET     /api/mentorships
+    GET     /api/mentorships/:id
+    POST    /api/mentorships
+    PUT     /api/mentorships/:id
+    DELETE  /api/mentorships/:id
+
+  [mes]
+    GET     /api/mes/maintenance-requests
+    GET     /api/mes/tasks
+    GET     /api/mes/sos/history
+    GET     /api/mes/downtime-reasons
+    GET     /api/mes/downtime-events/:sessionId
+    POST    /api/mes/maintenance-requests
+    POST    /api/mes/sos
+    POST    /api/mes/downtime-events
+    PATCH   /api/mes/maintenance-requests/:id
+    PATCH   /api/mes/tasks/:id/progress
+    GET     /api/mes/operations
+    GET     /api/mes/operations/downtime
+    GET     /api/mes/operations/downtime/summary
+    GET     /api/mes/operations/reason-codes
+    GET     /api/mes/operations/oee
+    POST    /api/mes/operations/downtime
+    POST    /api/mes/operations/:sessionId/downtime
+    PATCH   /api/mes/operations/downtime/:id/end
+    GET     /api/mes/production-sessions
+    GET     /api/mes/production-sessions/:sessionId
+    GET     /api/mes/production-sessions/:sessionId/downtime-events
+    POST    /api/mes/production-sessions
+    POST    /api/mes/production-sessions/:sessionId/downtime
+    GET     /api/mes/sessions/:id
+    POST    /api/mes/sessions
+    POST    /api/mes/sessions/:id/start
+    POST    /api/mes/sessions/:id/complete
+    POST    /api/mes/sessions/:id/downtime
+    GET     /api/mes/shifts/current
+    GET     /api/mes/shifts/evaluations
+    GET     /api/mes/oee
+    GET     /api/mes/stats
+    GET     /api/mes/gamification/leaderboard
+    GET     /api/mes/papka-orders
+    GET     /api/mes/orders
+    GET     /api/mes/orders/:id
+    GET     /api/mes/shifts
+    GET     /api/mes/maintenance
+    POST    /api/mes/shifts/handover
+    POST    /api/mes/shifts/close-evaluation
+    POST    /api/mes/material-consumption
+    PATCH   /api/mes/sessions/:id/pause
+    PATCH   /api/mes/sessions/:id/resume
+    PATCH   /api/mes/sessions/:id/quantity
+
+  [micro-modules]
+    GET     /api/micro-modules
+    GET     /api/micro-modules
+    GET     /api/micro-modules
+    GET     /api/micro-modules
+    GET     /api/micro-modules
+    GET     /api/micro-modules
+    GET     /api/micro-modules/user/:id
+    POST    /api/micro-modules/:id/view
+    POST    /api/micro-modules
+
+  [mm]
+    GET     /api/mm/dashboard
+    GET     /api/mm/vendor-ratings
+    GET     /api/mm/mrp-results
+    GET     /api/mm/fleet/vehicles
+    GET     /api/mm/fleet/fuel-logs
+    GET     /api/mm/supplier-performance
+    GET     /api/mm/materials/:id/price-history
+    GET     /api/mm/vendor-invoices
+    GET     /api/mm/vendor-invoices/:id
+    GET     /api/mm/three-way-match
+    GET     /api/mm/3way-match/:invoiceId
+    GET     /api/mm/fleet/maintenance
+    GET     /api/mm/fleet/deliveries
+    GET     /api/mm/vehicles/locations
+    GET     /api/mm/driver/expenses
+    GET     /api/mm/materials/:id/suppliers
+    POST    /api/mm/mrp-run
+    POST    /api/mm/fleet/vehicles
+    POST    /api/mm/fleet/fuel-logs
+    POST    /api/mm/vendor-invoices/:id/payment
+    PATCH   /api/mm/vendor-invoices/:id/approve
+    PATCH   /api/mm/vendor-invoices/:id/match
+    PATCH   /api/mm/fleet/deliveries/:id/status
+    GET     /api/mm/goods-receipts
+    GET     /api/mm/goods-receipts/:id
+    GET     /api/mm/goods-issues
+    GET     /api/mm/goods-issues/:id
+    GET     /api/mm/three-way-match/:poId
+    GET     /api/mm/currencies
+    GET     /api/mm/suppliers/price-comparison
+    POST    /api/mm/goods-receipts
+    POST    /api/mm/goods-issues
+    PATCH   /api/mm/goods-receipts/:id
+    PATCH   /api/mm/goods-issues/:id
+    DELETE  /api/mm/goods-receipts/:id
+    DELETE  /api/mm/goods-issues/:id
+    GET     /api/mm/materials
+    GET     /api/mm/materials/stats
+    GET     /api/mm/materials/:id
+    POST    /api/mm/materials
+    PUT     /api/mm/materials/:id
+    PATCH   /api/mm/materials/:id/toggle-active
+    GET     /api/mm/purchase-orders
+    GET     /api/mm/purchase-orders/:id
+    POST    /api/mm/purchase-orders
+    POST    /api/mm/purchase-orders/:id/approve
+    POST    /api/mm/purchase-orders/:id/goods-receipt
+    GET     /api/mm/vendors
+    GET     /api/mm/vendors/:id
+    GET     /api/mm/purchase-requisitions
+    GET     /api/mm/purchase-requisitions/:id
+    POST    /api/mm/vendors
+    POST    /api/mm/purchase-requisitions
+    PATCH   /api/mm/vendors/:id
+    PATCH   /api/mm/purchase-requisitions/:id
+    DELETE  /api/mm/vendors/:id
+    DELETE  /api/mm/purchase-requisitions/:id
+
+  [mro]
+    GET     /api/mro
+    GET     /api/mro/:id
+    POST    /api/mro/stop-machine
+    PATCH   /api/mro/:id/assign
+    PATCH   /api/mro/:id/complete
+
+  [notifications]
+    GET     /api/notifications
+    GET     /api/notifications/my
+    GET     /api/notifications/my/unread-count
+    GET     /api/notifications/preferences
+    POST    /api/notifications/my/mark-all-read
+    POST    /api/notifications
+    PUT     /api/notifications/preferences
+    PATCH   /api/notifications/:id/read
+    PATCH   /api/notifications/read-all
+
+  [okr]
+    GET     /api/okr/objectives
+    GET     /api/okr/objectives/:id
+    GET     /api/okr/key-results
+    GET     /api/okr/dashboard
+    POST    /api/okr/objectives
+    POST    /api/okr/key-results
+    PATCH   /api/okr/objectives/:id
+    PATCH   /api/okr/key-results/:id
+    DELETE  /api/okr/objectives/:id
+    DELETE  /api/okr/key-results/:id
+
+  [order-costing]
+    GET     /api/order-costing/top-profitable
+    GET     /api/order-costing/top-loss
+    GET     /api/order-costing
+    POST    /api/order-costing
+    POST    /api/order-costing/:id/calculate
+
+  [order-status]
+    GET     /api/order-status/chain
+    GET     /api/order-status/transitions
+    GET     /api/order-status/:orderId/log
+    POST    /api/order-status/:orderId/transition
+    POST    /api/order-status/:orderId/design-approved
+    POST    /api/order-status/:orderId/tech-approved
+    POST    /api/order-status/:orderId/advance-received
+    POST    /api/order-status/:orderId/qc-result
+    POST    /api/order-status/:orderId/mes-complete
+    POST    /api/order-status/:orderId/delivery-failed
+
+  [order-workflow]
+    GET     /api/order-workflow/orders/:id/saga-status
+    GET     /api/order-workflow/orders
+    POST    /api/order-workflow/orders
+    POST    /api/order-workflow/orders/:id/payment-plan
+    PATCH   /api/order-workflow/orders/:id/status
+
+  [org-chart]
+    GET     /api/org-chart/tree
+    GET     /api/org-chart/flat
+
+  [org-structure]
+    GET     /api/org-structure/hierarchy
+    GET     /api/org-structure/stats
+    GET     /api/org-structure/nodes/flat
+    GET     /api/org-structure/nodes/:id
+    GET     /api/org-structure/export/excel
+    GET     /api/org-structure/export/pdf
+    GET     /api/org-structure/nodes/:id/folder
+    GET     /api/org-structure/employees/:userId/folder
+    GET     /api/org-structure/nodes/:nodeId/history
+    GET     /api/org-structure/nodes/:nodeId/hr-requests
+    GET     /api/org-structure/nodes/:nodeId/portret
+    POST    /api/org-structure/nodes
+    POST    /api/org-structure/nodes/:id/folder
+    PATCH   /api/org-structure/nodes/:id
+    PATCH   /api/org-structure/nodes/:id/move
+    PATCH   /api/org-structure/users/:userId/node
+    DELETE  /api/org-structure/nodes/:id
+    DELETE  /api/org-structure/nodes/:nodeId/folder/:itemId
+
+  [papka-orders]
+    GET     /api/papka-orders
+    POST    /api/papka-orders
+    PATCH   /api/papka-orders/:id
+
+  [payroll]
+    GET     /api/payroll/by-department
+    GET     /api/payroll/by-brigade
+    GET     /api/payroll/tax-summary
+    GET     /api/payroll/periods
+    POST    /api/payroll/periods
+    POST    /api/payroll/periods/:id/calculate
+    POST    /api/payroll/periods/:id/close
+    POST    /api/payroll/calculate-tax
+
+  [planning]
+    GET     /api/planning/operations
+    POST    /api/planning/operations
+    GET     /api/planning/schedule
+    POST    /api/planning/schedule
+    PATCH   /api/planning/operations/:id
+
+  [pos]
+    GET     /api/pos/barcode/ai-suggestion/pending
+    POST    /api/pos/barcode/scan
+    POST    /api/pos/barcode/assign
+    POST    /api/pos/barcode/print
+    POST    /api/pos/barcode/generate-ean13
+    POST    /api/pos/barcode/ai-suggestion/review
+    GET     /api/pos/products
+    GET     /api/pos/scan/:barcode
+    GET     /api/pos/transactions
+    GET     /api/pos/receipt/:id
+    GET     /api/pos/dashboard
+    POST    /api/pos/products
+    POST    /api/pos/transactions
+    POST    /api/pos/transactions/:id/refund
+    GET     /api/pos/employees/:userId/balance
+    GET     /api/pos/employees/me/balance
+    GET     /api/pos/employees/department/:code/balance
+    GET     /api/pos/employees/:userId/statement
+    POST    /api/pos/employees/write-off
+    POST    /api/pos/employees/liability
+    POST    /api/pos/employees/dismiss-check
+    PATCH   /api/pos/employees/liability/:id
+    GET     /api/pos/gl/movement/:id
+    GET     /api/pos/gl/pending
+    GET     /api/pos/gl/journal
+    POST    /api/pos/gl/approve/:movementId
+    POST    /api/pos/gl/entry/:id/approve
+    POST    /api/pos/gl/entry/:id/reject
+    GET     /api/pos/inventory-counts
+    GET     /api/pos/inventory-counts/:id/variance
+    GET     /api/pos/inventory-counts/:id/pdf
+    POST    /api/pos/inventory-counts
+    POST    /api/pos/inventory-counts/lines/record
+    POST    /api/pos/inventory-counts/lines/bulk-record
+    PATCH   /api/pos/inventory-counts/approve
+    GET     /api/pos/mini-app/history
+    GET     /api/pos/mini-app/pending-approvals
+    GET     /api/pos/mini-app/warehouses
+    GET     /api/pos/mini-app/materials
+    POST    /api/pos/mini-app/auth
+    POST    /api/pos/mini-app/barcode/scan
+    POST    /api/pos/mini-app/requests
+    PATCH   /api/pos/mini-app/requests/:id/approve
+    PATCH   /api/pos/mini-app/requests/:id/reject
+    GET     /api/pos/movements
+    GET     /api/pos/movements/:id
+    GET     /api/pos/movements/:id/pdf
+    GET     /api/pos/movements/:id/confirmations
+    GET     /api/pos/movements/:id/history
+    POST    /api/pos/movements
+    POST    /api/pos/movements/qc-decision
+    POST    /api/pos/movements/damage
+    PATCH   /api/pos/movements/:id/status
+    GET     /api/pos/auth/ping
+    POST    /api/pos/auth/login
+    POST    /api/pos/auth/validate
+    GET     /api/pos/notifications
+    POST    /api/pos/notifications/:id/read
+    POST    /api/pos/notifications/read-all
+    GET     /api/pos/sales/daily
+    GET     /api/pos/inventory/low-stock
+    GET     /api/pos/inventory/movements
+    GET     /api/pos/inventory/monthly-report
+    PATCH   /api/pos/inventory/:productId/adjust
+    GET     /api/pos/printer-config
+    GET     /api/pos/printer-config/active
+    POST    /api/pos/printer-config
+    POST    /api/pos/printer-config/:id/test
+    PATCH   /api/pos/printer-config/:id
+    GET     /api/pos/reports/kpi
+    GET     /api/pos/reports/stock
+    GET     /api/pos/reports/movement-stats
+    GET     /api/pos/reports/top-materials
+    GET     /api/pos/reports/audit
+    GET     /api/pos/reports/three-way-match
+    GET     /api/pos/reports/liabilities
+    GET     /api/pos/requests
+    GET     /api/pos/requests/:id
+    POST    /api/pos/requests
+    POST    /api/pos/requests/issue
+    PATCH   /api/pos/requests/approve
+    PATCH   /api/pos/requests/reject
+    GET     /api/pos/stock
+    GET     /api/pos/stock/low-alerts
+    GET     /api/pos/stock/expiry-alerts
+    GET     /api/pos/stock/:warehouseId/:materialId
+    POST    /api/pos/stock/adjust
+    GET     /api/pos/sync/status
+    POST    /api/pos/sync/push
+    POST    /api/pos/sync/pull
+    GET     /api/pos/movement-types
+    GET     /api/pos/warehouse-access/:userId
+    GET     /api/pos/movements
+    GET     /api/pos/movements/stats
+    GET     /api/pos/movements/:id
+    GET     /api/pos/passports
+    GET     /api/pos/passports/:id
+    GET     /api/pos/barcodes/lookup
+    GET     /api/pos/pdf-templates
+    GET     /api/pos/pdf-templates/:id
+    POST    /api/pos/movement-types
+    POST    /api/pos/warehouse-access
+    POST    /api/pos/movements
+    POST    /api/pos/movements/:id/lines
+    POST    /api/pos/passports
+    POST    /api/pos/barcodes
+    POST    /api/pos/pdf-templates
+    PUT     /api/pos/movements/:id/status
+    DELETE  /api/pos/warehouse-access/:userId/:warehouseId
+
+  [pos-v2]
+    GET     /api/pos-v2/barcode/lookup
+    POST    /api/pos-v2/barcode/lookup
+    GET     /api/pos-v2/inventory-counts
+    GET     /api/pos-v2/inventory-counts/:id
+    PATCH   /api/pos-v2/inventory-counts/:id/lines/:lineId
+    PATCH   /api/pos-v2/inventory-counts/:id/complete
+    PATCH   /api/pos-v2/inventory-counts/:id/approve
+    GET     /api/pos-v2/reports/movements
+    GET     /api/pos-v2/reports/employee-activity
+    GET     /api/pos-v2/reports/low-stock
+    GET     /api/pos-v2/transfer-requests
+    GET     /api/pos-v2/transfer-requests/:id
+    POST    /api/pos-v2/transfer-requests
+    PATCH   /api/pos-v2/transfer-requests/:id/status
+
+  [pp]
+    GET     /api/pp/production-orders
+    GET     /api/pp/bom
+    GET     /api/pp/bom/:id
+    POST    /api/pp/bom
+    POST    /api/pp/bom/:id/approve
+    GET     /api/pp/mps
+    GET     /api/pp/crp
+    GET     /api/pp/learning-curve/:productId
+    POST    /api/pp/mrp/run
+    GET     /api/pp/orders
+    GET     /api/pp/orders/:id
+    GET     /api/pp/orders/plan/:startDate/:endDate
+    POST    /api/pp/orders
+    PATCH   /api/pp/orders/:id/release
+    GET     /api/pp/routing/:id
+    POST    /api/pp/routing
+    POST    /api/pp/routing/:id/approve
+    GET     /api/pp/work-centers
+    GET     /api/pp/work-centers/stats
+    GET     /api/pp/work-centers/:id
+    POST    /api/pp/work-centers
+    PUT     /api/pp/work-centers/:id
+    PATCH   /api/pp/work-centers/:id/toggle-active
+
+  [pricing]
+    GET     /api/pricing/tiers/:productName
+    POST    /api/pricing/calculate
+    POST    /api/pricing/tiers
+
+  [print]
+    GET     /api/print/spoilage/:jobId
+    POST    /api/print/ink-coverage
+    POST    /api/print/imposition
+    POST    /api/print/spoilage
+
+  [production]
+    GET     /api/production/orders/report
+    GET     /api/production/reports/weekly
+    GET     /api/production/stats
+    GET     /api/production/orders/:id/360-card
+    GET     /api/production/orders
+    GET     /api/production/shift-reports
+    GET     /api/production/shift-reports/:id
+    POST    /api/production/shift-reports
+    POST    /api/production/shift-reports/:id/close
+    POST    /api/production/shift-reports/:id/downtime
+    PATCH   /api/production/shift-reports/:id
+
+  [production-facts]
+    GET     /api/production-facts
+    GET     /api/production-facts/variance
+    GET     /api/production-facts/operators
+    POST    /api/production-facts
+
+  [products]
+    GET     /api/products
+
+  [progress]
+    GET     /api/progress/user
+
+  [public]
+    GET     /api/public/categories
+    GET     /api/public/products/:slug
+    POST    /api/public/orders
+
+  [qc]
+    GET     /api/qc/braks
+    GET     /api/qc/braks/stats
+    GET     /api/qc/braks/cost-impact/:papkaOrderId
+    GET     /api/qc/supplier-quality
+    GET     /api/qc/dashboard/stats
+    GET     /api/qc/dashboard/flow
+    GET     /api/qc/approvals
+    POST    /api/qc/braks
+    POST    /api/qc/supplier-quality
+    POST    /api/qc/approvals
+    PATCH   /api/qc/approvals/:id
+    PATCH   /api/qc/reclamations/:id
+    GET     /api/qc/defects
+    GET     /api/qc/defects/stats
+    GET     /api/qc/defects/:id
+    GET     /api/qc/braks/cost-impact
+    GET     /api/qc/pending/qc
+    POST    /api/qc/defects
+    PATCH   /api/qc/defects/:id/resolve
+    PATCH   /api/qc/approve/finance/:orderId
+    PATCH   /api/qc/approve/qc/:orderId
+    PATCH   /api/qc/reject/:orderId
+    PATCH   /api/qc/inspector-submit/:orderId
+    GET     /api/qc/dpmo/:processId
+    POST    /api/qc/dpmo
+    GET     /api/qc/standards
+    GET     /api/qc/standards/:id
+    GET     /api/qc/final-inspections
+    GET     /api/qc/final-orders
+    GET     /api/qc/in-process
+    GET     /api/qc/root-causes
+    POST    /api/qc/standards
+    POST    /api/qc/final-inspections
+    POST    /api/qc/final-inspections/:id/complete
+    POST    /api/qc/in-process
+    POST    /api/qc/root-causes
+    PATCH   /api/qc/standards/:id
+    PATCH   /api/qc/root-causes/:id
+    GET     /api/qc/inspections
+    GET     /api/qc/inspections/:id
+    POST    /api/qc/inspections
+    POST    /api/qc/inspections/:id/submit
+    GET     /api/qc/dashboard
+    GET     /api/qc/checkpoints
+    GET     /api/qc/ai-trend
+    GET     /api/qc/certificates
+    GET     /api/qc/lab-tests
+    GET     /api/qc/spc/control-chart
+    GET     /api/qc/control-charts/:processId
+    GET     /api/qc/supplier-quality/ratings
+    POST    /api/qc/checkpoints
+    POST    /api/qc/lab-tests
+    GET     /api/qc/parameters/grouped
+    GET     /api/qc/tests
+    GET     /api/qc/tests/recent
+    POST    /api/qc/parameters
+    POST    /api/qc/seed-parameters
+    POST    /api/qc/tests
+    POST    /api/qc/tests/:id/ai-analyze
+    PATCH   /api/qc/parameters/:id
+    DELETE  /api/qc/parameters/:id
+    DELETE  /api/qc/standards/:id
+    GET     /api/qc/reclamations
+    GET     /api/qc/reclamations/stats
+    GET     /api/qc/reclamations/:id
+    POST    /api/qc/reclamations
+
+  [questionnaire]
+    GET     /api/questionnaire/questions
+    GET     /api/questionnaire/responses
+    GET     /api/questionnaire/responses/:id
+    GET     /api/questionnaire/responses/:id/export
+    GET     /api/questionnaire
+    GET     /api/questionnaire/:id
+    GET     /api/questionnaire
+    POST    /api/questionnaire/questions
+    POST    /api/questionnaire/responses
+    POST    /api/questionnaire
+    POST    /api/questionnaire
+    PUT     /api/questionnaire/questions/:id
+    PUT     /api/questionnaire/:id
+    DELETE  /api/questionnaire/questions/:id
+    DELETE  /api/questionnaire/:id
+    DELETE  /api/questionnaire/:id
+
+  [raci-crisis]
+    GET     /api/raci-crisis/tasks
+    GET     /api/raci-crisis/tasks/:id/assignments
+    GET     /api/raci-crisis/stages
+    GET     /api/raci-crisis/crises
+    GET     /api/raci-crisis/assessments
+    POST    /api/raci-crisis/tasks
+    POST    /api/raci-crisis/assignments
+    POST    /api/raci-crisis/assessments
+    DELETE  /api/raci-crisis/assignments/:id
+
+  [raw-materials]
+    GET     /api/raw-materials
+
+  [reports]
+    GET     /api/reports/trial-balance
+    GET     /api/reports/profit-loss
+    GET     /api/reports/weekly-summary/current-week
+    GET     /api/reports/weekly-summary
+    GET     /api/reports/monthly-summary
+    GET     /api/reports/kpi-dashboard
+    GET     /api/reports/production-efficiency
+
+  [reports-hub]
+    GET     /api/reports-hub
+    GET     /api/reports-hub/dashboard
+    GET     /api/reports-hub/categories
+    GET     /api/reports-hub/definitions
+    GET     /api/reports-hub/runs
+    GET     /api/reports-hub/runs/:runId
+    GET     /api/reports-hub/subscriptions
+    POST    /api/reports-hub/definitions
+    POST    /api/reports-hub/generate/:definitionId
+    POST    /api/reports-hub/seed-categories
+    POST    /api/reports-hub/subscriptions
+    DELETE  /api/reports-hub/subscriptions/:id
+
+  [saas]
+    GET     /api/saas/tenants
+    GET     /api/saas/platform-stats
+    GET     /api/saas/error-logs
+    GET     /api/saas/modules
+    GET     /api/saas/expiry-alerts
+    GET     /api/saas/tenants/:id
+    GET     /api/saas/tenants/:id/modules
+    GET     /api/saas
+    POST    /api/saas/tenants
+    POST    /api/saas/tenants/:id/onboard
+    POST    /api/saas
+    PUT     /api/saas/tenants/:id
+    PATCH   /api/saas/tenants/:id/status
+    DELETE  /api/saas/tenants/:id
+
+  [safety-violations]
+    GET     /api/safety-violations/user
+
+  [sales]
+    GET     /api/sales/invoices
+    GET     /api/sales/analytics/monthly-trend
+    GET     /api/sales/analytics/velocity
+    GET     /api/sales/commission/calculations
+    GET     /api/sales/forecast/accuracy
+    GET     /api/sales/forecast/generate
+    GET     /api/sales/forecast/history
+    GET     /api/sales/targets/leaderboard
+
+  [sales-orders]
+    GET     /api/sales-orders
+
+  [sap]
+    GET     /api/sap/sales-orders
+    GET     /api/sap/sales-orders/:id
+    PUT     /api/sap/sales-orders/:id
+
+  [sd]
+    GET     /api/sd/customers
+    GET     /api/sd/customers/:id
+    GET     /api/sd/customers/:id/360
+    GET     /api/sd/customers/:id/contacts
+    GET     /api/sd/customers/:id/interactions
+    GET     /api/sd/customers/:id/documents
+    GET     /api/sd/customers/:id/competitors
+    GET     /api/sd/customers/:id/complaints
+    POST    /api/sd/customers
+    POST    /api/sd/customers/:id/contacts
+    POST    /api/sd/customers/:id/interactions
+    POST    /api/sd/customers/:id/documents
+    POST    /api/sd/customers/:id/complaints/:cid/resolve
+    PUT     /api/sd/customers/:id
+    PUT     /api/sd/customers/:id/contacts/:cid
+    DELETE  /api/sd/customers/:id
+    DELETE  /api/sd/customers/:id/contacts/:cid
+    DELETE  /api/sd/customers/:id/documents/:did
+    DELETE  /api/sd/customers/:id/competitors/:coid
+    GET     /api/sd/dashboard/overview
+    GET     /api/sd/dashboard/manager-actions
+    GET     /api/sd/dashboard/quota
+    GET     /api/sd/deliveries
+    GET     /api/sd/deliveries/:id
+    PATCH   /api/sd/deliveries/:id/status
+    GET     /api/sd/invoices
+    GET     /api/sd/invoices/:id
+    POST    /api/sd/invoices
+    GET     /api/sd/leads
+    GET     /api/sd/leads/stats
+    GET     /api/sd/leads/export
+    GET     /api/sd/leads/:id
+    GET     /api/sd/leads/:id/activities
+    POST    /api/sd/leads
+    POST    /api/sd/leads/:id/convert
+    POST    /api/sd/leads/:id/activities
+    PUT     /api/sd/leads/:id/status
+    PATCH   /api/sd/leads/:id
+    DELETE  /api/sd/leads/:id
+    GET     /api/sd/orders
+    GET     /api/sd/orders/pending-advance
+    GET     /api/sd/orders/:id
+    POST    /api/sd/orders
+    POST    /api/sd/orders/:id/advance-bypass
+    POST    /api/sd/orders/:id/advance-payment
+    PATCH   /api/sd/orders/:id/status
+    PATCH   /api/sd/orders/:id/tech-checkpoint
+    GET     /api/sd/payments
+    GET     /api/sd/payments/debitors
+    GET     /api/sd/payments/overdue
+    GET     /api/sd/debitors
+    GET     /api/sd/active-rentals
+    POST    /api/sd/payments
+    GET     /api/sd/quotations
+    GET     /api/sd/contracts
+    GET     /api/sd/price-formulas
+    GET     /api/sd/kpi/team
+    GET     /api/sd/kpi-targets
+    GET     /api/sd/reports/funnel
+    POST    /api/sd/quotations
+    POST    /api/sd/contracts
+    POST    /api/sd/calculate-price
+    POST    /api/sd/quotations/:id/convert-to-order
+    POST    /api/sd/quotations/:id/convert
+    POST    /api/sd/quotations/:id/send
+    PATCH   /api/sd/quotations/:id/approve
+    PATCH   /api/sd/quotations/:id
+    PATCH   /api/sd/contracts/:id/sign
+    PATCH   /api/sd/kpi-targets/:id
+    PATCH   /api/sd/orders/:id/cancel
+    PATCH   /api/sd/payments/:id/mark-paid
+
+  [security]
+    GET     /api/security
+    GET     /api/security/:id
+    POST    /api/security/report
+    POST    /api/security/visitors/:id/exit
+    PATCH   /api/security/:id
+    PATCH   /api/security/:id/resolve
+
+  [seven-functions]
+    GET     /api/seven-functions/functions
+    GET     /api/seven-functions/functions/:id
+    GET     /api/seven-functions/kpis/:functionId
+    POST    /api/seven-functions/functions
+    POST    /api/seven-functions/kpis
+    POST    /api/seven-functions/analyze
+    PUT     /api/seven-functions/functions/:id
+    PUT     /api/seven-functions/kpis/:id
+    DELETE  /api/seven-functions/functions/:id
+    DELETE  /api/seven-functions/kpis/:id
+
+  [strategic]
+    GET     /api/strategic/categories
+    GET     /api/strategic/tasks
+    GET     /api/strategic/tasks/:id
+    GET     /api/strategic/dashboard
+    POST    /api/strategic/categories
+    POST    /api/strategic/tasks
+    POST    /api/strategic/tasks/:taskId/milestones
+    POST    /api/strategic/seed
+    PATCH   /api/strategic/categories/:id
+    PATCH   /api/strategic/tasks/:id
+    PATCH   /api/strategic/milestones/:id
+    DELETE  /api/strategic/tasks/:id
+
+  [succession]
+    GET     /api/succession/career-plans
+    GET     /api/succession/talent-pool
+    GET     /api/succession/candidates
+    GET     /api/succession/key-positions
+    GET     /api/succession/risks
+    GET     /api/succession/readiness-stats
+    POST    /api/succession/career-plans
+    POST    /api/succession/talent-pool
+    PUT     /api/succession/career-plans/:id
+
+  [system]
+    GET     /api/system/health
+    GET     /api/system/db-stats
+    GET     /api/system/cron-jobs
+    GET     /api/system
+    GET     /api/system/integrations
+    GET     /api/system
+    PUT     /api/system
+
+  [system-settings]
+    GET     /api/system-settings
+    PUT     /api/system-settings
+
+  [technology]
+    GET     /api/technology/dashboard
+    GET     /api/technology/orders
+    GET     /api/technology/orders/:id/approval-log
+    GET     /api/technology/orders/:id/tech-card
+    GET     /api/technology/tech-cards
+    GET     /api/technology/materials/alternatives
+    GET     /api/technology/cards
+    GET     /api/technology/cards/:id
+    POST    /api/technology/orders/:id/ai-check
+    POST    /api/technology/orders/:id/approve
+    POST    /api/technology/orders/:id/reject
+    POST    /api/technology/cards/generate
+    POST    /api/technology/cards/:id/optimize
+
+  [technology-cards]
+    GET     /api/technology-cards
+
+  [telegram]
+    GET     /api/telegram/admin/stats
+    GET     /api/telegram/admin/users
+    POST    /api/telegram/admin/broadcast
+
+  [tests]
+    GET     /api/tests
+    GET     /api/tests/:id
+    GET     /api/tests
+    GET     /api/tests/:questionId
+    POST    /api/tests
+    POST    /api/tests
+    POST    /api/tests
+    PUT     /api/tests/:id
+    PUT     /api/tests/:questionId
+    DELETE  /api/tests/:id
+    DELETE  /api/tests/:questionId
+
+  [upload]
+    POST    /api/upload
+
+  [users]
+    GET     /api/users
+
+  [v2]
+    POST    /api/v2/pos/printer-config/:id/test
+
+  [validate]
+    POST    /api/validate/stir
+    POST    /api/validate/luhn
+
+  [warehouse]
+    GET     /api/warehouse/barcode/print/:id
+    POST    /api/warehouse/barcode/generate
+    POST    /api/warehouse/barcode/scan
+    POST    /api/warehouse/barcode/bulk-generate
+    GET     /api/warehouse/materials
+    GET     /api/warehouse/batches/stats
+    GET     /api/warehouse/batches
+    POST    /api/warehouse/batches
+    PATCH   /api/warehouse/batches/:id
+    GET     /api/warehouse/label/batches
+    GET     /api/warehouse/label/history
+    POST    /api/warehouse/label/print
+    POST    /api/warehouse/label/print-job
+    PATCH   /api/warehouse/label/batches/:id/status
+    GET     /api/warehouse/orders-by-date
+    GET     /api/warehouse/warehouses
+    GET     /api/warehouse/stock
+    GET     /api/warehouse/transfers
+    GET     /api/warehouse/lots
+    GET     /api/warehouse/internal-requests
+    GET     /api/warehouse/dashboard/kpis
+    GET     /api/warehouse/dashboard/warehouse-occupancy
+    GET     /api/warehouse/goods-receipts/stats
+    GET     /api/warehouse/goods-receipts
+    GET     /api/warehouse/goods-receipts/:id/lines
+    GET     /api/warehouse/bins
+    GET     /api/warehouse/bins/:id/360
+    GET     /api/warehouse/bins/:id
+    GET     /api/warehouse/zones
+    GET     /api/warehouse/warehouses/:id/stats
+    GET     /api/warehouse/warehouses/:id/zones
+    GET     /api/warehouse/warehouses/:id/bins
+    GET     /api/warehouse/warehouses/:id
+    GET     /api/warehouse/transfers/:id
+    GET     /api/warehouse/reports/abc-analysis
+    GET     /api/warehouse/reports/aging
+    GET     /api/warehouse/reports/expiry
+    GET     /api/warehouse/reports/stock-balance
+    GET     /api/warehouse/reports/turnover
+    GET     /api/warehouse/printer-config
+    GET     /api/warehouse/inventory-counts-stats
+    GET     /api/warehouse/inventory-counts
+    GET     /api/warehouse/inventory-counts/lines/:lineId
+    GET     /api/warehouse/inventory-counts/:id
+    GET     /api/warehouse/transactions
+    GET     /api/warehouse/dashboard
+    GET     /api/warehouse/orders-by-date/:date
+    GET     /api/warehouse/dashboard/movement-summary
+    GET     /api/warehouse/dashboard/alerts
+    GET     /api/warehouse/dashboard/top-materials
+    GET     /api/warehouse/material-kits
+    GET     /api/warehouse/material-kits/:id/items
+    GET     /api/warehouse/stats/total
+    GET     /api/warehouse/integration/mm/pending-deliveries
+    GET     /api/warehouse/integration/mm/reorder-suggestions
+    GET     /api/warehouse/integration/fi/stock-valuation
+    GET     /api/warehouse/integration/summary
+    GET     /api/warehouse/integration
+    POST    /api/warehouse/transfers
+    POST    /api/warehouse/internal-requests
+    POST    /api/warehouse/goods-receipts
+    POST    /api/warehouse/goods-receipts/lines/:id/qc
+    POST    /api/warehouse/goods-receipts/:id/complete
+    POST    /api/warehouse/printer-config
+    POST    /api/warehouse/inventory-counts
+    POST    /api/warehouse/inventory-counts/:id/generate-lines
+    POST    /api/warehouse/material-kits
+    POST    /api/warehouse/integration
+    PATCH   /api/warehouse/zones/:id
+    PATCH   /api/warehouse/warehouses/:id
+    PATCH   /api/warehouse/transfers/:id/status
+    PATCH   /api/warehouse/printer-config/:id
+    PATCH   /api/warehouse/inventory-counts/lines/:lineId
+    PATCH   /api/warehouse/inventory-counts/:id
+    PATCH   /api/warehouse/inventory-counts/:id/status
+    PATCH   /api/warehouse/material-kits/:id/status
+    DELETE  /api/warehouse/zones/:id
+    DELETE  /api/warehouse/printer-config/:id
+
+  [warehouse-rental]
+    GET     /api/warehouse-rental/records
+    GET     /api/warehouse-rental/summary
+    GET     /api/warehouse-rental/settings
+    POST    /api/warehouse-rental/records
+    POST    /api/warehouse-rental/records/:id/close
+    POST    /api/warehouse-rental/records/:id/mark-paid
+    POST    /api/warehouse-rental/recalculate
+    PATCH   /api/warehouse-rental/settings
+
+  [warehouses]
+    GET     /api/warehouses
+    GET     /api/warehouses/:id
+    GET     /api/warehouses
+    GET     /api/warehouses/:id
+    GET     /api/warehouses
+    GET     /api/warehouses/:id
+    GET     /api/warehouses
+    GET     /api/warehouses
+    GET     /api/warehouses/:id
+    POST    /api/warehouses
+    POST    /api/warehouses
+    POST    /api/warehouses
+    POST    /api/warehouses/notify-vacancies
+    POST    /api/warehouses
+    PATCH   /api/warehouses/:id
+    PATCH   /api/warehouses/:id
+    PATCH   /api/warehouses/:id
+    DELETE  /api/warehouses/:id
+    DELETE  /api/warehouses/:id
+
+  [waste]
+    GET     /api/waste/records
+    GET     /api/waste/dashboard
+    GET     /api/waste/trends
+    GET     /api/waste/targets
+    GET     /api/waste/analysis
+    POST    /api/waste/records
+    POST    /api/waste/targets
+    PATCH   /api/waste/records/:id
+
+  [website]
+    GET     /api/website/banners
+    GET     /api/website/portfolio
+    GET     /api/website/news
+    POST    /api/website/banners
+    POST    /api/website/portfolio
+    PUT     /api/website/banners/:id
+    PUT     /api/website/portfolio/:id
+    DELETE  /api/website/banners/:id
+    DELETE  /api/website/portfolio/:id
+    GET     /api/website/settings
+    GET     /api/website/pages
+    POST    /api/website/pages
+    PUT     /api/website/settings/:key
+    PUT     /api/website/pages/:id
+    DELETE  /api/website/pages/:id
+
+  [weekly-plans]
+    GET     /api/weekly-plans/stats/summary
+    GET     /api/weekly-plans
+    GET     /api/weekly-plans/:id
+    POST    /api/weekly-plans
+    PATCH   /api/weekly-plans/:id/approve
+
+  [wms]
+    GET     /api/wms/inventory-turnover
+    GET     /api/wms/dead-stock
+    GET     /api/wms/rop-alerts
+    GET     /api/wms/inventory-counts
+    GET     /api/wms/internal-requests
+    GET     /api/wms/batches
+    GET     /api/wms/production-supply
+    POST    /api/wms/inventory-counts
+    POST    /api/wms/internal-requests
+    PATCH   /api/wms/internal-requests/:id
+    DELETE  /api/wms/inventory-counts/:id
+    POST    /api/wms/eoq/calculate
+    POST    /api/wms/eoq/recalculate-all
+    GET     /api/wms/stats/total
+    GET     /api/wms/materials/:id/fifo-cost
+    GET     /api/wms/transactions
+    GET     /api/wms/alerts
+    GET     /api/wms/suggestions
+    GET     /api/wms/low-stock
+    GET     /api/wms/movements
+    POST    /api/wms/transactions
+    POST    /api/wms/check-alerts
+    POST    /api/wms/barcode/scan
+    PATCH   /api/wms/transactions/:id
+    DELETE  /api/wms/transactions/:id
+    POST    /api/wms/goods-issue
+    PATCH   /api/wms/goods-issue/:id
+    DELETE  /api/wms/goods-issue/:id
+    GET     /api/wms/inventory
+    GET     /api/wms/inventory/low-stock
+    GET     /api/wms/inventory/:id
+    PATCH   /api/wms/inventory/:id
+    DELETE  /api/wms/inventory/:id
+    GET     /api/wms/rental/:warehouseId
+    POST    /api/wms/rental/receive
+    PATCH   /api/wms/rental/:id
+    DELETE  /api/wms/rental/:id
+    GET     /api/wms/stock
+    GET     /api/wms/stock/:id
+    GET     /api/wms/stock/fefo/:materialId/:warehouseId
+    POST    /api/wms/stock/reserve
+    PATCH   /api/wms/stock/:id
+    DELETE  /api/wms/stock/:id
+    GET     /api/wms/warehouses
+    GET     /api/wms/warehouses/:id
+    GET     /api/wms/warehouses/:id/inventory
+    POST    /api/wms/warehouses
+    PATCH   /api/wms/warehouses/:id/toggle-active
+    DELETE  /api/wms/warehouses/:id

@@ -1,0 +1,77 @@
+════════════════════════════════════════════════════════════════════════════════
+TO'LIQ TIZIM TEKSHIRUVI HISOBOTI  (Full System Audit)
+Sana: 2026-04-28T15:25:23.550Z
+════════════════════════════════════════════════════════════════════════════════
+
+§0  UMUMIY XULOSA
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌─ BACKEND QAMROVI ──────────────────────────────────────────────────┐
+  │  Jami backend routlar               :     0                       │
+  │  To'liq qamrab olingan (API/button)  :     0  (  100%)          │
+  │  Qisman qamrab olingan (sahifa/nav)  :     0  (  100%)          │
+  │  Umuman qamlanmagan                  :     0  (  100%)  ← ASOSIY │
+  │    - GET routlar qamlanmagan         :     0                       │
+  │    - Mutatsiya (POST/PUT/...) yo'q   :     0                       │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ┌─ FRONTEND → BACKEND (404 XAVFI) ──────────────────────────────────┐
+  │  Yuqori ishonchdagi API chaqiruvlar  :     0                       │
+  │  Backendda mos keladiganlar          :     0                       │
+  │  Backendda YO'Q (404 xavfi)          :     0  ← TUZATISH KERAK  │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ┌─ SAHIFA SOGLIGI ───────────────────────────────────────────────────┐
+  │  Jami sahifalar                      :     0                       │
+  │  Buttonsiz sahifalar                 :     0                       │
+  │  API chaqiruvsiz sahifalar           :     0                       │
+  │  Button bor, API yo'q (uzilgan?)     :     0  ← TEKSHIRISH KERAK│
+  └────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+§1  UMUMAN QAMLANMAGAN BACKEND ROUTLAR  (0 ta)
+    Na API chaqiruv, na sahifa, na nav link, na tab, na button topilmadi
+────────────────────────────────────────────────────────────────────────────────
+
+  ✅ Barcha backend routlar qandaydir usulda frontendda mavjud!
+────────────────────────────────────────────────────────────────────────────────
+§2  MUTATSIYA ROUTLAR — FRONTEND DA BUTTON / API CHAQIRUV YO'Q  (0 ta)
+    POST / PUT / PATCH / DELETE routlar — frontendda bevosita chaqirilmayapti
+────────────────────────────────────────────────────────────────────────────────
+
+  ✅ Barcha mutatsiya routlari frontendda bog'langan!
+────────────────────────────────────────────────────────────────────────────────
+§3  FRONTEND → BACKEND: 404 XAVFI  (0 ta)
+    Frontend chaqirayapti, lekin backend routda bunday yo'l yo'q
+────────────────────────────────────────────────────────────────────────────────
+
+  ✅ Barcha frontend API chaqiruvlari backendda topildi!
+────────────────────────────────────────────────────────────────────────────────
+§4  QISMAN QAMRANGAN ROUTLAR  (0 ta)
+    Sahifa/nav/tab orqali mavjud, lekin bevosita API chaqiruv yo'q
+────────────────────────────────────────────────────────────────────────────────
+
+  ✅ Barcha qamrangan routlar to'liq bevosita API chaqiruvga ega!
+────────────────────────────────────────────────────────────────────────────────
+§5  BUTTON BOR LEKIN API CHAQIRUV YO'Q SAHIFALAR  (0 ta)
+    Bu sahifalardagi buttonlar backendga ulanmagan bo'lishi mumkin
+────────────────────────────────────────────────────────────────────────────────
+
+  ✅ Barcha interaktiv sahifalar API ga ulangan!
+
+────────────────────────────────────────────────────────────────────────────────
+§6  TO'LIQ QAMRANGAN ROUTLAR  (0 ta) — barcha signal manbalari
+────────────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────────────
+§7  BARCHA SAHIFALAR SOGLIGI  (0 ta sahifa)
+────────────────────────────────────────────────────────────────────────────────
+
+  Sahifa                                                onClick  submit  mutation  apiCall  API?
+  ──────────────────────────────────────────────────── ──────── ─────── ───────── ──────── ─────
+
+════════════════════════════════════════════════════════════════════════════════
+Hisobot yakunlandi: 2026-04-28T15:25:23.551Z
+Fayl: /home/runner/workspace/scripts/scripts/full-system-audit-report.txt
+════════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,114 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  RefreshCw, Eye, Plus, ClipboardList,
+} from "lucide-react";
+import { formatNum, formatDate, SHIFT_STATUS } from "./helpers";
+import { ShiftReport } from "./types";
+import { CreateShiftModal } from "./CreateShiftModal";
+import { ShiftDetailModal } from "./ShiftDetailModal";
+
+export function ShiftReportsTab() {
+  const [createOpen, setCreateOpen] = useState(false);
+  const [detailId, setDetailId] = useState<number | null>(null);
+
+  const { data, isLoading, refetch } = useQuery<{ reports: ShiftReport[] }>({
+    queryKey: ["/api/production/shift-reports"],
+    queryFn: async () => {
+      const r = await fetch("/api/production/shift-reports");
+      if (!r.ok) throw new Error("Xato");
+      return r.json();
+    },
+  });
+
+  const reports = data?.reports || [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <ClipboardList className="w-5 h-5 text-primary" />
+          Smena Xisobotlari
+        </h3>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4 mr-1" /> Yangilash
+          </Button>
+          <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="button-open-create-shift">
+            <Plus className="w-4 h-4 mr-1" /> Yangi Smena
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-4">Raqam</TableHead>
+                <TableHead>Sana</TableHead>
+                <TableHead>Bo'lim</TableHead>
+                <TableHead>Smena</TableHead>
+                <TableHead>Holat</TableHead>
+                <TableHead className="text-right">Reja</TableHead>
+                <TableHead className="text-right">Amalda</TableHead>
+                <TableHead className="text-right">Sifat %</TableHead>
+                <TableHead className="text-right">OEE</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={`k-${i}`}>
+                    {Array.from({ length: 10 }).map((_, j) => (
+                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : reports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-10">
+                    Smena xisobotlari yo'q
+                  </TableCell>
+                </TableRow>
+              ) : (
+                (Array.isArray(reports) ? reports : []).map((r) => {
+                  const st = SHIFT_STATUS[r.status] ?? ({ label: r.status, variant: "secondary" as const });
+                  return (
+                    <TableRow key={r.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => setDetailId(r.id)} data-testid={`row-shift-${r.id}`}>
+                      <TableCell className="pl-4 font-medium">{r.report_number}</TableCell>
+                      <TableCell>{formatDate(r.shift_date)}</TableCell>
+                      <TableCell>{r.department}</TableCell>
+                      <TableCell>{r.shift_number}-smena</TableCell>
+                      <TableCell><Badge variant={st.variant}>{st.label}</Badge></TableCell>
+                      <TableCell className="text-right">{formatNum(r.planned_qty)}</TableCell>
+                      <TableCell className="text-right font-semibold">{formatNum(r.produced_qty)}</TableCell>
+                      <TableCell className="text-right">{r.quality_rate ? `${Number(r.quality_rate).toFixed(1)}%` : "—"}</TableCell>
+                      <TableCell className="text-right">{r.oee_percent ? `${Number(r.oee_percent).toFixed(1)}%` : "—"}</TableCell>
+                      <TableCell>
+                        <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setDetailId(r.id); }} data-testid={`button-view-shift-${r.id}`}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <CreateShiftModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => refetch()} />
+      <ShiftDetailModal reportId={detailId} open={!!detailId} onClose={() => setDetailId(null)} />
+    </div>
+  );
+}

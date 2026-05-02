@@ -1,0 +1,1322 @@
+════════════════════════════════════════════════════════════════════════════════
+TO'LIQ TIZIM TEKSHIRUVI HISOBOTI  (Full System Audit)
+Sana: 2026-04-28T15:27:30.543Z
+════════════════════════════════════════════════════════════════════════════════
+
+§0  UMUMIY XULOSA
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌─ BACKEND QAMROVI ──────────────────────────────────────────────────┐
+  │  Jami backend routlar               :  2466                       │
+  │  To'liq qamrab olingan (API/button)  :  2184  ( 88.6%)          │
+  │  Qisman qamrab olingan (sahifa/nav)  :   225  (  9.1%)          │
+  │  Umuman qamlanmagan                  :    57  (  2.3%)  ← ASOSIY │
+  │    - GET routlar qamlanmagan         :    10                       │
+  │    - Mutatsiya (POST/PUT/...) yo'q   :    47                       │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ┌─ FRONTEND → BACKEND (404 XAVFI) ──────────────────────────────────┐
+  │  Yuqori ishonchdagi API chaqiruvlar  :  3904                       │
+  │  Backendda mos keladiganlar          :  3886                       │
+  │  Backendda YO'Q (404 xavfi)          :    14  ← TUZATISH KERAK  │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ┌─ SAHIFA SOGLIGI ───────────────────────────────────────────────────┐
+  │  Jami sahifalar                      :   384                       │
+  │  Buttonsiz sahifalar                 :     1                       │
+  │  API chaqiruvsiz sahifalar           :    64                       │
+  │  Button bor, API yo'q (uzilgan?)     :    64  ← TEKSHIRISH KERAK│
+  └────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+§1  UMUMAN QAMLANMAGAN BACKEND ROUTLAR  (57 ta)
+    Na API chaqiruv, na sahifa, na nav link, na tab, na button topilmadi
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌── ADMIN (1 ta) ─────────────────────────────────────────────────────────────────
+  │  POST    /api/admin/login
+  │  Fayl : apps/api/src/modules/admin/presentation/controllers/admin-extra.controller.ts
+  │
+
+  ┌── AI-AGENTS (6 ta) ─────────────────────────────────────────────────────────────
+  │  POST    /api/ai-agents/sales/evaluate
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/planning/plan
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/mes/oee
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/mes/anomaly
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/qc/vision-analyze
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/logistics/vrp
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+
+  ┌── BOT-GATEWAY (1 ta) ───────────────────────────────────────────────────────────
+  │  POST    /api/bot/:bot/webhook
+  │  Fayl : apps/api/src/modules/bot-gateway/bot-gateway.controller.ts
+  │
+
+  ┌── CHAT (11 ta) ──────────────────────────────────────────────────────────────────
+  │  GET     /api/hr-v2/chat/messages/:id/thread
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/messages/:id/reactions
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/polls
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/polls/:pollId/vote
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/messages/:id/thread
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/messages/:id/forward
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/upload/request-url
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/upload/complete
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  PATCH   /api/hr-v2/chat/messages/:id/pin
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/chat/upload/complete
+  │  Fayl : apps/api/src/modules/chat/chat.controller.ts
+  │
+  │  DELETE  /api/chat/push/unsubscribe
+  │  Fayl : apps/api/src/modules/chat/chat.controller.ts
+  │
+
+  ┌── COMMON (2 ta) ────────────────────────────────────────────────────────────────
+  │  POST    /api/validate/stir
+  │  Fayl : apps/api/src/modules/common/presentation/validate.controller.ts
+  │
+  │  POST    /api/validate/luhn
+  │  Fayl : apps/api/src/modules/common/presentation/validate.controller.ts
+  │
+
+  ┌── CRM (2 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/crm/churn/predict
+  │  Fayl : apps/api/src/modules/crm/presentation/crm-analytics.controller.ts
+  │
+  │  POST    /api/crm/churn/retrain
+  │  Fayl : apps/api/src/modules/crm/presentation/crm-analytics.controller.ts
+  │
+
+  ┌── FINANCE (5 ta) ───────────────────────────────────────────────────────────────
+  │  POST    /api/finance/break-even/cost-structure
+  │  Fayl : apps/api/src/modules/finance/presentation/finance-break-even.controller.ts
+  │
+  │  POST    /api/finance/standard-cost/name/:productName/calculate
+  │  Fayl : apps/api/src/modules/finance/presentation/finance-standard-cost.controller.ts
+  │
+  │  GET     /api/pricing/tiers/:productName
+  │  Fayl : apps/api/src/modules/finance/presentation/pricing.controller.ts
+  │
+  │  POST    /api/pricing/calculate
+  │  Fayl : apps/api/src/modules/finance/presentation/pricing.controller.ts
+  │
+  │  POST    /api/pricing/tiers
+  │  Fayl : apps/api/src/modules/finance/presentation/pricing.controller.ts
+  │
+
+  ┌── HR (2 ta) ────────────────────────────────────────────────────────────────────
+  │  POST    /api/hr/attendance/territory
+  │  Fayl : apps/api/src/modules/hr/attendance/attendance-face.controller.ts
+  │
+  │  POST    /api/hr/inspection/manual
+  │  Fayl : apps/api/src/modules/hr/inspection/inspection.controller.ts
+  │
+
+  ┌── INTEGRATION (1 ta) ───────────────────────────────────────────────────────────
+  │  GET     /api/integration/pm-upcoming
+  │  Fayl : apps/api/src/modules/integration/integration-extended-hr.controller.ts
+  │
+
+  ┌── LMS (3 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/lms/attempts/:id/submit
+  │  Fayl : apps/api/src/modules/lms/presentation/lms-attempts.controller.ts
+  │
+  │  GET     /api/lms/recent-activity/:lang
+  │  Fayl : apps/api/src/modules/lms/presentation/lms-core.controller.ts
+  │
+  │  GET     /api/progress/user/:id
+  │  Fayl : apps/api/src/modules/lms/presentation/lms-misc.controller.ts
+  │
+
+  ┌── MARKETING (1 ta) ─────────────────────────────────────────────────────────────
+  │  POST    /api/marketing/campaigns/:id/launch
+  │  Fayl : apps/api/src/modules/marketing/presentation/marketing.controller.ts
+  │
+
+  ┌── ORDER-WORKFLOW (3 ta) ────────────────────────────────────────────────────────
+  │  POST    /api/order-workflow/orders
+  │  Fayl : apps/api/src/modules/order-workflow/presentation/order-workflow.controller.ts
+  │
+  │  POST    /api/order-workflow/orders/:id/payment-plan
+  │  Fayl : apps/api/src/modules/order-workflow/presentation/order-workflow.controller.ts
+  │
+  │  PATCH   /api/order-workflow/orders/:id/status
+  │  Fayl : apps/api/src/modules/order-workflow/presentation/order-workflow.controller.ts
+  │
+
+  ┌── POS (10 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/pos/gl/approve/:movementId
+  │  Fayl : apps/api/src/modules/pos/controllers/gl.controller.ts
+  │
+  │  POST    /api/pos/gl/entry/:id/approve
+  │  Fayl : apps/api/src/modules/pos/controllers/gl.controller.ts
+  │
+  │  POST    /api/pos/gl/entry/:id/reject
+  │  Fayl : apps/api/src/modules/pos/controllers/gl.controller.ts
+  │
+  │  POST    /api/pos/auth/login
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-auth.controller.ts
+  │
+  │  POST    /api/pos/auth/validate
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-auth.controller.ts
+  │
+  │  POST    /api/pos/notifications/:id/read
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-notifications.controller.ts
+  │
+  │  POST    /api/pos/notifications/read-all
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-notifications.controller.ts
+  │
+  │  POST    /api/pos/stock/adjust
+  │  Fayl : apps/api/src/modules/pos/controllers/stock.controller.ts
+  │
+  │  POST    /api/pos/sync/push
+  │  Fayl : apps/api/src/modules/pos/controllers/sync.controller.ts
+  │
+  │  POST    /api/pos/sync/pull
+  │  Fayl : apps/api/src/modules/pos/controllers/sync.controller.ts
+  │
+
+  ┌── PP (2 ta) ────────────────────────────────────────────────────────────────────
+  │  GET     /api/pp/mps
+  │  Fayl : apps/api/src/modules/pp/presentation/pp-intelligence.controller.ts
+  │
+  │  GET     /api/pp/learning-curve/:productId
+  │  Fayl : apps/api/src/modules/pp/presentation/pp-intelligence.controller.ts
+  │
+
+  ┌── QC (4 ta) ────────────────────────────────────────────────────────────────────
+  │  GET     /api/print/spoilage/:jobId
+  │  Fayl : apps/api/src/modules/qc/presentation/print.controller.ts
+  │
+  │  POST    /api/print/spoilage
+  │  Fayl : apps/api/src/modules/qc/presentation/print.controller.ts
+  │
+  │  GET     /api/qc/dpmo/:processId
+  │  Fayl : apps/api/src/modules/qc/presentation/qc-dpmo.controller.ts
+  │
+  │  POST    /api/qc/dpmo
+  │  Fayl : apps/api/src/modules/qc/presentation/qc-dpmo.controller.ts
+  │
+
+  ┌── WMS (3 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/wms/eoq/calculate
+  │  Fayl : apps/api/src/modules/wms/presentation/wms-eoq.controller.ts
+  │
+  │  POST    /api/wms/eoq/recalculate-all
+  │  Fayl : apps/api/src/modules/wms/presentation/wms-eoq.controller.ts
+  │
+  │  GET     /api/warehouse/orders-by-date/:date
+  │  Fayl : apps/api/src/modules/wms/presentation/wms-warehouse-gateway.controller.ts
+  │
+
+────────────────────────────────────────────────────────────────────────────────
+§2  MUTATSIYA ROUTLAR — FRONTEND DA BUTTON / API CHAQIRUV YO'Q  (47 ta)
+    POST / PUT / PATCH / DELETE routlar — frontendda bevosita chaqirilmayapti
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌── ADMIN (1 ta) ─────────────────────────────────────────────────────────────────
+  │  POST    /api/admin/login
+  │  Fayl : apps/api/src/modules/admin/presentation/controllers/admin-extra.controller.ts
+  │
+
+  ┌── AI-AGENTS (6 ta) ─────────────────────────────────────────────────────────────
+  │  POST    /api/ai-agents/sales/evaluate
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/planning/plan
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/mes/oee
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/mes/anomaly
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/qc/vision-analyze
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+  │  POST    /api/ai-agents/logistics/vrp
+  │  Fayl : apps/api/src/modules/ai-agents/presentation/ai-agents.controller.ts
+  │
+
+  ┌── BOT-GATEWAY (1 ta) ───────────────────────────────────────────────────────────
+  │  POST    /api/bot/:bot/webhook
+  │  Fayl : apps/api/src/modules/bot-gateway/bot-gateway.controller.ts
+  │
+
+  ┌── CHAT (10 ta) ──────────────────────────────────────────────────────────────────
+  │  POST    /api/hr-v2/chat/messages/:id/reactions
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/polls
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/polls/:pollId/vote
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/messages/:id/thread
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/messages/:id/forward
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/upload/request-url
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/hr-v2/chat/upload/complete
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  PATCH   /api/hr-v2/chat/messages/:id/pin
+  │  Fayl : apps/api/src/modules/chat/chat-advanced.controller.ts
+  │
+  │  POST    /api/chat/upload/complete
+  │  Fayl : apps/api/src/modules/chat/chat.controller.ts
+  │
+  │  DELETE  /api/chat/push/unsubscribe
+  │  Fayl : apps/api/src/modules/chat/chat.controller.ts
+  │
+
+  ┌── COMMON (2 ta) ────────────────────────────────────────────────────────────────
+  │  POST    /api/validate/stir
+  │  Fayl : apps/api/src/modules/common/presentation/validate.controller.ts
+  │
+  │  POST    /api/validate/luhn
+  │  Fayl : apps/api/src/modules/common/presentation/validate.controller.ts
+  │
+
+  ┌── CRM (2 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/crm/churn/predict
+  │  Fayl : apps/api/src/modules/crm/presentation/crm-analytics.controller.ts
+  │
+  │  POST    /api/crm/churn/retrain
+  │  Fayl : apps/api/src/modules/crm/presentation/crm-analytics.controller.ts
+  │
+
+  ┌── FINANCE (4 ta) ───────────────────────────────────────────────────────────────
+  │  POST    /api/finance/break-even/cost-structure
+  │  Fayl : apps/api/src/modules/finance/presentation/finance-break-even.controller.ts
+  │
+  │  POST    /api/finance/standard-cost/name/:productName/calculate
+  │  Fayl : apps/api/src/modules/finance/presentation/finance-standard-cost.controller.ts
+  │
+  │  POST    /api/pricing/calculate
+  │  Fayl : apps/api/src/modules/finance/presentation/pricing.controller.ts
+  │
+  │  POST    /api/pricing/tiers
+  │  Fayl : apps/api/src/modules/finance/presentation/pricing.controller.ts
+  │
+
+  ┌── HR (2 ta) ────────────────────────────────────────────────────────────────────
+  │  POST    /api/hr/attendance/territory
+  │  Fayl : apps/api/src/modules/hr/attendance/attendance-face.controller.ts
+  │
+  │  POST    /api/hr/inspection/manual
+  │  Fayl : apps/api/src/modules/hr/inspection/inspection.controller.ts
+  │
+
+  ┌── LMS (1 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/lms/attempts/:id/submit
+  │  Fayl : apps/api/src/modules/lms/presentation/lms-attempts.controller.ts
+  │
+
+  ┌── MARKETING (1 ta) ─────────────────────────────────────────────────────────────
+  │  POST    /api/marketing/campaigns/:id/launch
+  │  Fayl : apps/api/src/modules/marketing/presentation/marketing.controller.ts
+  │
+
+  ┌── ORDER-WORKFLOW (3 ta) ────────────────────────────────────────────────────────
+  │  POST    /api/order-workflow/orders
+  │  Fayl : apps/api/src/modules/order-workflow/presentation/order-workflow.controller.ts
+  │
+  │  POST    /api/order-workflow/orders/:id/payment-plan
+  │  Fayl : apps/api/src/modules/order-workflow/presentation/order-workflow.controller.ts
+  │
+  │  PATCH   /api/order-workflow/orders/:id/status
+  │  Fayl : apps/api/src/modules/order-workflow/presentation/order-workflow.controller.ts
+  │
+
+  ┌── POS (10 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/pos/gl/approve/:movementId
+  │  Fayl : apps/api/src/modules/pos/controllers/gl.controller.ts
+  │
+  │  POST    /api/pos/gl/entry/:id/approve
+  │  Fayl : apps/api/src/modules/pos/controllers/gl.controller.ts
+  │
+  │  POST    /api/pos/gl/entry/:id/reject
+  │  Fayl : apps/api/src/modules/pos/controllers/gl.controller.ts
+  │
+  │  POST    /api/pos/auth/login
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-auth.controller.ts
+  │
+  │  POST    /api/pos/auth/validate
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-auth.controller.ts
+  │
+  │  POST    /api/pos/notifications/:id/read
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-notifications.controller.ts
+  │
+  │  POST    /api/pos/notifications/read-all
+  │  Fayl : apps/api/src/modules/pos/controllers/pos-notifications.controller.ts
+  │
+  │  POST    /api/pos/stock/adjust
+  │  Fayl : apps/api/src/modules/pos/controllers/stock.controller.ts
+  │
+  │  POST    /api/pos/sync/push
+  │  Fayl : apps/api/src/modules/pos/controllers/sync.controller.ts
+  │
+  │  POST    /api/pos/sync/pull
+  │  Fayl : apps/api/src/modules/pos/controllers/sync.controller.ts
+  │
+
+  ┌── QC (2 ta) ────────────────────────────────────────────────────────────────────
+  │  POST    /api/print/spoilage
+  │  Fayl : apps/api/src/modules/qc/presentation/print.controller.ts
+  │
+  │  POST    /api/qc/dpmo
+  │  Fayl : apps/api/src/modules/qc/presentation/qc-dpmo.controller.ts
+  │
+
+  ┌── WMS (2 ta) ───────────────────────────────────────────────────────────────────
+  │  POST    /api/wms/eoq/calculate
+  │  Fayl : apps/api/src/modules/wms/presentation/wms-eoq.controller.ts
+  │
+  │  POST    /api/wms/eoq/recalculate-all
+  │  Fayl : apps/api/src/modules/wms/presentation/wms-eoq.controller.ts
+  │
+
+────────────────────────────────────────────────────────────────────────────────
+§3  FRONTEND → BACKEND: 404 XAVFI  (14 ta)
+    Frontend chaqirayapti, lekin backend routda bunday yo'l yo'q
+────────────────────────────────────────────────────────────────────────────────
+
+  [CAMERA-ALERTS] — 1 ta:
+    ✗ /api/camera-alerts/analyze-by-missions
+      artifacts/erp-dashboard/src/lib/api/camera.ts:5
+
+  [CAMERA-HEATMAP] — 2 ta:
+    ✗ /api/camera-heatmap/generate-excel
+      artifacts/erp-dashboard/src/lib/api/camera.ts:11
+    ✗ /api/camera-heatmap/generate-pdf
+      artifacts/erp-dashboard/src/lib/api/camera.ts:13
+
+  [MARKETING] — 7 ta:
+    ✗ /api/marketing
+      artifacts/erp-dashboard/src/lib/api/misc.ts:230
+    ✗ /api/marketing/budget/${id}
+      artifacts/erp-dashboard/src/pages/MarketingBudget.tsx:41
+    ✗ /api/marketing/calendar/${id}
+      artifacts/erp-dashboard/src/pages/MarketingCalendar.tsx:48
+    ✗ /api/marketing/nps
+      artifacts/erp-dashboard/src/pages/MarketingDashboard.tsx:79
+    ✗ /api/marketing/ai-assistant
+      artifacts/erp-dashboard/src/pages/MarketingDashboard.tsx:235
+    ✗ /api/marketing/exhibitions/${id}
+      artifacts/erp-dashboard/src/pages/MarketingExhibitions.tsx:80
+    ✗ /api/marketing/pr/${id}
+      artifacts/erp-dashboard/src/pages/MarketingPR.tsx:38
+
+  [ORDER-STATUS] — 1 ta:
+    ✗ /api/order-status/${orderId}/machine-breakdown
+      artifacts/erp-dashboard/src/lib/api/misc.ts:306
+
+  [POS] — 1 ta:
+    ✗ /api/pos/sales
+      artifacts/erp-dashboard/src/lib/pos-sync.ts:48
+
+  [QC] — 1 ta:
+    ✗ /api/qc/control-charts
+      artifacts/erp-dashboard/src/pages/QCModule.tsx:188
+
+  [QUESTIONNAIRE] — 1 ta:
+    ✗ /api/questionnaire
+      artifacts/erp-dashboard/src/lib/api/lms.ts:27
+
+────────────────────────────────────────────────────────────────────────────────
+§4  QISMAN QAMRANGAN ROUTLAR  (225 ta)
+    Sahifa/nav/tab orqali mavjud, lekin bevosita API chaqiruv yo'q
+────────────────────────────────────────────────────────────────────────────────
+
+  [ADAPTATION] — 3 ta:
+    ~ GET     /api/adaptation/dashboard
+      ← tab: adaptation
+    ~ GET     /api/adaptation/records
+      ← tab: adaptation
+    ~ GET     /api/adaptation/cases
+      ← tab: adaptation
+
+  [ADMIN] — 5 ta:
+    ~ GET     /api/admin/cron-status
+      ← tab: admin
+    ~ GET     /api/admin/roles
+      ← tab: admin
+    ~ GET     /api/admin/logs
+      ← tab: admin
+    ~ GET     /api/admin/system
+      ← tab: system
+    ~ GET     /api/admin/system/alerts/:id
+      ← tab: alerts
+
+  [AI] — 7 ta:
+    ~ GET     /api/ai/automation/status
+      ← tab: status
+    ~ GET     /api/ai/director/executive-summary
+      ← tab: ai
+    ~ GET     /api/ai/finance/anomalies
+      ← tab: finance
+    ~ GET     /api/ai/budget
+      ← tab: ai
+    ~ GET     /api/gpt/status
+      ← tab: status
+    ~ GET     /api/gpt/chat
+      ← tab: gpt
+    ~ GET     /api/insights/dashboard
+      ← tab: dashboard
+
+  [AUTH] — 1 ta:
+    ~ GET     /api/auth/health
+      ← tab: health
+
+  [CAMERA] — 7 ta:
+    ~ GET     /api/ai-camera/dashboard
+      ← tab: dashboard
+    ~ GET     /api/ai-camera/events
+      ← tab: events
+    ~ GET     /api/ai-camera/alerts
+      ← tab: alerts
+    ~ GET     /api/camera/status
+      ← tab: status
+    ~ GET     /api/camera/list
+      ← tab: list
+    ~ GET     /api/camera/events
+      ← tab: events
+    ~ GET     /api/camera/zones
+      ← tab: zones
+
+  [CHAT] — 1 ta:
+    ~ GET     /api/hr-v2/chat/rooms/:roomId/pinned
+      ← tab: rooms
+
+  [COMPATIBILITY] — 11 ta:
+    ~ GET     /api/approval-workflow/:type/:docId/requests
+      ← tab: requests
+    ~ GET     /api/crm/supervisor/dashboard
+      ← tab: dashboard
+    ~ GET     /api/crm/ai/extended/insights
+      ← tab: ai
+    ~ GET     /api/employee-zone-history
+      ← sahifa: /*
+    ~ GET     /api/employees/:id/swap-requests
+      ← tab: employees
+    ~ GET     /api/employees/:id/assessment-skips
+      ← tab: employees
+    ~ GET     /api/europrint-control/logs
+      ← tab: log
+    ~ GET     /api/hr-map/attendance-today
+      ← tab: attendance
+    ... va yana 3 ta
+
+  [CRM] — 3 ta:
+    ~ GET     /api/crm/ai/leads
+      ← tab: ai
+    ~ GET     /api/crm/ai/nba
+      ← tab: ai
+    ~ GET     /api/crm
+      ← sahifa: /*
+
+  [DESIGN] — 1 ta:
+    ~ GET     /api/design/orders/:orderId/revisions
+      ← tab: orders
+
+  [DIRECTOR] — 9 ta:
+    ~ GET     /api/director/approvals/pending
+      ← tab: pending
+    ~ GET     /api/director/approvals/stats
+      ← tab: stats
+    ~ GET     /api/director/approvals/history
+      ← tab: history
+    ~ GET     /api/director/dashboard/kpis
+      ← tab: dashboard
+    ~ GET     /api/director/dashboard/production-summary
+      ← tab: dashboard
+    ~ GET     /api/director/dashboard/finance-summary
+      ← tab: finance
+    ~ GET     /api/director/dashboard/hr-summary
+      ← tab: dashboard
+    ~ GET     /api/director/kpi
+      ← tab: kpi
+    ... va yana 1 ta
+
+  [ECOMMERCE] — 5 ta:
+    ~ GET     /api/admin/customers
+      ← tab: admin
+    ~ GET     /api/admin/ecommerce/stats
+      ← tab: admin
+    ~ GET     /api/admin/customer-orders
+      ← tab: admin
+    ~ GET     /api/public/categories
+      ← tab: categories
+    ~ GET     /api/public/products/:slug
+      ← tab: products
+
+  [FINANCE] — 27 ta:
+    ~ GET     /api/accounting/dashboard
+      ← tab: dashboard
+    ~ GET     /api/accounting/accounts
+      ← tab: accounts
+    ~ GET     /api/finance/advances/pending
+      ← tab: finance
+    ~ GET     /api/finance/break-even
+      ← sahifa: /finance/break-even
+    ~ GET     /api/finance/budgets/stats
+      ← tab: finance
+    ~ GET     /api/finance/budgets/:id
+      ← tab: finance
+    ~ GET     /api/finance/budgets/:id/variance
+      ← tab: finance
+    ~ GET     /api/finance-extended/insurance
+      ← tab: insurance
+    ... va yana 19 ta
+
+  [HR] — 42 ta:
+    ~ GET     /api/hr-v2/ai-interview/stats
+      ← tab: stats
+    ~ GET     /api/hr/attendance/face/health
+      ← tab: attendance
+    ~ GET     /api/hr/attendance/late-arrivals/today
+      ← tab: attendance
+    ~ GET     /api/hr/gamification/my/badges
+      ← tab: hr
+    ~ GET     /api/hr/gamification/my/points
+      ← tab: hr
+    ~ GET     /api/hr/gamification/employee/:id/points
+      ← tab: hr
+    ~ GET     /api/hr/gamification/employee/:id/badges
+      ← tab: hr
+    ~ GET     /api/hr/inspection/checklist-pdf/:id
+      ← tab: hr
+    ... va yana 34 ta
+
+  [INTEGRATION] — 2 ta:
+    ~ GET     /api/integration/employee-rating/ratings/:year/:month
+      ← tab: ratings
+    ~ GET     /api/integration/expense/expense-requests/all
+      ← tab: all
+
+  [IOT] — 14 ta:
+    ~ GET     /api/camera-dashboard/attendance-stats
+      ← tab: attendance
+    ~ GET     /api/camera-dashboard/production-stats
+      ← tab: production
+    ~ GET     /api/camera/cameras/:cameraId/zones
+      ← tab: zones
+    ~ GET     /api/iot/dashboard
+      ← sahifa: /iot/dashboard
+    ~ GET     /api/iot/safety-violations
+      ← tab: safety
+    ~ GET     /api/iot/employee-productivity
+      ← tab: employee
+    ~ GET     /api/iot/devices/:id/stats
+      ← tab: stats
+    ~ GET     /api/iot/quality-defects
+      ← tab: quality
+    ... va yana 6 ta
+
+  [KANBAN] — 3 ta:
+    ~ GET     /api/kanban/reports/productivity
+      ← tab: kanban
+    ~ GET     /api/kanban/reports/overdue
+      ← tab: kanban
+    ~ GET     /api/kanban/analytics/summary
+      ← tab: kanban
+
+  [LMS] — 4 ta:
+    ~ GET     /api/courses/completion-trend/:lang
+      ← sahifa: /courses/*/lessons
+    ~ GET     /api/lms/enrollments/my
+      ← tab: my
+    ~ GET     /api/lms/enrollments/stats
+      ← tab: stats
+    ~ GET     /api/lms/enrollments/expiring-certificates
+      ← tab: expiring
+
+  [LOGISTICS] — 1 ta:
+    ~ GET     /api/logistics/:id
+      ← sahifa: /logistics/transport
+
+  [MARKETING] — 6 ta:
+    ~ GET     /api/marketing/analytics/overview
+      ← tab: overview
+    ~ GET     /api/marketing/analytics/campaigns
+      ← tab: analytics
+    ~ GET     /api/marketing/analytics/audience
+      ← tab: analytics
+    ~ GET     /api/marketing/analytics/conversion
+      ← tab: analytics
+    ~ GET     /api/marketing/content/calendar
+      ← tab: calendar
+    ~ GET     /api/marketing/content/analytics
+      ← tab: content
+
+  [MES] — 6 ta:
+    ~ GET     /api/mes/sos/history
+      ← tab: history
+    ~ GET     /api/mes/operations
+      ← tab: operations
+    ~ GET     /api/mes/operations/downtime/summary
+      ← tab: operations
+    ~ GET     /api/mes/operations/reason-codes
+      ← tab: operations
+    ~ GET     /api/mes/operations/oee
+      ← tab: oee
+    ~ GET     /api/mes/shifts/evaluations
+      ← tab: shifts
+
+  [MM] — 2 ta:
+    ~ GET     /api/mm/materials/:id/suppliers
+      ← tab: materials
+    ~ GET     /api/materials/cards/:id
+      ← tab: materials
+
+  [MRO] — 1 ta:
+    ~ GET     /api/mro
+      ← sahifa: /*
+
+  [ORDER-WORKFLOW] — 2 ta:
+    ~ GET     /api/order-workflow/orders/:id/saga-status
+      ← tab: orders
+    ~ GET     /api/order-workflow/orders
+      ← tab: orders
+
+  [POS] — 34 ta:
+    ~ GET     /api/pos/barcode/ai-suggestion/pending
+      ← tab: pending
+    ~ GET     /api/pos/employees/me/balance
+      ← tab: employees
+    ~ GET     /api/pos/employees/department/:code/balance
+      ← tab: employees
+    ~ GET     /api/pos/gl/movement/:id
+      ← tab: pos
+    ~ GET     /api/pos/gl/pending
+      ← tab: pending
+    ~ GET     /api/pos/gl/journal
+      ← tab: pos
+    ~ GET     /api/pos/inventory-counts/:id/variance
+      ← tab: pos
+    ~ GET     /api/pos/inventory-counts/:id/pdf
+      ← tab: pos
+    ... va yana 26 ta
+
+  [POS-V2] — 3 ta:
+    ~ GET     /api/pos-v2/reports/movements
+      ← tab: reports
+    ~ GET     /api/pos-v2/reports/employee-activity
+      ← tab: reports
+    ~ GET     /api/pos-v2/reports/low-stock
+      ← tab: reports
+
+  [PP] — 2 ta:
+    ~ GET     /api/pp/orders/:id
+      ← tab: orders
+    ~ GET     /api/pp/orders/plan/:startDate/:endDate
+      ← tab: orders
+
+  [REMAINING] — 6 ta:
+    ~ GET     /api/fi/invoices
+      ← tab: invoices
+    ~ GET     /api/order-status/:orderId/log
+      ← tab: log
+    ~ GET     /api/reports-hub/categories
+      ← tab: categories
+    ~ GET     /api/reports-hub/runs/:runId
+      ← tab: runs
+    ~ GET     /api/3way-match/results
+      ← tab: results
+    ~ GET     /api/weekly-plans/stats/summary
+      ← tab: stats
+
+  [SD] — 3 ta:
+    ~ GET     /api/sd/deliveries/:id
+      ← tab: deliveries
+    ~ GET     /api/sd/invoices/:id
+      ← tab: invoices
+    ~ GET     /api/sd/kpi-targets
+      ← tab: kpi
+
+  [SECURITY] — 2 ta:
+    ~ GET     /api/raci-crisis/tasks/:id/assignments
+      ← tab: tasks
+    ~ GET     /api/security
+      ← sahifa: /security
+
+  [TECHNOLOGY] — 1 ta:
+    ~ GET     /api/technology/orders/:id/tech-card
+      ← tab: orders
+
+  [WEBSITE] — 1 ta:
+    ~ GET     /api/website/settings
+      ← tab: settings
+
+  [WMS] — 10 ta:
+    ~ GET     /api/inventory/advanced/analytics
+      ← tab: analytics
+    ~ GET     /api/inventory/advanced/counts
+      ← tab: inventory
+    ~ GET     /api/inventory/advanced/barcodes
+      ← tab: inventory
+    ~ GET     /api/iot/material-kits/:id/items
+      ← tab: items
+    ~ GET     /api/wms/batches
+      ← tab: batches
+    ~ GET     /api/wms/production-supply
+      ← tab: production
+    ~ GET     /api/wms/materials/:id/fifo-cost
+      ← tab: materials
+    ~ GET     /api/wms/alerts
+      ← tab: alerts
+    ... va yana 2 ta
+
+────────────────────────────────────────────────────────────────────────────────
+§5  BUTTON BOR LEKIN API CHAQIRUV YO'Q SAHIFALAR  (64 ta)
+    Bu sahifalardagi buttonlar backendga ulanmagan bo'lishi mumkin
+────────────────────────────────────────────────────────────────────────────────
+
+  ✗ BarcodeWarehouse.tsx  (onClick:1 onSubmit:0)
+  ✗ CRMWorkspace.tsx  (onClick:1 onSubmit:1)
+  ✗ CVScreeningGuide.tsx  (onClick:1 onSubmit:0)
+  ✗ DesignGenerator.tsx  (onClick:1 onSubmit:0)
+  ✗ FIFinance.tsx  (onClick:1 onSubmit:0)
+  ✗ IncomeExpense.tsx  (onClick:2 onSubmit:2)
+  ✗ KanbanBoard.tsx  (onClick:1 onSubmit:0)
+  ✗ LMSSupport.tsx  (onClick:1 onSubmit:0)
+  ✗ OrderCreationWizard.tsx  (onClick:3 onSubmit:0)
+  ✗ OrgNodeDetail.tsx  (onClick:7 onSubmit:0)
+  ✗ PhoneScriptSheet.tsx  (onClick:4 onSubmit:0)
+  ✗ QCExtended.tsx  (onClick:1 onSubmit:0)
+  ✗ SDEuroprint.tsx  (onClick:1 onSubmit:0)
+  ✗ StubPage.tsx  (onClick:1 onSubmit:0)
+  ✗ accountant/ErpRoadmapCard.tsx  (onClick:1 onSubmit:0)
+  ✗ analytics/AssessmentTab.tsx  (onClick:1 onSubmit:0)
+  ✗ analytics/EngagementTab.tsx  (onClick:1 onSubmit:0)
+  ✗ analytics/LeaderboardTab.tsx  (onClick:1 onSubmit:0)
+  ✗ analytics/OutcomesTab.tsx  (onClick:1 onSubmit:0)
+  ✗ analytics/RemainingTabs.tsx  (onClick:1 onSubmit:0)
+  ✗ analytics/SystemTab.tsx  (onClick:1 onSubmit:0)
+  ✗ barcode/BatchDialogs.tsx  (onClick:5 onSubmit:0)
+  ✗ barcode/GenerateScannerContent.tsx  (onClick:5 onSubmit:0)
+  ✗ chat/ChatPage.tsx  (onClick:1 onSubmit:0)
+  ✗ crm/KanbanColumn.tsx  (onClick:1 onSubmit:0)
+  ✗ daily-kpi/AIInsightsSection.tsx  (onClick:1 onSubmit:0)
+  ✗ daily-kpi/WeeklyTrendChart.tsx  (onClick:1 onSubmit:0)
+  ✗ employee-profile/AttendanceTab.tsx  (onClick:4 onSubmit:0)
+  ✗ employee-profile/LeaveTab.tsx  (onClick:3 onSubmit:0)
+  ✗ employee-profile/PerformanceTab.tsx  (onClick:1 onSubmit:0)
+  ✗ employee-profile/PersonalTab.tsx  (onClick:3 onSubmit:0)
+  ✗ employee-profile/RemainingTabs.tsx  (onClick:1 onSubmit:0)
+  ✗ hr-dashboard/DisciplineTab.tsx  (onClick:1 onSubmit:0)
+  ✗ hr-dashboard/RiskTab.tsx  (onClick:1 onSubmit:0)
+  ✗ hr-dashboard/SafetyTab.tsx  (onClick:1 onSubmit:0)
+  ✗ hr-dashboard/TurnoverTab.tsx  (onClick:1 onSubmit:0)
+  ✗ iot/IoTChecklistModal.tsx  (onClick:2 onSubmit:0)
+  ✗ iot/IoTLoginPanel.tsx  (onClick:2 onSubmit:0)
+  ✗ iot/IoTProductionDashboard.tsx  (onClick:15 onSubmit:0)
+  ✗ iot/IoTSchedulePanel.tsx  (onClick:4 onSubmit:0)
+  ✗ kanban/CalendarView.tsx  (onClick:5 onSubmit:0)
+  ✗ kanban/DeadlineColumn.tsx  (onClick:2 onSubmit:0)
+  ✗ kanban/GanttView.tsx  (onClick:4 onSubmit:0)
+  ✗ kanban/KanbanCard.tsx  (onClick:5 onSubmit:0)
+  ✗ kanban/KanbanColumn.tsx  (onClick:2 onSubmit:0)
+  ✗ kanban/ListView.tsx  (onClick:2 onSubmit:0)
+  ✗ kanban/MyPlanView.tsx  (onClick:1 onSubmit:0)
+  ✗ kanban/TimeTrackingWidget.tsx  (onClick:1 onSubmit:0)
+  ✗ kanban/detail/ChatPanel.tsx  (onClick:5 onSubmit:0)
+  ✗ kanban/detail/ChecklistTabContent.tsx  (onClick:3 onSubmit:0)
+  ✗ kanban/detail/FilesTabContent.tsx  (onClick:4 onSubmit:0)
+  ✗ kanban/detail/MainTabContent.tsx  (onClick:11 onSubmit:0)
+  ✗ kanban/detail/ResultsTabContent.tsx  (onClick:4 onSubmit:0)
+  ✗ lms-dashboard/GamificationTab.tsx  (onClick:1 onSubmit:0)
+  ✗ lms-dashboard/SkillsGapTab.tsx  (onClick:1 onSubmit:0)
+  ✗ not-found.tsx  (onClick:1 onSubmit:0)
+  ✗ payroll/ContractsTab.tsx  (onClick:1 onSubmit:0)
+  ✗ payroll/PayrollStatsCards.tsx  (onClick:1 onSubmit:0)
+  ✗ payroll/TaxRulesSidebar.tsx  (onClick:1 onSubmit:0)
+  ✗ planning/PlanningDialogs.tsx  (onClick:3 onSubmit:12)
+  ✗ planning/PlanningTabPanels.tsx  (onClick:6 onSubmit:0)
+  ✗ qc/QCCertificateGenerator.tsx  (onClick:2 onSubmit:0)
+  ✗ skills-matrix/EmployeeSkillDialog.tsx  (onClick:1 onSubmit:4)
+  ✗ skills-matrix/SkillDialog.tsx  (onClick:1 onSubmit:4)
+
+────────────────────────────────────────────────────────────────────────────────
+§6  TO'LIQ QAMRANGAN ROUTLAR  (2184 ta) — barcha signal manbalari
+────────────────────────────────────────────────────────────────────────────────
+
+  ADAPTATION           5 route | ✓ 2 to'liq | ~ 3 qisman | ✗ 0 yo'q | 100.0%
+  ADMIN                17 route | ✓ 11 to'liq | ~ 5 qisman | ✗ 1 yo'q | 94.1%
+  AI                   77 route | ✓ 70 to'liq | ~ 7 qisman | ✗ 0 yo'q | 100.0%
+  AI-AGENTS            10 route | ✓ 4 to'liq | ~ 0 qisman | ✗ 6 yo'q | 40.0%
+  ANALYTICS            29 route | ✓ 29 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  APPLICATIONS         8 route | ✓ 8 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  AUTH                 8 route | ✓ 7 to'liq | ~ 1 qisman | ✗ 0 yo'q | 100.0%
+  BOT-GATEWAY          1 route | ✓ 0 to'liq | ~ 0 qisman | ✗ 1 yo'q | 0.0%
+  CAMERA               7 route | ✓ 0 to'liq | ~ 7 qisman | ✗ 0 yo'q | 100.0%
+  CHAT                 51 route | ✓ 39 to'liq | ~ 1 qisman | ✗ 11 yo'q | 78.4%
+  COMMON               2 route | ✓ 0 to'liq | ~ 0 qisman | ✗ 2 yo'q | 0.0%
+  COMPATIBILITY        294 route | ✓ 283 to'liq | ~ 11 qisman | ✗ 0 yo'q | 100.0%
+  CORE                 24 route | ✓ 24 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  CRM                  101 route | ✓ 96 to'liq | ~ 3 qisman | ✗ 2 yo'q | 98.0%
+  DESIGN               20 route | ✓ 19 to'liq | ~ 1 qisman | ✗ 0 yo'q | 100.0%
+  DIRECTOR             72 route | ✓ 63 to'liq | ~ 9 qisman | ✗ 0 yo'q | 100.0%
+  ECOMMERCE            22 route | ✓ 17 to'liq | ~ 5 qisman | ✗ 0 yo'q | 100.0%
+  ERP                  49 route | ✓ 49 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  EXPORT               5 route | ✓ 5 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  FEEDBACK-360         4 route | ✓ 4 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  FINANCE              137 route | ✓ 105 to'liq | ~ 27 qisman | ✗ 5 yo'q | 96.4%
+  HR                   327 route | ✓ 283 to'liq | ~ 42 qisman | ✗ 2 yo'q | 99.4%
+  HR-ASSETS            10 route | ✓ 10 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  INTEGRATION          63 route | ✓ 60 to'liq | ~ 2 qisman | ✗ 1 yo'q | 98.4%
+  IOT                  122 route | ✓ 108 to'liq | ~ 14 qisman | ✗ 0 yo'q | 100.0%
+  KANBAN               64 route | ✓ 61 to'liq | ~ 3 qisman | ✗ 0 yo'q | 100.0%
+  LEGACY               42 route | ✓ 42 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  LMS                  91 route | ✓ 84 to'liq | ~ 4 qisman | ✗ 3 yo'q | 96.7%
+  LOGISTICS            5 route | ✓ 4 to'liq | ~ 1 qisman | ✗ 0 yo'q | 100.0%
+  MARKETING            73 route | ✓ 66 to'liq | ~ 6 qisman | ✗ 1 yo'q | 98.6%
+  MES                  44 route | ✓ 38 to'liq | ~ 6 qisman | ✗ 0 yo'q | 100.0%
+  MM                   60 route | ✓ 58 to'liq | ~ 2 qisman | ✗ 0 yo'q | 100.0%
+  MRO                  5 route | ✓ 4 to'liq | ~ 1 qisman | ✗ 0 yo'q | 100.0%
+  NOTIFICATIONS        9 route | ✓ 9 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  ORDER-WORKFLOW       5 route | ✓ 0 to'liq | ~ 2 qisman | ✗ 3 yo'q | 40.0%
+  ORG-STRUCTURE        18 route | ✓ 18 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  POS                  107 route | ✓ 63 to'liq | ~ 34 qisman | ✗ 10 yo'q | 90.7%
+  POS-V2               14 route | ✓ 11 to'liq | ~ 3 qisman | ✗ 0 yo'q | 100.0%
+  PP                   29 route | ✓ 25 to'liq | ~ 2 qisman | ✗ 2 yo'q | 93.1%
+  PRODUCTION           10 route | ✓ 10 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  QC                   70 route | ✓ 66 to'liq | ~ 0 qisman | ✗ 4 yo'q | 94.3%
+  REMAINING            95 route | ✓ 89 to'liq | ~ 6 qisman | ✗ 0 yo'q | 100.0%
+  SALES                8 route | ✓ 8 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  SAP                  3 route | ✓ 3 to'liq | ~ 0 qisman | ✗ 0 yo'q | 100.0%
+  SD                   71 route | ✓ 68 to'liq | ~ 3 qisman | ✗ 0 yo'q | 100.0%
+  SECURITY             15 route | ✓ 13 to'liq | ~ 2 qisman | ✗ 0 yo'q | 100.0%
+  TECHNOLOGY           13 route | ✓ 12 to'liq | ~ 1 qisman | ✗ 0 yo'q | 100.0%
+  WEBSITE              15 route | ✓ 14 to'liq | ~ 1 qisman | ✗ 0 yo'q | 100.0%
+  WMS                  135 route | ✓ 122 to'liq | ~ 10 qisman | ✗ 3 yo'q | 97.8%
+
+────────────────────────────────────────────────────────────────────────────────
+§7  BARCHA SAHIFALAR SOGLIGI  (384 ta sahifa)
+────────────────────────────────────────────────────────────────────────────────
+
+  Sahifa                                                onClick  submit  mutation  apiCall  API?
+  ──────────────────────────────────────────────────── ──────── ─────── ───────── ──────── ─────
+  AIDesignGenerator.tsx                                       6       0         3        7     ✓
+  AIExams.tsx                                                 3       0         2        1     ✓
+  AIInterviewPage.tsx                                        10       4         4        3     ✓
+  AIInterviewPublicPage.tsx                                   8       0         2        0     ✓
+  AIProductionPlanning.tsx                                   19       0         9        8     ✓
+  AIReservation.tsx                                           1       0         2        1     ✓
+  AccountantView.tsx                                          3       0         0        0     ✓
+  AccountsPayable.tsx                                         9       0         2        1     ✓
+  AccountsReceivable.tsx                                      9       0         2        1     ✓
+  Adaptation.tsx                                              1       0         0        0     ✓
+  AllExams.tsx                                                3       0         2        1     ✓
+  Analytics.tsx                                               1       0         0        0     ✓
+  Applications.tsx                                            6       1         4        3     ✓
+  ApprovalHub.tsx                                             2       0         3        2     ✓
+  AssetManagement.tsx                                         1       0         8        7     ✓
+  AttendanceMonitorPage.tsx                                   2       0         0        2     ✓
+  AuditorPanel.tsx                                            3       0         2        2     ✓
+  BOMManagement.tsx                                          13       2         6        4     ✓
+  BarcodeScanner.tsx                                          2       0         2        1     ✓
+  BarcodeSystem.tsx                                           8       0         6        2     ✓
+  BarcodeWarehouse.tsx                                        1       0         0        0     ✗
+  BirthdayWidget.tsx                                          3       0         2        4     ✓
+  BudgetManagement.tsx                                        2       2         3        2     ✓
+  CFODashboard.tsx                                            1       0         0        0     ✓
+  CRMActivities.tsx                                           3       0         4        3     ✓
+  CRMSettings.tsx                                             9       0         5        4     ✓
+  CRMWorkspace.tsx                                            1       1         0        0     ✗
+  CVScreeningGuide.tsx                                        1       0         0        0     ✗
+  CameraAIAnalytics.tsx                                       1       0         0        0     ✓
+  CameraLiveMonitoring.tsx                                    7       0         0        0     ✓
+  CandidateChecklist.tsx                                      5       0         2        1     ✓
+  CandidateReport.tsx                                         2       0         0        3     ✓
+  CandidateReportDialog.tsx                                   2       0         0        0     ✓
+  CapacityPlanning.tsx                                        8       2         3        2     ✓
+  CashFlowManagement.tsx                                      0       3         2        1     ✓
+  CashRegister.tsx                                            1       1         0        0     ✓
+  Certificates.tsx                                            3       0         3        2     ✓
+  CfoConfigSettings.tsx                                       2       0         2        2     ✓
+  ChartOfAccounts.tsx                                         6       0         2        1     ✓
+  CoordinationPage.tsx                                        9       0         4        3     ✓
+  CourseDetail.tsx                                           13       0         4        3     ✓
+  Courses.tsx                                                 1       0         2        1     ✓
+  CrmCohortAnalysis.tsx                                       2       0         0        1     ✓
+  CrmFunnelAnalytics.tsx                                      0       0         0        1     ✓
+  CrmRfmClusters.tsx                                          1       0         2        1     ✓
+  CrpPage.tsx                                                 1       0         2        0     ✓
+  CustomerPortalConfig.tsx                                    2       0         0        0     ✓
+  DailyKPIDashboard.tsx                                       1       0         0        0     ✓
+  DailyReportPage.tsx                                         5       0         3        7     ✓
+  Departments.tsx                                             5       0         3        3     ✓
+  DesignApproval.tsx                                          8       0         3        2     ✓
+  DesignDashboard.tsx                                         1       0         0        0     ✓
+  DesignExtended.tsx                                          1       0         0        0     ✓
+  DesignGenerator.tsx                                         1       0         0        0     ✗
+  DesignOrderDetail.tsx                                       1       0         2        1     ✓
+  DesignOrders.tsx                                            1       3         2        1     ✓
+  DirectorAiAudit.tsx                                         3       0         0        3     ✓
+  DirectorDashboard.tsx                                       1       0         2        1     ✓
+  DirectorExtended.tsx                                        3       0         0        0     ✓
+  Discipline.tsx                                              9       0         2        1     ✓
+  DocumentWorkflowPage.tsx                                   18       0         7       10     ✓
+  ENPSPage.tsx                                                9       0         5        6     ✓
+  ERPDailyReports.tsx                                         4       3         4        3     ✓
+  ERPProduction.tsx                                           1       0         0        0     ✓
+  EmployeeDailyKPIPanel.tsx                                   2       3         2        1     ✓
+  EmployeeProfile.tsx                                         1       0        16       15     ✓
+  EmployeeRating.tsx                                          1       0         0        0     ✓
+  EmployeeStats.tsx                                           2       0         2        1     ✓
+  EmployeeTrackingReport.tsx                                  2       0         0        0     ✓
+  Employees.tsx                                               2       0         0        0     ✓
+  EuroprintControlCenter.tsx                                  1       0         0        0     ✓
+  EventsCalendar.tsx                                          3       1         4        3     ✓
+  ExceptionLog.tsx                                            2       0         0        0     ✓
+  ExpenseManagement.tsx                                       2       1         3        2     ✓
+  FIDashboard.tsx                                             0       0         0        0     ✓
+  FIFinance.tsx                                               1       0         0        0     ✗
+  FaceRecognitionMonitoring.tsx                               6       0         3        2     ✓
+  FaceRegistration.tsx                                        8       0         3        2     ✓
+  FinanceApproval.tsx                                         7       0         3        2     ✓
+  FinanceBreakEven.tsx                                        3       0         2        0     ✓
+  FinanceDashboard.tsx                                        6       1         6        5     ✓
+  FinanceExtended.tsx                                         5       1         2        1     ✓
+  FinanceVariance.tsx                                         1       0         0        0     ✓
+  FinancialReports.tsx                                        2       0         0        0     ✓
+  ForecastAnalytics.tsx                                       3       0         2        4     ✓
+  GLChartOfAccounts.tsx                                       2       0         0        0     ✓
+  GLDocuments.tsx                                             7       0         0        0     ✓
+  GLPostingMonitor.tsx                                        1       0         0        0     ✓
+  GamificationPage.tsx                                        4       0         3        5     ✓
+  GoalsKPI.tsx                                                3       3         4        0     ✓
+  GoodsReceiving.tsx                                          2       2         0        0     ✓
+  HRAIDashboard.tsx                                           3       0         0        0     ✓
+  HRAlertBanner.tsx                                           2       0         0        0     ✓
+  HRAlumni.tsx                                                3       0         2        1     ✓
+  HRAssetManagement.tsx                                      14       0         5        4     ✓
+  HRBrandPage.tsx                                             8       0         2        1     ✓
+  HRCapitalCourses.tsx                                        1       0         0        0     ✓
+  HRCapitalPublicTest.tsx                                     7       0         0        0     ✓
+  HRCapitalTests.tsx                                         13       0         4        4     ✓
+  HRCareerPath.tsx                                            6       0         2        1     ✓
+  HRConflict.tsx                                              2       1         2        1     ✓
+  HRDashboard.tsx                                             2       0         0        8     ✓
+  HRExtended.tsx                                              1       0        11       10     ✓
+  HRHealthMonitoring.tsx                                      3       0         2        1     ✓
+  HRLMSSkills.tsx                                             1       0         0        0     ✓
+  HRMap.tsx                                                   5       0         2        1     ✓
+  HROffboarding.tsx                                          12       0         5        4     ✓
+  HROnboarding.tsx                                            5       0         3        2     ✓
+  HRSafety.tsx                                               10       4         6        5     ✓
+  HRSuccessionPlanning.tsx                                    1       0         2        1     ✓
+  HRVacationSick.tsx                                          3       1         2        1     ✓
+  IdealRasmPage.tsx                                           4       0         2        0     ✓
+  ImpositionCalculator.tsx                                    4       0         2        1     ✓
+  IncomeExpense.tsx                                           2       2         0        0     ✗
+  InkCoverageCalculator.tsx                                   1       0         2        1     ✓
+  InspectionPage.tsx                                          5       0         0        0     ✓
+  IntegrationManagement.tsx                                   1       0         0        0     ✓
+  InternalJobBoard.tsx                                        4       0         2        1     ✓
+  InventoryCount.tsx                                          2       1         6        5     ✓
+  InventoryValuation.tsx                                      3       2         0        0     ✓
+  InvoiceVerification.tsx                                     1       0         2        1     ✓
+  IoTDashboard.tsx                                            6       0         2        1     ✓
+  IoTExtended.tsx                                             5       1         3        2     ✓
+  IoTTablet.tsx                                               1       0         0        0     ✓
+  KaizenPage.tsx                                              7       1         3        2     ✓
+  KanbanBoard.tsx                                             1       0         0        0     ✗
+  KnowledgeBase.tsx                                           6       3         5        0     ✓
+  LMSDashboard.tsx                                            2       0         2        1     ✓
+  LMSExtended.tsx                                             6       2         3        2     ✓
+  LMSSupport.tsx                                              1       0         0        0     ✗
+  LessonPlayer.tsx                                            8       0         2        1     ✓
+  Login.tsx                                                   1       1         0        0     ✓
+  LogisticsDashboard.tsx                                     14       0         7        6     ✓
+  MESDashboard.tsx                                            0       0         0        0     ✓
+  MESDowntimes.tsx                                            4       0         3        0     ✓
+  MESExtended.tsx                                             8       1         2        2     ✓
+  MESHomeDashboard.tsx                                        1       0         0        0     ✓
+  MESProducts.tsx                                             5       0         3        0     ✓
+  MESWorkCenters.tsx                                         12       0         6        0     ✓
+  MESWorkerAssignments.tsx                                    3       0         4        0     ✓
+  MMDashboard.tsx                                             0       0         0        0     ✓
+  MMExtended.tsx                                              5       1         3        2     ✓
+  MMPurchaseOrders.tsx                                        4       0         3        2     ✓
+  MMVendors.tsx                                               4       1         4        3     ✓
+  MRODashboard.tsx                                            1       0         4        3     ✓
+  MROExtended.tsx                                             7       3         4        3     ✓
+  MarketingBudget.tsx                                         2       0         3        2     ✓
+  MarketingCalendar.tsx                                       4       0         3        3     ✓
+  MarketingCampaigns.tsx                                      4       0         4        3     ✓
+  MarketingContent.tsx                                        5       0         6        5     ✓
+  MarketingDashboard.tsx                                      4       0         4        3     ✓
+  MarketingExhibitions.tsx                                    6       0         6        5     ✓
+  MarketingExtended.tsx                                       1       0         0        0     ✓
+  MarketingLeads.tsx                                         10       0         7        6     ✓
+  MarketingPR.tsx                                             3       0         4        3     ✓
+  MarketingSettings.tsx                                       8       0         5        4     ✓
+  MarketingSocialInbox.tsx                                    4       0         4        3     ✓
+  MarketingWebsiteCMS.tsx                                     7       0         6        5     ✓
+  MaterialBalance.tsx                                         3       0         3        2     ✓
+  MaterialsAccounting.tsx                                     4       0         0        0     ✓
+  Mentorship.tsx                                              3       1         4        3     ✓
+  MilestonePage.tsx                                           7       0         3        4     ✓
+  MrpMatrix.tsx                                               1       0         2        0     ✓
+  NotificationSettings.tsx                                    1       0         2        1     ✓
+  OTPVerify.tsx                                               2       0         3        2     ✓
+  OrderApprovalWorkflow.tsx                                   6       2         4        0     ✓
+  OrderCosting.tsx                                            6       3         3        2     ✓
+  OrderCreationWizard.tsx                                     3       0         0        0     ✗
+  OrderWorkflowPage.tsx                                       3       0         0        0     ✓
+  OrdersRegistry.tsx                                          6       1         2        1     ✓
+  OrgChartPage.tsx                                            6       0         0        0     ✓
+  OrgNodeDetail.tsx                                           7       0         0        0     ✗
+  OrgNodePortretTab.tsx                                       7       0         2        1     ✓
+  OrgStructureHierarchy.tsx                                  12       0         2        1     ✓
+  PIPPage.tsx                                                 8       0         5        6     ✓
+  POSDashboard.tsx                                           13       0         2        5     ✓
+  POSInventoryPage.tsx                                        6       0         2        5     ✓
+  PPDashboard.tsx                                             1       0         0        0     ✓
+  PapkaOrders.tsx                                             5       3         4        3     ✓
+  PayrollAutomation.tsx                                       0       0         0        0     ✓
+  PeerReviewPage.tsx                                          4       0         2        3     ✓
+  PeriodClosing.tsx                                           4       0         2        1     ✓
+  PhoneScriptSheet.tsx                                        4       0         0        0     ✗
+  PlanningBoard.tsx                                           4       5         7        7     ✓
+  Positions.tsx                                               5       0         3        3     ✓
+  PricingTiers.tsx                                            4       0         2        0     ✓
+  ProductProfitability.tsx                                    0       0         0        0     ✓
+  ProductionOrder360.tsx                                      1       0         0        0     ✓
+  ProductionReport.tsx                                        7       0         0        0     ✓
+  ProductivityInterviewDialog.tsx                            10       0         2        1     ✓
+  QCApproval.tsx                                             13       0         5        4     ✓
+  QCDashboard.tsx                                             0       0         0        0     ✓
+  QCExtended.tsx                                              1       0         0        0     ✗
+  QCFinalInspection.tsx                                       4       0         3        2     ✓
+  QCModule.tsx                                                7       1         5        2     ✓
+  Questionnaire.tsx                                          12       0         5        4     ✓
+  QuestionnaireTemplates.tsx                                 11       2         7        8     ✓
+  QueueMonitor.tsx                                            5       0         3        3     ✓
+  RACIMatrixPage.tsx                                          4       0         2        1     ✓
+  ReceptionPage.tsx                                           4       0         3        6     ✓
+  RecruiterKPIPage.tsx                                        2       0         0        1     ✓
+  RecruitingKanban.tsx                                       10       0         7        8     ✓
+  ReferralPage.tsx                                            7       0         3        4     ✓
+  ReportsHub.tsx                                              6       0         5        4     ✓
+  RoutingConfiguration.tsx                                    8       0         5        4     ✓
+  SDContracts.tsx                                             7       0         2        1     ✓
+  SDCustomers.tsx                                             5       1         2        2     ✓
+  SDDashboard.tsx                                             0       0         0        0     ✓
+  SDDebitors.tsx                                              6       0         3        0     ✓
+  SDEuroprint.tsx                                             1       0         0        0     ✗
+  SDExtended.tsx                                              1       0         0        0     ✓
+  SDKpi.tsx                                                   1       0         0        1     ✓
+  SDOverviewDashboard.tsx                                     1       0         0        0     ✓
+  SDQuotaDashboard.tsx                                        1       0         0        0     ✓
+  SDQuotations.tsx                                           13       1         4        3     ✓
+  SDSalesManagement.tsx                                       2       0         2        1     ✓
+  SDSalesOrders.tsx                                           3       0         3        4     ✓
+  SDSalesPayments.tsx                                         4       0         4        6     ✓
+  SDSalesQuotes.tsx                                           4       0         5        5     ✓
+  SDSettings.tsx                                              2       0         2        1     ✓
+  SaaSExtended.tsx                                            7       1         3        2     ✓
+  SalesOrders.tsx                                             3       1         3        3     ✓
+  SecurityDashboard.tsx                                      10       0         5        4     ✓
+  SecurityExtended.tsx                                        4       1         2        1     ✓
+  Settings.tsx                                                7       0         6        4     ✓
+  SevenFunctionsDashboard.tsx                                 4       0         0        0     ✓
+  ShiftSchedule.tsx                                          17       0         5        7     ✓
+  SkillsMatrix.tsx                                            3       2         6        5     ✓
+  StockReservation.tsx                                        2       0         1        0     ✓
+  StrategicTasksPanel.tsx                                     6       1         4        3     ✓
+  StubPage.tsx                                                1       0         0        0     ✗
+  SuperAdminPanel.tsx                                        11       0         6        5     ✓
+  SupplyChainDashboard.tsx                                    3       0         3        2     ✓
+  SystemMonitor.tsx                                           1       0         0        0     ✓
+  TechApproval.tsx                                           13       0         4        3     ✓
+  TechCards.tsx                                               8       0         2        1     ✓
+  TechDashboard.tsx                                           0       0         0        0     ✓
+  TechPPExtended.tsx                                          2       0         0        0     ✓
+  Technology.tsx                                              2       0         0        0     ✓
+  TelegramBotAdmin.tsx                                        1       0         2        1     ✓
+  TestDetail.tsx                                              6       0         3        2     ✓
+  Tests.tsx                                                   5       0         2        1     ✓
+  VacancyPortretDialog.tsx                                    5       0         3        2     ✓
+  VendorPerformance.tsx                                       1       0         0        0     ✓
+  WMSDashboard.tsx                                           11       0         5        0     ✓
+  WMSExtended.tsx                                             7       2         3        2     ✓
+  WMSMaterials.tsx                                            6       0         0        1     ✓
+  WarehouseDailyView.tsx                                     13       0         3        2     ✓
+  WarehouseDashboard.tsx                                      9       0         0        0     ✓
+  WarehouseDirectory.tsx                                      2       0         0        0     ✓
+  WarehouseHub.tsx                                            1       0         5        4     ✓
+  WarehouseIntegrations.tsx                                   9       0         1        0     ✓
+  WarehouseMaterialKits.tsx                                   9       0         4        3     ✓
+  WarehouseRental.tsx                                        10       0         6        5     ✓
+  WarehouseReports.tsx                                        1       0         0        0     ✓
+  WasteTracking.tsx                                           2       2         3        2     ✓
+  WeeklyPlanPage.tsx                                          8       0         3        0     ✓
+  WmsAnalytics.tsx                                            1       0         0        0     ✓
+  accountant/AuditConsole.tsx                                 8       0         0        0     ✓
+  accountant/ErpRoadmapCard.tsx                               1       0         0        0     ✗
+  adaptation/FeedbackTab.tsx                                  2       3         3        2     ✓
+  adaptation/NewEmployeesTab.tsx                              2       3         3        2     ✓
+  adaptation/ProgramsTab.tsx                                 12       1         4        3     ✓
+  adaptation/WelcomeEventsTab.tsx                             2       3         3        2     ✓
+  analytics/AssessmentTab.tsx                                 1       0         0        0     ✗
+  analytics/EngagementTab.tsx                                 1       0         0        0     ✗
+  analytics/LeaderboardTab.tsx                                1       0         0        0     ✗
+  analytics/OutcomesTab.tsx                                   1       0         0        0     ✗
+  analytics/RemainingTabs.tsx                                 1       0         0        0     ✗
+  analytics/SystemTab.tsx                                     1       0         0        0     ✗
+  barcode/BatchDialogs.tsx                                    5       0         0        0     ✗
+  barcode/GenerateScannerContent.tsx                          5       0         0        0     ✗
+  barcode/LabelPrintDialog.tsx                                3       0         2        0     ✓
+  barcode/PrinterSettingsTab.tsx                              3       0         3        0     ✓
+  camera-alerts.tsx                                           4       0         3        2     ✓
+  camera-dashboard.tsx                                        4       0         0        0     ✓
+  camera-employee-ratings.tsx                                 2       0         0        0     ✓
+  camera-employees.tsx                                        2       0         0        0     ✓
+  camera-heatmap.tsx                                          2       0         0        0     ✓
+  camera-machines.tsx                                         2       0         0        0     ✓
+  camera-quality.tsx                                          2       0         0        0     ✓
+  camera-reports.tsx                                          4       0         0        0     ✓
+  camera-safety.tsx                                           2       0         0        0     ✓
+  camera-settings.tsx                                         3       0         2        1     ✓
+  cameras-management.tsx                                      5       5         5        4     ✓
+  chat/ChatAdminPage.tsx                                      7       0         4        0     ✓
+  chat/ChatPage.tsx                                           1       0         0        0     ✗
+  crm/AIAnalysisPanel.tsx                                    10       0         0        2     ✓
+  crm/DetailSheet.tsx                                         1       0         2        6     ✓
+  crm/EntityCard.tsx                                          4       0         0        1     ✓
+  crm/ExtendedAIPanel.tsx                                    11       0         0        0     ✓
+  crm/KanbanColumn.tsx                                        1       0         0        0     ✗
+  crm/QuickCreateModal.tsx                                    5       1         2        0     ✓
+  crm/RobotsView.tsx                                          5       3         5        4     ✓
+  daily-kpi/AIInsightsSection.tsx                             1       0         0        0     ✗
+  daily-kpi/WeeklyTrendChart.tsx                              1       0         0        0     ✗
+  employee-profile/AdaptationTab.tsx                          3       0         2        2     ✓
+  employee-profile/AssessmentTab.tsx                          2       0         2        1     ✓
+  employee-profile/AssetsTab.tsx                              1       0         0        0     ✓
+  employee-profile/AttendanceTab.tsx                          4       0         0        0     ✗
+  employee-profile/CareerTab.tsx                              2       0         2        1     ✓
+  employee-profile/CorporateInfoCard.tsx                      3       0         2        2     ✓
+  employee-profile/CorporateInventoryTab.tsx                  5       0         4        3     ✓
+  employee-profile/DailyReportsTab.tsx                        1       0         0        1     ✓
+  employee-profile/DocumentsTab.tsx                          12       1         1        0     ✓
+  employee-profile/FinanceTab.tsx                             4       0         0        0     ✓
+  employee-profile/HRCapitalTab.tsx                           2       0         2        1     ✓
+  employee-profile/LeaveTab.tsx                               3       0         0        0     ✗
+  employee-profile/MachineOperatorTab.tsx                     1       0         0        0     ✓
+  employee-profile/MonthlyReportTab.tsx                       2       0         0        0     ✓
+  employee-profile/ObligationsTab.tsx                         1       0         0        0     ✓
+  employee-profile/OffboardingTab.tsx                         5       0         4        3     ✓
+  employee-profile/PerformanceTab.tsx                         1       0         0        0     ✗
+  employee-profile/PersonalTab.tsx                            3       0         0        0     ✗
+  employee-profile/RemainingTabs.tsx                          1       0         0        0     ✗
+  employee-profile/TechAccessTab.tsx                          1       0         0        0     ✓
+  employee-profile/WorkTab.tsx                                2       0         0        1     ✓
+  erp/ERPDashboardTab.tsx                                     1       0         0        0     ✓
+  erp/ERPDowntimeTab.tsx                                      3       1         3        3     ✓
+  erp/ERPEmployeeTab.tsx                                      4       1         3        3     ✓
+  erp/ERPOrdersTab.tsx                                        4       1         3        3     ✓
+  erp/ERPProductsTab.tsx                                      4       1         3        3     ✓
+  erp/ERPWorkCentersTab.tsx                                   4       1         3        3     ✓
+  hr-dashboard/DisciplineTab.tsx                              1       0         0        0     ✗
+  hr-dashboard/RiskTab.tsx                                    1       0         0        0     ✗
+  hr-dashboard/SafetyTab.tsx                                  1       0         0        0     ✗
+  hr-dashboard/TurnoverTab.tsx                                1       0         0        0     ✗
+  iot/IoTChecklistModal.tsx                                   2       0         0        0     ✗
+  iot/IoTCompletionReport.tsx                                 5       0         0        0     ✓
+  iot/IoTLoginPanel.tsx                                       2       0         0        0     ✗
+  iot/IoTProductionDashboard.tsx                             15       0         0        0     ✗
+  iot/IoTSchedulePanel.tsx                                    4       0         0        0     ✗
+  kanban/CalendarView.tsx                                     5       0         0        0     ✗
+  kanban/DashboardPanel.tsx                                   1       0         0        0     ✓
+  kanban/DeadlineColumn.tsx                                   2       0         0        0     ✗
+  kanban/FlowsDialog.tsx                                      3       0         3        2     ✓
+  kanban/GanttView.tsx                                        4       0         0        0     ✗
+  kanban/KanbanCard.tsx                                       5       0         0        0     ✗
+  kanban/KanbanColumn.tsx                                     2       0         0        0     ✗
+  kanban/ListView.tsx                                         2       0         0        0     ✗
+  kanban/MyPlanView.tsx                                       1       0         0        0     ✗
+  kanban/NotificationsPanel.tsx                               4       0         3        2     ✓
+  kanban/ReportsDialog.tsx                                    1       0         0        0     ✓
+  kanban/ResourceAllocationView.tsx                           1       0         0        0     ✓
+  kanban/RobotsDialog.tsx                                     3       0         3        2     ✓
+  kanban/TaskDetailSheet.tsx                                  8       0        21       19     ✓
+  kanban/TemplatesDialog.tsx                                  8       0         5        5     ✓
+  kanban/TimeTrackingWidget.tsx                               1       0         0        0     ✗
+  kanban/detail/ChatPanel.tsx                                 5       0         0        0     ✗
+  kanban/detail/ChecklistTabContent.tsx                       3       0         0        0     ✗
+  kanban/detail/FilesTabContent.tsx                           4       0         0        0     ✗
+  kanban/detail/MainTabContent.tsx                           11       0         0        0     ✗
+  kanban/detail/ResultsTabContent.tsx                         4       0         0        0     ✗
+  lms-dashboard/GamificationTab.tsx                           1       0         0        0     ✗
+  lms-dashboard/SkillsGapTab.tsx                              1       0         0        0     ✗
+  lms-extended/GamificationTab.tsx                            1       0         0        0     ✓
+  lms-extended/KnowledgeBaseTab.tsx                           2       0         0        0     ✓
+  lms-extended/MicroLearningTab.tsx                           5       0         3        2     ✓
+  mini-app/TelegramMiniApp.tsx                               27       0         5        0     ✓
+  not-found.tsx                                               1       0         0        0     ✗
+  payroll/AIPayrollDialog.tsx                                 1       0         2        1     ✓
+  payroll/CalculatePayrollDialog.tsx                          0       3         2        1     ✓
+  payroll/CalculationsTab.tsx                                 2       0         2        1     ✓
+  payroll/ContractsTab.tsx                                    1       0         0        0     ✗
+  payroll/PayrollStatsCards.tsx                               1       0         0        0     ✗
+  payroll/TaxRulesSidebar.tsx                                 1       0         0        0     ✗
+  planning/PlanningDialogs.tsx                                3      12         0        0     ✗
+  planning/PlanningTabPanels.tsx                              6       0         0        0     ✗
+  qc/QCAIAnalysisTab.tsx                                      1       0         0        0     ✓
+  qc/QCAITrendTab.tsx                                         1       0         0        0     ✓
+  qc/QCBraksTab.tsx                                           5       0         2        1     ✓
+  qc/QCCertificateGenerator.tsx                               2       0         0        0     ✗
+  qc/QCParameterDialog.tsx                                    1       1         3        0     ✓
+  qc/QCReclamationsTab.tsx                                    3       0         2        1     ✓
+  qc/QCSPCTab.tsx                                             1       0         0        0     ✓
+  qc/QCStandardsTab.tsx                                       2       1         4        1     ✓
+  qc/QCSupplierQualityTab.tsx                                 1       0         0        0     ✓
+  skills-matrix/EmployeeSkillDialog.tsx                       1       4         0        0     ✗
+  skills-matrix/SkillDialog.tsx                               1       4         0        0     ✗
+  warehouse/BinsTab.tsx                                       6       1         4        3     ✓
+  warehouse/InventarizatsiyaPanel.tsx                         2       0         0        0     ✓
+  warehouse/TransfersTab.tsx                                 12       0         3        2     ✓
+  warehouse/WarehousesTab.tsx                                 5       1         4        3     ✓
+  warehouse/ZonesTab.tsx                                      5       1         4        3     ✓
+
+════════════════════════════════════════════════════════════════════════════════
+Hisobot yakunlandi: 2026-04-28T15:27:30.549Z
+Fayl: /home/runner/workspace/scripts/full-system-audit-report.txt
+════════════════════════════════════════════════════════════════════════════════

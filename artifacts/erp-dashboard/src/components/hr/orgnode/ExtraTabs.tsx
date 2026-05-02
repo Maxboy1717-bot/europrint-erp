@@ -1,0 +1,107 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Building2, UserX, Layers, TrendingUp, CheckCircle, BarChart2 } from "lucide-react";
+import { StatCard } from "./StatCard";
+import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+
+interface StatsTabProps {
+  node: NodeDetail;
+}
+
+export function StatsTab({ node }: StatsTabProps) {
+  const isVacant = !node.headUserName;
+  
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <StatCard
+          icon={<Users className="h-4 w-4" />}
+          label="To'g'ridan xodimlar"
+          value={node.employeeCount}
+          color="#0f766e"
+        />
+        <StatCard
+          icon={<Building2 className="h-4 w-4" />}
+          label="Jami bo'limlar (farzand)"
+          value={node.childCount}
+          color="#1d4ed8"
+        />
+        <StatCard
+          icon={<UserX className="h-4 w-4" />}
+          label="Vakant farzandlar"
+          value={node.vacantChildCount ?? 0}
+          color={(node.vacantChildCount ?? 0) > 0 ? "#dc2626" : "#6b7280"}
+        />
+        <StatCard
+          icon={<Layers className="h-4 w-4" />}
+          label="Ierarxiya darajasi"
+          value={`${node.hierarchyLevel} — ${NODE_TYPE_LABELS[node.nodeType] || node.nodeType}`}
+          color="#7c3aed"
+        />
+        <StatCard
+          icon={isVacant ? <UserX className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+          label="Rahbar holati"
+          value={isVacant ? "Vakant" : "Tayinlangan"}
+          color={isVacant ? "#dc2626" : "#16a34a"}
+        />
+        <StatCard
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="Faollik"
+          value={node.isActive ? "Faol ✓" : "Nofaol ✗"}
+          color={node.isActive ? "#059669" : "#6b7280"}
+        />
+      </div>
+      <div className="mt-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <BarChart2 className="h-4 w-4" />
+              Qo'shimcha ma'lumot
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2 text-sm">
+            {([
+              { label: "Bo'lim turi", value: NODE_TYPE_LABELS[node.nodeType] || node.nodeType },
+              { label: "Ota bo'lim", value: node.parentName || (node.parentId ? `#${node.parentId}` : "Ildiz (asosiy)") },
+              { label: "QYaM uzunligi", value: node.tskp ? `${node.tskp.length} belgi` : "Kiritilmagan" },
+              { label: "Rang kodi", value: node.color },
+            ]).map((row) => (
+              <div key={row.label} className="flex flex-col gap-0.5">
+                <span className="text-muted-foreground text-xs">{row.label}</span>
+                <span className="font-medium text-sm">{row.value}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+export function VacantTab({ node }: StatsTabProps) {
+  const isVacant = !node.headUserName;
+  return (
+    <Card>
+      <CardContent className="py-6">
+        <div className="flex items-center gap-3">
+          {!isVacant ? (
+            <>
+              <CheckCircle className="h-6 w-6 text-green-500" />
+              <div>
+                <p className="font-medium">Rahbar tayinlangan</p>
+                <p className="text-sm text-muted-foreground">{node.headUserName}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <UserX className="h-6 w-6 text-red-500" />
+              <div>
+                <p className="font-medium text-red-600">Rahbar vakant</p>
+                <p className="text-sm text-muted-foreground">Bu bo'limga rahbar tayinlanmagan</p>
+              </div>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

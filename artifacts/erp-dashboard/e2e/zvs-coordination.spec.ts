@@ -1,0 +1,191 @@
+import { test, expect } from "@playwright/test";
+
+const API_BASE = process.env.API_BASE_URL ?? "http://localhost:8080";
+const ADMIN_USER = process.env.TEST_ADMIN_USER ?? "admin";
+const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? "admin123";
+
+async function getAdminToken(request: Parameters<Parameters<typeof test>[1]>[0]["request"]): Promise<string> {
+  const res = await request.post(`${API_BASE}/api/admin/login`, {
+    data: { username: ADMIN_USER, password: ADMIN_PASS },
+  });
+  const body = await res.json();
+  return body.accessToken as string;
+}
+
+test.describe("ZVS API — autentifikatsiyasiz", () => {
+  test("ZVS ro'yxat endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.get(`${API_BASE}/api/hr/zvs`);
+    expect([401, 403]).toContain(res.status());
+  });
+
+  test("ZVS yuborish endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.post(`${API_BASE}/api/hr/zvs`, {
+      data: { purpose: "Test maqsad", amount: 100000 },
+    });
+    expect([401, 403]).toContain(res.status());
+  });
+
+  test("ZVS tasdiqlash endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.patch(`${API_BASE}/api/hr/zvs/1/approve`);
+    expect([401, 403]).toContain(res.status());
+  });
+
+  test("ZVS rad etish endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.patch(`${API_BASE}/api/hr/zvs/1/reject`);
+    expect([401, 403]).toContain(res.status());
+  });
+
+  test("FP cycle endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.get(`${API_BASE}/api/hr/fp-cycle`);
+    expect([401, 403]).toContain(res.status());
+  });
+});
+
+test.describe("ZVS API — autentifikatsiyalangan", () => {
+  test("ZVS ariza yuborish → 201 yoki 200 va ID qaytaradi", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.post(`${API_BASE}/api/hr/zvs`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        purpose: "E2E test ZVS arizasi",
+        amount: 250000,
+        priority: "medium",
+      },
+    });
+    expect([200, 201]).toContain(res.status());
+    const body = await res.json();
+    expect(body).toHaveProperty("id");
+    expect(body).toHaveProperty("level");
+    expect(body.level).toBe(1);
+  });
+
+  test("Level-2 ZVS ariza yuborish (>500K) → level=2 qaytaradi", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.post(`${API_BASE}/api/hr/zvs`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        purpose: "E2E test ZVS level-2",
+        amount: 1_000_000,
+        priority: "high",
+      },
+    });
+    expect([200, 201]).toContain(res.status());
+    const body = await res.json();
+    expect(body.level).toBe(2);
+  });
+
+  test("Level-3 ZVS ariza yuborish (>5M) → level=3 qaytaradi", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.post(`${API_BASE}/api/hr/zvs`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        purpose: "E2E test ZVS level-3",
+        amount: 10_000_000,
+        priority: "critical",
+      },
+    });
+    expect([200, 201]).toContain(res.status());
+    const body = await res.json();
+    expect(body.level).toBe(3);
+  });
+
+  test("FP cycle → 200 va haftalik holat ma'lumotlari", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.get(`${API_BASE}/api/hr/fp-cycle`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty("today");
+    expect(body).toHaveProperty("weekStart");
+  });
+});
+
+test.describe("Coordination API — autentifikatsiyasiz", () => {
+  test("coordination councils endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.get(`${API_BASE}/api/coordination/councils`);
+    expect([401, 403]).toContain(res.status());
+  });
+
+  test("dokla endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.get(`${API_BASE}/api/coordination/dokla`);
+    expect([401, 403]).toContain(res.status());
+  });
+
+  test("rasporyazhenie endpoint 401 qaytaradi", async ({ request }) => {
+    const res = await request.get(`${API_BASE}/api/coordination/rasporyazhenie`);
+    expect([401, 403]).toContain(res.status());
+  });
+});
+
+test.describe("Coordination API — autentifikatsiyalangan", () => {
+  test("councils tuzilmasi → 200 va 5 ta kengash", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.get(`${API_BASE}/api/coordination/councils`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBe(5);
+    const levels = body.map((c: { level: number }) => c.level).sort();
+    expect(levels).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  test("dokla yaratish → 201 yoki 200 va ID qaytaradi", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.post(`${API_BASE}/api/coordination/dokla`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        subject: "E2E Test Доклад",
+        problem: "Muammo tavsifi",
+        result: "Natija",
+        council_level: 3,
+        from_name: "Test Admin",
+      },
+    });
+    expect([200, 201]).toContain(res.status());
+    const body = await res.json();
+    expect(body).toHaveProperty("id");
+    expect(body).toHaveProperty("subject");
+    expect(body.subject).toContain("E2E Test");
+  });
+
+  test("doklalar ro'yxati → 200 va array", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.get(`${API_BASE}/api/coordination/dokla`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+  });
+
+  test("rasporyazhenie yaratish → 201 yoki 200 va ID qaytaradi", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.post(`${API_BASE}/api/coordination/rasporyazhenie`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        task: "E2E Test vazifasi",
+        to_user: "Test Xodim",
+        priority: "medium",
+        deadline: "2026-04-30",
+        from_name: "Test Admin",
+      },
+    });
+    expect([200, 201]).toContain(res.status());
+    const body = await res.json();
+    expect(body).toHaveProperty("id");
+    expect(body).toHaveProperty("task");
+  });
+
+  test("rasporyazhenilar ro'yxati → 200 va array", async ({ request }) => {
+    const token = await getAdminToken(request);
+    const res = await request.get(`${API_BASE}/api/coordination/rasporyazhenie`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+  });
+});

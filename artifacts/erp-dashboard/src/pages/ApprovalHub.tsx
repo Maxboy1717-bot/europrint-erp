@@ -1,0 +1,296 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { CheckCircle2, XCircle, Clock, ClipboardList } from "lucide-react";
+
+interface ApprovalItem {
+  id: string | number;
+  type: string;
+  title: string;
+  description?: string;
+  requestedBy?: string;
+  amount?: number;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  priority?: "high" | "medium" | "low";
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  budget: "Byudjet",
+  purchase_order: "Xarid buyurtmasi",
+  payment: "To'lov",
+  leave: "Ta'til",
+  overtime: "Qo'shimcha ish",
+  expense: "Xarajat",
+};
+
+const PRIORITY_COLORS: Record<string, string> = {
+  high: "destructive",
+  medium: "secondary",
+  low: "outline",
+};
+
+export default function ApprovalHub() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("pending");
+
+  const { data: approvals = [], isLoading } = useQuery<ApprovalItem[]>({
+    queryKey: ["/api/approval-workflow/dashboard"],
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: ({ id, type }: { id: string | number; type: string }) =>
+      apiRequest("POST", `/api/approval-workflow/${type}/${id}/approve`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/approval-workflow/dashboard"],
+      });
+      toast({ title: "Tasdiqlandi" });
+    },
+    onError: () =>
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, type }: { id: string | number; type: string }) =>
+      apiRequest("POST", `/api/approval-workflow/${type}/${id}/reject`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/approval-workflow/dashboard"],
+      });
+      toast({ title: "Rad etildi" });
+    },
+    onError: () =>
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const pending = (approvals as ApprovalItem[]).filter(
+    (a) => a.status === "pending"
+  );
+  const approved = (approvals as ApprovalItem[]).filter(
+    (a) => a.status === "approved"
+  );
+  const rejected = (approvals as ApprovalItem[]).filter(
+    (a) => a.status === "rejected"
+  );
+
+  const fmt = (n: number) =>
+    n?.toLocaleString("uz-UZ") + " so'm";
+
+  function ApprovalTable({
+    items,
+    showActions,
+  }: {
+    items: ApprovalItem[];
+    showActions: boolean;
+  }) {
+    return (
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tur</TableHead>
+                <TableHead>Nomi</TableHead>
+                <TableHead>So'rovchi</TableHead>
+                <TableHead>Miqdor</TableHead>
+                <TableHead>Muhimlik</TableHead>
+                <TableHead>Sana</TableHead>
+                {showActions && <TableHead>Amal</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={showActions ? 7 : 6}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Yuklanmoqda...
+                  </TableCell>
+                </TableRow>
+              ) : items.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={showActions ? 7 : 6}
+                    className="text-center py-10 text-muted-foreground"
+                  >
+                    Tasdiqlash so'rovlari yo'q
+                  </TableCell>
+                </TableRow>
+              ) : (
+                (Array.isArray(items) ? items : []).map((item) => (
+                  <TableRow key={item.id} data-testid={`row-approval-${item.id}`}>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {TYPE_LABELS[item.type] || item.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <div>{item.title}</div>
+                      {item.description && (
+                        <div className="text-xs text-muted-foreground truncate max-w-[180px]">
+                          {item.description}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {item.requestedBy || "—"}
+                    </TableCell>
+                    <TableCell className="text-sm font-mono">
+                      {item.amount ? fmt(item.amount) : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {item.priority && (
+                        <Badge
+                          variant={
+                            (PRIORITY_COLORS[item.priority] as "destructive" | "secondary" | "outline") ||
+                            "outline"
+                          }
+                        >
+                          {item.priority === "high"
+                            ? "Yuqori"
+                            : item.priority === "medium"
+                            ? "O'rta"
+                            : "Past"}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(item.createdAt).toLocaleDateString("uz-UZ")}
+                    </TableCell>
+                    {showActions && (
+                      <TableCell>
+                        <div className="flex gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                            onClick={() =>
+                              approveMutation.mutate({
+                                id: item.id,
+                                type: item.type,
+                              })
+                            }
+                            disabled={approveMutation.isPending}
+                            data-testid={`button-approve-${item.id}`}
+                          >
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Tasdiqlash
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-7 text-xs"
+                            onClick={() =>
+                              rejectMutation.mutate({
+                                id: item.id,
+                                type: item.type,
+                              })
+                            }
+                            disabled={rejectMutation.isPending}
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Rad
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ClipboardList className="h-5 w-5 text-primary" />
+          <h1 className="font-semibold text-base">Tasdiqlash Markazi</h1>
+          {pending.length > 0 && (
+            <Badge variant="destructive">{pending.length} kutmoqda</Badge>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto p-6 space-y-6">
+        <div className="grid grid-cols-3 gap-4">
+          {([
+            {
+              label: "Kutmoqda",
+              value: pending.length,
+              icon: Clock,
+              color: "text-orange-600",
+            },
+            {
+              label: "Tasdiqlangan",
+              value: approved.length,
+              icon: CheckCircle2,
+              color: "text-green-600",
+            },
+            {
+              label: "Rad etilgan",
+              value: rejected.length,
+              icon: XCircle,
+              color: "text-red-600",
+            },
+          ]).map((stat) => (
+            <Card key={stat.label}>
+              <CardHeader className="pb-1 pt-3 px-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xs text-muted-foreground font-normal">
+                    {stat.label}
+                  </CardTitle>
+                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                </div>
+              </CardHeader>
+              <CardContent className="px-4 pb-3">
+                <div className={`text-2xl font-bold ${stat.color}`}>
+                  {stat.value}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="pending" data-testid="tab-pending">
+              Kutmoqda ({pending.length})
+            </TabsTrigger>
+            <TabsTrigger value="approved" data-testid="tab-approved">
+              Tasdiqlangan
+            </TabsTrigger>
+            <TabsTrigger value="rejected" data-testid="tab-rejected">
+              Rad etilgan
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pending" className="mt-4">
+            <ApprovalTable items={pending} showActions={true} />
+          </TabsContent>
+          <TabsContent value="approved" className="mt-4">
+            <ApprovalTable items={approved} showActions={false} />
+          </TabsContent>
+          <TabsContent value="rejected" className="mt-4">
+            <ApprovalTable items={rejected} showActions={false} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

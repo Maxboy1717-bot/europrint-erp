@@ -1,0 +1,99 @@
+import { TashkentTimeService } from '@common/time';
+const _time = new TashkentTimeService();
+import { safeNum } from '@common/math';
+import { Injectable } from '@nestjs/common';
+import { castTo } from '@common/db-rows';
+import { db , runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { safeCall, Result } from '@common/result';
+import { execSalesOrderSetVip } from '@common/database/queries-remaining';
+
+type Row = Record<string, unknown>;
+const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+  return (await runQuery<Row>(q)).rows as Row[];
+};
+
+const PROFIT_TARGET_WEEKLY = 25_000_000;
+const REVENUE_TARGET_WEEKLY = 200_000_000;
+
+function fmt(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return String(Math.round(n));
+}
+
+export interface WmsRentalData { rentalData: unknown[]; grandTotal: number; grandTotalToDate: number; daysElapsed: number; daysInMonth: number; month: string; generatedAt: string }
+export interface CompanyStateHistoryData { history: { week_label: string; week_start: string; revenue: number; profit: number; perf_ratio: number; state_key: string }[] }
+export interface IdealVsActualData { week_start: string; profit: { actual: number; target: number; pct: number; deviation_pct: number; formatted_actual: string; formatted_target: string }; revenue: { actual: number; target: number; pct: number; deviation_pct: number; formatted_actual: string; formatted_target: string }; orders: { completed: number; total: number; completion_pct: number } }
+
+type WRow = { warehouse_id: string; warehouse_name: string; warehouse_type: string; total_qty: string; total_value: string; item_count: string; rental_cost_monthly: string };
+type WR = { week_label: string; week_start: string; revenue: string; profit: string };
+type RR = Record<string, unknown>;
+
+@Injectable()
+export class DirectorStateRepository {
+  async queryWmsRental(): Promise<Result<WmsRentalData>> {
+    
+    return safeCall(async () => {
+      const now = _time.now();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const daysElapsed = now.getDate();
+      const r = await castTo<WRow[]>(exec(sql`SELECT w.id::text AS warehouse_id, w.name AS warehouse_name, w.type AS warehouse_type, COALESCE(SUM(si.quantity), 0) AS total_qty, COALESCE(SUM(si.quantity * si.unit_cost), 0) AS total_value, COUNT(DISTINCT si.id) AS item_count, COALESCE(w.monthly_rental_cost, 0) AS rental_cost_monthly FROM warehouses w LEFT JOIN stock_items si ON si.warehouse_id = w.id WHERE w.is_active = true GROUP BY w.id, w.name, w.type, w.monthly_rental_cost ORDER BY rental_cost_monthly DESC`));
+      const rentalData = (r ?? []).map(row => {
+        const rentalCostMonthly = parseFloat(row.rental_cost_monthly) || 0;
+        const rentalCostToDate = Math.round((rentalCostMonthly / daysInMonth) * daysElapsed);
+        return { warehouseId: row.warehouse_id, warehouseName: row.warehouse_name ?? '', warehouseType: row.warehouse_type ?? '', totalQty: parseFloat(row.total_qty)||0, totalValue: parseFloat(row.total_value)||0, itemCount: parseInt(row.item_count,10)||0, rentalCostMonthly, rentalCostToDate };
+      });
+      const grandTotal = (rentalData ?? []).reduce((s, x) => s + x.rentalCostMonthly, 0);
+      const grandTotalToDate = (rentalData ?? []).reduce((s, x) => s + x.rentalCostToDate, 0);
+      return { rentalData, grandTotal, grandTotalToDate, daysElapsed, daysInMonth, month: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`, generatedAt: now.toISOString() };
+    }, 'DB_ERROR');
+  }
+
+  async queryCompanyStateHistory(): Promise<Result<CompanyStateHistoryData>> {
+    
+    return safeCall(async () => {
+      const r = await castTo<WR[]>(exec(sql`SELECT TO_CHAR(DATE_TRUNC('week', si.created_at), 'DD.MM') AS week_label, DATE_TRUNC('week', si.created_at)::date::text AS week_start, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) AS revenue, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) - COALESCE((SELECT SUM(pi.total_amount) FROM purchase_invoices pi WHERE DATE_TRUNC('week', pi.created_at) = DATE_TRUNC('week', si.created_at) AND pi.payment_status IN ('paid','partial')), 0) AS profit FROM sales_invoices si WHERE si.created_at >= NOW() - INTERVAL '8 weeks' GROUP BY DATE_TRUNC('week', si.created_at) ORDER BY week_start ASC`));
+      const history = (r ?? []).map(row => {
+        const revenue = parseFloat(row.revenue)||0; const profit = parseFloat(row.profit)||0;
+        const perfRatio = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
+        let stateKey = 'inqiroz';
+        if (profit >= 130_000_000 && revenue >= 1_000_000_000) stateKey = 'osish';
+        else if (profit >= 100_000_000 && revenue >= 800_000_000) stateKey = 'normal';
+        else if (profit >= 70_000_000 && revenue >= 600_000_000) stateKey = 'ehtiyot';
+        else if (profit >= 40_000_000 || revenue >= 400_000_000) stateKey = 'xavf';
+        return { week_label: row.week_label??'', week_start: row.week_start??'', revenue, profit, perf_ratio: perfRatio, state_key: stateKey };
+      });
+      return { history };
+    }, 'DB_ERROR');
+  }
+
+  async queryIdealVsActual(): Promise<Result<IdealVsActualData>> {
+    
+    return safeCall(async () => {
+      const weekStart = _time.now();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+      weekStart.setHours(0, 0, 0, 0);
+      const [revRows, ordRows] = await Promise.all([
+        castTo<RR[]>(exec(sql`SELECT COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) AS revenue, COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) - COALESCE((SELECT SUM(total_amount) FROM purchase_invoices WHERE created_at >= ${weekStart} AND payment_status IN ('paid','partial')), 0) AS profit FROM sales_invoices WHERE created_at >= ${weekStart}`)),
+        castTo<RR[]>(exec(sql`SELECT COUNT(*) FILTER (WHERE status='completed') AS completed, COUNT(*) AS total FROM sales_orders WHERE created_at >= ${weekStart}`)),
+      ]);
+      const rv = (revRows[0]??{}) as RR; const ov = (ordRows[0]??{}) as RR;
+      const profitActual = safeNum(rv.profit??'0')||0;
+      const revenueActual = safeNum(rv.revenue??'0')||0;
+      const profitPct = Math.round((profitActual / PROFIT_TARGET_WEEKLY) * 100);
+      const revenuePct = Math.round((revenueActual / REVENUE_TARGET_WEEKLY) * 100);
+      const completed = parseInt(String(ov.completed??'0'),10)||0;
+      const total = parseInt(String(ov.total??'0'),10)||0;
+      return { week_start: weekStart.toISOString().slice(0,10), profit: { actual: profitActual, target: PROFIT_TARGET_WEEKLY, pct: profitPct, deviation_pct: profitPct-100, formatted_actual: fmt(profitActual), formatted_target: fmt(PROFIT_TARGET_WEEKLY) }, revenue: { actual: revenueActual, target: REVENUE_TARGET_WEEKLY, pct: revenuePct, deviation_pct: revenuePct-100, formatted_actual: fmt(revenueActual), formatted_target: fmt(REVENUE_TARGET_WEEKLY) }, orders: { completed, total, completion_pct: total>0?Math.round((completed/total)*100):0 } };
+    }, 'DB_ERROR');
+  }
+
+  async executeMarkVip(orderId: number): Promise<Result<void>> {
+    
+    return safeCall(async () => {
+      await execSalesOrderSetVip(orderId);
+    }, 'DB_ERROR');
+  }
+}

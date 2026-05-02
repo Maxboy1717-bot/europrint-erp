@@ -1,0 +1,13 @@
+import { Result } from '@common/result';
+type Row = Record<string, unknown>;
+
+export interface IHrLeaveSvcRepository {
+  findAll(opts: { limit: number; offset: number; userId?: number; status?: string; leaveType?: string }): Promise<Result<{ data: Row[]; count: number }>>;
+  findById(id: number): Promise<Result<any | null>>;
+  findUserById(userId: number): Promise<Result<any | null>>;
+  create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
+  approve(id: number): Promise<Result<Record<string, unknown>>>;
+  reject(id: number): Promise<Result<Record<string, unknown>>>;
+}
+
+export const HR_LEAVE_SVC_REPO = 'IHrLeaveSvcRepository';

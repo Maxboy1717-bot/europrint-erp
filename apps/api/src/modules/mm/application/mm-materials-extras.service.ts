@@ -1,0 +1,25 @@
+import { Injectable } from '@nestjs/common';
+import { safeCall, Result, AppError } from '@common/result';
+import { MmMaterialsExtrasRepository } from './mm-materials-extras.repository';
+
+@Injectable()
+export class MmMaterialsExtrasService {
+  constructor(private readonly repo: MmMaterialsExtrasRepository) {}
+
+  async listRawMaterials(page: number, limit: number, search?: string): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const rowsR = await this.repo.listRawMaterials(limit, (page - 1) * limit, search);
+      const rows = (rowsR.ok ? rowsR.data as Record<string, unknown>[] : []);
+      if (rows.length > 0) return rows;
+      return this.repo.listRawMaterialsFallback(limit, (page - 1) * limit, search);
+    });
+  }
+
+  async listMaterialCards(page: number, limit: number, search?: string, category?: string) {
+    return safeCall(() => this.repo.listMaterialCards(limit, (page - 1) * limit, search, category));
+  }
+
+  async getMaterialCard(id: number) {
+    return this.repo.getMaterialCard(id);
+  }
+}

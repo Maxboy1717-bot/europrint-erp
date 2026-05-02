@@ -1,0 +1,242 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Contact, Company, ContactFormValues, contactFormSchema } from "./types";
+import { MultiFieldInput } from "../MultiFieldInput";
+
+interface ContactEditFormProps {
+  contact: Contact | null;
+  companies: Company[] | undefined;
+  isPending: boolean;
+  onSubmit: (values: ContactFormValues) => void;
+  onCancel: () => void;
+}
+
+export function ContactEditForm({ contact, companies, isPending, onSubmit, onCancel }: ContactEditFormProps) {
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactFormSchema),
+    values: contact
+      ? {
+          name: contact.name || "",
+          secondName: contact.secondName || "",
+          lastName: contact.lastName || "",
+          post: contact.post || "",
+          companyId: contact.companyId,
+          phones: contact.phones?.map(p => p.value) || [],
+          emails: contact.emails?.map(e => e.value) || [],
+          birthdate: contact.birthdate || "",
+          comments: contact.comments || "",
+        }
+      : undefined,
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Familiya</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ""} data-testid="input-lastName" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ism *</FormLabel>
+                <FormControl>
+                  <Input {...field} data-testid="input-name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="secondName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Otasining ismi</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ""} data-testid="input-secondName" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="post"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lavozim</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value || ""} data-testid="input-post" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="companyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Kompaniya</FormLabel>
+              <Select
+                value={field.value?.toString() || "none"}
+                onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+              >
+                <FormControl>
+                  <SelectTrigger data-testid="select-company">
+                    <SelectValue placeholder="Kompaniyani tanlang" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">Yo'q</SelectItem>
+                  {companies?.map((company) => (
+                    <SelectItem key={company.id} value={company.id.toString()}>
+                      {company.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phones"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Telefonlar</FormLabel>
+              <FormControl>
+                <MultiFieldInput
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  placeholder="+998 90 123 45 67"
+                  label="Telefon"
+                  type="tel"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="emails"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email manzillar</FormLabel>
+              <FormControl>
+                <MultiFieldInput
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  placeholder="example@email.com"
+                  label="Email"
+                  type="email"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="birthdate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tug'ilgan sana</FormLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  {...field}
+                  value={field.value || ""}
+                  data-testid="input-birthdate"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="comments"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Izohlar</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  value={field.value || ""}
+                  rows={4}
+                  data-testid="input-comments"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            disabled={isPending}
+            data-testid="button-save-contact"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isPending ? "Saqlanmoqda..." : "Saqlash"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isPending}
+            data-testid="button-cancel-edit"
+          >
+            <X className="h-4 w-4 mr-2" />
+            Bekor qilish
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}

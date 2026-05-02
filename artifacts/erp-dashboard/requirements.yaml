@@ -1,0 +1,20 @@
+packages:
+  "framer-motion": "For page transitions, modal animations, and smooth UI interactions"
+  "recharts": "For beautiful dashboard data visualizations and analytics"
+  "date-fns": "For formatting dates in HR and LMS modules"
+  "react-hook-form": "For robust form state management"
+  "@hookform/resolvers": "For Zod schema validation integration"
+  "clsx": "For conditional class name merging"
+  "tailwind-merge": "For conditional class name merging"
+
+images:
+  - path: "artifacts/erp-dashboard/public/images/login-bg.png"
+    description: "Abstract modern 3D geometric background in deep indigo and teal with soft glassmorphism elements, suitable for an enterprise software login screen"
+    aspect_ratio: "16:9"
+  - path: "artifacts/erp-dashboard/public/images/hero-dashboard.png"
+    description: "Subtle professional tech pattern background with faint connecting lines and nodes, mostly transparent with light blue accents"
+    aspect_ratio: "16:9"
+
+notes:
+  - API server runs on a different port but same origin in dev, using window.location.origin replacement logic to reach /api
+  - Auth uses standard JWT Bearer token stored in localStorage

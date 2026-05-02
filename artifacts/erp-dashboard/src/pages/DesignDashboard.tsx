@@ -1,0 +1,232 @@
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Package, CheckCircle, Palette, FileText, Zap, Clock } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+import { ErrorState } from "@/components/ui/error-state";
+import { cn } from "@/lib/utils";
+
+interface DesignStats {
+  totalOrders: number;
+  activeOrders: number;
+  completedOrders: number;
+  totalDesigns: number;
+  approvedDesigns: number;
+  totalTemplates: number;
+  totalPrompts: number;
+  ordersByStatus: Array<{ status: string; count: number }>;
+  recentOrders: Array<{
+    id: string;
+    orderNumber: string;
+    clientName: string;
+    productName: string;
+    productType: string;
+    status: string;
+  }>;
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  yangi: "#3b82f6",
+  jarayonda: "#f59e0b",
+  "tasdiq-kutilmoqda": "#8b5cf6",
+  tasdiqlangan: "#10b981",
+  "ishlab-chiqarish": "#06b6d4",
+  yakunlangan: "#22c55e",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  yangi: "Yangi",
+  jarayonda: "Jarayonda",
+  "tasdiq-kutilmoqda": "Tasdiq kutilmoqda",
+  tasdiqlangan: "Tasdiqlangan",
+  "ishlab-chiqarish": "Ishlab chiqarishda",
+  yakunlangan: "Yakunlangan",
+};
+
+export default function DesignDashboard() {
+  const { t } = useTranslation("common");
+  const { data: stats, isLoading, isError, refetch } = useQuery<DesignStats>({
+    queryKey: ["/api/design/statistics"],
+  });
+
+  const approvalRate = stats?.totalDesigns
+    ? Math.round((stats.approvedDesigns / stats.totalDesigns) * 100)
+    : 0;
+
+  const statusData =
+    stats?.ordersByStatus?.map((item) => ({
+      name: STATUS_LABELS[item.status] || item.status,
+      value: item.count,
+      color: STATUS_COLORS[item.status] || "#6b7280",
+    })) || [];
+
+  const kpiItems = [
+    { label: "Jami Buyurtmalar", value: stats?.totalOrders || 0, desc: `${stats?.activeOrders || 0} ta faol`, icon: Package, accent: "text-orange-500", testId: "text-total-orders" },
+    { label: "Bajarilgan", value: stats?.completedOrders || 0, desc: "Muvaffaqiyatli", icon: CheckCircle, accent: "text-green-500", testId: "text-completed-orders" },
+    { label: "AI Dizaynlar", value: stats?.totalDesigns || 0, desc: `${stats?.approvedDesigns || 0} ta tasdiqlangan`, icon: Palette, accent: "text-purple-500", testId: "text-total-designs" },
+    { label: "Brend Shablonlar", value: stats?.totalTemplates || 0, desc: "Faol shablonlar", icon: FileText, accent: "text-blue-500", testId: "text-templates" },
+  ];
+
+  if (isError) return <ErrorState onRetry={refetch} />;
+
+  return (
+    <div className="flex-1 overflow-auto bg-surface p-6 space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-light tracking-tight text-on-surface">
+          Dizayn <span className="font-bold text-primary">Dashboard</span>
+        </h1>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Yangilash
+        </Button>
+      </div>
+
+      {/* ─── Unified KPI Bar ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {isLoading ? (
+          ([0, 1, 2, 3]).map((i) => (
+            <div key={`k-${i}`} className="bg-surface-container-lowest rounded-lg p-5 space-y-3">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-9 w-28" />
+            </div>
+          ))
+        ) : (
+          (kpiItems ?? []).map((item, i) => (
+            <div key={`k-${i}`} className="bg-surface-container-lowest rounded-lg p-5" data-testid={item.testId}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                {item.label}
+              </p>
+              <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">
+                {item.value}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <item.icon className={cn("w-3.5 h-3.5", item.accent)} />
+                <span className="text-xs text-on-surface-variant">{item.desc}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Qo'shimcha KPI mini qatori */}
+      {!isLoading && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-surface-container-lowest rounded-lg p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">AI Promptlar</p>
+            <p className="text-4xl font-bold tracking-tight text-on-surface mt-1" data-testid="text-prompts">{stats?.totalPrompts || 0}</p>
+          </div>
+          <div className="bg-surface-container-lowest rounded-lg p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Tasdiqlash ko'rsatkichi</p>
+            <p className="text-4xl font-bold tracking-tight text-on-surface mt-1" data-testid="text-approval-rate">{approvalRate}%</p>
+          </div>
+          <div className="bg-surface-container-lowest rounded-lg p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Tasdiqlangan Dizaynlar</p>
+            <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">{stats?.approvedDesigns || 0}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="bg-surface-container-lowest rounded-xl p-6">
+          <h3 className="text-sm font-semibold mb-4">Buyurtmalar Status Taqsimoti</h3>
+          <div className="h-[260px]">
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                    outerRadius={90}
+                    dataKey="value"
+                  >
+                    {(Array.isArray(statusData) ? statusData : []).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v, n) => [v, n]} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-on-surface-variant text-sm">
+                {t("noData")}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-surface-container-lowest rounded-xl p-6">
+          <h3 className="text-sm font-semibold mb-4">Buyurtmalar Statistikasi</h3>
+          <div className="h-[260px]">
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={statusData} barSize={28}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.04)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" name="Buyurtmalar" radius={[4, 4, 0, 0]}>
+                    {(Array.isArray(statusData) ? statusData : []).map((entry, index) => (
+                      <Cell key={`cell-bar-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-on-surface-variant text-sm">
+                {t("noData")}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Orders */}
+      <div className="bg-surface-container-lowest rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-on-surface mb-4">So'nggi Buyurtmalar</h3>
+        <div className="space-y-2">
+          {isLoading ? (
+            ([1, 2, 3, 4, 5]).map((i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-xl" />)
+          ) : stats?.recentOrders && stats.recentOrders.length > 0 ? (
+            stats.recentOrders?.map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-surface-container-low transition-colors"
+                data-testid={`row-order-${order.id}`}
+              >
+                <div>
+                  <p className="text-sm font-semibold text-on-surface">{order.orderNumber}</p>
+                  <p className="text-xs text-on-surface-variant">{order.clientName} — {order.productName}</p>
+                </div>
+                <div className="text-right">
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                      order.status === "yakunlangan" ? "bg-green-100 text-green-800" :
+                      order.status === "tasdiqlangan" ? "bg-primary-container text-on-primary-container" :
+                      order.status === "tasdiq-kutilmoqda" ? "bg-amber-100 text-amber-800" :
+                      order.status === "jarayonda" ? "bg-primary-container text-on-primary-container" :
+                      "bg-surface-container text-on-surface-variant"
+                    )}
+                  >
+                    {STATUS_LABELS[order.status] || order.status}
+                  </span>
+                  <p className="text-[10px] text-on-surface-variant mt-0.5">{order.productType}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-on-surface-variant py-10 text-sm">{t("noData")}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,250 @@
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { io } from "socket.io-client";
+import { useChatStore, ChatRoom, ChatMessage, ChatReaction } from "@/store/chatStore";
+import { useAuth } from "@/hooks/useAuth";
+import { setSharedSocket } from "./useChatSocket";
+import { safeStorage } from '@/lib/safeStorage';
+
+const ChatSocketContext = createContext<{ connected: boolean }>({ connected: false });
+
+export function ChatSocketProvider({ children }: { children: ReactNode }) {
+  const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const [connected, setConnected] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const token = safeStorage.getItem("access_token");
+    if (!token) return;
+
+    const wsUrl = `${window.location.protocol}//${window.location.host}`;
+    const basePath = (import.meta.env.BASE_URL ?? "/erp-dashboard/").replace(/\/$/, "");
+    const socketPath = `${basePath}/socket.io`;
+
+    const s = io(`${wsUrl}/chat`, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      path: socketPath,
+      reconnection: true,
+      reconnectionDelay: 5000,
+      reconnectionAttempts: 3,
+    });
+
+    setSharedSocket(s);
+
+    s.on("connect", () => {
+      setConnected(true);
+      s.emit("get_rooms");
+    });
+
+    s.on("disconnect", () => {
+      setConnected(false);
+    });
+
+    s.on("connect_error", () => {
+      setConnected(false);
+    });
+
+    s.on("reconnect_failed", () => {
+      setConnected(false);
+      s.disconnect();
+    });
+
+    const normalizeRooms = (rooms: Array<Record<string, unknown>>): ChatRoom[] =>
+      (Array.isArray(rooms) ? rooms : []).map((r) => ({ ...r, id: String(r.id) } as ChatRoom));
+
+    s.on("connected", ({ rooms }: { userId: number; rooms: Array<Record<string, unknown>> }) => {
+      useChatStore.getState().setRooms(normalizeRooms(rooms));
+    });
+
+    s.on("rooms_list", (rooms: Array<Record<string, unknown>>) => {
+      useChatStore.getState().setRooms(normalizeRooms(rooms));
+    });
+
+    // New direct room created — prepend to rooms list and auto-select
+    s.on("direct_room", (rawRoom: Record<string, unknown>) => {
+      const room = { ...rawRoom, id: String(rawRoom.id) } as ChatRoom;
+      const st = useChatStore.getState();
+      const exists = st.rooms?.some((r) => r.id === room.id);
+      if (!exists) {
+        st.setRooms([room, ...st.rooms]);
+      }
+      st.setActiveRoomId(room.id);
+      s.emit("join_room", { roomId: room.id });
+    });
+
+    s.on("unread_count", ({ count }: { count: number }) => {
+      useChatStore.getState().setTotalUnread(count);
+    });
+
+    s.on("messages_list", ({ roomId, messages }: { roomId: string | number; messages: Array<Record<string, unknown>> }) => {
+      const rId = String(roomId);
+      const normalized = (Array.isArray(messages) ? messages : []).map((m) => ({
+        ...m,
+        id: String(m.id),
+        roomId: rId,
+        senderId: String(m.senderId ?? m.sender_id),
+      })) as ChatMessage[];
+      useChatStore.getState().setMessages(rId, normalized);
+    });
+
+    s.on("new_message", (rawMsg: Record<string, unknown>) => {
+      const st = useChatStore.getState();
+      const msg: ChatMessage = {
+        ...(rawMsg as unknown as ChatMessage),
+        id: String(rawMsg.id),
+        roomId: String(rawMsg.roomId ?? rawMsg.room_id),
+        senderId: String(rawMsg.senderId ?? rawMsg.sender_id),
+        createdAt: String(rawMsg.createdAt ?? rawMsg.created_at),
+        messageType: (rawMsg.messageType ?? rawMsg.message_type ?? "text") as ChatMessage["messageType"],
+        isDeleted: Boolean(rawMsg.isDeleted ?? rawMsg.is_deleted ?? false),
+        senderName: String(rawMsg.senderName ?? rawMsg.sender_name ?? ""),
+      };
+      const roomId = msg.roomId;
+      if (msg.threadRootId) {
+        const threadRootId = String(msg.threadRootId);
+        st.addThreadMessage({ ...msg, threadRootId });
+        st.updateThreadCount(roomId, threadRootId, (st.threadMessages[threadRootId]?.length ?? 0) + 1);
+        return;
+      }
+      st.addMessage(msg);
+      st.updateRoom(roomId, {
+        lastMessage: {
+          id: msg.id,
+          content: msg.content,
+          senderName: msg.senderName,
+          createdAt: msg.createdAt,
+          messageType: msg.messageType,
+        },
+      });
+      const activeRoomId = st.activeRoomId;
+      if (activeRoomId !== roomId) {
+        const room = st.rooms?.find((r) => r.id === roomId);
+        if (room) {
+          st.updateRoom(roomId, { unreadCount: room.unreadCount + 1 });
+        }
+        const total = useChatStore.getState().rooms?.reduce((acc, r) => acc + r.unreadCount, 0);
+        st.setTotalUnread(total);
+      }
+    });
+
+    s.on("room_updated", () => {
+      s.emit("get_rooms");
+    });
+
+    s.on("room_read", ({ roomId }: { roomId: string | number }) => {
+      useChatStore.getState().markReadByOther(String(roomId));
+      s.emit("get_rooms");
+    });
+
+    s.on("message:edited", ({ id, roomId, content }: { id: string; roomId: string; content: string }) => {
+      useChatStore.getState().editMessage(roomId, id, content, true);
+    });
+
+    s.on("message:deleted", ({ id, roomId }: { id: string; roomId: string }) => {
+      useChatStore.getState().deleteMessage(roomId, id);
+    });
+
+    s.on("reaction:updated", ({
+      messageId, roomId, reactions,
+    }: { messageId: string; roomId?: string; reactions: ChatReaction[] }) => {
+      const st = useChatStore.getState();
+      const rId = roomId || Object.keys(st.messages).find(
+        (rid) => st.messages[rid]?.some((m) => m.id === messageId)
+      );
+      if (rId) st.updateReactions(rId, messageId, reactions);
+    });
+
+    s.on("poll:updated", ({
+      messageId, roomId, votes, totalVotes, myVotes,
+    }: { messageId: string; roomId: string; pollId: string; votes: Record<number, { count: number; users: string[] }>; totalVotes: number; myVotes: number[] }) => {
+      useChatStore.getState().updatePoll(roomId, messageId, { votes, totalVotes, myVotes });
+    });
+
+    s.on("thread:new_reply", (msg: ChatMessage) => {
+      useChatStore.getState().addThreadMessage(msg);
+    });
+
+    s.on("thread:count_updated", ({
+      messageId, threadCount, roomId,
+    }: { messageId: string; threadCount: number; roomId?: string }) => {
+      const st = useChatStore.getState();
+      const activeRoomId = st.activeRoomId;
+      if (activeRoomId) {
+        st.updateThreadCount(activeRoomId, messageId, threadCount);
+      }
+    });
+
+    s.on("message:pinned", ({
+      roomId, messageId, content, senderName,
+    }: { roomId: string; messageId: string; content?: string; senderName?: string }) => {
+      if (content) {
+        useChatStore.getState().setPinnedMessage(String(roomId), {
+          id: messageId,
+          content,
+          senderName: senderName || "Unknown",
+        });
+      }
+    });
+
+    s.on("message:unpinned", ({ roomId }: { roomId: string }) => {
+      useChatStore.getState().setPinnedMessage(roomId, null);
+    });
+
+    s.on("user:online", ({ userId }: { userId: number }) => {
+      useChatStore.getState().addOnlineUser(userId);
+    });
+
+    s.on("user:offline", ({ userId }: { userId: number }) => {
+      useChatStore.getState().removeOnlineUser(userId);
+    });
+
+    s.on("user_typing", ({
+      userId: uid, roomId, isTyping, userName,
+    }: { userId: number; roomId: string | number; isTyping: boolean; userName: string }) => {
+      if (!userName) return;
+      const rId = String(roomId);
+      const key = `${uid}:${rId}`;
+      useChatStore.getState().setTyping(rId, userName, isTyping);
+      if (isTyping) {
+        const old = typingTimers.current.get(key);
+        if (old) clearTimeout(old);
+        const timer = setTimeout(() => {
+          useChatStore.getState().setTyping(rId, userName, false);
+          typingTimers.current.delete(key);
+        }, 4000);
+        typingTimers.current.set(key, timer);
+      } else {
+        const old = typingTimers.current.get(key);
+        if (old) clearTimeout(old);
+        typingTimers.current.delete(key);
+      }
+    });
+
+    s.on("direct_room", (room: { id: number | string; type: string; name?: string }) => {
+      const roomId = String(room.id);
+      const st = useChatStore.getState();
+      st.setActiveRoomId(roomId);
+      s.emit("join_room", { roomId: room.id });
+      s.emit("get_messages", { roomId: room.id });
+      s.emit("mark_read", { roomId: room.id });
+      s.emit("get_rooms");
+      st.markRoomRead(roomId);
+    });
+
+    return () => {
+      s.disconnect();
+      setSharedSocket(null);
+    };
+  }, [isAuthenticated]);
+
+  return (
+    <ChatSocketContext.Provider value={{ connected }}>
+      {children}
+    </ChatSocketContext.Provider>
+  );
+}
+
+export function useChatSocketContext() {
+  return useContext(ChatSocketContext);
+}

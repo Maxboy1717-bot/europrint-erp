@@ -1,0 +1,769 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./erp-modern-ui/design-tokens.css";
+@import "./erp-modern-ui/shell-overrides.css";
+@import "./erp-modern-ui/global-surface.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-dim: hsl(var(--primary-dim));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --color-surface-container-lowest: hsl(var(--surface-container-lowest));
+  --color-surface-container-low: hsl(var(--surface-container-low));
+  --color-surface-container: hsl(var(--surface-container));
+  --color-surface-container-high: hsl(var(--surface-container-high));
+  --color-surface-container-highest: hsl(var(--surface-container-highest));
+  --color-on-surface: hsl(var(--on-surface));
+  --color-on-surface-variant: hsl(var(--on-surface-variant));
+  --color-outline-variant: hsl(var(--outline-variant));
+
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-info: hsl(var(--info));
+  --color-error: hsl(var(--error));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-module-sd: hsl(var(--module-sd));
+  --color-module-sd-light: hsl(var(--module-sd-light));
+  --color-module-sd-dark: hsl(var(--module-sd-dark));
+  --color-module-pp: hsl(var(--module-pp));
+  --color-module-pp-light: hsl(var(--module-pp-light));
+  --color-module-pp-dark: hsl(var(--module-pp-dark));
+  --color-module-hr: hsl(var(--module-hr));
+  --color-module-hr-light: hsl(var(--module-hr-light));
+  --color-module-hr-dark: hsl(var(--module-hr-dark));
+  --color-module-warehouse: hsl(var(--module-warehouse));
+  --color-module-warehouse-light: hsl(var(--module-warehouse-light));
+  --color-module-warehouse-dark: hsl(var(--module-warehouse-dark));
+  --color-module-fi: hsl(var(--module-fi));
+  --color-module-fi-light: hsl(var(--module-fi-light));
+  --color-module-fi-dark: hsl(var(--module-fi-dark));
+
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+  --radius: var(--radius);
+}
+
+/* EUROPRINT ERP — BITRIX24-STYLE ENTERPRISE DESIGN SYSTEM */
+/* Navy dark + Orange-red accent (#ff5d2e) | Segoe UI | 12px radius */
+:root {
+  --button-outline: rgba(26, 26, 46, 0.10);
+  --badge-outline: rgba(26, 26, 46, 0.06);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(26, 26, 46, 0.03);
+  --elevate-2: rgba(26, 26, 46, 0.08);
+
+  /* Base surfaces */
+  --background: 220 20% 98%;       /* #f8f9fc */
+  --foreground: 240 30% 14%;       /* #1a1a2e */
+  --border: 240 9% 91%;            /* #e8e8ee */
+
+  --surface-container-lowest: 0 0% 100%;
+  --surface-container-low: 220 20% 97%;
+  --surface-container: 220 16% 95%;
+  --surface-container-high: 220 14% 92%;
+  --surface-container-highest: 220 12% 89%;
+
+  --on-surface: 240 30% 14%;
+  --on-surface-variant: 220 12% 40%;
+  --outline-variant: 220 10% 78%;
+
+  /* Card: pure white */
+  --card: 0 0% 100%;
+  --card-foreground: 240 30% 14%;
+  --card-border: 240 9% 91%;
+
+  /* Sidebar: always dark navy (Bitrix24 style) */
+  --sidebar: 240 30% 9%;
+  --sidebar-foreground: 220 22% 82%;
+  --sidebar-border: 225 30% 16%;
+
+  /* Primary: #ff5d2e orange-red */
+  --sidebar-primary: 14 100% 59%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 225 30% 20%;
+  --sidebar-accent-foreground: 220 22% 88%;
+  --sidebar-ring: 14 100% 59%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 30% 14%;
+  --popover-border: 240 9% 90%;
+
+  --primary: 14 100% 59%;          /* #ff5d2e */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 220 14% 93%;
+  --secondary-foreground: 240 30% 20%;
+
+  --muted: 220 18% 96%;
+  --muted-foreground: 220 10% 46%;
+
+  --accent: 25 100% 63%;           /* #ff8c42 */
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 80% 56%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 240 9% 90%;
+  --ring: 14 100% 59%;
+
+  /* ERP Module Colors */
+  --module-sd: 217 91% 58%;
+  --module-sd-light: 217 91% 95%;
+  --module-sd-dark: 224 76% 46%;
+
+  --module-pp: 160 72% 38%;
+  --module-pp-light: 160 50% 94%;
+  --module-pp-dark: 160 72% 28%;
+
+  --module-hr: 262 68% 56%;
+  --module-hr-light: 262 60% 95%;
+  --module-hr-dark: 262 68% 42%;
+
+  --module-warehouse: 38 92% 50%;
+  --module-warehouse-light: 38 92% 93%;
+  --module-warehouse-dark: 38 92% 38%;
+
+  --module-fi: 188 78% 40%;
+  --module-fi-light: 188 60% 94%;
+  --module-fi-dark: 188 78% 30%;
+
+  --chart-1: 14 100% 59%;
+  --chart-2: 160 72% 38%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 262 68% 56%;
+  --chart-5: 188 78% 42%;
+
+  --success: 143 60% 38%;
+  --warning: 38 92% 50%;
+  --info: 199 89% 46%;
+  --error: 0 80% 56%;
+
+  /* Typography */
+  --font-sans: 'Segoe UI', Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --radius: 0.75rem;    /* 12px */
+  --spacing: 0.25rem;
+
+  /* Shadows */
+  --shadow-2xs: 0px 1px 2px 0px rgb(26 26 46 / 0.04);
+  --shadow-xs: 0px 1px 3px 0px rgb(26 26 46 / 0.06);
+  --shadow-sm: 0px 1px 2px 0px rgb(26 26 46 / 0.05), 0px 2px 4px -1px rgb(26 26 46 / 0.06);
+  --shadow: 0px 4px 6px -1px rgb(26 26 46 / 0.08), 0px 2px 4px -2px rgb(26 26 46 / 0.05);
+  --shadow-md: 0px 4px 6px -1px rgb(26 26 46 / 0.10), 0px 2px 4px -2px rgb(26 26 46 / 0.06);
+  --shadow-lg: 0px 10px 15px -3px rgb(26 26 46 / 0.10), 0px 4px 6px -4px rgb(26 26 46 / 0.05);
+  --shadow-xl: 0px 20px 25px -5px rgb(26 26 46 / 0.12), 0px 8px 10px -6px rgb(26 26 46 / 0.05);
+  --shadow-2xl: 0px 25px 50px -12px rgb(26 26 46 / 0.25);
+  --tracking-normal: 0em;
+
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* DARK MODE — Bitrix24 navy dark theme */
+.dark {
+  --button-outline: rgba(255, 255, 255, 0.10);
+  --badge-outline: rgba(255, 255, 255, 0.06);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.09);
+
+  /* Navy dark surfaces: #1a1a2e / #16213e */
+  --background: 240 30% 14%;        /* #1a1a2e */
+  --foreground: 220 22% 86%;        /* #b0b8cc */
+  --border: 225 30% 22%;
+
+  --surface-container-lowest: 240 30% 12%;
+  --surface-container-low: 225 46% 13%;
+  --surface-container: 225 46% 15%;
+  --surface-container-high: 225 40% 18%;
+  --surface-container-highest: 225 34% 22%;
+
+  --on-surface: 220 22% 88%;
+  --on-surface-variant: 220 14% 62%;
+  --outline-variant: 225 20% 30%;
+
+  --card: 225 46% 13%;              /* #16213e */
+  --card-foreground: 220 22% 88%;
+  --card-border: 225 30% 20%;
+
+  --sidebar: 240 30% 9%;            /* #0f0f1a */
+  --sidebar-foreground: 220 22% 86%;
+  --sidebar-border: 225 30% 16%;
+
+  --sidebar-primary: 14 100% 63%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 225 30% 20%;
+  --sidebar-accent-foreground: 220 22% 88%;
+  --sidebar-ring: 14 100% 63%;
+
+  --popover: 225 46% 13%;
+  --popover-foreground: 220 22% 88%;
+  --popover-border: 225 30% 20%;
+
+  --primary: 14 100% 63%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 225 30% 20%;
+  --secondary-foreground: 220 22% 86%;
+
+  --muted: 225 30% 18%;
+  --muted-foreground: 220 14% 58%;
+
+  --accent: 25 100% 62%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 76% 58%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 225 30% 22%;
+  --ring: 14 100% 63%;
+
+  /* ERP Module Colors - Dark */
+  --module-sd: 217 80% 62%;
+  --module-sd-light: 217 40% 20%;
+  --module-sd-dark: 217 80% 72%;
+
+  --module-pp: 160 65% 46%;
+  --module-pp-light: 160 40% 18%;
+  --module-pp-dark: 160 65% 56%;
+
+  --module-hr: 262 65% 64%;
+  --module-hr-light: 262 40% 20%;
+  --module-hr-dark: 262 65% 74%;
+
+  --module-warehouse: 38 92% 54%;
+  --module-warehouse-light: 38 40% 18%;
+  --module-warehouse-dark: 38 92% 64%;
+
+  --module-fi: 188 72% 48%;
+  --module-fi-light: 188 40% 18%;
+  --module-fi-dark: 188 72% 58%;
+
+  --chart-1: 14 100% 63%;
+  --chart-2: 160 65% 46%;
+  --chart-3: 38 92% 54%;
+  --chart-4: 262 65% 64%;
+  --chart-5: 188 72% 52%;
+
+  --success: 143 56% 44%;
+  --warning: 38 92% 54%;
+  --info: 199 80% 50%;
+  --error: 0 76% 60%;
+
+  /* Dark mode shadows - deeper */
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.2);
+  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.3);
+  --shadow-sm: 0px 1px 2px 0px hsl(0 0% 0% / 0.4), 0px 2px 4px -1px hsl(0 0% 0% / 0.3);
+  --shadow: 0px 4px 6px -1px hsl(0 0% 0% / 0.4), 0px 2px 4px -2px hsl(0 0% 0% / 0.2);
+  --shadow-md: 0px 4px 6px -1px hsl(0 0% 0% / 0.5), 0px 2px 4px -2px hsl(0 0% 0% / 0.3);
+  --shadow-lg: 0px 10px 15px -3px hsl(0 0% 0% / 0.5), 0px 4px 6px -4px hsl(0 0% 0% / 0.2);
+  --shadow-xl: 0px 20px 25px -5px hsl(0 0% 0% / 0.5), 0px 8px 10px -6px hsl(0 0% 0% / 0.2);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.6);
+
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+    text-rendering: optimizeLegibility;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+}
+
+/**
+ * Using the elevate system.
+ * Automatic contrast adjustment.
+ *
+ * <element className="hover-elevate" />
+ * <element className="active-elevate-2" />
+ *
+ * // Using the tailwind utility when a data attribute is "on"
+ * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
+ * // Or manually controlling the toggle state
+ * <element className="toggle-elevate toggle-elevated" />
+ *
+ * Elevation systems have to handle many states.
+ * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
+ * - toggled or not
+ * - focused or not (this is not handled with these utilities)
+ *
+ * Even without handling focused or not, this is six possible combinations that
+ * need to be distinguished from eachother visually.
+ */
+@layer utilities {
+
+  /* Hide ugly search cancel button in Chrome until we can style it properly */
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  /* Placeholder styling for contentEditable div */
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+
+  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
+   * buttons/badges can remove the automatic brightness adjustment on interactions
+   * and program their own. */
+  .no-default-hover-elevate {}
+
+  .no-default-active-elevate {}
+
+
+  /**
+   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
+   * This way they can stack/compound. Both will overlap the parent's borders!
+   * So borders will be automatically adjusted both on toggle, and hover/active,
+   * and they will be compounded.
+   */
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: -1;
+    /* sits behind content but above backdrop */
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  /* Does not work on elements with overflow:hidden! */
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: 999;
+    /* sits in front of content */
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
+    inset: -1px;
+  }
+}
+/* Custom Marker Styles for HR Map - Large and Visible */
+.custom-marker {
+  z-index: 1000 !important;
+  cursor: pointer;
+}
+
+.custom-marker svg {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+}
+
+.custom-marker:hover svg {
+  transform: scale(1.1);
+}
+
+.custom-cluster-icon {
+  z-index: 999 !important;
+}
+
+/* Make Leaflet popup more visible */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================== */
+/* EUROPRINT PREMIUM ERP STYLES */
+/* ========================== */
+
+/* Premium Table Styling - Zebra Rows */
+.erp-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.erp-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.erp-table thead tr {
+  background: hsl(var(--card));
+  border-bottom: 2px solid hsl(var(--border));
+}
+
+.erp-table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.erp-table tbody tr {
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+  transition: background-color 0.15s ease;
+}
+
+.erp-table tbody tr:nth-child(even) {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.erp-table tbody tr:hover {
+  background: hsl(var(--accent) / 0.5);
+}
+
+.erp-table tbody td {
+  padding: 14px 16px;
+  font-size: 14px;
+}
+
+/* Dark mode zebra rows */
+.dark .erp-table tbody tr:nth-child(even) {
+  background: hsl(220 15% 14%);
+}
+
+.dark .erp-table tbody tr:hover {
+  background: hsl(220 15% 18%);
+}
+
+/* Premium Header Styling */
+.erp-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Module-specific accent bar */
+.module-accent-sd { border-left: 4px solid hsl(210 80% 55%); }
+.module-accent-pp { border-left: 4px solid hsl(145 65% 50%); }
+.module-accent-hr { border-left: 4px solid hsl(270 60% 60%); }
+.module-accent-warehouse { border-left: 4px solid hsl(45 90% 55%); }
+.module-accent-fi { border-left: 4px solid hsl(200 70% 55%); }
+
+/* Premium Tab Styling */
+.erp-tabs [data-state="active"] {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border-bottom: 2px solid hsl(var(--primary));
+}
+
+/* Gradient KPI text */
+.gradient-text-sd {
+  background: linear-gradient(135deg, hsl(210 80% 55%), hsl(210 90% 45%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-pp {
+  background: linear-gradient(135deg, hsl(145 65% 50%), hsl(145 75% 40%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-hr {
+  background: linear-gradient(135deg, hsl(270 60% 60%), hsl(270 70% 50%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-warehouse {
+  background: linear-gradient(135deg, hsl(45 90% 55%), hsl(45 95% 45%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Premium sidebar active item glow */
+.sidebar-item-active {
+  background: hsl(var(--primary) / 0.15);
+  border-left: 3px solid hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+.sidebar-item-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.5));
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.4);
+}
+
+/* Smooth transitions for all interactive elements */
+.erp-interactive {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.erp-interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.1);
+}
+
+/* Premium notification badge */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: hsl(0 70% 55%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Progress bar with gradient */
+.progress-gradient {
+  background: linear-gradient(90deg, hsl(210 80% 55%), hsl(145 65% 50%));
+}
+
+/* Card hover effect for dashboard */
+.dashboard-card {
+  transition: all 0.2s ease;
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+.dashboard-card:hover {
+  border-color: hsl(var(--primary) / 0.3);
+  box-shadow: 0 8px 24px hsl(var(--primary) / 0.1);
+}
+
+/* Status dot indicator */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.status-dot.active { background: hsl(145 60% 50%); box-shadow: 0 0 8px hsl(145 60% 50% / 0.5); }
+.status-dot.pending { background: hsl(38 90% 55%); box-shadow: 0 0 8px hsl(38 90% 55% / 0.5); }
+.status-dot.inactive { background: hsl(0 0% 50%); }
+.status-dot.error { background: hsl(0 70% 55%); box-shadow: 0 0 8px hsl(0 70% 55% / 0.5); }
+
+/* ── M3 Utility Classes ── */
+.hidden-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Kinetic sidebar nav hover transition */
+.sidebar-nav-item {
+  transition: padding-left 150ms ease, background-color 150ms ease;
+}
+
+/* ═══ AZURE HORIZON — Glass Surface Utilities ═══ */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.70);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.40);
+}
+.dark .glass-panel {
+  background: rgba(15, 23, 32, 0.70);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-modal {
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0px 4px 20px rgba(38,52,61,0.04), 0px 12px 40px rgba(38,52,61,0.08);
+}
+.dark .glass-modal {
+  background: rgba(10, 18, 28, 0.95);
+  box-shadow: 0px 4px 20px rgba(0,0,0,0.3), 0px 12px 40px rgba(0,0,0,0.4);
+}
+
+.glass-chart {
+  background: rgba(255, 255, 255, 0.60);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+.dark .glass-chart {
+  background: rgba(15, 23, 42, 0.60);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-kpi {
+  background: rgba(255, 255, 255, 0.65);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.40);
+  border-radius: 1rem;
+}
+.dark .glass-kpi {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Material Symbols Outlined */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Azure Horizon AI glow effect */
+.ai-glow {
+  box-shadow: 0 0 12px rgba(23,168,236,0.25);
+}
+
+/* Azure Horizon nav item active indicator using after pseudo */
+.az-nav-active {
+  position: relative;
+}
+.az-nav-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: hsl(var(--primary));
+  border-radius: 0 2px 2px 0;
+}

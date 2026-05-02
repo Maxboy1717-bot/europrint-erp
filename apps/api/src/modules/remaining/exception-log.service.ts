@@ -1,0 +1,127 @@
+import { TashkentTimeService } from '@common/time';
+const _time = new TashkentTimeService();
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { safeCall, Result, AppError, Ok } from '@common/result';
+import { ExceptionLogRepository, ExceptionInsert } from './exception-log.repository';
+
+@Injectable()
+export class ExceptionLogService {
+  private readonly logger = new Logger(ExceptionLogService.name);
+
+  constructor(private readonly repo: ExceptionLogRepository) {}
+
+  async getAll(q: Record<string, string>): Promise<Result<object, AppError>> {
+    const limit = parseInt(q['limit'] ?? '50', 10);
+    const offset = parseInt(q['offset'] ?? '0', 10);
+    try {
+      const data = await this.repo.getAll({
+        module: q['module'], exceptionType: q['exceptionType'], status: q['status'],
+        relatedRecordId: q['relatedRecordId'], documentNumber: q['documentNumber'],
+        fromDate: q['fromDate'], toDate: q['toDate'], limit, offset,
+      });
+      const total = await this.repo.countAll({ module: q['module'], exceptionType: q['exceptionType'], status: q['status'] });
+      return Ok({ data, total, limit, offset });
+    } catch {
+      this.logger.warn('exception_logs table not found, returning empty list');
+      return Ok({ data: [], total: 0, limit, offset });
+    }
+  }
+
+  async getStats() {
+    try {
+      const all = await this.repo.getAllForStats();
+      const byModule: Record<string, number> = {};
+      const byType:   Record<string, number> = {};
+      const byStatus: Record<string, number> = {};
+      for (const row of (all.ok ? all.data : [])) {
+        const m = String(row['module'] ?? '');
+        const t = String(row['exception_type'] ?? '');
+        const s = String(row['status'] ?? '');
+        byModule[m] = (byModule[m] || 0) + 1;
+        byType[t]   = (byType[t]   || 0) + 1;
+        byStatus[s] = (byStatus[s] || 0) + 1;
+      }
+      const recentCount = await this.repo.countRecent();
+      return { total: all.ok ? all.data.length : 0, byModule, byType, byStatus, recentCount };
+    } catch {
+      return { total: 0, byModule: {}, byType: {}, byStatus: {}, recentCount: 0 };
+    }
+  }
+
+  async getOne(id: string) {
+    const row = await this.repo.getOne(id);
+    if (!row) throw new NotFoundException(`Exception log ${id} not found`);
+    return row;
+  }
+
+  private async insertLog(p: ExceptionInsert) {
+    try {
+      return await this.repo.insert(p);
+    } catch {
+      this.logger.warn('exception_logs insert failed — table may not exist');
+      return { id: null, module: p.module, status: p.status, createdAt: _time.now() };
+    }
+  }
+
+  create(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({
+      module:          String(body['module'] ?? ''),
+      exceptionType:   String(body['exceptionType'] ?? ''),
+      status:          String(body['status'] ?? 'pending'),
+      relatedRecordId: body['relatedRecordId'],
+      documentNumber:  body['documentNumber'],
+      description:     body['description'],
+      requestedBy:     userId,
+      meta:            body['meta'],
+    });
+  }
+
+  advanceBypass(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'SD', exceptionType: 'advance_bypass', status: 'pending', relatedRecordId: body['orderId'], documentNumber: body['documentNumber'], description: body['reason'], requestedBy: userId });
+  }
+
+  statusForce(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'SD', exceptionType: 'status_force', status: 'pending', relatedRecordId: body['orderId'], documentNumber: body['documentNumber'], description: body['reason'], requestedBy: userId });
+  }
+
+  designReject(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'MES', exceptionType: 'design_reject', status: 'auto_approved', relatedRecordId: body['orderId'], description: body['reason'], requestedBy: userId });
+  }
+
+  advanceBlock(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'FI', exceptionType: 'advance_hard_block', status: 'auto_approved', relatedRecordId: body['orderId'], description: body['reason'], requestedBy: userId });
+  }
+
+  materialShortage(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'WMS', exceptionType: 'material_shortage', status: 'pending', relatedRecordId: body['orderId'], description: body['description'], requestedBy: userId });
+  }
+
+  machineBreakdown(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'MES', exceptionType: 'machine_breakdown', status: 'pending', relatedRecordId: body['orderId'], description: body['description'], requestedBy: userId });
+  }
+
+  qcFailed(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'QC', exceptionType: 'qc_failed', status: 'pending', relatedRecordId: body['orderId'], description: body['description'], requestedBy: userId });
+  }
+
+  deliveryFailed(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'SD', exceptionType: 'delivery_failed', status: 'pending', relatedRecordId: body['orderId'], description: body['description'], requestedBy: userId });
+  }
+
+  employeeAbsent(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'HR', exceptionType: 'employee_absent', status: 'pending', relatedRecordId: body['employeeId'], description: body['reason'], requestedBy: userId });
+  }
+
+  materialNotReturned(body: Record<string, unknown>, userId: number) {
+    return this.insertLog({ module: 'WMS', exceptionType: 'material_not_returned', status: 'pending', relatedRecordId: body['orderId'], description: body['description'], requestedBy: userId });
+  }
+
+  async certExpiryCheck() {
+    try {
+      const expiring = await this.repo.getExpiringCerts();
+      return { checked: true, expiring };
+    } catch {
+      return { checked: true, expiring: [] };
+    }
+  }
+}

@@ -1,0 +1,72 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { db,
+  rawSql} from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { dbRows } from '../hr/common/db-rows';
+import { safeCall, Result, AppError } from '@common/result';
+
+const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
+
+@Injectable()
+export class EmployeeFilesCompatService {
+
+  async listFiles(employeeId?: string, type?: string) {
+    return safeCall(async () => {
+      const empFilter = employeeId ? sql`AND ef.employee_id = ${si(employeeId)}` : sql``;
+      const typeFilter = type ? sql`AND ef.file_type = ${type}` : sql``;
+      const r = await rawSql(sql`
+        SELECT ef.id, ef.employee_id, ef.file_name, ef.file_type, ef.file_url,
+               ef.file_size, ef.uploaded_by, ef.created_at,
+               e.first_name || ' ' || e.last_name AS employee_name
+        FROM employee_files ef
+        LEFT JOIN employees e ON e.id = ef.employee_id
+        WHERE ef.deleted_at IS NULL ${empFilter} ${typeFilter}
+        ORDER BY ef.created_at DESC LIMIT 100
+      `);
+      return dbRows(r);
+    });
+  }
+
+  async createFile(body: Record<string, unknown>, userId: number | null) {
+    return safeCall(async () => {
+      const { employee_id, file_name, file_type, file_url, file_size } = body;
+      if (!employee_id || !file_name) throw new BadRequestException('employee_id va file_name majburiy');
+      const r = await rawSql(sql`
+        INSERT INTO employee_files (employee_id, file_name, file_type, file_url, file_size, uploaded_by)
+        VALUES (${employee_id ?? null}, ${file_name ?? ''}, ${file_type ?? 'document'},
+                ${file_url ?? null}, ${file_size ?? null}, ${userId})
+        RETURNING id, file_name, file_type, created_at
+      `);
+      return dbRows(r)[0];
+    });
+  }
+
+  async getFile(fileId: string) {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        SELECT ef.id, ef.employee_id, ef.file_name, ef.file_type, ef.file_url,
+               ef.file_size, ef.uploaded_by, ef.created_at,
+               e.first_name || ' ' || e.last_name AS employee_name
+        FROM employee_files ef
+        LEFT JOIN employees e ON e.id = ef.employee_id
+        WHERE ef.id = ${si(fileId)} AND ef.deleted_at IS NULL
+      `);
+      const found = dbRows(r)[0];
+      if (!found) throw new NotFoundException(`Fayl #${fileId} topilmadi`);
+      return found;
+    });
+  }
+
+  async deleteFile(fileId: string): Promise<Result<{ deleted: boolean }, AppError>> {
+    return safeCall(async () => {
+      const check = await rawSql(sql`
+        SELECT id FROM employee_files WHERE id = ${si(fileId)} AND deleted_at IS NULL
+      `);
+      if (!dbRows(check)[0]) throw new NotFoundException(`Fayl #${fileId} topilmadi`);
+      await rawSql(sql`
+        UPDATE employee_files SET deleted_at = NOW() WHERE id = ${si(fileId)}
+      `);
+      return { deleted: true };
+    });
+  }
+}

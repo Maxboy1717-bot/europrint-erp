@@ -1,0 +1,187 @@
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { AssetInventoryForm } from "./types";
+
+interface CreateAssetDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  form: AssetInventoryForm;
+  setForm: (form: AssetInventoryForm) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  isPending: boolean;
+}
+
+export function CreateAssetDialog({
+  isOpen,
+  onOpenChange,
+  form,
+  setForm,
+  onSubmit,
+  isPending
+}: CreateAssetDialogProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Yangi Aktiv Qo'shish</DialogTitle>
+          <DialogDescription>
+            Asosiy vositalar ro'yxatiga yangi aktiv ma'lumotlarini kiriting
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Aktiv kodi *</Label>
+              <Input
+                value={form.assetCode}
+                onChange={(e) => setForm({ ...form, assetCode: e.target.value })}
+                placeholder="INV-001"
+                data-testid="input-asset-code"
+              />
+            </div>
+            <div>
+              <Label>Aktiv turi *</Label>
+              <Select 
+                value={form.assetType} 
+                onValueChange={(value) => setForm({ ...form, assetType: value })}
+              >
+                <SelectTrigger data-testid="select-asset-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="equipment">Uskunalar</SelectItem>
+                  <SelectItem value="vehicle">Transport</SelectItem>
+                  <SelectItem value="building">Binolar</SelectItem>
+                  <SelectItem value="furniture">Mebel</SelectItem>
+                  <SelectItem value="it_equipment">IT uskunalar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>Aktiv nomi *</Label>
+            <Input
+              value={form.assetName}
+              onChange={(e) => setForm({ ...form, assetName: e.target.value })}
+              placeholder="Uskunaning nomi"
+              data-testid="input-asset-name"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Xarid sanasi</Label>
+              <Input
+                type="date"
+                value={form.purchaseDate}
+                onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+                data-testid="input-asset-purchase-date"
+              />
+            </div>
+            <div>
+              <Label>Seriya raqami</Label>
+              <Input
+                value={form.serialNumber}
+                onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
+                placeholder="SN123456"
+                data-testid="input-asset-serial"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Xarid qiymati (UZS) *</Label>
+              <Input
+                type="number"
+                value={form.purchaseValue}
+                onChange={(e) => setForm({ ...form, purchaseValue: Number(e.target.value) })}
+                data-testid="input-asset-purchase-value"
+              />
+            </div>
+            <div>
+              <Label>Joriy qiymat (UZS) *</Label>
+              <Input
+                type="number"
+                value={form.currentValue}
+                onChange={(e) => setForm({ ...form, currentValue: Number(e.target.value) })}
+                data-testid="input-asset-current-value"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Foydali xizmat muddati (yil)</Label>
+              <Input
+                type="number"
+                value={form.usefulLife}
+                onChange={(e) => setForm({ ...form, usefulLife: Number(e.target.value) })}
+                data-testid="input-asset-useful-life"
+              />
+            </div>
+            <div>
+              <Label>Qoldiq qiymat (UZS)</Label>
+              <Input
+                type="number"
+                value={form.salvageValue}
+                onChange={(e) => setForm({ ...form, salvageValue: Number(e.target.value) })}
+                data-testid="input-asset-salvage-value"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Holati</Label>
+              <Select 
+                value={form.condition} 
+                onValueChange={(value) => setForm({ ...form, condition: value })}
+              >
+                <SelectTrigger data-testid="select-asset-condition">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="excellent">A'lo</SelectItem>
+                  <SelectItem value="good">Yaxshi</SelectItem>
+                  <SelectItem value="fair">Qoniqarli</SelectItem>
+                  <SelectItem value="poor">Yomon</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Joylashuv</Label>
+              <Input
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                placeholder="1-qavat, A-blok"
+                data-testid="input-asset-location"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Izoh</Label>
+            <Textarea
+              placeholder="Qo'shimcha ma'lumotlar..."
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              data-testid="input-asset-notes"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Bekor qilish
+          </Button>
+          <Button 
+            onClick={onSubmit}
+            disabled={isPending || !form.assetCode || !form.assetName}
+            data-testid="button-submit-asset"
+          >
+            {isPending ? "Yaratilmoqda..." : "Yaratish"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

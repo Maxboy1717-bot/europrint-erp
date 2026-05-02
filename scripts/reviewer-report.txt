@@ -1,0 +1,2835 @@
+╔══════════════════════════════════════════════════════╗
+║  EuroPrint ERP — Reviewer Skriptlar Hisoboti        ║
+║  2026-04-29 05:15:10                          ║
+╚══════════════════════════════════════════════════════╝
+
+══════════════════════════════════════════════════════
+  1. Array Xavfsizlik
+══════════════════════════════════════════════════════
+
+▶ Array Safety
+  Skript: scripts/reviewer-array-safety.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  Array Xavfsizlik Reviewer (SATR DARAJASIDA)         
+══════════════════════════════════════════════════════
+
+§1 — KRITIK: Backend controller + service fayllar (FAIL)
+──────────────────────────────────────────────────────
+  ✓  539 ta fayl — array op yo'q
+  ✓  admin-queue.service.ts — barcha array op himoyalangan
+  ✓  position-permissions.service.ts — barcha array op himoyalangan
+  ✓  admin-cron-status.controller.ts — barcha array op himoyalangan
+  ✓  admin-users.controller.ts — barcha array op himoyalangan
+  ✗  ai-alerts.service.ts — 4 ta himoyalanmagan array op:
+       → satr 71:supervisors.map((s) =>
+       → satr 105:supervisors.map((s) =>
+       → satr 139:managers.map((m) =>
+  ✗  ai-decision-log.service.ts — 1 ta himoyalanmagan array op:
+       → satr 193:return result.map((r) => ({
+  ✗  router.service.ts — 9 ta himoyalanmagan array op:
+       → satr 84:routeBuckets = trucks.map(() => [] as Customer[]);
+       → satr 86:routeBuckets = routeBuckets.filter((b) => b.length > 0);
+       → satr 116:const totalDemand = merged.reduce((s, c) => s + c.demand, 0);
+  ✗  planner.service.ts — 6 ta himoyalanmagan array op:
+       → satr 59:const U = jobs.filter((j) => j.t1 <= j.t2).sort((a, b) => a.t1 - b.t1);
+       → satr 60:const V = jobs.filter((j) => j.t1 > j.t2).sort((a, b) => b.t2 - a.t2);
+       → satr 80:const predEf = task.predecessors.map((pid) => ef[pid] ?? 0);
+  ✓  prepress-assistant.service.ts — barcha array op himoyalangan
+  ✗  sales-copilot.service.ts — 3 ta himoyalanmagan array op:
+       → satr 129:const recommended  = variants.find((v) => v.label === cachedChoice) ?? variants[1];
+       → satr 150:${variants.map((v) => `  ${v.label}: ${v.price.toLocaleString()} UZS (margin ${v.marginPct}%)`).join('\n')}
+       → satr 176:const recommended  = variants.find((v) => v.label === choice) ?? variants[1];
+  ✓  ai-hr-new.service.ts — barcha array op himoyalangan
+  ✓  ai-planning.service.ts — barcha array op himoyalangan
+  ✓  ai-reservation.service.ts — barcha array op himoyalangan
+  ✓  ai-router.service.ts — barcha array op himoyalangan
+  ✓  croston.service.ts — barcha array op himoyalangan
+  ✓  ensemble-forecast.service.ts — barcha array op himoyalangan
+  ✓  forecast-persistence.service.ts — barcha array op himoyalangan
+  ✓  forecast.service.ts — barcha array op himoyalangan
+  ✓  holt-winters.service.ts — barcha array op himoyalangan
+  ✓  nelder-mead.service.ts — barcha array op himoyalangan
+  ✓  forecast-ext.controller.ts — barcha array op himoyalangan
+  ✓  insights.controller.ts — barcha array op himoyalangan
+  ✓  ai-automation.service.ts — barcha array op himoyalangan
+  ✓  crm-ai.service.ts — barcha array op himoyalangan
+  ✓  director-ai.service.ts — barcha array op himoyalangan
+  ✓  finance-ai.service.ts — barcha array op himoyalangan
+  ✓  marketing-ai.service.ts — barcha array op himoyalangan
+  ✓  wms-ai.service.ts — barcha array op himoyalangan
+  ✗  bot-gateway.controller.ts — 1 ta himoyalanmagan array op:
+       → satr 77:const commandEntity    = entities ? entities.find((e) => e.type === 'bot_command') : undefined;
+  ✓  chat-advanced.controller.ts — barcha array op himoyalangan
+  ✓  chat.controller.ts — barcha array op himoyalangan
+  ✓  chat-ext.controller.ts — barcha array op himoyalangan
+  ✓  chat-gateway-helper.service.ts — barcha array op himoyalangan
+  ✓  chat-message-ext.service.ts — barcha array op himoyalangan
+  ✓  fuzzy-search.service.ts — barcha array op himoyalangan
+  ✓  kmeans.service.ts — barcha array op himoyalangan
+  ✓  approval-workflow.service.ts — barcha array op himoyalangan
+  ✓  asset-management.service.ts — barcha array op himoyalangan
+  ✓  barcode-warehouse.service.ts — barcha array op himoyalangan
+  ✓  calendar-events.service.ts — barcha array op himoyalangan
+  ✓  cfo.service.ts — barcha array op himoyalangan
+  ✓  crm-extended.service.ts — barcha array op himoyalangan
+  ✓  europrint-control.service.ts — barcha array op himoyalangan
+  ✓  org-chart-compat.service.ts — barcha array op himoyalangan
+  ✓  saas.service.ts — barcha array op himoyalangan
+  ✓  seven-functions.controller.ts — barcha array op himoyalangan
+  ✗  churn-retrain.service.ts — 4 ta himoyalanmagan array op:
+       → satr 33:return a.reduce((s, v, i) => s + v * (b[i] ?? 0), 0);
+       → satr 78:const probs = samples.map(s => sigmoid(dotProduct(beta, s.features)));
+       → satr 79:const labels = samples.map(s => s.label);
+  ✓  churn.service.ts — barcha array op himoyalangan
+  ✓  clv.service.ts — barcha array op himoyalangan
+  ✓  cohort.service.ts — barcha array op himoyalangan
+  ✗  funnel.service.ts — 1 ta himoyalanmagan array op:
+       → satr 98:const enriched = stages.map(s => ({
+  ✗  kmeans.service.ts — 5 ta himoyalanmagan array op:
+       → satr 38:return Math.sqrt(a.reduce((s, v, i) => s + (v - (b[i] ?? 0)) ** 2, 0));
+       → satr 42:return centroids.map(c => {
+       → satr 64:const dists = points.map(p => {
+  ✓  rfm.service.ts — barcha array op himoyalangan
+  ✓  lead-scorer-v2.service.ts — barcha array op himoyalangan
+  ✓  crm-companies.controller.ts — barcha array op himoyalangan
+  ✓  orders.service.ts — barcha array op himoyalangan
+  ✓  approvals.controller.ts — barcha array op himoyalangan
+  ✓  strategic.controller.ts — barcha array op himoyalangan
+  ✓  ecommerce.service.ts — barcha array op himoyalangan
+  ✓  fp-cycle-cron.service.ts — barcha array op himoyalangan
+  ✓  cashflow-forecast.service.ts — barcha array op himoyalangan
+  ✓  depreciation.service.ts — barcha array op himoyalangan
+  ✓  gl-posting.service.ts — barcha array op himoyalangan
+  ✓  investment.service.ts — barcha array op himoyalangan
+  ✗  standard-cost.service.ts — 1 ta himoyalanmagan array op:
+       → satr 109:const stdHours            = routingSteps.reduce((sum, step) => sum + step.hours, 0);
+  ✓  tiered-pricing.service.ts — barcha array op himoyalangan
+  ✗  variance-analysis.service.ts — 1 ta himoyalanmagan array op:
+       → satr 134:const sh  = routingSteps.reduce((sum, step) => sum + step.hours, 0) * plannedQty;
+  ✓  payroll.service.ts — barcha array op himoyalangan
+  ✓  ai-interview-v2-ai.service.ts — barcha array op himoyalangan
+  ✓  ai-interview-v2.controller.ts — barcha array op himoyalangan
+  ✓  ai-interview-v2.service.ts — barcha array op himoyalangan
+  ✓  attrition.service.ts — barcha array op himoyalangan
+  ✓  face-recognition.service.ts — barcha array op himoyalangan
+  ✓  territory-log.service.ts — barcha array op himoyalangan
+  ✓  career-path.service.ts — barcha array op himoyalangan
+  ✓  kpi.service.ts — barcha array op himoyalangan
+  ✓  hr-dashboard-extra.controller.ts — barcha array op himoyalangan
+  ✓  recruitment-assessment.service.ts — barcha array op himoyalangan
+  ✓  recruitment-funnel.service.ts — barcha array op himoyalangan
+  ✓  recruitment-stats.service.ts — barcha array op himoyalangan
+  ✓  shift.service.ts — barcha array op himoyalangan
+  ✓  skills-matrix.service.ts — barcha array op himoyalangan
+  ✓  boomerang-embedding.service.ts — barcha array op himoyalangan
+  ✗  learning-bot.service.ts — 2 ta himoyalanmagan array op:
+       → satr 104:const lines = courses.map(c => {
+       → satr 134:const lines = certs.map(c =>
+  ✗  manager-bot.service.ts — 1 ta himoyalanmagan array op:
+       → satr 213:const lines = team.map(m => {
+  ✗  telegram-bots-cron.service.ts — 2 ta himoyalanmagan array op:
+       → satr 396:? ranked.map(r => r.candidate)
+       → satr 397:: allCandidates.filter(c => this.candidateMatchesVacancy(c, keywords));
+  ✓  integration-employee.service.ts — barcha array op himoyalangan
+  ✓  oee-calculator.service.ts — barcha array op himoyalangan
+  ✓  sensors.service.ts — barcha array op himoyalangan
+  ✓  kanban.service.ts — barcha array op himoyalangan
+  ✓  general-legacy-a.controller.ts — barcha array op himoyalangan
+  ✓  general-legacy-b.controller.ts — barcha array op himoyalangan
+  ✓  legacy.service.ts — barcha array op himoyalangan
+  ✓  certification.service.ts — barcha array op himoyalangan
+  ✓  deliveries.service.ts — barcha array op himoyalangan
+  ✓  vrp.service.ts — barcha array op himoyalangan
+  ✓  campaigns.service.ts — barcha array op himoyalangan
+  ✓  leads.service.ts — barcha array op himoyalangan
+  ✓  materials.service.ts — barcha array op himoyalangan
+  ✓  purchase.service.ts — barcha array op himoyalangan
+  ✓  maintenance.service.ts — barcha array op himoyalangan
+  ✓  telegram.service.ts — barcha array op himoyalangan
+  ✓  org-export.service.ts — barcha array op himoyalangan
+  ✓  org-structure.service.ts — barcha array op himoyalangan
+  ✓  employee.controller.ts — barcha array op himoyalangan
+  ✓  employee-write-off.service.ts — barcha array op himoyalangan
+  ✓  cash-register.service.ts — barcha array op himoyalangan
+  ✓  label.service.ts — barcha array op himoyalangan
+  ✓  pos-inventory-count-query.service.ts — barcha array op himoyalangan
+  ✓  pos-movement.service.ts — barcha array op himoyalangan
+  ✓  pos-pdf.service.ts — barcha array op himoyalangan
+  ✓  pos-request-ext.service.ts — barcha array op himoyalangan
+  ✓  pos-request.service.ts — barcha array op himoyalangan
+  ✓  pos-telegram.service.ts — barcha array op himoyalangan
+  ✓  inventory-count.controller.ts — barcha array op himoyalangan
+  ✓  requests.controller.ts — barcha array op himoyalangan
+  ✓  pp-crp.service.ts — barcha array op himoyalangan
+  ✓  pp-intelligence.service.ts — barcha array op himoyalangan
+  ✓  pp-mps.service.ts — barcha array op himoyalangan
+  ✓  bom-explosion.service.ts — barcha array op himoyalangan
+  ✓  costing.service.ts — barcha array op himoyalangan
+  ✓  crp.service.ts — barcha array op himoyalangan
+  ✓  learning-curve.service.ts — barcha array op himoyalangan
+  ✓  scheduling-capacity.service.ts — barcha array op himoyalangan
+  ✓  scheduling-johnson.service.ts — barcha array op himoyalangan
+  ✓  scheduling-network.service.ts — barcha array op himoyalangan
+  ✓  pp-intelligence.controller.ts — barcha array op himoyalangan
+  ✓  pp-work-centers.controller.ts — barcha array op himoyalangan
+  ✓  defect-detector.service.ts — barcha array op himoyalangan
+  ✓  fmea.service.ts — barcha array op himoyalangan
+  ✗  imposition.service.ts — 1 ta himoyalanmagan array op:
+       → satr 31:const items   = placed.filter(p => p.sheetIndex === sheetIndex);
+  ✓  ink-consumption.service.ts — barcha array op himoyalangan
+  ✗  spc.service.ts — 1 ta himoyalanmagan array op:
+       → satr 68:const ranges = subgroups.map(sg => {
+  ✓  materialized-view-refresh.service.ts — barcha array op himoyalangan
+  ✓  ideal-rasm.service.ts — barcha array op himoyalangan
+  ✓  material-balance.service.ts — barcha array op himoyalangan
+  ✓  abc-xyz.service.ts — barcha array op himoyalangan
+  ✓  wms-analytics.service.ts — barcha array op himoyalangan
+  ✓  wms-extended.service.ts — barcha array op himoyalangan
+  ✓  wms-inventory.controller.ts — barcha array op himoyalangan
+  ✓  wms-warehouses.controller.ts — barcha array op himoyalangan
+
+§2 — Frontend pages + components (BARCHA .tsx fayllar, FAIL)
+──────────────────────────────────────────────────────
+  ✓  pages: 22 ta fayl — array op yo'q
+  ✓  AuditConsole.tsx — barcha array op himoyalangan
+  ✓  AccountantView.tsx — barcha array op himoyalangan
+  ✓  AccountsPayable.tsx — barcha array op himoyalangan
+  ✓  AccountsReceivable.tsx — barcha array op himoyalangan
+  ✓  FeedbackTab.tsx — barcha array op himoyalangan
+  ✓  NewEmployeesTab.tsx — barcha array op himoyalangan
+  ✓  ProgramsTab.tsx — barcha array op himoyalangan
+  ✓  Adaptation.tsx — barcha array op himoyalangan
+  ✓  WelcomeEventsTab.tsx — barcha array op himoyalangan
+  ✓  AIDesignGenerator.tsx — barcha array op himoyalangan
+  ✓  AIExams.tsx — barcha array op himoyalangan
+  ✓  AIInterviewPage.tsx — barcha array op himoyalangan
+  ✓  AIInterviewPublicPage.tsx — barcha array op himoyalangan
+  ✓  AIProductionPlanning.tsx — barcha array op himoyalangan
+  ✓  AIReservation.tsx — barcha array op himoyalangan
+  ✓  AllExams.tsx — barcha array op himoyalangan
+  ✓  AssessmentTab.tsx — barcha array op himoyalangan
+  ✓  LeaderboardTab.tsx — barcha array op himoyalangan
+  ✓  OutcomesTab.tsx — barcha array op himoyalangan
+  ✓  RemainingTabs.tsx — barcha array op himoyalangan
+  ✓  SystemTab.tsx — barcha array op himoyalangan
+  ✓  Analytics.tsx — barcha array op himoyalangan
+  ✓  Applications.tsx — barcha array op himoyalangan
+  ✓  ApprovalHub.tsx — barcha array op himoyalangan
+  ✓  AssetManagement.tsx — barcha array op himoyalangan
+  ✓  AttendanceMonitorPage.tsx — barcha array op himoyalangan
+  ✓  AuditorPanel.tsx — barcha array op himoyalangan
+  ✓  BatchDialogs.tsx — barcha array op himoyalangan
+  ✓  GenerateScannerContent.tsx — barcha array op himoyalangan
+  ✓  PrinterSettingsTab.tsx — barcha array op himoyalangan
+  ✓  BarcodeScanner.tsx — barcha array op himoyalangan
+  ✓  BarcodeSystem.tsx — barcha array op himoyalangan
+  ✓  BirthdayWidget.tsx — barcha array op himoyalangan
+  ✓  BOMManagement.tsx — barcha array op himoyalangan
+  ✓  BudgetManagement.tsx — barcha array op himoyalangan
+  ✓  CameraAIAnalytics.tsx — barcha array op himoyalangan
+  ✓  camera-alerts.tsx — barcha array op himoyalangan
+  ✓  camera-dashboard.tsx — barcha array op himoyalangan
+  ✓  camera-employee-ratings.tsx — barcha array op himoyalangan
+  ✓  camera-employees.tsx — barcha array op himoyalangan
+  ✓  camera-heatmap.tsx — barcha array op himoyalangan
+  ✓  CameraLiveMonitoring.tsx — barcha array op himoyalangan
+  ✓  camera-machines.tsx — barcha array op himoyalangan
+  ✓  camera-quality.tsx — barcha array op himoyalangan
+  ✓  camera-reports.tsx — barcha array op himoyalangan
+  ✓  camera-safety.tsx — barcha array op himoyalangan
+  ✓  camera-settings.tsx — barcha array op himoyalangan
+  ✓  cameras-management.tsx — barcha array op himoyalangan
+  ✓  CandidateChecklist.tsx — barcha array op himoyalangan
+  ✓  CandidateReportDialog.tsx — barcha array op himoyalangan
+  ✓  CandidateReport.tsx — barcha array op himoyalangan
+  ✓  CapacityPlanning.tsx — barcha array op himoyalangan
+  ✓  CashFlowManagement.tsx — barcha array op himoyalangan
+  ✓  CashRegister.tsx — barcha array op himoyalangan
+  ✓  Certificates.tsx — barcha array op himoyalangan
+  ✗  pages/CfoConfigSettings.tsx — 2 ta himoyalanmagan satr
+     → 67:const eclKeys = configs.filter(c => isEcl(c.configKey));
+     → 68:const otherKeys = configs.filter(c => !isEcl(c.configKey));
+  ✓  CFODashboard.tsx — barcha array op himoyalangan
+  ✓  ChartOfAccounts.tsx — barcha array op himoyalangan
+  ✓  ChatAdminPage.tsx — barcha array op himoyalangan
+  ✓  CoordinationPage.tsx — barcha array op himoyalangan
+  ✓  CourseDetail.tsx — barcha array op himoyalangan
+  ✓  Courses.tsx — barcha array op himoyalangan
+  ✓  CRMActivities.tsx — barcha array op himoyalangan
+  ✓  AIAnalysisPanel.tsx — barcha array op himoyalangan
+  ✗  pages/CrmCohortAnalysis.tsx — 3 ta himoyalanmagan satr
+     → 51:{periods.map(p => (
+     → 65:{periods.map(p => {
+     → 98:{levels.map(l => (
+  ✓  DetailSheet.tsx — barcha array op himoyalangan
+  ✓  EntityCard.tsx — barcha array op himoyalangan
+  ✓  ExtendedAIPanel.tsx — barcha array op himoyalangan
+  ✓  CrmFunnelAnalytics.tsx — barcha array op himoyalangan
+  ✓  KanbanColumn.tsx — barcha array op himoyalangan
+  ✓  QuickCreateModal.tsx — barcha array op himoyalangan
+  ✓  CrmRfmClusters.tsx — barcha array op himoyalangan
+  ✓  RobotsView.tsx — barcha array op himoyalangan
+  ✓  CRMSettings.tsx — barcha array op himoyalangan
+  ✓  CRMWorkspace.tsx — barcha array op himoyalangan
+  ✓  CrpPage.tsx — barcha array op himoyalangan
+  ✓  CustomerPortalConfig.tsx — barcha array op himoyalangan
+  ✓  CVScreeningGuide.tsx — barcha array op himoyalangan
+  ✓  AIInsightsSection.tsx — barcha array op himoyalangan
+  ✓  DailyKPIDashboard.tsx — barcha array op himoyalangan
+  ✓  DailyReportPage.tsx — barcha array op himoyalangan
+  ✓  Departments.tsx — barcha array op himoyalangan
+  ✓  DesignApproval.tsx — barcha array op himoyalangan
+  ✓  DesignDashboard.tsx — barcha array op himoyalangan
+  ✓  DesignExtended.tsx — barcha array op himoyalangan
+  ✓  DesignOrderDetail.tsx — barcha array op himoyalangan
+  ✓  DesignOrders.tsx — barcha array op himoyalangan
+  ✗  pages/DirectorAiAudit.tsx — 8 ta himoyalanmagan satr
+     → 114:const totalDecisions  = stats.reduce((s, a) => s + a.total, 0);
+     → 115:const totalAuto       = stats.reduce((s, a) => s + a.autoCount, 0);
+     → 116:const totalBlocked    = stats.reduce((s, a) => s + (a.total - a.autoCount), 0);
+     → 117:const totalOverridden = stats.reduce((s, a) => s + a.overrideCount, 0);
+     → 119:? stats.reduce((s, a) => s + a.avgConfidence, 0) / stats.length
+     → 217:{stats.map((agent) => (
+     → 289:{blocks.map((b) => (
+     → 346:{decisions.map((d) => (
+  ✓  DirectorDashboard.tsx — barcha array op himoyalangan
+  ✓  DirectorExtended.tsx — barcha array op himoyalangan
+  ✓  Discipline.tsx — barcha array op himoyalangan
+  ✓  DocumentWorkflowPage.tsx — barcha array op himoyalangan
+  ✓  EmployeeDailyKPIPanel.tsx — barcha array op himoyalangan
+  ✓  AdaptationTab.tsx — barcha array op himoyalangan
+  ✓  AssessmentTab.tsx — barcha array op himoyalangan
+  ✓  AssetsTab.tsx — barcha array op himoyalangan
+  ✓  AttendanceTab.tsx — barcha array op himoyalangan
+  ✓  CareerTab.tsx — barcha array op himoyalangan
+  ✓  CorporateInventoryTab.tsx — barcha array op himoyalangan
+  ✓  DailyReportsTab.tsx — barcha array op himoyalangan
+  ✓  DocumentsTab.tsx — barcha array op himoyalangan
+  ✓  FinanceTab.tsx — barcha array op himoyalangan
+  ✓  HRCapitalTab.tsx — barcha array op himoyalangan
+  ✓  LeaveTab.tsx — barcha array op himoyalangan
+  ✓  MachineOperatorTab.tsx — barcha array op himoyalangan
+  ✓  MonthlyReportTab.tsx — barcha array op himoyalangan
+  ✓  ObligationsTab.tsx — barcha array op himoyalangan
+  ✓  OffboardingTab.tsx — barcha array op himoyalangan
+  ✓  PerformanceTab.tsx — barcha array op himoyalangan
+  ✓  PersonalTab.tsx — barcha array op himoyalangan
+  ✓  RemainingTabs.tsx — barcha array op himoyalangan
+  ✓  TechAccessTab.tsx — barcha array op himoyalangan
+  ✓  EmployeeProfile.tsx — barcha array op himoyalangan
+  ✓  WorkTab.tsx — barcha array op himoyalangan
+  ✓  EmployeeRating.tsx — barcha array op himoyalangan
+  ✓  Employees.tsx — barcha array op himoyalangan
+  ✓  EmployeeTrackingReport.tsx — barcha array op himoyalangan
+  ✓  ENPSPage.tsx — barcha array op himoyalangan
+  ✓  ERPDailyReports.tsx — barcha array op himoyalangan
+  ✓  ERPDashboardTab.tsx — barcha array op himoyalangan
+  ✓  ERPDowntimeTab.tsx — barcha array op himoyalangan
+  ✓  ERPEmployeeTab.tsx — barcha array op himoyalangan
+  ✓  ERPOrdersTab.tsx — barcha array op himoyalangan
+  ✓  ERPProductsTab.tsx — barcha array op himoyalangan
+  ✓  ERPWorkCentersTab.tsx — barcha array op himoyalangan
+  ✓  EuroprintControlCenter.tsx — barcha array op himoyalangan
+  ✓  EventsCalendar.tsx — barcha array op himoyalangan
+  ✓  ExceptionLog.tsx — barcha array op himoyalangan
+  ✓  ExpenseManagement.tsx — barcha array op himoyalangan
+  ✓  FaceRecognitionMonitoring.tsx — barcha array op himoyalangan
+  ✓  FaceRegistration.tsx — barcha array op himoyalangan
+  ✓  FIDashboard.tsx — barcha array op himoyalangan
+  ✓  FinanceApproval.tsx — barcha array op himoyalangan
+  ✓  FinanceBreakEven.tsx — barcha array op himoyalangan
+  ✓  FinanceDashboard.tsx — barcha array op himoyalangan
+  ✓  FinanceExtended.tsx — barcha array op himoyalangan
+  ✓  FinanceVariance.tsx — barcha array op himoyalangan
+  ✗  pages/ForecastAnalytics.tsx — 2 ta himoyalanmagan satr
+     → 117:fitted.forEach((v, i) => { (base[i] as Record<string, number>)["fitted"] = Math.round(v * 100) / 100; });
+     → 119:predicted.forEach((v, j) => {
+  ✓  GamificationPage.tsx — barcha array op himoyalangan
+  ✓  GLChartOfAccounts.tsx — barcha array op himoyalangan
+  ✓  GLDocuments.tsx — barcha array op himoyalangan
+  ✓  GLPostingMonitor.tsx — barcha array op himoyalangan
+  ✓  GoalsKPI.tsx — barcha array op himoyalangan
+  ✓  GoodsReceiving.tsx — barcha array op himoyalangan
+  ✓  HRAIDashboard.tsx — barcha array op himoyalangan
+  ✓  HRAlertBanner.tsx — barcha array op himoyalangan
+  ✓  HRAlumni.tsx — barcha array op himoyalangan
+  ✓  HRAssetManagement.tsx — barcha array op himoyalangan
+  ✓  HRBrandPage.tsx — barcha array op himoyalangan
+  ✓  HRCapitalCourses.tsx — barcha array op himoyalangan
+  ✓  HRCapitalPublicTest.tsx — barcha array op himoyalangan
+  ✓  HRCapitalTests.tsx — barcha array op himoyalangan
+  ✓  HRCareerPath.tsx — barcha array op himoyalangan
+  ✓  HRConflict.tsx — barcha array op himoyalangan
+  ✓  DisciplineTab.tsx — barcha array op himoyalangan
+  ✓  RiskTab.tsx — barcha array op himoyalangan
+  ✓  SafetyTab.tsx — barcha array op himoyalangan
+  ✓  HRDashboard.tsx — barcha array op himoyalangan
+  ✓  TurnoverTab.tsx — barcha array op himoyalangan
+  ✓  HRExtended.tsx — barcha array op himoyalangan
+  ✓  HRHealthMonitoring.tsx — barcha array op himoyalangan
+  ✓  HRLMSSkills.tsx — barcha array op himoyalangan
+  ✓  HRMap.tsx — barcha array op himoyalangan
+  ✓  HROffboarding.tsx — barcha array op himoyalangan
+  ✓  HROnboarding.tsx — barcha array op himoyalangan
+  ✓  HRSafety.tsx — barcha array op himoyalangan
+  ✓  HRSuccessionPlanning.tsx — barcha array op himoyalangan
+  ✓  HRVacationSick.tsx — barcha array op himoyalangan
+  ✓  IdealRasmPage.tsx — barcha array op himoyalangan
+  ✗  pages/ImpositionCalculator.tsx — 4 ta himoyalanmagan satr
+     → 73:const removeRow = (i: number) => setProducts(p => p.filter((_, idx) => idx !== i));
+     → 75:setProducts(p => p.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+     → 208:{res.svg.map((_, i) => (
+     → 239:{res.unplaced.map(id => (
+  ✓  IncomeExpense.tsx — barcha array op himoyalangan
+  ✓  InkCoverageCalculator.tsx — barcha array op himoyalangan
+  ✓  IntegrationManagement.tsx — barcha array op himoyalangan
+  ✓  InternalJobBoard.tsx — barcha array op himoyalangan
+  ✓  InventoryCount.tsx — barcha array op himoyalangan
+  ✓  InventoryValuation.tsx — barcha array op himoyalangan
+  ✓  InvoiceVerification.tsx — barcha array op himoyalangan
+  ✓  IoTDashboard.tsx — barcha array op himoyalangan
+  ✓  IoTExtended.tsx — barcha array op himoyalangan
+  ✓  IoTChecklistModal.tsx — barcha array op himoyalangan
+  ✓  IoTCompletionReport.tsx — barcha array op himoyalangan
+  ✓  IoTProductionDashboard.tsx — barcha array op himoyalangan
+  ✓  IoTSchedulePanel.tsx — barcha array op himoyalangan
+  ✓  KaizenPage.tsx — barcha array op himoyalangan
+  ✓  KanbanBoard.tsx — barcha array op himoyalangan
+  ✓  CalendarView.tsx — barcha array op himoyalangan
+  ✓  DashboardPanel.tsx — barcha array op himoyalangan
+  ✓  DeadlineColumn.tsx — barcha array op himoyalangan
+  ✓  ChatPanel.tsx — barcha array op himoyalangan
+  ✓  ChecklistTabContent.tsx — barcha array op himoyalangan
+  ✓  FilesTabContent.tsx — barcha array op himoyalangan
+  ✓  MainTabContent.tsx — barcha array op himoyalangan
+  ✓  ResultsTabContent.tsx — barcha array op himoyalangan
+  ✓  FlowsDialog.tsx — barcha array op himoyalangan
+  ✓  GanttView.tsx — barcha array op himoyalangan
+  ✓  KanbanCard.tsx — barcha array op himoyalangan
+  ✓  KanbanColumn.tsx — barcha array op himoyalangan
+  ✓  ListView.tsx — barcha array op himoyalangan
+  ✓  MyPlanView.tsx — barcha array op himoyalangan
+  ✓  NotificationsPanel.tsx — barcha array op himoyalangan
+  ✓  ReportsDialog.tsx — barcha array op himoyalangan
+  ✓  ResourceAllocationView.tsx — barcha array op himoyalangan
+  ✓  RobotsDialog.tsx — barcha array op himoyalangan
+  ✓  TaskDetailSheet.tsx — barcha array op himoyalangan
+  ✓  TemplatesDialog.tsx — barcha array op himoyalangan
+  ✓  KnowledgeBase.tsx — barcha array op himoyalangan
+  ✓  LessonPlayer.tsx — barcha array op himoyalangan
+  ✓  GamificationTab.tsx — barcha array op himoyalangan
+  ✓  SkillsGapTab.tsx — barcha array op himoyalangan
+  ✓  LMSDashboard.tsx — barcha array op himoyalangan
+  ✓  GamificationTab.tsx — barcha array op himoyalangan
+  ✓  KnowledgeBaseTab.tsx — barcha array op himoyalangan
+  ✓  MicroLearningTab.tsx — barcha array op himoyalangan
+  ✓  LMSExtended.tsx — barcha array op himoyalangan
+  ✓  LMSSupport.tsx — barcha array op himoyalangan
+  ✓  Login.tsx — barcha array op himoyalangan
+  ✓  LogisticsDashboard.tsx — barcha array op himoyalangan
+  ✓  MarketingBudget.tsx — barcha array op himoyalangan
+  ✓  MarketingCalendar.tsx — barcha array op himoyalangan
+  ✓  MarketingCampaigns.tsx — barcha array op himoyalangan
+  ✓  MarketingContent.tsx — barcha array op himoyalangan
+  ✓  MarketingDashboard.tsx — barcha array op himoyalangan
+  ✓  MarketingExhibitions.tsx — barcha array op himoyalangan
+  ✓  MarketingExtended.tsx — barcha array op himoyalangan
+  ✓  MarketingLeads.tsx — barcha array op himoyalangan
+  ✓  MarketingPR.tsx — barcha array op himoyalangan
+  ✓  MarketingSettings.tsx — barcha array op himoyalangan
+  ✓  MarketingSocialInbox.tsx — barcha array op himoyalangan
+  ✓  MarketingWebsiteCMS.tsx — barcha array op himoyalangan
+  ✓  MaterialBalance.tsx — barcha array op himoyalangan
+  ✓  MaterialsAccounting.tsx — barcha array op himoyalangan
+  ✓  Mentorship.tsx — barcha array op himoyalangan
+  ✓  MESDashboard.tsx — barcha array op himoyalangan
+  ✓  MESDowntimes.tsx — barcha array op himoyalangan
+  ✓  MESExtended.tsx — barcha array op himoyalangan
+  ✓  MESHomeDashboard.tsx — barcha array op himoyalangan
+  ✓  MESProducts.tsx — barcha array op himoyalangan
+  ✓  MESWorkCenters.tsx — barcha array op himoyalangan
+  ✓  MESWorkerAssignments.tsx — barcha array op himoyalangan
+  ✓  MilestonePage.tsx — barcha array op himoyalangan
+  ✓  TelegramMiniApp.tsx — barcha array op himoyalangan
+  ✓  MMDashboard.tsx — barcha array op himoyalangan
+  ✓  MMExtended.tsx — barcha array op himoyalangan
+  ✓  MMPurchaseOrders.tsx — barcha array op himoyalangan
+  ✓  MMVendors.tsx — barcha array op himoyalangan
+  ✓  MRODashboard.tsx — barcha array op himoyalangan
+  ✓  MROExtended.tsx — barcha array op himoyalangan
+  ✓  MrpMatrix.tsx — barcha array op himoyalangan
+  ✓  NotificationSettings.tsx — barcha array op himoyalangan
+  ✓  OrderApprovalWorkflow.tsx — barcha array op himoyalangan
+  ✓  OrderCosting.tsx — barcha array op himoyalangan
+  ✓  OrdersRegistry.tsx — barcha array op himoyalangan
+  ✓  OrderWorkflowPage.tsx — barcha array op himoyalangan
+  ✓  OrgChartPage.tsx — barcha array op himoyalangan
+  ✓  OrgNodeDetail.tsx — barcha array op himoyalangan
+  ✓  OrgNodePortretTab.tsx — barcha array op himoyalangan
+  ✓  OrgStructureHierarchy.tsx — barcha array op himoyalangan
+  ✓  OTPVerify.tsx — barcha array op himoyalangan
+  ✓  PapkaOrders.tsx — barcha array op himoyalangan
+  ✓  AIPayrollDialog.tsx — barcha array op himoyalangan
+  ✓  PayrollAutomation.tsx — barcha array op himoyalangan
+  ✓  CalculatePayrollDialog.tsx — barcha array op himoyalangan
+  ✓  CalculationsTab.tsx — barcha array op himoyalangan
+  ✓  ContractsTab.tsx — barcha array op himoyalangan
+  ✓  PayrollStatsCards.tsx — barcha array op himoyalangan
+  ✓  TaxRulesSidebar.tsx — barcha array op himoyalangan
+  ✓  PeerReviewPage.tsx — barcha array op himoyalangan
+  ✓  PeriodClosing.tsx — barcha array op himoyalangan
+  ✓  PhoneScriptSheet.tsx — barcha array op himoyalangan
+  ✓  PIPPage.tsx — barcha array op himoyalangan
+  ✓  PlanningBoard.tsx — barcha array op himoyalangan
+  ✓  PlanningDialogs.tsx — barcha array op himoyalangan
+  ✓  PlanningTabPanels.tsx — barcha array op himoyalangan
+  ✓  POSDashboard.tsx — barcha array op himoyalangan
+  ✓  POSInventoryPage.tsx — barcha array op himoyalangan
+  ✓  Positions.tsx — barcha array op himoyalangan
+  ✓  PPDashboard.tsx — barcha array op himoyalangan
+  ✗  pages/PricingTiers.tsx — 1 ta himoyalanmagan satr
+     → 144:{tiers.map(tier => (
+  ✓  ProductionOrder360.tsx — barcha array op himoyalangan
+  ✓  ProductionReport.tsx — barcha array op himoyalangan
+  ✓  ProductivityInterviewDialog.tsx — barcha array op himoyalangan
+  ✓  ProductProfitability.tsx — barcha array op himoyalangan
+  ✓  QCApproval.tsx — barcha array op himoyalangan
+  ✓  QCDashboard.tsx — barcha array op himoyalangan
+  ✓  QCModule.tsx — barcha array op himoyalangan
+  ✓  QCAIAnalysisTab.tsx — barcha array op himoyalangan
+  ✓  QCAITrendTab.tsx — barcha array op himoyalangan
+  ✓  QCBraksTab.tsx — barcha array op himoyalangan
+  ✓  QCCertificateGenerator.tsx — barcha array op himoyalangan
+  ✓  QCParameterDialog.tsx — barcha array op himoyalangan
+  ✓  QCReclamationsTab.tsx — barcha array op himoyalangan
+  ✓  QCSPCTab.tsx — barcha array op himoyalangan
+  ✓  QCStandardsTab.tsx — barcha array op himoyalangan
+  ✓  QCSupplierQualityTab.tsx — barcha array op himoyalangan
+  ✓  QuestionnaireTemplates.tsx — barcha array op himoyalangan
+  ✓  Questionnaire.tsx — barcha array op himoyalangan
+  ✓  QueueMonitor.tsx — barcha array op himoyalangan
+  ✓  RACIMatrixPage.tsx — barcha array op himoyalangan
+  ✓  ReceptionPage.tsx — barcha array op himoyalangan
+  ✓  RecruiterKPIPage.tsx — barcha array op himoyalangan
+  ✓  RecruitingKanban.tsx — barcha array op himoyalangan
+  ✓  ReferralPage.tsx — barcha array op himoyalangan
+  ✓  ReportsHub.tsx — barcha array op himoyalangan
+  ✓  RoutingConfiguration.tsx — barcha array op himoyalangan
+  ✓  SaaSExtended.tsx — barcha array op himoyalangan
+  ✓  SalesOrders.tsx — barcha array op himoyalangan
+  ✓  SDContracts.tsx — barcha array op himoyalangan
+  ✓  SDCustomers.tsx — barcha array op himoyalangan
+  ✓  SDDashboard.tsx — barcha array op himoyalangan
+  ✓  SDDebitors.tsx — barcha array op himoyalangan
+  ✓  SDEuroprint.tsx — barcha array op himoyalangan
+  ✓  SDExtended.tsx — barcha array op himoyalangan
+  ✓  SDKpi.tsx — barcha array op himoyalangan
+  ✓  SDOverviewDashboard.tsx — barcha array op himoyalangan
+  ✓  SDQuotaDashboard.tsx — barcha array op himoyalangan
+  ✓  SDQuotations.tsx — barcha array op himoyalangan
+  ✓  SDSalesManagement.tsx — barcha array op himoyalangan
+  ✓  SDSalesOrders.tsx — barcha array op himoyalangan
+  ✓  SDSalesPayments.tsx — barcha array op himoyalangan
+  ✓  SDSalesQuotes.tsx — barcha array op himoyalangan
+  ✓  SDSettings.tsx — barcha array op himoyalangan
+  ✓  SecurityDashboard.tsx — barcha array op himoyalangan
+  ✓  SecurityExtended.tsx — barcha array op himoyalangan
+  ✓  Settings.tsx — barcha array op himoyalangan
+  ✓  SevenFunctionsDashboard.tsx — barcha array op himoyalangan
+  ✓  ShiftSchedule.tsx — barcha array op himoyalangan
+  ✓  EmployeeSkillDialog.tsx — barcha array op himoyalangan
+  ✓  SkillsMatrix.tsx — barcha array op himoyalangan
+  ✓  StockReservation.tsx — barcha array op himoyalangan
+  ✓  StrategicTasksPanel.tsx — barcha array op himoyalangan
+  ✓  SuperAdminPanel.tsx — barcha array op himoyalangan
+  ✓  SupplyChainDashboard.tsx — barcha array op himoyalangan
+  ✓  SystemMonitor.tsx — barcha array op himoyalangan
+  ✓  TechApproval.tsx — barcha array op himoyalangan
+  ✓  TechCards.tsx — barcha array op himoyalangan
+  ✓  TechDashboard.tsx — barcha array op himoyalangan
+  ✓  Technology.tsx — barcha array op himoyalangan
+  ✓  TechPPExtended.tsx — barcha array op himoyalangan
+  ✓  TelegramBotAdmin.tsx — barcha array op himoyalangan
+  ✓  TestDetail.tsx — barcha array op himoyalangan
+  ✓  Tests.tsx — barcha array op himoyalangan
+  ✓  VacancyPortretDialog.tsx — barcha array op himoyalangan
+  ✓  VendorPerformance.tsx — barcha array op himoyalangan
+  ✓  BinsTab.tsx — barcha array op himoyalangan
+  ✓  WarehouseDailyView.tsx — barcha array op himoyalangan
+  ✓  WarehouseDashboard.tsx — barcha array op himoyalangan
+  ✓  WarehouseHub.tsx — barcha array op himoyalangan
+  ✓  WarehouseIntegrations.tsx — barcha array op himoyalangan
+  ✓  InventarizatsiyaPanel.tsx — barcha array op himoyalangan
+  ✓  WarehouseMaterialKits.tsx — barcha array op himoyalangan
+  ✓  WarehouseRental.tsx — barcha array op himoyalangan
+  ✓  TransfersTab.tsx — barcha array op himoyalangan
+  ✓  WarehousesTab.tsx — barcha array op himoyalangan
+  ✓  ZonesTab.tsx — barcha array op himoyalangan
+  ✓  WasteTracking.tsx — barcha array op himoyalangan
+  ✓  WeeklyPlanPage.tsx — barcha array op himoyalangan
+  ✓  WmsAnalytics.tsx — barcha array op himoyalangan
+  ✓  WMSDashboard.tsx — barcha array op himoyalangan
+  ✓  WMSExtended.tsx — barcha array op himoyalangan
+  ✓  WMSMaterials.tsx — barcha array op himoyalangan
+  ✓  components: 195 ta fayl — array op yo'q
+  ✓  AddAttendanceDialog.tsx — barcha array op himoyalangan
+  ✓  AddDisciplineDialog.tsx — barcha array op himoyalangan
+  ✓  AddQuestionDialog.tsx — barcha array op himoyalangan
+  ✓  AddTestDialog.tsx — barcha array op himoyalangan
+  ✓  AdvancedFilters.tsx — barcha array op himoyalangan
+  ✓  AIInsightsPanel.tsx — barcha array op himoyalangan
+  ✓  AssetActionDialogs.tsx — barcha array op himoyalangan
+  ✓  AssetDepreciationTab.tsx — barcha array op himoyalangan
+  ✓  AssetDisposalTabs.tsx — barcha array op himoyalangan
+  ✓  AssetFormDialogs.tsx — barcha array op himoyalangan
+  ✓  AssetMaintenanceTab.tsx — barcha array op himoyalangan
+  ✓  AssetsTab.tsx — barcha array op himoyalangan
+  ✓  AssetSummaryCards.tsx — barcha array op himoyalangan
+  ✓  AssignAIExamDialog.tsx — barcha array op himoyalangan
+  ✓  AssignCourseDialog.tsx — barcha array op himoyalangan
+  ✓  EmployeeDetailDialog.tsx — barcha array op himoyalangan
+  ✓  ChatNotificationBell.tsx — barcha array op himoyalangan
+  ✓  ChatWidget.tsx — barcha array op himoyalangan
+  ✓  ChatAvatar.tsx — barcha array op himoyalangan
+  ✓  ChatLayout.tsx — barcha array op himoyalangan
+  ✓  ChatSearchPanel.tsx — barcha array op himoyalangan
+  ✓  CreateRoomModal.tsx — barcha array op himoyalangan
+  ✓  CreateTaskModal.tsx — barcha array op himoyalangan
+  ✓  DirectMessageModal.tsx — barcha array op himoyalangan
+  ✓  ForwardModal.tsx — barcha array op himoyalangan
+  ✓  MentionInput.tsx — barcha array op himoyalangan
+  ✓  MessageArea.tsx — barcha array op himoyalangan
+  ✓  MessageInput.tsx — barcha array op himoyalangan
+  ✓  MessagePoll.tsx — barcha array op himoyalangan
+  ✓  MessageReactions.tsx — barcha array op himoyalangan
+  ✓  PinnedMessages.tsx — barcha array op himoyalangan
+  ✓  PollCreator.tsx — barcha array op himoyalangan
+  ✓  RoomInfoPanel.tsx — barcha array op himoyalangan
+  ✓  RoomList.tsx — barcha array op himoyalangan
+  ✓  RoomSettingsModal.tsx — barcha array op himoyalangan
+  ✓  SharedFiles.tsx — barcha array op himoyalangan
+  ✓  ThreadPanel.tsx — barcha array op himoyalangan
+  ✓  VoiceRecorder.tsx — barcha array op himoyalangan
+  ✓  ComparisonPanel.tsx — barcha array op himoyalangan
+  ✓  ActivityFeed.tsx — barcha array op himoyalangan
+  ✓  CallForm.tsx — barcha array op himoyalangan
+  ✓  ActivityPanel.tsx — barcha array op himoyalangan
+  ✓  SlotsForm.tsx — barcha array op himoyalangan
+  ✓  TaskForm.tsx — barcha array op himoyalangan
+  ✓  WhatsAppForm.tsx — barcha array op himoyalangan
+  ✓  BitrixActivityPanel.tsx — barcha array op himoyalangan
+  ✓  CompanyEditForm.tsx — barcha array op himoyalangan
+  ✓  CompanyInfoTab.tsx — barcha array op himoyalangan
+  ✓  ContactsTab.tsx — barcha array op himoyalangan
+  ✓  DealsTab.tsx — barcha array op himoyalangan
+  ✓  CompanyDetailSheet.tsx — barcha array op himoyalangan
+  ✓  ContactDetailSheet.tsx — barcha array op himoyalangan
+  ✓  ContactEditForm.tsx — barcha array op himoyalangan
+  ✓  ContactHeader.tsx — barcha array op himoyalangan
+  ✓  ContactView.tsx — barcha array op himoyalangan
+  ✓  DealDetailSheet.tsx — barcha array op himoyalangan
+  ✓  KanbanColumn.tsx — barcha array op himoyalangan
+  ✓  LeadCard.tsx — barcha array op himoyalangan
+  ✓  LeadKanbanColumn.tsx — barcha array op himoyalangan
+  ✓  LeadActions.tsx — barcha array op himoyalangan
+  ✓  LeadActivities.tsx — barcha array op himoyalangan
+  ✓  LeadDetailSheet.tsx — barcha array op himoyalangan
+  ✓  LeadHeader.tsx — barcha array op himoyalangan
+  ✓  LeadInfo.tsx — barcha array op himoyalangan
+  ✓  MeetingCard.tsx — barcha array op himoyalangan
+  ✓  MultiFieldInput.tsx — barcha array op himoyalangan
+  ✓  DealForm.tsx — barcha array op himoyalangan
+  ✓  LeadForm.tsx — barcha array op himoyalangan
+  ✓  StageProgressBar.tsx — barcha array op himoyalangan
+  ✓  WatcherSelector.tsx — barcha array op himoyalangan
+  ✓  ActivityDialog.tsx — barcha array op himoyalangan
+  ✓  ActivityLogPanel.tsx — barcha array op himoyalangan
+  ✓  AdvancedFilterPanel.tsx — barcha array op himoyalangan
+  ✓  CRMHeader.tsx — barcha array op himoyalangan
+  ✓  KanbanView.tsx — barcha array op himoyalangan
+  ✓  ListView.tsx — barcha array op himoyalangan
+  ✓  DesignNotifications.tsx — barcha array op himoyalangan
+  ✓  AISummaryCard.tsx — barcha array op himoyalangan
+  ✓  AlertsCard.tsx — barcha array op himoyalangan
+  ✓  CompanyStateWidget.tsx — barcha array op himoyalangan
+  ✓  FinanceCard.tsx — barcha array op himoyalangan
+  ✓  HRStatusCard.tsx — barcha array op himoyalangan
+  ✓  IdealVsActualPanel.tsx — barcha array op himoyalangan
+  ✓  KpiScorecard.tsx — barcha array op himoyalangan
+  ✓  KpiSummaryCards.tsx — barcha array op himoyalangan
+  ✓  OverdueOrdersCard.tsx — barcha array op himoyalangan
+  ✓  ProductionStatusCard.tsx — barcha array op himoyalangan
+  ✓  QuickActionsCard.tsx — barcha array op himoyalangan
+  ✓  SalesSummaryCard.tsx — barcha array op himoyalangan
+  ✓  WarehouseStatusCard.tsx — barcha array op himoyalangan
+  ✓  AppSidebar.tsx — barcha array op himoyalangan
+  ✓  DashboardStats.tsx — barcha array op himoyalangan
+  ✓  DataTable.tsx — barcha array op himoyalangan
+  ✓  EmptyState.tsx — barcha array op himoyalangan
+  ✓  Login.tsx — barcha array op himoyalangan
+  ✓  NotificationBell.tsx — barcha array op himoyalangan
+  ✓  EditEmployeeDialog.tsx — barcha array op himoyalangan
+  ✓  EmployeeDialog.tsx — barcha array op himoyalangan
+  ✓  EmployeeTable.tsx — barcha array op himoyalangan
+  ✓  AccountingPeriodsTab.tsx — barcha array op himoyalangan
+  ✓  CostCentersTab.tsx — barcha array op himoyalangan
+  ✓  GLDocumentsTab.tsx — barcha array op himoyalangan
+  ✓  CategoryDialog.tsx — barcha array op himoyalangan
+  ✓  CategoryTree.tsx — barcha array op himoyalangan
+  ✓  TransactionDialog.tsx — barcha array op himoyalangan
+  ✓  TransactionFilters.tsx — barcha array op himoyalangan
+  ✓  TransactionTable.tsx — barcha array op himoyalangan
+  ✓  ProfitCentersTab.tsx — barcha array op himoyalangan
+  ✓  BalanceSheet.tsx — barcha array op himoyalangan
+  ✓  IncomeStatement.tsx — barcha array op himoyalangan
+  ✓  MonthlyCashFlow.tsx — barcha array op himoyalangan
+  ✓  ProductionAnalysis.tsx — barcha array op himoyalangan
+  ✓  GsdGraph.tsx — barcha array op himoyalangan
+  ✓  OrgStructureSection.tsx — barcha array op himoyalangan
+  ✓  PositionSection.tsx — barcha array op himoyalangan
+  ✓  AlumniSection.tsx — barcha array op himoyalangan
+  ✓  CareerSection.tsx — barcha array op himoyalangan
+  ✓  ConflictSection.tsx — barcha array op himoyalangan
+  ✓  HealthSection.tsx — barcha array op himoyalangan
+  ✓  OffboardingSection.tsx — barcha array op himoyalangan
+  ✓  OnboardingSection.tsx — barcha array op himoyalangan
+  ✓  SafetySection.tsx — barcha array op himoyalangan
+  ✓  VacationSection.tsx — barcha array op himoyalangan
+  ✓  IQScaleChart.tsx — barcha array op himoyalangan
+  ✓  JobOfferDialog.tsx — barcha array op himoyalangan
+  ✓  CandidateMarketSection.tsx — barcha array op himoyalangan
+  ✓  EmployerMarketSection.tsx — barcha array op himoyalangan
+  ✓  MarketHeatBadge.tsx — barcha array op himoyalangan
+  ✓  LaborMarketSheet.tsx — barcha array op himoyalangan
+  ✓  OnboardingRoadmapDialog.tsx — barcha array op himoyalangan
+  ✓  AddNodeDialog.tsx — barcha array op himoyalangan
+  ✓  ChildrenTab.tsx — barcha array op himoyalangan
+  ✓  EditDialog.tsx — barcha array op himoyalangan
+  ✓  EmployeesTab.tsx — barcha array op himoyalangan
+  ✓  ExtraTabs.tsx — barcha array op himoyalangan
+  ✓  FolderTab.tsx — barcha array op himoyalangan
+  ✓  HistoryTab.tsx — barcha array op himoyalangan
+  ✓  MainTab.tsx — barcha array op himoyalangan
+  ✓  TreeCanvas.tsx — barcha array op himoyalangan
+  ✓  TreeNodeCard.tsx — barcha array op himoyalangan
+  ✓  HRRequestDialog.tsx — barcha array op himoyalangan
+  ✓  HRRequestsHistory.tsx — barcha array op himoyalangan
+  ✓  PortretBlokD.tsx — barcha array op himoyalangan
+  ✓  PortretSection3.tsx — barcha array op himoyalangan
+  ✓  ProbationJournalPanel.tsx — barcha array op himoyalangan
+  ✓  ProbationReviewDialog.tsx — barcha array op himoyalangan
+  ✓  AttendanceDisciplineTables.tsx — barcha array op himoyalangan
+  ✓  FilesTable.tsx — barcha array op himoyalangan
+  ✓  LearningHistoryTables.tsx — barcha array op himoyalangan
+  ✓  OrganizationalStructure.tsx — barcha array op himoyalangan
+  ✓  StatsCharts.tsx — barcha array op himoyalangan
+  ✓  SyndromeAnalysis.tsx — barcha array op himoyalangan
+  ✓  BoardHeader.tsx — barcha array op himoyalangan
+  ✓  KanbanBoardView.tsx — barcha array op himoyalangan
+  ✓  ThreeBasketsPanel.tsx — barcha array op himoyalangan
+  ✓  LanguageSwitcher.tsx — barcha array op himoyalangan
+  ✓  Layout.tsx — barcha array op himoyalangan
+  ✓  LearningPathVisualization.tsx — barcha array op himoyalangan
+  ✓  CourseBasicInfoForm.tsx — barcha array op himoyalangan
+  ✓  MentorForm.tsx — barcha array op himoyalangan
+  ✓  Material360Card.tsx — barcha array op himoyalangan
+  ✓  ModuleSidebar.tsx — barcha array op himoyalangan
+  ✓  CustomerStep.tsx — barcha array op himoyalangan
+  ✓  PricingStep.tsx — barcha array op himoyalangan
+  ✓  ProductsStep.tsx — barcha array op himoyalangan
+  ✓  WizardStepper.tsx — barcha array op himoyalangan
+  ✓  Pagination.tsx — barcha array op himoyalangan
+  ✓  CartPanel.tsx — barcha array op himoyalangan
+  ✓  PaymentDialog.tsx — barcha array op himoyalangan
+  ✓  PaymentPanel.tsx — barcha array op himoyalangan
+  ✓  PosReports.tsx — barcha array op himoyalangan
+  ✓  ProductCatalog.tsx — barcha array op himoyalangan
+  ✓  ProductList.tsx — barcha array op himoyalangan
+  ✓  TransactionDetailDialog.tsx — barcha array op himoyalangan
+  ✓  TransactionHistory.tsx — barcha array op himoyalangan
+  ✓  AiTrendSection.tsx — barcha array op himoyalangan
+  ✓  CertificateSection.tsx — barcha array op himoyalangan
+  ✓  DefectSection.tsx — barcha array op himoyalangan
+  ✓  IsoSettingsSection.tsx — barcha array op himoyalangan
+  ✓  LabSection.tsx — barcha array op himoyalangan
+  ✓  ReclamationSection.tsx — barcha array op himoyalangan
+  ✓  ReportSection.tsx — barcha array op himoyalangan
+  ✓  VendorSection.tsx — barcha array op himoyalangan
+  ✓  CreateShiftModal.tsx — barcha array op himoyalangan
+  ✓  ShiftDetailModal.tsx — barcha array op himoyalangan
+  ✓  ShiftReportsTab.tsx — barcha array op himoyalangan
+  ✓  WeeklyReportsTab.tsx — barcha array op himoyalangan
+  ✓  Calculator.tsx — barcha array op himoyalangan
+  ✓  PublicFooter.tsx — barcha array op himoyalangan
+  ✓  PublicHeader.tsx — barcha array op himoyalangan
+  ✓  PublicMobileNav.tsx — barcha array op himoyalangan
+  ✗  components/QCheckDialog.tsx — 3 ta himoyalanmagan satr
+     → 105:{missingFields.map((f) => <li key={f}>{f}</li>)}
+     → 115:{preflight.errors.map((e, i) => (
+     → 118:{preflight.warnings.map((w, i) => (
+  ✓  SPCChart.tsx — barcha array op himoyalangan
+  ✓  CandidateCard.tsx — barcha array op himoyalangan
+  ✓  helpers.tsx — barcha array op himoyalangan
+  ✓  StepConditions.tsx — barcha array op himoyalangan
+  ✓  StepToolTest.tsx — barcha array op himoyalangan
+  ✓  RecruitingHeaderActions.tsx — barcha array op himoyalangan
+  ✓  BasicTab.tsx — barcha array op himoyalangan
+  ✓  CommunicationsTab.tsx — barcha array op himoyalangan
+  ✓  CompetitorsTab.tsx — barcha array op himoyalangan
+  ✓  ComplaintsTab.tsx — barcha array op himoyalangan
+  ✓  ContractsTab.tsx — barcha array op himoyalangan
+  ✓  Customer360View.tsx — barcha array op himoyalangan
+  ✓  CustomersTab.tsx — barcha array op himoyalangan
+  ✓  KPITab.tsx — barcha array op himoyalangan
+  ✓  LeadsTab.tsx — barcha array op himoyalangan
+  ✓  OrdersTab.tsx — barcha array op himoyalangan
+  ✓  OverviewDashboard.tsx — barcha array op himoyalangan
+  ✓  PaymentsTab.tsx — barcha array op himoyalangan
+  ✓  QuotationsTab.tsx — barcha array op himoyalangan
+  ✓  FinanceTab.tsx — barcha array op himoyalangan
+  ✓  GrowthTab.tsx — barcha array op himoyalangan
+  ✓  OrdersTab.tsx — barcha array op himoyalangan
+  ✓  SegmentationTab.tsx — barcha array op himoyalangan
+  ✓  CameraAIPrompts.tsx — barcha array op himoyalangan
+  ✓  CameraTriggerRules.tsx — barcha array op himoyalangan
+  ✓  MobileSidebar.tsx — barcha array op himoyalangan
+  ✓  ModuleTabs.tsx — barcha array op himoyalangan
+  ✓  NavGroup.tsx — barcha array op himoyalangan
+  ✓  TestQuestionCard.tsx — barcha array op himoyalangan
+  ✓  TopNavigation.tsx — barcha array op himoyalangan
+  ✓  chart.tsx — barcha array op himoyalangan
+  ✓  field.tsx — barcha array op himoyalangan
+  ✓  loading-skeleton.tsx — barcha array op himoyalangan
+  ✓  pill-tabs.tsx — barcha array op himoyalangan
+  ✓  toaster.tsx — barcha array op himoyalangan
+  ✓  AsosiyTab.tsx — barcha array op himoyalangan
+  ✓  ChiqishNazoratibolimi.tsx — barcha array op himoyalangan
+  ✓  ChopNavbatiBolimi.tsx — barcha array op himoyalangan
+  ✓  OperatorQarzlariBolimi.tsx — barcha array op himoyalangan
+  ✓  PickingBolimi.tsx — barcha array op himoyalangan
+  ✓  QabulBolimi.tsx — barcha array op himoyalangan
+  ✓  QCBolimi.tsx — barcha array op himoyalangan
+  ✓  ExitControlPanel.tsx — barcha array op himoyalangan
+  ✓  OperatorDebtsPanel.tsx — barcha array op himoyalangan
+  ✓  PickingPanel.tsx — barcha array op himoyalangan
+  ✓  QCPanel.tsx — barcha array op himoyalangan
+  ✓  ReceiveMaterialPanel.tsx — barcha array op himoyalangan
+  ✓  RecentMovementsPanel.tsx — barcha array op himoyalangan
+  ✓  StockTable.tsx — barcha array op himoyalangan
+  ✓  WarehouseStatsPanel.tsx — barcha array op himoyalangan
+  ✓  CountSessionTable.tsx — barcha array op himoyalangan
+  ✓  CreateUpdateCountDialog.tsx — barcha array op himoyalangan
+  ✓  ItemCountForm.tsx — barcha array op himoyalangan
+  ✓  BasicTab.tsx — barcha array op himoyalangan
+  ✓  FinanceTab.tsx — barcha array op himoyalangan
+  ✓  ForecastTab.tsx — barcha array op himoyalangan
+  ✓  InventoryTab.tsx — barcha array op himoyalangan
+  ✓  MovementsTab.tsx — barcha array op himoyalangan
+  ✓  ProductionTab.tsx — barcha array op himoyalangan
+  ✓  QualityTab.tsx — barcha array op himoyalangan
+  ✓  StockTab.tsx — barcha array op himoyalangan
+  ✓  StorageTab.tsx — barcha array op himoyalangan
+  ✓  SuppliersTab.tsx — barcha array op himoyalangan
+  ✓  MaterialDialog.tsx — barcha array op himoyalangan
+  ✓  ItemEntryDialog.tsx — barcha array op himoyalangan
+  ✓  ReceiptDetailSheet.tsx — barcha array op himoyalangan
+  ✓  ReceiveFormDialog.tsx — barcha array op himoyalangan
+  ✓  ReceivingList.tsx — barcha array op himoyalangan
+  ✓  AbcAnalysisTab.tsx — barcha array op himoyalangan
+  ✓  AgingTab.tsx — barcha array op himoyalangan
+  ✓  ExpiryTab.tsx — barcha array op himoyalangan
+  ✓  StockBalanceTab.tsx — barcha array op himoyalangan
+  ✓  TurnoverTab.tsx — barcha array op himoyalangan
+  ✓  AIReservationTab.tsx — barcha array op himoyalangan
+  ✓  BatchesTab.tsx — barcha array op himoyalangan
+  ✓  HistoryTab.tsx — barcha array op himoyalangan
+  ✓  BasicTab.tsx — barcha array op himoyalangan
+  ✓  ForecastTab.tsx — barcha array op himoyalangan
+  ✓  InventoryTab.tsx — barcha array op himoyalangan
+  ✓  MovementsTab.tsx — barcha array op himoyalangan
+  ✓  ProductionTab.tsx — barcha array op himoyalangan
+  ✓  QualityTab.tsx — barcha array op himoyalangan
+  ✓  StockTab.tsx — barcha array op himoyalangan
+  ✓  StorageTab.tsx — barcha array op himoyalangan
+  ✓  SuppliersTab.tsx — barcha array op himoyalangan
+  ✓  WmsFinanceTab.tsx — barcha array op himoyalangan
+  ✓  AssetInventoryTable.tsx — barcha array op himoyalangan
+  ✓  CountLinesDialog.tsx — barcha array op himoyalangan
+  ✓  CreateCountDialog.tsx — barcha array op himoyalangan
+  ✓  MaterialInventoryFilters.tsx — barcha array op himoyalangan
+  ✓  MaterialInventoryTable.tsx — barcha array op himoyalangan
+
+§3 — To'g'ri yozish namunasi
+──────────────────────────────────────────────────────
+  NOTO'G'RI:  const items = data.map(x => x.id);
+  TO'G'RI:    const rows = Array.isArray(data) ? data.map(x => x.id) : [];
+  TO'G'RI:    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+
+══════════════════════════════════════════════════════
+  PASS: 764  |  WARN: 0  |  FAIL: 23
+══════════════════════════════════════════════════════
+
+  ✗ Array Safety — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  2. Result Pattern (Repository)
+══════════════════════════════════════════════════════
+
+▶ Result Pattern
+  Skript: scripts/reviewer-result-pattern.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  Result Pattern Reviewer (METOD DARAJASIDA)          
+══════════════════════════════════════════════════════
+
+§1 — 'return null;' topilgan repository fayllar
+──────────────────────────────────────────────────────
+  ✓  position-permissions.repository.ts
+  ✓  ai-router.repository.ts
+  ✓  forecast.repository.ts
+  ✓  ai-automation.repository.ts
+  ✓  finance-ai.repository.ts
+  ✓  hr-ai.repository.ts
+  ✓  analytics-extended-base.repository.ts
+  ✓  analytics-extended.repository.ts
+  ✓  analytics.repository.ts
+  ✓  applications.repository.ts
+  ✓  auth-schema.repository.ts
+  ✓  otp-session.repository.ts
+  ✓  chat-admin.repository.ts
+  ✓  chat-message-base.repository.ts
+  ✓  chat-message.repository.ts
+  ✓  chat-notification.repository.ts
+  ✓  chat-room.repository.ts
+  ✓  seven-functions.repository.ts
+  ✓  departments.repository.ts
+  ✓  positions.repository.ts
+  ✓  crm-activities.repository.ts
+  ✓  crm-ai.repository.ts
+  ✓  crm-auto-lead.repository.ts
+  ✓  crm-bitrix-compat.repository.ts
+  ✓  crm-comms.repository.ts
+  ✓  crm-companies.repository.ts
+  ✓  crm-contacts.repository.ts
+  ✓  crm-custom-fields.repository.ts
+  ✓  crm-extras.repository.ts
+  ✓  crm-followup-compat.repository.ts
+  ✓  crm-leads-ops.repository.ts
+  ✓  design-extended.repository.ts
+  ✓  library.repository.ts
+  ✓  coordination.repository.ts
+  ✓  dashboard-query.repository.ts
+  ✓  director-data.repository.ts
+  ✓  director-state.repository.ts
+  ✓  kaizen.repository.ts
+  ✓  okr.repository.ts
+  ✓  strategic.repository.ts
+  ✓  zno.repository.ts
+  ✓  zvs.repository.ts
+  ✓  approvals.repository.ts
+  ✓  ecommerce.repository.ts
+  ✓  erp-camera.repository.ts
+  ✓  erp-extra.repository.ts
+  ✓  erp-reports.repository.ts
+  ✓  erp.repository.ts
+  ✓  export.repository.ts
+  ✓  finance-actions.repository.ts
+  ✓  finance-ap.repository.ts
+  ✓  finance-ar.repository.ts
+  ✓  finance-payroll.repository.ts
+  ✓  fp-cycle-cron.repository.ts
+  ✓  ai-interview-v2.repository.ts
+  ✓  hr-compat-a.repository.ts
+  ✓  hr-compat-safety.repository.ts
+  ✓  hr-dashboard-extra.repository.ts
+  ✓  hr-dashboard.repository.ts
+  ✓  hr-employees-ext.repository.ts
+  ✓  hr-assets.repository.ts
+  ✓  hr-assets-schema.repository.ts
+  ✓  territory-log.repository.ts
+  ✓  career-path.repository.ts
+  ✓  hr-v2-seed.repository.ts
+  ✓  daily-report.repository.ts
+  ✓  discipline-v2-absence.repository.ts
+  ✓  discipline-v2.repository.ts
+  ✓  document-workflow.repository.ts
+  ✓  enps.repository.ts
+  ✓  gamification.repository.ts
+  ✓  hr-offboarding.repository.ts
+  ✓  pip.repository.ts
+  ✓  hr-gsd.repository.ts
+  ✓  reception.repository.ts
+  ✓  recruitment-stats.repository.ts
+  ✓  hr-safety.repository.ts
+  ✓  shift.repository.ts
+  ✓  skills-matrix.repository.ts
+  ✓  bot-schema.repository.ts
+  ✓  report-bot-data.repository.ts
+  ✓  telegram-bots-pip-events.repository.ts
+  ✓  telegram-bots.repository.ts
+  ✓  iot-camera-events.repository.ts
+  ✓  iot-camera.repository.ts
+  ✓  sensors.repository.ts
+  ✓  routes.repository.ts
+  ✓  campaigns.repository.ts
+  ✓  leads.repository.ts
+  ✓  mes.repository.ts
+  ✓  operations.repository.ts
+  ✓  mm-dashboard.repository.ts
+  ✓  mm-materials-extras.repository.ts
+  ✓  mm-vendors-pr.repository.ts
+  ✓  mm.repository.ts
+  ✓  vendors.repository.ts
+  ✓  mro-inventory.repository.ts
+  ✓  alerts.repository.ts
+  ✓  notification-schema.repository.ts
+  ✓  notification-preferences.repository.ts
+  ✓  org-export.repository.ts
+  ✓  org-structure.repository.ts
+  ✓  position-folder.repository.ts
+  ✓  employee-ledger.repository.ts
+  ✓  employee-write-off.repository.ts
+  ✓  pos-barcode-ext.repository.ts
+  ✓  pos-barcode.repository.ts
+  ✓  pos-inventory-count.repository.ts
+  ✓  pos-lifecycle-block.repository.ts
+  ✓  pos-pdf-inventory.repository.ts
+  ✓  pos-pdf.repository.ts
+  ✓  pos-request-ext.repository.ts
+  ✓  pos-request.repository.ts
+  ✓  pos-stock-reservation.repository.ts
+  ✓  pos-telegram-ext.repository.ts
+  ✓  pos-telegram.repository.ts
+  ✓  cash-register.repository.ts
+  ✓  gl-posting-log.repository.ts
+  ✓  pos-auth.repository.ts
+  ✓  pos-event.repository.ts
+  ✓  pos-inventory-count-query.repository.ts
+  ✓  pos-inventory.repository.ts
+  ✓  pos-mini-app.repository.ts
+  ✓  pos-notifications.repository.ts
+  ✓  pos-reports.repository.ts
+  ✓  pos-sync.repository.ts
+  ✓  stock-ledger.repository.ts
+  ✓  label.repository.ts
+  ✓  pos-audit.repository.ts
+  ✓  pos-movement-query.repository.ts
+  ✓  pos-movement.repository.ts
+  ✓  pos-movement-status.repository.ts
+  ✓  pos-printer-config.repository.ts
+  ✓  pp-equipment.repository.ts
+  ✓  pp-planning.repository.ts
+  ✓  pp.repository.ts
+  ✓  production.repository.ts
+  ✓  qc-defects-extended.repository.ts
+  ✓  qc-extended.repository.ts
+  ✓  qc.repository.ts
+  ✓  qc-new.repository.ts
+  ✓  qc-parameters.repository.ts
+  ✓  company-state.repository.ts
+  ✓  exception-log.repository.ts
+  ✓  fi.repository.ts
+  ✓  ideal-rasm.repository.ts
+  ✓  material-balance.repository.ts
+  ✓  order-status.repository.ts
+  ✓  production-facts.repository.ts
+  ✓  reports-hub.repository.ts
+  ✓  system.repository.ts
+  ✓  three-way-match.repository.ts
+  ✓  waste.repository.ts
+  ✓  weekly-plan.repository.ts
+  ✓  sales.repository.ts
+  ✓  sap.repository.ts
+  ✓  sd-dashboard.repository.ts
+  ✓  sd-leads.repository.ts
+  ✓  sd-payments.repository.ts
+  ✓  sd-quotations.repository.ts
+  ✓  access.repository.ts
+  ✓  raci.repository.ts
+  ✓  attendance.repository.ts
+  ✓  technology.repository.ts
+  ✓  technology-schema.repository.ts
+  ✓  website.repository.ts
+  ✓  inventory-materials.repository.ts
+  ✓  iot-enhanced.repository.ts
+  ✓  warehouse-rental.repository.ts
+  ✓  wms-counts.repository.ts
+  ✓  wms-crud.repository.ts
+  ✓  wms-extended.repository.ts
+  ✓  wms.repository.ts
+
+  Jami 'return null;' (yangi pattern fayllar): 0
+
+§2 — METOD DARAJASIDA: Promise<Result<>> annotatsiyasi
+──────────────────────────────────────────────────────
+  (async metod satri + Promise<Result< pattern birga bo'lishi shart)
+  ✓  position-permissions.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  ai-router.repository.ts — barcha 2 ta metod Promise<Result<>>
+  ⚠  forecast.repository.ts — 2 ta metod Result<T> ishlatmaydi (eski pattern)
+  ✓  ai-automation.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ⚠  finance-ai.repository.ts — 2 ta metod Result<T> ishlatmaydi (eski pattern)
+  ✓  hr-ai.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  analytics-extended-base.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  analytics-extended.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  analytics.repository.ts — barcha 11 ta metod Promise<Result<>>
+  ✓  applications.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  auth-schema.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  otp-session.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  chat-admin.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  chat-message-base.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  chat-message.repository.ts — barcha 15 ta metod Promise<Result<>>
+  ✓  chat-notification.repository.ts — barcha 11 ta metod Promise<Result<>>
+  ✓  chat-room.repository.ts — barcha 15 ta metod Promise<Result<>>
+  ✓  seven-functions.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  departments.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  positions.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  crm-activities.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  crm-ai.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  crm-auto-lead.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  crm-bitrix-compat.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  crm-comms.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  crm-companies.repository.ts — barcha 13 ta metod Promise<Result<>>
+  ✓  crm-contacts.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  crm-custom-fields.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  crm-extras.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  crm-followup-compat.repository.ts — barcha 2 ta metod Promise<Result<>>
+  ✓  crm-leads-ops.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  design-extended.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  library.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  coordination.repository.ts — barcha 11 ta metod Promise<Result<>>
+  ✓  dashboard-query.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  director-data.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  director-state.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  kaizen.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  okr.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  strategic.repository.ts — barcha 11 ta metod Promise<Result<>>
+  ✓  zno.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  zvs.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  approvals.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  ecommerce.repository.ts — barcha 13 ta metod Promise<Result<>>
+  ✓  erp-camera.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  erp-extra.repository.ts — barcha 13 ta metod Promise<Result<>>
+  ✓  erp-reports.repository.ts — barcha 14 ta metod Promise<Result<>>
+  ✓  erp.repository.ts — barcha 13 ta metod Promise<Result<>>
+  ✓  export.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  finance-actions.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  finance-ap.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  finance-ar.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  finance-payroll.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  fp-cycle-cron.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  ai-interview-v2.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  hr-compat-a.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  hr-compat-safety.repository.ts — barcha 14 ta metod Promise<Result<>>
+  ✓  hr-dashboard-extra.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  hr-dashboard.repository.ts — barcha 13 ta metod Promise<Result<>>
+  ✓  hr-employees-ext.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  hr-assets.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  hr-assets-schema.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✗  territory-log.repository.ts — 1/8 metod Promise<Result<>> annotatsiyasiz
+     → 90:  async getLogsForDate(
+     → 116:  async getLogsEnriched(
+     → 166:  async getUnprocessedPhotos(): Promise<
+  ✓  career-path.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  hr-v2-seed.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  daily-report.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  discipline-v2-absence.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  discipline-v2.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  document-workflow.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  enps.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  gamification.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  hr-offboarding.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  pip.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  hr-gsd.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  reception.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  recruitment-stats.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  hr-safety.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  shift.repository.ts — barcha 15 ta metod Promise<Result<>>
+  ✓  skills-matrix.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  bot-schema.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  report-bot-data.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  telegram-bots-pip-events.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  telegram-bots.repository.ts — barcha 32 ta metod Promise<Result<>>
+  ✓  iot-camera-events.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  iot-camera.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  sensors.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  routes.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  campaigns.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  leads.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  operations.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  mm-dashboard.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  mm-materials-extras.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  mm-vendors-pr.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  vendors.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  mro-inventory.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  alerts.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  notification-schema.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  notification-preferences.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  org-export.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  org-structure.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  position-folder.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  employee-ledger.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  employee-write-off.repository.ts — barcha 2 ta metod Promise<Result<>>
+  ✓  pos-barcode-ext.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  pos-barcode.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  pos-inventory-count.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  pos-lifecycle-block.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  pos-pdf-inventory.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  pos-pdf.repository.ts — barcha 2 ta metod Promise<Result<>>
+  ✓  pos-request-ext.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  pos-request.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  pos-stock-reservation.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  pos-telegram-ext.repository.ts — barcha 2 ta metod Promise<Result<>>
+  ✓  pos-telegram.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  cash-register.repository.ts — barcha 11 ta metod Promise<Result<>>
+  ✓  gl-posting-log.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  pos-auth.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ⚠  pos-event.repository.ts — 4 ta metod Result<T> ishlatmaydi (eski pattern)
+  ✓  pos-inventory-count-query.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  pos-inventory.repository.ts — barcha 14 ta metod Promise<Result<>>
+  ✓  pos-mini-app.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  pos-notifications.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  pos-reports.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  pos-sync.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  stock-ledger.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  label.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  pos-audit.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  pos-movement-query.repository.ts — barcha 2 ta metod Promise<Result<>>
+  ✓  pos-movement.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  pos-movement-status.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  pos-printer-config.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  pp-equipment.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  pp-planning.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  production.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  qc-defects-extended.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  qc-extended.repository.ts — barcha 14 ta metod Promise<Result<>>
+  ✓  qc-new.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  qc-parameters.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  company-state.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  exception-log.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  fi.repository.ts — barcha 16 ta metod Promise<Result<>>
+  ✓  ideal-rasm.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  material-balance.repository.ts — barcha 11 ta metod Promise<Result<>>
+  ✓  order-status.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  production-facts.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  reports-hub.repository.ts — barcha 14 ta metod Promise<Result<>>
+  ✓  system.repository.ts — barcha 6 ta metod Promise<Result<>>
+  ✓  three-way-match.repository.ts — barcha 4 ta metod Promise<Result<>>
+  ✓  waste.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  weekly-plan.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  sales.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  sap.repository.ts — barcha 3 ta metod Promise<Result<>>
+  ✓  sd-dashboard.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  sd-leads.repository.ts — barcha 13 ta metod Promise<Result<>>
+  ✓  sd-payments.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  sd-quotations.repository.ts — barcha 10 ta metod Promise<Result<>>
+  ✓  access.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  raci.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  attendance.repository.ts — barcha 5 ta metod Promise<Result<>>
+  ✓  technology.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  technology-schema.repository.ts — barcha 1 ta metod Promise<Result<>>
+  ✓  website.repository.ts — barcha 14 ta metod Promise<Result<>>
+  ✓  inventory-materials.repository.ts — barcha 9 ta metod Promise<Result<>>
+  ✓  iot-enhanced.repository.ts — barcha 8 ta metod Promise<Result<>>
+  ✓  warehouse-rental.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  wms-counts.repository.ts — barcha 7 ta metod Promise<Result<>>
+  ✓  wms-crud.repository.ts — barcha 12 ta metod Promise<Result<>>
+  ✓  wms-extended.repository.ts — barcha 12 ta metod Promise<Result<>>
+
+§3 — CONTROLLER: CQRS bus bare return (unwrap yo'q)
+──────────────────────────────────────────────────────
+  (return this.bus.execute() yoki return await this.bus.execute() — FAIL)
+  ✓  adaptation.controller.ts — CQRS bus bare return yo'q
+  ✓  admin-cron-status.controller.ts — CQRS bus bare return yo'q
+  ✓  admin-extra.controller.ts — CQRS bus bare return yo'q
+  ✓  admin-queue.controller.ts — CQRS bus bare return yo'q
+  ✓  admin-settings.controller.ts — CQRS bus bare return yo'q
+  ✓  admin-users.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-agents.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-automation.controller.ts — CQRS bus bare return yo'q
+  ✓  ai.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-crm.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-director.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-exam.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-finance.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-hr.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-hr-new.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-marketing.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-planning.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-reservation.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-wms.controller.ts — CQRS bus bare return yo'q
+  ✓  forecast-ext.controller.ts — CQRS bus bare return yo'q
+  ✓  gpt.controller.ts — CQRS bus bare return yo'q
+  ✓  insights.controller.ts — CQRS bus bare return yo'q
+  ✓  analytics.controller.ts — CQRS bus bare return yo'q
+  ✓  analytics-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  application-responses.controller.ts — CQRS bus bare return yo'q
+  ✓  applications.controller.ts — CQRS bus bare return yo'q
+  ✓  auth.controller.ts — CQRS bus bare return yo'q
+  ✓  bot-gateway.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-camera.controller.ts — CQRS bus bare return yo'q
+  ✓  camera.controller.ts — CQRS bus bare return yo'q
+  ✓  chat-advanced.controller.ts — CQRS bus bare return yo'q
+  ✓  chat.controller.ts — CQRS bus bare return yo'q
+  ✓  chat-ext.controller.ts — CQRS bus bare return yo'q
+  ✓  validate.controller.ts — CQRS bus bare return yo'q
+  ✓  adaptation-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  approval-workflow.controller.ts — CQRS bus bare return yo'q
+  ✓  asset-management.controller.ts — CQRS bus bare return yo'q
+  ✓  barcode-warehouse.controller.ts — CQRS bus bare return yo'q
+  ✓  calendar-events.controller.ts — CQRS bus bare return yo'q
+  ✓  candidates-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  cfo.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  discipline-records-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  employee-files-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  employee-kpi-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  employees-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  europrint-control.controller.ts — CQRS bus bare return yo'q
+  ✓  europrint-control-director.controller.ts — CQRS bus bare return yo'q
+  ✓  goals-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-map-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  mentorships-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  org-chart-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  resources.controller.ts — CQRS bus bare return yo'q
+  ✓  saas.controller.ts — CQRS bus bare return yo'q
+  ✓  settings-admin.controller.ts — CQRS bus bare return yo'q
+  ✓  succession-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  telegram-admin.controller.ts — CQRS bus bare return yo'q
+  ✓  users-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  warehouse-barcode-ops.controller.ts — CQRS bus bare return yo'q
+  ✓  warehouse-catalog.controller.ts — CQRS bus bare return yo'q
+  ✓  warehouse-label.controller.ts — CQRS bus bare return yo'q
+  ✓  departments.controller.ts — CQRS bus bare return yo'q
+  ✓  panels.controller.ts — CQRS bus bare return yo'q
+  ✓  positions.controller.ts — CQRS bus bare return yo'q
+  ✓  seven-functions.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-activities.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-ai.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-ai-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-analytics.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-auto-lead.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-bitrix-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-comms.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-companies.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-contacts.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-custom-fields.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-deals.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-extras.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-followup-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-leads.controller.ts — CQRS bus bare return yo'q
+  ✓  crm-leads-ops.controller.ts — CQRS bus bare return yo'q
+  ✓  design.controller.ts — CQRS bus bare return yo'q
+  ✓  design-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  approvals.controller.ts — CQRS bus bare return yo'q
+  ✓  coordination.controller.ts — CQRS bus bare return yo'q
+  ✓  dashboard.controller.ts — CQRS bus bare return yo'q
+  ✓  director-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  director-root.controller.ts — CQRS bus bare return yo'q
+  ✓  kaizen.controller.ts — CQRS bus bare return yo'q
+  ✓  okr.controller.ts — CQRS bus bare return yo'q
+  ✓  strategic.controller.ts — CQRS bus bare return yo'q
+  ✓  zno.controller.ts — CQRS bus bare return yo'q
+  ✓  zvs.controller.ts — CQRS bus bare return yo'q
+  ✓  ecommerce-catalog.controller.ts — CQRS bus bare return yo'q
+  ✓  ecommerce-customers.controller.ts — CQRS bus bare return yo'q
+  ✓  ecommerce-orders.controller.ts — CQRS bus bare return yo'q
+  ✓  ecommerce-public.controller.ts — CQRS bus bare return yo'q
+  ✓  erp-camera.controller.ts — CQRS bus bare return yo'q
+  ✓  erp-orders.controller.ts — CQRS bus bare return yo'q
+  ✓  erp-products.controller.ts — CQRS bus bare return yo'q
+  ✓  erp-reports.controller.ts — CQRS bus bare return yo'q
+  ✓  export.controller.ts — CQRS bus bare return yo'q
+  ✓  feedback-360.controller.ts — CQRS bus bare return yo'q
+  ✓  budgets-standalone.controller.ts — CQRS bus bare return yo'q
+  ✓  cashflow.controller.ts — CQRS bus bare return yo'q
+  ✓  fi.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-accounting.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-advance.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-ap.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-ar.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-break-even.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-budgets.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-cashflow-forecast.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-cfo-config.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-extended.controller.ts — CQRS bus bare return yo'q
+  ✗  finance-gl.controller.ts — 1 ta bare bus.execute() (AR-5: await qilib result.data qaytaring)
+     → 41:    return await this.queryBus.execute(new GetGlEntriesQuery({ account, page: Number(page), limit: Number(limit) }));
+  ✗  finance-invoices.controller.ts — 1 ta bare bus.execute() (AR-5: await qilib result.data qaytaring)
+     → 38:    return await this.queryBus.execute(new GetInvoicesQuery({ status, page: Number(page), limit: Number(limit) }));
+  ✓  finance-main.controller.ts — CQRS bus bare return yo'q
+  ✗  finance-payments.controller.ts — 1 ta bare bus.execute() (AR-5: await qilib result.data qaytaring)
+     → 43:    return await this.queryBus.execute(new GetPaymentsQuery({ page: Number(page), limit: Number(limit) }));
+  ✓  finance-payroll.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-ratios.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-standard-cost.controller.ts — CQRS bus bare return yo'q
+  ✓  finance-variance.controller.ts — CQRS bus bare return yo'q
+  ✓  gl-standalone.controller.ts — CQRS bus bare return yo'q
+  ✓  order-costing.controller.ts — CQRS bus bare return yo'q
+  ✓  payroll-periods.controller.ts — CQRS bus bare return yo'q
+  ✓  pricing.controller.ts — CQRS bus bare return yo'q
+  ✓  reports.controller.ts — CQRS bus bare return yo'q
+  ✓  reports-hub.controller.ts — CQRS bus bare return yo'q
+  ✓  sales-orders-standalone.controller.ts — CQRS bus bare return yo'q
+  ✓  ai-interview-v2.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-assets.controller.ts — CQRS bus bare return yo'q
+  ✓  attendance-face.controller.ts — CQRS bus bare return yo'q
+  ✓  career-path.controller.ts — CQRS bus bare return yo'q
+  ✓  daily-report.controller.ts — CQRS bus bare return yo'q
+  ✓  discipline-v2.controller.ts — CQRS bus bare return yo'q
+  ✓  document-workflow.controller.ts — CQRS bus bare return yo'q
+  ✓  enps.controller.ts — CQRS bus bare return yo'q
+  ✓  gamification.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-offboarding.controller.ts — CQRS bus bare return yo'q
+  ✓  onboarding.controller.ts — CQRS bus bare return yo'q
+  ✓  pip.controller.ts — CQRS bus bare return yo'q
+  ✓  employees-for-face.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-attendance.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-compat-a.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-compat-safety.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-dashboard.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-dashboard-extra.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-employees.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-employees-ext.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-gsd.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-leave.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-payroll.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-shifts-compat.controller.ts — CQRS bus bare return yo'q
+  ✓  reception.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-vacancies.controller.ts — CQRS bus bare return yo'q
+  ✓  recruitment.controller.ts — CQRS bus bare return yo'q
+  ✓  hr-safety.controller.ts — CQRS bus bare return yo'q
+  ✓  shift.controller.ts — CQRS bus bare return yo'q
+  ✓  skills-matrix.controller.ts — CQRS bus bare return yo'q
+  ✓  telegram-bots.controller.ts — CQRS bus bare return yo'q
+  ✓  integration-employee.controller.ts — CQRS bus bare return yo'q
+  ✓  integration-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  integration-extended-hr.controller.ts — CQRS bus bare return yo'q
+  ✓  integration-mro.controller.ts — CQRS bus bare return yo'q
+  ✓  camera-ai.controller.ts — CQRS bus bare return yo'q
+  ✓  camera-alerts.controller.ts — CQRS bus bare return yo'q
+  ✓  camera-dashboard.controller.ts — CQRS bus bare return yo'q
+  ✓  camera-heatmap-reports.controller.ts — CQRS bus bare return yo'q
+  ✓  camera-recognition.controller.ts — CQRS bus bare return yo'q
+  ✓  iot-camera.controller.ts — CQRS bus bare return yo'q
+  ✓  iot-camera-events.controller.ts — CQRS bus bare return yo'q
+  ✓  iot-main.controller.ts — CQRS bus bare return yo'q
+  ✓  iot-sensors.controller.ts — CQRS bus bare return yo'q
+  ✓  iot-sensors-main.controller.ts — CQRS bus bare return yo'q
+  ✓  kanban-boards.controller.ts — CQRS bus bare return yo'q
+  ✓  kanban-checklist.controller.ts — CQRS bus bare return yo'q
+  ✓  kanban.controller.ts — CQRS bus bare return yo'q
+  ✓  kanban-ext.controller.ts — CQRS bus bare return yo'q
+  ✓  admin-auth.controller.ts — CQRS bus bare return yo'q
+  ✓  general-legacy-a.controller.ts — CQRS bus bare return yo'q
+  ✓  general-legacy-b.controller.ts — CQRS bus bare return yo'q
+  ✓  courses.controller.ts — CQRS bus bare return yo'q
+  ✓  knowledge-base.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-attempts.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-certificates.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-certificates-standalone.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-core.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-courses.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-enrollments.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-lessons.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-misc.controller.ts — CQRS bus bare return yo'q
+  ✓  lms-questionnaire.controller.ts — CQRS bus bare return yo'q
+  ✓  logistics.controller.ts — CQRS bus bare return yo'q
+  ✓  marketing-analytics.controller.ts — CQRS bus bare return yo'q
+  ✓  marketing-content.controller.ts — CQRS bus bare return yo'q
+  ✓  marketing.controller.ts — CQRS bus bare return yo'q
+  ✓  mes-maintenance.controller.ts — CQRS bus bare return yo'q
+  ✓  mes-operations.controller.ts — CQRS bus bare return yo'q
+  ✓  mes-production-sessions.controller.ts — CQRS bus bare return yo'q
+  ✓  mes-sessions.controller.ts — CQRS bus bare return yo'q
+  ✓  mes-shifts-stats.controller.ts — CQRS bus bare return yo'q
+  ✓  mm-dashboard.controller.ts — CQRS bus bare return yo'q
+  ✓  mm-goods.controller.ts — CQRS bus bare return yo'q
+  ✓  mm-material-cards.controller.ts — CQRS bus bare return yo'q
+  ✓  mm-materials.controller.ts — CQRS bus bare return yo'q
+  ✓  mm-purchase-orders.controller.ts — CQRS bus bare return yo'q
+  ✓  mm-raw-materials.controller.ts — CQRS bus bare return yo'q
+  ✓  mm-vendors-pr.controller.ts — CQRS bus bare return yo'q
+  ✓  mro.controller.ts — CQRS bus bare return yo'q
+  ✓  notifications.controller.ts — CQRS bus bare return yo'q
+  ✓  order-workflow.controller.ts — CQRS bus bare return yo'q
+  ✓  org-structure.controller.ts — CQRS bus bare return yo'q
+  ✓  barcode.controller.ts — CQRS bus bare return yo'q
+  ✓  cash-register.controller.ts — CQRS bus bare return yo'q
+  ✓  employee.controller.ts — CQRS bus bare return yo'q
+  ✓  gl.controller.ts — CQRS bus bare return yo'q
+  ✓  inventory-count.controller.ts — CQRS bus bare return yo'q
+  ✓  mini-app.controller.ts — CQRS bus bare return yo'q
+  ✓  mini-app-history.controller.ts — CQRS bus bare return yo'q
+  ✓  movements.controller.ts — CQRS bus bare return yo'q
+  ✓  pos-auth.controller.ts — CQRS bus bare return yo'q
+  ✓  pos-notifications.controller.ts — CQRS bus bare return yo'q
+  ✓  pos-printer-config-v2.controller.ts — CQRS bus bare return yo'q
+  ✓  pos-stub.controller.ts — CQRS bus bare return yo'q
+  ✓  printer-config.controller.ts — CQRS bus bare return yo'q
+  ✓  reports.controller.ts — CQRS bus bare return yo'q
+  ✓  requests.controller.ts — CQRS bus bare return yo'q
+  ✓  stock.controller.ts — CQRS bus bare return yo'q
+  ✓  sync.controller.ts — CQRS bus bare return yo'q
+  ✓  pos.controller.ts — CQRS bus bare return yo'q
+  ✓  barcode.controller.ts — CQRS bus bare return yo'q
+  ✓  inventory-count.controller.ts — CQRS bus bare return yo'q
+  ✓  reports.controller.ts — CQRS bus bare return yo'q
+  ✓  requests.controller.ts — CQRS bus bare return yo'q
+  ✗  pp-bom.controller.ts — 1 ta bare bus.execute() (AR-5: await qilib result.data qaytaring)
+     → 42:    return await this.queryBus.execute(new GetBomsQuery({ page: Number(page), limit: Number(limit) }));
+  ✓  pp-equipment.controller.ts — CQRS bus bare return yo'q
+  ✓  pp-intelligence.controller.ts — CQRS bus bare return yo'q
+  ✓  pp-orders.controller.ts — CQRS bus bare return yo'q
+  ✓  pp-planning.controller.ts — CQRS bus bare return yo'q
+  ✓  pp-routing.controller.ts — CQRS bus bare return yo'q
+  ✓  pp-work-centers.controller.ts — CQRS bus bare return yo'q
+  ✓  production-reports.controller.ts — CQRS bus bare return yo'q
+  ✓  production-shift-reports.controller.ts — CQRS bus bare return yo'q
+  ✓  print.controller.ts — CQRS bus bare return yo'q
+  ✓  qc-defects.controller.ts — CQRS bus bare return yo'q
+  ✓  qc-defects-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  qc-dpmo.controller.ts — CQRS bus bare return yo'q
+  ✓  qc-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  qc-new.controller.ts — CQRS bus bare return yo'q
+  ✓  qc-parameters.controller.ts — CQRS bus bare return yo'q
+  ✓  qc-reclamations.controller.ts — CQRS bus bare return yo'q
+  ✓  company-state.controller.ts — CQRS bus bare return yo'q
+  ✓  exception-log.controller.ts — CQRS bus bare return yo'q
+  ✓  fi.controller.ts — CQRS bus bare return yo'q
+  ✓  ideal-rasm.controller.ts — CQRS bus bare return yo'q
+  ✓  material-balance.controller.ts — CQRS bus bare return yo'q
+  ✓  order-status.controller.ts — CQRS bus bare return yo'q
+  ✓  production-facts.controller.ts — CQRS bus bare return yo'q
+  ✓  reports-hub.controller.ts — CQRS bus bare return yo'q
+  ✓  system.controller.ts — CQRS bus bare return yo'q
+  ✓  three-way-match.controller.ts — CQRS bus bare return yo'q
+  ✓  waste.controller.ts — CQRS bus bare return yo'q
+  ✓  weekly-plan.controller.ts — CQRS bus bare return yo'q
+  ✓  sales.controller.ts — CQRS bus bare return yo'q
+  ✓  sap.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-customers.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-dashboard.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-deliveries.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-invoices.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-leads.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-orders.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-payments.controller.ts — CQRS bus bare return yo'q
+  ✓  sd-quotations.controller.ts — CQRS bus bare return yo'q
+  ✓  raci.controller.ts — CQRS bus bare return yo'q
+  ✓  security.controller.ts — CQRS bus bare return yo'q
+  ✓  technology.controller.ts — CQRS bus bare return yo'q
+  ✓  website.controller.ts — CQRS bus bare return yo'q
+  ✓  website-media.controller.ts — CQRS bus bare return yo'q
+  ✓  inventory-advanced.controller.ts — CQRS bus bare return yo'q
+  ✓  inventory-materials.controller.ts — CQRS bus bare return yo'q
+  ✓  iot-enhanced.controller.ts — CQRS bus bare return yo'q
+  ✓  iot-material-kits.controller.ts — CQRS bus bare return yo'q
+  ✓  warehouse-rental.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-analytics.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-counts.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-eoq.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-extended.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-goods-issue.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-inventory.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-rental.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-stock.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-warehouse-gateway.controller.ts — CQRS bus bare return yo'q
+  ✓  wms-warehouses.controller.ts — CQRS bus bare return yo'q
+
+§4 — To'g'ri yozish namunalari
+──────────────────────────────────────────────────────
+  REPOSITORY — NOTO'G'RI:
+    async findAll(): Promise<User[]> { ... }
+    async findById(id: number) { return null; }
+
+  REPOSITORY — TO'G'RI:
+    async findAll(): Promise<Result<User[]>> {
+      const rows = await db.select().from(users);
+      return Result.ok(rows);
+    }
+
+  CONTROLLER — NOTO'G'RI:
+    @Get() getAll() { return this.service.getAll(); }
+
+  CONTROLLER — TO'G'RI (A — qo'lda):
+    @Get() async getAll() {
+      const r = await this.service.getAll();
+      if (r.isFailure) throw new InternalServerErrorException(r.error);
+      return r.getValue();
+    }
+  CONTROLLER — TO'G'RI (B — global interceptor bilan):
+    @Get() getAll() { return this.service.getAll(); }  // interceptor unwrap qiladi
+
+══════════════════════════════════════════════════════
+  PASS: 626  |  WARN: 3  |  FAIL: 5
+══════════════════════════════════════════════════════
+
+  ✗ Result Pattern — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  2b. Controller Result<T> Unwrap
+══════════════════════════════════════════════════════
+
+▶ Controller Result Unwrap
+  Skript: scripts/reviewer-controller-result.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  Controller Result<T> Reviewer                       
+══════════════════════════════════════════════════════
+
+  Tekshirilmoqda: apps/api/src/modules/**/*.controller.ts
+  Xavfli pattern: 'return this.<service>.<method>('
+  (await va getValue() bo'lsa — ruxsat beriladi)
+
+──────────────────────────────────────────────────────
+  ✓  adaptation.controller.ts
+  ✓  admin-cron-status.controller.ts
+  ✓  admin-extra.controller.ts
+  ✓  admin-queue.controller.ts
+  ✓  admin-settings.controller.ts
+  ✓  admin-users.controller.ts
+  ✗  ai-agents.controller.ts — 10 ta xavfli satr (Result<T> unwrap qilinmagan):
+       → 94:    return this.sales.evaluate(dto.orderId, dto.baseCost, dto.profile);
+       → 100:    return this.prepress.generateTechCard(dto.orderId, dto.surveyFields, dto.fileMeta);
+       → 106:    return this.planner.plan(
+       → 118:    return this.mes.calcOee(dto);
+       → 124:    return this.mes.detectAnomaly(dto.machineId, dto.value, dto.workOrderId);
+       ... va yana 5 ta satr
+
+     Tuzatish varianti A (qo'lda):
+       const r = await this.service.method();
+       if (r.isFailure) throw new InternalServerErrorException(r.error);
+       return r.getValue();
+     Tuzatish varianti B (global interceptor):
+       app.module.ts da ResultUnwrapInterceptor ro'yxatdan o'tkazilganligini tekshiring.
+  ✓  ai-automation.controller.ts
+  ✓  ai.controller.ts
+  ✓  ai-crm.controller.ts
+  ✓  ai-director.controller.ts
+  ✓  ai-exam.controller.ts
+  ✓  ai-finance.controller.ts
+  ✓  ai-hr.controller.ts
+  ✓  ai-hr-new.controller.ts
+  ✓  ai-marketing.controller.ts
+  ✓  ai-planning.controller.ts
+  ✓  ai-reservation.controller.ts
+  ✓  ai-wms.controller.ts
+  ✓  forecast-ext.controller.ts
+  ✓  gpt.controller.ts
+  ✓  insights.controller.ts
+  ✓  analytics.controller.ts
+  ✓  analytics-extended.controller.ts
+  ✓  application-responses.controller.ts
+  ✓  applications.controller.ts
+  ✓  auth.controller.ts
+  ✓  bot-gateway.controller.ts
+  ✓  ai-camera.controller.ts
+  ✓  camera.controller.ts
+  ✓  chat-advanced.controller.ts
+  ✓  chat.controller.ts
+  ✓  chat-ext.controller.ts
+  ✓  validate.controller.ts
+  ✓  adaptation-compat.controller.ts
+  ✓  approval-workflow.controller.ts
+  ✓  asset-management.controller.ts
+  ✓  barcode-warehouse.controller.ts
+  ✓  calendar-events.controller.ts
+  ✓  candidates-compat.controller.ts
+  ✓  cfo.controller.ts
+  ✓  crm-extended.controller.ts
+  ✓  discipline-records-compat.controller.ts
+  ✓  employee-files-compat.controller.ts
+  ✓  employee-kpi-compat.controller.ts
+  ✓  employees-compat.controller.ts
+  ✓  europrint-control.controller.ts
+  ✓  europrint-control-director.controller.ts
+  ✓  goals-compat.controller.ts
+  ✓  hr-map-compat.controller.ts
+  ✓  mentorships-compat.controller.ts
+  ✓  org-chart-compat.controller.ts
+  ✓  resources.controller.ts
+  ✓  saas.controller.ts
+  ✓  settings-admin.controller.ts
+  ✓  succession-compat.controller.ts
+  ✓  telegram-admin.controller.ts
+  ✓  users-compat.controller.ts
+  ✓  warehouse-barcode-ops.controller.ts
+  ✓  warehouse-catalog.controller.ts
+  ✓  warehouse-label.controller.ts
+  ✓  departments.controller.ts
+  ✓  panels.controller.ts
+  ✓  positions.controller.ts
+  ✓  seven-functions.controller.ts
+  ✓  crm-activities.controller.ts
+  ✓  crm-ai.controller.ts
+  ✓  crm-ai-extended.controller.ts
+  ✗  crm-analytics.controller.ts — 2 ta xavfli satr (Result<T> unwrap qilinmagan):
+       → 73:    return this.funnelSvc.composeFunnelData(pipelineId);
+       → 81:    return this.cohortSvc.buildCohortResponse(months, mode);
+
+     Tuzatish varianti A (qo'lda):
+       const r = await this.service.method();
+       if (r.isFailure) throw new InternalServerErrorException(r.error);
+       return r.getValue();
+     Tuzatish varianti B (global interceptor):
+       app.module.ts da ResultUnwrapInterceptor ro'yxatdan o'tkazilganligini tekshiring.
+  ✓  crm-auto-lead.controller.ts
+  ✓  crm-bitrix-compat.controller.ts
+  ✓  crm-comms.controller.ts
+  ✓  crm-companies.controller.ts
+  ✓  crm-contacts.controller.ts
+  ✓  crm-custom-fields.controller.ts
+  ✓  crm-deals.controller.ts
+  ✓  crm-extras.controller.ts
+  ✓  crm-followup-compat.controller.ts
+  ✓  crm-leads.controller.ts
+  ✓  crm-leads-ops.controller.ts
+  ✓  design.controller.ts
+  ✓  design-extended.controller.ts
+  ✓  approvals.controller.ts
+  ✓  coordination.controller.ts
+  ✓  dashboard.controller.ts
+  ✓  director-extended.controller.ts
+  ✓  director-root.controller.ts
+  ✓  kaizen.controller.ts
+  ✓  okr.controller.ts
+  ✓  strategic.controller.ts
+  ✓  zno.controller.ts
+  ✓  zvs.controller.ts
+  ✓  ecommerce-catalog.controller.ts
+  ✓  ecommerce-customers.controller.ts
+  ✓  ecommerce-orders.controller.ts
+  ✓  ecommerce-public.controller.ts
+  ✓  erp-camera.controller.ts
+  ✓  erp-orders.controller.ts
+  ✓  erp-products.controller.ts
+  ✓  erp-reports.controller.ts
+  ✓  export.controller.ts
+  ✓  feedback-360.controller.ts
+  ✓  budgets-standalone.controller.ts
+  ✓  cashflow.controller.ts
+  ✓  fi.controller.ts
+  ✓  finance-accounting.controller.ts
+  ✓  finance-advance.controller.ts
+  ✓  finance-ap.controller.ts
+  ✓  finance-ar.controller.ts
+  ✓  finance-break-even.controller.ts
+  ✓  finance-budgets.controller.ts
+  ✓  finance-cashflow-forecast.controller.ts
+  ✓  finance-cfo-config.controller.ts
+  ✓  finance-extended.controller.ts
+  ✓  finance-gl.controller.ts
+  ✓  finance-invoices.controller.ts
+  ✓  finance-main.controller.ts
+  ✓  finance-payments.controller.ts
+  ✓  finance-payroll.controller.ts
+  ✓  finance-ratios.controller.ts
+  ✓  finance-standard-cost.controller.ts
+  ✓  finance-variance.controller.ts
+  ✓  gl-standalone.controller.ts
+  ✓  order-costing.controller.ts
+  ✓  payroll-periods.controller.ts
+  ✓  pricing.controller.ts
+  ✓  reports.controller.ts
+  ✓  reports-hub.controller.ts
+  ✓  sales-orders-standalone.controller.ts
+  ✓  ai-interview-v2.controller.ts
+  ✓  hr-assets.controller.ts
+  ✓  attendance-face.controller.ts
+  ✓  career-path.controller.ts
+  ✓  daily-report.controller.ts
+  ✓  discipline-v2.controller.ts
+  ✓  document-workflow.controller.ts
+  ✓  enps.controller.ts
+  ✓  gamification.controller.ts
+  ✓  inspection.controller.ts
+  ✓  hr-offboarding.controller.ts
+  ✓  onboarding.controller.ts
+  ✓  pip.controller.ts
+  ✓  employees-for-face.controller.ts
+  ✓  hr-attendance.controller.ts
+  ✓  hr-compat-a.controller.ts
+  ✓  hr-compat-safety.controller.ts
+  ✓  hr-dashboard.controller.ts
+  ✓  hr-dashboard-extra.controller.ts
+  ✓  hr-employees.controller.ts
+  ✓  hr-employees-ext.controller.ts
+  ✓  hr-gsd.controller.ts
+  ✓  hr-leave.controller.ts
+  ✓  hr-payroll.controller.ts
+  ✓  hr-shifts-compat.controller.ts
+  ✓  reception.controller.ts
+  ✓  hr-vacancies.controller.ts
+  ✓  recruitment.controller.ts
+  ✓  hr-safety.controller.ts
+  ✓  shift.controller.ts
+  ✓  skills-matrix.controller.ts
+  ✓  telegram-bots.controller.ts
+  ✓  integration-employee.controller.ts
+  ✓  integration-extended.controller.ts
+  ✓  integration-extended-hr.controller.ts
+  ✓  integration-mro.controller.ts
+  ✓  camera-ai.controller.ts
+  ✓  camera-alerts.controller.ts
+  ✓  camera-dashboard.controller.ts
+  ✓  camera-heatmap-reports.controller.ts
+  ✓  camera-recognition.controller.ts
+  ✓  iot-camera.controller.ts
+  ✓  iot-camera-events.controller.ts
+  ✓  iot-main.controller.ts
+  ✓  iot-sensors.controller.ts
+  ✓  iot-sensors-main.controller.ts
+  ✓  kanban-boards.controller.ts
+  ✓  kanban-checklist.controller.ts
+  ✓  kanban.controller.ts
+  ✓  kanban-ext.controller.ts
+  ✓  admin-auth.controller.ts
+  ✓  general-legacy-a.controller.ts
+  ✓  general-legacy-b.controller.ts
+  ✓  courses.controller.ts
+  ✓  knowledge-base.controller.ts
+  ✓  lms-attempts.controller.ts
+  ✓  lms-certificates.controller.ts
+  ✓  lms-certificates-standalone.controller.ts
+  ✓  lms-core.controller.ts
+  ✓  lms-courses.controller.ts
+  ✓  lms-enrollments.controller.ts
+  ✓  lms-lessons.controller.ts
+  ✓  lms-misc.controller.ts
+  ✓  lms-questionnaire.controller.ts
+  ✓  lms-tests.controller.ts
+  ✓  logistics.controller.ts
+  ✓  marketing-analytics.controller.ts
+  ✓  marketing-content.controller.ts
+  ✓  marketing.controller.ts
+  ✓  mes-maintenance.controller.ts
+  ✓  mes-operations.controller.ts
+  ✓  mes-production-sessions.controller.ts
+  ✓  mes-sessions.controller.ts
+  ✓  mes-shifts-stats.controller.ts
+  ✓  mm-dashboard.controller.ts
+  ✓  mm-goods.controller.ts
+  ✓  mm-material-cards.controller.ts
+  ✓  mm-materials.controller.ts
+  ✓  mm-purchase-orders.controller.ts
+  ✓  mm-raw-materials.controller.ts
+  ✓  mm-vendors-pr.controller.ts
+  ✓  mro.controller.ts
+  ✓  notifications.controller.ts
+  ✓  order-workflow.controller.ts
+  ✓  org-structure.controller.ts
+  ✓  barcode.controller.ts
+  ✓  cash-register.controller.ts
+  ✓  employee.controller.ts
+  ✓  gl.controller.ts
+  ✓  inventory-count.controller.ts
+  ✓  mini-app.controller.ts
+  ✓  mini-app-history.controller.ts
+  ✓  movements.controller.ts
+  ✓  pos-auth.controller.ts
+  ✓  pos-notifications.controller.ts
+  ✓  pos-printer-config-v2.controller.ts
+  ✓  pos-stub.controller.ts
+  ✓  printer-config.controller.ts
+  ✓  reports.controller.ts
+  ✓  requests.controller.ts
+  ✓  stock.controller.ts
+  ✓  sync.controller.ts
+  ✓  pos.controller.ts
+  ✓  barcode.controller.ts
+  ✓  inventory-count.controller.ts
+  ✓  reports.controller.ts
+  ✓  requests.controller.ts
+  ✓  pp-bom.controller.ts
+  ✓  pp-equipment.controller.ts
+  ✓  pp-intelligence.controller.ts
+  ✓  pp-orders.controller.ts
+  ✓  pp-planning.controller.ts
+  ✓  pp-routing.controller.ts
+  ✓  pp-work-centers.controller.ts
+  ✓  production-reports.controller.ts
+  ✓  production-shift-reports.controller.ts
+  ✓  print.controller.ts
+  ✓  qc-defects.controller.ts
+  ✓  qc-defects-extended.controller.ts
+  ✓  qc-dpmo.controller.ts
+  ✓  qc-extended.controller.ts
+  ✓  qc-inspections.controller.ts
+  ✓  qc-new.controller.ts
+  ✓  qc-parameters.controller.ts
+  ✓  qc-reclamations.controller.ts
+  ✓  company-state.controller.ts
+  ✓  exception-log.controller.ts
+  ✓  fi.controller.ts
+  ✓  ideal-rasm.controller.ts
+  ✓  material-balance.controller.ts
+  ✓  order-status.controller.ts
+  ✓  production-facts.controller.ts
+  ✓  reports-hub.controller.ts
+  ✓  system.controller.ts
+  ✓  three-way-match.controller.ts
+  ✓  waste.controller.ts
+  ✓  weekly-plan.controller.ts
+  ✓  sales.controller.ts
+  ✓  sap.controller.ts
+  ✓  sd-customers.controller.ts
+  ✓  sd-dashboard.controller.ts
+  ✓  sd-deliveries.controller.ts
+  ✓  sd-invoices.controller.ts
+  ✓  sd-leads.controller.ts
+  ✓  sd-orders.controller.ts
+  ✓  sd-payments.controller.ts
+  ✓  sd-quotations.controller.ts
+  ✓  raci.controller.ts
+  ✓  security.controller.ts
+  ✓  technology.controller.ts
+  ✓  website.controller.ts
+  ✓  website-media.controller.ts
+  ✓  inventory-advanced.controller.ts
+  ✓  inventory-materials.controller.ts
+  ✓  iot-enhanced.controller.ts
+  ✓  iot-material-kits.controller.ts
+  ✓  warehouse-rental.controller.ts
+  ✓  wms-analytics.controller.ts
+  ✓  wms-counts.controller.ts
+  ✗  wms-eoq.controller.ts — 1 ta xavfli satr (Result<T> unwrap qilinmagan):
+       → 47:    return this.svc.enqueueRecalculation();
+
+     Tuzatish varianti A (qo'lda):
+       const r = await this.service.method();
+       if (r.isFailure) throw new InternalServerErrorException(r.error);
+       return r.getValue();
+     Tuzatish varianti B (global interceptor):
+       app.module.ts da ResultUnwrapInterceptor ro'yxatdan o'tkazilganligini tekshiring.
+  ✓  wms-extended.controller.ts
+  ✓  wms-goods-issue.controller.ts
+  ✓  wms-inventory.controller.ts
+  ✓  wms-rental.controller.ts
+  ✓  wms-stock.controller.ts
+  ✓  wms-warehouse-gateway.controller.ts
+  ✓  wms-warehouses.controller.ts
+
+──────────────────────────────────────────────────────
+  Tekshirilgan fayllar : 296
+  PASS                 : 293
+  FAIL                 : 3
+══════════════════════════════════════════════════════
+
+  → 3 ta controller Result<T> unwrap qilmayapti.
+    ResultUnwrapInterceptor global bo'lsa — bu WARN darajasida.
+    Agar interceptor yo'q bo'lsa — frontend TypeError chiqaradi!
+
+  ✗ Controller Result Unwrap — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  2c. TypeError Xavf Audit
+══════════════════════════════════════════════════════
+
+▶ TypeError Risk Audit
+  Skript: scripts/audit-typeerror-risks.sh
+──────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════╗
+║   TypeError Xavf Audit — EuroPrint ERP              ║
+╚══════════════════════════════════════════════════════╝
+
+§1 KRITIK — @common/result (Tip B) controller'lar:
+   Interceptor isTipB() HA — xavf bartaraf, kuzatuv uchun ro'yxatlanadi
+──────────────────────────────────────────────────────
+  ✓ Tip B KRITIK topilmadi
+
+§2 XAVFLI — shared/domain/result (Tip A) controller'lar:
+   Interceptor isTipA() HA — ushlab qoladi
+──────────────────────────────────────────────────────
+  ✓ Tip A XAVFLI topilmadi
+
+§3 FRONTEND — Array.isArray himoyasiz .filter/.map/.reduce:
+──────────────────────────────────────────────────────
+  ⚠ FRONTEND  LeadsTab.tsx  →  endpoint: /api/sd/leads
+       → 53:  const leadsByStatus = LEAD_STAGES.reduce((acc, st) => {
+  ⚠ FRONTEND  CfoConfigSettings.tsx  →  endpoint: /api/finance/cfo-config
+       → 67:  const eclKeys = configs.filter(c => isEcl(c.configKey));
+       → 68:  const otherKeys = configs.filter(c => !isEcl(c.configKey));
+  ⚠ FRONTEND  AssessmentTab.tsx  →  endpoint: /api/employees
+       → 95:  const byType = REVIEWER_TYPES.map((rt) => {
+  ⚠ FRONTEND  MarketingContent.tsx  →  endpoint: /api/marketing/content/posts
+       → 137:  const filtered = safeContentList.filter(c => {
+       → 145:    published: safeContentList.filter(c => c.status === "published").length,
+
+╔══════════════════════════════════════════════════════╗
+║  TypeError Xavf Audit — Yakuniy Hisobot             ║
+╠══════════════════════════════════════════════════════╣
+║  KRITIK  (Tip B, @common/result)    : 0 ta controller
+║  XAVFLI  (Tip A, shared/domain)     : 0 ta controller
+║  FRONTEND xavfli komponent           : 4 ta fayl
+║  JAMI                                : 4 ta topildi
+╠══════════════════════════════════════════════════════╣
+║  Interceptor: isTipA+isTipB — har ikki tip qo'llaniladi
+║  Tuzatish: Frontend .map/.filter → Array.isArray qo'shing
+╚══════════════════════════════════════════════════════╝
+
+  ✓ TypeError Risk Audit — PASS
+
+══════════════════════════════════════════════════════
+  3. Stub Yo'qligi
+══════════════════════════════════════════════════════
+
+▶ No Stubs
+  Skript: scripts/reviewer-no-stubs.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  Stub Yo'qligini Reviewer                           
+══════════════════════════════════════════════════════
+
+§1 — Modul kataloglari
+──────────────────────────────────────────────────────
+  ✓  apps/api/src/modules/compatibility — stub yo'q
+  ✓  apps/api/src/modules/legacy — stub yo'q
+  ✓  apps/api/src/modules/lms/certification — stub yo'q
+
+§2 — Alohida fayllar
+──────────────────────────────────────────────────────
+  ✓  finance-advance.controller.ts — stub yo'q
+
+§3 — Stub o'rniga qo'llaniladigan pattern
+──────────────────────────────────────────────────────
+  NOTO'G'RI (stub):
+    return { items: [] as unknown[], total: 0 };
+
+  TO'G'RI (real DB + Array.isArray):
+    const r = await this.svc.findAll(page, limit);
+    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items: rows, total: rows.length };
+
+══════════════════════════════════════════════════════
+  PASS: 4  |  FAIL: 0
+  → Barcha tekshirilgan fayllar stubsiz.
+══════════════════════════════════════════════════════
+
+  ✓ No Stubs — PASS
+
+══════════════════════════════════════════════════════
+  4. process.env Foydalanish
+══════════════════════════════════════════════════════
+
+▶ process.env
+  Skript: scripts/reviewer-process-env.sh
+──────────────────────────────────────────────────────
+  ✗ apps/api/src/modules/pos/pos.gateway.ts:38 — process.env to'g'ridan (ConfigService ishlatilsin)
+PASS: 0  FAIL: 1
+
+  ✗ process.env — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  5. 'as unknown' Tekshiruvi
+══════════════════════════════════════════════════════
+
+▶ as unknown
+  Skript: scripts/reviewer-as-unknown.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  'as unknown' Reviewer                              
+══════════════════════════════════════════════════════
+
+§1 — KRITIK: Stub sifatida ishlatilyapti ([] as unknown[])
+──────────────────────────────────────────────────────
+  ✓  Stub 'as unknown[]' topilmadi
+
+§2 — Boshqa 'as unknown' ishlatilishi (tahlil uchun)
+──────────────────────────────────────────────────────
+  Boshqa 'as unknown' holatlar soni: 1
+  ⚠  1 ta 'as unknown' — har birini tekshiring
+
+  Eng ko'p 'as unknown' bor fayllar:
+           1 apps/api/src/modules/marketing/presentation/marketing.controller.ts
+
+§3 — To'g'ri yozish namunasi
+──────────────────────────────────────────────────────
+  NOTO'G'RI (stub):
+    return { items: [] as unknown[], total: 0 };
+
+  TO'G'RI:
+    // Interfeys aniqlang:
+    interface ItemDto { id: number; name: string; }
+    // DB dan oling:
+    const r = await this.repo.findAll();
+    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items: rows as ItemDto[], total: rows.length };
+
+══════════════════════════════════════════════════════
+  PASS: 1  |  WARN: 1  |  FAIL: 0
+══════════════════════════════════════════════════════
+
+  ✓ as unknown — PASS
+
+══════════════════════════════════════════════════════
+  6. DTO Validation
+══════════════════════════════════════════════════════
+
+▶ DTO Validation
+  Skript: scripts/reviewer-dto-validation.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  DTO Validation Reviewer (Zod)                       
+══════════════════════════════════════════════════════
+
+§1 — @Body() bor controller fayllar — Zod validatsiya bormi
+──────────────────────────────────────────────────────
+  ⚠  admin-extra.controller.ts — DTO import qilinmagan lekin papkada Zod schema bor: update-settings.dto.ts
+  ✓  admin-settings.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  admin-users.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  ai-crm.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai-director.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai-exam.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  ai-finance.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai-hr.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai-hr-new.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  ai-marketing.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai-planning.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai-reservation.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  ai-wms.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  forecast-ext.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  gpt.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  insights.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  application-responses.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  applications.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  auth.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✗  bot-gateway.controller.ts — @Body() bor (1 ta) — DTO fayl ham, Zod schema ham yo'q
+  ✓  chat-advanced.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  chat-ext.controller.ts — 2 ta DTO, barchasi Zod schema bor
+  ✓  validate.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  adaptation-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  approval-workflow.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  asset-management.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  barcode-warehouse.controller.ts — 2 ta DTO, barchasi Zod schema bor
+  ✓  calendar-events.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  candidates-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  crm-extended.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  discipline-records-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  employee-files-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  employee-kpi-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  employees-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  goals-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  hr-map-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  mentorships-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  resources.controller.ts — 2 ta DTO, barchasi Zod schema bor
+  ✓  saas.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  settings-admin.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  succession-compat.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  telegram-admin.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  warehouse-barcode-ops.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  warehouse-catalog.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  warehouse-label.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  departments.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  panels.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  positions.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  seven-functions.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-activities.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-ai.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-ai-extended.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-analytics.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-auto-lead.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-bitrix-compat.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-comms.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-companies.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-contacts.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-custom-fields.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-deals.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-extras.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-leads.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  crm-leads-ops.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  design.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  design-extended.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  approvals.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  coordination.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  kaizen.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  okr.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  strategic.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  zno.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  zvs.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ecommerce-catalog.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ecommerce-customers.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ecommerce-orders.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ecommerce-public.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  erp-orders.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  erp-products.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  erp-reports.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  budgets-standalone.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  cashflow.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  fi.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-accounting.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-advance.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-break-even.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-budgets.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-cfo-config.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-extended.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-gl.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-invoices.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-payments.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  finance-standard-cost.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  gl-standalone.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  order-costing.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  payroll-periods.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pricing.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  ai-interview-v2.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-assets.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✗  attendance-face.controller.ts — @Body() bor (2 ta) — DTO fayl ham, Zod schema ham yo'q
+  ✓  career-path.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  daily-report.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  discipline-v2.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  document-workflow.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  enps.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  gamification.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-offboarding.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  onboarding.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pip.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-attendance.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-compat-a.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-compat-safety.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-dashboard.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-employees.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-employees-ext.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-leave.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-payroll.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-shifts-compat.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  reception.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  hr-vacancies.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  recruitment.controller.ts — 4 ta DTO, barchasi Zod schema bor
+  ✓  hr-safety.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  shift.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  skills-matrix.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  telegram-bots.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ⚠  integration-employee.controller.ts — @Body() Record<string, unknown> — ataylab generic (Zod qo'shish tavsiya)
+  ✓  integration-extended.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  integration-mro.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  camera-ai.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  camera-alerts.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  camera-heatmap-reports.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  iot-camera.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  iot-camera-events.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  iot-main.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  iot-sensors.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  iot-sensors-main.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  kanban-boards.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  kanban-checklist.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  kanban.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  kanban-ext.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  admin-auth.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  general-legacy-a.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  courses.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  knowledge-base.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-certificates.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-certificates-standalone.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-core.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-courses.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-enrollments.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-lessons.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-misc.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  lms-questionnaire.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  logistics.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  marketing-analytics.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  marketing-content.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  marketing.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  mes-maintenance.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mes-operations.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mes-production-sessions.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mes-sessions.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mes-shifts-stats.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mm-dashboard.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mm-goods.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mm-materials.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mm-purchase-orders.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mm-vendors-pr.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mro.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  notifications.controller.ts — 2 ta DTO, barchasi Zod schema bor
+  ✓  org-structure.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  barcode.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  cash-register.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  employee.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  inventory-count.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  mini-app.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  movements.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pos-auth.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ⚠  pos-stub.controller.ts — @Body() Record<string, unknown> — ataylab generic (Zod qo'shish tavsiya)
+  ✓  printer-config.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  requests.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  stock.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sync.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pos.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  barcode.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  inventory-count.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  requests.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pp-bom.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pp-equipment.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pp-intelligence.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pp-orders.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pp-planning.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pp-routing.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  pp-work-centers.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  production-shift-reports.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  print.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  qc-defects.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  qc-defects-extended.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  qc-dpmo.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  qc-extended.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  qc-new.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  qc-parameters.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  qc-reclamations.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  exception-log.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  fi.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  ideal-rasm.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  material-balance.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  order-status.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  production-facts.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  reports-hub.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  system.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  three-way-match.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  waste.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  weekly-plan.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  sap.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sd-customers.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sd-deliveries.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sd-invoices.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sd-leads.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sd-orders.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sd-payments.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  sd-quotations.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  raci.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  security.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  technology.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  website.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  website-media.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  inventory-materials.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  iot-enhanced.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  iot-material-kits.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  warehouse-rental.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  wms-counts.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  wms-eoq.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  wms-extended.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  wms-goods-issue.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  wms-inventory.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  wms-rental.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  wms-stock.controller.ts — 1 ta DTO, barchasi Zod schema bor
+  ✓  wms-warehouse-gateway.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+  ✓  wms-warehouses.controller.ts — controller ichida .parse()/.safeParse() bor (inline Zod)
+
+§2 — Global Zod pipe (main.ts)
+──────────────────────────────────────────────────────
+  ✓  main.ts — global pipe o'rnatilgan
+
+§3 — class-validator qoldiqlari (Zod ga ko'chirish kerak)
+──────────────────────────────────────────────────────
+  ✓  class-validator import topilmadi — hammasi Zod
+
+§4 — To'g'ri yozish namunasi (Zod)
+──────────────────────────────────────────────────────
+  // create-employee.dto.ts
+  import { z } from 'zod';
+
+  export const CreateEmployeeSchema = z.object({
+    firstName:    z.string().min(1).max(100),
+    lastName:     z.string().min(1).max(100),
+    email:        z.string().email(),
+    departmentId: z.number().int().positive().optional(),
+  });
+  export type CreateEmployeeDto = z.infer<typeof CreateEmployeeSchema>;
+
+  // employees.controller.ts
+  @Post()
+  async create(@Body() body: unknown) {
+    const dto = CreateEmployeeSchema.parse(body);   // ← bu validation
+    return this.service.create(dto);
+  }
+
+══════════════════════════════════════════════════════
+  PASS: 235  |  WARN: 3  |  FAIL: 2
+══════════════════════════════════════════════════════
+
+  ✗ DTO Validation — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  7. JWT Guard
+══════════════════════════════════════════════════════
+
+▶ JWT Guard
+  Skript: scripts/reviewer-jwt-guard.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  JWT Guard Reviewer                                  
+══════════════════════════════════════════════════════
+
+§1 — Global guard: { provide: APP_GUARD, useClass: JwtAuthGuard }
+──────────────────────────────────────────────────────
+  ✓  app.module.ts — { provide: APP_GUARD, useClass: JwtAuthGuard } ANIQLANDI
+  ~ Global guard barcha controllerlarni himoyalaydi
+  ~ @Public()/@SkipAuth() bilan belgilangan endpointlar istisno
+
+§2 — Controller darajasida @UseGuards(JwtAuthGuard) tekshiruvi
+──────────────────────────────────────────────────────
+  ~ Global guard aniqlandi — controller darajasida tekshiruv kerak emas
+  ~ (Barcha endpoint himoyalangan, faqat @Public() lar istisno)
+
+§3 — Auth controller: login endpointi tekshiruvi
+──────────────────────────────────────────────────────
+  ✓  auth.controller.ts — /login @Public()/@SkipAuth() bilan belgilangan (to'g'ri)
+
+§4 — To'g'ri yozish namunasi
+──────────────────────────────────────────────────────
+  1. Global guard (eng qulay — app.module.ts da):
+    providers: [
+      { provide: APP_GUARD, useClass: JwtAuthGuard }, // barcha endpoint himoyalangan
+    ]
+
+  2. Controller darajasida (ANIQ JwtAuthGuard):
+    @Controller('employees')
+    @UseGuards(JwtAuthGuard)  // <- aniq JwtAuthGuard, RolesGuard emas
+    export class EmployeesController { ... }
+
+  3. Ochiq endpoint uchun (@Public dekoratori):
+    @Public()  // yoki @SkipAuth()
+    @Post('login')
+    async login(...) { ... }
+
+══════════════════════════════════════════════════════
+  PASS: 2  |  WARN (ochiq): 0  |  FAIL: 0
+══════════════════════════════════════════════════════
+
+  ✓ JWT Guard — PASS
+
+══════════════════════════════════════════════════════
+  7b. Raw SQL
+══════════════════════════════════════════════════════
+
+▶ Raw SQL
+  Skript: scripts/reviewer-raw-sql.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  Raw SQL Reviewer (QOIDA 4)                          
+══════════════════════════════════════════════════════
+
+§1 — db.execute/runQuery raw SQL fayllar
+──────────────────────────────────────────────────────
+  ✗  qc-reclamations.controller.ts — 1 ta raw SQL (ORM ga o'tkazish kerak)
+     → 46:    const result = await runQuery(sql`
+  ✗  break-even.service.ts — 1 ta raw SQL (ORM ga o'tkazish kerak)
+     → 111:      await runQuery(sql`
+  ✗  financial-ratios.service.ts — 2 ta raw SQL (ORM ga o'tkazish kerak)
+     → 158:      await runQuery(sql`
+     → 188:    await runQuery(sql`
+  ✗  standard-cost.service.ts — 2 ta raw SQL (ORM ga o'tkazish kerak)
+     → 114:        await runQuery(sql`
+     → 125:        await runQuery(sql`
+  ✗  variance-analysis.service.ts — 2 ta raw SQL (ORM ga o'tkazish kerak)
+     → 229:      await runQuery(sql`
+     → 245:    await runQuery(sql`
+  ✗  telegram-bots.repository.ts — 5 ta raw SQL (ORM ga o'tkazish kerak)
+     → 332:    await runQuery(sql`
+     → 340:    await runQuery(sql`
+  ✗  rop-trigger.handler.ts — 1 ta raw SQL (ORM ga o'tkazish kerak)
+     → 104:    await runQuery(sql`
+  ✗  wms-analytics.service.ts — 3 ta raw SQL (ORM ga o'tkazish kerak)
+     → 49:      const rows = await runQuery(sql`
+     → 113:      const rows = await runQuery(sql`
+  ✗  wms-eoq.service.ts — 1 ta raw SQL (ORM ga o'tkazish kerak)
+     → 164:        await runQuery(sql`
+  ✗  pp-crp.service.ts — 3 ta raw SQL (ORM ga o'tkazish kerak)
+     → 44:    const r = await runQuery(sql`
+     → 61:    const r = await runQuery(sql`
+  ⚠  pp-mps.service.ts — 4 ta raw SQL (murakkab so'rov/izoh bilan)
+  ✗  pp-intelligence.service.ts — 9 ta raw SQL (ORM ga o'tkazish kerak)
+     → 36:    runQuery(sql`UPDATE pp_mrp_runs SET status = 'failed' WHERE status = 'running'`)
+     → 79:    await runQuery(sql`UPDATE pp_mrp_runs SET status = ${status} WHERE id = ${runId}`)
+  ✗  drizzle-sd-orders.repo.ts — 1 ta raw SQL (ORM ga o'tkazish kerak)
+     → 81:      await db.execute(sql`UPDATE sales_orders SET notes = COALESCE(notes,'') || ' [advance:' || ${dto.advancePaidAmount} || ']', updated_at = NOW() WHERE id = ${id}`);
+  ✗  mrp-run.processor.ts — 9 ta raw SQL (ORM ga o'tkazish kerak)
+     → 104:    const demandRows = await runQuery(sql`
+     → 120:    const matRows = await runQuery(sql`
+  ✗  mes-monitor.service.ts — 1 ta raw SQL (ORM ga o'tkazish kerak)
+     → 164:      await db.execute(sql`
+
+══════════════════════════════════════════════════════
+  PASS: 0    |  WARN: 1    |  FAIL: 14  
+══════════════════════════════════════════════════════
+
+  ✗ Raw SQL — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  8. WMS CRUD To'liqligi
+══════════════════════════════════════════════════════
+
+▶ WMS CRUD
+  Skript: scripts/reviewer-wms-crud.sh
+──────────────────────────────────────────────────────
+=== WMS DELETE endpointlari ===
+  ✓ wms-extended.controller.ts → @Delete
+  ✓ wms-goods-issue.controller.ts → @Delete
+  ✓ wms-inventory.controller.ts → @Delete
+  ✓ wms-rental.controller.ts → @Delete
+  ✓ wms-stock.controller.ts → @Delete
+  ✓ wms-counts.controller.ts → @Delete
+  ✓ wms-warehouses.controller.ts → @Delete
+=== WMS PUT/PATCH endpointlari ===
+  ✓ wms-extended.controller.ts → @Patch
+  ✓ wms-goods-issue.controller.ts → @Patch
+  ✓ wms-inventory.controller.ts → @Patch
+  ✓ wms-rental.controller.ts → @Patch
+  ✓ wms-stock.controller.ts → @Patch
+=== Soft delete tekshiruvi (deletedAt) ===
+  ✓ apps/api/src/modules/wms/application/wms-crud.repository.ts — soft delete bor
+  ✓ apps/api/src/modules/wms/application/wms-extended.repository.ts — soft delete bor
+  ✓ apps/api/src/modules/wms/application/wms-counts.repository.ts — soft delete bor
+  ✗ apps/api/src/modules/wms/application/warehouse-rental.repository.ts — soft delete YO'Q
+  ✓ apps/api/src/modules/wms/application/inventory-materials.repository.ts — soft delete bor
+  ✓ apps/api/src/modules/wms/domain/repositories/wms.repository.ts — soft delete bor
+=== Array.isArray tekshiruvi (WMS controllerlar) ===
+  ✓ apps/api/src/modules/wms/presentation/iot-material-kits.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-goods-issue.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-inventory.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-warehouses.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-rental.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/iot-enhanced.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/inventory-advanced.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/inventory-materials.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-counts.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-extended.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-stock.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/warehouse-rental.controller.ts
+  ✓ apps/api/src/modules/wms/presentation/wms-warehouse-gateway.controller.ts
+  ✗ apps/api/src/modules/wms/presentation/wms-analytics.controller.ts — Array.isArray yo'q
+  ✗ apps/api/src/modules/wms/presentation/wms-eoq.controller.ts — Array.isArray yo'q
+=== DTO validation tekshiruvi ===
+  ✗ apps/api/src/modules/wms/presentation/dto/wms-counts.dto.ts — class-validator dekoratorlari yo'q
+  ✗ apps/api/src/modules/wms/presentation/dto/wms-crud.dto.ts — class-validator dekoratorlari yo'q
+  ✗ apps/api/src/modules/wms/presentation/dto/wms-extended.dto.ts — class-validator dekoratorlari yo'q
+  ✗ apps/api/src/modules/wms/presentation/dto/wms-extra.dto.ts — class-validator dekoratorlari yo'q
+  ✗ apps/api/src/modules/wms/dto/wms.dto.ts — class-validator dekoratorlari yo'q
+
+══════════════════════════════
+  PASS: 30   FAIL: 8
+══════════════════════════════
+
+  ✗ WMS CRUD — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  9. Yo'q Endpointlar
+══════════════════════════════════════════════════════
+
+▶ Missing Endpoints
+  Skript: scripts/reviewer-missing-endpoints.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  EuroPrint Task #367 — Endpoint Reviewer             
+══════════════════════════════════════════════════════
+
+§1 — Stub check (bare return [];  / return {};)
+──────────────────────────────────────────────────────
+  [PASS]  No stubs in recruitment
+  [PASS]  No stubs in safety
+  [PASS]  No stubs in offboarding
+  [PASS]  recruitment.controller.ts — no bare return []
+
+§2 — Array.isArray guard in recruitment controllers
+──────────────────────────────────────────────────────
+  [PASS]  Array.isArray in hr-vacancies.controller.ts
+
+§3 — Promise<Result< in repos
+──────────────────────────────────────────────────────
+  [PASS]  Promise<Result< in i-hr-recruitment-funnel.repo.ts
+  [PASS]  Promise<Result< in drizzle-hr-recruitment-funnel.repo.ts
+  [PASS]  Promise<Result< in drizzle-hr-vacancies.repo.ts
+  [PASS]  Promise<Result< in hr-safety.repository.ts
+  [PASS]  Promise<Result< in hr-offboarding.repository.ts
+
+§4 — JwtAuthGuard / UseGuards in new controllers
+──────────────────────────────────────────────────────
+  [PASS]  Guard present in hr-vacancies.controller.ts
+  [PASS]  Guard present in hr-safety.controller.ts
+  [PASS]  Guard present in hr-offboarding.controller.ts
+  [PASS]  Guard present in hr-gsd.controller.ts
+
+§5 — Key endpoint route patterns
+──────────────────────────────────────────────────────
+  [PASS]  GET  adaptation/new-employees/:id
+  [PASS]  GET  chat (root)
+  [PASS]  POST finance/payments/:id/approve
+  [PASS]  GET  finance/accounting
+  [PASS]  GET  finance/salary-benchmark/:userId
+  [PASS]  GET  crm/companies/:companyId/contacts/:contactId
+  [PASS]  POST crm/ai/autofill/:entityId
+  [PASS]  GET  hr/employees/list/for-face
+  [PASS]  HR vacancies controller exists
+  [PASS]  HR safety controller exists
+  [PASS]  HR offboarding controller exists
+  [PASS]  HR GSD controller exists
+
+══════════════════════════════════════════════════════
+  PASS: 26  |  FAIL: 0
+  RESULT: 0 FAIL — all endpoint checks passed ✓
+══════════════════════════════════════════════════════
+
+  ✓ Missing Endpoints — PASS
+
+══════════════════════════════════════════════════════
+  10. Xavfsizlik
+══════════════════════════════════════════════════════
+
+▶ Security
+  Skript: scripts/reviewer-security.sh
+──────────────────────────────────────────────────────
+
+=== §1 STATIK: Swagger ochiq emasligi ===
+  ✓ /api/docs bloklangan (404)
+
+=== §2 STATIK: Stack trace yashirilgan ===
+  ✓ Stack trace yashirilgan
+
+=== §3 DINAMIK: Login token olish ===
+  ✗ Login muvaffaqiyatsiz! Status: 401 — PENTEST_ADMIN_PASSWORD to'g'riligini tekshiring
+
+=== §4 DINAMIK: JWT tekshiruvi (token yo'q) ===
+  ✓ Token yo'q → 401
+
+=== §5 DINAMIK: SQL injection ===
+  ✓ SQL injection auth/throttler tomonida bloklandi → 401: ' OR '1'='1
+  ✓ SQL injection auth/throttler tomonida bloklandi → 401: '; DROP TABLE users;--
+  ✓ SQL injection auth/throttler tomonida bloklandi → 401: 1 UNION SELECT NULL,NULL--
+
+=== §6 DINAMIK: XSS tekshiruvi ===
+  ✓ XSS payload aks ettirilmadi (bloklandi yoki sanitizatsiya qilindi)
+
+=== §7 DINAMIK: Katta payload bloklash ===
+  ✓ Katta payload bloklandi → 422
+
+=== §8 STATIK: Hard-coded secret yo'q ===
+  ✓ Hard-coded secret topilmadi
+
+══════════════════════════════
+  PASS: 9   FAIL: 1
+══════════════════════════════
+
+  ✗ Security — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  11. Safe Math (TZ-D03)
+══════════════════════════════════════════════════════
+
+▶ Safe Math
+  Skript: scripts/reviewer-safe-math.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  Safe Math Reviewer (TZ-D03)                         
+══════════════════════════════════════════════════════
+
+§1 — math-utils.ts mavjudligi [CRITICAL]:
+  ✓  math-utils.ts: safeDiv ✓ safeNum ✓ safeAvg=1 pct=1
+
+§2 — parseFloat(String( qoldiqlari [KRITIK]:
+  ✗  parseFloat(String(: 4 ta topildi — BARCHA safeNum() ga almashtirilishi shart
+     → apps/api/src/modules/hr/inspection/inspection.repository.ts:223:        const cs = parseFloat(String(r['cleanliness_score'] ?? '1'));
+     → apps/api/src/modules/hr/inspection/inspection.repository.ts:224:        const os = parseFloat(String(r['order_score'] ?? '1'));
+     → apps/api/src/modules/hr/inspection/room-analysis.cron.ts:67:        const cs         = parseFloat(String(analysis['cleanliness_score'] ?? '1'));
+     → apps/api/src/modules/hr/inspection/room-analysis.cron.ts:68:        const os         = parseFloat(String(analysis['order_score'] ?? '1'));
+
+§3 — Himoyasiz bo'linma (a/b) tekshiruvi [WARN]:
+     Qoida: DB dan kelgan qiymatlar bo'linmada safeDiv() ishlatilishi kerak
+  ✓  Himoyasiz DB bo'linma topilmadi ✓
+
+§4 — safeNum/safeDiv ishlatilishi:
+  ✓  safeNum(): 382 ta joylashuvda ishlatilmoqda ✓
+  ✓  safeDiv(): 130 ta joylashuvda ishlatilmoqda ✓
+
+══════════════════════════════════════════════════════
+  PASS: 4  |  FAIL: 1  |  WARN: 0
+══════════════════════════════════════════════════════
+
+  → FAIL. parseFloat(String() → safeNum() ga almashtiring.
+
+  ✗ Safe Math — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  12. New Date() Trend (TZ-D15)
+══════════════════════════════════════════════════════
+
+▶ New Date Trend
+  Skript: scripts/reviewer-new-date.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  New Date() Reviewer (TZ-D15)                        
+══════════════════════════════════════════════════════
+
+§1 — TimeService infrastrukturasi [CRITICAL]:
+  ✓  TashkentTimeService: apps/api/src/common/time/tashkent-time.service.ts ✓
+  ✓  TimeService wrapper: apps/api/src/common/time/time.service.ts ✓
+
+§2 — Foundation fayllari (common/math, common/decorators, common/dto) [KRITIK]:
+     Eslatma: tashkent-time.service.ts TimeService implementatsiyasi sifatida ruxsat berilgan
+  ✓  Foundation fayllar: new Date() 0 ta ✓
+
+§3 — Modullar new Date() trendi (baseline: 700):
+     Joriy son  : 58 ta
+     Sprint 0   : ~700 ta (meros)
+     Maqsad     : 0 ta (barcha sprintlar davomida)
+  ⚠  Modullar: 58 ta new Date() mavjud — TimeService.now() ga asta-sekin o'tkazing
+
+§4 — TimeService metodlari ishlatilishi:
+  ✓  TimeService.now()/.today()/.diffInDays()/_time.now(): 704 ta joylashuvda ✓
+
+══════════════════════════════════════════════════════
+  PASS: 4  |  FAIL: 0  |  WARN: 1
+══════════════════════════════════════════════════════
+
+  → PASS (WARN). new Date() → TimeService.now() progressiv migration davom etadi.
+
+  ✓ New Date Trend — PASS
+
+══════════════════════════════════════════════════════
+  13. DB Invariants (TZ-D16)
+══════════════════════════════════════════════════════
+
+▶ DB Invariants
+  Skript: scripts/reviewer-db-invariants.sh
+──────────────────────────────────────────────────────
+
+══════════════════════════════════════════════════════
+  DB Invariants Reviewer (TZ-D16)                     
+══════════════════════════════════════════════════════
+
+§1 — invariants.ts mavjudligi [CRITICAL]:
+  ✓  invariants.ts topildi: apps/api/src/shared/db/invariants.ts ✓
+
+§2 — CHK constraint soni (minimum 10) [CRITICAL]:
+  ✓  23 ta chk_ constraint topildi (≥ 10) ✓
+
+§3 — Asosiy invariantlar [CRITICAL]:
+  ✓  Inventar qty >= 0 ✓
+  ✓  Maosh: net <= gross ✓
+  ✓  To'lov: paid <= total ✓
+  ✓  Jami summa >= 0 ✓
+  ✓  BOM: parent != child ✓
+  ✓  Sana: end >= start ✓
+
+§4 — ensureDbInvariants startup integratsiyasi [CRITICAL]:
+  ✓  ensureDbInvariants main.ts da topildi (2 ta joy) ✓
+  ✓  await ensureDbInvariants() chaqiruvi mavjud ✓
+
+§5 — DB import (self-contained) tekshiruvi:
+  ✓  invariants.ts o'z ichida db import qiladi ✓
+
+══════════════════════════════════════════════════════
+  PASS: 11  |  FAIL: 0  |  WARN: 0
+══════════════════════════════════════════════════════
+
+  → PASS.
+
+  ✓ DB Invariants — PASS
+
+══════════════════════════════════════════════════════
+  14. Money Safety (TZ-D01, Sprint 1)
+══════════════════════════════════════════════════════
+
+▶ Money Safety
+  Skript: scripts/reviewer-money-safety.sh
+──────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════╗
+║    reviewer-money-safety.sh  — Sprint 1              ║
+╚══════════════════════════════════════════════════════╝
+
+§1 — Money VO (Decimal.js) tekshiruvi [FAIL agar yo'q bo'lsa]:
+  ✓  Money VO mavjud: apps/api/src/common/money/money.vo.ts
+  ✓  Decimal.js import: ✓
+  ✓  ROUND_HALF_EVEN (banker's rounding): ✓
+  ✓  CurrencyMismatchError himoyasi: ✓
+
+§2 — Hardcoded cost ratio taqiqlanish tekshiruvi [FAIL]:
+  ✗  2 ta joyda 0.65 hardcoded topildi — GL jadvalidan hisoblang
+     → apps/api/src/modules/ai-agents/common/ai-agents.constants.ts:6:export const OEE_CRITICAL_THRESHOLD       = 0.65;
+     → apps/api/src/modules/ai-agents/planning/planner.service.ts:170:    const confidence = deadlineRisk ? 0.65 : 0.90;
+
+§3 — Float pul arifmetikasi [WARN]:
+  ✓  Pul qiymatlarida xom float operatsiyasi yo'q ✓
+
+§4 — CFO GL jadvaldan hisoblash [FAIL agar hardcoded bo'lsa]:
+  ✓  CFO: GL jadvalidan hisoblash mavjud ✓
+  ✓  CFO: hardcoded qiymatlar yo'q ✓
+
+§5 — AR Aging SQL-native (N+1 yo'q) [FAIL agar for loop bo'lsa]:
+  ✓  AR Aging: invoice for loop yo'q — SQL-native ✓
+  ✓  AR Aging: SQL CASE/WHEN mavjud ✓
+  ✓  AR Aging: ECL hisoblash mavjud ✓
+
+§6 — Depreciation Service (SL, DB, SYD, UOP) [FAIL]:
+  ✓  DepreciationService mavjud ✓
+  ✓    Usul mavjud: straightLine ✓
+  ✓    Usul mavjud: doubleDeclining ✓
+  ✓    Usul mavjud: sumOfYearsDigits ✓
+  ✓    Usul mavjud: unitsOfProduction ✓
+
+§7 — Investment Service (NPV/IRR/Payback/Liquidity) [FAIL]:
+  ✓  InvestmentService mavjud ✓
+  ✓    Funksiya mavjud: npv ✓
+  ✓    Funksiya mavjud: irr ✓
+  ✓    Funksiya mavjud: discountedPayback ✓
+  ✓    Funksiya mavjud: liquidityRatios ✓
+  ✓    Funksiya mavjud: cashflow13Week ✓
+
+§8 — Advance Payment Idempotency (TZ-D06) [FAIL]:
+  ✓  Advance payment idempotency kalit mavjud ✓
+  ✓  Set<string> idempotency container mavjud ✓
+
+══════════════════════════════════════════════════════
+  PASS: 23  |  FAIL: 1  |  WARN: 0
+══════════════════════════════════════════════════════
+
+  → FAIL. 1 ta muammo bartaraf etilishi kerak.
+
+  ✗ Money Safety — FAIL (exit 1)
+
+══════════════════════════════════════════════════════
+  11. TypeScript Build (tsc --noEmit)
+══════════════════════════════════════════════════════
+  ⚠ TypeScript: 13 ta xato (pre-existing baseline 590, yangi xato yo'q)
+
+╔══════════════════════════════════════════════════════╗
+║  REVIEWER YAKUNIY HISOBOT                           ║
+╠══════════════════════════════════════════════════════╣
+║  Jami reviewerlar : 18
+║  PASS              : 7
+║  FAIL              : 10
+║  WARN/SKIP         : 1
+╠══════════════════════════════════════════════════════╣
+║  Natijalar:
+║    ✗ Array Safety
+║    ✗ Result Pattern
+║    ✗ Controller Result Unwrap
+║    ✓ TypeError Risk Audit
+║    ✓ No Stubs
+║    ✗ process.env
+║    ✓ as unknown
+║    ✗ DTO Validation
+║    ✓ JWT Guard
+║    ✗ Raw SQL
+║    ✗ WMS CRUD
+║    ✓ Missing Endpoints
+║    ✗ Security
+║    ✗ Safe Math
+║    ✓ New Date Trend
+║    ✓ DB Invariants
+║    ✗ Money Safety
+║    ~ TypeScript Build (13 errors ≤ baseline 590) (skip)
+╠══════════════════════════════════════════════════════╣
+║  Hisobot: scripts/reviewer-report.txt
+╚══════════════════════════════════════════════════════╝

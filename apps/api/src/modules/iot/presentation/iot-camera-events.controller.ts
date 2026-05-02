@@ -1,0 +1,118 @@
+import { assertRequired } from '@common/assertions';
+import {
+  AuditInterceptor } from '@common/interceptors/audit.interceptor';import { BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
+import { Throttle } from '@nestjs/throttler';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Roles } from '@common/decorators/roles.decorator';
+import { IotCameraEventsService } from '../application/iot-camera-events.service';
+import {
+  CameraEventsQuerySchema,
+  CreateCameraEventBodySchema,
+  CreateQualityDefectBodySchema,
+  CreateSafetyViolationBodySchema,
+  UpdateEventStatusBodySchema,
+  ViolationsQuerySchema,
+} from './dto/iot-camera.dto';
+
+const MANAGER_ROLES = ['production_manager', 'manager', 'super_admin', 'director', 'security_manager', 'admin'];
+
+@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@UseInterceptors(AuditInterceptor)
+@Controller('camera')
+export class IotCameraEventsController {
+  constructor(private readonly svc: IotCameraEventsService) {}
+
+  @Get('camera-events')
+  async listCameraEvents(@Query() raw: Record<string, unknown>) {
+    const q = CameraEventsQuerySchema.parse(raw);
+    return unwrapOrThrow(await this.svc.listCameraEvents(q.camera_id, q.type, q.limit));
+  }
+
+  @Post('camera-events')
+  @UseGuards(RolesGuard)
+  @Roles(...MANAGER_ROLES)
+  async createCameraEvent(@Body() body: Record<string, unknown>) {
+    const dto = CreateCameraEventBodySchema.parse(body);
+    assertRequired(dto.camera_id, 'camera_id va event_type majburiy');
+    assertRequired(dto.event_type, 'camera_id va event_type majburiy');
+    const _rCreateCameraEvent = await this.svc.createCameraEvent(
+      dto.camera_id,
+      dto.event_type,
+      dto.description ?? null,
+      dto.severity,
+      dto.zone_id ?? null,
+    );
+    assertOk(_rCreateCameraEvent);
+    return _rCreateCameraEvent.data;
+  }
+
+  @Patch('camera-events/:id')
+  @UseGuards(RolesGuard)
+  @Roles(...MANAGER_ROLES)
+  async updateCameraEvent(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    const dto = UpdateEventStatusBodySchema.parse(body);
+    return unwrapOrThrow(await this.svc.updateCameraEvent(parseInt(id, 10), dto.status ?? null, dto.resolution_note ?? null));
+  }
+
+  @Get('safety-violations')
+  async listSafetyViolations(@Query() raw: Record<string, unknown>) {
+    const q = ViolationsQuerySchema.parse(raw);
+    return unwrapOrThrow(await this.svc.listSafetyViolations(q.camera_id, q.status, q.limit));
+  }
+
+  @Post('safety-violations')
+  @UseGuards(RolesGuard)
+  @Roles(...MANAGER_ROLES)
+  async createSafetyViolation(@Body() body: Record<string, unknown>) {
+    const dto = CreateSafetyViolationBodySchema.parse(body);
+    const _rCreateSafetyViolation = await this.svc.createSafetyViolation(
+      dto.camera_id,
+      dto.violation_type,
+      dto.severity,
+      dto.description ?? null,
+      dto.employee_id ?? null,
+    );
+    assertOk(_rCreateSafetyViolation);
+    return _rCreateSafetyViolation.data;
+  }
+
+  @Get('quality-defects-camera')
+  async listQualityDefects(@Query('camera_id') cameraId?: string, @Query('status') status?: string) {
+    return unwrapOrThrow(await this.svc.listQualityDefects(cameraId, status));
+  }
+
+  @Post('quality-defects-camera')
+  @UseGuards(RolesGuard)
+  @Roles(...MANAGER_ROLES)
+  async createQualityDefect(@Body() body: Record<string, unknown>) {
+    const dto = CreateQualityDefectBodySchema.parse(body);
+    const _rCreateQualityDefect = await this.svc.createQualityDefect(
+      dto.camera_id,
+      dto.defect_type,
+      dto.severity,
+      dto.description ?? null,
+    );
+    assertOk(_rCreateQualityDefect);
+    return _rCreateQualityDefect.data;
+  }
+
+  @Patch('quality-defects-camera/:id')
+  @UseGuards(RolesGuard)
+  @Roles(...MANAGER_ROLES)
+  async updateQualityDefect(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    const dto = UpdateEventStatusBodySchema.parse(body);
+    return unwrapOrThrow(await this.svc.updateQualityDefect(parseInt(id, 10), dto.status ?? null, dto.resolution_note ?? null));
+  }
+}

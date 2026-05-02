@@ -1,0 +1,293 @@
+import { AI_SHORT_MAX_TOKENS, AI_MAX_TOKENS_STANDARD } from '@common/constants/app.constants';
+/**
+ * CRM AI Service — Lead scoring, Deal probability, Churn risk, Next best action
+ */
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
+import { AiRouterService } from '../application/services/ai-router.service';
+import { db } from '@shared/db';
+import { crmLeads, crmDeals, crmContacts } from '@europrint/schemas';
+import { eq, and, isNull } from 'drizzle-orm';
+import type { LeadScoreResult, DealProbabilityResult, ChurnRiskResult } from './crm-ai.types';
+export type { LeadScoreResult, DealProbabilityResult, ChurnRiskResult };
+
+@Injectable()
+export class CrmAiService {
+  private readonly logger = new Logger(CrmAiService.name);
+
+  constructor(private readonly ai: AiRouterService) {}
+
+  // ─── Lead Scoring ────────────────────────────────────────────────────────
+
+  async scoreLead(leadId: number, userId: number): Promise<Result<object, AppError>>{
+    return safeCall(async () => {
+      const [lead] = (await db
+        .select()
+        .from(crmLeads)
+        .where(and(eq(crmLeads.id, leadId), isNull(crmLeads.deleted_at)))
+        .limit(1)) as Array<Record<string, unknown>>;
+  
+      if (!lead) throw new InternalServerErrorException(`Lead #${leadId} topilmadi`);
+  
+      const prompt = `
+  EuroPrint CRM: Lead sifatini baholang.
+  
+  LEAD MA'LUMOTLARI:
+  Nomi: ${lead.title ?? lead.name ?? 'noma\'lum'}
+  Kompaniya: ${lead.companyTitle ?? 'ko\'rsatilmagan'}
+  Manba: ${lead.sourceId ?? 'noma\'lum'}
+  Status: ${lead.statusId ?? 'NEW'}
+  Izoh: ${lead.description ?? 'yo\'q'}
+  
+  EuroPrint bosma mahsulotlar va dizayn kompaniyasi.
+  B2B va B2C segmentlar.
+  
+  JSON formatda:
+  {
+    "score": <0-100>,
+    "grade": "HOT|WARM|COLD",
+    "reasoning": "...",
+    "suggestedActions": ["...", "..."],
+    "estimatedDealValue": <UZS yoki null>
+  }
+  `;
+  
+      const aiResult = await this.ai.call({
+        taskType: 'crm.lead_score',
+        prompt,
+        maxTokens: AI_SHORT_MAX_TOKENS,
+        temperature: 0.3,
+        userId,
+      });
+      if (isErr(aiResult)) {
+        this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+        return { score: 50, grade: 'WARM', reasoning: '', suggestedActions: [] };
+      }
+  
+      const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = safeJsonParse<LeadScoreResult>(jsonMatch[0]);
+        if (parsed) return parsed;
+      }
+  
+      return { score: 50, grade: 'WARM', reasoning: aiResult.data.text, suggestedActions: [] };
+    });
+  }
+
+  // ─── Deal Probability ────────────────────────────────────────────────────
+
+  async predictDealProbability(dealId: number, userId: number): Promise<DealProbabilityResult> {
+    const [deal] = (await db
+      .select()
+      .from(crmDeals)
+      .where(and(eq(crmDeals.id, dealId), isNull(crmDeals.deleted_at)))
+      .limit(1)) as Array<Record<string, unknown>>;
+
+    if (!deal) throw new InternalServerErrorException(`Deal #${dealId} topilmadi`);
+
+    const prompt = `
+EuroPrint CRM: Bitim yopilish ehtimolini bashorat qiling.
+
+BITIM:
+Nomi: ${deal.title}
+Qiymati: ${deal.amount ?? 0} UZS
+Status: ${deal.statusId ?? 'noma\'lum'}
+Bosqich: ${deal.stageId ?? 'noma\'lum'}
+Yopilish sanasi: ${deal.closeDate ?? 'belgilanmagan'}
+Izoh: ${deal.description ?? 'yo\'q'}
+
+EuroPrint bosma mahsulotlar kompaniyasi.
+
+JSON formatda:
+{
+  "probability": <0-100>,
+  "expectedCloseDate": "YYYY-MM-DD yoki null",
+  "riskFactors": ["...", "..."],
+  "successFactors": ["...", "..."],
+  "recommendation": "..."
+}
+`;
+
+    const aiResult = await this.ai.call({
+      taskType: 'crm.deal_probability',
+      prompt,
+      maxTokens: AI_SHORT_MAX_TOKENS,
+      temperature: 0.3,
+      userId,
+    });
+    if (isErr(aiResult)) {
+      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+      return { probability: 50, expectedCloseDate: '', riskFactors: [], successFactors: [], recommendation: '' };
+    }
+
+    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = safeJsonParse<DealProbabilityResult>(jsonMatch[0]);
+      if (parsed) return parsed;
+    }
+
+    return {
+      probability: 50,
+      expectedCloseDate: '',
+      riskFactors: [],
+      successFactors: [],
+      recommendation: aiResult.data.text,
+    };
+  }
+
+  // ─── Churn Risk ──────────────────────────────────────────────────────────
+
+  async assessChurnRisk(contactId: number, activityData: Record<string, unknown>, userId: number): Promise<ChurnRiskResult> {
+    const [contact] = (await db
+      .select()
+      .from(crmContacts)
+      .where(eq(crmContacts.id, contactId))
+      .limit(1)) as Array<Record<string, unknown>>;
+
+    const prompt = `
+EuroPrint CRM: Mijoz ketish xavfini baholang.
+
+MIJOZ: ${contact?.name ?? `ID:${contactId}`}
+KOMPANIYA: ${contact?.company ?? 'noma\'lum'}
+
+FAOLLIK MA'LUMOTLARI:
+${JSON.stringify(activityData, null, 2)}
+
+JSON formatda:
+{
+  "riskLevel": "HIGH|MEDIUM|LOW",
+  "riskScore": <0-100>,
+  "mainReasons": ["...", "..."],
+  "retentionActions": ["...", "...", "..."]
+}
+`;
+
+    const aiResult = await this.ai.call({
+      taskType: 'crm.churn_risk',
+      prompt,
+      maxTokens: AI_SHORT_MAX_TOKENS,
+      temperature: 0.3,
+      userId,
+    });
+    if (isErr(aiResult)) {
+      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+      return { riskLevel: 'MEDIUM', riskScore: 50, mainReasons: [], retentionActions: [] };
+    }
+
+    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = safeJsonParse<ChurnRiskResult>(jsonMatch[0]);
+      if (parsed) return parsed;
+    }
+
+    return { riskLevel: 'MEDIUM', riskScore: 50, mainReasons: [], retentionActions: [] };
+  }
+
+  // ─── Email Template ──────────────────────────────────────────────────────
+
+  async generateEmailTemplate(
+    purpose: 'FOLLOW_UP' | 'PROPOSAL' | 'RE_ENGAGE' | 'THANK_YOU',
+    contactName: string,
+    context: string,
+    userId: number,
+  ): Promise<{ subject: string; body: string }> {
+    this.logger.log(`crm ai: AI tahlil boshlanmoqda`);
+    const purposeMap = {
+      FOLLOW_UP: 'follow-up (kuzatuv xati)',
+      PROPOSAL: 'taklif-komerstsiya xati',
+      RE_ENGAGE: 'qayta aloqa o\'rnatish xati',
+      THANK_YOU: 'minnatdorlik xati',
+    };
+
+    const prompt = `
+EuroPrint kompaniyasi nomidan ${purposeMap[purpose]} yozing.
+
+QABUL QILUVCHI: ${contactName}
+KONTEKST: ${context}
+
+EuroPrint — bosma mahsulotlar, dizayn va brend yechimlar kompaniyasi.
+
+Xat O'zbek yoki Rus tilida bo'lishi mumkin (kontekstga qarab tanlang).
+Qisqa, professional, samimiy.
+
+JSON formatda:
+{
+  "subject": "...",
+  "body": "..."
+}
+`;
+
+    const aiResult = await this.ai.call({
+      taskType: 'crm.email_template',
+      prompt,
+      maxTokens: 600,
+      temperature: 0.7,
+      userId,
+    });
+    if (isErr(aiResult)) {
+      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+      return { subject: 'EuroPrint — Aloqa', body: '' };
+    }
+
+    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = safeJsonParse<{ subject: string; body: string }>(jsonMatch[0]);
+      if (parsed) return parsed;
+    }
+
+    return { subject: 'EuroPrint — Aloqa', body: aiResult.data.text };
+  }
+
+  // ─── Next Best Action ────────────────────────────────────────────────────
+
+  async nextBestAction(
+    dealId: number,
+    lastActivities: string[],
+    userId: number,
+  ): Promise<{ action: string; priority: 'HIGH' | 'MEDIUM' | 'LOW'; deadline: string; script?: string }> {
+    const [deal] = await db
+      .select({ title: crmDeals.title, amount: crmDeals.amount, stage_id: crmDeals.stage_id })
+      .from(crmDeals)
+      .where(eq(crmDeals.id, dealId))
+      .limit(1);
+
+    const prompt = `
+EuroPrint CRM: Keyingi eng yaxshi harakat nima?
+
+BITIM: ${deal?.title ?? `#${dealId}`}
+QIYMAT: ${deal?.amount ?? 0} UZS
+BOSQICH: ${deal?.stage_id ?? 'noma\'lum'}
+
+OXIRGI HARAKATLAR:
+${(Array.isArray(lastActivities) ? lastActivities : []).map((a, i) => `${i + 1}. ${a}`).join('\n')}
+
+JSON formatda:
+{
+  "action": "...",
+  "priority": "HIGH|MEDIUM|LOW",
+  "deadline": "bugun|ertaga|bu hafta|...",
+  "script": "optional telefon/xat skripti"
+}
+`;
+
+    const aiResult = await this.ai.call({
+      taskType: 'crm.next_best_action',
+      prompt,
+      maxTokens: AI_MAX_TOKENS_STANDARD,
+      temperature: 0.5,
+      userId,
+    });
+    if (isErr(aiResult)) {
+      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+      return { action: '', priority: 'MEDIUM', deadline: 'bu hafta' };
+    }
+
+    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = safeJsonParse<{ action: string; priority: 'HIGH' | 'MEDIUM' | 'LOW'; deadline: string; script?: string }>(jsonMatch[0]);
+      if (parsed) return parsed;
+    }
+
+    return { action: aiResult.data.text, priority: 'MEDIUM', deadline: 'bu hafta' };
+  }
+}

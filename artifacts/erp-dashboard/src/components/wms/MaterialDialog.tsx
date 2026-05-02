@@ -1,0 +1,213 @@
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
+export interface MaterialRecord {
+  id: string;
+  kod: string;
+  xomAshyo: string;
+  xomAshyoRu?: string | null;
+  category: string;
+  unitOfMeasure: string;
+  formatA?: string | null;
+  formatB?: string | null;
+  grammage?: string | null;
+  minStock?: string | null;
+  maxStock?: string | null;
+  materialType?: string | null;
+  abcSegment?: string | null;
+  shelfLifeDays?: number | null;
+  stockStatus?: string;
+  currentStock?: string | number;
+}
+
+interface MaterialFormData {
+  kod: string; xomAshyo: string; xomAshyoRu: string; category: string;
+  unitOfMeasure: string; formatA: string; formatB: string; grammage: string;
+  minStock: string; maxStock: string; materialType: string; abcSegment: string; shelfLifeDays: string;
+}
+
+const EMPTY_FORM: MaterialFormData = {
+  kod: "", xomAshyo: "", xomAshyoRu: "", category: "qogoz",
+  unitOfMeasure: "kg", formatA: "", formatB: "", grammage: "",
+  minStock: "", maxStock: "", materialType: "raw", abcSegment: "", shelfLifeDays: "",
+};
+
+function materialToForm(m: MaterialRecord): MaterialFormData {
+  return {
+    kod: m.kod || "", xomAshyo: m.xomAshyo || "", xomAshyoRu: m.xomAshyoRu || "",
+    category: m.category || "qogoz", unitOfMeasure: m.unitOfMeasure || "kg",
+    formatA: m.formatA || "", formatB: m.formatB || "", grammage: m.grammage || "",
+    minStock: m.minStock || "", maxStock: m.maxStock || "",
+    materialType: m.materialType || "raw", abcSegment: m.abcSegment || "",
+    shelfLifeDays: m.shelfLifeDays ? String(m.shelfLifeDays) : "",
+  };
+}
+
+export function MaterialDialog({ open, onClose, editMaterial }: {
+  open: boolean; onClose: () => void; editMaterial?: MaterialRecord | null;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const isEdit = !!editMaterial;
+  const [form, setForm] = useState<MaterialFormData>(editMaterial ? materialToForm(editMaterial) : EMPTY_FORM);
+
+  const set = (field: keyof MaterialFormData) => (e: ChangeEvent<HTMLInputElement>) =>
+    setForm(f => ({ ...f, [field]: e.target.value }));
+  const setVal = (field: keyof MaterialFormData) => (val: string) =>
+    setForm(f => ({ ...f, [field]: val }));
+
+  const createMutation = useMutation({
+    mutationFn: (data: MaterialFormData) => apiRequest("POST", "/api/inventory/materials", data),
+    onSuccess: (res) => {
+      if (res.error) { toast({ title: "Xatolik", description: res.error, variant: "destructive" }); return; }
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/materials"] });
+      toast({ title: "Material yaratildi" });
+      onClose();
+    },
+    onError: () => toast({ title: "Xatolik", description: "Server xatosi", variant: "destructive" }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: MaterialFormData) => apiRequest("PUT", `/api/inventory/materials/${editMaterial!.id}`, data),
+    onSuccess: (res) => {
+      if (res.error) { toast({ title: "Xatolik", description: res.error, variant: "destructive" }); return; }
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/materials"] });
+      toast({ title: "Material yangilandi" });
+      onClose();
+    },
+    onError: () => toast({ title: "Xatolik", description: "Server xatosi", variant: "destructive" }),
+  });
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.kod || !form.xomAshyo || !form.category || !form.unitOfMeasure) {
+      toast({ title: "Majburiy maydonlar to'ldirilmagan", variant: "destructive" });
+      return;
+    }
+    if (isEdit) updateMutation.mutate(form);
+    else createMutation.mutate(form);
+  };
+
+  const categories = ["qogoz", "karton", "boyoq", "plyonka", "kimyoviy", "ehtiyot", "tayyor", "boshqa"];
+  const units = ["kg", "ton", "litr", "dona", "m", "m²", "m³", "rol", "qop", "quti"];
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-material-crud">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Materialni tahrirlash" : "Yangi material yaratish"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="m-kod">Material kodi *</Label>
+              <Input id="m-kod" data-testid="input-material-kod" value={form.kod} onChange={set("kod")} placeholder="MAT-001" disabled={isEdit} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="m-type">Tur</Label>
+              <Select value={form.materialType} onValueChange={setVal("materialType")}>
+                <SelectTrigger data-testid="select-material-type"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="raw">Xom ashyo</SelectItem>
+                  <SelectItem value="semi">Yarim tayyor</SelectItem>
+                  <SelectItem value="finished">Tayyor mahsulot</SelectItem>
+                  <SelectItem value="consumable">Sarflanadigan</SelectItem>
+                  <SelectItem value="spare">Ehtiyot qism</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="m-name">Nomi (O'zbek) *</Label>
+            <Input id="m-name" data-testid="input-material-name" value={form.xomAshyo} onChange={set("xomAshyo")} placeholder="Material nomi" />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="m-name-ru">Nomi (Rus)</Label>
+            <Input id="m-name-ru" data-testid="input-material-name-ru" value={form.xomAshyoRu} onChange={set("xomAshyoRu")} placeholder="Название материала" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Kategoriya *</Label>
+              <Select value={form.category} onValueChange={setVal("category")}>
+                <SelectTrigger data-testid="select-material-category"><SelectValue /></SelectTrigger>
+                <SelectContent>{(Array.isArray(categories) ? categories : []).map(c => <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>O'lchov birligi *</Label>
+              <Select value={form.unitOfMeasure} onValueChange={setVal("unitOfMeasure")}>
+                <SelectTrigger data-testid="select-material-unit"><SelectValue /></SelectTrigger>
+                <SelectContent>{(Array.isArray(units) ? units : []).map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="m-abc">ABC segment</Label>
+              <Select value={form.abcSegment || "none"} onValueChange={v => setVal("abcSegment")(v === "none" ? "" : v)}>
+                <SelectTrigger data-testid="select-material-abc"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  <SelectItem value="A">A (Yuqori prioritet)</SelectItem>
+                  <SelectItem value="B">B (O'rta prioritet)</SelectItem>
+                  <SelectItem value="C">C (Past prioritet)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="m-shelf">Yaroqlilik (kun)</Label>
+              <Input id="m-shelf" data-testid="input-material-shelf-life" type="number" min="0" value={form.shelfLifeDays} onChange={set("shelfLifeDays")} placeholder="365" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="m-fmt-a">Format A (mm)</Label>
+              <Input id="m-fmt-a" data-testid="input-material-format-a" value={form.formatA} onChange={set("formatA")} placeholder="1000" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="m-fmt-b">Format B (mm)</Label>
+              <Input id="m-fmt-b" data-testid="input-material-format-b" value={form.formatB} onChange={set("formatB")} placeholder="700" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="m-grm">Gramm (g/m²)</Label>
+              <Input id="m-grm" data-testid="input-material-grammage" value={form.grammage} onChange={set("grammage")} placeholder="90" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="m-min">Min zaxira</Label>
+              <Input id="m-min" data-testid="input-material-min-stock" type="number" min="0" value={form.minStock} onChange={set("minStock")} placeholder="500" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="m-max">Max zaxira</Label>
+              <Input id="m-max" data-testid="input-material-max-stock" type="number" min="0" value={form.maxStock} onChange={set("maxStock")} placeholder="5000" />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending} data-testid="button-material-cancel">Bekor qilish</Button>
+            <Button type="submit" disabled={isPending} data-testid="button-material-save">
+              {isPending ? "Saqlanmoqda..." : isEdit ? "Saqlash" : "Yaratish"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1774895194656,
+      "tag": "0000_nice_kylun",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775644436368,
+      "tag": "0001_add_indexes_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1745575200000,
+      "tag": "0004_hr_tz2_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1745575800000,
+      "tag": "0005_lms_kanban_website_extended",
+      "breakpoints": true
+    }
+  ]
+}

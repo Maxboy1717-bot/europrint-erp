@@ -1,0 +1,228 @@
+import { TashkentTimeService } from '@common/time';
+const _time = new TashkentTimeService();
+import { Injectable, Logger } from '@nestjs/common';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
+import { castTo } from '@common/db-rows';
+import { db } from '@shared/db';
+import { eq, and, count, asc, sql, inArray } from 'drizzle-orm';
+import {
+  hr_documents, document_approval_steps,
+  offboarding_cases, offboarding_checklist_items,
+  payroll_advances, payroll_deductions,
+} from '@shared/db';
+import { employees } from '@shared/db';
+import { HrV2Events } from '../events/hr-v2-events';
+
+type Row = Record<string, unknown>;
+
+@Injectable()
+export class DocumentWorkflowProcessor {
+  private readonly logger = new Logger(DocumentWorkflowProcessor.name);
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
+
+  @OnEvent(HrV2Events.DOCUMENT_SUBMITTED)
+  async handleDocumentSubmitted(payload: {
+    documentId: number;
+    employeeId: number;
+    documentType: string;
+    title: string;
+  }) {
+    this.logger.log(`Processing document submission: #${payload.documentId} (${payload.documentType})`);
+    try {
+      const [{ stepCount }] = await db
+        .select({ stepCount: count() })
+        .from(document_approval_steps)
+        .where(eq(document_approval_steps.document_id, payload.documentId));
+
+      if (Number(stepCount) === 0) {
+        await db
+          .update(hr_documents)
+          .set({ status: 'approved', updated_at: _time.now() })
+          .where(eq(hr_documents.id, payload.documentId));
+        this.logger.log(`Document #${payload.documentId} auto-approved (no approval steps configured)`);
+      } else {
+        const [firstStep] = await db
+          .select({ id: document_approval_steps.id, approver_id: document_approval_steps.approver_id })
+          .from(document_approval_steps)
+          .where(eq(document_approval_steps.document_id, payload.documentId))
+          .orderBy(asc(document_approval_steps.step_number))
+          .limit(1);
+        if (firstStep) {
+          this.logger.log(`Document #${payload.documentId} awaiting approval from approver #${firstStep.approver_id}`);
+        }
+      }
+    } catch (err) {
+      this.logger.error(`Failed to process document #${payload.documentId}: ${err}`);
+    }
+  }
+
+  @OnEvent(HrV2Events.DOCUMENT_APPROVED)
+  async handleDocumentApproved(payload: { documentId: number }) {
+    this.logger.log(`Document #${payload.documentId} approved — checking remaining steps`);
+    try {
+      const [{ pendingCount }] = await db
+        .select({ pendingCount: count() })
+        .from(document_approval_steps)
+        .where(and(
+          eq(document_approval_steps.document_id, payload.documentId),
+          eq(document_approval_steps.status, 'pending'),
+        ));
+
+      if (Number(pendingCount) === 0) {
+        this.logger.log(`Document #${payload.documentId} all steps complete — triggering payroll hooks`);
+        await this.handlePayrollEvents(payload.documentId);
+      }
+    } catch (err) {
+      this.logger.error(`Approval processor error for #${payload.documentId}: ${err}`);
+    }
+  }
+
+  private async handlePayrollEvents(documentId: number) {
+    try {
+      const [doc] = await db
+        .select()
+        .from(hr_documents)
+        .where(and(eq(hr_documents.id, documentId), eq(hr_documents.status, 'approved')))
+        .limit(1);
+      if (!doc) return;
+      const employeeId = doc.employee_id;
+      if (employeeId == null) {
+        this.logger.warn(`Hujjat #${documentId} da employee_id yo'q — ish haqi hodisalari o'tkazib yuborildi`);
+        return;
+      }
+
+      const meta = doc.metadata
+        ? (typeof doc.metadata === 'string' ? JSON.parse(doc.metadata as string) : doc.metadata) as Row
+        : {} as Row;
+
+      if (doc.document_type === 'DISMISSAL_ORDER') {
+        const dismissalType = String(meta?.dismissalType ?? meta?.dismissal_type ?? 'termination');
+        const lastWorkingDay = (meta?.lastWorkingDay ?? meta?.last_working_day ?? null) as string | null;
+
+        const existingCases = await db
+          .select({ id: offboarding_cases.id })
+          .from(offboarding_cases)
+          .where(and(
+            eq(offboarding_cases.employee_id, employeeId),
+            eq(offboarding_cases.status, 'active'),
+          ))
+          .limit(1);
+
+        let caseId: number;
+
+        if (existingCases.length) {
+          caseId = existingCases[0].id;
+          this.logger.log(`Offboarding case already exists for employee #${doc.employee_id}: case #${caseId}`);
+        } else {
+          const [newCase] = await db
+            .insert(offboarding_cases)
+            .values({
+              employee_id: employeeId,
+              dismissal_type: dismissalType,
+              last_working_day: lastWorkingDay ?? undefined,
+              dismiss_order_doc_id: documentId,
+              status: 'active',
+              total_items: 8,
+              completed_items: 0,
+            })
+            .returning({ id: offboarding_cases.id });
+          caseId = newCase.id;
+
+          const defaultItems = [
+            { item_key: 'exit_interview',     label: "Chiqish suhbati o'tkazildi",                  order_num: 1 },
+            { item_key: 'work_handover',      label: 'Ish topshirish (voris xodimga)',               order_num: 2 },
+            { item_key: 'equipment_returned', label: 'Jihozlar qaytarildi (kompyuter, texnika)',     order_num: 3 },
+            { item_key: 'id_card_returned',   label: 'Korporativ ID karta qaytarildi',               order_num: 4 },
+            { item_key: 'erp_access_revoked', label: 'ERP va tizim kirishlari bloklandi',            order_num: 5 },
+            { item_key: 'nda_reviewed',       label: "NDA va maxfiylik shartnomasi ko'rib chiqildi", order_num: 6 },
+            { item_key: 'settlement_done',    label: "To'liq hisob-kitob amalga oshirildi",          order_num: 7 },
+            { item_key: 'final_document',     label: "Ishdan bo'shatish buyrug'i rasmiylashtirildi", order_num: 8 },
+          ];
+          for (const item of defaultItems) {
+            await db
+              .insert(offboarding_checklist_items)
+              .values({ case_id: caseId, item_key: item.item_key, label: item.label, done: false, order_num: item.order_num })
+              .onConflictDoNothing();
+          }
+
+          try {
+            await db
+              .update(employees)
+              .set({ status: 'offboarding' as 'terminated', updated_at: _time.now() })
+              .where(and(
+                sql`id = ${doc.employee_id}`,
+                eq(employees.status, 'active'),
+              ));
+          } catch (statusErr) {
+            this.logger.warn(`[DISMISSAL_ORDER] Could not set employee #${doc.employee_id} status to offboarding: ${statusErr instanceof Error ? statusErr.message : String(statusErr)}`);
+          }
+
+          this.eventEmitter.emit(HrV2Events.OFFBOARDING_STARTED, {
+            caseId, employeeId: doc.employee_id, documentId, dismissalType, lastWorkingDay,
+          });
+
+          this.logger.log(`Offboarding case #${caseId} created for employee #${doc.employee_id}`);
+        }
+      }
+
+      if (doc.document_type === 'ADVANCE_REQUEST') {
+        const amount = Number(meta?.amount ?? meta?.advance_amount ?? 0);
+        if (amount > 0) {
+          await db
+            .insert(payroll_advances)
+            .values({
+              employee_id: employeeId,
+              amount: String(amount),
+              request_date: _time.now().toISOString().split('T')[0],
+              status: 'approved',
+              document_id: documentId,
+              approved_at: _time.now(),
+            })
+            .onConflictDoNothing();
+          this.logger.log(`Payroll advance created for employee #${doc.employee_id}: ${amount} UZS`);
+        }
+      }
+
+      if (doc.document_type === 'DISCIPLINE_NOTICE') {
+        const fineAmount = Number(meta?.fine_amount ?? meta?.fineAmount ?? 0);
+        const finePercent = Number(meta?.fine_percent ?? meta?.finePercent ?? 0);
+        if (fineAmount > 0 || finePercent > 0) {
+          await db
+            .insert(payroll_deductions)
+            .values({
+              employee_id: employeeId,
+              deduction_type: 'DISCIPLINE_FINE',
+              amount: String(fineAmount),
+              fine_percent: String(finePercent),
+              reason: String(meta?.violation_name ?? 'Intizom buzilishi'),
+              document_id: documentId,
+              status: 'pending',
+              deduction_month: castTo<string>(sql`DATE_TRUNC('month', CURRENT_DATE)`),
+            })
+            .onConflictDoNothing();
+          this.logger.log(`Payroll deduction created for employee #${doc.employee_id}: fine=${fineAmount} UZS (${finePercent}%)`);
+        }
+      }
+
+    } catch (err) {
+      this.logger.error(`Payroll event handler error for document #${documentId}: ${err}`);
+    }
+  }
+
+  @OnEvent(HrV2Events.DOCUMENT_REJECTED)
+  async handleDocumentRejected(payload: { documentId: number; rejectionReason?: string }) {
+    this.logger.log(`Document #${payload.documentId} rejected: ${payload.rejectionReason}`);
+    try {
+      await db
+        .update(hr_documents)
+        .set({ status: 'rejected', updated_at: _time.now() })
+        .where(and(
+          eq(hr_documents.id, payload.documentId),
+          sql`${hr_documents.status} NOT IN ('approved', 'rejected')`,
+        ));
+    } catch (err) {
+      this.logger.error(`Rejection processor error for #${payload.documentId}: ${err}`);
+    }
+  }
+}

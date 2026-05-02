@@ -1,0 +1,25 @@
+════════════════════════════════════════════════════════════════════════════════
+BACKEND COVERAGE AUDIT HISOBOTI  (backend → frontend)
+Sana: 2026-04-28T15:25:22.356Z
+════════════════════════════════════════════════════════════════════════════════
+
+XULOSA:
+  Jami backend routlar               : 0
+  Frontendda qamrab olinganlar        : 0
+  Frontendda QAMLANMAGAN routlar      : 0  ← ASOSIY
+  Qamlanmagan modullar soni            : 0
+  Qamlov darajasi                     : 100.0%
+
+Frontend qamrov manbalari:
+  API chaqiruvlar (/api/... URL)       : 0
+  Sahifa routlari (*Routes.tsx)         : 0
+  Nav linklar (href/to/<Link)           : 0
+  Tab qiymatlari (<Tab value=)          : 0
+
+────────────────────────────────────────────────────────────────────────────────
+FRONTENDDA QAMLANMAGAN ROUTLAR (Modul bo'yicha guruhlanган):
+────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+BARCHA BACKEND ROUTLAR (Modul bo'yicha):
+────────────────────────────────────────────────────────────────────────────────

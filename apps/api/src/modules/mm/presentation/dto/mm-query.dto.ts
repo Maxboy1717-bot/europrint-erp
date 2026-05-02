@@ -1,0 +1,27 @@
+import { z } from 'zod';
+
+export const GetPurchaseOrdersDtoSchema = z.object({
+  status: z.enum([
+    'draft',
+    'pending',
+    'approved',
+    'partially_received',
+    'received',
+    'invoiced',
+    'paid',
+    'cancelled',
+  ]).optional(),
+  vendorId: z.string().uuid().optional(),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+});
+
+export type GetPurchaseOrdersDto = z.infer<typeof GetPurchaseOrdersDtoSchema>;
+
+export const GetVendorsDtoSchema = z.object({
+  isActive: z.boolean().optional(),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+});
+
+export type GetVendorsDto = z.infer<typeof GetVendorsDtoSchema>;

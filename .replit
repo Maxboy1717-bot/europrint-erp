@@ -1,0 +1,166 @@
+modules = ["nodejs-20", "python-3.11", "postgresql-16"]
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 8082
+externalPort = 4200
+
+[[ports]]
+localPort = 19721
+externalPort = 3001
+
+[[ports]]
+localPort = 19722
+externalPort = 3003
+
+[[ports]]
+localPort = 20806
+externalPort = 3000
+
+[[ports]]
+localPort = 20807
+externalPort = 3002
+
+[userenv]
+
+[userenv.shared]
+NEON_DATABASE_URL = "postgresql://neondb_owner:npg_Nq7S5FRhXBDk@ep-gentle-night-abiu1cup.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+ALLOWED_ORIGINS = "https://europrinterp.uz,https://www.europrinterp.uz"
+
+[userenv.development]
+
+[userenv.production]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "check-404-endpoints"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "check-500-endpoints"
+
+[[workflows.workflow]]
+name = "check-404-endpoints"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = """
+node -e \"
+      const http = require('http');
+      const ENDPOINTS = 'marketing/ab-tests marketing/competitors marketing/churn-risk marketing/budget?year=2026 marketing/calendar?month=4&year=2026 marketing/exhibitions marketing/pr marketing/settings warehouse/dashboard warehouse/orders-by-date/2026-04-25 pos/inventory/low-stock pos/inventory/monthly-report pos/inventory/movements?type=&limit=100 pos/sales/daily mm/purchase-orders finance-extended/income-expense/summary/ reports/weekly-summary/current-week lms/recent-activity/uz'.split(' ');
+      async function run() {
+        const pwd = process.env.ERP_ADMIN_PASSWORD;
+        if(!pwd){console.error('ERP_ADMIN_PASSWORD env var not set'); process.exit(2);}
+        const token = await new Promise((res) => {
+          const body = JSON.stringify({username:'admin',password:pwd});
+          const req = http.request({host:'localhost',port:8080,path:'/api/auth/login',method:'POST',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}}, r => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>res(JSON.parse(d).accessToken||'')); });
+          req.write(body); req.end();
+        });
+        let failed=0;
+        for (const ep of ENDPOINTS) {
+          const code = await new Promise((res) => {
+            http.request({host:'localhost',port:8080,path:'/api/'+ep,headers:{Authorization:'Bearer '+token}}, r => res(r.statusCode)).end();
+          });
+          const ok = code===200||code===201||code===304;
+          console.log((ok?'PASS':'FAIL')+' '+ep+' => '+code);
+          if(!ok) failed++;
+        }
+        console.log('=== RESULT: '+failed+' endpoints FAILED out of '+ENDPOINTS.length+' ===');
+        process.exit(failed>0?1:0);
+      }
+      run().catch(e=>{console.error(e);process.exit(1)});
+    \""""
+
+[[workflows.workflow]]
+name = "check-500-endpoints"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = """
+node -e \"
+        const http = require('http');
+        const GET_ENDPOINTS = 'director/dashboard director/summary director/ai-summary director/production director/hr strategic/tasks strategic/categories kaizen/suggestions mes/tasks mes/stats mes/shifts/current mes/maintenance-requests mes/gamification/leaderboard pp/work-centers design/orders qc/braks qc/braks/stats qc/supplier-quality qc/dashboard/stats qc/dashboard/flow qc/reclamations/stats employees hr/birthdays/today hr/birthdays/upcoming?days=7 hr/abc-analysis mentors certificates warehouses warehouse/materials warehouse-rental/summary material-cards mm/fleet/vehicles mm/fleet/fuel-logs gl/accounts reports/kpi-dashboard order-costing order-costing/top-profitable order-costing/top-loss payroll/periods camera-dashboard/safety-stats camera-dashboard/top-employees camera-dashboard/quality-stats camera-heatmap/employees erp/cameras/grouped-detections safety-violations iot/attendance/live crm/companies sales-orders sd/customers?limit=50 erp/team-analytics/departments production/stats crm/funnel crm/cohort qc/dpmo/proc-001 print/spoilage/job-001'.split(' ');
+        const SERIES26 = Array.from({length:26},(_,i)=>Math.floor(Math.random()*10+i));
+        const POST_ENDPOINTS = [
+          ['print/ink-coverage', {c:0.3,m:0.2,y:0.1,k:0.05,sheets:1000,sheetWidthMm:297,sheetHeightMm:420,paperType:'book'}],
+          ['print/imposition', {items:[{id:'a',width:100,height:150}],sheetWidth:700,sheetHeight:1000}],
+          ['crm/rfm/cluster', {points:[{customerId:'c1',rNorm:0.1,fNorm:0.2,mNorm:0.3},{customerId:'c2',rNorm:0.4,fNorm:0.5,mNorm:0.6},{customerId:'c3',rNorm:0.7,fNorm:0.8,mNorm:0.9},{customerId:'c4',rNorm:0.2,fNorm:0.3,mNorm:0.4},{customerId:'c5',rNorm:0.5,fNorm:0.6,mNorm:0.7},{customerId:'c6',rNorm:0.8,fNorm:0.9,mNorm:1.0}]}],
+          ['crm/churn/retrain', {samples:Array.from({length:10},(_,i)=>({features:[i*0.1,i*0.1,i*0.1,i*0.1,i*0.1,i*0.1,i*0.1],label:i%2}))}],
+          ['validate/stir', {stir:'123456789'}],
+          ['validate/luhn', {cardNumber:'4532015112830366'}],
+          ['forecast/mat-001/croston', {series:[1,0,2,0,3,1,0,2,0,1,3,0,2,1,0,3,2,0,1,2,0,3,1,0,2,1],horizon:4}],
+          ['forecast/mat-001/ensemble', {series:Array.from({length:26},(_,i)=>i+1),horizon:4,seasonLength:12}],
+        ];
+        function doReq(method, path, body, token) {
+          return new Promise((res) => {
+            const bStr = body ? JSON.stringify(body) : null;
+            const headers = {Authorization: 'Bearer '+token};
+            if(bStr){ headers['Content-Type']='application/json'; headers['Content-Length']=Buffer.byteLength(bStr); }
+            const r = http.request({host:'localhost',port:8080,path:'/api/'+path,method,headers}, resp => res(resp.statusCode));
+            if(bStr) r.write(bStr);
+            r.end();
+          });
+        }
+        async function run() {
+          const pwd = process.env.ERP_ADMIN_PASSWORD;
+          if(!pwd){console.error('ERP_ADMIN_PASSWORD env var not set'); process.exit(2);}
+          const token = await new Promise((res) => {
+            const body = JSON.stringify({username:'admin',password:pwd});
+            const req = http.request({host:'localhost',port:8080,path:'/api/auth/login',method:'POST',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}}, r => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>res(JSON.parse(d).accessToken||'')); });
+            req.write(body); req.end();
+          });
+          let failed=0;
+          for (const ep of GET_ENDPOINTS) {
+            const code = await doReq('GET', ep, null, token);
+            const ok = code===200||code===201||code===304;
+            console.log((ok?'PASS':'FAIL')+' GET '+ep+' => '+code);
+            if(!ok) failed++;
+          }
+          for (const [ep, body] of POST_ENDPOINTS) {
+            const code = await doReq('POST', ep, body, token);
+            const ok = code===200||code===201||code===304;
+            console.log((ok?'PASS':'FAIL')+' POST '+ep+' => '+code);
+            if(!ok) failed++;
+          }
+          console.log('=== RESULT: '+failed+' endpoints FAILED out of '+(GET_ENDPOINTS.length+POST_ENDPOINTS.length)+' ===');
+          process.exit(failed>0?1:0);
+        }
+        run().catch(e=>{console.error(e);process.exit(1)});
+      \""""
+
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+packages = ["comma", "undollar"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
+
+[deployment]
+deploymentTarget = "gce"

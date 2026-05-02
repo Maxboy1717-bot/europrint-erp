@@ -1,0 +1,118 @@
+import { TashkentTimeService } from '@common/time';
+const _time = new TashkentTimeService();
+import { Injectable } from '@nestjs/common';
+import { Err, Result, safeCall } from '@common/result';
+import { WeeklyPlanRepository } from './weekly-plan.repository';
+
+import { MS_PER_HOUR } from '@common/constants/app.constants';
+export const MANAGER_ROLES = ['director', 'super_admin', 'department_head', 'manager', 'admin'];
+
+export function getMondayOfWeek(dateStr?: string): string {
+  const d = dateStr ? new Date(dateStr) : _time.now();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().split('T')[0];
+}
+
+function isApprovalDeadlinePassed(weekStart: string): boolean {
+  const monday = new Date(weekStart + 'T00:00:00');
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  friday.setHours(18, 0, 0, 0);
+  const tashkentOffsetMs = 5 * MS_PER_HOUR;
+  return Date.now() > friday.getTime() - tashkentOffsetMs;
+}
+
+@Injectable()
+export class WeeklyPlanService {
+  constructor(private readonly repo: WeeklyPlanRepository) {}
+
+  async getStatsSummary(week?: string): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const weekStart = getMondayOfWeek(week);
+      const stats = await this.repo.getStatsSummary(weekStart);
+      return { weekStart, stats };
+    });
+  }
+
+  async getAll(user: { id: number; role: string }, week?: string, employeeId?: string): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const isManager = MANAGER_ROLES.includes(user.role);
+      const weekStart = getMondayOfWeek(week);
+      const empId = employeeId ? parseInt(employeeId, 10) : null;
+      let plans: Record<string, unknown>[];
+      if (isManager) {
+        const plansR = empId
+          ? await this.repo.getAllForManagerByEmployee(empId, weekStart)
+          : await this.repo.getAllForManager(weekStart);
+        plans = (plansR.ok ? plansR.data : []) as Record<string, unknown>[];
+      } else {
+        const plansR = await this.repo.getAllForEmployee(user.id, weekStart);
+        plans = (plansR.ok ? plansR.data : []) as Record<string, unknown>[];
+      }
+      return { plans, weekStart };
+    });
+  }
+
+  async create(user: { id: number; role: string }, body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const isManager = MANAGER_ROLES.includes(user.role);
+      let employeeId: number;
+      if (isManager && body['employee_id'] != null) {
+        employeeId = Number(body['employee_id']);
+      } else {
+        if (body['employee_id'] != null && Number(body['employee_id']) !== user.id) {
+          return Err('Boshqa xodim uchun reja topshira olmaysiz');
+        }
+        employeeId = user.id;
+      }
+      if (!employeeId || isNaN(employeeId)) return Err('employee_id talab qilinadi');
+      const gsdTarget = body['gsd_target'];
+      const top5Tasks = body['top5_tasks'];
+      if (!gsdTarget) return Err('gsd_target talab qilinadi');
+      if (!Array.isArray(top5Tasks) || top5Tasks.length === 0) return Err('top5_tasks array talab qilinadi');
+      const weekStart = getMondayOfWeek(String(body['week'] ?? ''));
+      const existing = await this.repo.findExisting(employeeId, weekStart);
+      if (!existing.ok) throw new Error(existing.error.message);
+      if (existing.data.length > 0) {
+        const existingId = existing.data[0]['id'];
+        const plan = await this.repo.updatePlan(existingId, gsdTarget, top5Tasks as Record<string, unknown>[], body);
+        return { plan, updated: true };
+      }
+      const plan = await this.repo.createPlan(employeeId, weekStart, gsdTarget, top5Tasks as Record<string, unknown>[], body);
+      return { plan, updated: false };
+    });
+  }
+
+  async getOne(id: string, user: { id: number; role: string }): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const planId = parseInt(id, 10);
+      if (isNaN(planId)) return Err("Noto'g'ri ID");
+      const plan = await this.repo.getOne(planId);
+      if (!plan) return Err('Reja topilmadi');
+      const isManager = MANAGER_ROLES.includes(user.role);
+      const planData = (plan.data ?? {}) as Record<string, unknown>;
+      if (!isManager && Number(planData['employee_id']) !== user.id) return Err("Ruxsat yo'q");
+      return { plan };
+    });
+  }
+
+  async approve(id: string, user: { id: number; role: string }): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const planId = parseInt(id, 10);
+      if (isNaN(planId)) return Err("Noto'g'ri ID");
+      const planR = await this.repo.getOne(planId);
+      if (!planR.ok) throw new Error(planR.error.message);
+      const plan = planR.data as Record<string, unknown> | null;
+      if (!plan) return Err('Reja topilmadi');
+      if (plan['status'] === 'approved') return Err('Reja allaqachon tasdiqlangan');
+      if (isApprovalDeadlinePassed(String(plan['week_start']))) {
+        return Err(`Haftalik reja tasdiqlash muddati (${plan['week_start']} haftasi uchun Juma 18:00) o'tib ketdi.`);
+      }
+      const updated = await this.repo.approve(planId, user.id);
+      return { plan: updated };
+    });
+  }
+}

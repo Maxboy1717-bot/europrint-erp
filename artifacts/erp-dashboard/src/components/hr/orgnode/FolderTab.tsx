@@ -1,0 +1,237 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { FolderOpen, Plus, Loader2, FileText, Video, ClipboardList, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { FolderItem } from "./types";
+
+interface FolderTabProps {
+  nodeId: string | number;
+}
+
+export function FolderTab({ nodeId }: FolderTabProps) {
+  const { toast } = useToast();
+  const [addFolderOpen, setAddFolderOpen] = useState(false);
+  const [folderForm, setFolderForm] = useState({
+    itemType: "document" as "document" | "video" | "test",
+    title: "",
+    url: "",
+    description: "",
+  });
+
+  const { data: folderItems = [], isLoading: folderLoading, refetch: refetchFolder } = useQuery<FolderItem[]>({
+    queryKey: [`/api/org-structure/nodes/${nodeId}/folder`],
+    enabled: !!nodeId,
+  });
+
+  const addFolderItemMutation = useMutation({
+    mutationFn: (dto: typeof folderForm) => apiRequest("POST", `/api/org-structure/nodes/${nodeId}/folder`, dto),
+    onSuccess: () => {
+      toast({ title: "Element qo'shildi" });
+      setAddFolderOpen(false);
+      setFolderForm({ itemType: "document", title: "", url: "", description: "" });
+      refetchFolder();
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const removeFolderItemMutation = useMutation({
+    mutationFn: (itemId: number) => apiRequest("DELETE", `/api/org-structure/nodes/${nodeId}/folder/${itemId}`),
+    onSuccess: () => {
+      toast({ title: "O'chirildi" });
+      refetchFolder();
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  if (folderLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-semibold text-sm flex items-center gap-2">
+            <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
+            Lavozim Papkasi
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Bu lavozimga biriktirilgan hujjatlar, videolar va testlar
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setAddFolderOpen(true)} data-testid="button-add-folder-item">
+          <Plus className="h-3.5 w-3.5 mr-1" />Qo'shish
+        </Button>
+      </div>
+
+      {folderItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
+          <div className="rounded-full bg-muted p-4">
+            <FolderOpen className="h-8 w-8" />
+          </div>
+          <div className="text-center">
+            <p className="font-medium text-foreground">Papka bo'sh</p>
+            <p className="text-sm mt-1">Bu lavozim uchun hujjat, video yoki test qo'shing</p>
+          </div>
+          <Button size="sm" onClick={() => setAddFolderOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" />Birinchi elementni qo'shish
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3">
+          {(["document", "video", "test"] as const).map((type) => {
+            const items = (folderItems as FolderItem[]).filter((i) => i.itemType === type);
+            if (items.length === 0) return null;
+            const typeConfig = {
+              document: { icon: <FileText className="h-4 w-4" />, label: "Hujjatlar", color: "#1d4ed8" },
+              video: { icon: <Video className="h-4 w-4" />, label: "Videolar", color: "#7c3aed" },
+              test: { icon: <ClipboardList className="h-4 w-4" />, label: "Testlar", color: "#16a34a" },
+            }[type];
+            return (
+              <div key={type}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div style={{ color: typeConfig.color }}>{typeConfig.icon}</div>
+                  <span className="text-sm font-medium" style={{ color: typeConfig.color }}>{typeConfig.label}</span>
+                  <Badge variant="secondary" className="text-xs">{items.length}</Badge>
+                </div>
+                <div className="space-y-2">
+                  {(Array.isArray(items) ? items : []).map((item) => (
+                    <Card key={item.id} data-testid={`folder-item-${item.id}`}>
+                      <CardContent className="py-3 px-4 flex items-center gap-3">
+                        <div
+                          className="rounded-lg p-2 shrink-0"
+                          style={{ background: `${typeConfig.color}18` }}
+                        >
+                          <div style={{ color: typeConfig.color }}>{typeConfig.icon}</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{item.title}</p>
+                          {item.description && (
+                            <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                          )}
+                          {item.url && (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline truncate block"
+                            >
+                              {item.url}
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-muted-foreground hidden sm:block">
+                            {new Date(item.createdAt).toLocaleDateString("uz-UZ")}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => removeFolderItemMutation.mutate(item.id)}
+                            disabled={removeFolderItemMutation.isPending}
+                            data-testid={`button-remove-folder-item-${item.id}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={addFolderOpen} onOpenChange={setAddFolderOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
+              Papkaga element qo'shish
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label>Tur</Label>
+              <Select
+                value={folderForm.itemType}
+                onValueChange={(v) => setFolderForm((f) => ({ ...f, itemType: v as "document" | "video" | "test" }))}
+              >
+                <SelectTrigger data-testid="select-folder-item-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="document">
+                    <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" />Hujjat</span>
+                  </SelectItem>
+                  <SelectItem value="video">
+                    <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5" />Video</span>
+                  </SelectItem>
+                  <SelectItem value="test">
+                    <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5" />Test / LMS kurs</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Nomi *</Label>
+              <Input
+                value={folderForm.title}
+                onChange={(e) => setFolderForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="Masalan: Texnika xavfsizligi bo'yicha yo'riqnoma"
+                data-testid="input-folder-item-title"
+              />
+            </div>
+            <div>
+              <Label>URL / Havola</Label>
+              <Input
+                value={folderForm.url}
+                onChange={(e) => setFolderForm((f) => ({ ...f, url: e.target.value }))}
+                placeholder="https://..."
+                data-testid="input-folder-item-url"
+              />
+            </div>
+            <div>
+              <Label>Tavsif</Label>
+              <Input
+                value={folderForm.description}
+                onChange={(e) => setFolderForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Qisqacha tavsif..."
+                data-testid="input-folder-item-description"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddFolderOpen(false)}>Bekor</Button>
+            <Button
+              onClick={() => addFolderItemMutation.mutate(folderForm)}
+              disabled={!folderForm.title || addFolderItemMutation.isPending}
+              data-testid="button-save-folder-item"
+            >
+              {addFolderItemMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

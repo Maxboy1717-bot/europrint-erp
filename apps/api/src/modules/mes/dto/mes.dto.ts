@@ -1,0 +1,133 @@
+import { z } from 'zod';
+import { MES_REASON_MAX_LENGTH, MES_TITLE_MAX_LENGTH, MES_SCORE_MAX } from '../constants/mes.constants';
+
+export const MesCreateProductionSessionSchema = z.object({
+  work_order_id:  z.number().int().positive().optional(),
+  machine_id:     z.number().int().positive().optional(),
+  operator_id:    z.number().int().positive().optional(),
+  product_id:     z.number().int().positive().optional(),
+  planned_qty:    z.number().positive().optional(),
+  shift:          z.enum(['morning', 'afternoon', 'night']).optional(),
+});
+export type MesCreateProductionSessionDto = z.infer<typeof MesCreateProductionSessionSchema>;
+
+export const MesAddSessionDowntimeSchema = z.object({
+  reason:      z.string().min(1).max(MES_REASON_MAX_LENGTH),
+  duration_min: z.number().int().min(1).optional(),
+});
+export type MesAddSessionDowntimeDto = z.infer<typeof MesAddSessionDowntimeSchema>;
+
+export const MesCreateWorkOrderSessionSchema = z.object({
+  work_order_id: z.number().int().positive().optional(),
+  machine_id:    z.number().int().positive().optional(),
+  operator_id:   z.number().int().positive().optional(),
+  planned_qty:   z.number().positive().optional(),
+  notes:         z.string().optional(),
+});
+export type MesCreateWorkOrderSessionDto = z.infer<typeof MesCreateWorkOrderSessionSchema>;
+
+export const MesStartSessionSchema = z.object({
+  actual_start:  z.string().optional(),
+  notes:         z.string().optional(),
+  workCenterId:  z.number().int().positive().optional(),
+  operatorId:    z.number().int().positive().optional(),
+});
+export type MesStartSessionDto = z.infer<typeof MesStartSessionSchema>;
+
+export const MesCompleteSessionSchema = z.object({
+  actual_qty:  z.number().int().min(0).optional(),
+  reject_qty:  z.number().int().min(0).optional(),
+  notes:       z.string().optional(),
+});
+export type MesCompleteSessionDto = z.infer<typeof MesCompleteSessionSchema>;
+
+export const MesAddDowntimeSchema = z.object({
+  reason:       z.string().min(1).max(MES_REASON_MAX_LENGTH),
+  duration_min: z.number().int().min(1).optional(),
+  category:     z.enum(['mechanical', 'electrical', 'material', 'operator', 'other']).optional(),
+});
+export type MesAddDowntimeDto = z.infer<typeof MesAddDowntimeSchema>;
+
+export const MesCreateMaintenanceRequestSchema = z.object({
+  title:          z.string().min(1).max(MES_TITLE_MAX_LENGTH),
+  description:    z.string().optional(),
+  work_center_id: z.number().int().positive().optional(),
+  priority:       z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+});
+export type MesCreateMaintenanceRequestDto = z.infer<typeof MesCreateMaintenanceRequestSchema>;
+
+export const MesUpdateMaintenanceRequestSchema = z.object({
+  status:      z.enum(['open', 'in_progress', 'completed', 'cancelled']).optional(),
+  assigned_to: z.number().int().positive().optional(),
+  notes:       z.string().optional(),
+  resolved_at: z.string().optional(),
+});
+export type MesUpdateMaintenanceRequestDto = z.infer<typeof MesUpdateMaintenanceRequestSchema>;
+
+export const MesUpdateTaskProgressSchema = z.object({
+  progress: z.number().int().min(0).max(MES_SCORE_MAX),
+  notes:    z.string().optional(),
+});
+export type MesUpdateTaskProgressDto = z.infer<typeof MesUpdateTaskProgressSchema>;
+
+export const MesShiftHandoverSchema = z.object({
+  outgoing_supervisor: z.number().int().positive(),
+  incoming_supervisor: z.number().int().positive(),
+  notes:               z.string().optional(),
+  issues:              z.string().optional(),
+});
+export type MesShiftHandoverDto = z.infer<typeof MesShiftHandoverSchema>;
+
+export const MesCloseShiftEvaluationSchema = z.object({
+  shift_id:          z.number().int().positive(),
+  supervisor_id:     z.number().int().positive().optional(),
+  production_score:  z.number().int().min(0).max(MES_SCORE_MAX).optional(),
+  quality_score:     z.number().int().min(0).max(MES_SCORE_MAX).optional(),
+  safety_score:      z.number().int().min(0).max(MES_SCORE_MAX).optional(),
+  notes:             z.string().optional(),
+});
+export type MesCloseShiftEvaluationDto = z.infer<typeof MesCloseShiftEvaluationSchema>;
+
+export const MesPauseSessionSchema = z.object({
+  reason: z.string().optional(),
+});
+export type MesPauseSessionDto = z.infer<typeof MesPauseSessionSchema>;
+
+export const MesCreateSosSchema = z.object({
+  reason:         z.string().min(1).max(MES_REASON_MAX_LENGTH),
+  session_id:     z.number().int().positive().optional(),
+  work_center_id: z.number().int().positive().optional(),
+});
+export type MesCreateSosDto = z.infer<typeof MesCreateSosSchema>;
+
+export const MesCreateDowntimeEventSchema = z.object({
+  session_id: z.number().int().positive(),
+  reason_id:  z.number().int().positive().optional(),
+  notes:      z.string().optional(),
+});
+export type MesCreateDowntimeEventDto = z.infer<typeof MesCreateDowntimeEventSchema>;
+
+export const MesRecordDowntimeSchema = MesAddDowntimeSchema;
+export type MesRecordDowntimeDto = MesAddDowntimeDto;
+
+export const MesCreateSessionSchema = z.object({
+  notes: z.string().optional(),
+});
+export type MesCreateSessionDto = z.infer<typeof MesCreateSessionSchema>;
+
+export const MesSessionDowntimeSchema = MesAddSessionDowntimeSchema;
+export type MesSessionDowntimeDto = MesAddSessionDowntimeDto;
+
+export const MesUpdateSessionQuantitySchema = z.object({
+  produced_qty: z.number().int().min(0),
+  rejected_qty: z.number().int().min(0).optional(),
+});
+export type MesUpdateSessionQuantityDto = z.infer<typeof MesUpdateSessionQuantitySchema>;
+
+export const MesMaterialConsumptionSchema = z.object({
+  session_id:   z.number().int().positive(),
+  material_id:  z.number().int().positive(),
+  quantity:     z.number().positive(),
+  batch_number: z.string().optional(),
+});
+export type MesMaterialConsumptionDto = z.infer<typeof MesMaterialConsumptionSchema>;

@@ -1,0 +1,16 @@
+{
+  "name": "@europrint/workspace",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @europrint/api run build",
+    "start": "pnpm --filter @europrint/api run start",
+    "build:erp": "pnpm --filter @workspace/erp-dashboard run build",
+    "build:site": "pnpm --filter @workspace/europrint-site run build",
+    "build:all": "pnpm run build && pnpm run build:erp && pnpm run build:site"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

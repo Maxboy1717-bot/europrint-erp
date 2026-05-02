@@ -1,0 +1,90 @@
+/**
+ * Butun ERP bo‘ylab bir xil “professional” vizual qatlam.
+ * Shell ichidagi asosiy maydon + kirish ekranlari.
+ */
+
+/* Asosiy kontent: sidebar tashqarida qoladi */
+[data-erp-shell="modern"] main.erp-main-canvas {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-erp-shell="modern"] main.erp-main-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 120% 90% at 100% 0%, hsl(var(--primary) / 0.09), transparent 52%),
+    radial-gradient(ellipse 100% 70% at 0% 100%, hsl(262 83% 58% / 0.07), transparent 48%),
+    linear-gradient(180deg, hsl(var(--muted) / 0.55) 0%, transparent 42%);
+}
+
+.dark [data-erp-shell="modern"] main.erp-main-canvas::before {
+  background:
+    radial-gradient(ellipse 100% 80% at 95% 0%, hsl(var(--primary) / 0.16), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 0% 100%, hsl(262 60% 55% / 0.12), transparent 45%),
+    linear-gradient(180deg, hsl(var(--background)) 0%, transparent 35%);
+}
+
+[data-erp-shell="modern"] main.erp-main-canvas > div {
+  position: relative;
+  z-index: 1;
+}
+
+/* Login / 404 fonlari */
+.erp-auth-root {
+  min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+  background: hsl(var(--background));
+}
+
+.erp-auth-root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 140% 100% at 0% 0%, hsl(var(--primary) / 0.12), transparent 55%),
+    radial-gradient(ellipse 100% 80% at 100% 100%, hsl(262 83% 58% / 0.1), transparent 50%),
+    linear-gradient(165deg, hsl(var(--muted) / 0.4) 0%, hsl(var(--background)) 45%);
+}
+
+.dark .erp-auth-root::before {
+  background:
+    radial-gradient(ellipse 120% 90% at 0% 0%, hsl(var(--primary) / 0.22), transparent 52%),
+    radial-gradient(ellipse 90% 70% at 100% 100%, hsl(262 55% 50% / 0.18), transparent 48%),
+    linear-gradient(165deg, hsl(222 47% 6%) 0%, hsl(var(--background)) 50%);
+}
+
+.erp-auth-root > * {
+  position: relative;
+  z-index: 1;
+}
+
+.erp-auth-hero-panel {
+  background: linear-gradient(
+    145deg,
+    #1a1a2e 0%,
+    #16213e 50%,
+    #0f3460 100%
+  );
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.erp-auth-hero-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
