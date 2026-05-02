@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Filter } from "lucide-react";
 import { ErrorState } from "@/components/ui/error-state";
+import { PageState } from "@/components/ui/page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DailyReport {
@@ -167,10 +168,6 @@ export default function ERPDailyReports() {
     if (percentage >= 80) return "text-yellow-600";
     return "text-red-600";
   };
-
-  if (isError) {
-    return <ErrorState onRetry={refetch} />;
-  }
 
   return (
     <div className="p-6 space-y-6" data-testid="page-daily-reports">
@@ -457,11 +454,20 @@ export default function ERPDailyReports() {
           <CardTitle>Hisobotlar ro'yxati ({reports.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Yuklanmoqda...</div>
-          ) : reports.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Hisobotlar topilmadi</div>
-          ) : (
+          <PageState
+            isLoading={isLoading}
+            isError={isError}
+            isEmpty={reports.length === 0}
+            onRetry={refetch}
+            skeleton="table"
+            skeletonRows={5}
+            skeletonColumns={9}
+            errorTitle="Hisobotlar yuklanmadi"
+            errorMessage="Server bilan bog'lanishda xatolik. Qayta urinib ko'ring."
+            emptyIcon={Filter}
+            emptyTitle="Hisobotlar topilmadi"
+            emptyDescription="Filtrni o'zgartiring yoki yangi hisobot qo'shing."
+          >
             <Table>
               <TableHeader>
                 <TableRow>
@@ -522,7 +528,7 @@ export default function ERPDailyReports() {
                 })}
               </TableBody>
             </Table>
-          )}
+          </PageState>
         </CardContent>
       </Card>
       <ConfirmDialog
