@@ -4,13 +4,35 @@
   "private": true,
   "scripts": {
     "build": "pnpm --filter @europrint/api run build",
-    "start": "pnpm --filter @europrint/api run start",
     "build:erp": "pnpm --filter @workspace/erp-dashboard run build",
     "build:site": "pnpm --filter @workspace/europrint-site run build",
-    "build:all": "pnpm run build && pnpm run build:erp && pnpm run build:site"
+    "build:all": "pnpm run build && pnpm run build:erp && pnpm run build:site",
+    "start": "pnpm --filter @europrint/api run start",
+    "dev:api": "pnpm --filter @europrint/api run dev:unsafe",
+    "dev:erp": "pnpm --filter @workspace/erp-dashboard run dev",
+    "typecheck": "pnpm --filter @europrint/api exec tsc --noEmit && pnpm --filter @workspace/erp-dashboard run typecheck",
+    "typecheck:api": "pnpm --filter @europrint/api exec tsc --noEmit",
+    "typecheck:erp": "pnpm --filter @workspace/erp-dashboard run typecheck",
+    "lint": "pnpm --filter @europrint/api exec eslint src/ --ext .ts --max-warnings 100",
+    "lint:fix": "pnpm --filter @europrint/api exec eslint src/ --ext .ts --fix",
+    "test": "pnpm --filter @europrint/api run test && pnpm --filter @workspace/erp-dashboard run test",
+    "test:api": "pnpm --filter @europrint/api run test",
+    "test:erp": "pnpm --filter @workspace/erp-dashboard run test",
+    "test:coverage": "pnpm --filter @europrint/api run test:cov && pnpm --filter @workspace/erp-dashboard run test:coverage",
+    "audit:full": "bash scripts/full-audit.sh",
+    "audit:pages": "bash page-audit.sh",
+    "audit:deep": "bash replit-deep-audit.sh",
+    "db:migrate": "pnpm --filter @europrint/api run migrate",
+    "db:fix": "psql \"$DATABASE_URL\" -f fix-replit.sql && psql \"$DATABASE_URL\" -f fix-schema-FINAL5.sql",
+    "ci:check": "pnpm run typecheck && pnpm run lint && pnpm run test",
+    "prepare": "husky install"
   },
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
   }
 }
