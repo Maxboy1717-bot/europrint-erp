@@ -1,0 +1,24 @@
+# Conventional Commits formatini majburlaydi (Husky v9)
+# Misol: feat(hr): add onboarding wizard
+#        fix(api): handle null response in CRM companies
+#        chore: update deps
+
+commit_regex='^(feat|fix|docs|chore|style|refactor|perf|test|build|ci|revert)(\([a-z0-9_-]+\))?!?: .{1,100}$'
+error_msg="Commit xabari noto'g'ri formatda.
+
+To'g'ri format:
+  <type>(<scope>): <description>
+
+Type: feat, fix, docs, chore, style, refactor, perf, test, build, ci, revert
+Scope (ixtiyoriy): hr, crm, api, ui, db, ...
+
+Misol:
+  feat(hr): onboarding sahifasi qo'shildi
+  fix(api): CRM companies'da null tekshiruv
+  chore: lint sozlamalari yangilandi
+"
+
+if ! grep -qE "$commit_regex" "$1"; then
+    echo "$error_msg" >&2
+    exit 1
+fi

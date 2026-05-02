@@ -1,0 +1,24 @@
+# EuroPrint ERP — Code ownership
+# Har bir PR avtomatik ravishda tegishli egaga review uchun yuboriladi.
+# Format: <path>  <@user-or-team>
+
+# Default — barcha fayllar
+*                                       @Maxboy1717-bot
+
+# Backend (NestJS API)
+/apps/api/                              @Maxboy1717-bot
+
+# Frontend (ERP Dashboard)
+/artifacts/erp-dashboard/               @Maxboy1717-bot
+
+# Database migratsiyalar — qo'shimcha ehtiyotkorlik
+/apps/api/src/db/                       @Maxboy1717-bot
+/lib/db/                                @Maxboy1717-bot
+*.sql                                   @Maxboy1717-bot
+
+# CI/CD va sozlamalar
+/.github/                               @Maxboy1717-bot
+/scripts/                               @Maxboy1717-bot
+package.json                            @Maxboy1717-bot
+pnpm-lock.yaml                          @Maxboy1717-bot
+tsconfig*.json                          @Maxboy1717-bot
