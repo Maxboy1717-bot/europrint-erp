@@ -1,11 +1,3 @@
 {
-  "apps/api/**/*.ts": [
-    "pnpm --filter @europrint/api exec eslint --fix --max-warnings 0"
-  ],
-  "artifacts/erp-dashboard/**/*.{ts,tsx}": [
-    "pnpm --filter @workspace/erp-dashboard exec eslint --fix --max-warnings 50"
-  ],
-  "*.{json,md,yml,yaml}": [
-    "prettier --write"
-  ]
+  "_comment": "ESLint/Prettier hozircha o'rnatilmagan. Faza 4'da qo'shamiz, hozircha hooklar passive."
 }

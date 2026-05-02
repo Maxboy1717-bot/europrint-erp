@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { PageState } from "@/components/ui/page-state";
 import { useToast } from "@/hooks/use-toast";
 import { FileCheck, Search, CheckCircle, Clock, Eye } from "lucide-react";
 
@@ -48,7 +49,7 @@ export default function SDContracts() {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data: contracts = [], isLoading } = useQuery<ContractItem[]>({
+  const { data: contracts = [], isLoading, isError, refetch } = useQuery<ContractItem[]>({
     queryKey: ["/api/sd/contracts", search, statusFilter],
     queryFn: async () => {
       const p = new URLSearchParams();
@@ -128,15 +129,20 @@ export default function SDContracts() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Yuklanmoqda...</div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground bg-surface-container-lowest rounded-xl">
-          <FileCheck className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Shartnomalar topilmadi</p>
-          <p className="text-sm">Taklifnoma tasdiqlanganida avtomatik yaratiladi</p>
-        </div>
-      ) : (
+      <PageState
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={filtered.length === 0}
+        onRetry={refetch}
+        skeleton="table"
+        skeletonRows={6}
+        skeletonColumns={5}
+        errorTitle="Shartnomalar yuklanmadi"
+        errorMessage="Server bilan bog'lanishda xatolik. Qayta urinib ko'ring."
+        emptyIcon={FileCheck}
+        emptyTitle="Shartnomalar topilmadi"
+        emptyDescription="Taklifnoma tasdiqlanganida avtomatik yaratiladi."
+      >
         <div className="bg-surface-container-lowest rounded-xl overflow-hidden border-none">
           <table className="w-full text-left">
             <thead>
@@ -204,7 +210,7 @@ export default function SDContracts() {
             </tbody>
           </table>
         </div>
-      )}
+      </PageState>
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent>

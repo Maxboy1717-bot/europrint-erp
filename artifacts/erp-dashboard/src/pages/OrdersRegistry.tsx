@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/ui/page-state";
 import { FileText, Plus, RefreshCw, Search, Eye, ChevronDown } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -231,7 +232,7 @@ export default function OrdersRegistry() {
   if (filterYear) queryParams.year = filterYear;
   if (search) queryParams.search = search;
 
-  const { data, isLoading, refetch } = useQuery<{ entries: OrdersRegistryEntry[]; total: number }>({
+  const { data, isLoading, isError, refetch } = useQuery<{ entries: OrdersRegistryEntry[]; total: number }>({
     queryKey: ["/api/orders-registry", Object.keys(queryParams).length > 0 ? queryParams : {}],
   });
 
@@ -355,16 +356,20 @@ export default function OrdersRegistry() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-10 w-full" />)}
-            </div>
-          ) : entries.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Buyruqlar topilmadi</p>
-            </div>
-          ) : (
+          <PageState
+            isLoading={isLoading}
+            isError={isError}
+            isEmpty={entries.length === 0}
+            onRetry={() => refetch()}
+            skeleton="table"
+            skeletonRows={5}
+            skeletonColumns={6}
+            errorTitle="Buyruqlar yuklanmadi"
+            errorMessage="Server bilan bog'lanishda xatolik. Qayta urinib ko'ring."
+            emptyIcon={FileText}
+            emptyTitle="Buyruqlar topilmadi"
+            emptyDescription="Yangi buyruq qo'shish uchun yuqoridagi 'Qo'shish' tugmasini bosing."
+          >
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -410,7 +415,7 @@ export default function OrdersRegistry() {
                 </TableBody>
               </Table>
             </div>
-          )}
+          </PageState>
         </CardContent>
       </Card>
 
