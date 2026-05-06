@@ -49,10 +49,10 @@ export function CustomersTab() {
       setForm({ name: "", stir: "", actualAddress: "", legalAddress: "", segment: "new", notes: "" });
       toast({ title: "Mijoz qo'shildi" });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message || "Mijoz qo'shib bo'lmadi", variant: "destructive" }),
   });
 
-  const customers = data?.data || [];
+  const customers: SdCustomer[] = Array.isArray(data) ? data : (data?.data || []);
 
   return (
     <div className="flex gap-4 h-[calc(100vh-200px)]">

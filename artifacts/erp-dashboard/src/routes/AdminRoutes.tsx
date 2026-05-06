@@ -30,6 +30,7 @@ const ProgressPage = lazy(() => import("@/pages/ProgressPage"));
 const EmployeesForFacePage = lazy(() => import("@/pages/EmployeesForFacePage"));
 const PosStockPage = lazy(() => import("@/pages/PosStockPage"));
 const PosSyncPage = lazy(() => import("@/pages/PosSyncPage"));
+const PosWarehousePage = lazy(() => import("@/pages/PosWarehousePage"));
 
 export const ADMIN_ROUTES: [string, React.ComponentType][] = [
   ['/settings',                Settings],
@@ -93,5 +94,7 @@ export const ARCHITECTURE_GAP_ROUTES: [string, React.ComponentType][] = [
   ['/dashboard/progress', ProgressPage],
   ['/hr/face-employees',  EmployeesForFacePage],
   ['/pos/stock',          PosStockPage],
+  ['/pos/warehouse',      PosWarehousePage],
+  ['/pos/wh',             PosWarehousePage],
   ['/pos/sync',           PosSyncPage],
 ];

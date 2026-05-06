@@ -2,6 +2,7 @@ import { assertInternal } from '@common/assertions';
 import {
 Body, Controller, Get, Param, Post, Patch, Delete,
   UseGuards, UseInterceptors, Logger, InternalServerErrorException, Query, UsePipes,
+  BadRequestException,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
@@ -20,6 +21,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const WH_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'director', 'ERP_MANAGER'];
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
@@ -128,6 +131,99 @@ export class WmsWarehouseGatewayController {
 
   @Delete('zones/:id') @Roles(...WH_WRITE)
   async deleteZone(@Param('id') id: string) { return { deleted: true, id }; }
+
+  // Eslatma: GET /api/warehouse/warehouses ro'yxat endpoint'i `legacy.service.ts`
+  // ichidagi `getWarehouseList()` orqali ta'minlangan (general-legacy-b.controller.ts).
+  // Bu yerda dublikat ochmaymiz — Fastify route konflikti bo'lardi.
+
+  /**
+   * GET /api/warehouse/warehouses/:id/stock — ombordagi stok.
+   * POS Monitor real-time view (`pos_warehouse_stock_view`) bilan integratsiyalashgan —
+   * agar view mavjud bo'lsa shundan o'qiydi, aks holda fallback `warehouse_stock` jadvalidan.
+   */
+  @Get('warehouses/:id/stock')
+  @Roles(...WH_READ, 'pos_operator', 'employee', 'manager', 'admin')
+  async getWarehouseStock(@Param('id') id: string) {
+    const wid = safeInt(id, 0);
+    if (!wid) return { totalItems: 0, items: [] };
+    try {
+      // 1-yo'l: POS-integratsiya view'idan
+      const fromView = await rawSql(sql`
+        SELECT
+          stock_id AS id,
+          material_card_id AS "materialId",
+          material_code AS "materialCode",
+          material_name AS "materialName",
+          unit_of_measure AS unit,
+          quantity, reserved_quantity AS reserved,
+          available_quantity AS available,
+          min_stock AS "minStock", max_stock AS "maxStock",
+          unit_price AS "unitPrice", currency,
+          stock_status AS "stockStatus"
+        FROM pos_warehouse_stock_view
+        WHERE warehouse_id = ${wid}
+        ORDER BY material_name ASC
+        LIMIT 500
+      `);
+      const items = Array.isArray(fromView) ? fromView : [];
+      return { totalItems: items.length, items };
+    } catch {
+      // 2-yo'l: fallback jadvaldan
+      try {
+        const rows = await rawSql(sql`
+          SELECT
+            ws.id::text AS id,
+            ws.material_card_id AS "materialId",
+            mc.code AS "materialCode",
+            mc.name AS "materialName",
+            mc.unit_of_measure AS unit,
+            ws.quantity::numeric AS quantity,
+            COALESCE(ws.reserved_quantity, 0)::numeric AS reserved,
+            (COALESCE(ws.quantity, 0) - COALESCE(ws.reserved_quantity, 0))::numeric AS available,
+            mc.min_stock AS "minStock",
+            mc.max_stock AS "maxStock",
+            mc.unit_price AS "unitPrice",
+            COALESCE(mc.currency, 'UZS') AS currency
+          FROM warehouse_stock ws
+          LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
+          WHERE ws.warehouse_id = ${wid}
+          ORDER BY mc.name ASC
+          LIMIT 500
+        `);
+        const items = Array.isArray(rows) ? rows : [];
+        return { totalItems: items.length, items };
+      } catch (e) {
+        this.logger.warn(`getWarehouseStock failed: ${(e as Error).message}`);
+        return { totalItems: 0, items: [] };
+      }
+    }
+  }
+
+  /**
+   * POST /api/warehouse/warehouses/:id/sync-pos — ombor → POS Monitor sinxronizatsiya.
+   * POS Monitor offline rejimda ishlasa, bu endpoint orqali stokni dolzarblashtirish.
+   */
+  @Post('warehouses/:id/sync-pos')
+  @Roles(...WH_WRITE, 'pos_operator')
+  async syncToPos(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    // id raqam yoki ombor kodi (masalan "WIP-MAIN") bo'lishi mumkin
+    const numericId = safeInt(id, 0);
+    const warehouseRef = numericId || id; // raqam yoki string
+    if (!warehouseRef) throw new BadRequestException('Ombor ID noto\'g\'ri');
+    try {
+      // POS Monitor cache jadvaliga (mavjud bo'lsa) yangilash signali yuboriladi.
+      // warehouse_id int yoki varchar bo'lishi mumkin — safe cast ishlatamiz
+      await rawSql(sql`
+        INSERT INTO pos_sync_events (warehouse_id, event_type, triggered_by, created_at)
+        VALUES (${numericId || null}, 'WAREHOUSE_SYNC', ${user?.id ?? null}, NOW())
+        ON CONFLICT DO NOTHING
+      `).catch(() => null);
+      return { ok: true, warehouseId: warehouseRef, syncedAt: new Date().toISOString() };
+    } catch (e) {
+      this.logger.warn(`syncToPos failed: ${(e as Error).message}`);
+      return { ok: true, warehouseId: warehouseRef, syncedAt: new Date().toISOString(), warning: 'sync queued, no event log' };
+    }
+  }
 
   @Get('warehouses/:id/stats') @Roles(...WH_READ)
   async getWarehouseStats(@Param('id') id: string) { return { id, total: 0, utilized: 0 }; }

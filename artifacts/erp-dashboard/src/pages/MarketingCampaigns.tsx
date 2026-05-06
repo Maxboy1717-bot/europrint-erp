@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,7 +114,7 @@ export default function MarketingCampaigns() {
   const [expandedStats, setExpandedStats] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", description: "", type: "social", platform: "telegram", status: "draft", budget: "", startDate: "", endDate: "" });
 
-  const { data: campaigns, isLoading, isError, refetch } = useQuery<MarketingCampaign[]>({ queryKey: ["/api/marketing/campaigns"] });
+  const { data: campaigns = [], isLoading, isError, refetch } = useQuery<MarketingCampaign[]>({ queryKey: ["/api/marketing/campaigns"], select: selectArray<MarketingCampaign> });
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/marketing/campaigns", data),

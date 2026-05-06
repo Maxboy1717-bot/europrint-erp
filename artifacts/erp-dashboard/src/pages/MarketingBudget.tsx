@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,9 @@ export default function MarketingBudget() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ category: "advertising", name: "", year: String(now.getFullYear()), month: "", plannedAmount: "", actualAmount: "", notes: "" });
 
-  const { data: items, isLoading, isError, refetch} = useQuery<MarketingBudgetItem[]>({
+  const { data: items = [], isLoading, isError, refetch} = useQuery<MarketingBudgetItem[]>({
     queryKey: ["/api/marketing/budget", { year }],
+    select: selectArray<MarketingBudgetItem>,
   });
 
   const createMutation = useMutation({

@@ -139,17 +139,36 @@ export async function apiRequest<T = any>(
   data?: unknown | undefined,
 ): Promise<T> {
   const isFormData = data instanceof FormData;
-  const headers: Record<string, string> = {
+  const buildHeaders = (): Record<string, string> => ({
     ...getAuthHeaders(),
     ...(!isFormData && data ? { "Content-Type": "application/json" } : {}),
-  };
+  });
+  const buildBody = () =>
+    isFormData ? (data as FormData) : data ? JSON.stringify(data) : undefined;
 
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     method,
-    headers,
-    body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+    headers: buildHeaders(),
+    body: buildBody(),
     credentials: "include",
   });
+
+  // 401 → bir martalik refresh urinib ko'r va so'rovni qaytar
+  if (res.status === 401) {
+    const refreshed = await refreshTokenOnce();
+    if (refreshed) {
+      res = await fetch(url, {
+        method,
+        headers: buildHeaders(),
+        body: buildBody(),
+        credentials: "include",
+      });
+    }
+    if (res.status === 401) {
+      scheduleLoginRedirect();
+      throw new AuthError(401, "Autentifikatsiya kerak");
+    }
+  }
 
   await throwIfResNotOk(res);
 
@@ -158,8 +177,13 @@ export async function apiRequest<T = any>(
     return undefined as unknown as T;
   }
   const json = await res.json();
-  // Result<T> himoyasi: backend { isSuccess, isFailure, value, error } qaytarsa
-  // avtomatik unwrap qilamiz. ResultUnwrapInterceptor ishlamagan holatda backup.
+
+  // ─── UNIVERSAL UNWRAPPER ───────────────────────────────────────────────
+  // Backend turli format'larda javob qaytarishi mumkin. Bularni avtomatik
+  // unwrap qilib, frontend componentlariga toza data beramiz.
+  // Shunda har joyda `Array.isArray(data) ? data : []` yozish shart bo'lmaydi.
+
+  // Format 1: { isSuccess, value, error } — Eski Result wrapper
   if (
     json !== null &&
     typeof json === 'object' &&
@@ -171,6 +195,47 @@ export async function apiRequest<T = any>(
     }
     throw new HttpError(500, String((json as Record<string, unknown>).error ?? 'Server xatosi'));
   }
+
+  // Format 2: { ok: true, data: T } — NestJS Result wrapper
+  // Bu eng keng tarqalgan format — service'da `safeCall` ortiqcha ishlatilgan double-wrap.
+  if (
+    json !== null &&
+    typeof json === 'object' &&
+    'ok' in json &&
+    typeof (json as Record<string, unknown>).ok === 'boolean'
+  ) {
+    const wrapped = json as { ok: boolean; data?: unknown; error?: unknown };
+    if (wrapped.ok === true) {
+      // Recursive unwrap — agar ichida yana Result bo'lsa
+      const inner = wrapped.data;
+      if (
+        inner !== null &&
+        typeof inner === 'object' &&
+        'ok' in inner &&
+        typeof (inner as Record<string, unknown>).ok === 'boolean'
+      ) {
+        const innerWrapped = inner as { ok: boolean; data?: unknown };
+        if (innerWrapped.ok === true) return innerWrapped.data as T;
+      }
+      return inner as T;
+    }
+    const errMsg = typeof wrapped.error === 'object' && wrapped.error !== null
+      ? String((wrapped.error as Record<string, unknown>).message ?? 'Server xatosi')
+      : String(wrapped.error ?? 'Server xatosi');
+    throw new HttpError(500, errMsg);
+  }
+
+  // Format 3: { success: false, error: ... } — Boshqa xato format
+  if (
+    json !== null &&
+    typeof json === 'object' &&
+    'success' in json &&
+    (json as Record<string, unknown>).success === false
+  ) {
+    throw new HttpError(500, String((json as Record<string, unknown>).error ?? 'Server xatosi'));
+  }
+
+  // Format 4: Plain data (array yoki object) — to'g'ri
   return json as T;
 }
 
@@ -224,7 +289,7 @@ export function getQueryFn<T>(options: {
     if (res.status === 401 || res.status === 403) {
       if (unauthorizedBehavior === "returnNull") {
         scheduleLoginRedirect();
-        return undefined as unknown as T;
+        return null as unknown as T;
       }
       scheduleLoginRedirect();
       throw new AuthError(res.status, res.status === 403 ? "Ruxsat yo'q" : "Autentifikatsiya kerak");
@@ -232,17 +297,41 @@ export function getQueryFn<T>(options: {
 
     await throwIfResNotOk(res);
     const json = await res.json();
-    if (json === null) return undefined as unknown as T;
-    if (json && typeof json === "object" && !Array.isArray(json)) {
-      const obj = json as Record<string, unknown>;
-      if (obj.ok === true && "data" in obj) {
-        return obj.data as T;
-      }
-      if ("data" in obj && Array.isArray(obj.data)) {
-        return obj.data as T;
-      }
+    if (json === null) return null as unknown as T;
+
+    // Recursive unwrap: backend service'larida `safeCall` double-wrap qilgan bo'lsa
+    // {ok: true, data: {ok: true, data: [...]}} → [...]
+    let unwrapped: unknown = json;
+    let depth = 0;
+    while (
+      depth < 5 &&
+      unwrapped !== null &&
+      typeof unwrapped === 'object' &&
+      !Array.isArray(unwrapped) &&
+      'ok' in unwrapped &&
+      (unwrapped as Record<string, unknown>).ok === true &&
+      'data' in unwrapped
+    ) {
+      unwrapped = (unwrapped as Record<string, unknown>).data;
+      depth++;
     }
-    return json as T;
+
+    // Agar ok: false bo'lsa — xato
+    if (
+      unwrapped !== null &&
+      typeof unwrapped === 'object' &&
+      !Array.isArray(unwrapped) &&
+      'ok' in unwrapped &&
+      (unwrapped as Record<string, unknown>).ok === false
+    ) {
+      const err = (unwrapped as Record<string, unknown>).error;
+      const msg = typeof err === 'object' && err !== null
+        ? String((err as Record<string, unknown>).message ?? 'Server xatosi')
+        : String(err ?? 'Server xatosi');
+      throw new HttpError(500, msg);
+    }
+
+    return unwrapped as T;
   };
 }
 

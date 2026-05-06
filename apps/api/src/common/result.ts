@@ -80,6 +80,25 @@ export type PaginatedResult<T> = {
   limit?: number;
 };
 
+/**
+ * NestJS HttpException turlarini AppErrorCode'ga map qiladi.
+ * Shu sababli `safeCall` ichida throw qilingan `BadRequestException`/`NotFoundException`
+ * va h.k. — to'g'ri HTTP status (400, 404) bilan qaytariladi (500 emas).
+ */
+function mapHttpExceptionToCode(err: unknown): AppErrorCode | null {
+  if (!err || typeof err !== 'object') return null;
+  const name = (err as { constructor?: { name?: string } }).constructor?.name;
+  switch (name) {
+    case 'BadRequestException':       return 'BAD_REQUEST';
+    case 'NotFoundException':         return 'NOT_FOUND';
+    case 'ConflictException':         return 'CONFLICT';
+    case 'UnauthorizedException':     return 'UNAUTHORIZED';
+    case 'ForbiddenException':        return 'FORBIDDEN';
+    case 'UnprocessableEntityException': return 'BUSINESS_RULE_VIOLATION';
+    default: return null;
+  }
+}
+
 export async function safeCall<T>(
   fn: () => Promise<T>,
   code: AppErrorCode = 'EXTERNAL_SERVICE',
@@ -88,6 +107,8 @@ export async function safeCall<T>(
     return Ok(await fn());
   } catch (err) {
     const message = err instanceof Error ? (err as Error).message : String(err);
-    return Err({ code, message });
+    // NestJS HttpException turlarini saqlash (BadRequest → 400, NotFound → 404, ...)
+    const httpCode = mapHttpExceptionToCode(err);
+    return Err({ code: httpCode ?? code, message });
   }
 }

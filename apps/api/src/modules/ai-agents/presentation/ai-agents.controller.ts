@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Param, Post, Query, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { SalesCopilotService } from '../sales/sales-copilot.service';
@@ -75,6 +77,7 @@ const VrpSchema = z.object({
 });
 
 @Controller('ai-agents')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Throttle({ default: { limit: 100, ttl: 60 } })
 @UseInterceptors(AuditInterceptor)
 export class AiAgentsController {

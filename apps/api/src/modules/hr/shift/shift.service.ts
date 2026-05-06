@@ -95,11 +95,11 @@ export class ShiftService {
   }
 
   async getSchedule(params: { employeeId?: number; departmentId?: number; weekStart?: string }) {
-    return safeCall(async () => {
-      const weekStart = params.weekStart || _time.now().toISOString().split('T')[0];
-      const weekEnd = new Date(new Date(weekStart).getTime() + 7 * MS_PER_DAY).toISOString().split('T')[0];
-      return this.repo.getSchedule(weekStart, weekEnd, params.employeeId, params.departmentId);
-    });
+    // MUHIM: repo `Result<Row[]>` qaytaradi — qayta `safeCall` bilan o'rash double-wrap qiladi
+    // (frontend `{ok, data: {ok, data: [...]}}` oladi, `for(...of)` ishlamaydi).
+    const weekStart = params.weekStart || _time.now().toISOString().split('T')[0];
+    const weekEnd = new Date(new Date(weekStart).getTime() + 7 * MS_PER_DAY).toISOString().split('T')[0];
+    return this.repo.getSchedule(weekStart, weekEnd, params.employeeId, params.departmentId);
   }
 
   async getSwapRequests() {

@@ -169,12 +169,9 @@ const menuGroups = {
     items: [
       { title: "HR Dashboard", url: "hr-dashboard", icon: BarChart3 },
       { title: "Xodimlar", url: "employees", icon: Users },
-      { title: "Bo'limlar", url: "departments", icon: Building2 },
-      { title: "Lavozimlar", url: "positions", icon: Briefcase },
       { title: "Adaptatsiya", url: "adaptation", icon: GraduationCap },
-      { title: "Org Tuzilma", url: "org-structure/hierarchy", icon: Network },
+      { title: "Tashkiliy Tuzilma", url: "org-structure/hierarchy", icon: Network },
       { title: "Tuzilma Yaratish", url: "org-structure/builder", icon: Settings },
-      { title: "Tashkiliy Tuzilma", url: "org-chart", icon: Network },
       { title: "7 Funksiya", url: "seven-functions", icon: Crown },
       { title: "RACI Matritsasi", url: "raci-matrix", icon: Grid3X3 },
       { title: "Biznes Salomatligi", url: "business-health", icon: Heart },

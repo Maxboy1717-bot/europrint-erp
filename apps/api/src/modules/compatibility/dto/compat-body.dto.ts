@@ -45,7 +45,12 @@ export class ProfileImageDto extends createZodDto(ProfileImageSchema) {}
 
 // z.union([z.string(), z.number()]) Swagger uchun aylanma yaratadi.
 // z.coerce.number() esa string va number ham qabul qiladi va number'ga aylantiradi.
+//
+// `orgDepartmentIds` — yangi multi-assignment yo'li (frontend EmployeeDialog yuboradi):
+//   POST /api/employees/:id/assign-org-functions  body: { orgDepartmentIds: [1, 2, 3] }
+// `departmentId`/`positionId` — legacy (faqat employees jadvalini yangilash).
 const OrgFunctionsSchema = z.object({
+  orgDepartmentIds: z.array(z.coerce.number().int().positive()).optional(),
   departmentId: z.coerce.number().int().optional(),
   positionId:   z.coerce.number().int().optional(),
 });

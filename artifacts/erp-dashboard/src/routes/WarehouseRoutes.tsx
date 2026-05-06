@@ -1,6 +1,6 @@
 import { lazy } from "react";
 
-const WarehouseHub = lazy(() => import("@/pages/WarehouseHub"));
+const WarehouseHub = lazy(() => import("@/pages/WarehouseHub12"));
 const BarcodeWarehouse = lazy(() => import("@/pages/BarcodeWarehouse"));
 const WarehouseDirectory = lazy(() => import("@/pages/WarehouseDirectory"));
 const InventoryCount = lazy(() => import("@/pages/InventoryCount"));

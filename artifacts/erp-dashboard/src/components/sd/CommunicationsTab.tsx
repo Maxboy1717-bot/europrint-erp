@@ -2,7 +2,6 @@ import { SdCommunicationsData } from "./sd-types";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,25 +52,38 @@ export function CommunicationsTab({ customerId, communications }: { customerId: 
   const typeLabel: Record<string, string> = {
     call: "Qo'ng'iroq", email: "Email", meeting: "Uchrashuv", note: "Izoh", chat: "Chat",
   };
+  const typeColor: Record<string, string> = {
+    call: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+    email: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+    meeting: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    note: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    chat: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  };
 
-  const items = communications?.recent || [];
+  const items = communications?.recent || (Array.isArray(communications) ? communications : []);
   const filtered = filter === "all" ? items : (Array.isArray(items) ? items : []).filter((i) => i.type === filter);
   const upcoming = communications?.upcomingTasks || [];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex gap-2 flex-wrap">
-          {(["all", "call", "email", "meeting", "note"]).map(t => (
-            <Button key={t} variant={filter === t ? "default" : "outline"} size="sm"
-              data-testid={`btn-filter-${t}`} onClick={() => setFilter(t)}>
+        <div className="flex gap-1.5 flex-wrap">
+          {["all", "call", "email", "meeting", "note"].map(t => (
+            <button key={t}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all
+                ${filter === t
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card hover:bg-muted border-border text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setFilter(t)}
+              data-testid={`btn-filter-${t}`}>
               {t === "all" ? "Barchasi" : typeLabel[t]}
-            </Button>
+            </button>
           ))}
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" data-testid="btn-add-interaction">
+            <Button size="sm" className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0"
+              data-testid="btn-add-interaction">
               <Plus className="h-4 w-4 mr-1" />Yangi aloqa
             </Button>
           </DialogTrigger>
@@ -123,62 +135,72 @@ export function CommunicationsTab({ customerId, communications }: { customerId: 
         </Dialog>
       </div>
 
+      {/* Upcoming tasks */}
       {upcoming.length > 0 && (
-        <Card className="border-yellow-200 dark:border-yellow-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+        <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 overflow-hidden">
+          <div className="px-4 py-3 border-b border-amber-200 dark:border-amber-800">
+            <h3 className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2">
               <Clock className="h-4 w-4" />Yaqinlashayotgan amallar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {(Array.isArray(upcoming) ? upcoming : []).map((t) => (
+            </h3>
+          </div>
+          <div className="p-4 space-y-2">
+            {upcoming.map((t) => (
               <div key={t.id} className="flex items-center gap-3 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span>{t.next_action}</span>
-                <span className="text-muted-foreground ml-auto">{fmtDate(t.next_action_date)}</span>
+                <Calendar className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span className="flex-1">{t.next_action}</span>
+                <span className="text-xs text-muted-foreground shrink-0">{fmtDate(t.next_action_date)}</span>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
+      {/* Timeline */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Muloqot tarixi yo'q</CardContent></Card>
-        ) : (Array.isArray(filtered) ? filtered : []).map((item) => {
+          <div className="rounded-xl border bg-card py-10 text-center text-muted-foreground text-sm">
+            <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            Muloqot tarixi yo'q
+          </div>
+        ) : filtered.map((item) => {
           const Icon = typeIcon[item.type] || MessageSquare;
+          const color = typeColor[item.type] || typeColor.note;
           return (
-            <Card key={item.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-md bg-muted shrink-0"><Icon className="h-4 w-4 text-muted-foreground" /></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">{item.subject}</span>
-                      <Badge variant="outline" className="text-xs">{typeLabel[item.type] || item.type}</Badge>
-                      {item.direction && (
-                        <Badge variant="outline" className="text-xs">
-                          {item.direction === "in" ? "Kiruvchi" : "Chiquvchi"}
-                        </Badge>
-                      )}
-                    </div>
-                    {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
-                    {item.outcome && (
-                      <p className="text-xs mt-1"><span className="text-muted-foreground">Natija: </span>{item.outcome}</p>
-                    )}
-                    {item.next_action && (
-                      <p className="text-xs mt-1 text-yellow-700 dark:text-yellow-400">
-                        <Clock className="h-3 w-3 inline mr-1" />
-                        Keyingi: {item.next_action} — {fmtDate(item.next_action_date)}
-                      </p>
+            <div key={item.id} className="rounded-xl border bg-card p-4 hover:shadow-sm transition-shadow">
+              <div className="flex items-start gap-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm">{item.subject || item.notes || "Muloqot"}</span>
+                    <Badge variant="outline" className="text-[10px]">{typeLabel[item.type] || item.type}</Badge>
+                    {item.direction && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {item.direction === "in" ? "Kiruvchi" : "Chiquvchi"}
+                      </Badge>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {fmtDate(item.interaction_date || item.interactionDate)}
-                  </span>
+                  {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
+                  {item.notes && item.notes !== item.subject && <p className="text-xs text-muted-foreground mt-1">{item.notes}</p>}
+                  {item.employeeName && item.employeeName.trim() && (
+                    <p className="text-[11px] text-muted-foreground mt-1">Xodim: {item.employeeName}</p>
+                  )}
+                  {item.outcome && (
+                    <p className="text-xs mt-1"><span className="text-muted-foreground">Natija: </span>{item.outcome}</p>
+                  )}
+                  {item.next_action && (
+                    <p className="text-xs mt-1.5 text-amber-700 dark:text-amber-400">
+                      <Clock className="h-3 w-3 inline mr-1" />
+                      Keyingi: {item.next_action} — {fmtDate(item.next_action_date)}
+                    </p>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <span className="text-[11px] text-muted-foreground shrink-0">
+                  {fmtDate(item.interaction_date || item.interactionDate || item.createdAt || item.created_at)}
+                </span>
+              </div>
+            </div>
           );
         })}
       </div>

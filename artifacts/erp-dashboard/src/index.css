@@ -3,6 +3,8 @@
 @import "./erp-modern-ui/design-tokens.css";
 @import "./erp-modern-ui/shell-overrides.css";
 @import "./erp-modern-ui/global-surface.css";
+/* SmartHR mockup theme (overrides above tokens) */
+@import "./erp-modern-ui/europrint-mockup-theme.css";
 
 @custom-variant dark (&:is(.dark *));
 
