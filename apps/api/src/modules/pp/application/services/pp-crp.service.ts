@@ -79,7 +79,7 @@ export class PpCrpService {
         AND planned_quantity > 0
         AND (planned_start_date IS NULL
              OR (planned_start_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                 AND planned_start_date::date <= CURRENT_DATE + ${sql.raw(String(CRP_HORIZON_DAYS))}))
+                 AND planned_start_date::date <= CURRENT_DATE + (INTERVAL '1 day' * ${CRP_HORIZON_DAYS})))
       ORDER BY planned_start_date
       LIMIT 200
     `);

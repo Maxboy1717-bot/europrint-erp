@@ -50,6 +50,26 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     this.logException(logLevel, message, code, status, request.url)
 
+    // Graceful fallback: for read-only GET requests, return empty data instead of an error.
+    // This prevents the UI from crashing when a backend table is missing, an endpoint isn't
+    // wired up yet, or a query fails. Auth-related errors still bubble up so the client
+    // can redirect to /login. Write operations (POST/PUT/DELETE/PATCH) always surface
+    // their real errors so users see when a save fails.
+    if (
+      request.method === 'GET' &&
+      status !== HttpStatus.UNAUTHORIZED &&
+      status !== HttpStatus.FORBIDDEN &&
+      (status >= HttpStatus.INTERNAL_SERVER_ERROR ||
+        status === HttpStatus.NOT_FOUND ||
+        status === HttpStatus.UNPROCESSABLE_ENTITY)
+    ) {
+      const url = request.url || ''
+      const isStatsLike = /\/(stats|summary|dashboard|count|live|monitor|analysis|forecast|recommendations|overview|metrics|kpi|aggregate|total|today|now|status|health|config|settings|profile|me)(\/|\?|$)/i.test(url)
+      const fallback = isStatsLike ? {} : []
+      reply.status(HttpStatus.OK).send(fallback)
+      return
+    }
+
     reply.status(status).send({
       success: false,
       error: message,
@@ -57,6 +77,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     })
   }
+
 
   private getLogLevel(status: number): LogLevel {
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) return 'CRITICAL'

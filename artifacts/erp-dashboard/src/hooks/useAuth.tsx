@@ -51,7 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUser = useCallback(async () => {
     try {
       const token = safeStorage.getItem("access_token");
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      // Token yo'q bo'lsa /api/auth/me chaqirmaymiz — 401 spam'ni oldini olamiz.
+      // Foydalanuvchi login qilganda token saqlanadi va refetch() chaqiriladi.
+      if (!token) {
+        setUser(null);
+        return;
+      }
+      const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
       const res = await fetch("/api/auth/me", { credentials: "include", headers });
       if (res.ok) {
         const data = await res.json();

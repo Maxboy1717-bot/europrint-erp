@@ -284,7 +284,7 @@ export class TelegramBotsRepository {
         FROM employees e
         JOIN attendance_logs al ON al.employee_id = e.id
           AND al.status IN ('absent', 'no_show')
-          AND al.date >= CURRENT_DATE - INTERVAL '${sql.raw(String(consecutiveDays))} days'
+          AND al.date >= CURRENT_DATE - (INTERVAL '1 day' * ${consecutiveDays})
         WHERE e.status = 'active'
           AND e.telegram_chat_id IS NOT NULL
         GROUP BY e.id, e.first_name, e.last_name, e.telegram_chat_id

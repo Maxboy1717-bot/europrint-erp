@@ -59,10 +59,12 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      // Backend: PATCH /api/employees/:id/status
       return await apiRequest("PATCH", `/api/employees/${id}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
         title: "Muvaffaqiyat",
         description: "Xodim holati yangilandi",
@@ -80,9 +82,13 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/hr/employees/${id}`);
+      // Backend: DELETE /api/employees/:id (employees-compat.controller.ts)
+      return await apiRequest("DELETE", `/api/employees/${id}`);
     },
     onSuccess: () => {
+      // Frontend Employees.tsx ishlatadigan key
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      // Eski legacy key'lar (boshqa joylarda hali ishlatilishi mumkin)
       queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({

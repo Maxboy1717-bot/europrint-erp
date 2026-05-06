@@ -121,7 +121,6 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
 
     // ── Event-Driven (§10 — 20 trigger) ─────────────────────────────────────
     EventEmitterModule.forRoot({
-      wildcard: false,
       delimiter: '.',
       maxListeners: 50,
       verboseMemoryLeak: true,

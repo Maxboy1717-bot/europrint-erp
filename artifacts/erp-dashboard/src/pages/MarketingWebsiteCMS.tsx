@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,13 +41,15 @@ export default function MarketingWebsiteCMS() {
   const [aiLang, setAiLang] = useState("uz");
   const [mainTab, setMainTab] = useState("blog");
 
-  const { data: posts, isLoading, isError, refetch} = useQuery<BlogPost[]>({
+  const { data: posts = [], isLoading, isError, refetch} = useQuery<BlogPost[]>({
     queryKey: ["/api/marketing/website/blog"],
+    select: selectArray<BlogPost>,
   });
 
-  const { data: news, isLoading: newsLoading } = useQuery<NewsItem[]>({
+  const { data: news = [], isLoading: newsLoading } = useQuery<NewsItem[]>({
     queryKey: ["/api/website/news"],
     enabled: mainTab === "news",
+    select: selectArray<NewsItem>,
   });
 
   const createMutation = useMutation({

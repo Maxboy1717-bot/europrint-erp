@@ -23,6 +23,7 @@ import { DisciplineCron } from './discipline.cron'
 import { AiInterviewCron } from './ai-interview.cron'
 import { DailyReportCron } from './daily-report.cron'
 import { BirthdayCron } from './birthday.cron'
+import { BadgeAwardCron } from './badge-award.cron'
 import { EnpsCron } from './enps.cron'
 import { CandidateArchiveCron } from './candidate-archive.cron'
 import { AbsenceBlockCron } from './absence-block.cron'
@@ -61,6 +62,7 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     AiInterviewCron,
     DailyReportCron,
     BirthdayCron,
+    BadgeAwardCron,
     EnpsCron,
     CandidateArchiveCron,
     AbsenceBlockCron,

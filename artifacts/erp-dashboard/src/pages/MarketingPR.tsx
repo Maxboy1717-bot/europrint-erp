@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export default function MarketingPR() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", type: "press_release", status: "planned", description: "", media: "", date: "", url: "" });
 
-  const { data: activities, isLoading, isError, refetch} = useQuery<PrActivity[]>({ queryKey: ["/api/marketing/pr"] });
+  const { data: activities = [], isLoading, isError, refetch} = useQuery<PrActivity[]>({ queryKey: ["/api/marketing/pr"], select: selectArray<PrActivity> });
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/marketing/pr", data),

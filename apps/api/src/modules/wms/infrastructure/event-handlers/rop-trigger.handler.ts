@@ -81,7 +81,7 @@ export class RopTriggerHandler {
       JOIN mm_purchase_requisition_items pri ON pri.requisition_id = pr.id
       WHERE pri.material_id = ${materialId}
         AND pr.status IN ('pending', 'approved')
-        AND pr.created_at > NOW() - INTERVAL ${sql.raw(`'${DEDUP_WINDOW}'`)}
+        AND pr.created_at > NOW() - (${DEDUP_WINDOW})::interval
       LIMIT 1
     `);
 

@@ -35,6 +35,22 @@ export class ReceptionController {
   private readonly logger = new Logger(ReceptionController.name);
   constructor(private readonly svc: ReceptionService) {}
 
+  /**
+   * GET /api/hr-v2/reception — root endpoint, frontend dashboard ko'rinishi.
+   * Active visitors + stats birgalikda qaytaradi.
+   */
+  @Get()
+  async getRoot() {
+    const [active, stats] = await Promise.all([
+      this.svc.getActiveVisitors(),
+      this.svc.getStats(),
+    ]);
+    return {
+      active: active.ok ? active.data : [],
+      stats: stats.ok ? stats.data : {},
+    };
+  }
+
   @Get('active')
   async getActive() {
     return unwrapOrInternal(await this.svc.getActiveVisitors());

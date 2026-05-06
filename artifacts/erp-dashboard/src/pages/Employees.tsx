@@ -20,11 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "@/lib/i18n";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Employees() {
   const { t } = useTranslation('hr');
   const { t: tCommon } = useTranslation('common');
   const [, navigate] = useLocation();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
@@ -36,7 +38,16 @@ export default function Employees() {
     setPage(1);
   }, [search, departmentFilter]);
 
-  const { data: allUsers = [], isLoading: employeesLoading, isError: employeesError, refetch: refetchEmployees } = useQuery<Array<{
+  // Auth tekshiruvi: login bo'lmagan foydalanuvchini login sahifaga yo'naltirish
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate("/login");
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  // /api/employees → kengaytirilgan list (backend `EmployeesListExtendedService` qaytaradi).
+  // Response: { items: EmployeeRow[], total: number }
+  interface EmployeeRow {
     id: string;
     fullName: string;
     employeeId: string;
@@ -58,9 +69,13 @@ export default function Employees() {
     failedTests: number | null;
     disciplineCount: number | null;
     profileImageUrl: string | null;
-  }>>({
-    queryKey: ["/api/users"],
-  });
+  }
+  const { data: employeesResponse, isLoading: employeesLoading, isError: employeesError, refetch: refetchEmployees } =
+    useQuery<{ items: EmployeeRow[]; total: number }>({
+      queryKey: ["/api/employees"],
+      enabled: isAuthenticated === true,  // login bo'lmasa chaqirmaydi (401 oldini olish)
+    });
+  const allUsers: EmployeeRow[] = Array.isArray(employeesResponse?.items) ? employeesResponse.items : [];
 
   // Client-side filtering and pagination
   const filteredUsers = (Array.isArray(allUsers) ? allUsers : []).filter(user => {
@@ -85,6 +100,7 @@ export default function Employees() {
 
   const { data: orgDepartments = [] } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ["/api/org-departments"],
+    enabled: isAuthenticated === true,
   });
 
   const transformedEmployees: Employee[] = (Array.isArray(employees) ? employees : []).map(emp => {
@@ -113,6 +129,15 @@ export default function Employees() {
       profileImageUrl: emp.profileImageUrl || undefined,
     };
   });
+
+  // Auth yuklanayotganda yoki login bo'lmaganda — bo'sh ekran (redirect ishga tushgancha)
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex-1 overflow-auto bg-surface p-6 space-y-6">
+        <TableSkeleton rows={5} columns={7} />
+      </div>
+    );
+  }
 
   if (employeesError) {
     return (

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { EmployeesCompatController } from './employees-compat.controller';
+import { EmployeesExtraController }  from './employees-extra.controller';
 import { UsersCompatController } from './users-compat.controller';
 import { BarcodeWarehouseCompatController } from './barcode-warehouse.controller';
 import { BarcodeWarehouseDebtService } from './barcode-warehouse-debt.service';
@@ -36,8 +37,13 @@ import { SettingsAdminController }       from './settings-admin.controller';
 import { ApprovalWorkflowController }    from './approval-workflow.controller';
 import { CalendarEventsController }      from './calendar-events.controller';
 import { AssetManagementController }     from './asset-management.controller';
+import { DocumentWorkflowV2Controller }  from './document-workflow-v2.controller';
+import { DocumentWorkflowV2Service }     from './document-workflow-v2.service';
+import { PosWarehouseIntegrationController } from './pos-warehouse-integration.controller';
+import { PosWarehouseIntegrationService }    from './pos-warehouse-integration.service';
 
 import { EmployeesCompatService }          from './employees-compat.service';
+import { EmployeesListExtendedService }    from './employees-list-extended.service';
 import { EmployeesCompatProfileService }   from './employees-compat-profile.service';
 import { EmployeesCompatFinancialsService } from './employees-compat-financials.service';
 import { UsersCompatService }            from './users-compat.service';
@@ -82,6 +88,7 @@ import { AuthModule }                 from '../auth/auth.module';
   imports: [AuthModule],
   controllers: [
     EmployeesCompatController,
+    EmployeesExtraController,
     UsersCompatController,
     BarcodeWarehouseCompatController,
     CfoCompatController,
@@ -116,6 +123,8 @@ import { AuthModule }                 from '../auth/auth.module';
     ApprovalWorkflowController,
     CalendarEventsController,
     AssetManagementController,
+    DocumentWorkflowV2Controller,
+    PosWarehouseIntegrationController,
   ],
   providers: [
     LabelRepository,
@@ -125,6 +134,7 @@ import { AuthModule }                 from '../auth/auth.module';
     EmployeesCompatProfileService,
     EmployeesCompatFinancialsService,
     EmployeesCompatService,
+    EmployeesListExtendedService,
     UsersCompatService,
     BarcodeWarehouseCompatService,
     BarcodeWarehouseDebtService,
@@ -157,6 +167,8 @@ import { AuthModule }                 from '../auth/auth.module';
     ApprovalWorkflowRepo,
     CalendarEventsRepo,
     AssetManagementRepo,
+    DocumentWorkflowV2Service,
+    PosWarehouseIntegrationService,
   ],
 })
 export class CompatibilityModule {}

@@ -137,6 +137,10 @@ function configureHealthRoutes(fastify: RawFastify): void {
   });
 }
 
+// Eslatma: 404 handling NestJS Global Exception Filter ichida amalga oshiriladi
+// (apps/api/src/common/filters/global-exception.filter.ts). Fastify'ning
+// `setNotFoundHandler` ni alohida o'rnatib bo'lmaydi — Nest o'zi o'rnatadi.
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,

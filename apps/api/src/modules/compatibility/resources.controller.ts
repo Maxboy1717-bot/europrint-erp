@@ -113,9 +113,14 @@ export class DepartmentsCompatController {
 export class OrgDepartmentsCompatController {
   constructor(private readonly svc: ResourcesCompatService) {}
 
+  /**
+   * GET /api/org-departments
+   * Frontend `EmployeeDialog → OrgStructureSection` ishlatadi.
+   * `org_departments` jadvalidan camelCase JSON qaytaradi.
+   */
   @Get()
   async getAll(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return unwrapOrInternal(await this.svc.getDepartments(page, limit));
+    return unwrapOrInternal(await this.svc.getOrgDepartments(page, limit));
   }
 
   @Post('notify-vacancies')

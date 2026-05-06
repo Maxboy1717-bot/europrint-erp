@@ -34,9 +34,20 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const decoded = this.jwtService.verify(token) as Record<string, unknown>;
-      request.user = { ...decoded, id: decoded['sub'] ?? decoded['id'] ?? decoded['userId'] };
+      // Payload validation — har bir token kamida `sub`/`id`/`userId` dan birini saqlashi shart.
+      const userId = decoded['sub'] ?? decoded['id'] ?? decoded['userId'];
+      if (!userId) {
+        throw new UnauthorizedException('Token payload yaroqsiz: foydalanuvchi identifikatori yo\'q');
+      }
+      // Muddat tugagani — additional sanity check (jwtService.verify also checks this)
+      const exp = decoded['exp'] as number | undefined;
+      if (exp && exp * 1000 < Date.now()) {
+        throw new UnauthorizedException('Token muddati tugagan');
+      }
+      request.user = { ...decoded, id: userId };
       return true;
-    } catch {
+    } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('Token yaroqsiz yoki muddati tugagan');
     }
   }

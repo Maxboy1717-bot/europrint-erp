@@ -1,6 +1,23 @@
 import { glApi } from "../api/pos-monitor.api";
 import { apiRequest } from "@/lib/queryClient";
 
+/**
+ * Universal safe array helper — backend turli format yuborsa ham
+ * ([] | {items:[]} | {data:[]} | undefined | null) → har doim T[].
+ * TypeError himoyasi.
+ */
+function safeArr<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.items)) return obj.items as T[];
+    if (Array.isArray(obj.data)) return obj.data as T[];
+    if (Array.isArray(obj.results)) return obj.results as T[];
+    if (Array.isArray(obj.rows)) return obj.rows as T[];
+  }
+  return [];
+}
+
 export interface Warehouse  { id: number; name: string; code?: string; isActive?: boolean; warehouseType?: string; }
 export interface Category   { id: number; name: string; code?: string; description?: string; }
 export interface Unit       { id: number; name: string; symbol?: string; unitType?: string; }
@@ -37,7 +54,7 @@ export function WarehousesSection({ data, loading, error, onRefresh, onToggle }:
         <table className="pos-table">
           <thead><tr><th>Kod</th><th>Nomi</th><th>Turi</th><th>Holat</th><th>Amal</th></tr></thead>
           <tbody>
-            {(data ?? []).map(w => (
+            {safeArr<Warehouse>(data).map(w => (
               <tr key={w.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>{w.code ?? `#${w.id}`}</td>
                 <td style={{ fontWeight: 500 }}>{w.name}</td>
@@ -49,7 +66,7 @@ export function WarehousesSection({ data, loading, error, onRefresh, onToggle }:
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Omborlar topilmadi</div>}
+      {!loading && !error && safeArr<Warehouse>(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Omborlar topilmadi</div>}
     </div>
   );
 }
@@ -63,7 +80,7 @@ export function CategoriesSection({ data, loading, error, onRefresh }: { data: C
         <table className="pos-table">
           <thead><tr><th>ID</th><th>Nomi</th><th>Kod</th><th>Tavsif</th></tr></thead>
           <tbody>
-            {(data ?? []).map(c => (
+            {safeArr(data).map(c => (
               <tr key={c.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{c.id}</td>
                 <td style={{ fontWeight: 500 }}>{c.name}</td>
@@ -74,7 +91,7 @@ export function CategoriesSection({ data, loading, error, onRefresh }: { data: C
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Kategoriyalar topilmadi</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Kategoriyalar topilmadi</div>}
     </div>
   );
 }
@@ -88,7 +105,7 @@ export function UnitsSection({ data, loading, error, onRefresh }: { data: Unit[]
         <table className="pos-table">
           <thead><tr><th>ID</th><th>Nomi</th><th>Belgi</th><th>Turi</th></tr></thead>
           <tbody>
-            {(data ?? []).map(u => (
+            {safeArr(data).map(u => (
               <tr key={u.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{u.id}</td>
                 <td style={{ fontWeight: 500 }}>{u.name}</td>
@@ -99,7 +116,7 @@ export function UnitsSection({ data, loading, error, onRefresh }: { data: Unit[]
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>O'lchov birliklari topilmadi</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>O'lchov birliklari topilmadi</div>}
     </div>
   );
 }
@@ -113,7 +130,7 @@ export function SuppliersSection({ data, loading, error, onRefresh }: { data: Su
         <table className="pos-table">
           <thead><tr><th>ID</th><th>Yetkazuvchi</th><th>Buyurtmalar</th><th>O'rtacha yetkazish</th><th>Reyting</th></tr></thead>
           <tbody>
-            {(data ?? []).map((s, i) => (
+            {safeArr(data).map((s, i) => (
               <tr key={`${s.id}-${i}`}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{s.id}</td>
                 <td style={{ fontWeight: 500 }}>{s.supplierName ?? "—"}</td>
@@ -125,7 +142,7 @@ export function SuppliersSection({ data, loading, error, onRefresh }: { data: Su
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Yetkazuvchilar topilmadi</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Yetkazuvchilar topilmadi</div>}
     </div>
   );
 }
@@ -168,7 +185,7 @@ export function PrintersSection({ data, loading, error, onRefresh }: { data: Pri
         <table className="pos-table">
           <thead><tr><th>Nomi</th><th>IP manzil</th><th>Port</th><th>Standart</th><th>Holat</th></tr></thead>
           <tbody>
-            {(data ?? []).map(p => (
+            {safeArr(data).map(p => (
               <tr key={p.id}>
                 <td style={{ fontWeight: 500 }}>{p.name}</td>
                 <td className="pos-mono">{p.ipAddress ?? "—"}</td>
@@ -180,7 +197,7 @@ export function PrintersSection({ data, loading, error, onRefresh }: { data: Pri
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Printerlar sozlanmagan</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Printerlar sozlanmagan</div>}
     </div>
   );
 }
@@ -197,7 +214,7 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
         <table className="pos-table">
           <thead><tr><th>Harakat</th><th>Bosqich</th><th>Yozuvlar</th><th>Status</th><th>Amal</th></tr></thead>
           <tbody>
-            {(data ?? []).map(g => (
+            {safeArr(data).map(g => (
               <tr key={g.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{g.movementId}</td>
                 <td style={{ fontSize: 12 }}>{g.stageName}</td>
@@ -213,7 +230,7 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>Kutayotgan GL postinglar yo'q</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>Kutayotgan GL postinglar yo'q</div>}
     </div>
   );
 }
@@ -227,7 +244,7 @@ export function AuditLogSection({ data, loading, error, onRefresh }: { data: Aud
         <table className="pos-table">
           <thead><tr><th>Vaqt</th><th>Amal</th><th>Resurs</th><th>IP</th></tr></thead>
           <tbody>
-            {(data ?? []).map(a => (
+            {safeArr(data).map(a => (
               <tr key={a.id}>
                 <td style={{ fontSize: 11, color: "var(--pos-text-muted)", whiteSpace: "nowrap" }}>{a.createdAt ? new Date(a.createdAt).toLocaleString("uz-UZ") : "—"}</td>
                 <td><span className="pos-badge pos-badge-gray" style={{ fontSize: 10 }}>{a.action}</span></td>
@@ -238,7 +255,7 @@ export function AuditLogSection({ data, loading, error, onRefresh }: { data: Aud
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>Audit yozuvlari mavjud emas.</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>Audit yozuvlari mavjud emas.</div>}
     </div>
   );
 }

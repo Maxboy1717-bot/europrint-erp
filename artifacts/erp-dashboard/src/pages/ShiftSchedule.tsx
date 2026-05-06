@@ -155,7 +155,7 @@ export default function ShiftSchedule() {
     [weekStart, selectedDeptId]
   );
 
-  const { data: schedules = [], isLoading: schedLoading, refetch: refetchSchedules } = useQuery<ShiftScheduleEntry[]>({
+  const { data: schedulesRaw, isLoading: schedLoading, refetch: refetchSchedules } = useQuery<unknown>({
     queryKey: scheduleKey,
     queryFn: () => {
       const params = new URLSearchParams({ week_start: weekStart });
@@ -163,6 +163,8 @@ export default function ShiftSchedule() {
       return apiRequest("GET", `/api/hr/shifts/schedule?${params}`);
     },
   });
+  // Xavfsizlik: backend kutilmagan format yuborsa ham TypeError chiqmaydi
+  const schedules = (Array.isArray(schedulesRaw) ? schedulesRaw : []) as ShiftScheduleEntry[];
 
   const { data: swapRequests = [], isLoading: swapLoading, refetch: refetchSwaps } = useQuery<ShiftSwapRequest[]>({
     queryKey: ["/api/hr/shifts/swap-requests"],

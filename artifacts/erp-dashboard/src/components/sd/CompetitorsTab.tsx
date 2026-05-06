@@ -2,7 +2,6 @@ import { SdCompetitorsData } from "./sd-types";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Target, BarChart2, Trophy, Plus, Trash2 } from "lucide-react";
+import { Target, BarChart2, Trophy, Plus, Trash2, Swords } from "lucide-react";
 import { KpiCard } from "./helpers";
 
 export function CompetitorsTab({ customerId, competitors }: { customerId: number; competitors: SdCompetitorsData }) {
@@ -49,26 +48,32 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/sd/customers", customerId, "360"] }),
   });
 
-  const potentialConf: Record<string, { label: string; cls: string }> = {
-    high: { label: "Yuqori", cls: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
-    medium: { label: "O'rta", cls: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
-    low: { label: "Past", cls: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
+  const potConf: Record<string, { label: string; cls: string }> = {
+    high: { label: "Yuqori", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200" },
+    medium: { label: "O'rta", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200" },
+    low: { label: "Past", cls: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200" },
   };
 
   if (!competitors) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
 
+  const items = competitors.list || (Array.isArray(competitors) ? competitors : []);
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <KpiCard icon={Target} label="Raqobatchilar" value={String((competitors.list || []).length)} />
-        <KpiCard icon={BarChart2} label="Raqobat ulushi" value={`${Math.round(competitors.totalCompetitorShare || 0)}%`} />
-        <KpiCard icon={Trophy} label="Bizning ulush" value={`${Math.round(competitors.ourShare || 100)}%`} color="text-green-600" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <KpiCard icon={Swords} label="Raqobatchilar" value={String(items.length)}
+          gradient="from-slate-500 to-gray-500" />
+        <KpiCard icon={BarChart2} label="Raqobat ulushi" value={`${Math.round(competitors.totalCompetitorShare || 0)}%`}
+          gradient="from-rose-500 to-pink-500" />
+        <KpiCard icon={Trophy} label="Bizning ulush" value={`${Math.round(competitors.ourShare || 100)}%`} color="text-emerald-600"
+          gradient="from-emerald-500 to-teal-500" />
       </div>
 
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" data-testid="btn-add-competitor">
+            <Button size="sm" className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0"
+              data-testid="btn-add-competitor">
               <Plus className="h-4 w-4 mr-1" />Raqobatchi qo'shish
             </Button>
           </DialogTrigger>
@@ -116,35 +121,37 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
         </Dialog>
       </div>
 
-      <div className="space-y-3">
-        {(competitors.list || []).length === 0 ? (
-          <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Raqobatchi ma'lumoti yo'q</CardContent></Card>
-        ) : (competitors.list || []).map((c) => {
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <div className="rounded-xl border bg-card py-10 text-center text-muted-foreground text-sm">
+            <Swords className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            Raqobatchi ma'lumoti yo'q
+          </div>
+        ) : items.map((c) => {
           const potKey = c.win_back_potential || c.winBackPotential;
-          const pot = potentialConf[potKey];
+          const pot = potConf[potKey];
           return (
-            <Card key={c.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="font-medium text-sm">{c.competitor_name || c.competitorName}</span>
-                      {c.product_type && <Badge variant="outline" className="text-xs">{c.product_type}</Badge>}
-                      {pot && <Badge className={`text-xs ${pot.cls}`}>{pot.label}</Badge>}
-                    </div>
-                    {c.estimated_share_percent && (
-                      <p className="text-xs text-muted-foreground">Taxminiy ulush: {c.estimated_share_percent}%</p>
-                    )}
-                    {c.notes && <p className="text-xs text-muted-foreground mt-1">{c.notes}</p>}
+            <div key={c.id} className="rounded-xl border bg-card p-4 hover:shadow-sm transition-shadow">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <span className="font-semibold text-sm">{c.competitor_name || c.competitorName}</span>
+                    {c.product_type && <Badge variant="outline" className="text-[10px]">{c.product_type}</Badge>}
+                    {c.product && <Badge variant="outline" className="text-[10px]">{c.product}</Badge>}
+                    {pot && <Badge className={`text-[10px] ${pot.cls}`}>{pot.label}</Badge>}
                   </div>
-                  <Button variant="ghost" size="icon"
-                    onClick={() => deleteMutation.mutate(c.id)}
-                    data-testid={`btn-delete-competitor-${c.id}`}>
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
+                  {c.estimated_share_percent && (
+                    <p className="text-xs text-muted-foreground">Taxminiy ulush: {c.estimated_share_percent}%</p>
+                  )}
+                  {c.notes && <p className="text-xs text-muted-foreground mt-1">{c.notes}</p>}
                 </div>
-              </CardContent>
-            </Card>
+                <Button variant="ghost" size="icon" className="shrink-0"
+                  onClick={() => deleteMutation.mutate(c.id)}
+                  data-testid={`btn-delete-competitor-${c.id}`}>
+                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
+                </Button>
+              </div>
+            </div>
           );
         })}
       </div>

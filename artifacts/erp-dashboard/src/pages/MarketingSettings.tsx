@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,8 +94,8 @@ export default function MarketingSettings() {
   });
   const [editApiId, setEditApiId] = useState<string | null>(null);
 
-  const { data: settings, isLoading, isError, refetch} = useQuery<MarketingSetting[]>({ queryKey: ["/api/marketing/settings"] });
-  const { data: apiConfigs, isLoading: apisLoading } = useQuery<SocialApiConfig[]>({ queryKey: ["/api/marketing/settings/social-api"] });
+  const { data: settings = [], isLoading, isError, refetch} = useQuery<MarketingSetting[]>({ queryKey: ["/api/marketing/settings"], select: selectArray<MarketingSetting> });
+  const { data: apiConfigs = [], isLoading: apisLoading } = useQuery<SocialApiConfig[]>({ queryKey: ["/api/marketing/settings/social-api"], select: selectArray<SocialApiConfig> });
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/marketing/settings", data),
@@ -158,12 +158,13 @@ export default function MarketingSettings() {
     else apiCreateMutation.mutate(payload);
   };
 
-  const grouped = settings?.reduce((acc, s) => {
+  const settingsArray = selectArray<MarketingSetting>(settings);
+  const grouped = settingsArray.reduce((acc, s) => {
     const cat = s.category || "general";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(s);
     return acc;
-  }, {} as Record<string, MarketingSetting[]>) || {};
+  }, {} as Record<string, MarketingSetting[]>);
 
   const webhookUrl = typeof window !== "undefined" ? `${window.location.origin}/api/marketing/webhook` : "";
 

@@ -70,13 +70,14 @@ export function AsosiyTab() {
     );
   }
 
-  const d = dashboard || {
-    barcodes: { total: 0, available: 0, qcHold: 0, issued: 0 },
-    pickingTasks: { pending: 0 },
-    operatorDebts: { count: 0, totalDebt: 0 },
-    exitControl: { todayTotal: 0, todayBlocked: 0 },
-    printQueue: { pending: 0 },
-    recentMovements: [],
+  // Universal default — backend bo'sh `{}` qaytarsa ham crash bo'lmaydi
+  const d = {
+    barcodes:        { total: 0, available: 0, qcHold: 0, issued: 0, ...(dashboard?.barcodes ?? {}) },
+    pickingTasks:    { pending: 0, ...(dashboard?.pickingTasks ?? {}) },
+    operatorDebts:   { count: 0, totalDebt: 0, ...((dashboard as Record<string, unknown>)?.operatorDebts as Record<string, unknown> ?? {}) },
+    exitControl:     { todayTotal: 0, todayBlocked: 0, ...((dashboard as Record<string, unknown>)?.exitControl as Record<string, unknown> ?? {}) },
+    printQueue:      { pending: 0, ...((dashboard as Record<string, unknown>)?.printQueue as Record<string, unknown> ?? {}) },
+    recentMovements: Array.isArray(dashboard?.recentMovements) ? dashboard.recentMovements : [],
   };
 
   return (
