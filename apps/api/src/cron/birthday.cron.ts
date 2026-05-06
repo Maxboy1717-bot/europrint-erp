@@ -52,12 +52,18 @@ export class BirthdayCron {
     } catch (err) { this.logger.error(`❌ BirthdayCron.checkTomorrow error: ${String(err)}`); this.cronStatus.recordFailure(jobName, String(err)) }
   }
 
+  /**
+   * 07:30 — Bugungi tug'ilgan kunlar HAMMA xodimlar'ga (PRD Q195).
+   * Manager'lar emas, balki barcha aktiv xodimlar telegram_chat_id orqali xabar oladi.
+   * Tug'ilgan kun egasiga xabar bormaydi (uning o'ziga 18:00'da boshqa cron yuboradi).
+   */
   @Cron('30 7 * * *')
   async announceToday(): Promise<void> {
     const jobName = 'BirthdayCron.announceToday'
     try {
       const employees = await db
         .select({
+          id: hrEmployees.id,
           first_name: hrEmployees.first_name,
           last_name: hrEmployees.last_name,
           department_name: hrDepartments.name,
@@ -74,28 +80,39 @@ export class BirthdayCron {
           ),
         )
       if (employees.length === 0) { this.cronStatus.recordSuccess(jobName); return }
-      const nameList = (employees ?? []).map(e => `• ${e.first_name} ${e.last_name} (${e.department_name ?? 'Bo\'lim ko\'rsatilmagan'})`).join('\n')
+
+      const safeEmployees = Array.isArray(employees) ? employees : []
+      const birthdayUserIds = safeEmployees.map(e => e.id).filter(Boolean) as number[]
+      const nameList = safeEmployees.map(e =>
+        `• ${e.first_name} ${e.last_name} (${e.department_name ?? 'Bo\'lim ko\'rsatilmagan'})`
+      ).join('\n')
       const message = `🎉 <b>Bugun tug'ilgan kunlari!</b>\n\n${nameList}\n\nUlarni tabriklab qo'ying!🎂\n\n<i>EuroPrint HR tizimi</i>`
-      const managerIdRows = await db
-        .selectDistinct({ manager_id: hrEmployees.manager_id })
+
+      // BARCHA aktiv xodimlar (tug'ilgan kun egalaridan tashqari) — Q195
+      const recipients = await db
+        .select({ id: hrEmployees.id, telegram_chat_id: hrEmployees.telegram_chat_id })
         .from(hrEmployees)
-        .where(isNotNull(hrEmployees.manager_id))
-      const uniqueManagerIds = (managerIdRows ?? []).map(r => r.manager_id).filter(Boolean) as number[]
-      const mgrsWithTelegram = uniqueManagerIds.length > 0
-        ? await db
-            .select({ telegram_chat_id: hrEmployees.telegram_chat_id })
-            .from(hrEmployees)
-            .where(and(inArray(hrEmployees.id, uniqueManagerIds), isNotNull(hrEmployees.telegram_chat_id)))
-            .limit(BIRTHDAY_MANAGER_NOTIFY_LIMIT)
-        : []
+        .where(
+          and(
+            eq(hrEmployees.status, 'active'),
+            isNull(hrEmployees.deleted_at),
+            isNotNull(hrEmployees.telegram_chat_id),
+            birthdayUserIds.length > 0
+              ? sql`${hrEmployees.id} NOT IN (${sql.join(birthdayUserIds.map(id => sql`${id}`), sql`, `)})`
+              : sql`true`,
+          ),
+        )
+
+      const safeRecipients = Array.isArray(recipients) ? recipients : []
       let sent = 0
-      for (const mgr of mgrsWithTelegram) {
-        if (this.telegram && mgr.telegram_chat_id) {
-          await this.telegram.sendMessage(mgr.telegram_chat_id, message).catch(e => this.logger.warn(`Birthday announce Telegram failed: ${String(e)}`))
+      for (const r of safeRecipients) {
+        if (this.telegram && r.telegram_chat_id) {
+          await this.telegram.sendMessage(r.telegram_chat_id, message)
+            .catch(e => this.logger.warn(`Birthday announce failed for emp ${r.id}: ${String(e)}`))
           sent++
         }
       }
-      this.logger.log(`✅ BirthdayCron.announceToday: birthdays=${employees.length}, notified=${sent}`)
+      this.logger.log(`✅ BirthdayCron.announceToday: birthdays=${safeEmployees.length}, recipients=${safeRecipients.length}, sent=${sent}`)
       this.cronStatus.recordSuccess(jobName)
     } catch (err) { this.logger.error(`❌ BirthdayCron.announceToday error: ${String(err)}`); this.cronStatus.recordFailure(jobName, String(err)) }
   }

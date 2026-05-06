@@ -47,6 +47,8 @@ async function posReq<T = unknown>(method: string, path: string, body?: unknown)
   }
 
   const json: unknown = await res.json();
+
+  // Format 1: { isSuccess, value, error }
   if (
     json !== null && typeof json === "object" &&
     "isSuccess" in (json as Record<string, unknown>) &&
@@ -56,6 +58,29 @@ async function posReq<T = unknown>(method: string, path: string, body?: unknown)
     if (wrapped.isSuccess) return wrapped.value;
     throw new Error(wrapped.error ?? "Server xatosi");
   }
+
+  // Format 2: { ok: true, data: T } — Result wrapper
+  if (
+    json !== null && typeof json === "object" &&
+    "ok" in (json as Record<string, unknown>) &&
+    typeof (json as Record<string, unknown>).ok === "boolean"
+  ) {
+    const wrapped = json as { ok: boolean; data?: T; error?: { message?: string } | string };
+    if (wrapped.ok) {
+      // Recursive unwrap (double-wrap holatlar uchun)
+      const inner = wrapped.data;
+      if (inner && typeof inner === "object" && "ok" in (inner as Record<string, unknown>)) {
+        const innerWrapped = inner as { ok: boolean; data?: T };
+        if (innerWrapped.ok) return innerWrapped.data as T;
+      }
+      return inner as T;
+    }
+    const errMsg = typeof wrapped.error === "object" && wrapped.error !== null
+      ? wrapped.error.message ?? "Server xatosi"
+      : String(wrapped.error ?? "Server xatosi");
+    throw new Error(errMsg);
+  }
+
   return json as T;
 }
 

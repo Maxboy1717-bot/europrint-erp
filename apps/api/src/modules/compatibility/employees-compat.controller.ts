@@ -5,6 +5,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { EmployeesCompatService } from './employees-compat.service';
+import { EmployeesListExtendedService } from './employees-list-extended.service';
 import { CompatBodyDto, ImportEmployeesDto, OrgFunctionsDto, ProfileImageDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
 
@@ -16,8 +17,12 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 export class EmployeesCompatController {
-  constructor(private readonly svc: EmployeesCompatService) {}
+  constructor(
+    private readonly svc: EmployeesCompatService,
+    private readonly extendedSvc: EmployeesListExtendedService,
+  ) {}
 
+  // GET /api/employees — kengaytirilgan ro'yxat (frontend `Employees.tsx` kutadi: items + total)
   @Get()
   async listEmployees(
     @Query('status') status?: string,
@@ -26,7 +31,12 @@ export class EmployeesCompatController {
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
-    return unwrapOrInternal(await this.svc.listEmployees(status, departmentId, search, limit, offset));
+    const itemsRes = await this.extendedSvc.listExtended(status, departmentId, search, limit, offset);
+    const totalRes = await this.extendedSvc.countExtended(status, departmentId, search);
+    return {
+      items: itemsRes.ok && Array.isArray(itemsRes.data) ? itemsRes.data : [],
+      total: totalRes.ok && typeof totalRes.data === 'number' ? totalRes.data : 0,
+    };
   }
 
   @Post()
@@ -48,6 +58,8 @@ export class EmployeesCompatController {
 
   @Get(':id')
   async getEmployee(@Param('id') id: string) {
+    const r = await this.extendedSvc.getById(id);
+    if (r.ok && r.data) return r.data;
     return unwrapOrInternal(await this.svc.getEmployee(id));
   }
 
@@ -94,6 +106,17 @@ export class EmployeesCompatController {
     @Body() body: OrgFunctionsDto,
   ) {
     return unwrapOrInternal(await this.svc.assignOrgFunctions(id, body));
+  }
+
+  /**
+   * GET /api/employees/:id/org-departments
+   * Xodim biriktirilgan barcha org_departments ID ro'yxati.
+   * Frontend `EmployeeDialog → OrgStructureSection` edit rejimida ishlatadi —
+   * pre-selected funksiyalarni ko'rsatish uchun.
+   */
+  @Get(':id/org-departments')
+  async getOrgDepartments(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getEmployeeOrgDepartments(id));
   }
 
   @Get(':id/assets')
@@ -187,18 +210,6 @@ export class EmployeesCompatController {
     const r = await this.svc.getCorporateInventory(id);
     const rows = r.ok && Array.isArray(r.data) ? r.data : [];
     return { items: rows, total: rows.length };
-  }
-
-  @Post(':id/corporate-inventory/:itemId/sign')
-  @HttpCode(HttpStatus.OK)
-  async signCorporateInventory(@Param('id') _id: string, @Param('itemId') _itemId: string) {
-    return { signed: true };
-  }
-
-  @Post(':id/corporate-inventory/:itemId/return')
-  @HttpCode(HttpStatus.OK)
-  async returnCorporateInventory(@Param('id') _id: string, @Param('itemId') _itemId: string) {
-    return { returned: true };
   }
 
   @Get(':id/emergency-contacts')

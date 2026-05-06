@@ -302,9 +302,9 @@ export default function BOMManagement() {
     <ModulePage
       module="pp"
       title={
-        <h1 className="text-4xl font-light tracking-tight text-on-surface">
+        <span className="text-4xl font-light tracking-tight text-on-surface">
           Materiallar <span className="font-bold text-primary">Spesifikatsiyasi</span>
-        </h1>
+        </span>
       }
       subtitle={`Bill of Materials - ${t('bom')}`}
       icon={<Package className="h-5 w-5 text-primary" />}

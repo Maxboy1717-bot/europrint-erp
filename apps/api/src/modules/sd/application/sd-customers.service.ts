@@ -21,6 +21,10 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.get360View(cid));
   }
 
+  async create(body: Record<string, unknown>) {
+    return safeCall(async () => this.repo.create(body));
+  }
+
   async update(cid: number, body: Record<string, unknown>) {
     return safeCall(async () => this.repo.update(cid, body));
   }

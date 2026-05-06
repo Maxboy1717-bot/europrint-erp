@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,11 +63,12 @@ export default function MarketingExhibitions() {
     status: "planned", startDate: "", endDate: "", budget: "", teamMembers: "",
   });
 
-  const { data: exhList, isLoading, isError, refetch} = useQuery<ExhibitionFull[]>({ queryKey: ["/api/marketing/exhibitions"] });
-  const { data: leads } = useQuery<ExhibitionLead[]>({
+  const { data: exhList = [], isLoading, isError, refetch} = useQuery<ExhibitionFull[]>({ queryKey: ["/api/marketing/exhibitions"], select: selectArray<ExhibitionFull> });
+  const { data: leads = [] } = useQuery<ExhibitionLead[]>({
     queryKey: ["/api/marketing/exhibitions", selectedExh, "leads"],
     enabled: !!selectedExh,
     queryFn: () => fetch(`/api/marketing/exhibitions/${selectedExh}/leads`, { credentials: "include" }).then(r => r.json()),
+    select: selectArray<ExhibitionLead>,
   });
 
   const createMutation = useMutation({

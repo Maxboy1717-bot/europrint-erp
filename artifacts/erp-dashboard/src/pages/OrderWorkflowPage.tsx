@@ -4,7 +4,13 @@ const BASE = (import.meta.env.BASE_URL ?? '/erp-dashboard/').replace(/\/$/, '');
 function getApiUrl(path: string) { return `${BASE}/api/${path}`; }
 
 function getAuthToken(): string {
-  try { return localStorage.getItem('token') ?? ''; } catch { return ''; }
+  try {
+    return (
+      localStorage.getItem('access_token') ??
+      localStorage.getItem('token') ??
+      ''
+    );
+  } catch { return ''; }
 }
 
 interface OrderItem {

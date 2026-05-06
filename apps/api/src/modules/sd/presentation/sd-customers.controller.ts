@@ -46,18 +46,17 @@ export class SdCustomersController {
   async get360View(@Param('id') id: string) {
     const _rResult = await this.svc.get360View(safeInt(id, 0));
     const data = unwrapOrThrow(_rResult);
-    assertFound(data.customer, 'Customer not found');
+    assertFound((data as Record<string, unknown>).customer ?? (data as Record<string, unknown>).basic, 'Customer not found');
     return data;
   }
 
   @Post()
   @Roles(...SD_WRITE_ROLES)
-  async create() {
-    throw new ForbiddenException(
-      'Mijoz yaratish §8.8 qoidasi bo\'yicha CRM moduliga tegishli. ' +
-      'Yangi mijoz yaratish uchun POST /crm/contacts dan foydalaning va ' +
-      'olingan customerId ni SD sohasida reference qiling.',
-    );
+  async create(@Body() body: Record<string, unknown>) {
+    if (!body.name && !body.title) {
+      throw new BadRequestException('Mijoz nomi (name yoki title) majburiy');
+    }
+    return unwrapOrThrow(await this.svc.create(body));
   }
 
   @Put(':id')

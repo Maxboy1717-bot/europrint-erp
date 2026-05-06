@@ -13,9 +13,10 @@ import {
   ArrowRightLeft, 
   Eye 
 } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorState } from "@/components/ui/error-state";
+import { useWarehousePosSync } from "@/hooks/useWarehousePosSync";
 
 import { 
   WarehouseItem, 
@@ -67,9 +68,13 @@ export default function WarehouseHub() {
     returnQty: "",
   });
 
-  const { data: warehouses, isLoading: whLoading, isError, refetch } = useQuery<WarehouseItem[]>({
+  const { data: warehouses = [], isLoading: whLoading, isError, refetch } = useQuery<WarehouseItem[]>({
     queryKey: ["/api/warehouse/warehouses"],
+    select: selectArray<WarehouseItem>,
   });
+
+  // POS Monitor bilan real-time sinxronizatsiya
+  const { syncToPos, isSyncing } = useWarehousePosSync(selectedWarehouse?.id);
 
   useEffect(() => {
     if (params.code && warehouses) {
@@ -88,8 +93,9 @@ export default function WarehouseHub() {
     }
   }, [params.code, warehouses]);
 
-  const { data: materials } = useQuery<MaterialCardItem[]>({
+  const { data: materials = [] } = useQuery<MaterialCardItem[]>({
     queryKey: ["/api/material-cards"],
+    select: selectArray<MaterialCardItem>,
   });
 
   const { data: warehouseStockData, isLoading: stockLoading } = useQuery<WarehouseStockData>({
@@ -97,24 +103,28 @@ export default function WarehouseHub() {
     enabled: !!selectedWarehouse,
   });
 
-  const { data: barcodes } = useQuery<BarcodeItem[]>({
+  const { data: barcodes = [] } = useQuery<BarcodeItem[]>({
     queryKey: ["/api/barcode-warehouse/barcodes"],
     enabled: !!selectedWarehouse,
+    select: selectArray<BarcodeItem>,
   });
 
-  const { data: pickingTasks } = useQuery<PickingTask[]>({
+  const { data: pickingTasks = [] } = useQuery<PickingTask[]>({
     queryKey: ["/api/barcode-warehouse/picking-tasks"],
     enabled: !!selectedWarehouse,
+    select: selectArray<PickingTask>,
   });
 
-  const { data: exitLogs } = useQuery<ExitLog[]>({
+  const { data: exitLogs = [] } = useQuery<ExitLog[]>({
     queryKey: ["/api/barcode-warehouse/exit-logs"],
     enabled: !!selectedWarehouse && activeTab === "nazorat",
+    select: selectArray<ExitLog>,
   });
 
-  const { data: operatorDebts } = useQuery<OperatorDebt[]>({
+  const { data: operatorDebts = [] } = useQuery<OperatorDebt[]>({
     queryKey: ["/api/barcode-warehouse/operator-balance"],
     enabled: !!selectedWarehouse && activeTab === "nazorat",
+    select: selectArray<OperatorDebt>,
   });
 
   const { data: dashboardData } = useQuery<{ recentMovements: RecentMovement[] }>({
@@ -182,11 +192,11 @@ export default function WarehouseHub() {
     setScanInput("");
   };
 
-  const filteredBarcodes = barcodes?.filter(b => !selectedWarehouse || b.warehouseId === selectedWarehouse.id || !b.warehouseId) || [];
-  const availableCount = warehouseStockData?.totalItems || (Array.isArray(filteredBarcodes) ? filteredBarcodes : []).filter(b => b.status === "AVAILABLE").length;
-  const qcHoldCount = (Array.isArray(filteredBarcodes) ? filteredBarcodes : []).filter(b => b.status === "QC_HOLD").length;
-  const pendingPickingCount = pickingTasks?.filter(t => t.status === "pending").length || 0;
-  const debtCount = operatorDebts?.filter(d => d.status === "open").length || 0;
+  const filteredBarcodes = barcodes.filter(b => !selectedWarehouse || b.warehouseId === selectedWarehouse.id || !b.warehouseId);
+  const availableCount = warehouseStockData?.totalItems ?? filteredBarcodes.filter(b => b.status === "AVAILABLE").length;
+  const qcHoldCount = filteredBarcodes.filter(b => b.status === "QC_HOLD").length;
+  const pendingPickingCount = pickingTasks.filter(t => t.status === "pending").length;
+  const debtCount = operatorDebts.filter(d => d.status === "open").length;
 
   if (whLoading) return <div className="flex items-center justify-center h-screen bg-surface"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (isError) return <div className="h-screen bg-surface"><ErrorState onRetry={refetch} /></div>;
@@ -208,6 +218,21 @@ export default function WarehouseHub() {
           />
         </div>
         <Button onClick={handleScan} className="h-14 w-14 rounded-2xl bg-primary text-white hover:scale-105 transition-transform"><Search className="h-6 w-6" /></Button>
+        <Button
+          onClick={() => selectedWarehouse && syncToPos(selectedWarehouse.id)}
+          disabled={isSyncing || !selectedWarehouse}
+          variant="outline"
+          className="h-14 px-4 rounded-2xl border-outline-variant text-sm font-semibold"
+          title="POS Monitor terminallariga stok ma'lumotini yuborish"
+          data-testid="button-sync-pos"
+        >
+          {isSyncing ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <ArrowRightLeft className="h-5 w-5 mr-1" />
+          )}
+          {isSyncing ? "Yuborilmoqda..." : "POS Sync"}
+        </Button>
       </div>
 
       <WarehouseStatsPanel availableCount={availableCount} qcHoldCount={qcHoldCount} pendingPickingCount={pendingPickingCount} debtCount={debtCount} />

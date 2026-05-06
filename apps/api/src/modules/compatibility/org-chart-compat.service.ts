@@ -1,64 +1,141 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { db,
-  rawSql} from '@shared/db';
+/**
+ * OrgChartCompatService — `/org-chart/tree` va `/org-chart/flat` uchun.
+ *
+ * Frontend (`OrgChartPage.tsx`) kutadi:
+ *   {
+ *     tree: OrgChartNode[],
+ *     stats: { totalDepartments, totalEmployees, maxDepth }
+ *   }
+ *
+ * OrgChartNode: { id, name, vep?, employeeCount?, color?, icon?, children? }
+ *
+ * MUHIM: `safeCall` natijani avtomatik `Ok(value)` bilan o'raydi —
+ * shu sababli ichkarida QO'LDA `{ ok: true, data: ... }` qaytarmaslik kerak
+ * (avvalgi versiyada double-wrap bor edi → frontend tree undefined olardi).
+ */
+import { Injectable } from '@nestjs/common';
+import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
-import { dbRows } from '../hr/common/db-rows';
-import { safeCall, Result } from '@common/result';
+import { dbRows, type DbRow } from '../hr/common/db-rows';
+import { safeCall, Result, AppError } from '@common/result';
 
-function buildTree(
-  nodes: Record<string, unknown>[],
-  parentId: number | null = null,
-): Record<string, unknown>[] {
-  return (Array.isArray(nodes) ? nodes : []).filter((n) => (n['parent_id'] ?? null) === parentId)
-    .map((n) => ({ ...n, children: buildTree(nodes, n['id'] as number) }));
+interface DeptRow extends DbRow {
+  id: string;
+  name: string;
+  parentId: number | null;
+  managerId: number | null;
+  vep: string | null;
+  color: string | null;
+  icon: string | null;
+  level: number | null;
+  employeeCount: number;
+  children?: DeptRow[];
+}
+
+interface OrgTreeData {
+  tree: DeptRow[];
+  stats: {
+    totalDepartments: number;
+    totalEmployees: number;
+    maxDepth: number;
+  };
+}
+
+interface FlatDept extends DbRow {
+  id: string;
+  name: string;
+  parentId: number | null;
+  managerId: number | null;
+  employeeCount: number;
+}
+
+function buildTree(nodes: DeptRow[], parentId: number | null = null): DeptRow[] {
+  const safe = Array.isArray(nodes) ? nodes : [];
+  return safe
+    .filter((n) => (n.parentId ?? null) === parentId)
+    .map((n) => ({ ...n, children: buildTree(safe, Number(n.id)) }));
+}
+
+function computeMaxDepth(nodes: DeptRow[], depth = 1): number {
+  if (!Array.isArray(nodes) || nodes.length === 0) return depth - 1;
+  return Math.max(...nodes.map((n) => computeMaxDepth(n.children ?? [], depth + 1)));
 }
 
 @Injectable()
 export class OrgChartCompatService {
-
-  async getOrgTree(departmentId?: string): Promise<Result<Record<string, unknown>>>{
+  /**
+   * `/api/org-chart/tree` — hierarchical bo'limlar daraxti + statistika.
+   */
+  async getOrgTree(departmentId?: string): Promise<Result<OrgTreeData, AppError>> {
     return safeCall(async () => {
-    const deptFilter = departmentId
-      ? sql`WHERE d.id = ${parseInt(departmentId, 10)}`
-      : sql``;
-    const [depts, emps] = await Promise.all([
-      rawSql(sql`
-        SELECT d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
-               COUNT(e.id) AS employee_count
+      const deptFilter = departmentId
+        ? sql`WHERE d.id = ${parseInt(departmentId, 10)}`
+        : sql``;
+
+      const depts = await rawSql(sql`
+        SELECT
+          d.id::text                                  AS id,
+          COALESCE(d.name_uz, d.name, '')             AS name,
+          d.parent_id                                 AS "parentId",
+          d.manager_id                                AS "managerId",
+          COALESCE(
+            NULLIF(TRIM(mgr.first_name || ' ' || COALESCE(mgr.last_name, '')), ''),
+            d.vep
+          )                                           AS vep,
+          d.color,
+          d.icon,
+          d.level,
+          COUNT(e.id)::int                            AS "employeeCount"
         FROM departments d
         LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
+        LEFT JOIN employees mgr ON mgr.id = d.manager_id
         ${deptFilter}
-        GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id
-        ORDER BY d.parent_id NULLS FIRST, d.name
-      `),
-      rawSql(sql`
-        SELECT e.id, e.first_name || ' ' || e.last_name AS full_name,
-               e.department_id, e.photo_url, e.employee_code,
-               COALESCE(p.name, p.name_uz) AS position_name
-        FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
-        WHERE e.status = 'active'
-        ORDER BY e.first_name
-      `),
-    ]);
-    const deptList = dbRows(depts);
-    const empList = dbRows(emps);
-    const tree = buildTree(deptList);
-    return { ok: true, data: { tree, departments: deptList, employees: empList } };
-  
-    });}
+        GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
+                 d.vep, d.color, d.icon, d.level, d.sort_order,
+                 mgr.first_name, mgr.last_name
+        ORDER BY d.parent_id NULLS FIRST, d.sort_order, COALESCE(d.name_uz, d.name)
+      `);
 
-  async getOrgFlat(_departmentId?: string){
+      const deptList = dbRows<DeptRow>(depts);
+      const safeList = Array.isArray(deptList) ? deptList : [];
+      const tree = buildTree(safeList, null);
+
+      const totalEmployees = safeList.reduce(
+        (sum, d) => sum + Number(d.employeeCount ?? 0),
+        0,
+      );
+      const maxDepth = computeMaxDepth(tree);
+
+      return {
+        tree,
+        stats: {
+          totalDepartments: safeList.length,
+          totalEmployees,
+          maxDepth,
+        },
+      };
+    });
+  }
+
+  /**
+   * `/api/org-chart/flat` — bo'limlar yassi ro'yxati (hierarchy yo'q).
+   */
+  async getOrgFlat(_departmentId?: string): Promise<Result<FlatDept[], AppError>> {
     return safeCall(async () => {
-    const r = await rawSql(sql`
-      SELECT d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
-             COUNT(e.id) AS employee_count
-      FROM departments d
-      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-      GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id
-      ORDER BY d.name
-    `);
-    return { ok: true, data: dbRows(r) };
-  
-    });}
+      const r = await rawSql(sql`
+        SELECT
+          d.id::text                                  AS id,
+          COALESCE(d.name_uz, d.name, '')             AS name,
+          d.parent_id                                 AS "parentId",
+          d.manager_id                                AS "managerId",
+          COUNT(e.id)::int                            AS "employeeCount"
+        FROM departments d
+        LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
+        GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id
+        ORDER BY COALESCE(d.name_uz, d.name)
+      `);
+      const rows = dbRows<FlatDept>(r);
+      return Array.isArray(rows) ? rows : [];
+    });
+  }
 }

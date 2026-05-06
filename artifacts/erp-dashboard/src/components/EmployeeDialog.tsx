@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, getAuthHeaders } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -40,16 +40,27 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   const [selectedOrgDepts, setSelectedOrgDepts] = useState<string[]>([]);
   const [orgSearchQuery, setOrgSearchQuery] = useState("");
 
+  // Modal ochilganda chaqiruvlar — yopiq bo'lsa hech narsa chaqirilmaydi (auth tekshirilmagan ham)
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ["/api/departments"],
+    enabled: open === true,
   });
 
   const { data: allPositions = [] } = useQuery<Position[]>({
     queryKey: ["/api/positions"],
+    enabled: open === true,
   });
 
   const { data: orgDepartments = [] } = useQuery<OrgDepartment[]>({
     queryKey: ["/api/org-departments"],
+    enabled: open === true,
+  });
+
+  // Edit rejimida: xodim allaqachon biriktirilgan funksiyalarni olamiz
+  // (rahbar bo'lgan + ishlovchi bo'lgan barcha funksiyalar)
+  const { data: assignedDeptsData } = useQuery<{ orgDepartmentIds: string[] }>({
+    queryKey: [`/api/employees/${employee?.id}/org-departments`],
+    enabled: open === true && !!employee?.id,
   });
 
   const form = useForm<EmployeeFormData>({
@@ -129,11 +140,16 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         longitude: employee.longitude?.toString() || "",
       });
       
-      if (orgDepartments.length > 0) {
-        const assignedDeptIds = orgDepartments
-          .filter(d => d.headUserId === employee.id)
-          .map(d => d.id);
-        setSelectedOrgDepts(assignedDeptIds);
+      // Xodim'ning barcha biriktirilgan funksiyalari (rahbar + ishlovchi)
+      // Backend'dan kelgan haqiqiy assignment'lar (employee_org_departments orqali)
+      if (Array.isArray(assignedDeptsData?.orgDepartmentIds)) {
+        setSelectedOrgDepts(assignedDeptsData.orgDepartmentIds);
+      } else if (orgDepartments.length > 0) {
+        // Fallback: backend assignedDeptsData kelmasa, faqat rahbar bo'lgan funksiyalar
+        const fallbackIds = orgDepartments
+          .filter(d => String(d.headUserId) === String(employee.id))
+          .map(d => String(d.id));
+        setSelectedOrgDepts(fallbackIds);
       }
     } else {
       form.reset({
@@ -167,27 +183,36 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       setSelectedOrgDepts([]);
       setOrgSearchQuery("");
     }
-  }, [open, employee, form, orgDepartments]);
+  }, [open, employee, form, orgDepartments, assignedDeptsData]);
 
   const handleAfterSubmit = async (empId: string) => {
+    // Profile image — FormData (Content-Type avtomatik), faqat Authorization header
     if (selectedFile) {
       const formData = new FormData();
       formData.append("image", selectedFile);
-      await fetch(`/api/employees/${empId}/profile-image`, {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        await fetch(`/api/employees/${empId}/profile-image`, {
+          method: "POST",
+          headers: getAuthHeaders(),
+          credentials: "include",
+          body: formData,
+        });
+      } catch {
+        // Silently fail — asosiy xodim yaratilgan, rasm yuklash optional
+      }
     }
+    // Org functions — JSON, Authorization header bilan
     const orgRes = await fetch(`/api/employees/${empId}/assign-org-functions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ orgDepartmentIds: selectedOrgDepts }),
     });
     if (!orgRes.ok) {
       const orgError = await orgRes.json().catch(() => ({ error: "Funktsiyalarni saqlashda xatolik" }));
       toast({
         title: "Ogohlantirish",
-        description: orgError.error || "Tashkiliy funksiyalarni saqlashda xatolik",
+        description: orgError.message || orgError.error || "Tashkiliy funksiyalarni saqlashda xatolik",
         variant: "destructive",
       });
     }

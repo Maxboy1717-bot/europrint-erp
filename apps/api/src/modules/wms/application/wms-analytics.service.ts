@@ -131,7 +131,7 @@ export class WmsAnalyticsService {
         WHERE mc.is_active = true
           AND GREATEST(mc.current_stock, 0) > 0
           AND (
-            lm.last_at < NOW() - ${sql.raw(`INTERVAL '${DEAD_STOCK_THRESHOLD_DAYS} days'`)}
+            lm.last_at < NOW() - (INTERVAL '1 day' * ${DEAD_STOCK_THRESHOLD_DAYS})
             OR lm.last_at IS NULL
           )
         ORDER BY days_since DESC NULLS FIRST, total_value DESC

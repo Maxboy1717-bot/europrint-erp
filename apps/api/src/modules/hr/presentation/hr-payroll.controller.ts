@@ -1,6 +1,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
+  BadRequestException,
   Body, Controller, Get, Inject, InternalServerErrorException, Param, Post, Query,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
@@ -12,6 +13,10 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { HR_REPO, IHrRepo } from '../domain/repositories/i-hr.repo';
+import {
+  findUserIdByEmployee,
+  hasAnyOrgAssignment,
+} from '../../compatibility/employees-org-assignment.helper';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -57,6 +62,21 @@ export class HrPayrollController {
     @Body() body: HrCalculatePayrollDto,
     @CurrentUser() _user: AuthenticatedUser,
   ) {
+    // Biznes qoida: oylik kiritishdan oldin xodim org-structure'da biriktirilgan bo'lishi shart.
+    const userId = await findUserIdByEmployee(body.employeeId);
+    if (userId === null) {
+      throw new BadRequestException(
+        `Xodim ID=${body.employeeId} uchun user yaratilmagan — oylik kiritilmaydi`,
+      );
+    }
+    const isAssigned = await hasAnyOrgAssignment(userId);
+    if (!isAssigned) {
+      throw new BadRequestException(
+        `Xodim ID=${body.employeeId} tashkiliy tuzilmaga biriktirilmagan — ` +
+        `oylik kiritilmaydi. Avval xodim org-structure'da bo'limga assign qilinishi kerak.`,
+      );
+    }
+
     const period       = body.period ?? _time.now().toISOString().slice(0, 7);
     const overtimeRate = body.overtimeRate ?? 1.5;
     const dailyRate    = body.baseSalary / 22;
