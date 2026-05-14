@@ -1,3 +1,8 @@
+/**
+ * @module ai.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 import { CLAUDE_DEFAULT_MODEL } from '@common/constants/app.constants';
 
 export type AiProvider = 'openai' | 'gemini' | 'claude';
@@ -50,7 +55,10 @@ export type AiTaskType =
   | 'design.layout_critique'
   | 'design.brand_check'
   // Prepress AI (1)
-  | 'prepress.vision_preflight';
+  | 'prepress.vision_preflight'
+  // Communication Center AI (2)
+  | 'cc.interview_question'
+  | 'cc.generate_document';
 
 export interface AiRequest {
   taskType: AiTaskType;
@@ -114,6 +122,8 @@ export const TASK_PROVIDER_MAP: Record<AiTaskType, AiProvider> = {
   'design.layout_critique': 'openai',
   'design.brand_check': 'openai',
   'prepress.vision_preflight': 'gemini',
+  'cc.interview_question': 'claude',
+  'cc.generate_document':  'claude',
 };
 
 export const PROVIDER_MODELS: Record<AiProvider, string> = {

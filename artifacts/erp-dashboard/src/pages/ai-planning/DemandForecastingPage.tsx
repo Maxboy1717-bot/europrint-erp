@@ -1,3 +1,8 @@
+/**
+ * @module DemandForecastingPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -56,7 +61,7 @@ export default function DemandForecastingPage() {
 
       <Section title={t('demandForecast.list', "Mahsulotlar bashorati")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14" />)}</div>
+          <div className="space-y-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('demandForecast.empty', "Ma'lumot yo'q")}</p>
         ) : (
@@ -85,8 +90,8 @@ export default function DemandForecastingPage() {
                     </td>
                     <td className="text-center p-2">
                       <Badge variant="outline" className={
-                        i.confidence >= CONFIDENCE_HIGH ? "text-emerald-700" :
-                        i.confidence >= CONFIDENCE_MEDIUM ? "text-yellow-700" : "text-rose-700"
+                        i.confidence >= CONFIDENCE_HIGH ? "text-[var(--ep-green)]" :
+                        i.confidence >= CONFIDENCE_MEDIUM ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"
                       }>
                         {i.confidence}%
                       </Badge>

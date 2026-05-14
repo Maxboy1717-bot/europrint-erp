@@ -1,3 +1,8 @@
+/**
+ * @module payment-received.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Err } from '@common/types/result.type';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -26,6 +31,20 @@ export class PaymentReceivedListener {
       const orderResult = await this.orderRepo.findById(Number(event.orderId));
       if (!orderResult.ok || !orderResult.data) {
         this.logger.warn({ msg: 'Order not found', orderId: event.orderId });
+        return;
+      }
+
+      const order = orderResult.data as { getStatus(): string };
+      const currentStatus = order.getStatus();
+
+      // State machine allows: delivered → closed only.
+      // If payment arrives before delivery, record it but do not force-close.
+      if (currentStatus !== 'delivered') {
+        this.logger.log({
+          msg: 'Full payment received but order not yet delivered — close deferred',
+          orderId: event.orderId,
+          currentStatus,
+        });
         return;
       }
 

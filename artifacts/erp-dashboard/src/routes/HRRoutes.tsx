@@ -1,3 +1,8 @@
+/**
+ * @module HRRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
 const Employees = lazy(() => import("@/pages/Employees"));

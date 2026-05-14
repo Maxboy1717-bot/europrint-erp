@@ -1,9 +1,15 @@
+/**
+ * @module ProductionCompletePanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Factory, Loader2 } from "lucide-react";
+import { Factory } from "lucide-react";
 
+import { EPLoader } from "@/components/ep";
 interface ProductionCompleteProps {
   form: {
     consumptionId: string;
@@ -26,7 +32,7 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Sarflash ID</Label>
             <Input
@@ -48,7 +54,7 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Chiqindi (kg)</Label>
             <Input
@@ -78,7 +84,7 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
           data-testid="button-complete"
         >
           {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            <EPLoader className="mr-1" />
           ) : (
             <Factory className="h-4 w-4 mr-1" />
           )}

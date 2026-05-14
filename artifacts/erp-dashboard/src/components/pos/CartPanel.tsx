@@ -1,3 +1,8 @@
+/**
+ * @module CartPanel
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +27,11 @@ export function CartPanel({
   const { t } = useTranslation('finance');
   const { t: tCommon } = useTranslation('common');
 
+  const handleClearCart = () => {
+    if (!window.confirm('Savatni tozalab tashlamoqchimisiz?')) return;
+    setCart([]);
+  };
+
   return (
     <Card className="flex-1 flex flex-col min-h-0">
       <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between gap-2">
@@ -32,7 +42,7 @@ export function CartPanel({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCart([])}
+            onClick={handleClearCart}
             data-testid="button-clear-cart"
           >
             <Trash2 className="h-3 w-3 mr-1" /> {tCommon('delete')}
@@ -47,8 +57,8 @@ export function CartPanel({
             <p className="text-xs">Scan barcode to add products</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
+          <div className="ep-table-scroll"><Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>{t('products')}</TableHead>
                 <TableHead className="text-center w-32">{t('quantity')}</TableHead>
@@ -59,7 +69,7 @@ export function CartPanel({
             </TableHeader>
             <TableBody>
               {(Array.isArray(cart) ? cart : []).map((item) => (
-                <TableRow key={item.productId} data-testid={`row-cart-item-${item.productId}`}>
+                <TableRow key={item.productId} data-testid={`row-cart-item-${item.productId}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell>
                     <div>
                       <span className="font-medium text-sm">{item.name}</span>
@@ -111,7 +121,7 @@ export function CartPanel({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         )}
       </CardContent>
     </Card>

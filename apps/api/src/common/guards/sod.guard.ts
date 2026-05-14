@@ -1,3 +1,8 @@
+/**
+ * @module sod.guard
+ * @description NestJS guard. canActivate() returns true when access is permitted; throws Unauthorized/Forbidden otherwise.
+ */
+
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common'
 import { PermissionSet } from '../cache/permission-set.interface'
 
@@ -86,10 +91,10 @@ export class SodGuard implements CanActivate {
       }
     }
 
-    if (
-      (path.includes('/material') && method === 'POST') ||
-      (path.includes('/material') && method === 'DELETE')
-    ) {
+    // Rule 5: Material create + delete separation
+    // Only triggers on specific MM materials endpoints, not on any URL containing 'material'
+    const isMaterialEndpoint = /\/mm\/materials(\/\d+)?$/.test(path) || /\/materials(\/\d+)?$/.test(path);
+    if (isMaterialEndpoint && (method === 'POST' || method === 'DELETE')) {
       if (permissions.includes('material:create') && permissions.includes('material:delete')) {
         violations.push('Cannot both create and delete materials')
       }

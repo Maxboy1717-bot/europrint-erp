@@ -1,3 +1,8 @@
+/**
+ * @module LeadForm
+ * @description React UI component.
+ */
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -12,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -21,11 +25,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { User, Phone, Mail, Building2, DollarSign, MessageSquare } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { LEAD_SOURCES, leadFormSchema, type LeadFormValues } from "./lead-schema";
+import { LEAD_SOURCES, LEAD_PRIORITIES, leadFormSchema, type LeadFormValues } from "./lead-schema";
 
+import { EPLoader } from "@/components/ep";
 interface LeadFormProps {
   users: Array<{ id: string; fullName: string }>;
   usersLoading: boolean;
@@ -38,42 +43,45 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
-      title: "",
-      name: "",
-      lastName: "",
-      phone: "",
-      email: "",
-      companyTitle: "",
-      source: "",
+      title:             "",
+      name:              "",
+      lastName:          "",
+      phone:             "",
+      email:             "",
+      companyTitle:      "",
+      source:            "",
       sourceDescription: "",
-      budget: 0,
+      priority:          "normal",
+      budget:            0,
       opportunityAmount: 0,
-      comments: "",
-      assignedById: "",
+      comments:          "",
+      assignedById:      "",
     },
   });
 
   const mutation = useMutation({
     mutationFn: async (data: LeadFormValues) => {
       const payload = {
-        title: data.title,
-        name: data.name || null,
-        lastName: data.lastName || null,
-        companyTitle: data.companyTitle || null,
-        phones: data.phone ? [{ value: data.phone, type: "WORK" }] : [],
-        emails: data.email ? [{ value: data.email, type: "WORK" }] : [],
-        sourceId: data.source || null,
+        title:             data.title,
+        name:              data.name              || null,
+        lastName:          data.lastName          || null,
+        companyTitle:      data.companyTitle      || null,
+        phones:            data.phone ? [{ value: data.phone, type: "WORK" }] : [],
+        emails:            data.email ? [{ value: data.email, type: "WORK" }] : [],
+        sourceId:          data.source            || null,
         sourceDescription: data.sourceDescription || null,
-        budget: data.budget?.toString() || null,
+        priority:          data.priority          || "normal",
+        budget:            data.budget?.toString() || null,
         opportunityAmount: data.opportunityAmount?.toString() || null,
-        comments: data.comments || null,
-        assignedById: data.assignedById || null,
+        opportunity:       data.opportunityAmount  || null,   // also map to opportunity field
+        comments:          data.comments          || null,
+        assignedById:      data.assignedById      || null,
       };
       return apiRequest("POST", "/api/crm/leads/quick", payload);
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });
-      toast({ title: "Lid yaratildi", description: "Yangi lid muvaffaqiyatli qo'shildi" });
+      toast({ title: "✅ Lid yaratildi", description: "Yangi lid muvaffaqiyatli qo'shildi" });
       onCreated?.(result);
       onClose();
     },
@@ -88,74 +96,127 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Asosiy ma'lumotlar</h4>
-          <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-5">
+
+        {/* ── Asosiy ma'lumotlar ─────────────────────────────────────── */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-primary" />
+            <h4 className="text-sm font-semibold">Asosiy ma'lumotlar</h4>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Lid nomi — full width */}
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem className="col-span-2">
-                  <FormLabel>Lid nomi <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Lid nomi <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Lid nomini kiriting" {...field} data-testid="input-title" autoFocus />
+                    <Input
+                      placeholder="Masalan: EuroPrint uchun matbaa uskunalari"
+                      {...field}
+                      data-testid="input-title"
+                      autoFocus
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Ism */}
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ism</FormLabel>
-                  <FormControl><Input placeholder="Ismini kiriting" {...field} data-testid="input-name" /></FormControl>
+                  <FormLabel className="flex items-center gap-1">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" /> Ism
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ismini kiriting" {...field} data-testid="input-name" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Familiya */}
             <FormField
               control={form.control}
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Familiya</FormLabel>
-                  <FormControl><Input placeholder="Familiyasini kiriting" {...field} data-testid="input-lastName" /></FormControl>
+                  <FormLabel className="flex items-center gap-1">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" /> Familiya
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Familiyasini kiriting" {...field} data-testid="input-lastName" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Telefon */}
             <FormField
               control={form.control}
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefon</FormLabel>
-                  <FormControl><Input placeholder="+998 90 123 45 67" {...field} data-testid="input-phone" /></FormControl>
+                  <FormLabel className="flex items-center gap-1">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground" /> Telefon
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="+998 90 123 45 67" {...field} data-testid="input-phone" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Email */}
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl><Input type="email" placeholder="example@mail.com" {...field} data-testid="input-email" /></FormControl>
+                  <FormLabel className="flex items-center gap-1">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" /> Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="example@mail.com"
+                      {...field}
+                      data-testid="input-email"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Kompaniya — full width */}
             <FormField
               control={form.control}
               name="companyTitle"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kompaniya nomi</FormLabel>
-                  <FormControl><Input placeholder="Kompaniya nomini kiriting" {...field} data-testid="input-companyTitle" /></FormControl>
+                <FormItem className="col-span-2">
+                  <FormLabel className="flex items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" /> Kompaniya
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Kompaniya nomini kiriting"
+                      {...field}
+                      data-testid="input-companyTitle"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -163,11 +224,15 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
           </div>
         </div>
 
-        <Separator />
+        {/* ── Savdo ma'lumotlari ─────────────────────────────────────── */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-emerald-500" />
+            <h4 className="text-sm font-semibold">Savdo ma'lumotlari</h4>
+          </div>
 
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Moliyaviy ma'lumotlar</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Manba */}
             <FormField
               control={form.control}
               name="source"
@@ -176,14 +241,14 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
                   <FormLabel>Manba</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-source">
+                      <SelectTrigger data-testid="select-source" className="h-9">
                         <SelectValue placeholder="Manbani tanlang" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(Array.isArray(LEAD_SOURCES) ? LEAD_SOURCES : []).map((source) => (
-                        <SelectItem key={source.value} value={source.value} data-testid={`source-option-${source.value}`}>
-                          {source.label}
+                      {LEAD_SOURCES.map((s) => (
+                        <SelectItem key={s.value} value={s.value} data-testid={`source-option-${s.value}`}>
+                          {s.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -192,21 +257,94 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
                 </FormItem>
               )}
             />
+
+            {/* Ustuvorlik */}
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ustuvorlik</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-priority" className="h-9">
+                        <SelectValue placeholder="Darajani tanlang" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {LEAD_PRIORITIES.map((p) => (
+                        <SelectItem key={p.value} value={p.value} data-testid={`priority-option-${p.value}`}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Kutilayotgan daromad */}
+            <FormField
+              control={form.control}
+              name="opportunityAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <DollarSign className="h-3.5 w-3.5 text-muted-foreground" /> Kutilayotgan daromad
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      {...field}
+                      data-testid="input-opportunityAmount"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Byudjet */}
+            <FormField
+              control={form.control}
+              name="budget"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <DollarSign className="h-3.5 w-3.5 text-muted-foreground" /> Byudjet (so'm)
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0" {...field} data-testid="input-budget" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Mas'ul shaxs — full width */}
             <FormField
               control={form.control}
               name="assignedById"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-2">
                   <FormLabel>Mas'ul shaxs</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-assignedById">
-                        <SelectValue placeholder={usersLoading ? "Yuklanmoqda..." : "Mas'ul shaxsni tanlang"} />
+                      <SelectTrigger data-testid="select-assignedById" className="h-9">
+                        <SelectValue
+                          placeholder={usersLoading ? "Yuklanmoqda..." : "Mas'ul shaxsni tanlang"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {(Array.isArray(users) ? users : []).map((user) => (
-                        <SelectItem key={user.id} value={user.id} data-testid={`user-option-${user.id}`}>
+                        <SelectItem
+                          key={user.id}
+                          value={user.id}
+                          data-testid={`user-option-${user.id}`}
+                        >
                           {user.fullName}
                         </SelectItem>
                       ))}
@@ -216,61 +354,51 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="budget"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Byudjet (so'm)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} data-testid="input-budget" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="opportunityAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kutilayotgan daromad</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} data-testid="input-opportunityAmount" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
         </div>
 
-        <Separator />
+        {/* ── Qo'shimcha ─────────────────────────────────────────────── */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-violet-500" />
+            <h4 className="text-sm font-semibold">Qo'shimcha</h4>
+          </div>
 
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Qo'shimcha ma'lumotlar</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-3">
             <FormField
               control={form.control}
               name="sourceDescription"
               render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel>Manba tavsifi</FormLabel>
+                <FormItem>
+                  <FormLabel>Manba tavsifi / Qiziqish mahsuloti</FormLabel>
                   <FormControl>
-                    <Input placeholder="Qiziqish mahsuloti yoki tavsif" {...field} data-testid="input-sourceDescription" />
+                    <Input
+                      placeholder="Masalan: offset bosma, A3 format, 1000 dona"
+                      {...field}
+                      data-testid="input-sourceDescription"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="comments"
               render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel>Izohlar</FormLabel>
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /> Izoh
+                  </FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Qo'shimcha izohlar..." className="resize-none" rows={3} {...field} data-testid="input-comments" />
+                    <Textarea
+                      placeholder="Qo'shimcha izohlar, eslatmalar..."
+                      className="resize-none"
+                      rows={3}
+                      {...field}
+                      data-testid="input-comments"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -279,13 +407,24 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
           </div>
         </div>
 
-        <DialogFooter className="gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} data-testid="button-cancel">
+        {/* ── Footer ────────────────────────────────────────────────── */}
+        <DialogFooter className="gap-2 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            data-testid="button-cancel"
+          >
             Bekor qilish
           </Button>
-          <Button type="submit" disabled={mutation.isPending} data-testid="button-submit">
-            {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Yaratish
+          <Button
+            type="submit"
+            disabled={mutation.isPending}
+            data-testid="button-submit"
+            className="gap-2"
+          >
+            {mutation.isPending && <EPLoader />}
+            Lid yaratish
           </Button>
         </DialogFooter>
       </form>

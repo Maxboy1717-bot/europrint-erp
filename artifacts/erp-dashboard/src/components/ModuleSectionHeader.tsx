@@ -1,3 +1,8 @@
+/**
+ * @module ModuleSectionHeader
+ * @description React UI component.
+ */
+
 import { type LucideIcon, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 

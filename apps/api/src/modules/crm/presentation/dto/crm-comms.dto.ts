@@ -1,9 +1,14 @@
+/**
+ * @module crm-comms.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 
 export const SendEmailDtoSchema = z.object({
   to: z.string().email('Noto\'g\'ri email format'),
   subject: z.string().min(1).max(500),
-  body: z.string().min(1).max(50_000),
+  body: z.string().max(50_000).optional().default(''),
   lead_id: z.number().int().positive().optional(),
   deal_id: z.number().int().positive().optional(),
 });

@@ -1,3 +1,8 @@
+/**
+ * @module waste.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -17,7 +22,7 @@ export class WasteRepository {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
         SELECT wr.id, wr.production_order_id, wr.order_id, wr.machine_id, wr.operator_id,
-               u.full_name AS operator_name, wr.waste_type, wr.material_type, wr.quantity, wr.unit,
+               (u.first_name || ' ' || u.last_name) AS operator_name, wr.waste_type, wr.material_type, wr.quantity, wr.unit,
                wr.cost_per_unit, wr.total_cost, wr.cause, wr.correction_action, wr.shift_number,
                wr.date, wr.notes, wr.is_recyclable, wr.recycled_quantity, wr.created_at
         FROM waste_records wr

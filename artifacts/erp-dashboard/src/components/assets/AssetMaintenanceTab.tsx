@@ -1,3 +1,8 @@
+/**
+ * @module AssetMaintenanceTab
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +36,11 @@ export function MaintenanceTab({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("maintStatusScheduled")}</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-blue-500">{(Array.isArray(maintenanceRecords) ? maintenanceRecords : []).filter(m => m.status === "scheduled").length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-[var(--ep-blue)]">{(Array.isArray(maintenanceRecords) ? maintenanceRecords : []).filter(m => m.status === "scheduled").length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("maintStatusInProgress")}</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-amber-500">{(Array.isArray(maintenanceRecords) ? maintenanceRecords : []).filter(m => m.status === "in_progress").length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-[var(--ep-yellow)]">{(Array.isArray(maintenanceRecords) ? maintenanceRecords : []).filter(m => m.status === "in_progress").length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("cardMaintCost")}</CardTitle></CardHeader>
@@ -58,9 +63,9 @@ export function MaintenanceTab({
         </CardHeader>
         <CardContent>
           {maintenanceLoading ? (
-            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full" />)}</div>
+            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}</div>
           ) : filteredMaintenance.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>{t("noMaintRecords")}</p>
             </div>
@@ -68,7 +73,7 @@ export function MaintenanceTab({
             <div className="border rounded-md overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
                     <TableHead>{t("colAssetId")}</TableHead>
                     <TableHead>{tCommon("type")}</TableHead>
                     <TableHead>{tCommon("status")}</TableHead>
@@ -94,7 +99,7 @@ export function MaintenanceTab({
                       <TableCell className="text-center">
                         {(record.status === "scheduled" || record.status === "in_progress") && (
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCompleteMaintenanceClick(record)} title={t("finish")} data-testid={`button-complete-maintenance-${record.id}`}>
-                            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                            <CheckCircle className="h-3.5 w-3.5 text-[var(--ep-green)]" />
                           </Button>
                         )}
                       </TableCell>

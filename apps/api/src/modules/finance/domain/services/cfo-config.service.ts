@@ -1,3 +1,8 @@
+/**
+ * @module cfo-config.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
 import { pgTable, serial, varchar, numeric, text, timestamp } from 'drizzle-orm/pg-core';

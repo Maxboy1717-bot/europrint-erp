@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+/**
+ * @module employees-compat-financials.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -107,6 +112,97 @@ export class EmployeesCompatFinancialsService {
         ORDER BY a.created_at DESC LIMIT 50
       `);
       return dbRows(r) as Row[];
+    });
+  }
+
+  async createBankAccount(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        INSERT INTO employee_bank_accounts (employee_id, bank_name, account_number, account_type, is_primary)
+        VALUES (${si(employeeId)}, ${body['bank_name'] ?? body['bankName'] ?? ''}, ${body['account_number'] ?? body['accountNumber'] ?? ''}, ${body['account_type'] ?? body['accountType'] ?? 'checking'}, ${body['is_primary'] ?? body['isPrimary'] ?? false})
+        RETURNING id, employee_id, bank_name, account_number, account_type, is_primary, created_at
+      `);
+      const item = dbRows(r)[0] as Row | undefined;
+      if (!item) throw new InternalServerErrorException('Bank account creation failed');
+      return item;
+    });
+  }
+
+  async createBonus(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        INSERT INTO salary_history (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, total_bonuses, other_bonuses)
+        VALUES (${si(employeeId)}, ${body['period'] ?? body['salary_period_start'] ?? new Date().toISOString().slice(0,7) + '-01'}, ${body['period_end'] ?? body['salary_period_end'] ?? null}, ${body['base_salary'] ?? 0}, ${body['salary_earned'] ?? 0}, ${body['amount'] ?? body['total_bonuses'] ?? 0}, ${body['other_bonuses'] ?? 0})
+        RETURNING id, employee_id, salary_period_start AS period, total_bonuses AS amount, created_at
+      `);
+      const item = dbRows(r)[0] as Row | undefined;
+      if (!item) throw new InternalServerErrorException('Bonus creation failed');
+      return item;
+    });
+  }
+
+  async createBusinessTrip(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        INSERT INTO employee_business_trips (employee_id, destination, purpose, start_date, end_date, status)
+        VALUES (${si(employeeId)}, ${body['destination'] ?? ''}, ${body['purpose'] ?? null}, ${body['start_date'] ?? body['startDate'] ?? null}, ${body['end_date'] ?? body['endDate'] ?? null}, ${body['status'] ?? 'pending'})
+        RETURNING id, employee_id, destination, purpose, start_date, end_date, status, created_at
+      `);
+      const item = dbRows(r)[0] as Row | undefined;
+      if (!item) throw new InternalServerErrorException('Business trip creation failed');
+      return item;
+    });
+  }
+
+  async createCashAdvance(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        INSERT INTO payroll_advances (employee_id, amount, request_date, status)
+        VALUES (${si(employeeId)}, ${body['amount'] ?? 0}, ${body['request_date'] ?? body['requestDate'] ?? new Date().toISOString().slice(0,10)}, ${body['status'] ?? 'pending'})
+        RETURNING id, employee_id, amount, request_date, status, created_at
+      `);
+      const item = dbRows(r)[0] as Row | undefined;
+      if (!item) throw new InternalServerErrorException('Cash advance creation failed');
+      return item;
+    });
+  }
+
+  async createFine(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        INSERT INTO disciplinary_actions (employee_id, type, reason, severity, appeal_status)
+        VALUES (${si(employeeId)}, ${body['type'] ?? 'fine'}, ${body['reason'] ?? ''}, ${body['severity'] ?? 'low'}, ${body['appeal_status'] ?? body['appealStatus'] ?? 'none'})
+        RETURNING id, employee_id, type, reason, severity, appeal_status, created_at
+      `);
+      const item = dbRows(r)[0] as Row | undefined;
+      if (!item) throw new InternalServerErrorException('Fine creation failed');
+      return item;
+    });
+  }
+
+  async createOvertime(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        INSERT INTO attendance_logs (employee_id, log_date, check_in, check_out, overtime_hours)
+        VALUES (${si(employeeId)}, ${body['log_date'] ?? body['logDate'] ?? body['date'] ?? new Date().toISOString().slice(0,10)}, ${body['check_in'] ?? body['checkIn'] ?? null}, ${body['check_out'] ?? body['checkOut'] ?? null}, ${body['overtime_hours'] ?? body['overtimeHours'] ?? 0})
+        RETURNING id, employee_id, log_date, overtime_hours, created_at
+      `);
+      const item = dbRows(r)[0] as Row | undefined;
+      if (!item) throw new InternalServerErrorException('Overtime creation failed');
+      return item;
+    });
+  }
+
+  async createAssessment(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        INSERT INTO employee_360_assessments (employee_id, assessment_period, assessment_year, status)
+        VALUES (${si(employeeId)}, ${body['assessment_period'] ?? body['assessmentPeriod'] ?? 'Q1'}, ${body['assessment_year'] ?? body['assessmentYear'] ?? new Date().getFullYear()}, ${body['status'] ?? 'pending'})
+        RETURNING id, employee_id, assessment_period, assessment_year, status, created_at
+      `);
+      const item = dbRows(r)[0] as Row | undefined;
+      if (!item) throw new InternalServerErrorException('Assessment creation failed');
+      return item;
     });
   }
 

@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module sd-quotations.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall, Ok, Err, Result } from '@common/result';
@@ -87,7 +92,7 @@ export class SdQuotationsRepository {
         SELECT q.*, c.name AS customer_name, c.id AS customer_record_id
         FROM sd_quotations q
         LEFT JOIN sd_customers c ON c.id = q.customer_id
-        WHERE q.id = ${id} LIMIT 1
+        WHERE q.id = ${id} AND q.deleted_at IS NULL LIMIT 1
       `);
       if (!r.ok) throw new Error(r.error.message);
       return r.data[0] ?? null;
@@ -102,18 +107,22 @@ export class SdQuotationsRepository {
       if (!quotation) return { error: `Quotation ${id} not found` };
       if (quotation['status'] === 'converted') {
         const existingOrder = quotation['order_id']
-          ? await execOne(sql`SELECT id, order_number FROM sd_sales_orders WHERE id = ${quotation['order_id']} LIMIT 1`)
+          ? await execOne(sql`SELECT id, order_number FROM sales_orders WHERE id = ${quotation['order_id']} LIMIT 1`)
           : null;
         return { order: existingOrder ?? { id: quotation['order_id'], order_number: `QO-${id}` } };
       }
       const orderNumber = `QO-${id}-${Date.now().toString(36).toUpperCase()}`;
       const totalAmount = String(quotation['total_amount'] ?? '0');
-      const companyId: number = typeof quotation['customer_id'] === 'number' ? (quotation['customer_id'] as number) : 0;
+      const companyId = Number(quotation['customer_id'] ?? quotation['company_id'] ?? 0);
+      if (isNaN(companyId) || companyId === 0) {
+        throw new BadRequestException('Invalid or missing customer_id on quotation');
+      }
+      const advancePercent = Number(quotation['advance_percent'] ?? 30);
       const insertedOrder = await execOne(sql`
-        INSERT INTO sd_sales_orders
+        INSERT INTO sales_orders
           (order_number, status, company_id, total_amount, advance_required, advance_paid, advance_status, design_flag, sample_flag, created_by)
         VALUES
-          (${orderNumber}, 'pending', ${companyId}, ${totalAmount}, 70, '0', 'pending', false, false, 0)
+          (${orderNumber}, 'pending', ${companyId}, ${totalAmount}, ${advancePercent ?? 30}, '0', 'pending', false, false, 0)
         RETURNING id, order_number, status, total_amount, created_at
       `);
       if (!insertedOrder) return { error: 'Failed to create sales order — DB insert returned no row' };

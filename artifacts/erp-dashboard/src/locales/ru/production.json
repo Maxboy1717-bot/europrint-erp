@@ -421,5 +421,11 @@
   "mrp_material": "Материал",
   "mrp_ss": "Страховой запас",
   "mrp_method": "Метод",
-  "mrp_lt": "ВЗ: {{periods}}д"
+  "mrp_lt": "ВЗ: {{periods}}д",
+  "statusGood": "Хорошо",
+  "statusMedium": "Средне",
+  "statusPoor": "Плохо",
+  "statusLow": "Статус Low",
+  "statusHigh": "Статус High",
+  "version": "Version"
 }

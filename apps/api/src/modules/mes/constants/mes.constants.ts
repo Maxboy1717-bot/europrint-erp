@@ -1,3 +1,8 @@
+/**
+ * @module mes.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 import { MAX_SHORT_TEXT, MAX_TITLE_LENGTH, MAX_SCORE_VALUE } from '@common/constants/app.constants';
 
 // ─── MES: matn uzunligi chegaralari ──────────────────────────────────────────

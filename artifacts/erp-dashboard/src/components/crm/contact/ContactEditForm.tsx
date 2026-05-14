@@ -1,3 +1,8 @@
+/**
+ * @module ContactEditForm
+ * @description React UI component.
+ */
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save, X } from "lucide-react";
@@ -22,6 +27,7 @@ import {
 import { Contact, Company, ContactFormValues, contactFormSchema } from "./types";
 import { MultiFieldInput } from "../MultiFieldInput";
 
+import { useTranslation } from '@/lib/i18n';
 interface ContactEditFormProps {
   contact: Contact | null;
   companies: Company[] | undefined;
@@ -30,7 +36,8 @@ interface ContactEditFormProps {
   onCancel: () => void;
 }
 
-export function ContactEditForm({ contact, companies, isPending, onSubmit, onCancel }: ContactEditFormProps) {
+export function ContactEditForm({contact, companies, isPending, onSubmit, onCancel }: ContactEditFormProps) {
+  const { t } = useTranslation('common');
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     values: contact
@@ -51,7 +58,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="lastName"
@@ -120,7 +127,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
                 onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
               >
                 <FormControl>
-                  <SelectTrigger data-testid="select-company">
+                  <SelectTrigger data-testid="select-company" className="h-9">
                     <SelectValue placeholder="Kompaniyani tanlang" />
                   </SelectTrigger>
                 </FormControl>
@@ -163,13 +170,13 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
           name="emails"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email manzillar</FormLabel>
+              <FormLabel>{t('emailManzillar')}</FormLabel>
               <FormControl>
                 <MultiFieldInput
                   value={field.value || []}
                   onChange={field.onChange}
                   placeholder="example@email.com"
-                  label="Email"
+                  label={t('email1')}
                   type="email"
                 />
               </FormControl>

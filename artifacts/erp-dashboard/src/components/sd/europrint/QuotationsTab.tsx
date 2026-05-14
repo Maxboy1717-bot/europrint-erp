@@ -1,3 +1,8 @@
+/**
+ * @module QuotationsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -20,9 +25,9 @@ const QUOT_STATUS_LABELS: Record<string, string> = {
   approved: "Tasdiqlandi", rejected: "Rad etildi", expired: "Muddati o'tdi",
 };
 const QUOT_STATUS_COLORS: Record<string, string> = {
-  draft: "bg-surface-container-low text-on-surface", sent: "bg-blue-100 text-blue-700",
-  viewed: "bg-indigo-100 text-indigo-700", approved: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700", expired: "bg-amber-100 text-amber-700",
+  draft: "bg-muted/40 text-foreground", sent: "bg-blue-100 text-[var(--ep-blue)]",
+  viewed: "bg-indigo-100 text-[var(--ep-blue)]", approved: "bg-green-100 text-[var(--ep-green)]",
+  rejected: "bg-red-100 text-[var(--ep-red)]", expired: "bg-amber-100 text-[var(--ep-yellow)]",
 };
 
 export function QuotationsTab() {
@@ -63,7 +68,7 @@ export function QuotationsTab() {
   });
 
   const sendMut = useMutation({
-    mutationFn: (id: string | number) => apiRequest("PUT", `/api/sd/quotations/${id}/send`, {}),
+    mutationFn: (id: string | number) => apiRequest("POST", `/api/sd/quotations/${id}/send`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/quotations"] });
       toast({ title: "Yuborildi" });
@@ -71,7 +76,7 @@ export function QuotationsTab() {
   });
 
   const approveMut = useMutation({
-    mutationFn: (id: string | number) => apiRequest("PUT", `/api/sd/quotations/${id}/approve`, {}),
+    mutationFn: (id: string | number) => apiRequest("PATCH", `/api/sd/quotations/${id}/approve`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/quotations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sd/orders"] });
@@ -88,20 +93,20 @@ export function QuotationsTab() {
           <DialogTrigger asChild>
             <Button data-testid="button-add-quotation"><Plus className="w-4 h-4 mr-1" />Yangi taklifnoma</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader><DialogTitle>Taklifnoma + narx hisoblash</DialogTitle></DialogHeader>
-            <div className="grid grid-cols-2 gap-4">
+          <DialogContent className="max-w-2xl p-6">
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Taklifnoma + narx hisoblash</DialogTitle></DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <h4 className="font-medium text-sm">Mahsulot parametrlari</h4>
                 <div><Label>Mahsulot turi</Label>
                   <Select value={calcForm.productType} onValueChange={v => setCalcForm({ ...calcForm, productType: v })}>
-                    <SelectTrigger data-testid="select-product-type"><SelectValue /></SelectTrigger>
+                    <SelectTrigger data-testid="select-product-type" className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(["box", "lid", "tray", "cup", "other"]).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div><Label>Uzunlik (mm)</Label>
                     <Input data-testid="input-length" type="number" value={calcForm.lengthMm}
                       onChange={e => setCalcForm({ ...calcForm, lengthMm: +e.target.value })} /></div>
@@ -117,7 +122,7 @@ export function QuotationsTab() {
                 </div>
                 <div><Label>Bosma ranglari</Label>
                   <Select value={String(calcForm.printColors)} onValueChange={v => setCalcForm({ ...calcForm, printColors: +v })}>
-                    <SelectTrigger data-testid="select-print-colors"><SelectValue /></SelectTrigger>
+                    <SelectTrigger data-testid="select-print-colors" className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {([0, 1, 2, 3, 4]).map(n => <SelectItem key={n} value={String(n)}>{n === 0 ? "Rangsiz" : `${n} rang`}</SelectItem>)}
                     </SelectContent>
@@ -160,7 +165,7 @@ export function QuotationsTab() {
                     <h4 className="font-medium text-sm">Taklifnoma ma'lumotlari</h4>
                     <div><Label>Mijoz</Label>
                       <Select value={form.customerId} onValueChange={v => setForm({ ...form, customerId: v })}>
-                        <SelectTrigger data-testid="select-quotation-customer"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                        <SelectTrigger data-testid="select-quotation-customer" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
                         <SelectContent>
                           {customers?.data?.map((c: SdCustomer) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                         </SelectContent>

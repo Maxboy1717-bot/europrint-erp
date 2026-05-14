@@ -1,8 +1,14 @@
+/**
+ * @module sales.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { SalesRepository } from './sales.repository';
+import { FORECAST, FORECAST_CONFIDENCE_DEFAULT } from '@common/constants/business.constants';
 
 @Injectable()
 export class SalesService {
@@ -51,10 +57,10 @@ export class SalesService {
       return {
         manager_id: managerId,
         period: period ?? 'monthly',
-        forecast_revenue: Number(pipeline['pipeline_value'] ?? 0) * 0.6,
+        forecast_revenue: Number(pipeline['pipeline_value'] ?? 0) * FORECAST.pipeline_conversion,
         pipeline_value: pipeline['pipeline_value'] ?? 0,
         deal_count: pipeline['deal_count'] ?? 0,
-        confidence: 0.72,
+        confidence: FORECAST_CONFIDENCE_DEFAULT,
         generated_at: _time.now(),
       };
     });

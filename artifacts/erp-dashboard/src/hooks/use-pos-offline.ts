@@ -1,3 +1,8 @@
+/**
+ * @module use-pos-offline
+ * @description React custom hook.
+ */
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   savePendingSale,

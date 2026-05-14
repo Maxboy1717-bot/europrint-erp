@@ -57,7 +57,7 @@ export const salaryBands = pgTable("salary_bands", {
 export const payrollJournalEntries = pgTable("payroll_journal_entries", {
   id: serial("id").primaryKey(),
   payrollPeriodId: integer("payroll_period_id"),       // FK keyinroq qo'shiladi (payroll_periods)
-  employeeId: integer("employee_id").references(() => employees.id),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "set null" }),
   glDocumentId: varchar("gl_document_id"),             // varchar PK glDocuments dan
   entryType: varchar("entry_type", { length: 20 }).notNull(), // accrual / deduction / payment
   debitAccountCode: varchar("debit_account_code", { length: 10 }),
@@ -79,7 +79,7 @@ export const payrollJournalEntries = pgTable("payroll_journal_entries", {
 export const disciplineAppeals = pgTable("discipline_appeals", {
   id: serial("id").primaryKey(),
   disciplineRecordId: integer("discipline_record_id").notNull(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   appealReason: text("appeal_reason").notNull(),
   appealEvidence: jsonb("appeal_evidence").$type<{ url: string; type: string }[]>(),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
@@ -100,8 +100,8 @@ export const disciplineAppeals = pgTable("discipline_appeals", {
 export const careerDevelopmentPlans = pgTable("career_development_plans", {
   id: serial("id").primaryKey(),
   employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
-  mentorId: integer("mentor_id").references(() => employees.id),
-  targetPositionId: integer("target_position_id").references(() => positions.id),
+  mentorId: integer("mentor_id").references(() => employees.id, { onDelete: "set null" }),
+  targetPositionId: integer("target_position_id").references(() => positions.id, { onDelete: "set null" }),
   goals: jsonb("goals").$type<Array<{ title: string; description?: string; deadline?: string; status: string }>>(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date"),
@@ -124,7 +124,7 @@ export const careerDevelopmentPlans = pgTable("career_development_plans", {
 // Lavozim sharti shabloni (talablar, mas'uliyat)
 export const jobTemplates = pgTable("job_templates", {
   id: serial("id").primaryKey(),
-  positionId: integer("position_id").references(() => positions.id),
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }),
   code: varchar("code", { length: 50 }).notNull().unique(),
   titleUz: varchar("title_uz", { length: 200 }).notNull(),
   titleRu: varchar("title_ru", { length: 200 }),
@@ -228,8 +228,8 @@ export const aiInterviewSessionsExt = pgTable("ai_interview_sessions_ext", {
 // ─── 11. exit_interviews ─────────────────────────────────────────────────────
 export const exitInterviews = pgTable("exit_interviews", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
-  interviewerId: integer("interviewer_id").references(() => employees.id),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
+  interviewerId: integer("interviewer_id").references(() => employees.id, { onDelete: "set null" }),
   exitDate: date("exit_date").notNull(),
   reasonCategory: varchar("reason_category", { length: 50 }).notNull(),
   // career_growth / compensation / work_culture / management / personal / relocation / other

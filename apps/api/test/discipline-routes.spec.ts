@@ -1,3 +1,8 @@
+/**
+ * @module discipline-routes.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { DisciplineV2Service } from '../src/modules/hr/discipline-v2/discipline-v2.service';
 
 describe('DisciplineV2Service – migrated routes', () => {

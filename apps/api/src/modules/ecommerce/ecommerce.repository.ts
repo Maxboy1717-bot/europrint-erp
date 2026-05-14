@@ -1,3 +1,8 @@
+/**
+ * @module ecommerce.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
@@ -99,7 +104,7 @@ export class EcommerceRepository {
           .offset(offset),
         db.select({ count: count() }).from(customerOrders).where(whereClause),
       ]);
-      return { orders: (orders ?? []).map((o) => ({ ...o.order, customer: o.customer })), total: totalResult[0]?.count || 0 };
+      return { orders: (Array.isArray(orders) ? orders : []).map((o) => ({ ...o.order, customer: o.customer })), total: totalResult[0]?.count || 0 };
       }, 'DB_ERROR');
   }
 

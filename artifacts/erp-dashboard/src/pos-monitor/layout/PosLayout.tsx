@@ -1,7 +1,13 @@
+/**
+ * @module PosLayout
+ * @description Source module. See exports for details.
+ */
+
 import { useState, useEffect, ReactNode } from "react";
 import { useLocation, Link } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { getPosSocket } from "../socket/pos-socket";
+import { warehousesApi } from "../api/pos-monitor.api";
 import PosOfflineBanner from "../components/PosOfflineBanner";
 import PosNotificationsDrawer from "../components/PosNotificationsDrawer";
 
@@ -12,16 +18,42 @@ interface NavItem {
   role?: string;
 }
 
+interface DynamicWarehouse {
+  id: string;
+  code: string | null;
+  name: string | null;
+  type: string | null;
+}
+
+// Ombor turi → ikonka
+const WH_TYPE_ICON: Record<string, string> = {
+  RAW_MATERIAL:   "📦",
+  FINISHED_GOODS: "✅",
+  WIP:            "⚙️",
+  SCRAP:          "⚠️",
+  QUARANTINE:     "🔒",
+  TOOLS:          "🔧",
+  HOUSEHOLD:      "🏠",
+  MRO:            "🛠️",
+  MAIN:           "🏭",
+};
+
+// POS Monitor = FAQAT MA'LUMOT KIRITISH (data entry)
+// ERP = analytics, hisobotlar, audit
+// Sidebar ixcham — 7 ta asosiy band + dinamik omborlar
 const NAV_ITEMS: NavItem[] = [
-  { icon: "📊", key: "nav.dashboard",    path: "/pos-monitor" },
-  { icon: "🏪", key: "nav.warehouses",   path: "/pos-monitor/warehouses" },
-  { icon: "📦", key: "nav.materials",    path: "/pos-monitor/materials" },
-  { icon: "🔄", key: "nav.movements",    path: "/pos-monitor/movements" },
-  { icon: "👤", key: "nav.ledger",       path: "/pos-monitor/ledger" },
-  { icon: "📋", key: "nav.requests",     path: "/pos-monitor/requests" },
-  { icon: "📋", key: "nav.inventory",    path: "/pos-monitor/inventory" },
-  { icon: "📈", key: "nav.reports",      path: "/pos-monitor/reports" },
-  { icon: "⚙️", key: "nav.admin",        path: "/pos-monitor/admin" },
+  // ── Asosiy ──
+  { icon: "📊", key: "nav.dashboard",     path: "/pos-monitor" },
+
+  // ── Ma'lumot kiritish ──
+  { icon: "📥", key: "nav.newKirim",      path: "/pos-monitor/movements/new/kirim" },
+  { icon: "📤", key: "nav.newChiqim",     path: "/pos-monitor/movements/new/chiqim" },
+  { icon: "➕", key: "nav.newMaterial",   path: "/pos-monitor/materials/new" },
+
+  // ── Ko'rib chiqish ──
+  { icon: "📦", key: "nav.materials",     path: "/pos-monitor/materials" },
+  { icon: "🔬", key: "nav.qcreview",      path: "/pos-monitor/qc-review" },
+  { icon: "🎒", key: "nav.myInventory",   path: "/pos-monitor/my-inventory" },
 ];
 
 interface PosLayoutProps { children: ReactNode; }
@@ -34,6 +66,21 @@ export default function PosLayout({ children }: PosLayoutProps) {
   const [notifCount, setNotifCount] = useState(0);
   const [clock, setClock] = useState(new Date());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [warehouses, setWarehouses] = useState<DynamicWarehouse[]>([]);
+
+  // Sidebar uchun barcha omborlarni yuklash
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await warehousesApi.getAll();
+        if (!cancelled && Array.isArray(r)) {
+          setWarehouses(r as DynamicWarehouse[]);
+        }
+      } catch { /* noop */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const tick = setInterval(() => setClock(new Date()), 1000);
@@ -74,10 +121,10 @@ export default function PosLayout({ children }: PosLayoutProps) {
         {/* Logo */}
         <div style={{ padding: "20px 16px", borderBottom: "1px solid var(--pos-border)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden" }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#00D4FF,#0094B8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>📡</div>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--ep-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>📡</div>
             {!mini && (
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--pos-accent)", letterSpacing: 1 }}>POS MONITOR</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--pos-accent)", letterSpacing: 1 }}>{t('common.posMonitor')}</div>
                 <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>EuroPrint ERP</div>
               </div>
             )}
@@ -107,6 +154,53 @@ export default function PosLayout({ children }: PosLayoutProps) {
               </div>
             </Link>
           ))}
+
+          {/* ── HAR OMBOR ALOHIDA — dinamik ── */}
+          {warehouses.length > 0 && (
+            <>
+              {!mini && (
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: "var(--pos-text-muted)",
+                  letterSpacing: 1, padding: "12px 16px 4px",
+                  textTransform: "uppercase",
+                }}>
+                  Omborlar ({warehouses.length})
+                </div>
+              )}
+              {warehouses.map(w => {
+                const icon = WH_TYPE_ICON[(w.type ?? "").toUpperCase()] ?? "🏪";
+                const path = `/pos-monitor/warehouses/${w.id}`;
+                return (
+                  <Link key={w.id} href={path}>
+                    <div
+                      className={`pos-sidebar-item ${isActive(path) ? "active" : ""}`}
+                      title={mini ? (w.name ?? w.code ?? w.id) : undefined}
+                    >
+                      <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>
+                      {!mini && (
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: 13, whiteSpace: "nowrap", overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}>
+                            {w.name ?? w.code ?? `Ombor #${w.id}`}
+                          </div>
+                          {w.code && w.name && (
+                            <div style={{
+                              fontSize: 9, color: "var(--pos-text-muted)",
+                              fontFamily: "monospace", lineHeight: 1.2,
+                            }}>
+                              {w.code}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </div>
 
         {/* Collapse toggle */}

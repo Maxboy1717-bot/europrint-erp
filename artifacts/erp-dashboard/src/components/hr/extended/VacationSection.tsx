@@ -1,3 +1,8 @@
+/**
+ * @module VacationSection
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +14,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, RefreshCw, Calendar, CheckCircle2, FileText } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { HRLeaveRequest, HREmployee } from "./types";
+
+const VacationSchema = z.object({
+  type:       z.enum(["annual", "sick", "unpaid"]),
+  startDate:  z.string().min(1, "Boshlanish sanasi majburiy"),
+  endDate:    z.string().min(1, "Tugash sanasi majburiy"),
+  reason:     z.string().optional(),
+  employeeId: z.string().optional(),
+}).refine(d => !d.startDate || !d.endDate || d.endDate >= d.startDate, {
+  message: "Tugash sanasi boshlanish sanasidan kechroq bo'lishi kerak",
+  path: ["endDate"],
+});
+type VacationData = z.infer<typeof VacationSchema>;
 import { UseMutationResult } from "@tanstack/react-query";
 
 interface VacationSectionProps {
@@ -32,8 +51,9 @@ export function VacationSection({
   onLeave,
 }: VacationSectionProps) {
   const [showVacDialog, setShowVacDialog] = useState(false);
-  const vacForm = useForm({
-    defaultValues: { type: "annual", startDate: "", endDate: "", reason: "", employeeId: "" }
+  const vacForm = useForm<VacationData>({
+    resolver: zodResolver(VacationSchema),
+    defaultValues: { type: "annual", startDate: "", endDate: "", reason: "", employeeId: "" },
   });
 
   const getLeaveTypeLabel = (type: string) => {
@@ -58,11 +78,11 @@ export function VacationSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { l: "Hozir ta'tilda", v: onLeave.length, c: "text-blue-600", i: Calendar },
-          { l: "Kutilayotgan so'rovlar", v: pendingLeave.length, c: "text-orange-600", i: CheckCircle2 },
-          { l: "Bu oyda yakunlangan", v: "8", c: "text-green-600", i: FileText },
+          { l: "Hozir ta'tilda", v: onLeave.length, c: "text-[var(--ep-blue)]", i: Calendar },
+          { l: "Kutilayotgan so'rovlar", v: pendingLeave.length, c: "text-[var(--ep-primary)]", i: CheckCircle2 },
+          { l: "Bu oyda yakunlangan", v: "8", c: "text-[var(--ep-green)]", i: FileText },
           { l: "Yillik limit (o'rtacha)", v: "24 kun", c: "text-primary", i: Calendar },
         ]).map(s => (
           <Card key={s.l}><CardContent className="pt-4 pb-3 flex items-start justify-between">
@@ -78,7 +98,7 @@ export function VacationSection({
       <Card>
         <CardHeader><CardTitle className="text-base">Oxirgi so'rovlar</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
               <TableHead>Xodim</TableHead><TableHead>Tur</TableHead>
               <TableHead>Sana</TableHead><TableHead>Kunlar</TableHead>
@@ -88,9 +108,9 @@ export function VacationSection({
               {leaveLoading ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow>
               ) : leaveRequests.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Ma'lumotlar yo'q</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Ma'lumotlar yo'q</TableCell></TableRow>
               ) : (Array.isArray(leaveRequests) ? leaveRequests : []).map((req) => (
-                <TableRow key={req.id}>
+                <TableRow key={req.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{req.employeeName || `Xodim #${req.userId}`}</TableCell>
                   <TableCell>{getLeaveTypeLabel(req.type || req.leaveType || "")}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
@@ -105,19 +125,19 @@ export function VacationSection({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 
       <Dialog open={showVacDialog} onOpenChange={setShowVacDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Yangi Ta'til So'rovi</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Ta'til So'rovi</DialogTitle></DialogHeader>
           <form onSubmit={vacForm.handleSubmit(d => createLeaveRequest.mutate(d as Record<string, unknown>))} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Xodim</Label>
+            <div className="space-y-1">
+          <Label>Xodim</Label>
               <Controller control={vacForm.control} name="employeeId" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger data-testid="select-vacation-employee"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-vacation-employee" className="h-9"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
                   <SelectContent>
                     {(Array.isArray(employees) ? employees : []).map(e => (
                       <SelectItem key={e.id} value={String(e.id)}>{e.fullName || e.name || `#${e.id}`}</SelectItem>
@@ -126,8 +146,8 @@ export function VacationSection({
                 </Select>
               )} />
             </div>
-            <div className="space-y-2">
-              <Label>Turi</Label>
+            <div className="space-y-1">
+          <Label>Turi</Label>
               <Controller control={vacForm.control} name="type" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -139,12 +159,20 @@ export function VacationSection({
                 </Select>
               )} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Boshlanish sanasi</Label><Input type="date" {...vacForm.register("startDate", { required: true })} /></div>
-              <div className="space-y-2"><Label>Tugash sanasi</Label><Input type="date" {...vacForm.register("endDate", { required: true })} /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+          <Label>Boshlanish sanasi</Label>
+                <Input type="date" {...vacForm.register("startDate")} />
+                {vacForm.formState.errors.startDate && <p className="text-xs text-destructive">{vacForm.formState.errors.startDate.message}</p>}
+              </div>
+              <div className="space-y-1">
+          <Label>Tugash sanasi</Label>
+                <Input type="date" {...vacForm.register("endDate")} />
+                {vacForm.formState.errors.endDate && <p className="text-xs text-destructive">{vacForm.formState.errors.endDate.message}</p>}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Sabab</Label>
+            <div className="space-y-1">
+          <Label>Sabab</Label>
               <Input {...vacForm.register("reason")} placeholder="Qisqacha izoh..." />
             </div>
             <DialogFooter>

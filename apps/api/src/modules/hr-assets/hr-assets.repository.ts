@@ -1,3 +1,8 @@
+/**
+ * @module hr-assets.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result } from '@common/result';
 import {
@@ -35,7 +40,7 @@ export class HrAssetsRepository {
     return safeCall(async () => {
       const search = filter.search ? '%' + filter.search + '%' : null;
       const rows = await queryAllAssets(search, filter.category ?? null, filter.status ?? null, filter.department_id ?? null);
-      return (rows ?? []).map(toAsset);
+      return (Array.isArray(rows) ? rows : []).map(toAsset);
     }, 'DB_ERROR');
   }
 
@@ -72,7 +77,7 @@ export class HrAssetsRepository {
     
     return safeCall(async () => {
       const rows = await queryAssetsByEmployee(employeeId);
-      return (rows ?? []).map(toAsset);
+      return (Array.isArray(rows) ? rows : []).map(toAsset);
     }, 'DB_ERROR');
   }
 

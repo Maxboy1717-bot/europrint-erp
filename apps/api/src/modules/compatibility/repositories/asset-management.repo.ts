@@ -1,3 +1,8 @@
+/**
+ * @module asset-management.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { assetItems, assetMaintenance, assetDisposals, assetTransfers } from '@shared/db/europrint-compat';
@@ -30,101 +35,149 @@ type TransferInsert = {
 @Injectable()
 export class AssetManagementRepo {
   async findAllAssets() {
-    return db.select().from(assetItems).orderBy(desc(assetItems.createdAt));
+    try {
+      return await db.select().from(assetItems).orderBy(desc(assetItems.createdAt));
+    } catch (e) {
+      throw new Error(`asset_management.findAllAssets: ${String(e)}`);
+    }
   }
 
   async findAssetById(id: string) {
-    const rows = await db.select().from(assetItems).where(eq(assetItems.id, id));
-    return rows[0] ?? null;
+    try {
+      const rows = await db.select().from(assetItems).where(eq(assetItems.id, id));
+      return rows[0] ?? null;
+    } catch (e) {
+      throw new Error(`asset_management.findAssetById: ${String(e)}`);
+    }
   }
 
   async insertAsset(data: AssetInsert) {
-    return db.insert(assetItems).values({
-      name:          data.name,
-      assetCode:     data.assetCode ?? null,
-      category:      data.category,
-      status:        data.status,
-      location:      data.location ?? null,
-      assignedTo:    data.assignedTo ?? null,
-      departmentId:  data.departmentId ?? null,
-      serialNumber:  data.serialNumber ?? null,
-      purchaseDate:  data.purchaseDate ?? null,
-      purchaseValue: data.purchaseValue ?? null,
-      currentValue:  data.currentValue ?? null,
-      notes:         data.notes ?? null,
-    }).returning();
+    try {
+      return await db.insert(assetItems).values({
+        name:          data.name,
+        assetCode:     data.assetCode ?? null,
+        category:      data.category,
+        status:        data.status,
+        location:      data.location ?? null,
+        assignedTo:    data.assignedTo ?? null,
+        departmentId:  data.departmentId ?? null,
+        serialNumber:  data.serialNumber ?? null,
+        purchaseDate:  data.purchaseDate ?? null,
+        purchaseValue: data.purchaseValue ?? null,
+        currentValue:  data.currentValue ?? null,
+        notes:         data.notes ?? null,
+      }).returning();
+    } catch (e) {
+      throw new Error(`asset_management.insertAsset: ${String(e)}`);
+    }
   }
 
   async updateAsset(id: string, data: AssetUpdate) {
-    return db.update(assetItems).set({
-      name:          data.name,
-      assetCode:     data.assetCode,
-      category:      data.category,
-      status:        data.status,
-      location:      data.location,
-      assignedTo:    data.assignedTo,
-      departmentId:  data.departmentId,
-      serialNumber:  data.serialNumber,
-      purchaseDate:  data.purchaseDate,
-      purchaseValue: data.purchaseValue,
-      currentValue:  data.currentValue,
-      notes:         data.notes,
-      updatedAt:     data.updatedAt,
-    }).where(eq(assetItems.id, id)).returning();
+    try {
+      return await db.update(assetItems).set({
+        name:          data.name,
+        assetCode:     data.assetCode,
+        category:      data.category,
+        status:        data.status,
+        location:      data.location,
+        assignedTo:    data.assignedTo,
+        departmentId:  data.departmentId,
+        serialNumber:  data.serialNumber,
+        purchaseDate:  data.purchaseDate,
+        purchaseValue: data.purchaseValue,
+        currentValue:  data.currentValue,
+        notes:         data.notes,
+        updatedAt:     data.updatedAt,
+      }).where(eq(assetItems.id, id)).returning();
+    } catch (e) {
+      throw new Error(`asset_management.updateAsset: ${String(e)}`);
+    }
   }
 
   async deleteAsset(id: string) {
-    return db.delete(assetItems).where(eq(assetItems.id, id)).returning();
+    try {
+      return await db.delete(assetItems).where(eq(assetItems.id, id)).returning();
+    } catch (e) {
+      throw new Error(`asset_management.deleteAsset: ${String(e)}`);
+    }
   }
 
   async findAllMaintenance() {
-    return db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
+    try {
+      return await db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
+    } catch (e) {
+      throw new Error(`asset_management.findAllMaintenance: ${String(e)}`);
+    }
   }
 
   async findMaintenanceByAsset(assetId: string) {
-    const rows = await db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
-    return (rows ?? []).filter((r) => r.assetId === assetId);
+    try {
+      const rows = await db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
+      return (Array.isArray(rows) ? rows : []).filter((r) => r.assetId === assetId);
+    } catch (e) {
+      throw new Error(`asset_management.findMaintenanceByAsset: ${String(e)}`);
+    }
   }
 
   async insertMaintenance(data: MaintenanceInsert) {
-    return db.insert(assetMaintenance).values({
-      assetId:         data.assetId,
-      maintenanceType: data.maintenanceType,
-      scheduledAt:     data.scheduledAt ?? null,
-      completedAt:     data.completedAt ?? null,
-      cost:            data.cost ?? null,
-      notes:           data.notes ?? null,
-      status:          data.status,
-    }).returning();
+    try {
+      return await db.insert(assetMaintenance).values({
+        assetId:         data.assetId,
+        maintenanceType: data.maintenanceType,
+        scheduledAt:     data.scheduledAt ?? null,
+        completedAt:     data.completedAt ?? null,
+        cost:            data.cost ?? null,
+        notes:           data.notes ?? null,
+        status:          data.status,
+      }).returning();
+    } catch (e) {
+      throw new Error(`asset_management.insertMaintenance: ${String(e)}`);
+    }
   }
 
   async findAllDisposals() {
-    return db.select().from(assetDisposals).orderBy(desc(assetDisposals.createdAt));
+    try {
+      return await db.select().from(assetDisposals).orderBy(desc(assetDisposals.createdAt));
+    } catch (e) {
+      throw new Error(`asset_management.findAllDisposals: ${String(e)}`);
+    }
   }
 
   async insertDisposal(data: DisposalInsert) {
-    return db.insert(assetDisposals).values({
-      assetId:      data.assetId,
-      disposalType: data.disposalType,
-      disposalDate: data.disposalDate ?? null,
-      saleValue:    data.saleValue ?? null,
-      reason:       data.reason ?? null,
-      approvedBy:   data.approvedBy ?? null,
-    }).returning();
+    try {
+      return await db.insert(assetDisposals).values({
+        assetId:      data.assetId,
+        disposalType: data.disposalType,
+        disposalDate: data.disposalDate ?? null,
+        saleValue:    data.saleValue ?? null,
+        reason:       data.reason ?? null,
+        approvedBy:   data.approvedBy ?? null,
+      }).returning();
+    } catch (e) {
+      throw new Error(`asset_management.insertDisposal: ${String(e)}`);
+    }
   }
 
   async findAllTransfers() {
-    return db.select().from(assetTransfers).orderBy(desc(assetTransfers.createdAt));
+    try {
+      return await db.select().from(assetTransfers).orderBy(desc(assetTransfers.createdAt));
+    } catch (e) {
+      throw new Error(`asset_management.findAllTransfers: ${String(e)}`);
+    }
   }
 
   async insertTransfer(data: TransferInsert) {
-    return db.insert(assetTransfers).values({
-      assetId:      data.assetId,
-      fromDeptId:   data.fromDeptId ?? null,
-      toDeptId:     data.toDeptId ?? null,
-      transferDate: data.transferDate ?? null,
-      reason:       data.reason ?? null,
-      approvedBy:   data.approvedBy ?? null,
-    }).returning();
+    try {
+      return await db.insert(assetTransfers).values({
+        assetId:      data.assetId,
+        fromDeptId:   data.fromDeptId ?? null,
+        toDeptId:     data.toDeptId ?? null,
+        transferDate: data.transferDate ?? null,
+        reason:       data.reason ?? null,
+        approvedBy:   data.approvedBy ?? null,
+      }).returning();
+    } catch (e) {
+      throw new Error(`asset_management.insertTransfer: ${String(e)}`);
+    }
   }
 }

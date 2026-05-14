@@ -1,3 +1,8 @@
+/**
+ * @module design-extended.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -17,7 +22,7 @@ export class DesignExtendedRepository {
   async findOrdersList(): Promise<Result<object[]>> {
     return safeCall(async () => {
       const rows = await db.select().from(design_orders).orderBy(design_orders.created_at);
-      return (rows ?? []).map(r => ({ order: { id: r.id, orderNumber: `D-${String(r.id).padStart(6,'0').slice(-6)}`, productName: r.product_name ?? r.order_number, clientName: r.client_name ?? 'Client', status: r.status, productType: r.product_type ?? 'general' } }));
+      return (Array.isArray(rows) ? rows : []).map(r => ({ order: { id: r.id, orderNumber: `D-${String(r.id).padStart(6,'0').slice(-6)}`, productName: r.product_name ?? r.order_number, clientName: r.client_name ?? 'Client', status: r.status, productType: r.product_type ?? 'general' } }));
     }, 'DB_ERROR');
   }
 
@@ -78,7 +83,7 @@ export class DesignExtendedRepository {
   }
 
   async verifyDesign(designId: string, checkTypes: string[]): Promise<Result<{ checks: Record<string,unknown>; overallScore: number }>> {
-    return Ok({ checks: Object.fromEntries((checkTypes ?? []).map(ct => [ct, { passed: Math.random() > 0.2, score: Math.round(70 + Math.random()*30), issues: [] }])), overallScore: Math.round(75 + Math.random()*20) });
+    return Ok({ checks: Object.fromEntries((Array.isArray(checkTypes) ? checkTypes : []).map(ct => [ct, { passed: Math.random() > 0.2, score: Math.round(70 + Math.random()*30), issues: [] }])), overallScore: Math.round(75 + Math.random()*20) });
   }
 
   async generateMockup(designId: string, productType: string): Promise<Result<{ mockupUrl: string; designId: string; productType: string }>> {

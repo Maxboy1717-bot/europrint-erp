@@ -1,3 +1,8 @@
+/**
+ * @module hr
+ * @description Frontend utility / library module.
+ */
+
 import { apiRequest } from "@/lib/queryClient";
 
 export const hrApi = {

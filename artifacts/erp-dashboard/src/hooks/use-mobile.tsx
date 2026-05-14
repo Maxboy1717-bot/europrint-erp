@@ -1,3 +1,8 @@
+/**
+ * @module use-mobile
+ * @description React custom hook.
+ */
+
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768

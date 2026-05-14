@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.gateway
+ * @description NestJS WebSocket gateway. Socket.IO handlers.
+ */
+
 import { Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { castTo } from '@common/db-rows';
@@ -97,7 +102,7 @@ export class AiInterviewGateway implements OnGatewayConnection, OnGatewayDisconn
       sessionId: validation.session_id,
       candidateName: validation.candidate_name,
       language: validation.candidate_language,
-      questions: (questions ?? []).map(q => ({
+      questions: (Array.isArray(questions) ? questions : []).map(q => ({
         id: q.id,
         question: q.question,
         maxScore: q.max_score || 10,
@@ -130,7 +135,7 @@ export class AiInterviewGateway implements OnGatewayConnection, OnGatewayDisconn
     client.emit('session.joined', {
       sessionId: session.sessionId,
       candidateName: session.candidateName,
-      questions: (questions ?? []).map(q => ({ id: q.id, question: q.question, maxScore: q.max_score || 10 })),
+      questions: (Array.isArray(questions) ? questions : []).map(q => ({ id: q.id, question: q.question, maxScore: q.max_score || 10 })),
     });
   }
 

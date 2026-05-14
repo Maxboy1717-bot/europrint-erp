@@ -1,3 +1,8 @@
+/**
+ * @module hooks.test
+ * @description Jest / Vitest test suite.
+ */
+
 import { describe, it, expect } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -41,7 +46,6 @@ describe('useTranslation', () => {
 
   it('returns RU translation from default (common) module', () => {
     function Comp() {
-      const { t } = useTranslation();
       return <div data-testid="val">{t('save')}</div>;
     }
     render(<Comp />, { wrapper: ({ children }) => wrapper({ lang: 'ru', children }) });
@@ -50,7 +54,6 @@ describe('useTranslation', () => {
 
   it('returns translation from a specific module', () => {
     function Comp() {
-      const { t } = useTranslation('errors');
       return <div data-testid="val">{t('notFound')}</div>;
     }
     render(<Comp />, { wrapper: ({ children }) => wrapper({ lang: 'uz', children }) });
@@ -61,7 +64,6 @@ describe('useTranslation', () => {
 
   it('t() with params interpolates the string', () => {
     function Comp() {
-      const { t } = useTranslation('common');
       return <div data-testid="val">{t('save', { x: '!' })}</div>;
     }
     render(<Comp />, { wrapper: ({ children }) => wrapper({ lang: 'uz', children }) });
@@ -71,7 +73,6 @@ describe('useTranslation', () => {
 
   it('returns key itself for unknown key', () => {
     function Comp() {
-      const { t } = useTranslation();
       return <div data-testid="val">{t('__unknown_hooks_key__')}</div>;
     }
     render(<Comp />, { wrapper: ({ children }) => wrapper({ children }) });
@@ -82,7 +83,6 @@ describe('useTranslation', () => {
     const user = userEvent.setup();
 
     function Comp() {
-      const { t } = useTranslation();
       const { setLanguage, language } = useLanguageSetter();
       return (
         <>

@@ -1,84 +1,22 @@
+/**
+ * @module AccountsPayable
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
-import { formatDate, formatCurrency } from "@/lib/format";
 import { exportToCSV } from "@/lib/export-utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Building2,
-  DollarSign,
-  Clock,
-  AlertTriangle,
-  RefreshCw,
-  Download,
-  ArrowUpDown,
-  Calendar
-} from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-
-interface ApAgingData {
-  buckets: ApAgingBucket[];
-  totals: {
-    current: number;
-    days31to60: number;
-    days61to90: number;
-    days91to120: number;
-    over120: number;
-    totalOutstanding: number;
-  };
-}
-
-interface ApAgingBucket {
-  id: string;
-  vendorId: string;
-  vendorName: string;
-  current: number;
-  days31to60: number;
-  days61to90: number;
-  days91to120: number;
-  over120: number;
-  totalOutstanding: number;
-  lastCalculatedAt?: string;
-}
-
-interface OverduePayable {
-  id: string;
-  poNumber: string;
-  vendorName: string;
-  totalAmount: number;
-  paidAmount: number;
-  dueDate: string;
-  invoiceDate: string;
-  paymentStatus: string;
-}
-
-type SortField = "vendorName" | "current" | "days31to60" | "days61to90" | "days91to120" | "over120" | "totalOutstanding";
-type SortDirection = "asc" | "desc";
-
-
-function calculateDaysOverdue(dueDate: string): number {
-  const due = new Date(dueDate);
-  const today = new Date();
-  const diffTime = today.getTime() - due.getTime();
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-}
-
-function getDaysOverdueBadge(days: number) {
-  if (days > 90) {
-    return <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{days} kun</Badge>;
-  } else if (days > 60) {
-    return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{days} kun</Badge>;
-  } else if (days > 30) {
-    return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{days} kun</Badge>;
-  }
-  return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{days} kun</Badge>;
-}
+import { RefreshCw, Download } from "lucide-react";
+import type { ApAgingData, OverduePayable, SortField, SortDirection, ApFormState } from "./AccountsPayableTypes";
+import { EMPTY_AP_FORM, calculateDaysOverdue } from "./AccountsPayableTypes";
+import { AddApEntryDialog } from "./AccountsPayableDialogs";
+import { ApKpiCards, ApAgingTable, ApOverdueTable } from "./AccountsPayableSections";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 export default function AccountsPayable() {
   const { t } = useTranslation('finance');
@@ -87,23 +25,43 @@ export default function AccountsPayable() {
   const [sortField, setSortField] = useState<SortField>("totalOutstanding");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [overdueFilter, setOverdueFilter] = useState<string>("all");
+  const [addOpen, setAddOpen] = useState(false);
+  const [apForm, setApForm] = useState<ApFormState>(EMPTY_AP_FORM);
 
-  const { data: agingData, isLoading: agingLoading, isError, refetch} = useQuery<ApAgingData>({
+  const { data: agingData, isLoading: agingLoading, isError, refetch } = useQuery<ApAgingData>({
     queryKey: ["/api/ap/aging"],
   });
 
-  const { data: overduePayables = [], isLoading: overdueLoading } = useQuery<OverduePayable[]>({
+  const { data: overduePayables = [] } = useQuery<OverduePayable[]>({
     queryKey: ["/api/ap/overdue"],
   });
 
   const recalculateMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("POST", "/api/ap/aging/recalculate");
-    },
+    mutationFn: async () => apiRequest("POST", "/api/ap/aging/recalculate"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ap/aging"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ap/overdue"] });
       toast({ title: tCommon('success'), description: tCommon('operationSuccess') });
+    },
+    onError: () => {
+      toast({ title: tCommon('error'), description: tCommon('operationFailed'), variant: "destructive" });
+    },
+  });
+
+  const addEntryMutation = useMutation({
+    mutationFn: async () =>
+      apiRequest("POST", "/api/finance/ap/entries", {
+        vendorId: apForm.vendorId,
+        amount: Number(apForm.amount),
+        dueDate: apForm.dueDate,
+        description: apForm.description,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ap/aging"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ap/overdue"] });
+      toast({ title: tCommon('success'), description: "Yozuv muvaffaqiyatli qo'shildi" });
+      setApForm(EMPTY_AP_FORM);
+      setAddOpen(false);
     },
     onError: () => {
       toast({ title: tCommon('error'), description: tCommon('operationFailed'), variant: "destructive" });
@@ -131,32 +89,20 @@ export default function AccountsPayable() {
   const filteredOverdue = (Array.isArray(overduePayables) ? overduePayables : []).filter((payable) => {
     const days = calculateDaysOverdue(payable.dueDate);
     switch (overdueFilter) {
-      case "30+":
-        return days >= 30;
-      case "60+":
-        return days >= 60;
-      case "90+":
-        return days >= 90;
-      default:
-        return true;
+      case "30+": return days >= 30;
+      case "60+": return days >= 60;
+      case "90+": return days >= 90;
+      default: return true;
     }
   });
 
   const totals = agingData?.totals || {
-    current: 0,
-    days31to60: 0,
-    days61to90: 0,
-    days91to120: 0,
-    over120: 0,
-    totalOutstanding: 0,
+    current: 0, days31to60: 0, days61to90: 0, days91to120: 0, over120: 0, totalOutstanding: 0,
   };
-
-  const overdue31to90 = totals.days31to60 + totals.days61to90;
-  const overdue90Plus = totals.days91to120 + totals.over120;
 
   const handleExport = () => {
     if (overduePayables && overduePayables.length > 0) {
-      exportToCSV(overduePayables as unknown as Record<string, unknown>[], "kreditorlik_qarzi", [
+      exportToCSV(overduePayables as Record<string, unknown>[], "kreditorlik_qarzi", [
         { key: "vendorName", label: "Yetkazuvchi" },
         { key: "invoiceNumber", label: "Hisob-faktura" },
         { key: "totalAmount", label: "Summa" },
@@ -170,47 +116,46 @@ export default function AccountsPayable() {
     }
   };
 
-  if (isError) {
-    return <ErrorState onRetry={refetch} />;
-  }
+  if (isError) return <EPErrorState onRetry={refetch} />;
 
   if (agingLoading) {
     return (
-      <div className="flex-1 overflow-auto bg-surface p-6" data-testid="accounts-payable-loading">
-        <h1 className="text-4xl font-light tracking-tight text-on-surface mb-8">
-          To'lanadigan <span className="font-bold text-primary">Hisoblar</span>
-        </h1>
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="accounts-payable-loading">
+        <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">To'lanadigan Hisoblar</b></>}
+        title="To'lanadigan Hisoblar"
+      />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {([1, 2, 3, 4]).map((i) => <Skeleton key={`k-${i}`} className="h-32 w-full" />)}
+          {([1, 2, 3, 4]).map((i) => <Skeleton key={`k-${i}`} className="h-32 w-full rounded-lg" />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6" data-testid="accounts-payable-page">
+    <div className="space-y-6" data-testid="accounts-payable-page">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            To'lanadigan <span className="font-bold text-primary">Hisoblar</span>
-          </h1>
+          <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">To'lanadigan Hisoblar</b></>}
+        title="To'lanadigan Hisoblar"
+      />
           <p className="text-muted-foreground mt-1">{t('accountsPayable')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => recalculateMutation.mutate()}
-            disabled={recalculateMutation.isPending}
-            data-testid="button-recalculate"
-          >
+          <AddApEntryDialog
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            form={apForm}
+            onFormChange={setApForm}
+            onSubmit={() => addEntryMutation.mutate()}
+            isPending={addEntryMutation.isPending}
+          />
+          <Button variant="outline" onClick={() => recalculateMutation.mutate()} disabled={recalculateMutation.isPending} data-testid="button-recalculate">
             <RefreshCw className={`h-4 w-4 mr-2 ${recalculateMutation.isPending ? "animate-spin" : ""}`} />
             {tCommon('refresh')}
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleExport}
-            data-testid="button-export"
-          >
+          <Button variant="outline" onClick={handleExport} data-testid="button-export">
             <Download className="h-4 w-4 mr-2" />
             Excel
           </Button>
@@ -218,210 +163,9 @@ export default function AccountsPayable() {
       </div>
 
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-surface-container-lowest rounded-lg p-5" data-testid="card-total-ap">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t('accountsPayable')}</p>
-            <p className="text-4xl font-bold tracking-tight text-on-surface mt-1" data-testid="text-total-ap">
-              {formatCurrency(totals.totalOutstanding)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">{tCommon('total')}</p>
-          </div>
-
-          <div className="bg-surface-container-lowest rounded-lg p-5" data-testid="card-current">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t('currentPeriod')}</p>
-            <p className="text-4xl font-bold tracking-tight text-green-600 mt-1" data-testid="text-current">
-              {formatCurrency(totals.current)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">{t('paid')}</p>
-          </div>
-
-          <div className="bg-surface-container-lowest rounded-lg p-5" data-testid="card-due-31-90">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t('overdue')} 31-90</p>
-            <p className="text-4xl font-bold tracking-tight text-amber-600 mt-1" data-testid="text-due-31-90">
-              {formatCurrency(overdue31to90)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">{t('overdue')}</p>
-          </div>
-
-          <div className="bg-surface-container-lowest rounded-lg p-5" data-testid="card-overdue-90-plus">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t('overdue')} 90+</p>
-            <p className="text-4xl font-bold tracking-tight text-error mt-1" data-testid="text-overdue-90-plus">
-              {formatCurrency(overdue90Plus)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">{t('overdue')}</p>
-          </div>
-        </div>
-
-        <div className="bg-surface-container-lowest rounded-xl p-6" data-testid="card-aging-table">
-          <div className="flex flex-col gap-1 mb-6">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              {t('accountsPayable')}
-            </h3>
-          </div>
-          {sortedBuckets.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {tCommon('noData')}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead 
-                      className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 cursor-pointer hover:bg-surface-container-low transition-colors"
-                      onClick={() => handleSort("vendorName")}
-                      data-testid="th-vendor"
-                    >
-                      <div className="flex items-center gap-1">
-                        {t('vendor')}
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right cursor-pointer hover:bg-surface-container-low transition-colors"
-                      onClick={() => handleSort("current")}
-                      data-testid="th-current"
-                    >
-                      <div className="flex items-center justify-end gap-1">
-                        {t('currentPeriod')}
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right cursor-pointer hover:bg-surface-container-low transition-colors"
-                      onClick={() => handleSort("days31to60")}
-                      data-testid="th-31-60"
-                    >
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="text-amber-600">31-60</span>
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right cursor-pointer hover:bg-surface-container-low transition-colors"
-                      onClick={() => handleSort("days61to90")}
-                      data-testid="th-61-90"
-                    >
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="text-orange-600">61-90</span>
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right cursor-pointer hover:bg-surface-container-low transition-colors"
-                      onClick={() => handleSort("days91to120")}
-                      data-testid="th-91-120"
-                    >
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="text-red-400">91-120</span>
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right cursor-pointer hover:bg-surface-container-low transition-colors"
-                      onClick={() => handleSort("over120")}
-                      data-testid="th-over-120"
-                    >
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="text-error">120+</span>
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right cursor-pointer hover:bg-surface-container-low transition-colors"
-                      onClick={() => handleSort("totalOutstanding")}
-                      data-testid="th-total"
-                    >
-                      <div className="flex items-center justify-end gap-1">
-                        {tCommon('total')}
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(Array.isArray(sortedBuckets) ? sortedBuckets : []).map((bucket) => (
-                    <TableRow key={bucket.id} className="hover:bg-surface-container-low transition-colors" data-testid={`row-vendor-${bucket.id}`}>
-                      <TableCell className="font-medium py-3 px-6">{bucket.vendorName || bucket.vendorId}</TableCell>
-                      <TableCell className="text-right py-3 px-6">{formatCurrency(bucket.current)}</TableCell>
-                      <TableCell className="text-right text-amber-600 py-3 px-6">{formatCurrency(bucket.days31to60)}</TableCell>
-                      <TableCell className="text-right text-orange-600 py-3 px-6">{formatCurrency(bucket.days61to90)}</TableCell>
-                      <TableCell className="text-right text-red-400 py-3 px-6">{formatCurrency(bucket.days91to120)}</TableCell>
-                      <TableCell className="text-right text-error font-medium py-3 px-6">{formatCurrency(bucket.over120)}</TableCell>
-                      <TableCell className="text-right font-bold py-3 px-6">{formatCurrency(bucket.totalOutstanding)}</TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow className="bg-surface-container-low font-bold">
-                    <TableCell className="py-3 px-6">{tCommon('total')}</TableCell>
-                    <TableCell className="text-right py-3 px-6">{formatCurrency(totals.current)}</TableCell>
-                    <TableCell className="text-right text-amber-600 py-3 px-6">{formatCurrency(totals.days31to60)}</TableCell>
-                    <TableCell className="text-right text-orange-600 py-3 px-6">{formatCurrency(totals.days61to90)}</TableCell>
-                    <TableCell className="text-right text-red-400 py-3 px-6">{formatCurrency(totals.days91to120)}</TableCell>
-                    <TableCell className="text-right text-error py-3 px-6">{formatCurrency(totals.over120)}</TableCell>
-                    <TableCell className="text-right py-3 px-6">{formatCurrency(totals.totalOutstanding)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-surface-container-lowest rounded-xl p-6" data-testid="card-overdue-payables">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {t('overdue')}
-            </h3>
-            <Select value={overdueFilter} onValueChange={setOverdueFilter}>
-              <SelectTrigger className="w-[180px]" data-testid="select-overdue-filter">
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{tCommon('all')}</SelectItem>
-                <SelectItem value="30+">30+</SelectItem>
-                <SelectItem value="60+">60+</SelectItem>
-                <SelectItem value="90+">90+</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {filteredOverdue.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {tCommon('noData')}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6" data-testid="th-po-number">{t('documentNumber')}</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6" data-testid="th-vendor-name">{t('vendor')}</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right" data-testid="th-amount">{t('amount')}</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6" data-testid="th-due-date">{t('dueDate')}</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right" data-testid="th-days-overdue">{t('overdue')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(Array.isArray(filteredOverdue) ? filteredOverdue : []).map((payable) => {
-                    const daysOverdue = calculateDaysOverdue(payable.dueDate);
-                    const outstandingAmount = payable.totalAmount - (payable.paidAmount || 0);
-                    return (
-                      <TableRow key={payable.id} className="hover:bg-surface-container-low transition-colors" data-testid={`row-payable-${payable.id}`}>
-                        <TableCell className="font-medium py-3 px-6">{payable.poNumber}</TableCell>
-                        <TableCell className="py-3 px-6">{payable.vendorName}</TableCell>
-                        <TableCell className="text-right py-3 px-6">{formatCurrency(outstandingAmount)}</TableCell>
-                        <TableCell className="py-3 px-6">{formatDate(payable.dueDate)}</TableCell>
-                        <TableCell className="text-right py-3 px-6">
-                          {getDaysOverdueBadge(daysOverdue)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
+        <ApKpiCards totals={totals} />
+        <ApAgingTable sortedBuckets={sortedBuckets} totals={totals} onSort={handleSort} />
+        <ApOverdueTable filteredOverdue={filteredOverdue} overdueFilter={overdueFilter} onFilterChange={setOverdueFilter} />
       </div>
     </div>
   );

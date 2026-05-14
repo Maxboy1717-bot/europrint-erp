@@ -1,3 +1,8 @@
+/**
+ * @module FilesTabContent
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Upload, Eye, Download, Trash2 } from "lucide-react";
 import { getFileIcon, isImageFile } from "../kanban-types";
@@ -59,7 +64,7 @@ export function FilesTabContent({
       </div>
 
       {files.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-3">
           {(Array.isArray(files) ? files : []).map((file) => {
             const { icon: FileIcon, color: iconColor } = getFileIcon(file.mimeType, file.fileName);
             const showThumbnail = isImageFile(file.mimeType, file.fileName);

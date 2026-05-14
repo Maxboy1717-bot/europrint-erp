@@ -1,3 +1,8 @@
+/**
+ * @module CVScreeningGuide
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import {
   Sheet,
@@ -46,7 +51,7 @@ const EVALUATION_PARAMS = [
     icon: "🎓",
     color: "bg-blue-50",
     border: "border-blue-200",
-    textColor: "text-blue-700",
+    textColor: "text-[var(--ep-blue)]",
     criteria: [
       { level: "A'lo", desc: "Talab qilingan soha bo'yicha oliy ta'lim, magistratura yoki chet el diplomi" },
       { level: "Yaxshi", desc: "Oliy ta'lim, soha mos emas lekin tajriba bor" },
@@ -60,7 +65,7 @@ const EVALUATION_PARAMS = [
     icon: "💼",
     color: "bg-amber-50",
     border: "border-amber-200",
-    textColor: "text-amber-700",
+    textColor: "text-[var(--ep-yellow)]",
     criteria: [
       { level: "A'lo", desc: "5+ yil mos sohada, yirik kompaniyalarda, lavozim bo'yicha aniq natijalar" },
       { level: "Yaxshi", desc: "3-5 yil tajriba, 1-2 mos ish joyi, o'rtacha natijalar" },
@@ -74,7 +79,7 @@ const EVALUATION_PARAMS = [
     icon: "💰",
     color: "bg-green-50",
     border: "border-green-200",
-    textColor: "text-green-700",
+    textColor: "text-[var(--ep-green)]",
     criteria: [
       { level: "Mos", desc: "Kompaniya budjetiga to'liq mos, diapazon ichida" },
       { level: "Muzokarali", desc: "10-20% yuqori — tajriba asosida muhokama qilish mumkin" },
@@ -88,7 +93,7 @@ const EVALUATION_PARAMS = [
     icon: "⚡",
     color: "bg-purple-50",
     border: "border-purple-200",
-    textColor: "text-purple-700",
+    textColor: "text-[var(--ep-purple)]",
     criteria: [
       { level: "A'lo", desc: "Barcha asosiy ko'nikmalar bor, qo'shimcha sifatida foydali ko'nikmalar ham" },
       { level: "Yaxshi", desc: "Asosiy ko'nikmalar bor, 1-2 ta qo'shimcha ko'nikmani o'rgana oladi" },
@@ -156,7 +161,7 @@ export function CVScreeningGuide({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 gap-1 px-1"
+            className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-[var(--ep-cyan)]/90/10 gap-1 px-1"
             data-testid="button-cv-screening-guide"
           >
             <FileSearch className="w-2.5 h-2.5" />
@@ -166,10 +171,10 @@ export function CVScreeningGuide({
       </SheetTrigger>
       <SheetContent side="right" className="w-[500px] max-w-full overflow-y-auto p-0">
         {/* Header */}
-        <SheetHeader className="px-5 pt-5 pb-3 border-b bg-[#1a1a2e] text-white sticky top-0 z-10">
+        <SheetHeader className="px-5 pt-5 pb-3 border-b from-primary to-amber-500 text-white sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-white flex items-center gap-2 text-base">
-              <FileSearch className="w-4 h-4 text-teal-400" />
+              <FileSearch className="w-4 h-4 text-white/80" />
               CV Skrining Ko'rsatmasi
             </SheetTitle>
             <Badge className="bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[10px]">
@@ -189,13 +194,13 @@ export function CVScreeningGuide({
           <CollapsibleSection
             title="Yaxshi CV belgilari"
             defaultOpen={true}
-            icon={<CheckCircle2 className="w-4 h-4 text-green-500" />}
+            icon={<CheckCircle2 className="w-4 h-4 text-[var(--ep-green)]" />}
             headerClass="bg-green-50 text-green-800"
           >
             <div className="p-3 space-y-1.5">
               {(Array.isArray(GOOD_CV_SIGNS) ? GOOD_CV_SIGNS : []).map((sign, i) => (
                 <div key={`k-${i}`} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ep-green)] shrink-0 mt-0.5" />
                   <p className="text-xs text-slate-700">{sign}</p>
                 </div>
               ))}
@@ -206,7 +211,7 @@ export function CVScreeningGuide({
           <CollapsibleSection
             title="Xavfli belgilar (qizil bayroqlar)"
             defaultOpen={true}
-            icon={<XCircle className="w-4 h-4 text-red-500" />}
+            icon={<XCircle className="w-4 h-4 text-[var(--ep-red)]" />}
             headerClass="bg-red-50 text-red-800"
           >
             <div className="p-3 space-y-1.5">
@@ -235,10 +240,10 @@ export function CVScreeningGuide({
                   <div className="divide-y divide-slate-100">
                     {(Array.isArray(param.criteria) ? param.criteria : []).map((crit, i) => {
                       const levelColor =
-                        i === 0 ? "text-green-600 bg-green-50" :
-                        i === 1 ? "text-blue-600 bg-blue-50" :
-                        i === 2 ? "text-amber-600 bg-amber-50" :
-                        "text-red-600 bg-red-50";
+                        i === 0 ? "text-[var(--ep-green)] bg-green-50" :
+                        i === 1 ? "text-[var(--ep-blue)] bg-blue-50" :
+                        i === 2 ? "text-[var(--ep-yellow)] bg-amber-50" :
+                        "text-[var(--ep-red)] bg-red-50";
                       return (
                         <div key={`k-${i}`} className="flex items-start gap-3 px-3 py-2">
                           <span className={cn(
@@ -280,12 +285,12 @@ export function CVScreeningGuide({
 
           {/* Scoring tip */}
           <div className="bg-violet-50 border border-violet-200 rounded-lg p-3">
-            <p className="text-[10px] font-semibold text-violet-700 mb-1.5">Hisoblash usuli:</p>
+            <p className="text-[10px] font-semibold text-[var(--ep-purple)] mb-1.5">Hisoblash usuli:</p>
             <p className="text-[11px] text-slate-600 leading-relaxed">
               Har bir parametrni 0–25 ball bilan baholang (ta'lim, tajriba, maosh, ko'nikmalar).
               Jami 100 ball. Yakuniy ball asosida yuqoridagi qaror matritsasidan foydalaning.
             </p>
-            <div className="grid grid-cols-2 gap-1.5 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-2">
               {(Array.isArray(EVALUATION_PARAMS) ? EVALUATION_PARAMS : []).map(p => (
                 <div key={p.key} className="flex items-center gap-1.5">
                   <span className="text-base">{p.icon}</span>

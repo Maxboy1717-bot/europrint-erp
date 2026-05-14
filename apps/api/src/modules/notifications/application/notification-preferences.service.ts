@@ -1,3 +1,8 @@
+/**
+ * @module notification-preferences.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result, isErr } from '@common/result';
 import { NotificationPreferencesRepository, NotificationPrefsRow } from '../infrastructure/repositories/notification-preferences.repository';

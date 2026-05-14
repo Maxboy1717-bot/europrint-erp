@@ -1,3 +1,8 @@
+/**
+ * @module lms-cert-expired.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { db } from '@shared/db';

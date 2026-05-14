@@ -1,3 +1,45 @@
+/**
+ * @module payroll.service
+ * @description Payroll history service. Records every salary change (raise,
+ *   bonus, deduction, base-rate update) per employee with a typed reason
+ *   code. Used by the salary-history report on the employee profile and by
+ *   period close (current month's salary is the sum of base + entries).
+ *
+ *   Read endpoint: paginated, filterable by user/date/changeType.
+ *   Write endpoint: validates org-structure assignment before insert.
+ * @layer Service (HR / payroll)
+ *
+ * WHY ORG-STRUCTURE ASSIGNMENT IS A HARD PRECONDITION
+ *   Payroll computation depends on the employee's position (base rate) and
+ *   department (cost center). An employee with no `org_assignments` row
+ *   cannot be paid because:
+ *     - No base rate → can't compute gross
+ *     - No cost center → GL posting has nowhere to land
+ *     - No supervisor → no approver for the salary change
+ *   We reject the create at the service layer so the failure surfaces at
+ *   data-entry time, not at month-end close (where 400 missing-rate errors
+ *   would block the entire payroll run).
+ *
+ *   The fix path is in HR's hands: assign the employee in org-structure
+ *   first, then retry payroll entry. The error message points there.
+ *
+ * WHY PAYROLL HISTORY (NOT a "current salary" column)
+ *   IFRS + UZ tax law require a full audit trail of compensation changes:
+ *     - Who approved the raise + when (anti-fraud control)
+ *     - Effective-from date (mid-month raises pro-rated correctly)
+ *     - Reason code (raise / bonus / deduction / hardship / correction)
+ *
+ *   Storing only `employees.current_salary` would lose that history. Reading
+ *   "current" means SELECT MAX(effective_from) WHERE userId = ?; we trade
+ *   one extra query for a defensible audit trail.
+ *
+ * WHY THE controller uses `safeCall` instead of try/catch
+ *   safeCall wraps thrown HttpExceptions and preserves their semantics
+ *   (BadRequestException → 400, NotFoundException → 404). The thrown
+ *   InternalServerErrorException on repo.findAll failure is converted to
+ *   `{ code: 'INTERNAL', message: ... }` automatically — see common/result.ts.
+ */
+
 import { Injectable, InternalServerErrorException, BadRequestException, Inject, Logger} from '@nestjs/common';
 import { IHrPayrollRepository, HR_PAYROLL_REPO } from './i-hr-payroll.repo';
 import { safeCall, Result, AppError } from '@common/result';

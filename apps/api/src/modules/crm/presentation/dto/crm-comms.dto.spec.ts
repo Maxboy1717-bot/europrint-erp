@@ -1,3 +1,8 @@
+/**
+ * @module crm-comms.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   SendEmailDtoSchema,

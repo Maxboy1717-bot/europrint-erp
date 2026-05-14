@@ -1,3 +1,8 @@
+/**
+ * @module LeadDetailSheet
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
@@ -52,13 +57,13 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
   const { data: history = [] } = useQuery<HistoryItem[]>({
     queryKey: ["/api/crm/history", leadId, "lead"],
-    queryFn: () => fetch(`/api/crm/history?entityType=lead&entityId=${leadId}`).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/crm/history?entityType=lead&entityId=${leadId}`),
     enabled: !!leadId && open,
   });
 
   const { data: activities = [] } = useQuery<Activity[]>({
     queryKey: ["/api/crm/followup-activities", leadId, "lead"],
-    queryFn: () => fetch(`/api/crm/followup-activities?entityType=lead&entityId=${leadId}`).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/crm/followup-activities?entityType=lead&entityId=${leadId}`),
     enabled: !!leadId && open,
   });
 
@@ -197,10 +202,10 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
       </Sheet>
 
       <Dialog open={showConvertDialog} onOpenChange={setShowConvertDialog}>
-        <DialogContent data-testid="dialog-convert-lead">
+        <DialogContent data-testid="dialog-convert-lead" className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-green-600" />
+              <Zap className="h-4 w-4 text-[var(--ep-green)]" />
               Lidni konvertatsiya qilish
             </DialogTitle>
             <DialogDescription>
@@ -246,7 +251,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
             <div className="flex gap-2 pt-2">
               <Button
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-600 hover:bg-[var(--ep-green)]/90"
                 onClick={() => convertLeadMutation.mutate()}
                 disabled={convertLeadMutation.isPending || (!convertOptions.createDeal && !convertOptions.createContact && !convertOptions.createCompany)}
                 data-testid="button-confirm-convert"

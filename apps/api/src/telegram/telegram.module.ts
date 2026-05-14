@@ -1,3 +1,8 @@
+/**
+ * @module telegram.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
 import { TelegramService } from './telegram.service'

@@ -1,3 +1,8 @@
+/**
+ * @module queries-wms
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { stocks } from '@shared/db';
 import { eq, and, asc, sql } from 'drizzle-orm';

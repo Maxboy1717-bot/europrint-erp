@@ -1,14 +1,18 @@
+/**
+ * @module DesignDashboard
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Package, CheckCircle, Palette, FileText, Zap, Clock } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-import { ErrorState } from "@/components/ui/error-state";
 import { cn } from "@/lib/utils";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 interface DesignStats {
   totalOrders: number;
@@ -65,20 +69,21 @@ export default function DesignDashboard() {
     })) || [];
 
   const kpiItems = [
-    { label: "Jami Buyurtmalar", value: stats?.totalOrders || 0, desc: `${stats?.activeOrders || 0} ta faol`, icon: Package, accent: "text-orange-500", testId: "text-total-orders" },
-    { label: "Bajarilgan", value: stats?.completedOrders || 0, desc: "Muvaffaqiyatli", icon: CheckCircle, accent: "text-green-500", testId: "text-completed-orders" },
-    { label: "AI Dizaynlar", value: stats?.totalDesigns || 0, desc: `${stats?.approvedDesigns || 0} ta tasdiqlangan`, icon: Palette, accent: "text-purple-500", testId: "text-total-designs" },
-    { label: "Brend Shablonlar", value: stats?.totalTemplates || 0, desc: "Faol shablonlar", icon: FileText, accent: "text-blue-500", testId: "text-templates" },
+    { label: "Jami Buyurtmalar", value: stats?.totalOrders || 0, desc: `${stats?.activeOrders || 0} ta faol`, icon: Package, accent: "text-[var(--ep-primary)]", testId: "text-total-orders" },
+    { label: "Bajarilgan", value: stats?.completedOrders || 0, desc: "Muvaffaqiyatli", icon: CheckCircle, accent: "text-[var(--ep-green)]", testId: "text-completed-orders" },
+    { label: "AI Dizaynlar", value: stats?.totalDesigns || 0, desc: `${stats?.approvedDesigns || 0} ta tasdiqlangan`, icon: Palette, accent: "text-[var(--ep-purple)]", testId: "text-total-designs" },
+    { label: "Brend Shablonlar", value: stats?.totalTemplates || 0, desc: "Faol shablonlar", icon: FileText, accent: "text-[var(--ep-blue)]", testId: "text-templates" },
   ];
 
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch} />;
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-4xl font-light tracking-tight text-on-surface">
-          Dizayn <span className="font-bold text-primary">Dashboard</span>
-        </h1>
+        <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Dizayn {t('dashboard7')}</b></>}
+        title="Dizayn {t('dashboard7')}"
+      />
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Yangilash
@@ -86,26 +91,26 @@ export default function DesignDashboard() {
       </div>
 
       {/* ─── Unified KPI Bar ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {isLoading ? (
           ([0, 1, 2, 3]).map((i) => (
-            <div key={`k-${i}`} className="bg-surface-container-lowest rounded-lg p-5 space-y-3">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-9 w-28" />
+            <div key={`k-${i}`} className="bg-card rounded-lg p-5 space-y-3">
+              <Skeleton className="h-3 w-24 rounded-lg" />
+              <Skeleton className="h-9 w-28 rounded-lg" />
             </div>
           ))
         ) : (
-          (kpiItems ?? []).map((item, i) => (
-            <div key={`k-${i}`} className="bg-surface-container-lowest rounded-lg p-5" data-testid={item.testId}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+          (Array.isArray(kpiItems) ? kpiItems : []).map((item, i) => (
+            <div key={`k-${i}`} className="bg-card rounded-lg p-5" data-testid={item.testId}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {item.label}
               </p>
-              <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">
+              <p className="text-4xl font-bold tracking-tight text-foreground mt-1">
                 {item.value}
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <item.icon className={cn("w-3.5 h-3.5", item.accent)} />
-                <span className="text-xs text-on-surface-variant">{item.desc}</span>
+                <span className="text-xs text-muted-foreground">{item.desc}</span>
               </div>
             </div>
           ))
@@ -114,25 +119,25 @@ export default function DesignDashboard() {
 
       {/* Qo'shimcha KPI mini qatori */}
       {!isLoading && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-surface-container-lowest rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">AI Promptlar</p>
-            <p className="text-4xl font-bold tracking-tight text-on-surface mt-1" data-testid="text-prompts">{stats?.totalPrompts || 0}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-card rounded-lg p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Promptlar</p>
+            <p className="text-4xl font-bold tracking-tight text-foreground mt-1" data-testid="text-prompts">{stats?.totalPrompts || 0}</p>
           </div>
-          <div className="bg-surface-container-lowest rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Tasdiqlash ko'rsatkichi</p>
-            <p className="text-4xl font-bold tracking-tight text-on-surface mt-1" data-testid="text-approval-rate">{approvalRate}%</p>
+          <div className="bg-card rounded-lg p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tasdiqlash ko'rsatkichi</p>
+            <p className="text-4xl font-bold tracking-tight text-foreground mt-1" data-testid="text-approval-rate">{approvalRate}%</p>
           </div>
-          <div className="bg-surface-container-lowest rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Tasdiqlangan Dizaynlar</p>
-            <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">{stats?.approvedDesigns || 0}</p>
+          <div className="bg-card rounded-lg p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tasdiqlangan Dizaynlar</p>
+            <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{stats?.approvedDesigns || 0}</p>
           </div>
         </div>
       )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-surface-container-lowest rounded-xl p-6">
+        <div className="bg-card rounded-xl p-6">
           <h3 className="text-sm font-semibold mb-4">Buyurtmalar Status Taqsimoti</h3>
           <div className="h-[260px]">
             {statusData.length > 0 ? (
@@ -155,14 +160,14 @@ export default function DesignDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-on-surface-variant text-sm">
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
                 {t("noData")}
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-surface-container-lowest rounded-xl p-6">
+        <div className="bg-card rounded-xl p-6">
           <h3 className="text-sm font-semibold mb-4">Buyurtmalar Statistikasi</h3>
           <div className="h-[260px]">
             {statusData.length > 0 ? (
@@ -180,7 +185,7 @@ export default function DesignDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-on-surface-variant text-sm">
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
                 {t("noData")}
               </div>
             )}
@@ -189,41 +194,41 @@ export default function DesignDashboard() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-surface-container-lowest rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-on-surface mb-4">So'nggi Buyurtmalar</h3>
+      <div className="bg-card rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-4">So'nggi Buyurtmalar</h3>
         <div className="space-y-2">
           {isLoading ? (
-            ([1, 2, 3, 4, 5]).map((i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-xl" />)
+            ([1, 2, 3, 4, 5]).map((i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)
           ) : stats?.recentOrders && stats.recentOrders.length > 0 ? (
             stats.recentOrders?.map((order) => (
               <div
                 key={order.id}
-                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-surface-container-low transition-colors"
+                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-muted/40 transition-colors"
                 data-testid={`row-order-${order.id}`}
               >
                 <div>
-                  <p className="text-sm font-semibold text-on-surface">{order.orderNumber}</p>
-                  <p className="text-xs text-on-surface-variant">{order.clientName} — {order.productName}</p>
+                  <p className="text-sm font-semibold text-foreground">{order.orderNumber}</p>
+                  <p className="text-xs text-muted-foreground">{order.clientName} — {order.productName}</p>
                 </div>
                 <div className="text-right">
                   <span
                     className={cn(
                       "rounded-full px-2.5 py-0.5 text-xs font-semibold",
                       order.status === "yakunlangan" ? "bg-green-100 text-green-800" :
-                      order.status === "tasdiqlangan" ? "bg-primary-container text-on-primary-container" :
+                      order.status === "tasdiqlangan" ? "bg-primary/10 text-primary" :
                       order.status === "tasdiq-kutilmoqda" ? "bg-amber-100 text-amber-800" :
-                      order.status === "jarayonda" ? "bg-primary-container text-on-primary-container" :
-                      "bg-surface-container text-on-surface-variant"
+                      order.status === "jarayonda" ? "bg-primary/10 text-primary" :
+                      "bg-muted/60 text-muted-foreground"
                     )}
                   >
                     {STATUS_LABELS[order.status] || order.status}
                   </span>
-                  <p className="text-[10px] text-on-surface-variant mt-0.5">{order.productType}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{order.productType}</p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center text-on-surface-variant py-10 text-sm">{t("noData")}</div>
+            <div className="text-center text-muted-foreground py-10 text-sm">{t("noData")}</div>
           )}
         </div>
       </div>

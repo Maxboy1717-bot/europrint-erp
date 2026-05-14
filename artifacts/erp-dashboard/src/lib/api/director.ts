@@ -1,3 +1,8 @@
+/**
+ * @module director
+ * @description Frontend utility / library module.
+ */
+
 import { apiRequest } from "@/lib/queryClient";
 
 export const directorApi = {

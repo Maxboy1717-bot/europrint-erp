@@ -1,3 +1,8 @@
+/**
+ * @module MarketingWebsiteCMS
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
@@ -13,19 +18,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Globe, Pencil, Trash2, Eye, Sparkles, Send, Newspaper } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
-import { ErrorState } from "@/components/ui/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-
-interface NewsItem {
-  id: number | string;
-  title: string;
-  title_ru?: string;
-  summary?: string;
-  image_url?: string;
-  published_at?: string;
-  is_published?: boolean;
-  created_at?: string;
-}
+import type { NewsItem } from "./MarketingWebsiteCMSTypes";
+import { EPErrorState } from "@/components/ep";
 
 export default function MarketingWebsiteCMS() {
   const { toast } = useToast();
@@ -80,7 +75,7 @@ export default function MarketingWebsiteCMS() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("PATCH", `/api/marketing/website/blog/${id}/publish`),
+    mutationFn: (id: string) => apiRequest("POST", `/api/marketing/website/blog/${id}/publish`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/website/blog"] });
       toast({ title: "Post nashr qilindi" });
@@ -134,24 +129,24 @@ export default function MarketingWebsiteCMS() {
   const published = posts?.filter(p => p.isPublished) || [];
   const drafts = posts?.filter(p => !p.isPublished) || [];
 
-  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24" />)}</div>;
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
+  if (isError) return <EPErrorState onRetry={refetch} />;
 
   return (
-    <div className="p-4 space-y-4" data-testid="marketing-website-cms">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-4" data-testid="marketing-website-cms">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Globe className="h-6 w-6 text-emerald-500" />Web sayt CMS
+          <Globe className="h-6 w-6 text-[var(--ep-green)]" />Web sayt CMS
         </h1>
         {mainTab === "blog" && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
               <Button data-testid="button-create-blog"><Plus className="h-4 w-4 mr-1" />Yangi Maqola</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>{editId ? "Maqolani tahrirlash" : "Yangi Blog Maqola"}</DialogTitle></DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+              <DialogHeader><DialogTitle className="text-[18px] font-semibold">{editId ? "Maqolani tahrirlash" : "Yangi Blog Maqola"}</DialogTitle></DialogHeader>
               <Tabs defaultValue="content">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
                   <TabsTrigger value="content">Kontent</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                   <TabsTrigger value="ai">AI Yordamchi</TabsTrigger>
@@ -196,7 +191,7 @@ export default function MarketingWebsiteCMS() {
         </TabsList>
 
         <TabsContent value="blog" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold" data-testid="text-published-count">{published.length}</p>
@@ -250,7 +245,7 @@ export default function MarketingWebsiteCMS() {
 
         <TabsContent value="news" className="mt-4">
           {newsLoading ? (
-            <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-20" />)}</div>
+            <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-20 rounded-lg" />)}</div>
           ) : !news || news.length === 0 ? (
             <Card><CardContent className="p-8 text-center text-muted-foreground">Hozircha yangiliklar yo'q</CardContent></Card>
           ) : (

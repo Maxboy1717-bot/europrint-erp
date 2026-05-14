@@ -1,3 +1,8 @@
+/**
+ * @module ProductionTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingDown, Clock } from "lucide-react";
 import { KpiCard } from "./KpiCard";
@@ -6,7 +11,7 @@ import { fmtQty, type ProductionUsageInfo, type BasicInfo } from "./types";
 export function ProductionTab({ productionUsage, basic }: { productionUsage: ProductionUsageInfo; basic: BasicInfo }) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         <KpiCard icon={TrendingDown} label="Kunlik sarflanish" value={fmtQty(productionUsage.avgDailyConsumption, basic.unitOfMeasure)} sub="so'nggi 30 kun" />
         <KpiCard icon={TrendingDown} label="Oylik sarflanish" value={fmtQty(productionUsage.avgMonthlyConsumption, basic.unitOfMeasure)} />
         <KpiCard icon={Clock} label="Zaxira davri"

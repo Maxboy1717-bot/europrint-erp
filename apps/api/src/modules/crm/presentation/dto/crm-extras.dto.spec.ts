@@ -1,3 +1,8 @@
+/**
+ * @module crm-extras.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import {
   CreateCommentDtoSchema,
   CreateTaskDtoSchema,

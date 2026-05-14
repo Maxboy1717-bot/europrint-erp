@@ -1,3 +1,8 @@
+/**
+ * @module wms-warehouse-gateway.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { WmsWarehouseGatewayRepo } from '../infrastructure/wms-warehouse-gateway.repo';
@@ -74,5 +79,9 @@ export class WmsWarehouseGatewayService {
 
   async barcodeScan(barcode: string) {
     return this.repo.barcodeScan(barcode);
+  }
+
+  async logPosSyncEvent(warehouseId: number | null, userId: number | null): Promise<void> {
+    return this.repo.logPosSyncEvent(warehouseId, userId);
   }
 }

@@ -1,8 +1,14 @@
+/**
+ * @module lms-misc.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -38,6 +44,15 @@ export class LmsMicroModulesController {
   @Post(':id/view')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')
   async recordView(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const userId = String(user?.id ?? 0);
+    const result = await this.svc.recordMicroModuleView(id, userId);
+    const data = unwrapOrInternal(result);
+    return { message: "Ko'rildi", data };
+  }
+
+  @Patch(':id/view')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')
+  async patchRecordView(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     const userId = String(user?.id ?? 0);
     const result = await this.svc.recordMicroModuleView(id, userId);
     const data = unwrapOrInternal(result);

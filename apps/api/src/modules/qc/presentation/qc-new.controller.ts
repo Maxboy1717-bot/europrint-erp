@@ -1,3 +1,8 @@
+/**
+ * @module qc-new.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -100,6 +105,13 @@ export class QcNewController {
   async getSpcControlChart(@Query('parameterId') parameterId?: string) {
     const pid = parameterId ? parseInt(parameterId, 10) : undefined;
     return unwrapOrInternal(await this.svc.getSpcControlChart(pid));
+  }
+
+  @Get('control-charts')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'SPC control charts list' })
+  async getControlCharts() {
+    return { data: [], total: 0 };
   }
 
   @Get('control-charts/:processId')

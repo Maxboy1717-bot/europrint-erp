@@ -1,3 +1,8 @@
+/**
+ * @module shared-schema
+ * @description Source module. See exports for details.
+ */
+
 import { z } from "zod";
 
 export type User = Record<string, any>;

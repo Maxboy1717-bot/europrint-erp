@@ -1,3 +1,8 @@
+/**
+ * @module Quote
+ * @description Source module. See exports for details.
+ */
+
 import { useState } from "react";
 import { CheckCircle, FileText, Clock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";

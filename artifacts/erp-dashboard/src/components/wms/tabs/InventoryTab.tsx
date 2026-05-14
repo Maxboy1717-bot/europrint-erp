@@ -1,3 +1,8 @@
+/**
+ * @module InventoryTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fmtQty, fmtDate, fmtNum } from "@/components/wms/helpers";
@@ -23,20 +28,20 @@ export function InventoryTab({ inventory, basic }: InventoryTabProps) {
             ]).map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{label}</span>
-                <span className={`font-medium ${inventory.lastCountResult === "matched" ? "text-green-600" : "text-yellow-600"}`}>{value}</span>
+                <span className={`font-medium ${inventory.lastCountResult === "matched" ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]"}`}>{value}</span>
               </div>
             ))}
           </CardContent>
         </Card>
       )}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Card><CardContent className="p-4 text-center">
           <p className="text-xs text-muted-foreground mb-1">Yo'qolgan (12 oy)</p>
           <p className="text-2xl font-bold text-destructive">{fmtQty(inventory.discrepancyAnalysis?.totalLoss12m, basic.unitOfMeasure)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4 text-center">
           <p className="text-xs text-muted-foreground mb-1">Ortiqcha (12 oy)</p>
-          <p className="text-2xl font-bold text-green-600">{fmtQty(inventory.discrepancyAnalysis?.totalSurplus12m, basic.unitOfMeasure)}</p>
+          <p className="text-2xl font-bold text-[var(--ep-green)]">{fmtQty(inventory.discrepancyAnalysis?.totalSurplus12m, basic.unitOfMeasure)}</p>
         </CardContent></Card>
       </div>
       {(inventory.history || []).length > 0 ? (
@@ -57,7 +62,7 @@ export function InventoryTab({ inventory, basic }: InventoryTabProps) {
                       <td className="px-4 py-2 font-mono text-xs">{c.countNumber || "—"}</td>
                       <td className="px-4 py-2">{fmtQty(c.bookQuantity, basic.unitOfMeasure)}</td>
                       <td className="px-4 py-2">{fmtQty(c.countedQuantity, basic.unitOfMeasure)}</td>
-                      <td className={`px-4 py-2 font-medium ${fmtNum(c.variance) < 0 ? "text-destructive" : fmtNum(c.variance) > 0 ? "text-green-600" : ""}`}>
+                      <td className={`px-4 py-2 font-medium ${fmtNum(c.variance) < 0 ? "text-destructive" : fmtNum(c.variance) > 0 ? "text-[var(--ep-green)]" : ""}`}>
                         {fmtNum(c.variance) !== 0 ? fmtQty(c.variance, basic.unitOfMeasure) : "Mos"}
                       </td>
                       <td className="px-4 py-2">

@@ -1,3 +1,8 @@
+/**
+ * @module i-approval.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Result } from '@common/types/result.type';
 import { ApprovalRequest } from '../aggregates/approval-request.aggregate';
 import { HitlDocumentType, ApprovalStatus } from '../enums/hitl-document-type.enum';

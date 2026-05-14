@@ -1,6 +1,11 @@
+/**
+ * @module fi-kassa
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
@@ -27,7 +32,7 @@ export const cashRegisters = pgTable("cash_registers", {
   nameRu: text("name_ru"),
   location: text("location"), // Joylashuv
   currency: varchar("currency", { length: 10 }).notNull().default("UZS"),
-  custodianId: integer("custodian_id").references(() => users.id), // Kassir
+  custodianId: integer("custodian_id").references(() => users.id, { onDelete: "set null" }), // Kassir
   openingBalance: numericMoney("opening_balance").notNull().default(0),
   currentBalance: numericMoney("current_balance").notNull().default(0),
   dailyLimit: numericMoney("daily_limit"), // Kunlik limit
@@ -53,10 +58,10 @@ export type InsertCashRegister = z.infer<typeof insertCashRegisterSchema>;
 // Cash Sessions (Kassa smenalari)
 export const cashSessions = pgTable("cash_sessions", {
   id: serial("id").primaryKey(),
-  registerId: integer("register_id").notNull().references(() => cashRegisters.id),
+  registerId: integer("register_id").notNull().references(() => cashRegisters.id, { onDelete: "restrict" }),
   sessionNumber: varchar("session_number", { length: 50 }).notNull().unique(),
-  openedBy: integer("opened_by").notNull().references(() => users.id),
-  closedBy: integer("closed_by").references(() => users.id),
+  openedBy: integer("opened_by").notNull().references(() => users.id, { onDelete: "set null" }),
+  closedBy: integer("closed_by").references(() => users.id, { onDelete: "set null" }),
   openingBalance: numericMoney("opening_balance").notNull(),
   closingBalance: numericMoney("closing_balance"),
   expectedBalance: numericMoney("expected_balance"), // Kutilgan balans
@@ -68,6 +73,7 @@ export const cashSessions = pgTable("cash_sessions", {
   closedAt: timestamp("closed_at"),
   notes: text("notes"),
 }, (t) => [
+  check("cash_sessions_status_chk", sql`${t.status} IN ('open','closed','reconciled')`),
   index("idx_cash_sessions_register_id").on(t.registerId),
   index("idx_cash_sessions_status").on(t.status),
   index("idx_cash_sessions_opened_at").on(t.openedAt),
@@ -88,25 +94,28 @@ export type InsertCashSession = z.infer<typeof insertCashSessionSchema>;
 // Cash Transactions (Kassa tranzaksiyalari)
 export const cashTransactions = pgTable("cash_transactions", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => cashSessions.id),
-  registerId: integer("register_id").notNull().references(() => cashRegisters.id),
+  sessionId: integer("session_id").references(() => cashSessions.id, { onDelete: "set null" }),
+  registerId: integer("register_id").notNull().references(() => cashRegisters.id, { onDelete: "restrict" }),
   transactionNumber: varchar("transaction_number", { length: 50 }).notNull().unique(),
   transactionDate: varchar("transaction_date", { length: 10 }).notNull(), // YYYY-MM-DD
   transactionTime: varchar("transaction_time", { length: 8 }), // HH:MM:SS
-  transactionType: varchar("transaction_type", { length: 20 }).notNull(), // inflow, outflow
+  transactionType: varchar("transaction_type", { length: 20 }).notNull(), // inflow | outflow
   categoryId: varchar("category_id"), // References financeCategories.id
   counterparty: text("counterparty"), // Kim bilan
-  counterpartyType: varchar("counterparty_type", { length: 20 }), // customer, vendor, employee, other
-  paymentMethod: varchar("payment_method", { length: 20 }).notNull().default("cash"), // cash, card, bank_transfer
+  counterpartyType: varchar("counterparty_type", { length: 20 }), // customer | vendor | employee | other
+  paymentMethod: varchar("payment_method", { length: 20 }).notNull().default("cash"), // cash | card | bank_transfer
   referenceType: varchar("reference_type", { length: 30 }), // sales_invoice, purchase_invoice, expense, manual
   referenceId: varchar("reference_id"),
   amount: numericMoney("amount").notNull(),
   currency: varchar("currency", { length: 10 }).notNull().default("UZS"),
   description: text("description"),
-  approvedBy: integer("approved_by").references(() => users.id),
-  createdBy: integer("created_by").references(() => users.id),
+  approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("cash_txn_type_chk", sql`${t.transactionType} IN ('inflow','outflow')`),
+  check("cash_txn_counterparty_chk", sql`${t.counterpartyType} IS NULL OR ${t.counterpartyType} IN ('customer','vendor','employee','other')`),
+  check("cash_txn_payment_chk", sql`${t.paymentMethod} IN ('cash','card','bank_transfer')`),
   index("idx_cash_transactions_session_id").on(t.sessionId),
   index("idx_cash_transactions_register_id").on(t.registerId),
   index("idx_cash_transactions_transaction_type").on(t.transactionType),
@@ -138,9 +147,9 @@ export const financeCategories = pgTable("finance_categories", {
   code: varchar("code", { length: 20 }).notNull().unique(),
   name: text("name").notNull(),
   nameRu: text("name_ru"),
-  categoryType: varchar("category_type", { length: 20 }).notNull(), // income, expense
-  parentId: varchar("parent_id").references((): AnyPgColumn => financeCategories.id),
-  accountId: varchar("account_id").references(() => accounts.id), // GL hisob bog'lanishi
+  categoryType: varchar("category_type", { length: 20 }).notNull(), // income | expense
+  parentId: varchar("parent_id").references((): AnyPgColumn => financeCategories.id, { onDelete: "set null" }),
+  accountId: varchar("account_id").references(() => accounts.id, { onDelete: "set null" }), // GL hisob bog'lanishi
   isSystem: boolean("is_system").notNull().default(false), // Tizim tomonidan yaratilgan
   isActive: boolean("is_active").notNull().default(true),
   color: varchar("color", { length: 7 }), // Rang kodi (#RRGGBB)
@@ -148,6 +157,7 @@ export const financeCategories = pgTable("finance_categories", {
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("finance_cat_type_chk", sql`${t.categoryType} IN ('income','expense')`),
   index("idx_finance_categories_category_type").on(t.categoryType),
   index("idx_finance_categories_is_active").on(t.isActive),
 ]);
@@ -170,9 +180,9 @@ export const incomeExpenseTransactions = pgTable("income_expense_transactions", 
   id: serial("id").primaryKey(),
   transactionNumber: varchar("transaction_number", { length: 50 }).notNull().unique(),
   transactionDate: varchar("transaction_date", { length: 10 }).notNull(), // YYYY-MM-DD
-  transactionType: varchar("transaction_type", { length: 20 }).notNull(), // income, expense
+  transactionType: varchar("transaction_type", { length: 20 }).notNull(), // income | expense
   categoryId: varchar("category_id"), // References financeCategories.id
-  accountId: varchar("account_id").references(() => accounts.id), // GL hisob
+  accountId: varchar("account_id").references(() => accounts.id, { onDelete: "set null" }), // GL hisob
   counterpartyType: varchar("counterparty_type", { length: 20 }), // customer, vendor, employee, other
   counterpartyId: varchar("counterparty_id"), // Related entity ID
   counterpartyName: text("counterparty_name"),
@@ -182,13 +192,15 @@ export const incomeExpenseTransactions = pgTable("income_expense_transactions", 
   description: text("description"),
   referenceType: varchar("reference_type", { length: 30 }), // invoice, order, manual
   referenceId: varchar("reference_id"),
-  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id), // Auto-generated GL entry
-  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, posted, cancelled
-  createdBy: integer("created_by").references(() => users.id),
-  approvedBy: integer("approved_by").references(() => users.id),
+  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }), // Auto-generated GL entry
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft | posted | cancelled
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
+  approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   postedAt: timestamp("posted_at"),
 }, (t) => [
+  check("ie_txn_type_chk", sql`${t.transactionType} IN ('income','expense')`),
+  check("ie_txn_status_chk", sql`${t.status} IN ('draft','posted','cancelled')`),
   index("idx_income_expense_transactions_transaction_type").on(t.transactionType),
   index("idx_income_expense_transactions_status").on(t.status),
   index("idx_income_expense_transactions_created_at").on(t.createdAt),

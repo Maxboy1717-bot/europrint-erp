@@ -1,3 +1,8 @@
+/**
+ * @module okr.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertFound, assertRequired } from '@common/assertions';

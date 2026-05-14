@@ -1,3 +1,8 @@
+/**
+ * @module integration-extended.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body, Controller, Get, HttpCode, Param, Post, Put, Query,
   UseGuards, UseInterceptors, UsePipes, HttpStatus } from '@nestjs/common';
@@ -119,7 +124,8 @@ export class IntegrationExtendedController {
   @Roles(...ALL_ROLES)
   async getExpenseRequests(@Query('status') status?: string) {
     const r = await this.repo.findExpenseRequests(status);
-    return r.ok ? r.data : [];
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { requests: items, total: items.length };
   }
 
   @Post('expense/expense-requests')
@@ -138,7 +144,16 @@ export class IntegrationExtendedController {
   @Roles(...ALL_ROLES)
   async getExpenseStats() {
     const r = await this.repo.getExpenseStats();
-    return r.ok ? r.data : {};
+    const raw = r.ok ? (r.data as Record<string, unknown>) : {};
+    return {
+      byStatus: [
+        { status: 'pending',   count: Number(raw['pending'] ?? 0),   totalAmount: 0 },
+        { status: 'approved',  count: Number(raw['approved'] ?? 0),  totalAmount: Number(raw['total_approved_amount'] ?? 0) },
+        { status: 'submitted', count: 0, totalAmount: 0 },
+      ],
+      byCategory: [],
+      totalRequests: Number(raw['total_requests'] ?? 0),
+    };
   }
 
   @Get('expense/advance-payments')

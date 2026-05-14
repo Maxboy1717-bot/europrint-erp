@@ -1,3 +1,8 @@
+/**
+ * @module delete-confirm-dialog
+ * @description React UI component.
+ */
+
 import {
   AlertDialog,
   AlertDialogAction,

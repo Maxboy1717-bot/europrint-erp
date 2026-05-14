@@ -1,3 +1,8 @@
+/**
+ * @module SidebarHeader
+ * @description React UI component.
+ */
+
 import { cn } from "@/lib/utils";
 import { LayoutDashboard } from "lucide-react";
 
@@ -11,7 +16,7 @@ export function SidebarHeader({ icon: Icon, title, accentBg }: SidebarHeaderProp
   return (
     <div className="px-4 pt-4 pb-3 border-b border-sidebar-border">
       <div className="flex items-center gap-2.5">
-        <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-white select-none shadow-sm", accentBg)}>
+        <div className={cn("w-8 h-8 rounded-md flex items-center justify-center shrink-0 text-white select-none", accentBg)}>
           <Icon className="w-4.5 h-4.5" />
         </div>
         <div className="min-w-0 flex-1">

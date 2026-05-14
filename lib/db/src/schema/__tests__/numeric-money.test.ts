@@ -1,3 +1,8 @@
+/**
+ * @module numeric-money.test
+ * @description Jest / Vitest test suite.
+ */
+
 import { describe, it, expect } from 'vitest';
 
 describe('numericMoney custom type behavior', () => {

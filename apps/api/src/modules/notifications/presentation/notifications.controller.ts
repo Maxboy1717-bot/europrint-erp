@@ -1,3 +1,8 @@
+/**
+ * @module notifications.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
@@ -104,6 +109,21 @@ export class NotificationsController {
   async markAllAsRead(@CurrentUser() user: AuthenticatedUser) {
     this.logger.log({ userId: user.id }, 'Mark all notifications as read');
     return { statusCode: HttpStatus.OK, data: { updated: 0 } };
+  }
+
+  @Patch('/my/mark-all-read')
+  async patchMarkAllReadMy(@CurrentUser() user: AuthenticatedUser) {
+    const result = await this.prefsSvc.markAllRead(user.id);
+    assertOk(result);
+    return { statusCode: HttpStatus.OK, data: result.data };
+  }
+
+  @Patch('/preferences')
+  async patchPreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const dto = parseNotificationPreferences(body);
+    const result = await this.prefsSvc.updatePreferences(user.id, dto);
+    assertOk(result);
+    return { statusCode: HttpStatus.OK, data: result.data };
   }
 
   @Post()

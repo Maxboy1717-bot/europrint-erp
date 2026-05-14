@@ -1,3 +1,8 @@
+/**
+ * @module schema-misc-app-b
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, integer, text, boolean, timestamp, varchar, date,
 } from 'drizzle-orm/pg-core';

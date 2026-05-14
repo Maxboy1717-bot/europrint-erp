@@ -1,3 +1,8 @@
+/**
+ * @module lms-misc.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Result } from '@common/result';
 import { LmsMiscRepository } from '../../infrastructure/repositories/drizzle-lms-misc.repo';

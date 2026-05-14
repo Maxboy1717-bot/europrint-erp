@@ -1,3 +1,8 @@
+/**
+ * @module saas.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -11,41 +16,65 @@ type TenantUpdate = Partial<TenantInsert> & { updatedAt: Date };
 @Injectable()
 export class SaasRepo {
   async findAll() {
-    return db.select().from(saasTenants).orderBy(saasTenants.createdAt);
+    try {
+      return await db.select().from(saasTenants).orderBy(saasTenants.createdAt);
+    } catch (e) {
+      throw new Error(`saas.findAll: ${String(e)}`);
+    }
   }
 
   async findById(id: string) {
-    const rows = await db.select().from(saasTenants).where(eq(saasTenants.id, id));
-    return rows[0] ?? null;
+    try {
+      const rows = await db.select().from(saasTenants).where(eq(saasTenants.id, id));
+      return rows[0] ?? null;
+    } catch (e) {
+      throw new Error(`saas.findById: ${String(e)}`);
+    }
   }
 
   async insert(data: TenantInsert) {
-    return db.insert(saasTenants).values({
-      name:          data.name,
-      domain:        data.domain ?? null,
-      plan:          data.plan,
-      employeeLimit: data.employeeLimit,
-    }).returning();
+    try {
+      return await db.insert(saasTenants).values({
+        name:          data.name,
+        domain:        data.domain ?? null,
+        plan:          data.plan,
+        employeeLimit: data.employeeLimit,
+      }).returning();
+    } catch (e) {
+      throw new Error(`saas.insert: ${String(e)}`);
+    }
   }
 
   async updateStatus(id: string, status: string) {
-    return db.update(saasTenants).set({
-      status,
-      updatedAt: _time.now(),
-    }).where(eq(saasTenants.id, id)).returning();
+    try {
+      return await db.update(saasTenants).set({
+        status,
+        updatedAt: _time.now(),
+      }).where(eq(saasTenants.id, id)).returning();
+    } catch (e) {
+      throw new Error(`saas.updateStatus: ${String(e)}`);
+    }
   }
 
   async update(id: string, data: TenantUpdate) {
-    return db.update(saasTenants).set({
-      name:          data.name,
-      domain:        data.domain,
-      plan:          data.plan,
-      employeeLimit: data.employeeLimit,
-      updatedAt:     data.updatedAt,
-    }).where(eq(saasTenants.id, id)).returning();
+    try {
+      return await db.update(saasTenants).set({
+        name:          data.name,
+        domain:        data.domain,
+        plan:          data.plan,
+        employeeLimit: data.employeeLimit,
+        updatedAt:     data.updatedAt,
+      }).where(eq(saasTenants.id, id)).returning();
+    } catch (e) {
+      throw new Error(`saas.update: ${String(e)}`);
+    }
   }
 
   async delete(id: string) {
-    return db.delete(saasTenants).where(eq(saasTenants.id, id)).returning();
+    try {
+      return await db.delete(saasTenants).where(eq(saasTenants.id, id)).returning();
+    } catch (e) {
+      throw new Error(`saas.delete: ${String(e)}`);
+    }
   }
 }

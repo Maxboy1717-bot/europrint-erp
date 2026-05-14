@@ -1,3 +1,8 @@
+/**
+ * @module HRRequestDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -50,7 +55,7 @@ export function HRRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Send className="h-4 w-4 text-primary" />
@@ -86,7 +91,7 @@ export function HRRequestDialog({
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                     form.priority === p.value
                       ? `${p.color} text-white border-transparent`
-                      : "border-border/40 text-on-surface-variant hover:border-primary/40"
+                      : "border-border/40 text-muted-foreground hover:border-primary/40"
                   }`}
                 >{p.label}</button>
               ))}
@@ -104,7 +109,7 @@ export function HRRequestDialog({
           </div>
 
           {portretId && (
-            <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 dark:bg-green-950/30 rounded-lg p-2.5">
+            <div className="flex items-center gap-2 text-xs text-[var(--ep-green)] bg-green-50 dark:bg-green-950/30 rounded-lg p-2.5">
               <CheckCircle className="h-3.5 w-3.5 shrink-0" />
               Portret saqlangan — so'rovga avtomatik biriktiriladi
             </div>
@@ -115,7 +120,7 @@ export function HRRequestDialog({
           <Button variant="outline" size="sm" onClick={onClose}>Bekor</Button>
           <Button
             size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}
-            className="bg-primary text-on-primary"
+            className="bg-primary text-primary-foreground"
           >
             <Send className="h-3.5 w-3.5 mr-1.5" />
             {mutation.isPending ? "Yuborilmoqda..." : "HR ga yuborish"}

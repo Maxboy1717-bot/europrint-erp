@@ -1,3 +1,8 @@
+/**
+ * @module card
+ * @description React UI component.
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -9,7 +14,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg bg-surface-container-lowest text-card-foreground",
+      "rounded-lg border border-border bg-card text-card-foreground",
       className
     )}
     {...props}
@@ -36,7 +41,7 @@ const CardTitle = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "text-sm font-semibold leading-none tracking-tight text-on-surface",
+      "text-sm font-semibold leading-none tracking-tight text-foreground",
       className
     )}
     {...props}
@@ -50,7 +55,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-xs text-on-surface-variant mt-0.5", className)}
+    className={cn("text-xs text-muted-foreground mt-0.5", className)}
     {...props}
   />
 ));

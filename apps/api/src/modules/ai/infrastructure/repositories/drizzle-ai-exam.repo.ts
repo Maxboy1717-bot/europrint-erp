@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-ai-exam.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -17,7 +22,7 @@ export class DrizzleAiExamRepo {
         .select()
         .from(aiExamAttempts)
         .limit(100);
-      return (rows ?? []).map((r): AiExamAttempt => ({
+      return (Array.isArray(rows) ? rows : []).map((r): AiExamAttempt => ({
         id:             r.id,
         userId:         r.employeeId,
         employeeId:     r.employeeId,

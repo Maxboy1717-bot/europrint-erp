@@ -1,3 +1,8 @@
+/**
+ * @module StockTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Package, CheckCircle, AlertTriangle, Clock } from "lucide-react";
@@ -11,10 +16,10 @@ export function StockTab({ stock, basic }: { stock: StockInfo; basic: BasicInfo 
   const progressPct = maxStock > 0 ? Math.min(100, (curr / maxStock) * 100) : 0;
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard icon={Package} label="Jami miqdor" value={fmtQty(stock.totalQty, basic.unitOfMeasure)} color="text-primary" />
-        <KpiCard icon={CheckCircle} label="Mavjud" value={fmtQty(stock.totalAvailable, basic.unitOfMeasure)} color="text-green-600" />
-        <KpiCard icon={AlertTriangle} label="Band qilingan" value={fmtQty(stock.totalReserved, basic.unitOfMeasure)} color="text-yellow-600" />
+        <KpiCard icon={CheckCircle} label="Mavjud" value={fmtQty(stock.totalAvailable, basic.unitOfMeasure)} color="text-[var(--ep-green)]" />
+        <KpiCard icon={AlertTriangle} label="Band qilingan" value={fmtQty(stock.totalReserved, basic.unitOfMeasure)} color="text-[var(--ep-yellow)]" />
         <KpiCard icon={Clock} label="Necha kunga yetadi"
           value={stock.daysRemaining != null ? `${stock.daysRemaining} kun` : "Noma'lum"}
           color={stock.daysRemaining != null && stock.daysRemaining < 7 ? "text-destructive" : "text-primary"} />
@@ -30,7 +35,7 @@ export function StockTab({ stock, basic }: { stock: StockInfo; basic: BasicInfo 
             <Progress value={progressPct}
               className={progressPct < 20 ? "[&>div]:bg-destructive" : progressPct < 40 ? "[&>div]:bg-yellow-500" : ""} />
           )}
-          <div className="grid grid-cols-2 gap-2 text-sm pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm pt-1">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Minimal:</span>
               <span>{fmtNum(stock.reorderPoint) > 0 ? fmtQty(stock.reorderPoint, basic.unitOfMeasure) : "—"}</span>
@@ -63,8 +68,8 @@ export function StockTab({ stock, basic }: { stock: StockInfo; basic: BasicInfo 
                   <tr key={w.warehouseId} className="border-b hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-2"><div className="font-medium">{w.warehouseName}</div><div className="text-xs text-muted-foreground">{w.warehouseCode}</div></td>
                     <td className="px-4 py-2">{fmtQty(w.quantity, basic.unitOfMeasure)}</td>
-                    <td className="px-4 py-2 text-green-600">{fmtQty(w.availableQuantity, basic.unitOfMeasure)}</td>
-                    <td className="px-4 py-2 text-yellow-600">{fmtQty(w.reservedQuantity, basic.unitOfMeasure)}</td>
+                    <td className="px-4 py-2 text-[var(--ep-green)]">{fmtQty(w.availableQuantity, basic.unitOfMeasure)}</td>
+                    <td className="px-4 py-2 text-[var(--ep-yellow)]">{fmtQty(w.reservedQuantity, basic.unitOfMeasure)}</td>
                     <td className="px-4 py-2 text-xs text-muted-foreground">{fmtDate(w.lastUpdatedAt)}</td>
                   </tr>
                 ))}

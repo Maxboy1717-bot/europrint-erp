@@ -1,3 +1,8 @@
+/**
+ * @module crm-contacts.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   CheckContactDuplicatesDtoSchema,

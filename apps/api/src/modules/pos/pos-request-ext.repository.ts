@@ -1,3 +1,8 @@
+/**
+ * @module pos-request-ext.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 
 import { Injectable } from '@nestjs/common';
 import { posMaterialRequests, db, sql, desc, eq, and, gte, lte } from '@workspace/db';

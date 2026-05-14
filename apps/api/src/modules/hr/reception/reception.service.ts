@@ -1,3 +1,8 @@
+/**
+ * @module reception.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { errMsg } from "../hr-v2-error";
 import { EventEmitter2 } from '@nestjs/event-emitter';

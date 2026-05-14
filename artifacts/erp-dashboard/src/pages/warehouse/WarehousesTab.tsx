@@ -1,3 +1,8 @@
+/**
+ * @module WarehousesTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -106,7 +111,7 @@ export function WarehousesTab({ lang, t }: WarehousesTabProps) {
 
       <Card>
         <ScrollArea className="h-[500px]">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t.code}</TableHead>
@@ -120,8 +125,8 @@ export function WarehousesTab({ lang, t }: WarehousesTabProps) {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={`k-${i}`}>
-                    {Array.from({ length: 6 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                    {Array.from({ length: 6 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-20 rounded-lg" /></TableCell>)}
                   </TableRow>
                 ))
               ) : filtered.length === 0 ? (
@@ -133,7 +138,7 @@ export function WarehousesTab({ lang, t }: WarehousesTabProps) {
                 </TableRow>
               ) : (
                 (Array.isArray(filtered) ? filtered : []).map(wh => (
-                  <TableRow key={wh.id} data-testid={`row-warehouse-${wh.id}`}>
+                  <TableRow key={wh.id} data-testid={`row-warehouse-${wh.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-mono">{wh.code}</TableCell>
                     <TableCell>
                       <div className="font-medium">{wh.name}</div>
@@ -144,32 +149,32 @@ export function WarehousesTab({ lang, t }: WarehousesTabProps) {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{wh.location || "-"}</TableCell>
                     <TableCell>
-                      <Badge className={wh.isActive ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-on-surface-variant border-gray-500/40"}>
+                      <Badge className={wh.isActive ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-muted-foreground border-gray-500/40"}>
                         {wh.isActive ? t.active : t.inactive}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="icon" variant="ghost" onClick={() => handleEdit(wh)} data-testid={`btn-edit-warehouse-${wh.id}`}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => setDeleteId(wh.id)} data-testid={`btn-delete-warehouse-${wh.id}`}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => setDeleteId(wh.id)} data-testid={`btn-delete-warehouse-${wh.id}`}><Trash2 className="h-4 w-4 text-[var(--ep-red)]" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </ScrollArea>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
-            <DialogTitle>{editingWarehouse ? t.editWarehouse : t.createWarehouse}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{editingWarehouse ? t.editWarehouse : t.createWarehouse}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="code" render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t.code} <span className="text-destructive">*</span></FormLabel>
@@ -182,7 +187,7 @@ export function WarehousesTab({ lang, t }: WarehousesTabProps) {
                     <FormLabel>{t.type} <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-warehouse-type"><SelectValue /></SelectTrigger>
+                        <SelectTrigger data-testid="select-warehouse-type" className="h-9"><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {Object.entries(t.warehouseTypes).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}

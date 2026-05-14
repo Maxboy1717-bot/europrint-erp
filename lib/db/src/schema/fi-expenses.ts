@@ -1,6 +1,11 @@
+/**
+ * @module fi-expenses
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
@@ -33,6 +38,8 @@ export const cfoBotExpenses = pgTable("cfo_bot_expenses", {
   index("idx_cfo_bot_expenses_category").on(t.category),
   index("idx_cfo_bot_expenses_status").on(t.status),
   index("idx_cfo_bot_expenses_created_at").on(t.createdAt),
+  check("cfo_bot_expenses_source_type_chk", sql`${t.sourceType} IS NULL OR ${t.sourceType} IN ('manual','telegram','bot','import')`),
+  check("cfo_bot_expenses_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('pending','confirmed','rejected')`),
 ]);
 
 export const cfoBotDocuments = pgTable("cfo_bot_documents", {
@@ -48,6 +55,7 @@ export const cfoBotDocuments = pgTable("cfo_bot_documents", {
 }, (t) => [
   index("idx_cfo_bot_documents_telegram_chat_id").on(t.telegramChatId),
   index("idx_cfo_bot_documents_status").on(t.status),
+  check("cfo_bot_documents_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('pending','processed','failed')`),
 ]);
 
 export const cfoBotHealthLogs = pgTable("cfo_bot_health_logs", {
@@ -78,6 +86,8 @@ export const cfoBotReminders = pgTable("cfo_bot_reminders", {
   index("idx_cfo_bot_reminders_telegram_chat_id").on(t.telegramChatId),
   index("idx_cfo_bot_reminders_status").on(t.status),
   index("idx_cfo_bot_reminders_remind_at").on(t.remindAt),
+  check("cfo_bot_reminders_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('active','completed','cancelled')`),
+  check("cfo_bot_reminders_pattern_chk", sql`${t.recurringPattern} IS NULL OR ${t.recurringPattern} IN ('daily','weekly','monthly','yearly')`),
 ]);
 
 export const insertCfoBotSettingsSchema = createInsertSchema(cfoBotSettings).omit({ id: true, createdAt: true, updatedAt: true } as never);
@@ -111,7 +121,7 @@ export type CfoBotReminder = typeof cfoBotReminders.$inferSelect;
 export const expenseRequests = pgTable("expense_requests", {
   id: serial("id").primaryKey(),
   requestNumber: varchar("request_number", { length: 30 }).notNull(),
-  requestedBy: varchar("requested_by").references(() => users.id).notNull(),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   department: varchar("department", { length: 100 }),
   category: varchar("category", { length: 50 }).notNull(),
   purpose: text("purpose").notNull(),
@@ -119,11 +129,11 @@ export const expenseRequests = pgTable("expense_requests", {
   currency: varchar("currency", { length: 5 }).notNull().default("UZS"),
   budgetLineId: varchar("budget_line_id"),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
-  approvalRequestId: varchar("approval_request_id").references(() => approvalRequests.id),
-  cashRegisterId: varchar("cash_register_id").references(() => cashRegisters.id),
+  approvalRequestId: varchar("approval_request_id").references(() => approvalRequests.id, { onDelete: "set null" }),
+  cashRegisterId: varchar("cash_register_id").references(() => cashRegisters.id, { onDelete: "set null" }),
   disbursedAmount: numericMoney("disbursed_amount"),
   disbursedAt: timestamp("disbursed_at"),
-  disbursedBy: varchar("disbursed_by").references(() => users.id),
+  disbursedBy: varchar("disbursed_by").references(() => users.id, { onDelete: "set null" }),
   settlementStatus: varchar("settlement_status", { length: 20 }).default("not_settled"),
   settledAmount: numericMoney("settled_amount"),
   settledAt: timestamp("settled_at"),
@@ -135,6 +145,9 @@ export const expenseRequests = pgTable("expense_requests", {
   index("idx_expense_requests_status").on(t.status),
   index("idx_expense_requests_category").on(t.category),
   index("idx_expense_requests_created_at").on(t.createdAt),
+  check("expense_requests_status_chk", sql`${t.status} IN ('draft','submitted','approved','disbursed','settled','rejected','cancelled')`),
+  check("expense_requests_settlement_chk", sql`${t.settlementStatus} IS NULL OR ${t.settlementStatus} IN ('not_settled','partial','settled','overspent')`),
+  check("expense_requests_category_chk", sql`${t.category} IN ('MATERIAL','MRO','TRAVEL','UTILITIES','OFFICE','TRANSPORT','FOOD','OTHER')`),
 ]);
 
 
@@ -158,8 +171,8 @@ export const expenseReports = pgTable("expense_reports", {
   remainingCash: numericMoney("remaining_cash").default(0),
   deficit: numericMoney("deficit").default(0),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
-  submittedBy: varchar("submitted_by").references(() => users.id).notNull(),
-  verifiedBy: varchar("verified_by").references(() => users.id),
+  submittedBy: varchar("submitted_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
+  verifiedBy: varchar("verified_by").references(() => users.id, { onDelete: "set null" }),
   verifiedAt: timestamp("verified_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -167,6 +180,8 @@ export const expenseReports = pgTable("expense_reports", {
   index("idx_expense_reports_expense_request_id").on(t.expenseRequestId),
   index("idx_expense_reports_status").on(t.status),
   index("idx_expense_reports_submitted_by").on(t.submittedBy),
+  check("expense_reports_status_chk", sql`${t.status} IN ('draft','submitted','verified','approved','rejected')`),
+  check("expense_reports_totals_chk", sql`${t.totalReceipts} >= 0`),
 ]);
 
 
@@ -205,20 +220,20 @@ export type InsertExpenseAttachment = z.infer<typeof insertExpenseAttachmentSche
 export const advancePayments = pgTable("advance_payments", {
   id: serial("id").primaryKey(),
   requestNumber: varchar("request_number", { length: 30 }).notNull(),
-  vendorId: varchar("vendor_id").references(() => vendors.id),
-  employeeId: varchar("employee_id").references(() => users.id),
+  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "set null" }),
   paymentType: varchar("payment_type", { length: 30 }).notNull(),
   amount: numericMoney("amount").notNull(),
   currency: varchar("currency", { length: 5 }).notNull().default("UZS"),
   purpose: text("purpose").notNull(),
-  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id),
+  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("requested"),
-  approvalRequestId: varchar("approval_request_id").references(() => approvalRequests.id),
+  approvalRequestId: varchar("approval_request_id").references(() => approvalRequests.id, { onDelete: "set null" }),
   disbursedAt: timestamp("disbursed_at"),
   settledAmount: numericMoney("settled_amount").default(0),
   settlementStatus: varchar("settlement_status", { length: 20 }).default("unsettled"),
-  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id),
-  createdBy: integer("created_by").references(() => users.id).notNull(),
+  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (t) => [
@@ -226,6 +241,10 @@ export const advancePayments = pgTable("advance_payments", {
   index("idx_advance_payments_employee_id").on(t.employeeId),
   index("idx_advance_payments_status").on(t.status),
   index("idx_advance_payments_created_at").on(t.createdAt),
+  check("advance_payments_type_chk", sql`${t.paymentType} IN ('VENDOR_ADVANCE','EMPLOYEE_ADVANCE','TRAVEL_ADVANCE')`),
+  check("advance_payments_status_chk", sql`${t.status} IN ('requested','approved','disbursed','partially_settled','settled','rejected')`),
+  check("advance_payments_settlement_chk", sql`${t.settlementStatus} IS NULL OR ${t.settlementStatus} IN ('unsettled','partial','settled')`),
+  check("advance_payments_amount_chk", sql`${t.amount} > 0`),
 ]);
 
 
@@ -244,10 +263,10 @@ export type InsertAdvancePayment = z.infer<typeof insertAdvancePaymentSchema>;
 
 export const invoicePaymentMatching = pgTable("invoice_payment_matching", {
   id: serial("id").primaryKey(),
-  invoiceId: varchar("invoice_id").references(() => salesInvoices.id),
-  paymentId: varchar("payment_id").references(() => customerPayments.id),
+  invoiceId: varchar("invoice_id").references(() => salesInvoices.id, { onDelete: "set null" }),
+  paymentId: varchar("payment_id").references(() => customerPayments.id, { onDelete: "set null" }),
   matchedAmount: numericMoney("matched_amount").notNull(),
-  matchedBy: varchar("matched_by").references(() => users.id),
+  matchedBy: varchar("matched_by").references(() => users.id, { onDelete: "set null" }),
   matchedAt: timestamp("matched_at").defaultNow(),
   isAutoMatched: boolean("is_auto_matched").default(false),
   notes: text("notes"),
@@ -275,9 +294,9 @@ export const bankStatements = pgTable("bank_statements", {
   creditAmount: numericMoney("credit_amount").default(0),
   balance: numericMoney("balance"),
   isMatched: boolean("is_matched").default(false),
-  matchedInvoiceId: varchar("matched_invoice_id").references(() => salesInvoices.id),
+  matchedInvoiceId: varchar("matched_invoice_id").references(() => salesInvoices.id, { onDelete: "set null" }),
   importedAt: timestamp("imported_at").defaultNow(),
-  importedBy: varchar("imported_by").references(() => users.id),
+  importedBy: varchar("imported_by").references(() => users.id, { onDelete: "set null" }),
 }, (t) => [
   index("idx_bank_statements_bank_account").on(t.bankAccount),
   index("idx_bank_statements_transaction_date").on(t.transactionDate),

@@ -1,5 +1,11 @@
+/**
+ * @module ContactsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Users, User, X, Briefcase, Phone } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -22,6 +28,7 @@ interface ContactsTabProps {
 
 export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
   const [showLinkContactDialog, setShowLinkContactDialog] = useState(false);
+  const [confirmUnlinkId, setConfirmUnlinkId] = useState<number | null>(null);
   const [linkContactId, setLinkContactId] = useState("");
   const [linkContactRole, setLinkContactRole] = useState("");
   const { toast } = useToast();
@@ -98,7 +105,7 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
                   variant="ghost"
                   className="text-destructive hover:text-destructive ml-2 shrink-0"
                   disabled={unlinkContactMutation.isPending}
-                  onClick={() => unlinkContactMutation.mutate(contact.id)}
+                  onClick={() => setConfirmUnlinkId(contact.id)}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -110,9 +117,9 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
 
       {/* Link Contact Dialog */}
       <Dialog open={showLinkContactDialog} onOpenChange={setShowLinkContactDialog}>
-        <DialogContent data-testid="dialog-link-contact">
+        <DialogContent data-testid="dialog-link-contact" className="p-6">
           <DialogHeader>
-            <DialogTitle>Kontakt ulash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Kontakt ulash</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -159,6 +166,17 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmUnlinkId !== null}
+        onOpenChange={(open) => { if (!open) setConfirmUnlinkId(null); }}
+        title="Kontaktni uzish"
+        description="Ushbu kontaktni kompaniyadan uzishni tasdiqlaysizmi?"
+        confirmText="Uzish"
+        cancelText="Bekor qilish"
+        variant="destructive"
+        onConfirm={() => { if (confirmUnlinkId !== null) unlinkContactMutation.mutate(confirmUnlinkId); }}
+      />
     </div>
   );
 }

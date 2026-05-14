@@ -1,3 +1,8 @@
+/**
+ * @module PasswordDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +36,13 @@ export function PasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm p-6">
         <DialogHeader>
-          <DialogTitle>Parol o'rnatish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Parol o'rnatish</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="new-password">Yangi parol</Label>
+          <div className="space-y-1">
+          <Label htmlFor="new-password">Yangi parol</Label>
             <Input
               id="new-password"
               type="password"
@@ -47,8 +52,8 @@ export function PasswordDialog({
               data-testid="input-new-password"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Parolni tasdiqlang</Label>
+          <div className="space-y-1">
+          <Label htmlFor="confirm-password">Parolni tasdiqlang</Label>
             <Input
               id="confirm-password"
               type="password"

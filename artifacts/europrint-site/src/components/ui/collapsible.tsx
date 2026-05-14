@@ -1,3 +1,8 @@
+/**
+ * @module collapsible
+ * @description Source module. See exports for details.
+ */
+
 "use client"
 
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"

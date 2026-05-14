@@ -1,3 +1,8 @@
+/**
+ * @module ecommerce-catalog.helper
+ * @description Source module. See exports for details.
+ */
+
 import { NotFoundException, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import { db } from '../../infrastructure/database/database';
 import { publicProducts, productCategories, insertPublicProductSchema, insertProductCategorySchema } from '@europrint/schemas';
@@ -81,7 +86,7 @@ export async function ecommerceListProducts(query: Record<string, unknown>) {
   ]);
   const total = totalResult[0]?.count || 0;
   return {
-    products: (products ?? []).map((p) => ({ ...p.product, category: p.category })),
+    products: (Array.isArray(products) ? products : []).map((p) => ({ ...p.product, category: p.category })),
     pagination: { page, limit, total, totalPages: Math.ceil(Number(total) / limit) },
   };
   });}

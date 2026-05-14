@@ -1,3 +1,8 @@
+/**
+ * @module use-default-panel
+ * @description React custom hook.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 
 interface PanelConfig {

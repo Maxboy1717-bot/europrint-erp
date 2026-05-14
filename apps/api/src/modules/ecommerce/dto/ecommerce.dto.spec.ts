@@ -1,3 +1,8 @@
+/**
+ * @module ecommerce.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   EcommerceCreateOrderSchema,

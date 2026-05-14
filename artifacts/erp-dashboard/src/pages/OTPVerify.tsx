@@ -1,3 +1,8 @@
+/**
+ * @module OTPVerify
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -75,7 +80,7 @@ export default function OTPVerify() {
     if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
-    if ((newOtp ?? []).every((d) => d !== "")) {
+    if ((Array.isArray(newOtp) ? newOtp : []).every((d) => d !== "")) {
       verifyMutation.mutate(newOtp.join(""));
     }
   }
@@ -108,7 +113,7 @@ export default function OTPVerify() {
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
             <Shield className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-xl">OTP Tasdiqlash</CardTitle>
+          <CardTitle className="text-[14px] font-semibold">OTP Tasdiqlash</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Telegramga yuborilgan {OTP_LENGTH} raqamli kodni kiriting
           </p>
@@ -150,7 +155,7 @@ export default function OTPVerify() {
           <Button
             onClick={() => verifyMutation.mutate(otp.join(""))}
             className="w-full"
-            disabled={(otp ?? []).some((d) => !d) || verifyMutation.isPending || timeLeft === 0 || !sessionId}
+            disabled={(Array.isArray(otp) ? otp : []).some((d) => !d) || verifyMutation.isPending || timeLeft === 0 || !sessionId}
             data-testid="button-verify-otp"
           >
             {verifyMutation.isPending ? "Tekshirilmoqda..." : "Tasdiqlash"}

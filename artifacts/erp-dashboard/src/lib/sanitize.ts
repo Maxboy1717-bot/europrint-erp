@@ -1,3 +1,8 @@
+/**
+ * @module sanitize
+ * @description Frontend utility / library module.
+ */
+
 import DOMPurify from 'dompurify';
 
 /**

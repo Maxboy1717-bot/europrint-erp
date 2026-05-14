@@ -1,3 +1,8 @@
+/**
+ * @module chat-message-ext.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, InternalServerErrorException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { ChatMessageRepository } from './repositories/chat-message.repository';

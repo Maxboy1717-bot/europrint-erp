@@ -1,3 +1,8 @@
+/**
+ * @module birthday.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { Injectable, Logger, Optional } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { db, hrEmployees, hrDepartments } from '@shared/db'

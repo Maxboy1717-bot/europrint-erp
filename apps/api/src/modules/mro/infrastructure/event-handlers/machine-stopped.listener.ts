@@ -1,3 +1,8 @@
+/**
+ * @module machine-stopped.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EventEmitter2 } from '@nestjs/event-emitter';

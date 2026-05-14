@@ -1,6 +1,11 @@
+/**
+ * @module hr-questionnaire
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, Position, admins, departments, positions, users } from "./core-schema";
@@ -16,7 +21,7 @@ export const questionnaireTemplates = pgTable("questionnaire_templates", {
   nameRu: text("name_ru").notNull(),
   description: text("description"),
   descriptionRu: text("description_ru"),
-  positionId: integer("position_id").references(() => positions.id), // Qaysi lavozim uchun (null = umumiy)
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }), // Qaysi lavozim uchun (null = umumiy)
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -35,25 +40,30 @@ export const questionnaireQuestions = pgTable("questionnaire_questions", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("questionnaire_questions_type_chk", sql`${t.questionType} IN ('text','multiple_choice','yes_no')`),
+]);
 
 
 // Questionnaire Responses (from new employees)
 export const questionnaireResponses = pgTable("questionnaire_responses", {
   id: serial("id").primaryKey(),
-  templateId: varchar("template_id").references(() => questionnaireTemplates.id), // Qaysi shablon orqali to'ldirilgan
+  templateId: varchar("template_id").references(() => questionnaireTemplates.id, { onDelete: "set null" }), // Qaysi shablon orqali to'ldirilgan
   fullName: text("full_name").notNull(),
   phone: varchar("phone", { length: 20 }).notNull(),
   telegramChatId: varchar("telegram_chat_id", { length: 50 }).notNull(),
   lang: varchar("lang", { length: 5 }).notNull().default("uz"),
-  positionId: integer("position_id").references(() => positions.id), // Qaysi lavozimga murojaat qilgani
-  vacancyId: varchar("vacancy_id").references(() => vacancies.id), // Qaysi vakansiya uchun (agar mavjud bo'lsa)
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }), // Qaysi lavozimga murojaat qilgani
+  vacancyId: varchar("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }), // Qaysi vakansiya uchun (agar mavjud bo'lsa)
   responses: jsonb("responses").notNull(), // [{questionId, question, answer}]
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, rejected, converted_to_candidate
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("questionnaire_responses_status_chk", sql`${t.status} IN ('pending','approved','rejected','converted_to_candidate')`),
+  check("questionnaire_responses_lang_chk", sql`${t.lang} IN ('uz','ru','en')`),
+]);
 
 
 // Job Templates (Vakansiya shablonlari - lavozimlar uchun)
@@ -124,7 +134,9 @@ export const vacancies = pgTable("vacancies", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("vacancies_status_chk", sql`${t.status} IN ('active','closed','on_hold')`),
+]);
 
 
 // Candidates (Nomzodlar)
@@ -134,10 +146,10 @@ export const candidates = pgTable("candidates", {
   phone: varchar("phone", { length: 20 }).notNull(),
   email: varchar("email", { length: 100 }),
   telegramChatId: varchar("telegram_chat_id", { length: 50 }), // Telegram chat ID
-  departmentId: integer("department_id").references(() => departments.id), // Qaysi bo'limga murojaat qilgani
-  positionId: integer("position_id").references(() => positions.id), // Qaysi lavozimga murojaat qilgani
-  vacancyId: varchar("vacancy_id").references(() => vacancies.id), // Agar konkret vakansiya bo'lsa
-  questionnaireResponseId: varchar("questionnaire_response_id").references(() => questionnaireResponses.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }), // Qaysi bo'limga murojaat qilgani
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }), // Qaysi lavozimga murojaat qilgani
+  vacancyId: varchar("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }), // Agar konkret vakansiya bo'lsa
+  questionnaireResponseId: varchar("questionnaire_response_id").references(() => questionnaireResponses.id, { onDelete: "set null" }),
   resumeUrl: text("resume_url"), // CV fayl URL
   source: varchar("source", { length: 50 }), // hh.uz, telegram, referral, questionnaire
   status: varchar("status", { length: 20 }).notNull().default("new"), // new, screening, interview, offer, hired, rejected
@@ -146,14 +158,17 @@ export const candidates = pgTable("candidates", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("candidates_status_chk", sql`${t.status} IN ('new','screening','interview','offer','hired','rejected')`),
+  check("candidates_source_chk", sql`${t.source} IS NULL OR ${t.source} IN ('hh.uz','telegram','referral','questionnaire')`),
+]);
 
 
 // Interviews (Intervyular)
 export const interviews = pgTable("interviews", {
   id: serial("id").primaryKey(),
   candidateId: varchar("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
-  vacancyId: varchar("vacancy_id").references(() => vacancies.id),
+  vacancyId: varchar("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   scheduledDate: varchar("scheduled_date", { length: 10 }).notNull(), // YYYY-MM-DD
   scheduledTime: varchar("scheduled_time", { length: 5 }).notNull(), // HH:MM
   interviewerIds: jsonb("interviewer_ids").notNull(), // [userId1, userId2] - Intervyu oluvchilar
@@ -166,7 +181,11 @@ export const interviews = pgTable("interviews", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("interviews_type_chk", sql`${t.type} IN ('phone','video','in_person')`),
+  check("interviews_status_chk", sql`${t.status} IN ('scheduled','completed','cancelled','rescheduled')`),
+  check("interviews_rating_chk", sql`${t.rating} IS NULL OR (${t.rating} >= 1 AND ${t.rating} <= 10)`),
+]);
 
 
 // Certificates (for course completion)

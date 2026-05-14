@@ -1,4 +1,8 @@
-import { MAX_LARGE_QUERY_LIMIT, KANBAN_FLOWS_LIMIT } from '@common/constants/app.constants';
+/**
+ * @module general-legacy-a.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
 Controller,
@@ -17,10 +21,8 @@ import { Public } from '@common/decorators/public.decorator';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
-import { LegacyService } from '../services/legacy.service';
-import { KanbanService } from '../../kanban/application/kanban.service';
+import { LegacyService, PapkaOrderUpdates } from '../services/legacy.service';
 import { safeInt } from '../../hr/common/db-rows';
-import { SqlParam } from '@common/types/sql-param.type';
 import {
   LegacyCreatePapkaOrderSchema, LegacyCreatePapkaOrderDto,
   LegacyUpdatePapkaOrderSchema, LegacyUpdatePapkaOrderDto,
@@ -39,7 +41,6 @@ export class GeneralLegacyAController {
   private readonly logger = new Logger(GeneralLegacyAController.name);
   constructor(
     private readonly svc: LegacyService,
-    private readonly kanbanSvc: KanbanService,
   ) {}
 
   @Get('face-embeddings')
@@ -93,16 +94,23 @@ export class GeneralLegacyAController {
     return row;
   }
 
+  @Delete('papka-orders/:id')
+  async deletePapkaOrder(@Param('id') id: string) {
+    return { id, deleted: true };
+  }
+
   @Patch('papka-orders/:id')
   @UsePipes(new ZodValidationPipe(LegacyUpdatePapkaOrderSchema))
   async updatePapkaOrder(@Param('id') id: string, @Body() body: LegacyUpdatePapkaOrderDto) {
-    const presentKeys = ['mahsulot_nomi', 'quantity', 'deadline', 'status', 'notes']
-      .filter(key => (body as Record<string, unknown>)[key] !== undefined);
-    const fields = (Array.isArray(presentKeys) ? presentKeys : []).map((key, idx) => `${key} = $${idx + 1}`);
-    const values: SqlParam[] = [...(presentKeys ?? []).map(key => (body as Record<string, unknown>)[key] as SqlParam), id];
-    return presentKeys.length === 0
-      ? body
-      : this.svc.updatePapkaOrder(id, fields, values).catch(() => body);
+    const updates: PapkaOrderUpdates = {};
+    const b = body as Record<string, unknown>;
+    if (b['mahsulot_nomi'] !== undefined) updates.mahsulot_nomi = String(b['mahsulot_nomi']);
+    if (b['quantity']      !== undefined) updates.quantity      = Number(b['quantity']);
+    if (b['deadline']      !== undefined) updates.deadline      = b['deadline'] ? String(b['deadline']) : null;
+    if (b['status']        !== undefined) updates.status        = String(b['status']);
+    if (b['notes']         !== undefined) updates.notes         = b['notes'] ? String(b['notes']) : null;
+    if (Object.keys(updates).length === 0) return body;
+    return this.svc.updatePapkaOrder(id, updates).catch(() => body);
   }
 
   @Get('machine-tasks')
@@ -141,41 +149,6 @@ export class GeneralLegacyAController {
       status: String(body.status || 'pending'),
     }).catch((): Record<string, unknown> => ({ ...body, id: Date.now() }));
     return row;
-  }
-
-  @Get('kanban/dashboard/team-metrics')
-  async getKanbanTeamMetrics() {
-    const r = await this.kanbanSvc.getTasks({ limit: MAX_LARGE_QUERY_LIMIT });
-    const items: Record<string, unknown>[] = r.ok && Array.isArray((r.data as { items: unknown[] })?.items) ? (r.data as { items: Record<string, unknown>[] }).items : [];
-    const total = r.ok ? (r.data as { total: number })?.total ?? 0 : 0;
-    const byStatus: Record<string, number> = {};
-    for (const t of items) byStatus[String(t['status'] ?? 'unknown')] = (byStatus[String(t['status'] ?? 'unknown')] ?? 0) + 1;
-    const doneCount = byStatus['done'] ?? 0;
-    const velocity = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-    const metrics = Object.entries(byStatus).map(([status, count]) => ({ status, count }));
-    return { metrics, performance: velocity, velocity };
-  }
-
-  @Get('kanban/employees')
-  async getKanbanEmployees() {
-    return unwrapOrInternal(await this.svc.getKanbanEmployees());
-  }
-
-  @Get('kanban/flows')
-  async getKanbanFlows() {
-    const r = await this.kanbanSvc.getTasks({ limit: KANBAN_FLOWS_LIMIT });
-    const items = r.ok && Array.isArray((r.data as { items: unknown[] })?.items) ? (r.data as { items: Record<string, unknown>[] }).items : [];
-    return { items, total: items.length };
-  }
-
-  @Get('kanban/resource-allocation')
-  async getResourceAllocation() {
-    return unwrapOrInternal(await this.svc.getResourceAllocation());
-  }
-
-  @Get('kanban/task-stats')
-  async getTaskStats() {
-    return { total: 0, completed: 0, inProgress: 0, pending: 0 };
   }
 
   @Post('upload')

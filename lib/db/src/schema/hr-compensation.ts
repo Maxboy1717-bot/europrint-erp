@@ -1,6 +1,11 @@
+/**
+ * @module hr-compensation
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, Position, admins, departments, positions, users } from "./core-schema";
@@ -29,7 +34,11 @@ export const abcAnalysis = pgTable("abc_analysis", {
   notesRu: text("notes_ru"),
   lastCalculated: timestamp("last_calculated").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("abc_analysis_grade_chk", sql`${t.grade} IN ('A','B','C')`),
+  check("abc_analysis_score_chk", sql`${t.score} >= 1 AND ${t.score} <= 5`),
+  check("abc_analysis_rates_chk", sql`${t.attendanceRate} >= 0 AND ${t.attendanceRate} <= 200 AND ${t.punctualityRate} >= 0 AND ${t.punctualityRate} <= 100`),
+]);
 
 
 // Position Required Courses schemas
@@ -90,7 +99,7 @@ export const employeeFiles = pgTable("employee_files", {
   fileType: varchar("file_type", { length: 50 }), // PDF, DOCX, XLSX, JPG, etc.
   fileSize: integer("file_size"), // bytes
   description: text("description"), // Fayl haqida ma'lumot
-  uploadedBy: varchar("uploaded_by").references(() => admins.id), // Kim yukladi
+  uploadedBy: varchar("uploaded_by").references(() => admins.id, { onDelete: "set null" }), // Kim yukladi
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -121,13 +130,13 @@ export const employeeIdeas = pgTable("employee_ideas", {
   category: varchar("category", { length: 50 }).notNull(), // process_improvement, cost_reduction, quality, safety, innovation, other
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, under_review, in_discussion, approved, implemented, rejected, returned
   // Mas'ul va bajaruvchi
-  assignedTo: integer("assigned_to").references(() => users.id), // Kim ko'rib chiqadi (mas'ul)
-  implementerId: varchar("implementer_id").references(() => users.id), // Kim amalga oshiradi
+  assignedTo: integer("assigned_to").references(() => users.id, { onDelete: "set null" }), // Kim ko'rib chiqadi (mas'ul)
+  implementerId: varchar("implementer_id").references(() => users.id, { onDelete: "set null" }), // Kim amalga oshiradi
   // Resurslar va muddatlar
   estimatedCost: text("estimated_cost"), // Taxminiy xarajat
   estimatedDuration: varchar("estimated_duration", { length: 100 }), // Taxminiy muddat (masalan: "2 hafta", "1 oy")
   // Ko'rib chiqish
-  reviewedBy: varchar("reviewed_by").references(() => admins.id),
+  reviewedBy: varchar("reviewed_by").references(() => admins.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewed_at"),
   implementedAt: timestamp("implemented_at"),
   // Javoblar va muhokama
@@ -141,7 +150,11 @@ export const employeeIdeas = pgTable("employee_ideas", {
   reward: text("reward"), // Mukofot (agar berilgan bo'lsa)
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("employee_ideas_category_chk", sql`${t.category} IN ('process_improvement','cost_reduction','quality','safety','innovation','other')`),
+  check("employee_ideas_status_chk", sql`${t.status} IN ('pending','under_review','in_discussion','approved','implemented','rejected','returned')`),
+  check("employee_ideas_likes_chk", sql`${t.likes} >= 0 AND ${t.views} >= 0`),
+]);
 
 
 export const insertEmployeeIdeaSchema = createInsertSchema(employeeIdeas, {
@@ -174,20 +187,24 @@ export const adaptationPrograms = pgTable("adaptation_programs", {
   titleRu: text("title_ru").notNull(), // Dastur nomi (RU)
   description: text("description"), // Tavsif (UZ)
   descriptionRu: text("description_ru"), // Tavsif (RU)
-  positionId: integer("position_id").references(() => positions.id), // Qaysi lavozim uchun (null = barcha lavozimlar)
-  departmentId: integer("department_id").references(() => departments.id), // Qaysi bo'lim uchun (null = barcha bo'limlar)
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }), // Qaysi lavozim uchun (null = barcha lavozimlar)
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }), // Qaysi bo'lim uchun (null = barcha bo'limlar)
   duration: integer("duration").notNull(), // Davomiyligi (kunlarda)
   durationType: varchar("duration_type", { length: 20 }).notNull(), // day, week, month
   tasks: jsonb("tasks").notNull(), // [{title, description, day, isCompleted}]
   checkpoints: jsonb("checkpoints"), // [{day, title, description}] - muhim tekshirish nuqtalari
   mentorRequired: boolean("mentor_required").notNull().default(true),
   status: varchar("status", { length: 20 }).notNull().default("active"), // active, archived
-  createdBy: varchar("created_by").references(() => admins.id),
+  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("adaptation_programs_v2_status_chk", sql`${t.status} IN ('active','archived')`),
+  check("adaptation_programs_v2_type_chk", sql`${t.durationType} IN ('day','week','month')`),
+  check("adaptation_programs_v2_duration_chk", sql`${t.duration} > 0`),
+]);
 
 
 export const insertAdaptationProgramSchema = createInsertSchema(adaptationPrograms, {

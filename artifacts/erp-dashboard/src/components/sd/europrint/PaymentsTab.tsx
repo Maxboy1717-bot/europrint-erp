@@ -1,3 +1,8 @@
+/**
+ * @module PaymentsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -73,14 +78,14 @@ export function PaymentsTab() {
             <Button size="sm" data-testid="button-add-payment"><Plus className="w-4 h-4 mr-1" />To'lov kiritish</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>To'lov kiritish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">To'lov kiritish</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Buyurtma</Label>
                 <Select value={form.orderId} onValueChange={v => {
                   const o = orders?.data?.find((o: SdOrder) => String(o.id) === v);
                   setForm({ ...form, orderId: v, customerId: String(o?.customerId || "") });
                 }}>
-                  <SelectTrigger data-testid="select-payment-order"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-payment-order" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
                   <SelectContent>
                     {orders?.data?.map((o: SdOrder) => (
                       <SelectItem key={o.id} value={String(o.id)}>{o.orderNumber} — {fmt(o.totalAmount)} so'm</SelectItem>
@@ -93,7 +98,7 @@ export function PaymentsTab() {
                   onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
               <div><Label>Tur</Label>
                 <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
-                  <SelectTrigger data-testid="select-payment-type"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="select-payment-type" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="advance">Avans</SelectItem>
                     <SelectItem value="balance">Qoldiq</SelectItem>
@@ -128,7 +133,7 @@ export function PaymentsTab() {
                   <div><span className="text-muted-foreground">61-90:</span> <strong>{fmt(d["61-90"] ?? 0)} so'm</strong></div>
                   <div><span className="text-muted-foreground">90+:</span> <strong>{fmt(d["90+"] ?? 0)} so'm</strong></div>
                 </div>
-                <div className="font-bold text-red-600">{fmt(d.total ?? 0)} so'm</div>
+                <div className="font-bold text-[var(--ep-red)]">{fmt(d.total ?? 0)} so'm</div>
               </CardContent>
             </Card>
           ))}
@@ -148,7 +153,7 @@ export function PaymentsTab() {
                   </div>
                   {p.dueDate && <div className="text-xs text-muted-foreground">Muddat: {p.dueDate}</div>}
                   {p.overdueDays && p.overdueDays > 0 && (
-                    <div className="text-xs text-red-600 font-medium">{p.overdueDays} kun kechikdi</div>
+                    <div className="text-xs text-[var(--ep-red)] font-medium">{p.overdueDays} kun kechikdi</div>
                   )}
                 </div>
                 <div className="font-bold text-lg">{fmt(p.amount || 0)} so'm</div>

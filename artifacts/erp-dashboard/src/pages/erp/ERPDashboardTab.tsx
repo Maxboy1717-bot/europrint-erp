@@ -1,3 +1,8 @@
+/**
+ * @module ERPDashboardTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "@/lib/i18n";
@@ -74,7 +79,7 @@ export function ERPDashboardTab() {
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <ClipboardList className="h-4.5 w-4.5 text-blue-500" />
+                <ClipboardList className="h-4.5 w-4.5 text-[var(--ep-blue)]" />
               </div>
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide">
                 {t('today')}
@@ -95,7 +100,7 @@ export function ERPDashboardTab() {
                 <TrendingUp className="h-4.5 w-4.5 text-primary" />
               </div>
               {!loadingDashboard && dashboardStats && (
-                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${planVsFact >= 90 ? 'bg-green-500/10 text-green-600 dark:text-green-400' : planVsFact >= 70 ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${planVsFact >= 90 ? 'bg-green-500/10 text-[var(--ep-green)] dark:text-green-400' : planVsFact >= 70 ? 'bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400' : 'bg-red-500/10 text-[var(--ep-red)] dark:text-red-400'}`}>
                   {planVsFact >= 90 ? '↑' : '↓'} {planVsFact}%
                 </span>
               )}
@@ -112,13 +117,13 @@ export function ERPDashboardTab() {
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${oee >= 85 ? 'bg-green-500/10' : oee >= 70 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                <BarChart3 className={`h-4.5 w-4.5 ${oee >= 85 ? 'text-green-500' : oee >= 70 ? 'text-yellow-500' : 'text-red-500'}`} />
+                <BarChart3 className={`h-4.5 w-4.5 ${oee >= 85 ? 'text-[var(--ep-green)]' : oee >= 70 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`} />
               </div>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${oee >= 85 ? 'bg-green-500/10 text-green-600 dark:text-green-400' : oee >= 70 ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${oee >= 85 ? 'bg-green-500/10 text-[var(--ep-green)] dark:text-green-400' : oee >= 70 ? 'bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400' : 'bg-red-500/10 text-[var(--ep-red)] dark:text-red-400'}`}>
                 {oee >= 85 ? t('statusGood') : oee >= 70 ? t('statusMedium') : t('statusPoor')}
               </span>
             </div>
-            <div className={`text-2xl font-bold tracking-tight ${oee >= 85 ? 'text-green-600 dark:text-green-500' : oee >= 70 ? 'text-yellow-600 dark:text-yellow-500' : 'text-red-600 dark:text-red-500'}`} data-testid="text-oee">
+            <div className={`text-2xl font-bold tracking-tight ${oee >= 85 ? 'text-[var(--ep-green)] dark:text-green-500' : oee >= 70 ? 'text-[var(--ep-yellow)] dark:text-yellow-500' : 'text-[var(--ep-red)] dark:text-red-500'}`} data-testid="text-oee">
               {loadingDashboard ? <span className="text-muted-foreground">—</span> : `${oee}%`}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">OEE {t('oeeEfficiency')}</p>
@@ -130,13 +135,13 @@ export function ERPDashboardTab() {
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${scrap <= 2 ? 'bg-green-500/10' : scrap <= 5 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                <AlertTriangle className={`h-4.5 w-4.5 ${scrap <= 2 ? 'text-green-500' : scrap <= 5 ? 'text-yellow-500' : 'text-red-500'}`} />
+                <AlertTriangle className={`h-4.5 w-4.5 ${scrap <= 2 ? 'text-[var(--ep-green)]' : scrap <= 5 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`} />
               </div>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${scrap <= 2 ? 'bg-green-500/10 text-green-600 dark:text-green-400' : scrap <= 5 ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${scrap <= 2 ? 'bg-green-500/10 text-[var(--ep-green)] dark:text-green-400' : scrap <= 5 ? 'bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400' : 'bg-red-500/10 text-[var(--ep-red)] dark:text-red-400'}`}>
                 {scrap <= 2 ? `↓ ${t('statusLow')}` : scrap <= 5 ? t('statusMedium') : `↑ ${t('statusHigh')}`}
               </span>
             </div>
-            <div className={`text-2xl font-bold tracking-tight ${scrap <= 2 ? 'text-green-600 dark:text-green-500' : scrap <= 5 ? 'text-yellow-600 dark:text-yellow-500' : 'text-red-600 dark:text-red-500'}`} data-testid="text-scrap-percentage">
+            <div className={`text-2xl font-bold tracking-tight ${scrap <= 2 ? 'text-[var(--ep-green)] dark:text-green-500' : scrap <= 5 ? 'text-[var(--ep-yellow)] dark:text-yellow-500' : 'text-[var(--ep-red)] dark:text-red-500'}`} data-testid="text-scrap-percentage">
               {loadingDashboard ? <span className="text-muted-foreground">—</span> : `${scrap}%`}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{t('scrapPercent')}</p>
@@ -148,13 +153,13 @@ export function ERPDashboardTab() {
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${downtime <= 30 ? 'bg-green-500/10' : downtime <= 60 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                <TrendingDown className={`h-4.5 w-4.5 ${downtime <= 30 ? 'text-green-500' : downtime <= 60 ? 'text-yellow-500' : 'text-red-500'}`} />
+                <TrendingDown className={`h-4.5 w-4.5 ${downtime <= 30 ? 'text-[var(--ep-green)]' : downtime <= 60 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`} />
               </div>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${downtime <= 30 ? 'bg-green-500/10 text-green-600 dark:text-green-400' : downtime <= 60 ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${downtime <= 30 ? 'bg-green-500/10 text-[var(--ep-green)] dark:text-green-400' : downtime <= 60 ? 'bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400' : 'bg-red-500/10 text-[var(--ep-red)] dark:text-red-400'}`}>
                 {downtime <= 30 ? t('statusNormal') : downtime <= 60 ? t('statusMedium') : t('statusHigh')}
               </span>
             </div>
-            <div className={`text-2xl font-bold tracking-tight ${downtime <= 30 ? 'text-green-600 dark:text-green-500' : downtime <= 60 ? 'text-yellow-600 dark:text-yellow-500' : 'text-red-600 dark:text-red-500'}`} data-testid="text-downtime-total">
+            <div className={`text-2xl font-bold tracking-tight ${downtime <= 30 ? 'text-[var(--ep-green)] dark:text-green-500' : downtime <= 60 ? 'text-[var(--ep-yellow)] dark:text-yellow-500' : 'text-[var(--ep-red)] dark:text-red-500'}`} data-testid="text-downtime-total">
               {loadingDashboard ? <span className="text-muted-foreground">—</span> : `${downtime} ${t('min')}`}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{t('downtimeToday')}</p>
@@ -172,10 +177,10 @@ export function ERPDashboardTab() {
           {loadingDashboard ? (
             <div className="h-[300px] space-y-4 p-4">
               <div className="flex justify-between">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-20 rounded-lg" />
+                <Skeleton className="h-4 w-32 rounded-lg" />
               </div>
-              <Skeleton className="h-[250px] w-full" />
+              <Skeleton className="h-[250px] w-full rounded-lg" />
             </div>
           ) : !dashboardStats?.weeklyTrend || dashboardStats.weeklyTrend.length === 0 ? (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
@@ -207,7 +212,7 @@ export function ERPDashboardTab() {
           </div>
           <div className="flex items-center gap-4">
             <Select value={selectedWorkCenterId || ""} onValueChange={setSelectedWorkCenterId}>
-              <SelectTrigger className="w-[250px]" data-testid="select-work-center">
+              <SelectTrigger className="w-full sm:w-[250px] h-9" data-testid="select-work-center">
                 <SelectValue placeholder={t('selectWorkCenter')} />
               </SelectTrigger>
               <SelectContent>
@@ -219,7 +224,7 @@ export function ERPDashboardTab() {
               </SelectContent>
             </Select>
             <Select value={dateRange.toString()} onValueChange={(v) => setDateRange(Number(v))}>
-              <SelectTrigger className="w-[150px]" data-testid="select-date-range">
+              <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="select-date-range">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -232,26 +237,26 @@ export function ERPDashboardTab() {
         </CardHeader>
         <CardContent>
           {!selectedWorkCenterId ? (
-            <div className="text-center py-8 text-muted-foreground">{t('selectWorkCenter')}</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">{t('selectWorkCenter')}</div>
           ) : loadingWorkCenterStats ? (
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-4">
                 {([1, 2, 3, 4]).map((i) => (
                   <Card key={`k-${i}`}>
                     <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-                      <Skeleton className="h-4 w-16" />
-                      <Skeleton className="h-4 w-4" />
+                      <Skeleton className="h-4 w-16 rounded-lg" />
+                      <Skeleton className="h-4 w-4 rounded-full" />
                     </CardHeader>
                     <CardContent>
-                      <Skeleton className="h-8 w-20 mb-1" />
-                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-8 w-20 mb-1 rounded-lg" />
+                      <Skeleton className="h-3 w-16 rounded-lg" />
                     </CardContent>
                   </Card>
                 ))}
               </div>
             </div>
           ) : !workCenterStats ? (
-            <div className="text-center py-8 text-muted-foreground">{t('noDataFound')}</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">{t('noDataFound')}</div>
           ) : (
             <div className="space-y-6">
               <div className="grid gap-3 md:grid-cols-4">
@@ -260,10 +265,10 @@ export function ERPDashboardTab() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${(workCenterStats?.oee || 0) >= 85 ? 'bg-green-500/10' : (workCenterStats?.oee || 0) >= 70 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <BarChart3 className={`h-4 w-4 ${(workCenterStats?.oee || 0) >= 85 ? 'text-green-500' : (workCenterStats?.oee || 0) >= 70 ? 'text-yellow-500' : 'text-red-500'}`} />
+                        <BarChart3 className={`h-4 w-4 ${(workCenterStats?.oee || 0) >= 85 ? 'text-[var(--ep-green)]' : (workCenterStats?.oee || 0) >= 70 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`} />
                       </div>
                     </div>
-                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.oee || 0) >= 85 ? 'text-green-600 dark:text-green-500' : (workCenterStats?.oee || 0) >= 70 ? 'text-yellow-600 dark:text-yellow-500' : 'text-red-600 dark:text-red-500'}`} data-testid="text-work-center-oee">
+                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.oee || 0) >= 85 ? 'text-[var(--ep-green)] dark:text-green-500' : (workCenterStats?.oee || 0) >= 70 ? 'text-[var(--ep-yellow)] dark:text-yellow-500' : 'text-[var(--ep-red)] dark:text-red-500'}`} data-testid="text-work-center-oee">
                       {workCenterStats?.oee || 0}%
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{t('oee')}</p>
@@ -274,10 +279,10 @@ export function ERPDashboardTab() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${(workCenterStats?.utilization || 0) >= 90 ? 'bg-green-500/10' : (workCenterStats?.utilization || 0) >= 75 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <TrendingUp className={`h-4 w-4 ${(workCenterStats?.utilization || 0) >= 90 ? 'text-green-500' : (workCenterStats?.utilization || 0) >= 75 ? 'text-yellow-500' : 'text-red-500'}`} />
+                        <TrendingUp className={`h-4 w-4 ${(workCenterStats?.utilization || 0) >= 90 ? 'text-[var(--ep-green)]' : (workCenterStats?.utilization || 0) >= 75 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`} />
                       </div>
                     </div>
-                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.utilization || 0) >= 90 ? 'text-green-600 dark:text-green-500' : (workCenterStats?.utilization || 0) >= 75 ? 'text-yellow-600 dark:text-yellow-500' : 'text-red-600 dark:text-red-500'}`} data-testid="text-work-center-utilization">
+                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.utilization || 0) >= 90 ? 'text-[var(--ep-green)] dark:text-green-500' : (workCenterStats?.utilization || 0) >= 75 ? 'text-[var(--ep-yellow)] dark:text-yellow-500' : 'text-[var(--ep-red)] dark:text-red-500'}`} data-testid="text-work-center-utilization">
                       {workCenterStats?.utilization || 0}%
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{t('utilization')}</p>
@@ -288,10 +293,10 @@ export function ERPDashboardTab() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${(workCenterStats?.scrapRate || 0) <= 2 ? 'bg-green-500/10' : (workCenterStats?.scrapRate || 0) <= 5 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <AlertTriangle className={`h-4 w-4 ${(workCenterStats?.scrapRate || 0) <= 2 ? 'text-green-500' : (workCenterStats?.scrapRate || 0) <= 5 ? 'text-yellow-500' : 'text-red-500'}`} />
+                        <AlertTriangle className={`h-4 w-4 ${(workCenterStats?.scrapRate || 0) <= 2 ? 'text-[var(--ep-green)]' : (workCenterStats?.scrapRate || 0) <= 5 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`} />
                       </div>
                     </div>
-                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.scrapRate || 0) <= 2 ? 'text-green-600 dark:text-green-500' : (workCenterStats?.scrapRate || 0) <= 5 ? 'text-yellow-600 dark:text-yellow-500' : 'text-red-600 dark:text-red-500'}`} data-testid="text-work-center-scrap-rate">
+                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.scrapRate || 0) <= 2 ? 'text-[var(--ep-green)] dark:text-green-500' : (workCenterStats?.scrapRate || 0) <= 5 ? 'text-[var(--ep-yellow)] dark:text-yellow-500' : 'text-[var(--ep-red)] dark:text-red-500'}`} data-testid="text-work-center-scrap-rate">
                       {workCenterStats?.scrapRate || 0}%
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{t('scrapPercent')}</p>
@@ -302,10 +307,10 @@ export function ERPDashboardTab() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${(workCenterStats?.totalDowntime || 0) <= 30 ? 'bg-green-500/10' : (workCenterStats?.totalDowntime || 0) <= 60 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <TrendingDown className={`h-4 w-4 ${(workCenterStats?.totalDowntime || 0) <= 30 ? 'text-green-500' : (workCenterStats?.totalDowntime || 0) <= 60 ? 'text-yellow-500' : 'text-red-500'}`} />
+                        <TrendingDown className={`h-4 w-4 ${(workCenterStats?.totalDowntime || 0) <= 30 ? 'text-[var(--ep-green)]' : (workCenterStats?.totalDowntime || 0) <= 60 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`} />
                       </div>
                     </div>
-                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.totalDowntime || 0) <= 30 ? 'text-green-600 dark:text-green-500' : (workCenterStats?.totalDowntime || 0) <= 60 ? 'text-yellow-600 dark:text-yellow-500' : 'text-red-600 dark:text-red-500'}`} data-testid="text-work-center-downtime">
+                    <div className={`text-2xl font-bold tracking-tight ${(workCenterStats?.totalDowntime || 0) <= 30 ? 'text-[var(--ep-green)] dark:text-green-500' : (workCenterStats?.totalDowntime || 0) <= 60 ? 'text-[var(--ep-yellow)] dark:text-yellow-500' : 'text-[var(--ep-red)] dark:text-red-500'}`} data-testid="text-work-center-downtime">
                       {workCenterStats?.totalDowntime || 0} {t('min')}
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{t('downtimeLogs')}</p>

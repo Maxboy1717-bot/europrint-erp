@@ -1,3 +1,8 @@
+/**
+ * @module PaymentPanel
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,7 +92,7 @@ export function PaymentPanel({
 
         <div className="space-y-2">
           <label className="text-xs font-medium">To'lov usuli</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {Object.entries(paymentMethodLabels).map(([key, value]) => (
               <Button
                 key={key}
@@ -117,14 +122,14 @@ export function PaymentPanel({
             />
             <div className="flex justify-between items-center pt-1">
               <span className="text-xs text-muted-foreground">Qaytim:</span>
-              <span className="text-lg font-bold text-orange-600">{formatCurrency(changeAmount)}</span>
+              <span className="text-lg font-bold text-[var(--ep-primary)]">{formatCurrency(changeAmount)}</span>
             </div>
           </div>
         )}
 
         {paymentMethod === "mixed" && (
           <div className="space-y-2 pt-1 border-t mt-1">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="space-y-1">
                 <label className="text-[10px] font-medium">Naqd</label>
                 <Input
@@ -156,8 +161,8 @@ export function PaymentPanel({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-medium text-orange-600">Qaytim</label>
-                <div className="h-8 flex items-center justify-end font-bold text-orange-600">
+                <label className="text-[10px] font-medium text-[var(--ep-primary)]">Qaytim</label>
+                <div className="h-8 flex items-center justify-end font-bold text-[var(--ep-primary)]">
                   {formatCurrency(changeAmount)}
                 </div>
               </div>
@@ -183,9 +188,9 @@ export function PaymentPanel({
           data-testid="button-complete-sale"
         >
           {isPending ? (
-            <RefreshCw className="h-5 w-5 animate-spin" />
+            <RefreshCw className="h-4 w-4 animate-spin" />
           ) : (
-            <Check className="h-5 w-5 mr-2" />
+            <Check className="h-4 w-4 mr-2" />
           )}
           Sotishni yakunlash
         </Button>

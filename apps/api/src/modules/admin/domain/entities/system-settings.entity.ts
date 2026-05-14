@@ -1,3 +1,8 @@
+/**
+ * @module system-settings.entity
+ * @description Domain entity. Aggregate root or child entity (Drizzle row + behavior).
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { InternalServerErrorException } from '@nestjs/common';

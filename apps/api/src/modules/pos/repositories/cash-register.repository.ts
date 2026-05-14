@@ -1,3 +1,8 @@
+/**
+ * @module cash-register.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { eq, ilike, desc, sql, and, gte, lt } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { TashkentTimeService } from '@common/time';

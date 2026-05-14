@@ -1,3 +1,8 @@
+/**
+ * @module RoomReferenceUpload
+ * @description React UI component.
+ */
+
 import { useState, useRef, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Camera, Upload, X } from 'lucide-react';
 
+import { useTranslation } from '@/lib/i18n';
 const FormSchema = z.object({
   description: z.string().max(1000).optional(),
 });
@@ -21,7 +27,8 @@ interface Props {
   onSaved:  () => void;
 }
 
-export function RoomReferenceUpload({ open, roomCode, roomName, onClose, onSaved }: Props) {
+export function RoomReferenceUpload({open, roomCode, roomName, onClose, onSaved }: Props) {
+  const { t } = useTranslation('common');
   const [preview,     setPreview]     = useState<string | null>(null);
   const [base64,      setBase64]      = useState<string>('');
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -86,10 +93,10 @@ export function RoomReferenceUpload({ open, roomCode, roomName, onClose, onSaved
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Camera className="w-5 h-5 text-blue-600" />
+            <Camera className="w-5 h-5 text-[var(--ep-blue)]" />
             Referans rasm yuklash — {roomName}
           </DialogTitle>
         </DialogHeader>
@@ -97,13 +104,13 @@ export function RoomReferenceUpload({ open, roomCode, roomName, onClose, onSaved
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
           {preview ? (
             <div className="relative rounded-lg overflow-hidden border bg-gray-50">
-              <img src={preview} alt="Preview" className="w-full h-52 object-cover" />
+              <img src={preview} alt={t('preview1')} className="w-full h-52 object-cover" />
               <button
                 type="button"
                 onClick={() => { setPreview(null); setBase64(''); }}
                 className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-red-50"
               >
-                <X className="w-4 h-4 text-red-500" />
+                <X className="w-4 h-4 text-[var(--ep-red)]" />
               </button>
             </div>
           ) : (
@@ -131,18 +138,18 @@ export function RoomReferenceUpload({ open, roomCode, roomName, onClose, onSaved
               className="resize-none"
             />
             {errors.description && (
-              <p className="text-xs text-red-500">{errors.description.message}</p>
+              <p className="text-xs text-[var(--ep-red)]">{errors.description.message}</p>
             )}
           </div>
 
           {!base64 && (
-            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+            <p className="text-xs text-[var(--ep-yellow)] bg-amber-50 border border-amber-200 rounded px-2 py-1">
               Davom etish uchun rasm tanlang
             </p>
           )}
 
           {submitError && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">{submitError}</p>
+            <p className="text-sm text-[var(--ep-red)] bg-red-50 px-3 py-2 rounded-md">{submitError}</p>
           )}
 
           <DialogFooter>

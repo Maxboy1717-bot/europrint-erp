@@ -1,3 +1,8 @@
+/**
+ * @module core-enterprise
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
@@ -12,7 +17,7 @@ export const documentLifecycle = pgTable("document_lifecycle", {
   documentNumber: varchar("document_number", { length: 100 }),
   currentStatus: varchar("current_status", { length: 30 }).notNull().default("draft"),
   previousStatus: varchar("previous_status", { length: 30 }),
-  statusChangedBy: varchar("status_changed_by").references(() => users.id),
+  statusChangedBy: varchar("status_changed_by").references(() => users.id, { onDelete: "set null" }),
   statusChangedAt: timestamp("status_changed_at").notNull().defaultNow(),
   reason: text("reason"),
   metadata: jsonb("metadata"),
@@ -26,7 +31,7 @@ export const documentLifecycleHistory = pgTable("document_lifecycle_history", {
   documentId: varchar("document_id", { length: 100 }).notNull(),
   fromStatus: varchar("from_status", { length: 30 }),
   toStatus: varchar("to_status", { length: 30 }).notNull(),
-  changedBy: varchar("changed_by").references(() => users.id),
+  changedBy: varchar("changed_by").references(() => users.id, { onDelete: "set null" }),
   changedAt: timestamp("changed_at").notNull().defaultNow(),
   reason: text("reason"),
   ipAddress: varchar("ip_address", { length: 50 }),
@@ -46,12 +51,12 @@ export const changeRequests = pgTable("change_requests", {
   reason: text("reason").notNull(),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"),
   status: varchar("status", { length: 30 }).notNull().default("pending"),
-  requestedBy: varchar("requested_by").references(() => users.id),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "set null" }),
   requestedAt: timestamp("requested_at").notNull().defaultNow(),
-  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedBy: varchar("reviewed_by").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewed_at"),
   reviewNotes: text("review_notes"),
-  implementedBy: varchar("implemented_by").references(() => users.id),
+  implementedBy: varchar("implemented_by").references(() => users.id, { onDelete: "set null" }),
   implementedAt: timestamp("implemented_at"),
   effectiveDate: timestamp("effective_date"),
 });
@@ -92,14 +97,14 @@ export const postingEntries = pgTable("posting_entries", {
   currency: varchar("currency", { length: 3 }).notNull().default("UZS"),
   exchangeRate: decimal("exchange_rate", { precision: 10, scale: 4 }).notNull().default("1"),
   amountInBaseCurrency: decimal("amount_in_base_currency", { precision: 18, scale: 2 }).notNull().default("0"),
-  costCenterId: varchar("cost_center_id").references(() => costCenters.id),
+  costCenterId: varchar("cost_center_id").references(() => costCenters.id, { onDelete: "set null" }),
   costObjectType: varchar("cost_object_type", { length: 30 }),
   costObjectId: varchar("cost_object_id", { length: 100 }),
   description: text("description"),
   reference: text("reference"),
   isReversed: boolean("is_reversed").notNull().default(false),
   reversalEntryId: varchar("reversal_entry_id"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -112,8 +117,8 @@ export const costObjects = pgTable("cost_objects", {
   objectName: text("object_name").notNull(),
   objectNameRu: text("object_name_ru"),
   parentId: varchar("parent_id"),
-  costCenterId: varchar("cost_center_id").references(() => costCenters.id),
-  responsibleUserId: integer("responsible_user_id").references(() => users.id),
+  costCenterId: varchar("cost_center_id").references(() => costCenters.id, { onDelete: "set null" }),
+  responsibleUserId: integer("responsible_user_id").references(() => users.id, { onDelete: "set null" }),
   budget: decimal("budget", { precision: 18, scale: 2 }),
   actualCost: decimal("actual_cost", { precision: 18, scale: 2 }).notNull().default("0"),
   startDate: timestamp("start_date"),
@@ -134,7 +139,7 @@ export const sopTemplates = pgTable("sop_templates", {
   description: text("description"),
   version: varchar("version", { length: 20 }).notNull().default("1.0"),
   isActive: boolean("is_active").notNull().default(true),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
@@ -143,7 +148,7 @@ export type SopTemplate = typeof sopTemplates.$inferSelect;
 
 export const sopSteps = pgTable("sop_steps", {
   id: serial("id").primaryKey(),
-  sopId: varchar("sop_id").references(() => sopTemplates.id).notNull(),
+  sopId: varchar("sop_id").references(() => sopTemplates.id, { onDelete: "cascade" }).notNull(),
   stepNumber: integer("step_number").notNull(),
   stepName: text("step_name").notNull(),
   stepNameRu: text("step_name_ru"),
@@ -199,7 +204,7 @@ export type ExceptionType = typeof exceptionTypes.$inferSelect;
 
 export const exceptionInbox = pgTable("exception_inbox", {
   id: serial("id").primaryKey(),
-  exceptionTypeId: varchar("exception_type_id").references(() => exceptionTypes.id),
+  exceptionTypeId: varchar("exception_type_id").references(() => exceptionTypes.id, { onDelete: "set null" }),
   exceptionCode: varchar("exception_code", { length: 50 }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
@@ -211,14 +216,14 @@ export const exceptionInbox = pgTable("exception_inbox", {
   affectedAmount: decimal("affected_amount", { precision: 18, scale: 2 }),
   currency: varchar("currency", { length: 3 }).default("UZS"),
   status: varchar("status", { length: 30 }).notNull().default("open"),
-  assignedTo: integer("assigned_to").references(() => users.id),
+  assignedTo: integer("assigned_to").references(() => users.id, { onDelete: "set null" }),
   detectedAt: timestamp("detected_at").notNull().defaultNow(),
   resolvedAt: timestamp("resolved_at"),
-  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedBy: integer("resolved_by").references(() => users.id, { onDelete: "set null" }),
   resolution: text("resolution"),
   dueDate: timestamp("due_date"),
   escalatedAt: timestamp("escalated_at"),
-  escalatedTo: varchar("escalated_to").references(() => users.id),
+  escalatedTo: varchar("escalated_to").references(() => users.id, { onDelete: "set null" }),
   metadata: jsonb("metadata"),
 });
 
@@ -226,12 +231,12 @@ export type ExceptionInbox = typeof exceptionInbox.$inferSelect;
 
 export const exceptionActivities = pgTable("exception_activities", {
   id: serial("id").primaryKey(),
-  exceptionId: varchar("exception_id").references(() => exceptionInbox.id).notNull(),
+  exceptionId: varchar("exception_id").references(() => exceptionInbox.id, { onDelete: "cascade" }).notNull(),
   activityType: varchar("activity_type", { length: 30 }).notNull(),
   content: text("content"),
   previousValue: text("previous_value"),
   newValue: text("new_value"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -279,7 +284,7 @@ export const batchLots = pgTable("batch_lots", {
   warehouseId: integer("warehouse_id"),
   qualityStatus: varchar("quality_status", { length: 30 }).default("pending"),
   qualityCheckDate: timestamp("quality_check_date"),
-  qualityCheckBy: integer("quality_check_by").references(() => users.id),
+  qualityCheckBy: integer("quality_check_by").references(() => users.id, { onDelete: "set null" }),
   supplierBatchNumber: varchar("supplier_batch_number", { length: 50 }),
   supplierId: integer("supplier_id"),
   costPerUnit: numericMoney("cost_per_unit"),
@@ -290,7 +295,7 @@ export const batchLots = pgTable("batch_lots", {
 
 export const batchLotMovements = pgTable("batch_lot_movements", {
   id: serial("id").primaryKey(),
-  batchLotId: varchar("batch_lot_id").references(() => batchLots.id),
+  batchLotId: varchar("batch_lot_id").references(() => batchLots.id, { onDelete: "set null" }),
   movementType: varchar("movement_type", { length: 30 }).notNull(),
   quantity: numericMoney("quantity").notNull(),
   fromWarehouseId: integer("from_warehouse_id"),

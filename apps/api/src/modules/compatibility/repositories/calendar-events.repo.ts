@@ -1,3 +1,8 @@
+/**
+ * @module calendar-events.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -26,49 +31,73 @@ type EventUpdate = Partial<Omit<EventInsert, 'startDate' | 'endDate'>> & {
 @Injectable()
 export class CalendarEventsRepo {
   async findAll() {
-    return db.select().from(calendarEvents).orderBy(desc(calendarEvents.startDate));
+    try {
+      return await db.select().from(calendarEvents).orderBy(desc(calendarEvents.startDate));
+    } catch (e) {
+      throw new Error(`calendarEvents.findAll: ${String(e)}`);
+    }
   }
 
   async findUpcoming() {
-    return db.select().from(calendarEvents)
-      .where(gte(calendarEvents.startDate, _time.now()))
-      .orderBy(calendarEvents.startDate);
+    try {
+      return await db.select().from(calendarEvents)
+        .where(gte(calendarEvents.startDate, _time.now()))
+        .orderBy(calendarEvents.startDate);
+    } catch (e) {
+      throw new Error(`calendarEvents.findUpcoming: ${String(e)}`);
+    }
   }
 
   async findById(id: string) {
-    const rows = await db.select().from(calendarEvents).where(eq(calendarEvents.id, id));
-    return rows[0] ?? null;
+    try {
+      const rows = await db.select().from(calendarEvents).where(eq(calendarEvents.id, id));
+      return rows[0] ?? null;
+    } catch (e) {
+      throw new Error(`calendarEvents.findById: ${String(e)}`);
+    }
   }
 
   async insert(data: EventInsert) {
-    return db.insert(calendarEvents).values({
-      title:       data.title,
-      description: data.description ?? null,
-      startDate:   data.startDate,
-      endDate:     data.endDate ?? null,
-      allDay:      data.allDay,
-      eventType:   data.eventType,
-      location:    data.location ?? null,
-      attendees:   data.attendees,
-      createdBy:   data.createdBy ?? null,
-    }).returning();
+    try {
+      return await db.insert(calendarEvents).values({
+        title:       data.title,
+        description: data.description ?? null,
+        startDate:   data.startDate,
+        endDate:     data.endDate ?? null,
+        allDay:      data.allDay,
+        eventType:   data.eventType,
+        location:    data.location ?? null,
+        attendees:   data.attendees,
+        createdBy:   data.createdBy ?? null,
+      }).returning();
+    } catch (e) {
+      throw new Error(`calendarEvents.insert: ${String(e)}`);
+    }
   }
 
   async update(id: string, data: EventUpdate) {
-    return db.update(calendarEvents).set({
-      title:       data.title,
-      description: data.description,
-      startDate:   data.startDate,
-      endDate:     data.endDate,
-      allDay:      data.allDay,
-      eventType:   data.eventType,
-      location:    data.location,
-      attendees:   data.attendees,
-      updatedAt:   data.updatedAt,
-    }).where(eq(calendarEvents.id, id)).returning();
+    try {
+      return await db.update(calendarEvents).set({
+        title:       data.title,
+        description: data.description,
+        startDate:   data.startDate,
+        endDate:     data.endDate,
+        allDay:      data.allDay,
+        eventType:   data.eventType,
+        location:    data.location,
+        attendees:   data.attendees,
+        updatedAt:   data.updatedAt,
+      }).where(eq(calendarEvents.id, id)).returning();
+    } catch (e) {
+      throw new Error(`calendarEvents.update: ${String(e)}`);
+    }
   }
 
   async delete(id: string) {
-    return db.delete(calendarEvents).where(eq(calendarEvents.id, id)).returning();
+    try {
+      return await db.delete(calendarEvents).where(eq(calendarEvents.id, id)).returning();
+    } catch (e) {
+      throw new Error(`calendarEvents.delete: ${String(e)}`);
+    }
   }
 }

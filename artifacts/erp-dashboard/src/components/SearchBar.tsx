@@ -1,3 +1,8 @@
+/**
+ * @module SearchBar
+ * @description React UI component.
+ */
+
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 

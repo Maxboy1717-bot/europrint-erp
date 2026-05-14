@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-downtime.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
 import { pgTable, uuid, text, timestamp, integer, index } from 'drizzle-orm/pg-core';

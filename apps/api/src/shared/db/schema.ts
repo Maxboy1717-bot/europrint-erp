@@ -1,3 +1,8 @@
+/**
+ * @module schema
+ * @description Source module. See exports for details.
+ */
+
 import { InternalServerErrorException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -81,14 +86,23 @@ export const db = drizzle(pool);
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 export const rawSql = (query: SQL): ReturnType<typeof db.execute> => db.execute(query);
 
-/** DDL operations (CREATE TABLE, ALTER TABLE, etc.) — cannot use query builder */
+/**
+ * DDL operations only (CREATE TABLE, ALTER TABLE, etc.) — cannot use query builder.
+ * SECURITY: `q` MUST be a hard-coded string literal — never a user-controlled value.
+ * For DML queries use `rawSql(sql\`...\`)` with template-literal parameterisation.
+ */
 export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> =>
   db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
 
+/**
+ * Typed query helper.
+ * Accepts only `sql\`...\`` template objects — NOT plain strings — to prevent accidental
+ * SQL injection. Use `sql\`SELECT ... WHERE id = ${id}\`` for parameterised values.
+ */
 export async function runQuery<T = Record<string, unknown>>(
-  q: SQL | SQLWrapper | string,
+  q: SQL | SQLWrapper,
 ): Promise<T[] & { rows: T[] }> {
-  const result = await db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
+  const result = await db.execute(q as SQL);
   const arr = castTo<T[]>(Array.isArray(result) ? result : ((result as { rows?: unknown }).rows ?? []));
   return Object.assign(arr, { rows: arr });
 }

@@ -1,6 +1,11 @@
+/**
+ * @module AdvancedFilters
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +31,7 @@ import {
 import { Filter, Save, Trash2, ChevronDown, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { SavedFilter } from "@shared/schema";
 
 interface OrgDepartment {
@@ -68,6 +74,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [confirmDeleteFilterId, setConfirmDeleteFilterId] = useState<string | number | null>(null);
   const [filterName, setFilterName] = useState("");
   const [filterDescription, setFilterDescription] = useState("");
 
@@ -92,15 +99,8 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
   const courses = coursesResponse?.data || [];
 
   const saveFilterMutation = useMutation({
-    mutationFn: async (data: { name: string; description: string; filterData: FilterConfig; isPublic: boolean }) => {
-      const res = await fetch("/api/filters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to save filter");
-      return res.json();
-    },
+    mutationFn: (data: { name: string; description: string; filterData: FilterConfig; isPublic: boolean }) =>
+      apiRequest('POST', '/api/filters', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/filters"] });
       toast({ title: "Filtr saqlandi" });
@@ -111,11 +111,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
   });
 
   const deleteFilterMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/filters/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete filter");
-      return res.json();
-    },
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/filters/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/filters"] });
       toast({ title: "Filtr o'chirildi" });
@@ -251,7 +247,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
               </div>
 
               {filters.dateRange && (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
                     <Label>Boshlanish</Label>
                     <Input
@@ -260,7 +256,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
                       onChange={(e) => {
                         const newFilters = {
                           ...filters,
-                          dateRange: { ...filters.dateRange!, start: e.target.value },
+                          dateRange: { ...filters.dateRange ?? {}, start: e.target.value },
                         };
                         setFilters(newFilters);
                         onFilterChange(newFilters);
@@ -277,7 +273,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
                       onChange={(e) => {
                         const newFilters = {
                           ...filters,
-                          dateRange: { ...filters.dateRange!, end: e.target.value },
+                          dateRange: { ...filters.dateRange ?? {}, end: e.target.value },
                         };
                         setFilters(newFilters);
                         onFilterChange(newFilters);
@@ -350,7 +346,8 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8"
-                  onClick={() => deleteFilterMutation.mutate(filter.id)}
+                  onClick={() => setConfirmDeleteFilterId(filter.id)}
+                  data-testid={`button-delete-filter-${filter.id}`}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
@@ -398,7 +395,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Filtrni saqlash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Filtrni saqlash</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -428,6 +425,17 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmDeleteFilterId !== null}
+        onOpenChange={(open) => { if (!open) setConfirmDeleteFilterId(null); }}
+        title="Filterni o'chirish"
+        description="Saqlangan filterni o'chirishni tasdiqlaysizmi?"
+        confirmText="O'chirish"
+        cancelText="Bekor qilish"
+        variant="destructive"
+        onConfirm={() => { if (confirmDeleteFilterId !== null) deleteFilterMutation.mutate(confirmDeleteFilterId as string & number); }}
+      />
     </div>
   );
 }

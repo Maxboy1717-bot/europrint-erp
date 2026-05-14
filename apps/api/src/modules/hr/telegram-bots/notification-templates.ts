@@ -1,3 +1,8 @@
+/**
+ * @module notification-templates
+ * @description Source module. See exports for details.
+ */
+
 export interface NotificationTemplate {
   key: string;
   template_uz: string;
@@ -233,6 +238,27 @@ export const NOTIFICATION_TEMPLATES = {
     key: 'CAREER_OPPORTUNITY',
     template_uz: '🚀 <b>Martaba imkoniyati!</b>\n\nHurmatli {name}, sizga mos ichki imkoniyat:\n<b>{opportunity_title}</b>\nBo\'lim: {department}\n\nMurojaat qilish muddati: {deadline}\nBatafsil: {url}',
     channels: ['TELEGRAM', 'EMAIL'],
+  },
+  // ── Recruiter notifications ───────────────────────────────────────────────
+  CANDIDATE_APPLIED: {
+    key: 'CANDIDATE_APPLIED',
+    template_uz: '👤 <b>Yangi nomzod!</b>\n\nVakansiya: <b>{vacancy_title}</b>\nNomzod: {candidate_name}\nManba: {source}\nVaqt: {applied_at}\n\nKo\'rish: {url}',
+    channels: ['TELEGRAM'],
+  },
+  CANDIDATE_STAGE_CHANGED: {
+    key: 'CANDIDATE_STAGE_CHANGED',
+    template_uz: '🔄 <b>Nomzod bosqichi o\'zgardi</b>\n\nNomzod: <b>{candidate_name}</b>\nVakansiya: {vacancy_title}\n{prev_stage} → <b>{new_stage}</b>\n\nKo\'rish: {url}',
+    channels: ['TELEGRAM'],
+  },
+  CANDIDATE_INTERVIEW_48H: {
+    key: 'CANDIDATE_INTERVIEW_48H',
+    template_uz: '⏰ <b>Suhbat natijasi 48 soat qoldi!</b>\n\nNomzod: <b>{candidate_name}</b>\nVakansiya: {vacancy_title}\nSuhbat: {interview_date}\n\nDeadline: {deadline}\n\nQaror qabul qiling: {url}',
+    channels: ['TELEGRAM'],
+  },
+  MANAGER_DAILY_SUMMARY: {
+    key: 'MANAGER_DAILY_SUMMARY',
+    template_uz: '📊 <b>Kunlik hisobot xulosasi</b>\n\nBo\'lingiz: <b>{department}</b>\nJami xodim: {total}\nHisobot topshirgan: ✅ {submitted}\nTopshirmagan: ❌ {missing}\n\nBatafsil: {url}',
+    channels: ['TELEGRAM'],
   },
 } as const satisfies Record<string, NotificationTemplate>;
 

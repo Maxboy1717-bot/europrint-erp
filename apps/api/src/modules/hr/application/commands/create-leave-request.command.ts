@@ -1,3 +1,8 @@
+/**
+ * @module create-leave-request.command
+ * @description Source module. See exports for details.
+ */
+
 export class CreateLeaveRequestCommand {
   constructor(public readonly employeeId: string,
     public readonly userId: string,

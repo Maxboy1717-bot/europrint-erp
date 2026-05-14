@@ -1,3 +1,8 @@
+/**
+ * @module CreateShiftModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -51,16 +56,16 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>Yangi Smena Ochish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Yangi Smena Ochish</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Bo'lim *</Label>
               <Select value={form.department} onValueChange={(v) => setForm((f) => ({ ...f, department: v }))}>
-                <SelectTrigger data-testid="select-shift-dept">
+                <SelectTrigger data-testid="select-shift-dept" className="h-9">
                   <SelectValue placeholder="Bo'limni tanlang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -71,7 +76,7 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
             <div>
               <Label>Smena *</Label>
               <Select value={form.shift_number} onValueChange={(v) => setForm((f) => ({ ...f, shift_number: v }))}>
-                <SelectTrigger data-testid="select-shift-number">
+                <SelectTrigger data-testid="select-shift-number" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -82,7 +87,7 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Sana *</Label>
               <Input type="date" value={form.shift_date} onChange={(e) => setForm((f) => ({ ...f, shift_date: e.target.value }))} data-testid="input-shift-date" />
@@ -96,7 +101,7 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
             <Label>Mashina</Label>
             <Input placeholder="Mashina nomi" value={form.machine_name} onChange={(e) => setForm((f) => ({ ...f, machine_name: e.target.value }))} data-testid="input-machine-name" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Reja (dona)</Label>
               <Input type="number" placeholder="0" value={form.planned_qty} onChange={(e) => setForm((f) => ({ ...f, planned_qty: e.target.value }))} data-testid="input-planned-qty" />

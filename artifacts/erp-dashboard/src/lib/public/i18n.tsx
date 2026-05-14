@@ -1,3 +1,8 @@
+/**
+ * @module i18n
+ * @description Frontend utility / library module.
+ */
+
 // ============================================================
 // EUROPRINT Public Sayt — i18n Adapter
 // ERP bilan bitta Context ishlatadi (sinxron)

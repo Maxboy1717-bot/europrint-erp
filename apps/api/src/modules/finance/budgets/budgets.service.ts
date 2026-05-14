@@ -1,3 +1,8 @@
+/**
+ * @module budgets.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject } from '@nestjs/common';
 import { IFinanceBudgetsRepository, FINANCE_BUDGETS_REPO } from './i-finance-budgets.repo';
 import { safeCall, Result, AppError } from '@common/result';

@@ -1,3 +1,8 @@
+/**
+ * @module panel.aggregate
+ * @description Source module. See exports for details.
+ */
+
 export class Panel {
   constructor(public readonly id: string,
     public readonly userId: string,

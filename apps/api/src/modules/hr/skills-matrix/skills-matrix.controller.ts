@@ -1,3 +1,8 @@
+/**
+ * @module skills-matrix.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';

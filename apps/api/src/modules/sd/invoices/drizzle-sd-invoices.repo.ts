@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-sd-invoices.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { salesInvoices } from '@europrint/schemas';

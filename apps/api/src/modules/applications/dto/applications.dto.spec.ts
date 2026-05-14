@@ -1,3 +1,8 @@
+/**
+ * @module applications.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   ApplicationCreateSchema,

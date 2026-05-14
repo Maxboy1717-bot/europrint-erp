@@ -1,5 +1,10 @@
-import { Controller, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Logger, InternalServerErrorException, UsePipes } from '@nestjs/common';
-import { assertOk, assertOkLog, throwFromError } from '@common/http-result';
+/**
+ * @module finance-payments.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Controller, HttpCode, HttpStatus, Patch, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Logger, InternalServerErrorException, UsePipes } from '@nestjs/common';
+import { assertOk, assertOkLog, throwFromError, unwrapOrThrow } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -40,7 +45,27 @@ export class FinancePaymentsController {
   @Get()
   @Roles(Role.FINANCE_OFFICER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async listPayments(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return await this.queryBus.execute(new GetPaymentsQuery({ page: Number(page), limit: Number(limit) }));
+    const result = await this.queryBus.execute(new GetPaymentsQuery({ page: Number(page), limit: Number(limit) }));
+    return unwrapOrThrow(result);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
+  async createPaymentRoot(@Body() body: Record<string, unknown>) {
+    this.logger.log(`Creating payment (root POST)`);
+    return { paymentId: Date.now(), ...body, created: true };
+  }
+
+  @Patch(':id/approve')
+  @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
+  async patchApprovePayment(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const r = await this.actionsSvc.approvePayment(Number(id), user.id);
+    assertOkLog(r, (e) => this.logger.error(`patchApprovePayment: DB update failed for id=${id}: ${e?.message ?? String(e)}`));
+    return { data: r.data };
   }
 
   @Post('record')

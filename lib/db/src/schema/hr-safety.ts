@@ -1,6 +1,11 @@
+/**
+ * @module hr-safety
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, Position, admins, departments, positions, users } from "./core-schema";
@@ -11,7 +16,7 @@ import { candidates, vacancies } from "./hr-recruitment";
 
 export const shiftSwapRequests = pgTable("shift_swap_requests", {
   id: serial("id").primaryKey(),
-  requestedBy: varchar("requested_by").references(() => users.id).notNull(),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   swapWith: varchar("swap_with").references(() => users.id, { onDelete: 'set null' }),
   originalShiftDate: varchar("original_shift_date", { length: 20 }).notNull(),
   originalShiftType: varchar("original_shift_type", { length: 30 }).notNull(),
@@ -22,7 +27,9 @@ export const shiftSwapRequests = pgTable("shift_swap_requests", {
   approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("shift_swap_requests_status_chk", sql`${t.status} IN ('pending','approved','rejected','cancelled')`),
+]);
 
 
 export const insertShiftSwapRequestSchema = createInsertSchema(shiftSwapRequests, {
@@ -66,7 +73,9 @@ export const attendanceRecords = pgTable("attendance_records", {
   location: varchar("location", { length: 200 }),
   eventAt: timestamp("event_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("attendance_records_event_type_chk", sql`${t.eventType} IN ('entry','exit')`),
+]);
 
 export const insertAttendanceRecordSchema = createInsertSchema(attendanceRecords).omit({ id: true, createdAt: true } as never);
 export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
@@ -84,7 +93,10 @@ export const employee360Assessments = pgTable("employee_360_assessments", {
   periodYear: integer("period_year").notNull(),
   periodMonth: integer("period_month").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("emp_360_reviewer_type_chk", sql`${t.reviewerType} IN ('manager','peer','subordinate','service_chain','self')`),
+  check("emp_360_score_chk", sql`${t.score} >= 1 AND ${t.score} <= 5`),
+]);
 
 export const insertEmployee360AssessmentSchema = createInsertSchema(employee360Assessments).omit({ id: true, createdAt: true } as never);
 export type Employee360Assessment = typeof employee360Assessments.$inferSelect;
@@ -102,7 +114,9 @@ export const employeeCareerProfiles = pgTable("employee_career_profiles", {
   notes: text("notes"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("emp_career_cross_training_chk", sql`${t.crossTrainingStatus} IS NULL OR ${t.crossTrainingStatus} IN ('not_started','in_progress','completed')`),
+]);
 
 export const insertEmployeeCareerProfileSchema = createInsertSchema(employeeCareerProfiles).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type EmployeeCareerProfile = typeof employeeCareerProfiles.$inferSelect;
@@ -121,7 +135,10 @@ export const hrCapitalProfiles = pgTable("hr_capital_profiles", {
   notes: text("notes"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("hr_capital_visotskiy_chk", sql`${t.visotskiyCategory} IS NULL OR ${t.visotskiyCategory} IN ('Flagman','Performer','Troublemaker')`),
+  check("hr_capital_onboarding_chk", sql`${t.onboardingStatus} IS NULL OR ${t.onboardingStatus} IN ('not_started','in_progress','completed')`),
+]);
 
 export const insertHrCapitalProfileSchema = createInsertSchema(hrCapitalProfiles).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type HrCapitalProfile = typeof hrCapitalProfiles.$inferSelect;
@@ -144,7 +161,11 @@ export const safetyIncidents = pgTable("safety_incidents", {
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("safety_incidents_type_chk", sql`${t.incidentType} IN ('injury','near_miss','violation')`),
+  check("safety_incidents_severity_chk", sql`${t.severity} IN ('minor','major','critical')`),
+  check("safety_incidents_status_chk", sql`${t.status} IN ('open','investigating','closed')`),
+]);
 
 export const ppeCompliance = pgTable("ppe_compliance", {
   id: serial("id").primaryKey(),
@@ -157,7 +178,9 @@ export const ppeCompliance = pgTable("ppe_compliance", {
   checkedBy: varchar("checked_by").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("ppe_compliance_status_chk", sql`${t.status} IN ('compliant','non_compliant','expired')`),
+]);
 
 export const safetyTrainings = pgTable("safety_trainings", {
   id: serial("id").primaryKey(),
@@ -172,7 +195,9 @@ export const safetyTrainings = pgTable("safety_trainings", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("safety_trainings_status_chk", sql`${t.status} IN ('pending','completed','expired')`),
+]);
 
 export const hazardZones = pgTable("hazard_zones", {
   id: serial("id").primaryKey(),
@@ -186,7 +211,9 @@ export const hazardZones = pgTable("hazard_zones", {
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("hazard_zones_risk_level_chk", sql`${t.riskLevel} IN ('low','medium','high','critical')`),
+]);
 
 export const insertSafetyIncidentSchema = createInsertSchema(safetyIncidents).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export const insertPpeComplianceSchema = createInsertSchema(ppeCompliance).omit({ id: true, createdAt: true, updatedAt: true } as never);
@@ -213,7 +240,10 @@ export const hrConflictReports = pgTable("hr_conflict_reports", {
   createdBy: integer("created_by").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("hr_conflict_severity_chk", sql`${t.severity} IN ('low','medium','high')`),
+  check("hr_conflict_status_chk", sql`${t.status} IN ('open','investigating','resolved')`),
+]);
 
 export const insertHrConflictReportSchema = createInsertSchema(hrConflictReports).omit({ createdAt: true, updatedAt: true } as never);
 export type HrConflictReport = typeof hrConflictReports.$inferSelect;
@@ -229,7 +259,9 @@ export const successionPlans = pgTable("succession_plans", {
   status: varchar("status", { length: 30 }).notNull().default("on_track"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("succession_plans_status_chk", sql`${t.status} IN ('on_track','at_risk','off_track','completed','cancelled')`),
+]);
 
 export const insertSuccessionPlanSchema = createInsertSchema(successionPlans).omit({ createdAt: true, updatedAt: true } as never);
 export type SuccessionPlan = typeof successionPlans.$inferSelect;
@@ -246,6 +278,9 @@ export const notificationLogs = pgTable("notification_logs", {
   errorDetail: text("error_detail"),
   sentAt: timestamp("sent_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("notification_logs_channel_chk", sql`${t.channel} IN ('telegram','email','sms')`),
+  check("notification_logs_status_chk", sql`${t.status} IN ('sent','failed','pending')`),
+]);
 
 export type NotificationLog = typeof notificationLogs.$inferSelect;

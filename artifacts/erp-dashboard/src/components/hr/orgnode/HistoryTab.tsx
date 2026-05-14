@@ -1,3 +1,8 @@
+/**
+ * @module HistoryTab
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { History } from "lucide-react";
@@ -18,7 +23,7 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
   if (histLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff5d2e]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -35,7 +40,7 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
   return (
     <div className="space-y-3">
       {(Array.isArray(historyData.history) ? historyData.history : []).map((entry) => (
-        <Card key={entry.id} className="border-l-4 border-l-[#ff5d2e]/50">
+        <Card key={entry.id} className="border-l-4 border-l-primary/50">
           <CardContent className="py-3 px-4 flex justify-between gap-4">
             <div>
               <p className="font-semibold text-sm">{entry.action}</p>

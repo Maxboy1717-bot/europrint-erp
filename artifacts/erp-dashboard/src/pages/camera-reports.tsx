@@ -1,3 +1,8 @@
+/**
+ * @module camera-reports
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { safeArray } from "@/lib/queryClient";
@@ -40,7 +45,8 @@ import {
   LineChart,
   Line
 } from "recharts";
-import { ErrorState } from "@/components/ui/error-state";
+import { apiRequest } from '@/lib/queryClient';
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
@@ -108,7 +114,7 @@ export default function CameraReports() {
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-      const response = await fetch(`/api/camera-reports/generate-pdf?period=${reportPeriod}`, { credentials: "include" });
+      const response = await apiRequest('GET', `/api/camera-reports/generate-pdf?period=${reportPeriod}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -129,7 +135,7 @@ export default function CameraReports() {
   const generateExcel = async () => {
     setIsGenerating(true);
     try {
-      const response = await fetch(`/api/camera-reports/generate-excel?period=${reportPeriod}`, { credentials: "include" });
+      const response = await apiRequest('GET', `/api/camera-reports/generate-excel?period=${reportPeriod}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -152,21 +158,21 @@ export default function CameraReports() {
       title: language === "uz" ? "Xavfsizlik buzilishlari" : "Нарушения безопасности",
       value: safetyStats?.reduce((sum, s) => sum + (s.count || 0), 0) || 0,
       icon: Shield,
-      color: "text-orange-500",
+      color: "text-[var(--ep-primary)]",
       bg: "bg-orange-100"
     },
     {
       title: language === "uz" ? "Sifat nuqsonlari" : "Дефекты качества",
       value: qualityStats?.reduce((sum, s) => sum + (s.count || 0), 0) || 0,
       icon: CheckCircle,
-      color: "text-blue-500",
+      color: "text-[var(--ep-blue)]",
       bg: "bg-blue-100"
     },
     {
       title: language === "uz" ? "Top xodimlar" : "Лучшие сотрудники",
       value: safeArray<TopEmployee>(topEmployees).length,
       icon: Users,
-      color: "text-green-500",
+      color: "text-[var(--ep-green)]",
       bg: "bg-green-100"
     }
   ];
@@ -185,50 +191,51 @@ export default function CameraReports() {
 
   if (loadingSafety || loadingQuality || loadingEmployees) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-10 w-64" />
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+        <Skeleton className="h-10 w-64 rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {([...Array(3)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-24" />)}
+          {([...Array(3)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}
         </div>
-        <Skeleton className="h-96" />
+        <Skeleton className="h-96 rounded-lg" />
       </div>
     );
   }
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="p-6 space-y-6 bg-surface min-h-screen">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Link href="/camera-dashboard">
-              <Button variant="ghost" size="sm" className="rounded-lg text-on-surface-variant hover:bg-surface-container-low" data-testid="button-back">
+              <Button variant="ghost" size="sm" className="rounded-lg text-muted-foreground hover:bg-muted/40" data-testid="button-back">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 {t.back}
               </Button>
             </Link>
           </div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            AI Kamera <span className="font-bold text-primary">Hisobotlari</span>
-          </h1>
-          <p className="text-on-surface-variant">{t.subtitle}</p>
+          <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">AI Kamera Hisobotlari</b></>}
+        title="AI Kamera Hisobotlari"
+        subtitle={t.subtitle}
+      />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={reportPeriod} onValueChange={(v: "daily" | "weekly" | "monthly") => setReportPeriod(v)}>
-            <SelectTrigger className="w-[140px] bg-surface border-outline-variant rounded-lg h-9" data-testid="select-period">
+            <SelectTrigger className="w-full sm:w-[140px] bg-background border-border rounded-lg h-9" data-testid="select-period">
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-surface-container-lowest border-outline-variant">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="daily">{t.daily}</SelectItem>
               <SelectItem value="weekly">{t.weekly}</SelectItem>
               <SelectItem value="monthly">{t.monthly}</SelectItem>
             </SelectContent>
           </Select>
-          <div className="flex rounded-lg border border-outline-variant overflow-hidden">
+          <div className="flex rounded-lg border border-border overflow-hidden">
             <Button 
               variant={language === "uz" ? "default" : "ghost"} 
               size="sm"
@@ -255,20 +262,20 @@ export default function CameraReports() {
         <Button 
           onClick={generatePDF} 
           disabled={isGenerating}
-          className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2 text-sm font-semibold"
+          className="bg-primary text-white rounded-lg px-5 py-2 text-sm font-semibold gap-2"
           data-testid="button-download-pdf"
         >
-          <FileText className="h-4 w-4 mr-2" />
+          <FileText className="h-4 w-4" />
           {isGenerating ? t.generating : t.downloadPDF}
         </Button>
         <Button 
           variant="outline" 
           onClick={generateExcel} 
           disabled={isGenerating}
-          className="border-outline-variant text-on-surface hover:bg-surface-container-low rounded-lg px-5 py-2 text-sm font-semibold"
+          className="border-border text-foreground hover:bg-muted/40 rounded-lg px-5 py-2 text-sm font-semibold gap-2"
           data-testid="button-download-excel"
         >
-          <FileSpreadsheet className="h-4 w-4 mr-2" />
+          <FileSpreadsheet className="h-4 w-4" />
           {isGenerating ? t.generating : t.downloadExcel}
         </Button>
       </div>
@@ -277,47 +284,47 @@ export default function CameraReports() {
         {(Array.isArray(summaryData) ? summaryData : []).map((item, index) => {
           const Icon = item.icon;
           return (
-            <Card key={`k-${index}`} className="bg-surface-container-lowest border-none rounded-lg p-5" data-testid={`card-summary-${index}`}>
+            <Card key={`k-${index}`} className="bg-card border-none rounded-lg p-5" data-testid={`card-summary-${index}`}>
               <div className="flex flex-row items-center justify-between gap-2 mb-4">
-                <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{item.title}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{item.title}</span>
                 <div className={`p-2 rounded-lg ${item.bg} ${item.color}`}>
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <div className="text-4xl font-bold tracking-tight text-on-surface">{item.value}</div>
+              <div className="text-4xl font-bold tracking-tight text-foreground">{item.value}</div>
             </Card>
           );
         })}
       </div>
 
       <Tabs defaultValue="safety" className="space-y-6">
-        <TabsList className="bg-surface-container-low p-1 rounded-lg">
-          <TabsTrigger value="safety" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-safety">
+        <TabsList className="bg-muted/40 p-1 rounded-lg">
+          <TabsTrigger value="safety" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-safety">
             <Shield className="h-4 w-4 mr-2" />
             {t.safety}
           </TabsTrigger>
-          <TabsTrigger value="quality" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-quality">
+          <TabsTrigger value="quality" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-quality">
             <CheckCircle className="h-4 w-4 mr-2" />
             {t.quality}
           </TabsTrigger>
-          <TabsTrigger value="employees" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-employees">
+          <TabsTrigger value="employees" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-employees">
             <Users className="h-4 w-4 mr-2" />
             {t.topEmployees}
           </TabsTrigger>
-          <TabsTrigger value="trend" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-trend">
+          <TabsTrigger value="trend" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-trend">
             <BarChart3 className="h-4 w-4 mr-2" />
             {t.trend}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="safety">
-          <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none">
-            <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-              <CardTitle className="text-lg font-bold flex items-center gap-2 text-on-surface">
-                <Shield className="h-5 w-5 text-orange-500" />
+          <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none">
+            <CardHeader className="bg-muted/40/50 py-4 px-6">
+              <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
+                <Shield className="h-5 w-5 text-[var(--ep-primary)]" />
                 {t.violations}
               </CardTitle>
-              <CardDescription className="text-on-surface-variant">
+              <CardDescription className="text-muted-foreground">
                 {language === "uz" ? "Xavfsizlik buzilishlari turlari bo'yicha" : "По типам нарушений безопасности"}
               </CardDescription>
             </CardHeader>
@@ -362,13 +369,13 @@ export default function CameraReports() {
         </TabsContent>
 
         <TabsContent value="quality">
-          <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none">
-            <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-              <CardTitle className="text-lg font-bold flex items-center gap-2 text-on-surface">
-                <CheckCircle className="h-5 w-5 text-blue-500" />
+          <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none">
+            <CardHeader className="bg-muted/40/50 py-4 px-6">
+              <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
+                <CheckCircle className="h-5 w-5 text-[var(--ep-blue)]" />
                 {t.defects}
               </CardTitle>
-              <CardDescription className="text-on-surface-variant">
+              <CardDescription className="text-muted-foreground">
                 {language === "uz" ? "Sifat nuqsonlari turlari bo'yicha" : "По типам дефектов качества"}
               </CardDescription>
             </CardHeader>
@@ -413,68 +420,68 @@ export default function CameraReports() {
         </TabsContent>
 
         <TabsContent value="employees">
-          <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none">
-            <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-              <CardTitle className="text-lg font-bold flex items-center gap-2 text-on-surface">
-                <Users className="h-5 w-5 text-green-500" />
+          <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none">
+            <CardHeader className="bg-muted/40/50 py-4 px-6">
+              <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
+                <Users className="h-5 w-5 text-[var(--ep-green)]" />
                 {t.topEmployees}
               </CardTitle>
-              <CardDescription className="text-on-surface-variant">
+              <CardDescription className="text-muted-foreground">
                 {language === "uz" ? "Bugungi eng samarali xodimlar" : "Самые продуктивные сотрудники сегодня"}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
+              <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">#</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{language === "uz" ? "Xodim ID" : "ID сотрудника"}</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{language === "uz" ? "Smena" : "Смена"}</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{language === "uz" ? "Faol vaqt" : "Активное время"}</TableHead>
-                    <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{language === "uz" ? "Umumiy ball" : "Общий балл"}</TableHead>
+                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">#</TableHead>
+                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{language === "uz" ? "Xodim ID" : "ID сотрудника"}</TableHead>
+                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{language === "uz" ? "Smena" : "Смена"}</TableHead>
+                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{language === "uz" ? "Faol vaqt" : "Активное время"}</TableHead>
+                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{language === "uz" ? "Umumiy ball" : "Общий балл"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {safeArray<TopEmployee>(topEmployees).length > 0 ? (
                     safeArray<TopEmployee>(topEmployees).map((emp, index) => (
-                      <TableRow key={emp.id} className="hover:bg-surface-container-low transition-colors border-none" data-testid={`row-employee-${emp.id}`}>
+                      <TableRow key={emp.id} className="hover:bg-muted/40 transition-colors border-none" data-testid={`row-employee-${emp.id}`}>
                         <TableCell className="py-4 px-6">
-                          <Badge className={`${index < 3 ? "bg-primary text-white" : "bg-surface-container text-on-surface-variant"} border-none rounded-full w-6 h-6 p-0 flex items-center justify-center font-bold`}>
+                          <Badge className={`${index < 3 ? "bg-primary text-white" : "bg-muted/60 text-muted-foreground"} border-none rounded-full w-6 h-6 p-0 flex items-center justify-center font-bold`}>
                             {index + 1}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-4 px-6 font-bold text-on-surface">{emp.userId}</TableCell>
-                        <TableCell className="py-4 px-6 text-sm font-medium text-on-surface-variant">{emp.shift}</TableCell>
-                        <TableCell className="py-4 px-6 text-sm font-medium text-on-surface-variant">{emp.activeTime} min</TableCell>
+                        <TableCell className="py-4 px-6 font-bold text-foreground">{emp.userId}</TableCell>
+                        <TableCell className="py-4 px-6 text-sm font-medium text-muted-foreground">{emp.shift}</TableCell>
+                        <TableCell className="py-4 px-6 text-sm font-medium text-muted-foreground">{emp.activeTime} min</TableCell>
                         <TableCell className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <Progress value={emp.overallScore} className="w-20 h-1.5 bg-surface-container" />
-                            <span className="text-sm font-bold text-on-surface">{emp.overallScore}%</span>
+                            <Progress value={emp.overallScore} className="w-20 h-1.5 bg-muted/60" />
+                            <span className="text-sm font-bold text-foreground">{emp.overallScore}%</span>
                           </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20 text-on-surface-variant">
+                      <TableCell colSpan={5} className="text-center py-20 text-[13px] text-muted-foreground">
                         {t.noData}
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
-              </Table>
+              </Table></div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="trend">
-          <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none">
-            <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-              <CardTitle className="text-lg font-bold flex items-center gap-2 text-on-surface">
-                <TrendingUp className="h-5 w-5 text-purple-500" />
+          <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none">
+            <CardHeader className="bg-muted/40/50 py-4 px-6">
+              <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
+                <TrendingUp className="h-5 w-5 text-[var(--ep-purple)]" />
                 {t.trend}
               </CardTitle>
-              <CardDescription className="text-on-surface-variant">
+              <CardDescription className="text-muted-foreground">
                 {language === "uz" ? "Haftalik trend tahlili" : "Анализ тенденций за неделю"}
               </CardDescription>
             </CardHeader>

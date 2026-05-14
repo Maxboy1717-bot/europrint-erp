@@ -1,3 +1,8 @@
+/**
+ * @module pp-intelligence.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller, Get, Post, Body, Param,
   Query, HttpCode, UseGuards, UseInterceptors,
@@ -54,9 +59,9 @@ export class PpIntelligenceController {
   @RequirePermission('pp:READ')
   async getCrp() {
     const workCenters = unwrapOrThrow(await this.crpSvc.getCrp());
-    const bottleneckCount = (workCenters ?? []).filter((w) => w.isBottleneck).length;
+    const bottleneckCount = (Array.isArray(workCenters) ? workCenters : []).filter((w) => w.isBottleneck).length;
     const avgUtilization = workCenters.length > 0
-      ? (workCenters ?? []).reduce((s, w) => s + w.utilizationPct, 0) / workCenters.length
+      ? (Array.isArray(workCenters) ? workCenters : []).reduce((s, w) => s + w.utilizationPct, 0) / workCenters.length
       : 0;
     return { workCenters, bottleneckCount, avgUtilization };
   }
@@ -88,7 +93,7 @@ export class PpIntelligenceController {
       for (const p of periods) { poh = poh + p.scheduledReceipts + p.plannedOrders - p.grossReq; p.projectedOnHand = poh; }
     }
 
-    const policyMap = new Map((result.policies ?? []).map((p) => [p.materialId, p]));
+    const policyMap = new Map((Array.isArray(result.policies) ? result.policies : []).map((p) => [p.materialId, p]));
     const lines = Array.from(byMaterial.entries()).map(([materialId, periods]) => {
       const policy = policyMap.get(materialId);
       return {

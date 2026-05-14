@@ -1,3 +1,8 @@
+/**
+ * @module OperatorQarzlariBolimi
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +33,7 @@ export function OperatorQarzlariBolimi() {
     },
   });
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <Skeleton className="h-40 w-full rounded-lg" />;
 
   return (
     <Card>
@@ -48,7 +53,7 @@ export function OperatorQarzlariBolimi() {
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <span className="font-medium text-sm">{item.operatorName}</span>
-                    <div className="text-xs text-red-600 font-bold">
+                    <div className="text-xs text-[var(--ep-red)] font-bold">
                       Qarz: {item.balance.qtyDebt} (BC: {item.barcodeCode})
                     </div>
                   </div>

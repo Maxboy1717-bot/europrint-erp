@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-ai-hr-new.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -47,7 +52,7 @@ export class DrizzleAiHrNewRepo {
         .orderBy(desc(aiHrInterviews.createdAt))
         .limit(limit)
         .offset(offset);
-      return (rows ?? []).map((r) => this.toRow(r));
+      return (Array.isArray(rows) ? rows : []).map((r) => this.toRow(r));
     });
     if (!result.ok) return Ok([]);
     return result;
@@ -74,7 +79,7 @@ export class DrizzleAiHrNewRepo {
   async findDashboardStats(): Promise<Result<Record<string, unknown>>> {
     const result = await safeCall(async () => {
       const rows = await this.drizzle.db.select().from(aiHrInterviews);
-      const completed = (rows ?? []).filter((r) => r.status === 'completed').length;
+      const completed = (Array.isArray(rows) ? rows : []).filter((r) => r.status === 'completed').length;
       return { totalAiTasks: rows.length, completedInterviews: completed };
     });
     if (!result.ok) return Ok({ totalAiTasks: 0, completedInterviews: 0 });
@@ -88,7 +93,7 @@ export class DrizzleAiHrNewRepo {
         .from(aiHrInterviews)
         .orderBy(desc(aiHrInterviews.createdAt))
         .limit(limit);
-      return (rows ?? []).map((r) => ({ id: r.id, taskType: r.interviewType, status: r.status, createdAt: r.createdAt?.toISOString() ?? '' }));
+      return (Array.isArray(rows) ? rows : []).map((r) => ({ id: r.id, taskType: r.interviewType, status: r.status, createdAt: r.createdAt?.toISOString() ?? '' }));
     });
     if (!result.ok) return Ok([]);
     return result;

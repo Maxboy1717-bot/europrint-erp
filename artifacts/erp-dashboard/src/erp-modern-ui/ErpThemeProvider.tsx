@@ -1,3 +1,8 @@
+/**
+ * @module ErpThemeProvider
+ * @description Source module. See exports for details.
+ */
+
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ReactNode } from "react";
 

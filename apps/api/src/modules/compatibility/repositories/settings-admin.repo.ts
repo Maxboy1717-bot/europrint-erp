@@ -1,3 +1,8 @@
+/**
+ * @module settings-admin.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import {
@@ -18,82 +23,130 @@ type SystemUpdate     = { companyName?: string; timezone?: string; language?: st
 @Injectable()
 export class SettingsAdminRepo {
   async findAllGuidelines() {
-    return db.select().from(guidelinesTable).orderBy(guidelinesTable.createdAt);
+    try {
+      return await db.select().from(guidelinesTable).orderBy(guidelinesTable.createdAt);
+    } catch (e) {
+      throw new Error(`settings_admin.findAllGuidelines: ${String(e)}`);
+    }
   }
 
   async insertGuideline(data: GuidelineInsert) {
-    return db.insert(guidelinesTable).values({
-      title:     data.title,
-      content:   data.content,
-      category:  data.category,
-      isActive:  data.isActive,
-      createdBy: data.createdBy ?? null,
-    }).returning();
+    try {
+      return await db.insert(guidelinesTable).values({
+        title:     data.title,
+        content:   data.content,
+        category:  data.category,
+        isActive:  data.isActive,
+        createdBy: data.createdBy ?? null,
+      }).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.insertGuideline: ${String(e)}`);
+    }
   }
 
   async updateGuideline(id: string, data: GuidelineUpdate) {
-    return db.update(guidelinesTable).set({
-      title:     data.title,
-      content:   data.content,
-      category:  data.category,
-      isActive:  data.isActive,
-      createdBy: data.createdBy,
-      updatedAt: data.updatedAt,
-    }).where(eq(guidelinesTable.id, id)).returning();
+    try {
+      return await db.update(guidelinesTable).set({
+        title:     data.title,
+        content:   data.content,
+        category:  data.category,
+        isActive:  data.isActive,
+        createdBy: data.createdBy,
+        updatedAt: data.updatedAt,
+      }).where(eq(guidelinesTable.id, id)).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.updateGuideline: ${String(e)}`);
+    }
   }
 
   async deleteGuideline(id: string) {
-    return db.delete(guidelinesTable).where(eq(guidelinesTable.id, id)).returning();
+    try {
+      return await db.delete(guidelinesTable).where(eq(guidelinesTable.id, id)).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.deleteGuideline: ${String(e)}`);
+    }
   }
 
   async getContactSettings() {
-    return db.select().from(contactTable);
+    try {
+      return await db.select().from(contactTable);
+    } catch (e) {
+      throw new Error(`settings_admin.getContactSettings: ${String(e)}`);
+    }
   }
 
   async upsertContactSettings(data: ContactUpdate) {
-    const existing = await db.select().from(contactTable);
-    if (existing.length === 0) {
-      return db.insert(contactTable).values({ id: 1, ...data }).returning();
+    try {
+      const existing = await db.select().from(contactTable);
+      if (existing.length === 0) {
+        return await db.insert(contactTable).values({ id: 1, ...data }).returning();
+      }
+      return await db.update(contactTable).set(data).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.upsertContactSettings: ${String(e)}`);
     }
-    return db.update(contactTable).set(data).returning();
   }
 
   async getSystemSettings() {
-    return db.select().from(sysTable);
+    try {
+      return await db.select().from(sysTable);
+    } catch (e) {
+      throw new Error(`settings_admin.getSystemSettings: ${String(e)}`);
+    }
   }
 
   async upsertSystemSettings(data: SystemUpdate) {
-    const existing = await db.select().from(sysTable);
-    if (existing.length === 0) {
-      return db.insert(sysTable).values({ id: 1, ...data }).returning();
+    try {
+      const existing = await db.select().from(sysTable);
+      if (existing.length === 0) {
+        return await db.insert(sysTable).values({ id: 1, ...data }).returning();
+      }
+      return await db.update(sysTable).set(data).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.upsertSystemSettings: ${String(e)}`);
     }
-    return db.update(sysTable).set(data).returning();
   }
 
   async findAllFilters() {
-    return db.select().from(filtersTable).orderBy(filtersTable.createdAt);
+    try {
+      return await db.select().from(filtersTable).orderBy(filtersTable.createdAt);
+    } catch (e) {
+      throw new Error(`settings_admin.findAllFilters: ${String(e)}`);
+    }
   }
 
   async insertFilter(data: FilterInsert) {
-    return db.insert(filtersTable).values({
-      name:       data.name,
-      filterType: data.filterType,
-      config:     data.config,
-      isActive:   data.isActive,
-    }).returning();
+    try {
+      return await db.insert(filtersTable).values({
+        name:       data.name,
+        filterType: data.filterType,
+        config:     data.config,
+        isActive:   data.isActive,
+      }).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.insertFilter: ${String(e)}`);
+    }
   }
 
   async updateFilter(id: string, data: FilterUpdate) {
-    return db.update(filtersTable).set({
-      name:       data.name,
-      filterType: data.filterType,
-      config:     data.config,
-      isActive:   data.isActive,
-      updatedAt:  data.updatedAt,
-    }).where(eq(filtersTable.id, id)).returning();
+    try {
+      return await db.update(filtersTable).set({
+        name:       data.name,
+        filterType: data.filterType,
+        config:     data.config,
+        isActive:   data.isActive,
+        updatedAt:  data.updatedAt,
+      }).where(eq(filtersTable.id, id)).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.updateFilter: ${String(e)}`);
+    }
   }
 
   async deleteFilter(id: string) {
-    return db.delete(filtersTable).where(eq(filtersTable.id, id)).returning();
+    try {
+      return await db.delete(filtersTable).where(eq(filtersTable.id, id)).returning();
+    } catch (e) {
+      throw new Error(`settings_admin.deleteFilter: ${String(e)}`);
+    }
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module tooltip
+ * @description React UI component.
+ */
+
 "use client"
 
 import * as React from "react"

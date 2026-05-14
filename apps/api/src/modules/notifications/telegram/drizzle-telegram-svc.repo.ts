@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-telegram-svc.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';

@@ -1,3 +1,8 @@
+/**
+ * @module i-settings.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { SystemSettings } from '../entities/system-settings.entity';
 
 export interface ISettingsRepo {

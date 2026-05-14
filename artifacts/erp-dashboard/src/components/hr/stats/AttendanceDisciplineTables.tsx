@@ -1,3 +1,8 @@
+/**
+ * @module AttendanceDisciplineTables
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +44,7 @@ export function AttendanceDisciplineTables({
           <CardDescription>Oxirgi davomat yozuvlari</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Sana</TableHead>
@@ -51,7 +56,7 @@ export function AttendanceDisciplineTables({
               {(Array.isArray(attendance) ? attendance : []).slice(0, 5).map((record: AttendanceRecord) => {
                 const badge = getAttendanceStatusBadge(record.status);
                 return (
-                  <TableRow key={record.id} data-testid={`row-attendance-${record.id}`}>
+                  <TableRow key={record.id} data-testid={`row-attendance-${record.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{new Date(record.date).toLocaleDateString('uz-UZ')}</TableCell>
                     <TableCell>
                       <Badge variant={badge.variant}>{badge.label}</Badge>
@@ -62,13 +67,13 @@ export function AttendanceDisciplineTables({
               })}
               {attendance.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     Ma'lumot topilmadi
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 
@@ -87,7 +92,7 @@ export function AttendanceDisciplineTables({
           <CardDescription>Rag'bat va choralar</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Sana</TableHead>
@@ -99,7 +104,7 @@ export function AttendanceDisciplineTables({
               {(Array.isArray(discipline) ? discipline : []).slice(0, 5).map((record: DisciplineRecord) => {
                 const badge = getDisciplineTypeBadge(record.type);
                 return (
-                  <TableRow key={record.id} data-testid={`row-discipline-${record.id}`}>
+                  <TableRow key={record.id} data-testid={`row-discipline-${record.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{new Date(record.date).toLocaleDateString('uz-UZ')}</TableCell>
                     <TableCell>
                       <Badge variant={badge.variant}>{badge.label}</Badge>
@@ -110,13 +115,13 @@ export function AttendanceDisciplineTables({
               })}
               {discipline.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     Ma'lumot topilmadi
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

@@ -1,0 +1,8234 @@
+{
+  "modules": {
+    "admin": {
+      "total": 91,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Administrator paneli"
+        },
+        {
+          "k": "dashboard",
+          "v": "Admin paneli"
+        },
+        {
+          "k": "username",
+          "v": "Foydalanuvchi nomi"
+        },
+        {
+          "k": "email",
+          "v": "Email"
+        },
+        {
+          "k": "superAdmin",
+          "v": "Super Administrator"
+        },
+        {
+          "k": "inactive",
+          "v": "Faol emas"
+        },
+        {
+          "k": "systemSettings",
+          "v": "Tizim sozlamalari"
+        },
+        {
+          "k": "companyInfo",
+          "v": "Kompaniya ma'lumotlari"
+        },
+        {
+          "k": "companyName",
+          "v": "Kompaniya nomi"
+        },
+        {
+          "k": "companyLogo",
+          "v": "Kompaniya logosi"
+        },
+        {
+          "k": "timezone",
+          "v": "Vaqt mintaqasi"
+        },
+        {
+          "k": "dateFormat",
+          "v": "Sana formati"
+        },
+        {
+          "k": "defaultLanguage",
+          "v": "Standart til"
+        },
+        {
+          "k": "lightTheme",
+          "v": "Yorug' mavzu"
+        },
+        {
+          "k": "darkTheme",
+          "v": "Qorong'u mavzu"
+        },
+        {
+          "k": "maintenance",
+          "v": "Texnik xizmat"
+        },
+        {
+          "k": "maintenanceMode",
+          "v": "Texnik xizmat rejimi"
+        },
+        {
+          "k": "systemLogs",
+          "v": "Tizim jurnali"
+        },
+        {
+          "k": "errorLogs",
+          "v": "Xatolik jurnali"
+        },
+        {
+          "k": "database",
+          "v": "Ma'lumotlar bazasi"
+        },
+        {
+          "k": "dbStatus",
+          "v": "MB holati"
+        },
+        {
+          "k": "dbSize",
+          "v": "MB hajmi"
+        },
+        {
+          "k": "dbBackup",
+          "v": "MB zaxirasi"
+        },
+        {
+          "k": "apiKeys",
+          "v": "API kalitlar"
+        },
+        {
+          "k": "moduleSettings",
+          "v": "Modul sozlamalari"
+        },
+        {
+          "k": "validate.stirFailed",
+          "v": "STIR xato"
+        },
+        {
+          "k": "validate.cardFailed",
+          "v": "Karta xato"
+        },
+        {
+          "k": "validate.stirLabel",
+          "v": "Stir Yorliq"
+        },
+        {
+          "k": "validate.cardLabel",
+          "v": "Card Yorliq"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "email",
+          "v": "Email"
+        }
+      ]
+    },
+    "ai": {
+      "total": 214,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Sun'iy Intellekt"
+        },
+        {
+          "k": "dashboard",
+          "v": "AI paneli"
+        },
+        {
+          "k": "assistant",
+          "v": "AI yordamchi"
+        },
+        {
+          "k": "analyzing",
+          "v": "Tahlil qilinmoqda..."
+        },
+        {
+          "k": "selectModel",
+          "v": "Model tanlang"
+        },
+        {
+          "k": "temperature",
+          "v": "Ijodkorlik darajasi"
+        },
+        {
+          "k": "maxTokens",
+          "v": "Maksimal belgilar"
+        },
+        {
+          "k": "anomalyDetected",
+          "v": "Anomaliya aniqlandi"
+        },
+        {
+          "k": "autoReport",
+          "v": "Avtomatik hisobot"
+        },
+        {
+          "k": "dataAnalysis",
+          "v": "Ma'lumotlar tahlili"
+        },
+        {
+          "k": "naturalLanguage",
+          "v": "Tabiiy til"
+        },
+        {
+          "k": "nlpQuery",
+          "v": "Tabiiy til so'rovi"
+        },
+        {
+          "k": "askQuestion",
+          "v": "Savol bering..."
+        },
+        {
+          "k": "documentAnalysis",
+          "v": "Hujjat tahlili"
+        },
+        {
+          "k": "autoTranslate",
+          "v": "Avtomatik tarjima"
+        },
+        {
+          "k": "sentimentAnalysis",
+          "v": "Fikr tahlili"
+        },
+        {
+          "k": "f1Score",
+          "v": "F1 ko'rsatkichi"
+        },
+        {
+          "k": "modelVersion",
+          "v": "Model versiyasi"
+        },
+        {
+          "k": "systemPrompt",
+          "v": "Tizim so'rovi"
+        },
+        {
+          "k": "forecastAnalytics",
+          "v": "Prognoz analitikasi"
+        },
+        {
+          "k": "forecastModel",
+          "v": "Prognoz modeli"
+        },
+        {
+          "k": "historySeries",
+          "v": "Tarixiy qiymatlar (vergul bilan)"
+        },
+        {
+          "k": "sporadicSample",
+          "v": "Sporadic namuna"
+        },
+        {
+          "k": "seasonalSample",
+          "v": "Mavsumiy namuna"
+        },
+        {
+          "k": "forecastChart",
+          "v": "Prognoz grafigi"
+        },
+        {
+          "k": "demandProbability",
+          "v": "Talab ehtimoli"
+        },
+        {
+          "k": "avgDemandSize",
+          "v": "O'rtacha talab hajmi"
+        },
+        {
+          "k": "materialId",
+          "v": "Material ID"
+        },
+        {
+          "k": "seasonLength",
+          "v": "Mavsum uzunligi (s)"
+        },
+        {
+          "k": "hitlWarning",
+          "v": "HITL talab etiladi"
+        },
+        {
+          "k": "modelEma",
+          "v": "EMA (Eksponensial o'rtacha)"
+        },
+        {
+          "k": "modelHw",
+          "v": "Holt-Winters (mavsumiy)"
+        },
+        {
+          "k": "modelCroston",
+          "v": "Croston/TSB (sporadic)"
+        },
+        {
+          "k": "modelEnsemble",
+          "v": "Ensemble (MAPE-og'irlikli)"
+        },
+        {
+          "k": "auditTitle",
+          "v": "AI Agent Audit"
+        },
+        {
+          "k": "totalDecisions",
+          "v": "Jami Qarorlar"
+        },
+        {
+          "k": "autoExecuted",
+          "v": "Avto Bajarilgan"
+        },
+        {
+          "k": "decisionsHistory",
+          "v": "Qarorlar Tarixi"
+        },
+        {
+          "k": "noDecisionsForAgent",
+          "v": "Bu agent uchun qarorlar yo'q."
+        },
+        {
+          "k": "totalDecisionsLabel",
+          "v": "Jami qarorlar"
+        },
+        {
+          "k": "avgLatencyLabel",
+          "v": "O'rt. javob vaqti"
+        },
+        {
+          "k": "totalCostLabel",
+          "v": "Jami xarajat"
+        },
+        {
+          "k": "agentSalesCopilot",
+          "v": "Sotuv yordamchisi"
+        },
+        {
+          "k": "agentPrepressAssistant",
+          "v": "Prepress Yordamchi"
+        },
+        {
+          "k": "agentMesMonitor",
+          "v": "MES Monitor"
+        },
+        {
+          "k": "agentVisionQc",
+          "v": "Vision QC"
+        },
+        {
+          "k": "agentRouter",
+          "v": "Logistika Router"
+        },
+        {
+          "k": "overriddenCount",
+          "v": "Bekor qilingan"
+        },
+        {
+          "k": "hardBlockTab",
+          "v": "Hard-Block Metrikalar"
+        },
+        {
+          "k": "noBlockedDecisions",
+          "v": "Bloklangan qarorlar yo'q."
+        },
+        {
+          "k": "humanOverrideLabel",
+          "v": "Inson bekor qildi"
+        },
+        {
+          "k": "onlyIncorrectLabel",
+          "v": "Faqat noto'g'rilarini ko'rsat"
+        },
+        {
+          "k": "noIncorrectDecisions",
+          "v": "Noto'g'ri qarorlar yo'q."
+        },
+        {
+          "k": "overriddenTag",
+          "v": "Bekor qilindi"
+        },
+        {
+          "k": "qcheck.completeness",
+          "v": "To'liqlik darajasi"
+        },
+        {
+          "k": "qcheck.preflightOk",
+          "v": "Preflight: Muvaffaqiyatli"
+        },
+        {
+          "k": "qcheck.preflightFail",
+          "v": "Preflight: Muammo aniqlandi"
+        },
+        {
+          "k": "qcheck.commitAutoTitle",
+          "v": "Avtomatik tasdiqlandi"
+        },
+        {
+          "k": "bottleneck.workCenters",
+          "v": "work Centers"
+        },
+        {
+          "k": "demandForecast.avgConfidence",
+          "v": "avg Confidence"
+        },
+        {
+          "k": "oeeLive.avgOee",
+          "v": "avg Oee"
+        },
+        {
+          "k": "oeeLive.worldClass",
+          "v": "world Class"
+        },
+        {
+          "k": "oeeLive.machineList",
+          "v": "machine List"
+        },
+        {
+          "k": "rushOrder.rejected",
+          "v": "Rad etilgan"
+        },
+        {
+          "k": "rushOrder.avgSurcharge",
+          "v": "avg Surcharge"
+        },
+        {
+          "k": "agents.triggerFailed",
+          "v": "trigger Failed"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "bottleneck.workCenters",
+          "v": "work Centers"
+        },
+        {
+          "k": "demandForecast.avgConfidence",
+          "v": "avg Confidence"
+        },
+        {
+          "k": "oeeLive.avgOee",
+          "v": "avg Oee"
+        },
+        {
+          "k": "oeeLive.worldClass",
+          "v": "world Class"
+        },
+        {
+          "k": "oeeLive.machineList",
+          "v": "machine List"
+        },
+        {
+          "k": "rushOrder.avgSurcharge",
+          "v": "avg Surcharge"
+        },
+        {
+          "k": "agents.triggerFailed",
+          "v": "trigger Failed"
+        }
+      ]
+    },
+    "auth": {
+      "total": 85,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "username",
+          "v": "Foydalanuvchi nomi"
+        },
+        {
+          "k": "confirmPassword",
+          "v": "Parolni tasdiqlang"
+        },
+        {
+          "k": "currentPassword",
+          "v": "Joriy parol"
+        },
+        {
+          "k": "email",
+          "v": "Elektron pochta"
+        },
+        {
+          "k": "forgotPassword",
+          "v": "Parolni unutdingizmi?"
+        },
+        {
+          "k": "rememberMe",
+          "v": "Meni eslab qol"
+        },
+        {
+          "k": "invalidCredentials",
+          "v": "Noto'g'ri login yoki parol"
+        },
+        {
+          "k": "loginSuccess",
+          "v": "Muvaffaqiyatli kirildi"
+        },
+        {
+          "k": "registerSuccess",
+          "v": "Muvaffaqiyatli ro'yxatdan o'tildi"
+        },
+        {
+          "k": "sessionExpired",
+          "v": "Sessiya tugadi, qayta kiring"
+        },
+        {
+          "k": "accountLocked",
+          "v": "Hisob bloklangan"
+        },
+        {
+          "k": "welcomeBack",
+          "v": "Qaytganingiz bilan"
+        },
+        {
+          "k": "fullName",
+          "v": "To'liq ism"
+        },
+        {
+          "k": "enterUsername",
+          "v": "Foydalanuvchi nomini kiriting"
+        },
+        {
+          "k": "enterPassword",
+          "v": "Parolni kiriting"
+        },
+        {
+          "k": "enterEmail",
+          "v": "Email kiriting"
+        },
+        {
+          "k": "login.subtitle",
+          "v": "Hisob ma'lumotlaringizni kiriting"
+        },
+        {
+          "k": "login.email",
+          "v": "Email manzil"
+        },
+        {
+          "k": "login.rememberMe",
+          "v": "Meni eslab qol"
+        },
+        {
+          "k": "login.forgotPassword",
+          "v": "Parolni unutdingizmi?"
+        },
+        {
+          "k": "login.success",
+          "v": "Tizimga muvaffaqiyatli kirdingiz"
+        },
+        {
+          "k": "login.error.invalid",
+          "v": "Email yoki parol noto'g'ri"
+        },
+        {
+          "k": "login.error.locked",
+          "v": "Hisob vaqtincha bloklangan"
+        },
+        {
+          "k": "register.email",
+          "v": "Email"
+        },
+        {
+          "k": "register.confirmPassword",
+          "v": "Parolni tasdiqlang"
+        },
+        {
+          "k": "register.success",
+          "v": "Muvaffaqiyatli ro'yxatdan o'tdingiz"
+        },
+        {
+          "k": "register.error.emailExists",
+          "v": "Bu email allaqachon ro'yxatdan o'tgan"
+        },
+        {
+          "k": "register.error.passwordMismatch",
+          "v": "Parollar mos kelmayapti"
+        },
+        {
+          "k": "password.reset.email",
+          "v": "Elektron pochta manzilingizni kiriting"
+        },
+        {
+          "k": "password.reset.error",
+          "v": "Email topilmadi"
+        },
+        {
+          "k": "password.change.current",
+          "v": "Joriy parol"
+        },
+        {
+          "k": "token.expired",
+          "v": "Sessiya muddati tugadi. Qayta kiring."
+        },
+        {
+          "k": "token.invalid",
+          "v": "Yaroqsiz token"
+        },
+        {
+          "k": "role.superAdmin",
+          "v": "Super Administrator"
+        },
+        {
+          "k": "role.hrManager",
+          "v": "HR Menejer"
+        },
+        {
+          "k": "role.hrSpecialist",
+          "v": "HR Mutaxassis"
+        },
+        {
+          "k": "role.warehouseManager",
+          "v": "Ombor mudiri"
+        },
+        {
+          "k": "role.salesManager",
+          "v": "Sotuv menejer"
+        },
+        {
+          "k": "subtitle",
+          "v": "Ostki sarlavha"
+        },
+        {
+          "k": "loggingIn",
+          "v": "logging In"
+        },
+        {
+          "k": "loginBtn",
+          "v": "login Btn"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "register.email",
+          "v": "Email"
+        },
+        {
+          "k": "loggingIn",
+          "v": "logging In"
+        },
+        {
+          "k": "loginBtn",
+          "v": "login Btn"
+        }
+      ]
+    },
+    "barcode": {
+      "total": 7,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "cameraUnsupported",
+          "v": "Kamera qo'llab-quvvatlanmaydi"
+        },
+        {
+          "k": "notFound",
+          "v": "not Found"
+        },
+        {
+          "k": "notifyAdmin",
+          "v": "notify Admin"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "notFound",
+          "v": "not Found"
+        },
+        {
+          "k": "notifyAdmin",
+          "v": "notify Admin"
+        }
+      ]
+    },
+    "calc": {
+      "total": 4,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [],
+      "englishInRu": []
+    },
+    "common": {
+      "total": 328,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "none",
+          "v": "Hech biri"
+        },
+        {
+          "k": "noData",
+          "v": "Ma'lumot topilmadi"
+        },
+        {
+          "k": "required",
+          "v": "Majburiy maydon"
+        },
+        {
+          "k": "perPage",
+          "v": "Har sahifada"
+        },
+        {
+          "k": "createdAt",
+          "v": "Yaratilgan sana"
+        },
+        {
+          "k": "critical",
+          "v": "Juda muhim"
+        },
+        {
+          "k": "rejected",
+          "v": "Rad etilgan"
+        },
+        {
+          "k": "noResults",
+          "v": "Natija topilmadi"
+        },
+        {
+          "k": "confirmDelete",
+          "v": "Haqiqatan ham o'chirmoqchimisiz?"
+        },
+        {
+          "k": "deleteWarning",
+          "v": "Bu amalni qaytarib bo'lmaydi"
+        },
+        {
+          "k": "savedSuccessfully",
+          "v": "Muvaffaqiyatli saqlandi"
+        },
+        {
+          "k": "deletedSuccessfully",
+          "v": "Muvaffaqiyatli o'chirildi"
+        },
+        {
+          "k": "createdSuccessfully",
+          "v": "Muvaffaqiyatli yaratildi"
+        },
+        {
+          "k": "operationFailed",
+          "v": "Amal bajarilmadi"
+        },
+        {
+          "k": "tryAgain",
+          "v": "Qayta urinib ko'ring"
+        },
+        {
+          "k": "exportToExcel",
+          "v": "Excel ga eksport"
+        },
+        {
+          "k": "exportToPDF",
+          "v": "PDF ga eksport"
+        },
+        {
+          "k": "email",
+          "v": "Elektron pochta"
+        },
+        {
+          "k": "cancelled",
+          "v": "Bekor qilingan"
+        },
+        {
+          "k": "table.rowsPerPage",
+          "v": "Sahifadagi qatorlar"
+        },
+        {
+          "k": "confirm.delete.description",
+          "v": "Bu amalni ortga qaytarib bo'lmaydi."
+        },
+        {
+          "k": "success.saved",
+          "v": "Muvaffaqiyatli saqlandi"
+        },
+        {
+          "k": "success.deleted",
+          "v": "Muvaffaqiyatli o'chirildi"
+        },
+        {
+          "k": "success.approved",
+          "v": "Muvaffaqiyatli tasdiqlandi"
+        },
+        {
+          "k": "success.sent",
+          "v": "Muvaffaqiyatli yuborildi"
+        },
+        {
+          "k": "error.generic",
+          "v": "Xatolik yuz berdi. Qayta urinib ko'ring."
+        },
+        {
+          "k": "error.notFound",
+          "v": "Ma'lumot topilmadi."
+        },
+        {
+          "k": "error.unauthorized",
+          "v": "Ruxsat yo'q."
+        },
+        {
+          "k": "errorOccurred",
+          "v": "Xatolik yuz berdi"
+        },
+        {
+          "k": "previousPageAria",
+          "v": "Oldingi sahifa"
+        },
+        {
+          "k": "nextPageAria",
+          "v": "Keyingi sahifa"
+        },
+        {
+          "k": "progress.noStages",
+          "v": "Yo'q Stages"
+        },
+        {
+          "k": "paymentTerms",
+          "v": "To'lov Terms"
+        },
+        {
+          "k": "createdBy",
+          "v": "created By"
+        },
+        {
+          "k": "cancelledDesc",
+          "v": "Bekor qilingan"
+        },
+        {
+          "k": "aiTyping",
+          "v": "AI yozmoqda..."
+        },
+        {
+          "k": "typeAnswer",
+          "v": "Javobni yozing..."
+        },
+        {
+          "k": "micOff",
+          "v": "Mikrofon o'chirilgan"
+        },
+        {
+          "k": "micOn",
+          "v": "Mikrofon yoqilgan"
+        },
+        {
+          "k": "expiredDesc",
+          "v": "Muddati tugadi"
+        },
+        {
+          "k": "hrEmail",
+          "v": "HR email"
+        },
+        {
+          "k": "invalidDesc",
+          "v": "Noto'g'ri ma'lumot"
+        },
+        {
+          "k": "completedDesc",
+          "v": "Suhbat yakunlandi"
+        },
+        {
+          "k": "hrContact",
+          "v": "HR aloqasi"
+        },
+        {
+          "k": "voiceText",
+          "v": "Ovozli matn"
+        },
+        {
+          "k": "tip1",
+          "v": "Toza fonda turing"
+        },
+        {
+          "k": "tip3",
+          "v": "Yaqindan turing"
+        },
+        {
+          "k": "tip4",
+          "v": "Ovozli javob bering"
+        },
+        {
+          "k": "currentBalance",
+          "v": "Joriy qoldiq"
+        },
+        {
+          "k": "Polmaster",
+          "v": "Yarim usta"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "createdBy",
+          "v": "created By"
+        },
+        {
+          "k": "hrEmail",
+          "v": "HR email"
+        }
+      ]
+    },
+    "contact": {
+      "total": 1,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [],
+      "englishInRu": []
+    },
+    "coordination": {
+      "total": 60,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "coordination",
+          "v": "Koordinatsiya tizimi"
+        },
+        {
+          "k": "meetingProtocol",
+          "v": "Majlis protokoli"
+        },
+        {
+          "k": "councilMinutes",
+          "v": "Majlis bayoni"
+        },
+        {
+          "k": "executiveCouncilParticipants",
+          "v": "Direktor va top-menejerlar"
+        },
+        {
+          "k": "recommendationCommitteePurpose",
+          "v": "O'rta bosqich operatsion muammolar"
+        },
+        {
+          "k": "councilAgenda",
+          "v": "Kun tartibi"
+        },
+        {
+          "k": "doklaPurpose",
+          "v": "Muammo, natija, taklif bayon etiladi"
+        },
+        {
+          "k": "sessionClosed",
+          "v": "Sessiya yopildi"
+        },
+        {
+          "k": "totalDocuments",
+          "v": "Jami hujjatlar"
+        }
+      ],
+      "englishInRu": []
+    },
+    "crm": {
+      "total": 394,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "crm",
+          "v": "Mijozlar bilan aloqalar"
+        },
+        {
+          "k": "leads",
+          "v": "Potentsial mijozlar"
+        },
+        {
+          "k": "quickLead",
+          "v": "Tez lid"
+        },
+        {
+          "k": "leadsNotFound",
+          "v": "Lidlar topilmadi"
+        },
+        {
+          "k": "leadMoved",
+          "v": "Lead ko'chirildi"
+        },
+        {
+          "k": "leadsDeleted",
+          "v": "Lidlar o'chirildi"
+        },
+        {
+          "k": "contactsNotFound",
+          "v": "Kontaktlar topilmadi"
+        },
+        {
+          "k": "contactCreated",
+          "v": "Kontakt yaratildi"
+        },
+        {
+          "k": "contactsDeleted",
+          "v": "Kontaktlar o'chirildi"
+        },
+        {
+          "k": "companiesNotFound",
+          "v": "Kompaniyalar topilmadi"
+        },
+        {
+          "k": "companyCreated",
+          "v": "Kompaniya yaratildi"
+        },
+        {
+          "k": "companiesDeleted",
+          "v": "Kompaniyalar o'chirildi"
+        },
+        {
+          "k": "dealValue",
+          "v": "Bitim qiymati"
+        },
+        {
+          "k": "dealMoved",
+          "v": "Bitim ko'chirildi"
+        },
+        {
+          "k": "dealsDeleted",
+          "v": "Bitimlar o'chirildi"
+        },
+        {
+          "k": "dealsNotFound",
+          "v": "Bitimlar topilmadi"
+        },
+        {
+          "k": "crmActivities",
+          "v": "CRM Faoliyatlar"
+        },
+        {
+          "k": "activityCreated",
+          "v": "Faoliyat yaratildi"
+        },
+        {
+          "k": "activityCompleted",
+          "v": "Faoliyat bajarildi"
+        },
+        {
+          "k": "activityCancelled",
+          "v": "Faoliyat bekor qilindi"
+        },
+        {
+          "k": "noActivities",
+          "v": "Faoliyatlar yo'q"
+        },
+        {
+          "k": "noCompletedActivities",
+          "v": "Bajarilgan faoliyatlar yo'q"
+        },
+        {
+          "k": "activitySubject",
+          "v": "Faoliyat mavzusi"
+        },
+        {
+          "k": "emails",
+          "v": "Elektron pochta"
+        },
+        {
+          "k": "pipeline",
+          "v": "Quvur liniyasi"
+        },
+        {
+          "k": "expectedRevenue",
+          "v": "Kutilayotgan daromad"
+        },
+        {
+          "k": "contacted",
+          "v": "Aloqa qilingan"
+        },
+        {
+          "k": "closedWon",
+          "v": "Yopilgan (yutuq)"
+        },
+        {
+          "k": "leadSource",
+          "v": "Lid manbasi"
+        },
+        {
+          "k": "lastContact",
+          "v": "Oxirgi aloqa"
+        },
+        {
+          "k": "totalDeals",
+          "v": "Jami bitimlar"
+        },
+        {
+          "k": "wonDeals",
+          "v": "Yutilgan bitimlar"
+        },
+        {
+          "k": "lostDeals",
+          "v": "Yo'qotilgan bitimlar"
+        },
+        {
+          "k": "conversionRate",
+          "v": "Konversiya darajasi"
+        },
+        {
+          "k": "salesFunnel",
+          "v": "Sotuv voronkasi"
+        },
+        {
+          "k": "aiInsights",
+          "v": "AI tahlili"
+        },
+        {
+          "k": "quickActions",
+          "v": "Tezkor amallar"
+        },
+        {
+          "k": "dealTotalValue",
+          "v": "Bitimlar qiymati"
+        },
+        {
+          "k": "paidAmounts",
+          "v": "To'langan summalar"
+        },
+        {
+          "k": "conversionStats",
+          "v": "Konversiya statistikasi"
+        },
+        {
+          "k": "converted",
+          "v": "Konvertatsiya qilingan"
+        },
+        {
+          "k": "overdue",
+          "v": "muddati o'tgan"
+        },
+        {
+          "k": "inCatalog",
+          "v": "Katalogda mavjud"
+        },
+        {
+          "k": "paidInvoice",
+          "v": "to'langan hisob"
+        },
+        {
+          "k": "allLeads",
+          "v": "Barcha lidlar"
+        },
+        {
+          "k": "createdToday",
+          "v": "Bugun yaratilgan"
+        },
+        {
+          "k": "unansweredCalls",
+          "v": "Javobsiz qo'ng'iroqlar"
+        },
+        {
+          "k": "assignedToMe",
+          "v": "Menga tayinlangan"
+        },
+        {
+          "k": "answered",
+          "v": "Javob berildi"
+        },
+        {
+          "k": "missed",
+          "v": "O'tkazib yuborildi"
+        },
+        {
+          "k": "selectedCount",
+          "v": "ta tanlangan"
+        },
+        {
+          "k": "createdDate",
+          "v": "Yaratilgan sana"
+        },
+        {
+          "k": "selectSource",
+          "v": "Manbani tanlang"
+        },
+        {
+          "k": "emailSource",
+          "v": "Email"
+        },
+        {
+          "k": "companyName",
+          "v": "Kompaniya nomi"
+        },
+        {
+          "k": "aboutDeal",
+          "v": "O BITIMDA"
+        },
+        {
+          "k": "selectStage",
+          "v": "Bosqich tanlang"
+        },
+        {
+          "k": "amountAndCurrency",
+          "v": "Summa va valyuta"
+        },
+        {
+          "k": "paymentStatus",
+          "v": "To'lov holati"
+        },
+        {
+          "k": "productsList",
+          "v": "Tovarlar ro'yxati"
+        },
+        {
+          "k": "quickDeal",
+          "v": "Tez bitim"
+        },
+        {
+          "k": "calendarMode",
+          "v": "Kalendar rejimi"
+        },
+        {
+          "k": "calendarDescription",
+          "v": "Bitimlar kalendarda ko'rinadi"
+        },
+        {
+          "k": "allContacts",
+          "v": "Barcha kontaktlar"
+        },
+        {
+          "k": "customerJourney",
+          "v": "Mijoz yo'li"
+        },
+        {
+          "k": "journeyStep1",
+          "v": "Birinchi aloqa"
+        },
+        {
+          "k": "journeyStep5",
+          "v": "Doimiy mijoz"
+        },
+        {
+          "k": "birthday",
+          "v": "Tug'ilgan sana"
+        },
+        {
+          "k": "lastContactDate",
+          "v": "Oxirgi aloqa"
+        },
+        {
+          "k": "fatherName",
+          "v": "Otasining ismi"
+        },
+        {
+          "k": "phoneNumbers",
+          "v": "Telefon raqamlari"
+        },
+        {
+          "k": "emailAddresses",
+          "v": "Email manzillar"
+        },
+        {
+          "k": "birthDate",
+          "v": "Tug'ilgan sana"
+        },
+        {
+          "k": "allCompanies",
+          "v": "Barcha kompaniyalar"
+        },
+        {
+          "k": "activeCompanies",
+          "v": "Aktiv kompaniyalar"
+        },
+        {
+          "k": "companyInfo",
+          "v": "Kompaniya ma'lumotlari"
+        },
+        {
+          "k": "stir",
+          "v": "STIR (INN)"
+        },
+        {
+          "k": "bankInfo",
+          "v": "Bank ma'lumotlari"
+        },
+        {
+          "k": "bankName",
+          "v": "Bank nomi"
+        },
+        {
+          "k": "accountNumber",
+          "v": "Hisob raqami"
+        },
+        {
+          "k": "bankNotSpecified",
+          "v": "Bank ma'lumotlari ko'rsatilmagan"
+        },
+        {
+          "k": "financialInfo",
+          "v": "Moliyaviy ma'lumotlar"
+        },
+        {
+          "k": "employeesCount",
+          "v": "Xodimlar soni"
+        },
+        {
+          "k": "annualRevenue",
+          "v": "Yillik daromad (UZS)"
+        },
+        {
+          "k": "watcherRemoved",
+          "v": "Kuzatuvchi o'chirildi"
+        },
+        {
+          "k": "emailType",
+          "v": "Email"
+        },
+        {
+          "k": "videoCallType",
+          "v": "Video qo'ng'iroq"
+        },
+        {
+          "k": "dealName",
+          "v": "Bitim nomi"
+        },
+        {
+          "k": "selectCompany",
+          "v": "Kompaniyani tanlang"
+        },
+        {
+          "k": "noNameContact",
+          "v": "Nomsiz kontakt"
+        },
+        {
+          "k": "companyNotSpecified",
+          "v": "Kompaniya ko'rsatilmagan"
+        },
+        {
+          "k": "relatedContacts",
+          "v": "Bog'liq kontaktlar"
+        },
+        {
+          "k": "relatedContactsNotFound",
+          "v": "Bog'liq kontaktlar topilmadi"
+        },
+        {
+          "k": "annualRevenueSuffix",
+          "v": "yillik daromad"
+        },
+        {
+          "k": "totalDealsLabel",
+          "v": "Jami bitimlar:"
+        },
+        {
+          "k": "lastContactLabel",
+          "v": "Oxirgi aloqa:"
+        },
+        {
+          "k": "annualRevenueLabel",
+          "v": "yillik daromad"
+        },
+        {
+          "k": "bankDetails",
+          "v": "Bank ma'lumotlari"
+        },
+        {
+          "k": "bankDetailsNotSpecified",
+          "v": "Bank ma'lumotlari ko'rsatilmagan"
+        },
+        {
+          "k": "birthdate",
+          "v": "Tug'ilgan sana"
+        },
+        {
+          "k": "email",
+          "v": "Email"
+        },
+        {
+          "k": "middleName",
+          "v": "Otasining ismi"
+        },
+        {
+          "k": "selected",
+          "v": "ta tanlangan"
+        },
+        {
+          "k": "stirInn",
+          "v": "STIR (INN)"
+        },
+        {
+          "k": "journeyFirstContact",
+          "v": "Birinchi aloqa"
+        },
+        {
+          "k": "journeyRegularCustomer",
+          "v": "Doimiy mijoz"
+        },
+        {
+          "k": "lead.list",
+          "v": "Lidlar ro'yxati"
+        },
+        {
+          "k": "lead.name",
+          "v": "Lid nomi"
+        },
+        {
+          "k": "lead.status.converted",
+          "v": "Konvertatsiya qilindi"
+        },
+        {
+          "k": "deal.list",
+          "v": "Bitimlar ro'yxati"
+        },
+        {
+          "k": "deal.name",
+          "v": "Bitim nomi"
+        },
+        {
+          "k": "contact.email",
+          "v": "Email"
+        },
+        {
+          "k": "activity.email",
+          "v": "Email"
+        },
+        {
+          "k": "pipeline.title",
+          "v": "Sotuv quvuri"
+        },
+        {
+          "k": "funnelAnalytics",
+          "v": "Funnel Analitika"
+        },
+        {
+          "k": "cohortAnalysis",
+          "v": "Cohort Analizi"
+        },
+        {
+          "k": "countRetention",
+          "v": "Mijoz soni"
+        },
+        {
+          "k": "avgCycleDays",
+          "v": "O'rtacha tsikl (kun)"
+        },
+        {
+          "k": "avgDealSize",
+          "v": "O'rtacha bitim hajmi"
+        },
+        {
+          "k": "pipelineOpportunities",
+          "v": "Faol imkoniyatlar"
+        },
+        {
+          "k": "cohortCount",
+          "v": "Cohort soni"
+        },
+        {
+          "k": "maxPeriod",
+          "v": "Maksimal kuzatuv davri"
+        },
+        {
+          "k": "noData",
+          "v": "Ma'lumot yo'q"
+        },
+        {
+          "k": "stagesByCount",
+          "v": "Bosqichlar bo'yicha funnel"
+        },
+        {
+          "k": "rfmClusters",
+          "v": "RFM Segmentatsiya"
+        },
+        {
+          "k": "winRateGauge",
+          "v": "Win Rate ko'rsatkichi"
+        },
+        {
+          "k": "baseRevenue",
+          "v": "Bazaviy daromad"
+        },
+        {
+          "k": "retentionMatrix",
+          "v": "Retention Matrisa"
+        },
+        {
+          "k": "revenueBasedBadge",
+          "v": "Daromad asosida"
+        },
+        {
+          "k": "cohortNoData",
+          "v": "Cohort ma'lumoti yo'q"
+        },
+        {
+          "k": "recencyAxis",
+          "v": "Recency (normalizatsiya)"
+        },
+        {
+          "k": "frequencyAxis",
+          "v": "Frequency (normalizatsiya)"
+        },
+        {
+          "k": "monetaryAxis",
+          "v": "Monetary (normalizatsiya)"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "emailSource",
+          "v": "Email"
+        },
+        {
+          "k": "emailType",
+          "v": "Email"
+        },
+        {
+          "k": "email",
+          "v": "Email"
+        },
+        {
+          "k": "contact.email",
+          "v": "Email"
+        },
+        {
+          "k": "activity.email",
+          "v": "Email"
+        }
+      ]
+    },
+    "dashboard": {
+      "total": 68,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "recentActivity",
+          "v": "So'nggi faoliyat"
+        },
+        {
+          "k": "quickActions",
+          "v": "Tezkor harakatlar"
+        },
+        {
+          "k": "totalUsers",
+          "v": "Jami foydalanuvchilar"
+        },
+        {
+          "k": "activeUsers",
+          "v": "Faol foydalanuvchilar"
+        },
+        {
+          "k": "totalSales",
+          "v": "Jami sotuvlar"
+        },
+        {
+          "k": "todayOrders",
+          "v": "Bugungi buyurtmalar"
+        },
+        {
+          "k": "pendingOrders",
+          "v": "Kutilayotgan buyurtmalar"
+        },
+        {
+          "k": "completedOrders",
+          "v": "Tugallangan buyurtmalar"
+        },
+        {
+          "k": "totalRevenue",
+          "v": "Jami daromad"
+        },
+        {
+          "k": "monthlyRevenue",
+          "v": "Oylik daromad"
+        },
+        {
+          "k": "salesChart",
+          "v": "Sotuvlar grafigi"
+        },
+        {
+          "k": "revenueChart",
+          "v": "Daromad grafigi"
+        },
+        {
+          "k": "topProducts",
+          "v": "Eng ko'p sotilgan mahsulotlar"
+        },
+        {
+          "k": "recentOrders",
+          "v": "So'nggi buyurtmalar"
+        },
+        {
+          "k": "systemHealth",
+          "v": "Tizim holati"
+        },
+        {
+          "k": "serverStatus",
+          "v": "Server holati"
+        },
+        {
+          "k": "databaseStatus",
+          "v": "Baza holati"
+        },
+        {
+          "k": "warehouseStatus",
+          "v": "Ombor holati"
+        },
+        {
+          "k": "financialSummary",
+          "v": "Moliyaviy xulosa"
+        },
+        {
+          "k": "hrSummary",
+          "v": "Kadrlar xulosa"
+        },
+        {
+          "k": "qualityMetrics",
+          "v": "Sifat ko'rsatkichlari"
+        },
+        {
+          "k": "oeeScore",
+          "v": "OEE ko'rsatkichi"
+        },
+        {
+          "k": "defectRate",
+          "v": "Nuqson darajasi"
+        },
+        {
+          "k": "chart.monthly",
+          "v": "Oylik statistika"
+        },
+        {
+          "k": "chart.weekly",
+          "v": "Haftalik statistika"
+        },
+        {
+          "k": "director.title",
+          "v": "Direktor paneli"
+        },
+        {
+          "k": "director.hitl",
+          "v": "Qaror talab etadigan arizalar"
+        },
+        {
+          "k": "auditor.title",
+          "v": "Auditor paneli"
+        },
+        {
+          "k": "todayMovements",
+          "v": "Today Harakatlar"
+        },
+        {
+          "k": "todayAmount",
+          "v": "today Amount"
+        },
+        {
+          "k": "awaitingApproval",
+          "v": "awaiting Approval"
+        },
+        {
+          "k": "lowStockAlerts",
+          "v": "low Stock Alerts"
+        },
+        {
+          "k": "recentFeed",
+          "v": "recent Feed"
+        },
+        {
+          "k": "warehouseMap",
+          "v": "Ombor Map"
+        },
+        {
+          "k": "myTasks",
+          "v": "my Tasks"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "todayAmount",
+          "v": "today Amount"
+        },
+        {
+          "k": "awaitingApproval",
+          "v": "awaiting Approval"
+        },
+        {
+          "k": "lowStockAlerts",
+          "v": "low Stock Alerts"
+        },
+        {
+          "k": "recentFeed",
+          "v": "recent Feed"
+        },
+        {
+          "k": "myTasks",
+          "v": "my Tasks"
+        }
+      ]
+    },
+    "design": {
+      "total": 78,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Dizayn va Prepress"
+        },
+        {
+          "k": "dashboard",
+          "v": "Dizayn paneli"
+        },
+        {
+          "k": "projectName",
+          "v": "Loyiha nomi"
+        },
+        {
+          "k": "projectStatus",
+          "v": "Loyiha holati"
+        },
+        {
+          "k": "briefReceived",
+          "v": "Brief qabul qilindi"
+        },
+        {
+          "k": "finalFile",
+          "v": "Yakuniy fayl"
+        },
+        {
+          "k": "proofing",
+          "v": "Pruf bosqichi"
+        },
+        {
+          "k": "fileFormat",
+          "v": "Fayl formati"
+        },
+        {
+          "k": "resolution",
+          "v": "Ruxsat (DPI)"
+        },
+        {
+          "k": "colorMode",
+          "v": "Rang rejimi"
+        },
+        {
+          "k": "colorProfile",
+          "v": "Rang profili"
+        },
+        {
+          "k": "safeZone",
+          "v": "Xavfsiz zona"
+        },
+        {
+          "k": "lineSpacing",
+          "v": "Satr oralig'i"
+        },
+        {
+          "k": "ai",
+          "v": "Adobe Illustrator"
+        },
+        {
+          "k": "designerAssigned",
+          "v": "Dizayner biriktirildi"
+        },
+        {
+          "k": "clientFeedback",
+          "v": "Mijoz fikri"
+        },
+        {
+          "k": "internalFeedback",
+          "v": "Ichki fikr"
+        },
+        {
+          "k": "clientApproval",
+          "v": "Mijoz tasdiqi"
+        },
+        {
+          "k": "assetLibrary",
+          "v": "Aktivlar kutubxonasi"
+        },
+        {
+          "k": "brandGuidelines",
+          "v": "Brend ko'rsatmalari"
+        },
+        {
+          "k": "brandColors",
+          "v": "Brend ranglari"
+        },
+        {
+          "k": "printSpecification",
+          "v": "Bosma spetsifikatsiya"
+        },
+        {
+          "k": "paperWeight",
+          "v": "Qog'oz og'irligi"
+        },
+        {
+          "k": "embossing",
+          "v": "Kabartma bosma"
+        },
+        {
+          "k": "foiling",
+          "v": "Folga bosma"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "ai",
+          "v": "Adobe Illustrator"
+        }
+      ]
+    },
+    "director": {
+      "total": 104,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Direktor paneli"
+        },
+        {
+          "k": "executiveSummary",
+          "v": "Ijroiya xulosasi"
+        },
+        {
+          "k": "companyHealth",
+          "v": "Kompaniya salomatligi"
+        },
+        {
+          "k": "strategicKPI",
+          "v": "Strategik KPI"
+        },
+        {
+          "k": "decisions",
+          "v": "Qarorlar kutmoqda"
+        },
+        {
+          "k": "pendingApprovals",
+          "v": "Tasdiq kutmoqda"
+        },
+        {
+          "k": "revenueTarget",
+          "v": "Daromad maqsadi"
+        },
+        {
+          "k": "revenueActual",
+          "v": "Haqiqiy daromad"
+        },
+        {
+          "k": "netProfit",
+          "v": "Sof foyda"
+        },
+        {
+          "k": "grossProfit",
+          "v": "Yalpi foyda"
+        },
+        {
+          "k": "burnRate",
+          "v": "Xarajat sur'ati"
+        },
+        {
+          "k": "cashFlow",
+          "v": "Pul oqimi"
+        },
+        {
+          "k": "operatingCashFlow",
+          "v": "Operatsion pul oqimi"
+        },
+        {
+          "k": "freeCashFlow",
+          "v": "Erkin pul oqimi"
+        },
+        {
+          "k": "roi",
+          "v": "Investitsiya daromadliligi"
+        },
+        {
+          "k": "salesPipeline",
+          "v": "Sotuv quvuri"
+        },
+        {
+          "k": "pipelineValue",
+          "v": "Quvur qiymati"
+        },
+        {
+          "k": "winRate",
+          "v": "Yutuq darajasi"
+        },
+        {
+          "k": "employeeCount",
+          "v": "Xodimlar soni"
+        },
+        {
+          "k": "weeklyHighlights",
+          "v": "Haftalik yutuqlar"
+        },
+        {
+          "k": "quarterlyReport",
+          "v": "Choraklik hisobot"
+        },
+        {
+          "k": "annualReport",
+          "v": "Yillik hisobot"
+        },
+        {
+          "k": "forecastRevenue",
+          "v": "Daromad prognozi"
+        },
+        {
+          "k": "worstCase",
+          "v": "Eng yomon stsenariy"
+        },
+        {
+          "k": "baseCase",
+          "v": "Asosiy stsenariy"
+        },
+        {
+          "k": "strategicGoal",
+          "v": "Strategik maqsad"
+        },
+        {
+          "k": "strategicGoals",
+          "v": "Strategik maqsadlar"
+        },
+        {
+          "k": "milestone",
+          "v": "Muhim belgi"
+        },
+        {
+          "k": "okr",
+          "v": "OKR (Maqsad va asosiy natijalar)"
+        },
+        {
+          "k": "keyResult",
+          "v": "Asosiy natija"
+        },
+        {
+          "k": "riskMatrix",
+          "v": "Risk matritsasi"
+        },
+        {
+          "k": "highRisk",
+          "v": "Yuqori risk"
+        },
+        {
+          "k": "mediumRisk",
+          "v": "O'rta risk"
+        },
+        {
+          "k": "lowRisk",
+          "v": "Past risk"
+        },
+        {
+          "k": "cfo",
+          "v": "Moliya Direktori"
+        },
+        {
+          "k": "coo",
+          "v": "Operatsiya Direktori"
+        },
+        {
+          "k": "cto",
+          "v": "Texnologiya Direktori"
+        },
+        {
+          "k": "hrDirector",
+          "v": "HR Direktori"
+        },
+        {
+          "k": "executiveTeam",
+          "v": "Ijroiya jamoasi"
+        },
+        {
+          "k": "stateFormula",
+          "v": "Kompaniya holat formulasi"
+        },
+        {
+          "k": "companyState",
+          "v": "Joriy holat"
+        },
+        {
+          "k": "stateThreshold",
+          "v": "Holat chegarasi sozlamalari"
+        },
+        {
+          "k": "idealPicture",
+          "v": "Ideal kartina"
+        },
+        {
+          "k": "idealVsActual",
+          "v": "Ideal vs Haqiqat"
+        },
+        {
+          "k": "weeklyProfitTarget",
+          "v": "Haftalik foyda maqsadi: 100 000 000 so'm"
+        },
+        {
+          "k": "weeklyRevenueTarget",
+          "v": "Haftalik daromad maqsadi: 800 000 000 so'm"
+        },
+        {
+          "k": "branchCountTarget",
+          "v": "Filiallar maqsadi: 15 ta"
+        },
+        {
+          "k": "stateGrowthDesc",
+          "v": "Investitsiya vaqti. KPI reja ustida."
+        },
+        {
+          "k": "gsdWeeklyProfit",
+          "v": "Haftalik yalpi foyda (GSD)"
+        },
+        {
+          "k": "gsdWeeklyRevenue",
+          "v": "Haftalik daromad (GSD)"
+        },
+        {
+          "k": "gsdOrders",
+          "v": "Bajarilgan buyurtmalar soni (GSD)"
+        },
+        {
+          "k": "executionDiaryToday",
+          "v": "Bugungi holat"
+        },
+        {
+          "k": "executionDiaryHistory",
+          "v": "O'tgan kunlar tarixi"
+        }
+      ],
+      "englishInRu": []
+    },
+    "errors": {
+      "total": 51,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "errorOccurred",
+          "v": "Xatolik yuz berdi"
+        },
+        {
+          "k": "tryAgain",
+          "v": "Qayta urinib ko'ring"
+        },
+        {
+          "k": "somethingWentWrong",
+          "v": "Nimadir noto'g'ri ketdi"
+        },
+        {
+          "k": "pageNotFound",
+          "v": "Sahifa topilmadi"
+        },
+        {
+          "k": "unauthorized",
+          "v": "Ruxsat berilmagan"
+        },
+        {
+          "k": "serverError",
+          "v": "Server xatosi"
+        },
+        {
+          "k": "networkError",
+          "v": "Tarmoq xatosi"
+        },
+        {
+          "k": "timeoutError",
+          "v": "Vaqt tugadi"
+        },
+        {
+          "k": "requiredField",
+          "v": "Majburiy maydon"
+        },
+        {
+          "k": "invalidEmail",
+          "v": "Noto'g'ri email"
+        },
+        {
+          "k": "invalidPhone",
+          "v": "Noto'g'ri telefon raqami"
+        },
+        {
+          "k": "passwordTooShort",
+          "v": "Parol juda qisqa"
+        },
+        {
+          "k": "passwordsDoNotMatch",
+          "v": "Parollar mos kelmaydi"
+        },
+        {
+          "k": "emailAlreadyExists",
+          "v": "Email allaqachon mavjud"
+        },
+        {
+          "k": "usernameAlreadyExists",
+          "v": "Foydalanuvchi nomi allaqachon mavjud"
+        },
+        {
+          "k": "duplicateEntry",
+          "v": "Bunday ma'lumot allaqachon mavjud"
+        },
+        {
+          "k": "invalidCredentials",
+          "v": "Noto'g'ri login yoki parol"
+        },
+        {
+          "k": "sessionExpired",
+          "v": "Sessiya tugadi"
+        },
+        {
+          "k": "tokenExpired",
+          "v": "Token muddati tugadi"
+        },
+        {
+          "k": "insufficientPermissions",
+          "v": "Ruxsat yetarli emas"
+        },
+        {
+          "k": "fileTooLarge",
+          "v": "Fayl juda katta"
+        },
+        {
+          "k": "serviceUnavailable",
+          "v": "Xizmat mavjud emas"
+        },
+        {
+          "k": "generic",
+          "v": "Xatolik yuz berdi"
+        },
+        {
+          "k": "network",
+          "v": "Tarmoq xatosi"
+        },
+        {
+          "k": "validation",
+          "v": "Validatsiya xatosi"
+        },
+        {
+          "k": "server",
+          "v": "Server xatosi"
+        },
+        {
+          "k": "timeout",
+          "v": "So'rov muddati tugadi"
+        },
+        {
+          "k": "duplicate",
+          "v": "Bunday ma'lumot allaqachon mavjud"
+        },
+        {
+          "k": "insufficientStock",
+          "v": "Zaxira yetarli emas"
+        },
+        {
+          "k": "certificateInvalid",
+          "v": "Sertifikat yo'q yoki muddati tugagan"
+        },
+        {
+          "k": "periodLocked",
+          "v": "Bu davr yopilgan"
+        },
+        {
+          "k": "tooManyRequests",
+          "v": "Juda ko'p so'rov. Keyinroq urinib ko'ring."
+        },
+        {
+          "k": "invalidFileType",
+          "v": "Ruxsat etilmagan fayl turi"
+        },
+        {
+          "k": "aiUnavailable",
+          "v": "AI xizmati hozirda mavjud emas"
+        }
+      ],
+      "englishInRu": []
+    },
+    "finance": {
+      "total": 432,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "chartOfAccounts",
+          "v": "Hisoblar rejasi"
+        },
+        {
+          "k": "accountsPayable",
+          "v": "Kreditorlik qarzi"
+        },
+        {
+          "k": "accountsReceivable",
+          "v": "Debitorlik qarzi"
+        },
+        {
+          "k": "cashFlow",
+          "v": "Pul oqimi"
+        },
+        {
+          "k": "balanceSheet",
+          "v": "Balans hisoboti"
+        },
+        {
+          "k": "incomeStatement",
+          "v": "Daromad hisoboti"
+        },
+        {
+          "k": "invoiceNumber",
+          "v": "Hisob-faktura raqami"
+        },
+        {
+          "k": "dueDate",
+          "v": "To'lov muddati"
+        },
+        {
+          "k": "paymentMethod",
+          "v": "To'lov usuli"
+        },
+        {
+          "k": "bankTransfer",
+          "v": "Bank o'tkazmasi"
+        },
+        {
+          "k": "vatRate",
+          "v": "QQS stavkasi"
+        },
+        {
+          "k": "incomeTax",
+          "v": "Daromad solig'i"
+        },
+        {
+          "k": "exchangeRate",
+          "v": "Valyuta kursi"
+        },
+        {
+          "k": "uzs",
+          "v": "UZS (so'm)"
+        },
+        {
+          "k": "usd",
+          "v": "USD (dollar)"
+        },
+        {
+          "k": "eur",
+          "v": "EUR (yevro)"
+        },
+        {
+          "k": "rub",
+          "v": "RUB (rubl)"
+        },
+        {
+          "k": "partiallyPaid",
+          "v": "Qisman to'langan"
+        },
+        {
+          "k": "overdue",
+          "v": "Muddati o'tgan"
+        },
+        {
+          "k": "creditLimit",
+          "v": "Kredit limiti"
+        },
+        {
+          "k": "journalEntry",
+          "v": "Jurnal yozuvi"
+        },
+        {
+          "k": "journalEntries",
+          "v": "Jurnal yozuvlari"
+        },
+        {
+          "k": "postingDate",
+          "v": "E'lon sanasi"
+        },
+        {
+          "k": "documentNumber",
+          "v": "Hujjat raqami"
+        },
+        {
+          "k": "accountCode",
+          "v": "Hisob kodi"
+        },
+        {
+          "k": "accountName",
+          "v": "Hisob nomi"
+        },
+        {
+          "k": "accountType",
+          "v": "Hisob turi"
+        },
+        {
+          "k": "costCenter",
+          "v": "Xarajat markazi"
+        },
+        {
+          "k": "fiscalYear",
+          "v": "Moliya yili"
+        },
+        {
+          "k": "fiscalPeriod",
+          "v": "Moliya davri"
+        },
+        {
+          "k": "periodClosed",
+          "v": "Davr yopiq"
+        },
+        {
+          "k": "auditTrail",
+          "v": "Audit izi"
+        },
+        {
+          "k": "financialReport",
+          "v": "Moliyaviy hisobot"
+        },
+        {
+          "k": "taxReport",
+          "v": "Soliq hisoboti"
+        },
+        {
+          "k": "bankStatement",
+          "v": "Bank ko'chirmasi"
+        },
+        {
+          "k": "purchaseInvoice",
+          "v": "Xarid hisob-fakturasi"
+        },
+        {
+          "k": "prepayment",
+          "v": "Oldindan to'lov"
+        },
+        {
+          "k": "pendingApproval",
+          "v": "Tasdiq kutilmoqda"
+        },
+        {
+          "k": "totalGross",
+          "v": "Jami yalpi oylik"
+        },
+        {
+          "k": "salaryDetails",
+          "v": "Oylik tafsilotlari"
+        },
+        {
+          "k": "paymentType",
+          "v": "To'lov turi"
+        },
+        {
+          "k": "paymentTypes",
+          "v": "To'lov turlari"
+        },
+        {
+          "k": "hourlyRate",
+          "v": "Soatlik stavka"
+        },
+        {
+          "k": "pieceworkRate",
+          "v": "Donabay stavka"
+        },
+        {
+          "k": "unit",
+          "v": "O'lchov birligi"
+        },
+        {
+          "k": "loans",
+          "v": "Qarz to'lovi"
+        },
+        {
+          "k": "totalTaxes",
+          "v": "Jami soliqlar"
+        },
+        {
+          "k": "taxRules",
+          "v": "Soliq qoidalari"
+        },
+        {
+          "k": "pensionFund",
+          "v": "Pensiya jamg'armasi"
+        },
+        {
+          "k": "importantNotes",
+          "v": "Muhim eslatmalar"
+        },
+        {
+          "k": "period",
+          "v": "Davr (Oy)"
+        },
+        {
+          "k": "financeDashboard",
+          "v": "Moliya paneli"
+        },
+        {
+          "k": "totalRevenue",
+          "v": "Jami Daromad"
+        },
+        {
+          "k": "totalExpenses",
+          "v": "Jami Xarajatlar"
+        },
+        {
+          "k": "netProfit",
+          "v": "Sof Foyda"
+        },
+        {
+          "k": "unpaidInvoices",
+          "v": "To'lanmagan Hisob-fakturalar"
+        },
+        {
+          "k": "recentTransactions",
+          "v": "Oxirgi Tranzaksiyalar"
+        },
+        {
+          "k": "financialIndicators",
+          "v": "Moliyaviy Ko'rsatkichlar"
+        },
+        {
+          "k": "revenuePlan",
+          "v": "Daromad rejasi"
+        },
+        {
+          "k": "expenseBudget",
+          "v": "Xarajat byudjeti"
+        },
+        {
+          "k": "quickActions",
+          "v": "Tezkor Harakatlar"
+        },
+        {
+          "k": "dailyReport",
+          "v": "Kunlik hisobot"
+        },
+        {
+          "k": "cfoStrategicPanel",
+          "v": "Moliya direktori strategik paneli"
+        },
+        {
+          "k": "noFinancialData",
+          "v": "Moliyaviy ma'lumotlar topilmadi"
+        },
+        {
+          "k": "noFinancialReports",
+          "v": "Hozircha hech qanday moliyaviy hisobotlar mavjud emas"
+        },
+        {
+          "k": "cashBalance",
+          "v": "Pul qoldiq"
+        },
+        {
+          "k": "inBankAccounts",
+          "v": "Bank hisoblarida"
+        },
+        {
+          "k": "workingCapital",
+          "v": "Aylanma kapital"
+        },
+        {
+          "k": "currentAssetsMinusDebt",
+          "v": "Joriy aktivlar - Qarz"
+        },
+        {
+          "k": "currentRatioDesc",
+          "v": "Joriy aktivlar / Joriy qarzlar"
+        },
+        {
+          "k": "grossProfitMargin",
+          "v": "Yalpi foyda marjasi"
+        },
+        {
+          "k": "netProfitMargin",
+          "v": "Sof foyda marjasi"
+        },
+        {
+          "k": "currencyBalances",
+          "v": "Valyuta bo'yicha pul qoldiqlari"
+        },
+        {
+          "k": "allBankFunds",
+          "v": "Barcha bank hisoblaridagi mablag'lar"
+        },
+        {
+          "k": "noDataAvailable",
+          "v": "Ma'lumot mavjud emas"
+        },
+        {
+          "k": "profitabilityTrend",
+          "v": "Rentabellik tendensiyasi"
+        },
+        {
+          "k": "last6MonthsRevExp",
+          "v": "Oxirgi 6 oy daromad va xarajatlar"
+        },
+        {
+          "k": "quickLinks",
+          "v": "Tezkor havolalar"
+        },
+        {
+          "k": "cfoMainModules",
+          "v": "CFO uchun asosiy modullar"
+        },
+        {
+          "k": "orderCosting",
+          "v": "Buyurtma tannarxi"
+        },
+        {
+          "k": "financialReports",
+          "v": "Moliyaviy hisobotlar"
+        },
+        {
+          "k": "hourlyPay",
+          "v": "Vaqtbay (Soatbay)"
+        },
+        {
+          "k": "pieceworkPay",
+          "v": "Donabay (Mahsulotbay)"
+        },
+        {
+          "k": "selectEmployee",
+          "v": "Xodimni tanlang"
+        },
+        {
+          "k": "invoiceDetails",
+          "v": "Hisob-faktura ma'lumotlari"
+        },
+        {
+          "k": "invoiceTitle",
+          "v": "Hisob nomi"
+        },
+        {
+          "k": "invoiceCreated",
+          "v": "Hisob-faktura yaratildi"
+        },
+        {
+          "k": "invoiceMoved",
+          "v": "Hisob-faktura ko'chirildi"
+        },
+        {
+          "k": "invoicesDeleted",
+          "v": "Hisob-fakturalar o'chirildi"
+        },
+        {
+          "k": "linkedDeal",
+          "v": "Bog'langan bitim"
+        },
+        {
+          "k": "selectContact",
+          "v": "Kontakt tanlang"
+        },
+        {
+          "k": "selectCompany",
+          "v": "Kompaniya tanlang"
+        },
+        {
+          "k": "selectDeal",
+          "v": "Bitim tanlang"
+        },
+        {
+          "k": "selectMethod",
+          "v": "Usul tanlang"
+        },
+        {
+          "k": "noProducts",
+          "v": "Tovarlar yo'q"
+        },
+        {
+          "k": "noPayments",
+          "v": "To'lovlar yo'q"
+        },
+        {
+          "k": "paymentHistory",
+          "v": "To'lovlar tarixi"
+        },
+        {
+          "k": "totalAmount",
+          "v": "Jami summa"
+        },
+        {
+          "k": "dealOptional",
+          "v": "Bitim (ixtiyoriy)"
+        },
+        {
+          "k": "gl.entry",
+          "v": "Journal yozuvi"
+        },
+        {
+          "k": "gl.account",
+          "v": "Hisob kodi"
+        },
+        {
+          "k": "ap.title",
+          "v": "Kreditorlik hisobi (AP)"
+        },
+        {
+          "k": "ap.dueDate",
+          "v": "To'lov muddati"
+        },
+        {
+          "k": "ap.status.overdue",
+          "v": "Muddati o'tgan"
+        },
+        {
+          "k": "ar.title",
+          "v": "Debitorlik hisobi (AR)"
+        },
+        {
+          "k": "ar.dueDate",
+          "v": "To'lov muddati"
+        },
+        {
+          "k": "ar.outstanding",
+          "v": "Qolgan qarz"
+        },
+        {
+          "k": "ar.creditLimit",
+          "v": "Kredit limiti"
+        },
+        {
+          "k": "ar.receipt",
+          "v": "To'lov kvitansiyasi"
+        },
+        {
+          "k": "budget.plan",
+          "v": "Byudjet rejasi"
+        },
+        {
+          "k": "budget.actual",
+          "v": "Haqiqiy xarajat"
+        },
+        {
+          "k": "budget.approved",
+          "v": "Tasdiqlangan byudjet"
+        },
+        {
+          "k": "analytics.title",
+          "v": "Moliyaviy tahlil"
+        },
+        {
+          "k": "analytics.cashflow",
+          "v": "Pul oqimi"
+        },
+        {
+          "k": "analytics.profitMargin",
+          "v": "Foyda marjasi"
+        },
+        {
+          "k": "tax.income",
+          "v": "Daromad solig'i"
+        },
+        {
+          "k": "tax.social",
+          "v": "Ijtimoiy soliq"
+        },
+        {
+          "k": "advance.title",
+          "v": "Avans to'lov"
+        },
+        {
+          "k": "advance.amount",
+          "v": "Avans miqdori"
+        },
+        {
+          "k": "advance.approved",
+          "v": "Avans tasdiqlandi"
+        },
+        {
+          "k": "advance.rejected",
+          "v": "Avans rad etildi"
+        },
+        {
+          "k": "unpaidBillsList",
+          "v": "To'lanmagan schyotlar ro'yxati"
+        },
+        {
+          "k": "breakEvenAnalysis",
+          "v": "Break-Even Tahlili"
+        },
+        {
+          "k": "analysisParams",
+          "v": "Tahlil parametrlari"
+        },
+        {
+          "k": "productNameLabel",
+          "v": "Mahsulot nomi"
+        },
+        {
+          "k": "periodLabel",
+          "v": "Davr (YYYY-MM)"
+        },
+        {
+          "k": "contributionMarginPerUnit",
+          "v": "Contribution Margin/dona"
+        },
+        {
+          "k": "bepUnits",
+          "v": "BEP birliklar"
+        },
+        {
+          "k": "bepRevenue",
+          "v": "BEP daromad"
+        },
+        {
+          "k": "safetyMargin",
+          "v": "Xavfsizlik chekkasi"
+        },
+        {
+          "k": "cvpChart",
+          "v": "CVP Diagrammasi"
+        },
+        {
+          "k": "cvpSubtitle",
+          "v": "Daromad vs Umumiy xarajat"
+        },
+        {
+          "k": "totalCostLabel",
+          "v": "Umumiy xarajat"
+        },
+        {
+          "k": "fixedCostLabel",
+          "v": "Doimiy xarajat"
+        },
+        {
+          "k": "vcPerUnit",
+          "v": "OzGaruvchan xarajat/dona"
+        },
+        {
+          "k": "actualSalesQty",
+          "v": "Haqiqiy sotuv"
+        },
+        {
+          "k": "safetyQty",
+          "v": "Xavfsizlik (dona)"
+        },
+        {
+          "k": "operatingLeverage",
+          "v": "Operating Leverage"
+        },
+        {
+          "k": "pricingTiers",
+          "v": "Narxlar Tizimi"
+        },
+        {
+          "k": "pricingSubtitle",
+          "v": "Miqdoriy chegirmali narx darajalari (Tiered Pricing)"
+        },
+        {
+          "k": "tierNameLabel",
+          "v": "Daraja nomi"
+        },
+        {
+          "k": "minQtyLabel",
+          "v": "Min miqdor"
+        },
+        {
+          "k": "maxQtyLabel",
+          "v": "Max miqdor"
+        },
+        {
+          "k": "priceUzsLabel",
+          "v": "Narx (UZS)"
+        },
+        {
+          "k": "quantityLabel",
+          "v": "Miqdor (dona)"
+        },
+        {
+          "k": "appliedTierLabel",
+          "v": "Qolllaniladigan daraja"
+        },
+        {
+          "k": "unitPriceLabel",
+          "v": "Birlik narxi"
+        },
+        {
+          "k": "noTiersFound",
+          "v": "Bu mahsulot uchun narx darajasi topilmadi"
+        },
+        {
+          "k": "enterProductName",
+          "v": "Mahsulot nomi kiriting"
+        },
+        {
+          "k": "variance.title",
+          "v": "Variance tahlili"
+        },
+        {
+          "k": "variance.placeholder",
+          "v": "Buyurtma raqamini kiriting (masalan: 1)"
+        },
+        {
+          "k": "variance.stdCost",
+          "v": "Standart xarajat"
+        },
+        {
+          "k": "variance.actualCost",
+          "v": "Haqiqiy xarajat"
+        },
+        {
+          "k": "variance.totalVariance",
+          "v": "Jami variance"
+        },
+        {
+          "k": "variance.composition",
+          "v": "Variance tarkibi"
+        },
+        {
+          "k": "variance.auditRequired",
+          "v": "Audit talab qilinadi"
+        },
+        {
+          "k": "variance.chart",
+          "v": "Variance diagrammasi"
+        },
+        {
+          "k": "variance.labeling",
+          "v": "Labelling xulosasi"
+        },
+        {
+          "k": "variance.notFound",
+          "v": "Buyurtma topilmadi"
+        },
+        {
+          "k": "variance.mpv",
+          "v": "MPV (narx)"
+        },
+        {
+          "k": "variance.mqv",
+          "v": "MQV (miqdor)"
+        },
+        {
+          "k": "variance.lrv",
+          "v": "LRV (mehnat stavka)"
+        },
+        {
+          "k": "variance.lev",
+          "v": "LEV (mehnat sarf)"
+        },
+        {
+          "k": "variance.ov",
+          "v": "OV (overhead)"
+        },
+        {
+          "k": "cfo.altman.greyZone",
+          "v": "Kulrang zona"
+        },
+        {
+          "k": "cfo.risk.title",
+          "v": "Risk Ko'rsatkichlari"
+        },
+        {
+          "k": "cfo.risk.arDelay",
+          "v": "AR kechik."
+        },
+        {
+          "k": "cfo.altman.title",
+          "v": "Altman Z-Score"
+        },
+        {
+          "k": "cfo.altman.grossMargin",
+          "v": "Yalpi marja"
+        },
+        {
+          "k": "cfo.cashflow.minReserve",
+          "v": "Min rezerv"
+        },
+        {
+          "k": "productPlaceholder",
+          "v": "Masalan: Offset A4"
+        },
+        {
+          "k": "netCashFlow",
+          "v": "Sof pul oqimi"
+        },
+        {
+          "k": "incomeExpense",
+          "v": "income Expense"
+        },
+        {
+          "k": "currentPeriod",
+          "v": "current Period"
+        },
+        {
+          "k": "budgetLines",
+          "v": "Byudjet Lines"
+        },
+        {
+          "k": "budgetManagement",
+          "v": "Byudjet Management"
+        },
+        {
+          "k": "periodType",
+          "v": "Period Turi"
+        },
+        {
+          "k": "overBudget",
+          "v": "Over Byudjet"
+        },
+        {
+          "k": "withinBudget",
+          "v": "Within Byudjet"
+        },
+        {
+          "k": "periodClosing",
+          "v": "period Closing"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "cfo.altman.title",
+          "v": "Altman Z-Score"
+        },
+        {
+          "k": "incomeExpense",
+          "v": "income Expense"
+        },
+        {
+          "k": "currentPeriod",
+          "v": "current Period"
+        },
+        {
+          "k": "periodClosing",
+          "v": "period Closing"
+        }
+      ]
+    },
+    "footer": {
+      "total": 2,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "rights",
+          "v": "Barcha huquqlar himoyalangan"
+        }
+      ],
+      "englishInRu": []
+    },
+    "glPosting": {
+      "total": 6,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "rejected",
+          "v": "Rad etilgan"
+        }
+      ],
+      "englishInRu": []
+    },
+    "hr": {
+      "total": 384,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "employeeList",
+          "v": "Xodimlar ro'yxati"
+        },
+        {
+          "k": "employeeDetails",
+          "v": "Xodim ma'lumotlari"
+        },
+        {
+          "k": "fullName",
+          "v": "To'liq ism"
+        },
+        {
+          "k": "middleName",
+          "v": "Otasining ismi"
+        },
+        {
+          "k": "employeeId",
+          "v": "Xodim ID"
+        },
+        {
+          "k": "dateOfBirth",
+          "v": "Tug'ilgan sana"
+        },
+        {
+          "k": "maritalStatus",
+          "v": "Oilaviy holati"
+        },
+        {
+          "k": "inn",
+          "v": "INN (STIR)"
+        },
+        {
+          "k": "bankAccount",
+          "v": "Bank hisobi"
+        },
+        {
+          "k": "emergencyContact",
+          "v": "Favqulodda aloqa"
+        },
+        {
+          "k": "emergencyContacts",
+          "v": "Favqulodda aloqalar"
+        },
+        {
+          "k": "contactPhone",
+          "v": "Aloqa telefoni"
+        },
+        {
+          "k": "morningShift",
+          "v": "Ertalabki smena"
+        },
+        {
+          "k": "eveningShift",
+          "v": "Kechki smena"
+        },
+        {
+          "k": "nightShift",
+          "v": "Tungi smena"
+        },
+        {
+          "k": "leaveRequest",
+          "v": "Ta'til so'rovi"
+        },
+        {
+          "k": "annualLeave",
+          "v": "Yillik ta'til"
+        },
+        {
+          "k": "sickLeave",
+          "v": "Kasallik varaqasi"
+        },
+        {
+          "k": "attendanceRate",
+          "v": "Davomat darajasi"
+        },
+        {
+          "k": "probation",
+          "v": "Sinov muddati"
+        },
+        {
+          "k": "totalEmployees",
+          "v": "Jami xodimlar"
+        },
+        {
+          "k": "employeeProfile",
+          "v": "Xodim profili"
+        },
+        {
+          "k": "socialInsurance",
+          "v": "Ijtimoiy sug'urta"
+        },
+        {
+          "k": "accountNumber",
+          "v": "Hisob raqami"
+        },
+        {
+          "k": "attendanceStats",
+          "v": "Davomat statistikasi"
+        },
+        {
+          "k": "attestationDate",
+          "v": "Attestatsiya sanasi"
+        },
+        {
+          "k": "bankDetails",
+          "v": "Bank ma'lumotlari"
+        },
+        {
+          "k": "bankName",
+          "v": "Bank nomi"
+        },
+        {
+          "k": "birthDate",
+          "v": "Tug'ilgan sana"
+        },
+        {
+          "k": "birthPlace",
+          "v": "Tug'ilgan joy"
+        },
+        {
+          "k": "cardHolder",
+          "v": "Karta egasi"
+        },
+        {
+          "k": "cardNumber",
+          "v": "Karta raqami"
+        },
+        {
+          "k": "childrenCount",
+          "v": "Bolalar soni"
+        },
+        {
+          "k": "ckpAndAttestation",
+          "v": "CKP va Attestatsiya"
+        },
+        {
+          "k": "ckpCode",
+          "v": "CKP kodi"
+        },
+        {
+          "k": "contactInfo",
+          "v": "Aloqa ma'lumotlari"
+        },
+        {
+          "k": "employeeNotFound",
+          "v": "Xodim topilmadi"
+        },
+        {
+          "k": "familyInfo",
+          "v": "Oila ma'lumotlari"
+        },
+        {
+          "k": "hierarchyLevel",
+          "v": "Iyerarxiya darajasi"
+        },
+        {
+          "k": "householdMembers",
+          "v": "Oila a'zolari"
+        },
+        {
+          "k": "householdSize",
+          "v": "Oila tarkibi"
+        },
+        {
+          "k": "housingType",
+          "v": "Uy-joy turi"
+        },
+        {
+          "k": "issuedBy",
+          "v": "Kim tomonidan berilgan"
+        },
+        {
+          "k": "issuedDate",
+          "v": "Berilgan sana"
+        },
+        {
+          "k": "lateDays",
+          "v": "Kechikkan kunlar"
+        },
+        {
+          "k": "notAssignedToStructure",
+          "v": "Tuzilmaga biriktirilmagan"
+        },
+        {
+          "k": "partTime",
+          "v": "Yarim stavka"
+        },
+        {
+          "k": "passportInfo",
+          "v": "Pasport ma'lumotlari"
+        },
+        {
+          "k": "passportNumber",
+          "v": "Pasport raqami"
+        },
+        {
+          "k": "passportSeries",
+          "v": "Pasport seriyasi"
+        },
+        {
+          "k": "presentDays",
+          "v": "Kelgan kunlar"
+        },
+        {
+          "k": "previousPosition",
+          "v": "Avvalgi lavozim"
+        },
+        {
+          "k": "totalDays",
+          "v": "Jami kunlar"
+        },
+        {
+          "k": "employee.list",
+          "v": "Xodimlar ro'yxati"
+        },
+        {
+          "k": "employee.profile",
+          "v": "Xodim profili"
+        },
+        {
+          "k": "employee.middleName",
+          "v": "Otasining ismi"
+        },
+        {
+          "k": "employee.dateOfBirth",
+          "v": "Tug'ilgan sana"
+        },
+        {
+          "k": "employee.phone",
+          "v": "Telefon raqami"
+        },
+        {
+          "k": "employee.email",
+          "v": "Email"
+        },
+        {
+          "k": "attendance.status.late",
+          "v": "Kech keldi"
+        },
+        {
+          "k": "attendance.status.halfDay",
+          "v": "Yarim kun"
+        },
+        {
+          "k": "attendance.summary",
+          "v": "Davomat xisoboti"
+        },
+        {
+          "k": "attendance.presentDays",
+          "v": "Kelgan kunlar"
+        },
+        {
+          "k": "attendance.absentDays",
+          "v": "Kelmagan kunlar"
+        },
+        {
+          "k": "attendance.lateDays",
+          "v": "Kech kelgan kunlar"
+        },
+        {
+          "k": "leave.title",
+          "v": "Ta'til so'rovi"
+        },
+        {
+          "k": "leave.type",
+          "v": "Ta'til turi"
+        },
+        {
+          "k": "leave.type.annual",
+          "v": "Yillik ta'til"
+        },
+        {
+          "k": "leave.type.sick",
+          "v": "Kasallik ta'tili"
+        },
+        {
+          "k": "leave.type.unpaid",
+          "v": "Haq to'lanmaydigan ta'til"
+        },
+        {
+          "k": "leave.type.maternity",
+          "v": "Tug'ruq ta'tili"
+        },
+        {
+          "k": "leave.days",
+          "v": "Kunlar soni"
+        },
+        {
+          "k": "leave.balance",
+          "v": "Ta'til balansi"
+        },
+        {
+          "k": "kpi.title",
+          "v": "KPI ko'rsatkichlari"
+        },
+        {
+          "k": "kpi.score",
+          "v": "Ko'rsatkich bali"
+        },
+        {
+          "k": "department.name",
+          "v": "Bo'lim nomi"
+        },
+        {
+          "k": "department.headcount",
+          "v": "Xodimlar soni"
+        },
+        {
+          "k": "position.name",
+          "v": "Lavozim nomi"
+        },
+        {
+          "k": "position.grade",
+          "v": "Tarif toifasi"
+        },
+        {
+          "k": "recruitment.applicant",
+          "v": "Ariza beruvchi"
+        },
+        {
+          "k": "gsdDefinition",
+          "v": "Lavozimning asosiy o'lchanadigan ko'rsatkichi"
+        },
+        {
+          "k": "gsdTarget",
+          "v": "GSD maqsad (haftalik)"
+        },
+        {
+          "k": "gsdActual",
+          "v": "GSD haqiqiy natija"
+        },
+        {
+          "k": "weeklyGsdReport",
+          "v": "Haftalik GSD hisoboti"
+        },
+        {
+          "k": "gsdDynamics",
+          "v": "GSD dinamikasi (12 oy)"
+        },
+        {
+          "k": "prevWeekGsd",
+          "v": "O'tgan hafta GSD"
+        },
+        {
+          "k": "onboardingRoadmap",
+          "v": "Onboarding yo'l xaritasi"
+        },
+        {
+          "k": "successFactors",
+          "v": "Muvaffaqiyat omillari"
+        },
+        {
+          "k": "shiftScheduleTitle",
+          "v": "Smena Jadvali"
+        },
+        {
+          "k": "totalEmployeesLabel",
+          "v": "Jami Xodimlar"
+        },
+        {
+          "k": "morningShiftLabel",
+          "v": "Ertalabi Smena"
+        },
+        {
+          "k": "eveningShiftLabel",
+          "v": "Kechki Smena"
+        },
+        {
+          "k": "nightShiftLabel",
+          "v": "Tungi Smena"
+        },
+        {
+          "k": "shiftNoAssignment",
+          "v": "Smena belgilanmagan"
+        },
+        {
+          "k": "shiftCount",
+          "v": "Smena soni"
+        },
+        {
+          "k": "documentWorkflow",
+          "v": "Hujjat oqimi"
+        },
+        {
+          "k": "documentWorkflowDesc",
+          "v": "Barcha hujjatlar org-chart orqali yo'naltiriladi"
+        },
+        {
+          "k": "documentType",
+          "v": "Hujjat turi"
+        },
+        {
+          "k": "documentNumber",
+          "v": "Hujjat raqami"
+        },
+        {
+          "k": "documentStatus",
+          "v": "Hujjat holati"
+        },
+        {
+          "k": "pendingApprovalCount",
+          "v": "Tasdiq kutilmoqda"
+        },
+        {
+          "k": "totalDocuments",
+          "v": "Jami hujjatlar"
+        },
+        {
+          "k": "myDocuments",
+          "v": "Mening hujjatlarim"
+        },
+        {
+          "k": "pendingDocuments",
+          "v": "Tasdiq kutayotganlar"
+        },
+        {
+          "k": "docTypeLeave",
+          "v": "Ta'til so'rovi"
+        },
+        {
+          "k": "docTypeAdvance",
+          "v": "Avans so'rovi"
+        },
+        {
+          "k": "docTypeExpense",
+          "v": "Xarajat talabi"
+        },
+        {
+          "k": "docTypeIncident",
+          "v": "Hodisa hisoboti"
+        },
+        {
+          "k": "docTypePIP",
+          "v": "PIP Rejasi"
+        },
+        {
+          "k": "statusRejected",
+          "v": "Rad etildi"
+        },
+        {
+          "k": "statusCancelled",
+          "v": "Bekor qilindi"
+        },
+        {
+          "k": "approvalNotes",
+          "v": "Izoh (ixtiyoriy)"
+        },
+        {
+          "k": "documentDetails",
+          "v": "Hujjat tafsilotlari"
+        },
+        {
+          "k": "documentCreated",
+          "v": "Hujjat yaratildi"
+        },
+        {
+          "k": "documentApproved",
+          "v": "Hujjat tasdiqlandi"
+        },
+        {
+          "k": "documentRejected",
+          "v": "Hujjat rad etildi"
+        },
+        {
+          "k": "commentOptional",
+          "v": "Izoh (ixtiyoriy)"
+        },
+        {
+          "k": "docContentPlaceholder",
+          "v": "Hujjat mazmuni va tafsilotlari..."
+        },
+        {
+          "k": "noDocuments",
+          "v": "Hali hujjat yo'q"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "employee.email",
+          "v": "Email"
+        }
+      ]
+    },
+    "inventory": {
+      "total": 12,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "activeCount",
+          "v": "active Count"
+        },
+        {
+          "k": "planNo",
+          "v": "Plan Yo'q"
+        },
+        {
+          "k": "systemQty",
+          "v": "system Qty"
+        },
+        {
+          "k": "actualQty",
+          "v": "actual Qty"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "activeCount",
+          "v": "active Count"
+        },
+        {
+          "k": "systemQty",
+          "v": "system Qty"
+        },
+        {
+          "k": "actualQty",
+          "v": "actual Qty"
+        }
+      ]
+    },
+    "iot": {
+      "total": 156,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "IoT monitoring"
+        },
+        {
+          "k": "dashboard",
+          "v": "IoT paneli"
+        },
+        {
+          "k": "deviceName",
+          "v": "Qurilma nomi"
+        },
+        {
+          "k": "deviceType",
+          "v": "Qurilma turi"
+        },
+        {
+          "k": "deviceId",
+          "v": "Qurilma ID"
+        },
+        {
+          "k": "deviceStatus",
+          "v": "Qurilma holati"
+        },
+        {
+          "k": "maintenance",
+          "v": "Texnik xizmatda"
+        },
+        {
+          "k": "sensorType",
+          "v": "Sensor turi"
+        },
+        {
+          "k": "unit",
+          "v": "O'lchov birligi"
+        },
+        {
+          "k": "timestamp",
+          "v": "Vaqt belgisi"
+        },
+        {
+          "k": "realtime",
+          "v": "Real vaqt"
+        },
+        {
+          "k": "liveData",
+          "v": "Jonli ma'lumotlar"
+        },
+        {
+          "k": "upperThreshold",
+          "v": "Yuqori chegara"
+        },
+        {
+          "k": "lowerThreshold",
+          "v": "Pastki chegara"
+        },
+        {
+          "k": "lastCalibration",
+          "v": "Oxirgi kalibrovka"
+        },
+        {
+          "k": "maintenanceSchedule",
+          "v": "Texnik xizmat jadvali"
+        },
+        {
+          "k": "nextMaintenance",
+          "v": "Keyingi texnik xizmat"
+        },
+        {
+          "k": "energyConsumption",
+          "v": "Energiya iste'moli"
+        },
+        {
+          "k": "activeSensors",
+          "v": "Faol sensorlar"
+        },
+        {
+          "k": "sensorsOnline",
+          "v": "sensorlar onlayn"
+        },
+        {
+          "k": "machinesWithSensors",
+          "v": "sensor ulangan uskunalar"
+        },
+        {
+          "k": "avgOee",
+          "v": "O'rtacha OEE"
+        },
+        {
+          "k": "noData",
+          "v": "Ma'lumot yo'q"
+        },
+        {
+          "k": "tabPredictive",
+          "v": "Prognoz TA"
+        },
+        {
+          "k": "noActiveSensors",
+          "v": "Tizimda faol sensorlar aniqlanmadi"
+        },
+        {
+          "k": "oeeTitle",
+          "v": "OEE Dinamikasi (30 kun)"
+        },
+        {
+          "k": "oeeByMachine",
+          "v": "Uskunalar bo'yicha OEE"
+        },
+        {
+          "k": "allGood",
+          "v": "Hammasi joyida!"
+        },
+        {
+          "k": "noActiveAlerts",
+          "v": "Hozircha faol texnik muammolar aniqlanmadi"
+        },
+        {
+          "k": "resolved",
+          "v": "Hal qilindi"
+        },
+        {
+          "k": "sensorReadings",
+          "v": "Sensor ko'rsatkichlari grafikasi"
+        },
+        {
+          "k": "selectSensor",
+          "v": "Sensor tanlang"
+        },
+        {
+          "k": "predictiveMaintenance",
+          "v": "Sensor trendlariga asoslanib profilaktik texnik xizmat (TZ-18)"
+        },
+        {
+          "k": "analyzedAt",
+          "v": "Tahlil vaqti:"
+        },
+        {
+          "k": "riskHigh",
+          "v": "Yuqori xavf"
+        },
+        {
+          "k": "riskMedium",
+          "v": "O'rta xavf"
+        },
+        {
+          "k": "riskLow",
+          "v": "Past xavf"
+        },
+        {
+          "k": "analyzingSensors",
+          "v": "Sensorlar tahlil qilinmoqda..."
+        },
+        {
+          "k": "noSensorData",
+          "v": "Aktiv sensor ma'lumoti topilmadi"
+        },
+        {
+          "k": "realTimeAttendance",
+          "v": "Real Vaqt Kamera Davomati"
+        },
+        {
+          "k": "attendanceLoading",
+          "v": "Davomat ma'lumotlari yuklanmoqda..."
+        },
+        {
+          "k": "noAttendanceEvents",
+          "v": "Bugun hech qanday kamera hodisasi qayd etilmadi"
+        },
+        {
+          "k": "healthMonitoring",
+          "v": "Xodim Sog'liq Monitoringi (HR)"
+        },
+        {
+          "k": "severityCritical",
+          "v": "Juda muhim"
+        }
+      ],
+      "englishInRu": []
+    },
+    "kanban": {
+      "total": 104,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Kanban doska"
+        },
+        {
+          "k": "taskTitle",
+          "v": "Vazifa sarlavhasi"
+        },
+        {
+          "k": "taskDescription",
+          "v": "Vazifa tavsifi"
+        },
+        {
+          "k": "wipLimit",
+          "v": "WIP chegarasi"
+        },
+        {
+          "k": "checklistProgress",
+          "v": "Chek-list jarayoni"
+        },
+        {
+          "k": "filterByAssignee",
+          "v": "Ijrochi bo'yicha filtr"
+        },
+        {
+          "k": "filterByPriority",
+          "v": "Ustuvorlik bo'yicha filtr"
+        },
+        {
+          "k": "filterByTag",
+          "v": "Teg bo'yicha filtr"
+        },
+        {
+          "k": "ganttView",
+          "v": "Gant diagrammasi"
+        },
+        {
+          "k": "timeTracking",
+          "v": "Vaqt kuzatuvi"
+        },
+        {
+          "k": "trackedTime",
+          "v": "Kuzatilgan vaqt"
+        },
+        {
+          "k": "actualTime",
+          "v": "Haqiqiy vaqt"
+        },
+        {
+          "k": "thisWeek",
+          "v": "Bu hafta"
+        },
+        {
+          "k": "nextWeek",
+          "v": "Keyingi hafta"
+        },
+        {
+          "k": "myPlan",
+          "v": "Mening rejam"
+        },
+        {
+          "k": "allTasks",
+          "v": "Barcha vazifalar"
+        },
+        {
+          "k": "myTasks",
+          "v": "Mening vazifalarim"
+        },
+        {
+          "k": "createdByMe",
+          "v": "Men yaratgan"
+        },
+        {
+          "k": "noTasks",
+          "v": "Vazifalar yo'q"
+        },
+        {
+          "k": "noBoards",
+          "v": "Doskalar yo'q"
+        },
+        {
+          "k": "selectBoard",
+          "v": "Doska tanlang"
+        },
+        {
+          "k": "createFirstBoard",
+          "v": "Birinchi doska yarating"
+        },
+        {
+          "k": "incomingBasket",
+          "v": "Kiruvchi savat"
+        },
+        {
+          "k": "pendingBasket",
+          "v": "Kutilmoqda savati"
+        },
+        {
+          "k": "dailyTaskList",
+          "v": "Kunlik vazifalar ro'yxati"
+        }
+      ],
+      "englishInRu": []
+    },
+    "ledger": {
+      "total": 11,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "totalItems",
+          "v": "Jami elementlar"
+        },
+        {
+          "k": "totalValue",
+          "v": "Jami Value"
+        },
+        {
+          "k": "expiringSoon",
+          "v": "expiring Soon"
+        },
+        {
+          "k": "issuedDate",
+          "v": "Issued Sana"
+        },
+        {
+          "k": "returnDeadline",
+          "v": "return Deadline"
+        },
+        {
+          "k": "returnItem",
+          "v": "return Item"
+        },
+        {
+          "k": "returnQty",
+          "v": "return Qty"
+        },
+        {
+          "k": "returnReason",
+          "v": "return Reason"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "expiringSoon",
+          "v": "expiring Soon"
+        },
+        {
+          "k": "returnDeadline",
+          "v": "return Deadline"
+        },
+        {
+          "k": "returnItem",
+          "v": "return Item"
+        },
+        {
+          "k": "returnQty",
+          "v": "return Qty"
+        },
+        {
+          "k": "returnReason",
+          "v": "return Reason"
+        }
+      ]
+    },
+    "lms": {
+      "total": 110,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "lms",
+          "v": "O'quv tizimi"
+        },
+        {
+          "k": "testResults",
+          "v": "Test natijalari"
+        },
+        {
+          "k": "advanced",
+          "v": "Ilg'or"
+        },
+        {
+          "k": "courseContent",
+          "v": "Kurs tarkibi"
+        },
+        {
+          "k": "courseMaterials",
+          "v": "Kurs materiallari"
+        },
+        {
+          "k": "questionBank",
+          "v": "Savollar banki"
+        },
+        {
+          "k": "correctAnswer",
+          "v": "To'g'ri javob"
+        },
+        {
+          "k": "aiGeneratedTest",
+          "v": "AI yaratgan test"
+        },
+        {
+          "k": "knowledgeBase",
+          "v": "Bilimlar bazasi"
+        },
+        {
+          "k": "skillMatrix",
+          "v": "Ko'nikmalar matritsasi"
+        },
+        {
+          "k": "certificatesEarned",
+          "v": "Olingan sertifikatlar"
+        },
+        {
+          "k": "coursesCompleted",
+          "v": "Tugatilgan kurslar"
+        },
+        {
+          "k": "course.list",
+          "v": "Kurslar ro'yxati"
+        },
+        {
+          "k": "course.title",
+          "v": "Kurs nomi"
+        },
+        {
+          "k": "course.description",
+          "v": "Kurs tavsifi"
+        },
+        {
+          "k": "certificate.employeeId",
+          "v": "Xodim ID"
+        },
+        {
+          "k": "certificate.courseId",
+          "v": "Kurs ID"
+        },
+        {
+          "k": "certificate.issuedDate",
+          "v": "Berilgan sana"
+        },
+        {
+          "k": "certificate.status.valid",
+          "v": "Amal qiladi"
+        },
+        {
+          "k": "certificate.status.expired",
+          "v": "Muddati tugagan"
+        },
+        {
+          "k": "certificate.status.revoked",
+          "v": "Bekor qilingan"
+        },
+        {
+          "k": "skill.matrix",
+          "v": "Ko'nikma matritsasi"
+        },
+        {
+          "k": "skill.name",
+          "v": "Ko'nikma nomi"
+        },
+        {
+          "k": "knowledgeBase.title",
+          "v": "Bilim bazasi"
+        }
+      ],
+      "englishInRu": []
+    },
+    "logistics": {
+      "total": 69,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "dashboard",
+          "v": "Logistika paneli"
+        },
+        {
+          "k": "shipmentNumber",
+          "v": "Jo'natma raqami"
+        },
+        {
+          "k": "shipmentDate",
+          "v": "Jo'natma sanasi"
+        },
+        {
+          "k": "shipmentStatus",
+          "v": "Jo'natma holati"
+        },
+        {
+          "k": "trackingNumber",
+          "v": "Kuzatuv raqami"
+        },
+        {
+          "k": "vehicle",
+          "v": "Transport vositasi"
+        },
+        {
+          "k": "vehicles",
+          "v": "Transport vositalari"
+        },
+        {
+          "k": "vehicleType",
+          "v": "Transport vositasi turi"
+        },
+        {
+          "k": "vehiclePlate",
+          "v": "Davlat raqami"
+        },
+        {
+          "k": "waypoint",
+          "v": "Yo'l nuqtasi"
+        },
+        {
+          "k": "estimatedTime",
+          "v": "Taxminiy vaqt"
+        },
+        {
+          "k": "actualTime",
+          "v": "Haqiqiy vaqt"
+        },
+        {
+          "k": "recipient",
+          "v": "Qabul qiluvchi"
+        },
+        {
+          "k": "recipientName",
+          "v": "Qabul qiluvchi nomi"
+        },
+        {
+          "k": "recipientPhone",
+          "v": "Qabul qiluvchi telefoni"
+        },
+        {
+          "k": "hazardous",
+          "v": "Xavfli yuk"
+        },
+        {
+          "k": "coldChain",
+          "v": "Sovuq zanjir"
+        },
+        {
+          "k": "insuranceValue",
+          "v": "Sug'urta qiymati"
+        },
+        {
+          "k": "importDuty",
+          "v": "Import boji"
+        },
+        {
+          "k": "exportDuty",
+          "v": "Eksport boji"
+        },
+        {
+          "k": "waybill",
+          "v": "Yo'l-yo'riq hujjati"
+        },
+        {
+          "k": "billOfLading",
+          "v": "Akkreditivli hujjat"
+        },
+        {
+          "k": "airWaybill",
+          "v": "Havo yo'l xati"
+        },
+        {
+          "k": "fuelSurcharge",
+          "v": "Yoqilg'i ustavajorati"
+        },
+        {
+          "k": "lastMile",
+          "v": "So'nggi kilometr"
+        },
+        {
+          "k": "performance",
+          "v": "Logistika samaradorligi"
+        }
+      ],
+      "englishInRu": []
+    },
+    "lowstock": {
+      "total": 1,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [],
+      "englishInRu": []
+    },
+    "marketing": {
+      "total": 100,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "dashboard",
+          "v": "Marketing paneli"
+        },
+        {
+          "k": "leadsTotal",
+          "v": "Jami lidlar"
+        },
+        {
+          "k": "qualifiedLeads",
+          "v": "Malakali lidlar"
+        },
+        {
+          "k": "convertedLeads",
+          "v": "Konvertatsiya qilingan"
+        },
+        {
+          "k": "activeCampaigns",
+          "v": "Faol kampaniyalar"
+        },
+        {
+          "k": "campaignPerformance",
+          "v": "Kampaniya samaradorligi"
+        },
+        {
+          "k": "contentFactory",
+          "v": "Kontent zavodi"
+        },
+        {
+          "k": "contentCalendar",
+          "v": "Kontent kalendari"
+        },
+        {
+          "k": "adsCenter",
+          "v": "Reklama markazi"
+        },
+        {
+          "k": "adSpend",
+          "v": "Reklama xarajatlari"
+        },
+        {
+          "k": "callCenter",
+          "v": "Call markaz"
+        },
+        {
+          "k": "incomingCalls",
+          "v": "Kiruvchi qo'ng'iroqlar"
+        },
+        {
+          "k": "missedCalls",
+          "v": "O'tkazib yuborilgan"
+        },
+        {
+          "k": "responseRate",
+          "v": "Javob tezligi"
+        },
+        {
+          "k": "conversionRate",
+          "v": "Konversiya darajasi"
+        },
+        {
+          "k": "leadAutomation",
+          "v": "Lid avtomatikasi"
+        },
+        {
+          "k": "emailMarketing",
+          "v": "Email marketing"
+        },
+        {
+          "k": "socialMedia",
+          "v": "Ijtimoiy tarmoqlar"
+        },
+        {
+          "k": "averageSession",
+          "v": "O'rtacha sessiya"
+        },
+        {
+          "k": "campaignName",
+          "v": "Kampaniya nomi"
+        },
+        {
+          "k": "leadSource",
+          "v": "Lid manbasi"
+        },
+        {
+          "k": "leadStatus",
+          "v": "Lid holati"
+        },
+        {
+          "k": "noDataTitle",
+          "v": "Ma'lumotlar mavjud emas"
+        },
+        {
+          "k": "noActivitiesTitle",
+          "v": "Faoliyatlar mavjud emas"
+        },
+        {
+          "k": "noActivitiesDescription",
+          "v": "Hali hech qanday faoliyat qayd etilmagan"
+        },
+        {
+          "k": "campaign.name",
+          "v": "Kampaniya nomi"
+        },
+        {
+          "k": "report.success",
+          "v": "Hisobot yaratildi"
+        }
+      ],
+      "englishInRu": []
+    },
+    "mes": {
+      "total": 83,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "dashboard",
+          "v": "MES paneli"
+        },
+        {
+          "k": "session",
+          "v": "Smena sessiyasi"
+        },
+        {
+          "k": "activeSession",
+          "v": "Faol sessiya"
+        },
+        {
+          "k": "sessionDuration",
+          "v": "Sessiya davomiyligi"
+        },
+        {
+          "k": "firstShift",
+          "v": "Birinchi smena"
+        },
+        {
+          "k": "secondShift",
+          "v": "Ikkinchi smena"
+        },
+        {
+          "k": "thirdShift",
+          "v": "Uchinchi smena"
+        },
+        {
+          "k": "oee",
+          "v": "OEE (Umumiy Uskunalar Samaradorligi)"
+        },
+        {
+          "k": "oeeTarget",
+          "v": "OEE maqsad"
+        },
+        {
+          "k": "oeeActual",
+          "v": "OEE haqiqiy"
+        },
+        {
+          "k": "goodOutput",
+          "v": "Sifatli mahsulot"
+        },
+        {
+          "k": "defectOutput",
+          "v": "Brakli mahsulot"
+        },
+        {
+          "k": "cycleTime",
+          "v": "Tsikl vaqti"
+        },
+        {
+          "k": "targetCycleTime",
+          "v": "Maqsad tsikl vaqti"
+        },
+        {
+          "k": "maintenance",
+          "v": "Texnik xizmatda"
+        },
+        {
+          "k": "report",
+          "v": "MES hisobot"
+        },
+        {
+          "k": "efficiencyReport",
+          "v": "Samaradorlik hisoboti"
+        },
+        {
+          "k": "shiftReport",
+          "v": "Smena hisoboti"
+        },
+        {
+          "k": "realtime",
+          "v": "Real vaqt"
+        },
+        {
+          "k": "liveData",
+          "v": "Jonli ma'lumotlar"
+        },
+        {
+          "k": "noActiveSession",
+          "v": "Faol sessiya yo'q"
+        },
+        {
+          "k": "sessionEnded",
+          "v": "Sessiya tugatildi"
+        },
+        {
+          "k": "reasonCode",
+          "v": "Sabab kodi"
+        },
+        {
+          "k": "reasonCodes",
+          "v": "Sabab kodlari"
+        },
+        {
+          "k": "targetQuantity",
+          "v": "Maqsad miqdori"
+        },
+        {
+          "k": "completedQuantity",
+          "v": "Tugallangan miqdor"
+        },
+        {
+          "k": "remainingQuantity",
+          "v": "Qolgan miqdor"
+        },
+        {
+          "k": "spc",
+          "v": "Statistik jarayon nazorati"
+        },
+        {
+          "k": "controlChart",
+          "v": "Nazorat diagrammasi"
+        },
+        {
+          "k": "upperLimit",
+          "v": "Yuqori chegara"
+        },
+        {
+          "k": "lowerLimit",
+          "v": "Pastki chegara"
+        },
+        {
+          "k": "centerLine",
+          "v": "Markaziy chiziq"
+        },
+        {
+          "k": "processCapability",
+          "v": "Jarayon qobiliyati"
+        },
+        {
+          "k": "batchRecord",
+          "v": "Partiya yozuvi"
+        }
+      ],
+      "englishInRu": []
+    },
+    "movements": {
+      "total": 2,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [],
+      "englishInRu": []
+    },
+    "mro": {
+      "total": 410,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Texnik xizmat va ta'mir"
+        },
+        {
+          "k": "dashboard",
+          "v": "MRO paneli"
+        },
+        {
+          "k": "assetId",
+          "v": "Aktiv ID"
+        },
+        {
+          "k": "assetName",
+          "v": "Aktiv nomi"
+        },
+        {
+          "k": "assetType",
+          "v": "Aktiv turi"
+        },
+        {
+          "k": "assetStatus",
+          "v": "Aktiv holati"
+        },
+        {
+          "k": "underMaintenance",
+          "v": "Texnik xizmatda"
+        },
+        {
+          "k": "serialNumber",
+          "v": "Seriya raqami"
+        },
+        {
+          "k": "purchaseDate",
+          "v": "Xarid sanasi"
+        },
+        {
+          "k": "warrantyExpiry",
+          "v": "Kafolat muddati"
+        },
+        {
+          "k": "maintenancePlan",
+          "v": "Texnik xizmat rejasi"
+        },
+        {
+          "k": "maintenanceSchedule",
+          "v": "Texnik xizmat jadvali"
+        },
+        {
+          "k": "nextMaintenance",
+          "v": "Keyingi texnik xizmat"
+        },
+        {
+          "k": "lastMaintenance",
+          "v": "Oxirgi texnik xizmat"
+        },
+        {
+          "k": "maintenanceInterval",
+          "v": "Texnik xizmat intervali"
+        },
+        {
+          "k": "technician",
+          "v": "Texnik mutaxassis"
+        },
+        {
+          "k": "technicians",
+          "v": "Texnik mutaxassislar"
+        },
+        {
+          "k": "cancelled",
+          "v": "Bekor qilindi"
+        },
+        {
+          "k": "estimatedHours",
+          "v": "Taxminiy soatlar"
+        },
+        {
+          "k": "actualHours",
+          "v": "Haqiqiy soatlar"
+        },
+        {
+          "k": "laborCost",
+          "v": "Mehnat xarajati"
+        },
+        {
+          "k": "materialCost",
+          "v": "Material xarajati"
+        },
+        {
+          "k": "totalCost",
+          "v": "Jami xarajat"
+        },
+        {
+          "k": "spareParts",
+          "v": "Ehtiyot qismlar"
+        },
+        {
+          "k": "sparePart",
+          "v": "Ehtiyot qism"
+        },
+        {
+          "k": "partNumber",
+          "v": "Qism raqami"
+        },
+        {
+          "k": "partName",
+          "v": "Qism nomi"
+        },
+        {
+          "k": "stockLevel",
+          "v": "Zaxira darajasi"
+        },
+        {
+          "k": "reorderPoint",
+          "v": "Buyurtma nuqtasi"
+        },
+        {
+          "k": "supplier",
+          "v": "Yetkazib beruvchi"
+        },
+        {
+          "k": "checklist",
+          "v": "Nazorat ro'yxati"
+        },
+        {
+          "k": "checkItem",
+          "v": "Nazorat bandi"
+        },
+        {
+          "k": "mtbf",
+          "v": "MTBF (Nosozliklar orasidagi o'rtacha vaqt)"
+        },
+        {
+          "k": "report",
+          "v": "MRO hisoboti"
+        },
+        {
+          "k": "assetInventory",
+          "v": "Aktivlar inventari"
+        },
+        {
+          "k": "vehicle",
+          "v": "Transport vositalari"
+        },
+        {
+          "k": "itEquipment",
+          "v": "IT uskunalar"
+        },
+        {
+          "k": "depreciationStraightLine",
+          "v": "Chiziqli amortizatsiya"
+        },
+        {
+          "k": "depreciationDeclining",
+          "v": "Kamayuvchi qoldiq amortizatsiya"
+        },
+        {
+          "k": "depreciationCalculated",
+          "v": "Amortizatsiya hisoblandi"
+        },
+        {
+          "k": "purchaseValue",
+          "v": "Xarid qiymati"
+        },
+        {
+          "k": "currentValue",
+          "v": "Joriy qiymat"
+        },
+        {
+          "k": "accumulatedDepreciation",
+          "v": "Yig'ilgan amortizatsiya"
+        },
+        {
+          "k": "salvageValue",
+          "v": "Qoldiq qiymat"
+        },
+        {
+          "k": "usefulLife",
+          "v": "Foydali xizmat muddati"
+        },
+        {
+          "k": "assetCode",
+          "v": "Aktiv kodi"
+        },
+        {
+          "k": "assetCondition",
+          "v": "Aktiv holati"
+        },
+        {
+          "k": "insuranceRecords",
+          "v": "Sug'urta yozuvlari"
+        },
+        {
+          "k": "noInsuranceRecords",
+          "v": "Sug'urta yozuvlari topilmadi"
+        },
+        {
+          "k": "insuranceExpired",
+          "v": "Muddati o'tgan"
+        },
+        {
+          "k": "assetCreated",
+          "v": "Aktiv yaratildi"
+        },
+        {
+          "k": "insuranceCreated",
+          "v": "Sug'urta yozuvi yaratildi"
+        },
+        {
+          "k": "noAssetsFound",
+          "v": "Aktivlar topilmadi"
+        },
+        {
+          "k": "searchAssets",
+          "v": "Kod, nom yoki seriya raqami..."
+        },
+        {
+          "k": "totalAssets",
+          "v": "Jami aktivlar"
+        },
+        {
+          "k": "totalValue",
+          "v": "Umumiy qiymat"
+        },
+        {
+          "k": "noDepreciationAssets",
+          "v": "Faol aktivlar topilmadi"
+        },
+        {
+          "k": "allAssetsStatus",
+          "v": "Barcha aktivlar va ularning holati"
+        },
+        {
+          "k": "assetSearchPlaceholder",
+          "v": "Kod, nom yoki seriya raqami..."
+        },
+        {
+          "k": "assetList",
+          "v": "Asosiy Vositalar Ro'yxati"
+        },
+        {
+          "k": "assetNamePlaceholder",
+          "v": "Aktiv nomi"
+        },
+        {
+          "k": "insuranceStatusExpired",
+          "v": "Muddati o'tgan"
+        },
+        {
+          "k": "insuranceStatusCancelled",
+          "v": "Bekor qilingan"
+        },
+        {
+          "k": "assetTypeVehicle",
+          "v": "Transport vositalari"
+        },
+        {
+          "k": "assetTypeIT",
+          "v": "IT uskunalar"
+        },
+        {
+          "k": "maintStatusCancelled",
+          "v": "Bekor qilindi"
+        },
+        {
+          "k": "depMethodDeclining",
+          "v": "Kamayuvchi qoldiq"
+        },
+        {
+          "k": "cardTotalAssets",
+          "v": "Jami aktivlar"
+        },
+        {
+          "k": "cardActiveAssets",
+          "v": "Faol aktivlar"
+        },
+        {
+          "k": "cardPurchaseValue",
+          "v": "Xarid qiymati"
+        },
+        {
+          "k": "cardCurrentBalance",
+          "v": "Joriy balans qiymati"
+        },
+        {
+          "k": "cardCurrentValue",
+          "v": "Hozirgi qiymat"
+        },
+        {
+          "k": "cardTotalDepreciation",
+          "v": "Jami amortizatsiya"
+        },
+        {
+          "k": "colAssetId",
+          "v": "Aktiv ID"
+        },
+        {
+          "k": "colBookValue",
+          "v": "Balans qiymati"
+        },
+        {
+          "k": "colScheduledDate",
+          "v": "Reja sana"
+        },
+        {
+          "k": "colReceivedBy",
+          "v": "Qabul qildi"
+        },
+        {
+          "k": "colPolicyNumber",
+          "v": "Polisi raqami"
+        },
+        {
+          "k": "colCurrentValue2",
+          "v": "Joriy qiymat"
+        },
+        {
+          "k": "cardMaintCost",
+          "v": "Jami xarajat (yakunlangan)"
+        },
+        {
+          "k": "cardDisposalGainLoss",
+          "v": "Umumiy foyda/zarar"
+        },
+        {
+          "k": "insuranceRecordsDesc",
+          "v": "Aktivlar bo'yicha sug'urta polislari va qamrov ma'lumotlari"
+        },
+        {
+          "k": "depreciationCalc",
+          "v": "Amortizatsiya Hisobi"
+        },
+        {
+          "k": "noActiveAssets",
+          "v": "Faol aktivlar topilmadi"
+        },
+        {
+          "k": "assetInfoHint",
+          "v": "Asosiy vosita ma'lumotlarini kiriting"
+        },
+        {
+          "k": "colPurchaseDate",
+          "v": "Xarid sanasi"
+        },
+        {
+          "k": "colDepMethod",
+          "v": "Amortizatsiya usuli"
+        },
+        {
+          "k": "depMethodDeclining2",
+          "v": "Kamayuvchi qoldiq"
+        },
+        {
+          "k": "colSerialNumber",
+          "v": "Seriya raqami"
+        },
+        {
+          "k": "colScheduledDate2",
+          "v": "Reja sana"
+        },
+        {
+          "k": "colTechnician2",
+          "v": "Texnik mutaxassis"
+        },
+        {
+          "k": "colCompletedDate2",
+          "v": "Yakunlangan sana"
+        },
+        {
+          "k": "colCoverageType",
+          "v": "Qamrov turi"
+        },
+        {
+          "k": "coverageFull",
+          "v": "To'liq qamrov"
+        },
+        {
+          "k": "coverageThirdParty",
+          "v": "Uchinchi tomon"
+        },
+        {
+          "k": "coverageFire",
+          "v": "Yong'indan himoya"
+        },
+        {
+          "k": "coverageTheft",
+          "v": "O'g'irlikdan himoya"
+        },
+        {
+          "k": "coverageNatural",
+          "v": "Tabiiy ofat"
+        },
+        {
+          "k": "colContactInfo",
+          "v": "Aloqa ma'lumotlari"
+        },
+        {
+          "k": "transferHint",
+          "v": "Aktiv jadvalida ko'k o'q belgisini bosing yoki yuqoridagi tugmadan foydalaning"
+        },
+        {
+          "k": "labelUsefulLife",
+          "v": "Foydali muddati (yil)"
+        },
+        {
+          "k": "labelSalvageValue",
+          "v": "Qoldiq qiymat (UZS)"
+        },
+        {
+          "k": "locationPlaceholder",
+          "v": "Masalan: 2-qavat, omborxona"
+        },
+        {
+          "k": "labelAccumDep",
+          "v": "Yig'ilgan amortizatsiya:"
+        },
+        {
+          "k": "colCostUZS",
+          "v": "Xarajat (UZS)"
+        },
+        {
+          "k": "currentBalanceLabel",
+          "v": "Joriy balans qiymati:"
+        },
+        {
+          "k": "selectAsset",
+          "v": "Aktiv tanlang"
+        },
+        {
+          "k": "fromLocationPlaceholder",
+          "v": "Masalan: 2-qavat, xona 201"
+        },
+        {
+          "k": "toLocationPlaceholder",
+          "v": "Masalan: 3-qavat, xona 305"
+        },
+        {
+          "k": "insuranceForAsset",
+          "v": "uchun sug'urta polisi"
+        },
+        {
+          "k": "insuranceAlt",
+          "v": "Aktiv uchun sug'urta ma'lumotlarini kiriting"
+        },
+        {
+          "k": "insurerNamePlaceholder",
+          "v": "Sug'urta kompaniyasi nomi"
+        },
+        {
+          "k": "labelPremiumAmount",
+          "v": "Mukofot miqdori (UZS)"
+        },
+        {
+          "k": "labelCoverageAmount",
+          "v": "Qamrov miqdori (UZS)"
+        },
+        {
+          "k": "contactInfoPlaceholder",
+          "v": "Telefon, email..."
+        },
+        {
+          "k": "monthlyDepreciationLabel",
+          "v": "Oylik amortizatsiya"
+        },
+        {
+          "k": "coverageThirdPartyShort",
+          "v": "Uchinchi tomon"
+        },
+        {
+          "k": "depreciationTabDesc",
+          "v": "Faol aktivlar bo'yicha amortizatsiya holati va hisob-kitob"
+        },
+        {
+          "k": "colSalvageValue",
+          "v": "Qoldiq qiymat"
+        },
+        {
+          "k": "colAccumDepreciation",
+          "v": "Yig'ilgan amortizatsiya"
+        },
+        {
+          "k": "colUsefulLifeYears",
+          "v": "Foydali muddati (yil)"
+        },
+        {
+          "k": "canteen.mealsToday",
+          "v": "Bugungi ovqatlar"
+        },
+        {
+          "k": "canteen.employeesServed",
+          "v": "Xodimlar Served"
+        },
+        {
+          "k": "canteen.costToday",
+          "v": "cost Today"
+        },
+        {
+          "k": "canteen.costPerMeal",
+          "v": "cost Per Meal"
+        },
+        {
+          "k": "canteen.topMeals",
+          "v": "top Meals"
+        },
+        {
+          "k": "canteen.noMeals",
+          "v": "Yo'q Meals"
+        },
+        {
+          "k": "canteen.noConsumption",
+          "v": "Yo'q Consumption"
+        },
+        {
+          "k": "facility.totalArea",
+          "v": "Jami Area"
+        },
+        {
+          "k": "facility.totalItems",
+          "v": "Jami elementlar"
+        },
+        {
+          "k": "pm.dueSoon",
+          "v": "due Soon"
+        },
+        {
+          "k": "spareParts.lowStock",
+          "v": "low Stock"
+        },
+        {
+          "k": "spareParts.totalValue",
+          "v": "Jami Value"
+        },
+        {
+          "k": "utility.totalCost",
+          "v": "Jami Cost"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "canteen.costToday",
+          "v": "cost Today"
+        },
+        {
+          "k": "canteen.costPerMeal",
+          "v": "cost Per Meal"
+        },
+        {
+          "k": "canteen.topMeals",
+          "v": "top Meals"
+        },
+        {
+          "k": "pm.dueSoon",
+          "v": "due Soon"
+        },
+        {
+          "k": "spareParts.lowStock",
+          "v": "low Stock"
+        }
+      ]
+    },
+    "myInventory": {
+      "total": 10,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "givenQty",
+          "v": "Berilgan miqdor"
+        },
+        {
+          "k": "totalValue",
+          "v": "Jami Value"
+        },
+        {
+          "k": "returnedQty",
+          "v": "Qaytarilgan miqdor"
+        },
+        {
+          "k": "noItems",
+          "v": "Elementlar yo'q"
+        }
+      ],
+      "englishInRu": []
+    },
+    "nav": {
+      "total": 4,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [],
+      "englishInRu": []
+    },
+    "navigation": {
+      "total": 495,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "marketingSales",
+          "v": "Marketing va Sotuv"
+        },
+        {
+          "k": "marketingDashboard",
+          "v": "Marketing paneli"
+        },
+        {
+          "k": "contentFactory",
+          "v": "Kontent zavodi"
+        },
+        {
+          "k": "leadAutomation",
+          "v": "Lid avtomatikasi"
+        },
+        {
+          "k": "adsCenter",
+          "v": "Reklama markazi"
+        },
+        {
+          "k": "callCenter",
+          "v": "Call markaz"
+        },
+        {
+          "k": "marketingAnalytics",
+          "v": "Marketing analitikasi"
+        },
+        {
+          "k": "crmDashboard",
+          "v": "CRM paneli"
+        },
+        {
+          "k": "crmSettings",
+          "v": "CRM sozlamalari"
+        },
+        {
+          "k": "salesOrders",
+          "v": "Savdo buyurtmalari"
+        },
+        {
+          "k": "aiCamera",
+          "v": "AI Kamera"
+        },
+        {
+          "k": "controlCenter",
+          "v": "Nazorat Markazi"
+        },
+        {
+          "k": "directorDashboard",
+          "v": "Direktor paneli"
+        },
+        {
+          "k": "auditorPanel",
+          "v": "Auditor paneli"
+        },
+        {
+          "k": "marketing",
+          "v": "Marketing va Sotuv"
+        },
+        {
+          "k": "director",
+          "v": "Direktor paneli"
+        },
+        {
+          "k": "auditor",
+          "v": "Auditor paneli"
+        },
+        {
+          "k": "maintenance",
+          "v": "Texnik xizmat"
+        },
+        {
+          "k": "Savdo va CRM",
+          "v": "Savdo va CRM"
+        },
+        {
+          "k": "SD Dashboard",
+          "v": "SD paneli"
+        },
+        {
+          "k": "AI CRM",
+          "v": "AI CRM"
+        },
+        {
+          "k": "Papka Buyurtmalari",
+          "v": "Papka Buyurtmalari"
+        },
+        {
+          "k": "Buyurtma Workflow",
+          "v": "Buyurtma jarayoni"
+        },
+        {
+          "k": "MENEJER PANELI",
+          "v": "MENEJER PANELI"
+        },
+        {
+          "k": "Menejer Paneli",
+          "v": "Menejer Paneli"
+        },
+        {
+          "k": "Kvota Dashboard",
+          "v": "Kvota paneli"
+        },
+        {
+          "k": "Ombor Ijara",
+          "v": "Ombor Ijara"
+        },
+        {
+          "k": "MIJOZ 360",
+          "v": "MIJOZ 360"
+        },
+        {
+          "k": "Customer 360",
+          "v": "Mijoz 360"
+        },
+        {
+          "k": "LEAD VA KAMPANIYA",
+          "v": "LEAD VA KAMPANIYA"
+        },
+        {
+          "k": "Social Inbox",
+          "v": "Social Inbox"
+        },
+        {
+          "k": "PR VA TADBIRLAR",
+          "v": "PR VA TADBIRLAR"
+        },
+        {
+          "k": "PR Faoliyat",
+          "v": "PR Faoliyat"
+        },
+        {
+          "k": "Tahlil (ROI/ROAS)",
+          "v": "Tahlil (ROI/ROAS)"
+        },
+        {
+          "k": "SEO Monitoring",
+          "v": "SEO Monitoring"
+        },
+        {
+          "k": "A/B Testing",
+          "v": "A/B Testing"
+        },
+        {
+          "k": "NPS va Churn",
+          "v": "NPS va Churn"
+        },
+        {
+          "k": "Web sayt CMS",
+          "v": "Web sayt CMS"
+        },
+        {
+          "k": "Dizayn Dashboard",
+          "v": "Dizayn paneli"
+        },
+        {
+          "k": "Dizayn Buyurtmalar",
+          "v": "Dizayn Buyurtmalar"
+        },
+        {
+          "k": "AI VA VOSITALAR",
+          "v": "AI VA VOSITALAR"
+        },
+        {
+          "k": "AI Generator",
+          "v": "AI Generator"
+        },
+        {
+          "k": "Dizayn Kutubxona",
+          "v": "Dizayn Kutubxona"
+        },
+        {
+          "k": "Brend Guidelines",
+          "v": "Brend Guidelines"
+        },
+        {
+          "k": "QOLIPLAR VA ASBOBLAR",
+          "v": "QOLIPLAR VA ASBOBLAR"
+        },
+        {
+          "k": "Asboblar va Plastinalar",
+          "v": "Asboblar va Plastinalar"
+        },
+        {
+          "k": "Dizayn Tannarxi",
+          "v": "Dizayn Tannarxi"
+        },
+        {
+          "k": "Sifat Nazorati",
+          "v": "Sifat Nazorati"
+        },
+        {
+          "k": "QC Dashboard",
+          "v": "QC paneli"
+        },
+        {
+          "k": "Qog'oz Parametrlari",
+          "v": "Qog'oz Parametrlari"
+        },
+        {
+          "k": "Material Testlari",
+          "v": "Material Testlari"
+        },
+        {
+          "k": "Inline QC",
+          "v": "Inline QC"
+        },
+        {
+          "k": "Yetkazuvchi Sifati",
+          "v": "Yetkazuvchi Sifati"
+        },
+        {
+          "k": "BRAK VA REKLAMATSIYA",
+          "v": "BRAK VA REKLAMATSIYA"
+        },
+        {
+          "k": "Sifat Sertifikatlari",
+          "v": "Sifat Sertifikatlari"
+        },
+        {
+          "k": "ISO Hujjatlari",
+          "v": "ISO Hujjatlari"
+        },
+        {
+          "k": "Sifat Trendi",
+          "v": "Sifat Trendi"
+        },
+        {
+          "k": "AI Tahlil",
+          "v": "AI Tahlil"
+        },
+        {
+          "k": "TEXNIK TASDIQ",
+          "v": "TEXNIK TASDIQ"
+        },
+        {
+          "k": "Texnik Kartalar",
+          "v": "Texnik Kartalar"
+        },
+        {
+          "k": "BOM Tarkib",
+          "v": "BOM Tarkib"
+        },
+        {
+          "k": "Material Muqobili",
+          "v": "Material Muqobili"
+        },
+        {
+          "k": "Vaqt va Tannarx",
+          "v": "Vaqt va Tannarx"
+        },
+        {
+          "k": "Xarajat Optimizatsiya",
+          "v": "Xarajat Optimizatsiya"
+        },
+        {
+          "k": "MIJOZ TALABLARI",
+          "v": "MIJOZ TALABLARI"
+        },
+        {
+          "k": "Mijoz Maxsus Talablar",
+          "v": "Mijoz Maxsus Talablar"
+        },
+        {
+          "k": "Parallel Buyurtmalar",
+          "v": "Parallel Buyurtmalar"
+        },
+        {
+          "k": "AI Rezervatsiya",
+          "v": "AI Rezervatsiya"
+        },
+        {
+          "k": "PP Dashboard",
+          "v": "PP paneli"
+        },
+        {
+          "k": "KUNLIK / HAFTALIK / OYLIK",
+          "v": "KUNLIK / HAFTALIK / OYLIK"
+        },
+        {
+          "k": "Parallel Jarayonlar",
+          "v": "Parallel Jarayonlar"
+        },
+        {
+          "k": "SUPER ADMIN OVERRIDE",
+          "v": "SUPER ADMIN OVERRIDE"
+        },
+        {
+          "k": "Quvvat Rejasi",
+          "v": "Quvvat Rejasi"
+        },
+        {
+          "k": "Bottleneck Tahlili",
+          "v": "Bottleneck Tahlili"
+        },
+        {
+          "k": "Demand Forecasting",
+          "v": "Demand Forecasting"
+        },
+        {
+          "k": "What-if Tahlil",
+          "v": "What-if Tahlil"
+        },
+        {
+          "k": "Energiya Optimizatsiya",
+          "v": "Energiya Optimizatsiya"
+        },
+        {
+          "k": "OEE Monitor",
+          "v": "OEE Monitor"
+        },
+        {
+          "k": "Real-time Progress",
+          "v": "Real vaqtda jarayon"
+        },
+        {
+          "k": "MES Dashboard",
+          "v": "MES paneli"
+        },
+        {
+          "k": "Kunlik Reja",
+          "v": "Kunlik Reja"
+        },
+        {
+          "k": "OEE Monitoring",
+          "v": "OEE Monitoring"
+        },
+        {
+          "k": "Sabablar Logi",
+          "v": "Sabablar Logi"
+        },
+        {
+          "k": "SENSOR VA KAMERA",
+          "v": "SENSOR VA KAMERA"
+        },
+        {
+          "k": "Texnik Xizmat So'rovi",
+          "v": "Texnik Xizmat So'rovi"
+        },
+        {
+          "k": "Uskuna Normalari",
+          "v": "Uskuna Normalari"
+        },
+        {
+          "k": "Ombor Dashboard",
+          "v": "Ombor paneli"
+        },
+        {
+          "k": "Rulon Ombori",
+          "v": "Rulon Ombori"
+        },
+        {
+          "k": "Tayyor Mahsulot",
+          "v": "Tayyor Mahsulot"
+        },
+        {
+          "k": "Yarim Tayyor",
+          "v": "Yarim Tayyor"
+        },
+        {
+          "k": "Brak Ombori",
+          "v": "Brak Ombori"
+        },
+        {
+          "k": "Karantin Ombori",
+          "v": "Karantin Ombori"
+        },
+        {
+          "k": "Asbob Uskuna",
+          "v": "Asbob Uskuna"
+        },
+        {
+          "k": "Xo'jalik Ombori",
+          "v": "Xo'jalik Ombori"
+        },
+        {
+          "k": "MRO Ombori",
+          "v": "MRO Ombori"
+        },
+        {
+          "k": "Qabul Akti (GRN)",
+          "v": "Qabul Akti (GRN)"
+        },
+        {
+          "k": "Reservation Panel",
+          "v": "Rezervatsiya paneli"
+        },
+        {
+          "k": "Lot Traceability",
+          "v": "Lot Traceability"
+        },
+        {
+          "k": "Barkod Tizimi",
+          "v": "Barkod Tizimi"
+        },
+        {
+          "k": "ICHKI SO'ROV",
+          "v": "ICHKI SO'ROV"
+        },
+        {
+          "k": "Ichki So'rov",
+          "v": "Ichki So'rov"
+        },
+        {
+          "k": "Ombor KPI",
+          "v": "Ombor KPI"
+        },
+        {
+          "k": "MATERIAL BALANS",
+          "v": "MATERIAL BALANS"
+        },
+        {
+          "k": "Material Balans",
+          "v": "Material Balans"
+        },
+        {
+          "k": "Tayyor Mahsulot Ijara",
+          "v": "Tayyor Mahsulot Ijara"
+        },
+        {
+          "k": "MM Dashboard",
+          "v": "MM paneli"
+        },
+        {
+          "k": "Xarid Buyurtmalari",
+          "v": "Xarid Buyurtmalari"
+        },
+        {
+          "k": "PUL NAZORATI",
+          "v": "PUL NAZORATI"
+        },
+        {
+          "k": "Xarajat Nazorati",
+          "v": "Xarajat Nazorati"
+        },
+        {
+          "k": "Chek Bot",
+          "v": "Chek Bot"
+        },
+        {
+          "k": "Kreditor Qarzlar",
+          "v": "Kreditor Qarzlar"
+        },
+        {
+          "k": "Yetkazuvchi Baho",
+          "v": "Yetkazuvchi Baho"
+        },
+        {
+          "k": "Supplier Portal",
+          "v": "Supplier Portal"
+        },
+        {
+          "k": "Transport Parki",
+          "v": "Transport Parki"
+        },
+        {
+          "k": "GPS Monitoring",
+          "v": "GPS Monitoring"
+        },
+        {
+          "k": "Yoqilg'i Nazorati",
+          "v": "Yoqilg'i Nazorati"
+        },
+        {
+          "k": "GL / IKKI YOQLAMA",
+          "v": "GL / IKKI YOQLAMA"
+        },
+        {
+          "k": "CFO Dashboard",
+          "v": "CFO paneli"
+        },
+        {
+          "k": "AI Moliya",
+          "v": "AI Moliya"
+        },
+        {
+          "k": "GL Hujjatlar",
+          "v": "GL Hujjatlar"
+        },
+        {
+          "k": "Hisoblar Rejasi",
+          "v": "Hisoblar Rejasi"
+        },
+        {
+          "k": "Pul Oqimi",
+          "v": "Pul Oqimi"
+        },
+        {
+          "k": "Foyda Tahlili",
+          "v": "Foyda Tahlili"
+        },
+        {
+          "k": "DEBITOR / KREDITOR",
+          "v": "DEBITOR / KREDITOR"
+        },
+        {
+          "k": "AVANS VA KASSA",
+          "v": "AVANS VA KASSA"
+        },
+        {
+          "k": "POS TIZIMI",
+          "v": "POS TIZIMI"
+        },
+        {
+          "k": "POS Kassa",
+          "v": "POS Kassa"
+        },
+        {
+          "k": "POS Monitor",
+          "v": "POS Monitor"
+        },
+        {
+          "k": "Buyurtma Tannarxi",
+          "v": "Buyurtma Tannarxi"
+        },
+        {
+          "k": "Ombor Hisobi",
+          "v": "Ombor Hisobi"
+        },
+        {
+          "k": "Asosiy Vositalar",
+          "v": "Asosiy Vositalar"
+        },
+        {
+          "k": "Xarajat Markazlari",
+          "v": "Xarajat Markazlari"
+        },
+        {
+          "k": "Transfer Pricing",
+          "v": "Transfer Pricing"
+        },
+        {
+          "k": "Ichki Soliqlar",
+          "v": "Ichki Soliqlar"
+        },
+        {
+          "k": "Soliq Kalendari",
+          "v": "Soliq Kalendari"
+        },
+        {
+          "k": "Audit Log",
+          "v": "Audit jurnali"
+        },
+        {
+          "k": "Moliyaviy Risk AI",
+          "v": "Moliyaviy Risk AI"
+        },
+        {
+          "k": "HR Dashboard",
+          "v": "HR paneli"
+        },
+        {
+          "k": "HR Xarita",
+          "v": "HR Xarita"
+        },
+        {
+          "k": "Smena Jadvali",
+          "v": "Smena Jadvali"
+        },
+        {
+          "k": "Maqsadlar va Milestone",
+          "v": "Maqsadlar va bosqichlar"
+        },
+        {
+          "k": "Hujjat Oqimi",
+          "v": "Hujjat Oqimi"
+        },
+        {
+          "k": "Kunlik Hisobot",
+          "v": "Kunlik Hisobot"
+        },
+        {
+          "k": "Haftalik Reja",
+          "v": "Haftalik Reja"
+        },
+        {
+          "k": "REKRUTING & ONBOARDING",
+          "v": "REKRUTING & ONBOARDING"
+        },
+        {
+          "k": "Rekruting Voronka",
+          "v": "Rekruting Voronka"
+        },
+        {
+          "k": "AI Intervyu",
+          "v": "AI Intervyu"
+        },
+        {
+          "k": "Onboarding & Adaptatsiya",
+          "v": "Onboarding & Adaptatsiya"
+        },
+        {
+          "k": "Referral Tizimi",
+          "v": "Referral Tizimi"
+        },
+        {
+          "k": "Succession Planning",
+          "v": "Vorislik rejasi"
+        },
+        {
+          "k": "PIP Rejalar",
+          "v": "PIP Rejalar"
+        },
+        {
+          "k": "Ta'til va Kasallik",
+          "v": "Ta'til va Kasallik"
+        },
+        {
+          "k": "Tug'ilgan Kunlar",
+          "v": "Tug'ilgan Kunlar"
+        },
+        {
+          "k": "TAHLIL VA AI",
+          "v": "TAHLIL VA AI"
+        },
+        {
+          "k": "AI HR Dashboard",
+          "v": "AI HR paneli"
+        },
+        {
+          "k": "eNPS So'rov",
+          "v": "eNPS So'rov"
+        },
+        {
+          "k": "RACI Matritsasi",
+          "v": "RACI Matritsasi"
+        },
+        {
+          "k": "Sog'liq Nazorati",
+          "v": "Sog'liq Nazorati"
+        },
+        {
+          "k": "HR BREND",
+          "v": "HR BREND"
+        },
+        {
+          "k": "Milestone Tracker",
+          "v": "Bosqich kuzatuvchi"
+        },
+        {
+          "k": "LMS Dashboard",
+          "v": "LMS paneli"
+        },
+        {
+          "k": "HR Capital Kurslar",
+          "v": "HR Capital Kurslar"
+        },
+        {
+          "k": "HR Capital Testlar",
+          "v": "HR Capital Testlar"
+        },
+        {
+          "k": "Kurs Muallifi",
+          "v": "Kurs Muallifi"
+        },
+        {
+          "k": "AI Imtihonlar",
+          "v": "AI Imtihonlar"
+        },
+        {
+          "k": "Operator Sertifikatsiyasi",
+          "v": "Operator sertifikatsiyasi"
+        },
+        {
+          "k": "BILIM BAZASI",
+          "v": "BILIM BAZASI"
+        },
+        {
+          "k": "Bilim Bazasi",
+          "v": "Bilim Bazasi"
+        },
+        {
+          "k": "O'quv Byudjeti",
+          "v": "O'quv Byudjeti"
+        },
+        {
+          "k": "Xavfsizlik Holati",
+          "v": "Xavfsizlik Holati"
+        },
+        {
+          "k": "Zona Ruxsatlari",
+          "v": "Zona Ruxsatlari"
+        },
+        {
+          "k": "Jonli Monitoring",
+          "v": "Jonli Monitoring"
+        },
+        {
+          "k": "HODISALAR VA XAVF",
+          "v": "HODISALAR VA XAVF"
+        },
+        {
+          "k": "PPE Nazorati",
+          "v": "PPE Nazorati"
+        },
+        {
+          "k": "Xavfli Material",
+          "v": "Xavfli Material"
+        },
+        {
+          "k": "Evakuatsiya Rejasi",
+          "v": "Evakuatsiya Rejasi"
+        },
+        {
+          "k": "Xavfsizlik Reytingi",
+          "v": "Xavfsizlik Reytingi"
+        },
+        {
+          "k": "TEXNIK XIZMAT",
+          "v": "TEXNIK XIZMAT"
+        },
+        {
+          "k": "MRO Dashboard",
+          "v": "MRO paneli"
+        },
+        {
+          "k": "Preventive Maintenance",
+          "v": "Preventive Maintenance"
+        },
+        {
+          "k": "MRO Ehtiyot Qismlar",
+          "v": "MRO Ehtiyot Qismlar"
+        },
+        {
+          "k": "Ofis Inventari",
+          "v": "Ofis Inventari"
+        },
+        {
+          "k": "Bino Inventari",
+          "v": "Bino Inventari"
+        },
+        {
+          "k": "IoT va Kamera",
+          "v": "IoT va Kamera"
+        },
+        {
+          "k": "IOT SENSORLAR",
+          "v": "IOT SENSORLAR"
+        },
+        {
+          "k": "IoT Dashboard",
+          "v": "IoT paneli"
+        },
+        {
+          "k": "Sensor Monitoring",
+          "v": "Sensor Monitoring"
+        },
+        {
+          "k": "Kamera Dashboard",
+          "v": "Kamera paneli"
+        },
+        {
+          "k": "Issiqlik Xaritasi",
+          "v": "Issiqlik Xaritasi"
+        },
+        {
+          "k": "AI TAHLIL",
+          "v": "AI TAHLIL"
+        },
+        {
+          "k": "AI Nazorat Hub",
+          "v": "AI Nazorat Hub"
+        },
+        {
+          "k": "Xodim Monitoring",
+          "v": "Xodim Monitoring"
+        },
+        {
+          "k": "Xodim Reytingi",
+          "v": "Xodim Reytingi"
+        },
+        {
+          "k": "AI Sozlamalar",
+          "v": "AI Sozlamalar"
+        },
+        {
+          "k": "Predictive Maintenance",
+          "v": "Predictive Maintenance"
+        },
+        {
+          "k": "OEE Live",
+          "v": "OEE Live"
+        },
+        {
+          "k": "Digital Twin",
+          "v": "Digital Twin"
+        },
+        {
+          "k": "UMUMIY PANEL",
+          "v": "UMUMIY PANEL"
+        },
+        {
+          "k": "Direktor Dashboard",
+          "v": "Direktor paneli"
+        },
+        {
+          "k": "Nazorat Markazi",
+          "v": "Nazorat Markazi"
+        },
+        {
+          "k": "Auditor Panel",
+          "v": "Auditor paneli"
+        },
+        {
+          "k": "Kunlik KPI",
+          "v": "Kunlik KPI"
+        },
+        {
+          "k": "Hisobotlar Markazi",
+          "v": "Hisobotlar Markazi"
+        },
+        {
+          "k": "AI Xulosa",
+          "v": "AI Xulosa"
+        },
+        {
+          "k": "Muammoli Nuqtalar",
+          "v": "Muammoli Nuqtalar"
+        },
+        {
+          "k": "IDEAL RASM",
+          "v": "IDEAL RASM"
+        },
+        {
+          "k": "Ideal Rasm",
+          "v": "Ideal Rasm"
+        },
+        {
+          "k": "Admin Panel",
+          "v": "Admin paneli"
+        },
+        {
+          "k": "Super Admin Panel",
+          "v": "Super admin paneli"
+        },
+        {
+          "k": "Litsenziya va Tariflar",
+          "v": "Litsenziya va Tariflar"
+        },
+        {
+          "k": "Xatolar Logi",
+          "v": "Xatolar Logi"
+        },
+        {
+          "k": "Istisno Holatlar",
+          "v": "Istisno Holatlar"
+        },
+        {
+          "k": "Navbat Monitori",
+          "v": "Navbat Monitori"
+        },
+        {
+          "k": "Telegram Admin",
+          "v": "Telegram admin"
+        },
+        {
+          "k": "Buyurtmalar Kanbani",
+          "v": "Buyurtmalar Kanbani"
+        },
+        {
+          "k": "Rekruting Kanbani",
+          "v": "Rekruting Kanbani"
+        },
+        {
+          "k": "Strategik Vazifalar",
+          "v": "Strategik Vazifalar"
+        },
+        {
+          "k": "Kommunikatsiya Markazi",
+          "v": "Kommunikatsiya Markazi"
+        },
+        {
+          "k": "AI Agentlar (14 ta)",
+          "v": "AI Agentlar (14 ta)"
+        },
+        {
+          "k": "HR AI",
+          "v": "HR AI"
+        },
+        {
+          "k": "Quality AI",
+          "v": "Sifat AI"
+        },
+        {
+          "k": "Strategic AI",
+          "v": "Strategic AI"
+        },
+        {
+          "k": "Facilities AI",
+          "v": "Facilities AI"
+        },
+        {
+          "k": "Procurement AI",
+          "v": "Procurement AI"
+        },
+        {
+          "k": "ICHKI CHAT",
+          "v": "ICHKI CHAT"
+        },
+        {
+          "k": "Ombor Hub (9 ombor)",
+          "v": "Ombor Hub (9 ombor)"
+        },
+        {
+          "k": "Real-time KPI",
+          "v": "Real-time KPI"
+        },
+        {
+          "k": "Ichki So'rovlar",
+          "v": "Ichki So'rovlar"
+        },
+        {
+          "k": "Karantin Ro'yxati",
+          "v": "Karantin Ro'yxati"
+        },
+        {
+          "k": "Inventar Pasportlari",
+          "v": "Inventar Pasportlari"
+        },
+        {
+          "k": "Barkod Navbati",
+          "v": "Barkod Navbati"
+        },
+        {
+          "k": "Hisobotlar Markazi (22)",
+          "v": "Hisobotlar Markazi (22)"
+        },
+        {
+          "k": "Audit Jurnali",
+          "v": "Audit Jurnali"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "AI CRM",
+          "v": "AI CRM"
+        },
+        {
+          "k": "Social Inbox",
+          "v": "Social Inbox"
+        },
+        {
+          "k": "Inline QC",
+          "v": "Inline QC"
+        },
+        {
+          "k": "OEE Live",
+          "v": "OEE Live"
+        },
+        {
+          "k": "HR AI",
+          "v": "HR AI"
+        }
+      ]
+    },
+    "notifications": {
+      "total": 78,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "typeMention",
+          "v": "Eslatib o'tildi"
+        },
+        {
+          "k": "recipient",
+          "v": "Qabul qiluvchi"
+        },
+        {
+          "k": "sentAt",
+          "v": "Yuborilgan vaqt"
+        },
+        {
+          "k": "readAt",
+          "v": "O'qilgan vaqt"
+        },
+        {
+          "k": "quietHours",
+          "v": "Jim soatlar"
+        },
+        {
+          "k": "doNotDisturb",
+          "v": "Bezovta qilma"
+        },
+        {
+          "k": "taskAssigned",
+          "v": "Vazifa biriktirildi"
+        },
+        {
+          "k": "taskOverdue",
+          "v": "Vazifa kechikdi"
+        },
+        {
+          "k": "approvalRejected",
+          "v": "Rad etildi"
+        },
+        {
+          "k": "invoiceDue",
+          "v": "Faktura muddati"
+        },
+        {
+          "k": "paymentReceived",
+          "v": "To'lov qabul qilindi"
+        },
+        {
+          "k": "lowStock",
+          "v": "Zaxira kam"
+        },
+        {
+          "k": "noItems",
+          "v": "Elementlar yo'q"
+        }
+      ],
+      "englishInRu": []
+    },
+    "offline": {
+      "total": 3,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [],
+      "englishInRu": []
+    },
+    "pos": {
+      "total": 71,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Savdo nuqtasi"
+        },
+        {
+          "k": "dashboard",
+          "v": "POS paneli"
+        },
+        {
+          "k": "subtotal",
+          "v": "Oraliq jami"
+        },
+        {
+          "k": "taxRate",
+          "v": "Soliq stavkasi"
+        },
+        {
+          "k": "discountCode",
+          "v": "Chegirma kodi"
+        },
+        {
+          "k": "paymentMethod",
+          "v": "To'lov usuli"
+        },
+        {
+          "k": "cash",
+          "v": "Naqd pul"
+        },
+        {
+          "k": "split",
+          "v": "Ajratilgan to'lov"
+        },
+        {
+          "k": "cashReceived",
+          "v": "Qabul qilingan naqd"
+        },
+        {
+          "k": "cardTerminal",
+          "v": "Karta terminali"
+        },
+        {
+          "k": "qrPayment",
+          "v": "QR to'lov"
+        },
+        {
+          "k": "layaway",
+          "v": "Muddatli to'lov"
+        },
+        {
+          "k": "dailyReport",
+          "v": "Kunlik hisobot"
+        },
+        {
+          "k": "shiftReport",
+          "v": "Smena hisoboti"
+        },
+        {
+          "k": "cashCount",
+          "v": "Naqd pul hisobi"
+        },
+        {
+          "k": "closingBalance",
+          "v": "Yakuniy balans"
+        },
+        {
+          "k": "totalSales",
+          "v": "Jami sotuvlar"
+        },
+        {
+          "k": "netSales",
+          "v": "Sof sotuvlar"
+        },
+        {
+          "k": "cashierName",
+          "v": "Kassir nomi"
+        },
+        {
+          "k": "register",
+          "v": "Kassa apparati"
+        },
+        {
+          "k": "loyaltyCard",
+          "v": "Sadoqat kartasi"
+        },
+        {
+          "k": "loyaltyPoints",
+          "v": "Sadoqat ballari"
+        },
+        {
+          "k": "guestCheckout",
+          "v": "Mehmon sifatida"
+        },
+        {
+          "k": "kiosk",
+          "v": "Kiosk rejimi"
+        },
+        {
+          "k": "offlineMode",
+          "v": "Offlayn rejim"
+        }
+      ],
+      "englishInRu": []
+    },
+    "print": {
+      "total": 61,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "sheetSettings",
+          "v": "Varaq sozlamalari"
+        },
+        {
+          "k": "sheetWidth",
+          "v": "Varaq eni (mm)"
+        },
+        {
+          "k": "sheetHeight",
+          "v": "Varaq balandligi (mm)"
+        },
+        {
+          "k": "paperType",
+          "v": "Qog'oz turi"
+        },
+        {
+          "k": "totalInkGrams",
+          "v": "Jami siyoh (g)"
+        },
+        {
+          "k": "totalInkLitres",
+          "v": "Jami siyoh (L)"
+        },
+        {
+          "k": "totalCost",
+          "v": "Umumiy narx"
+        },
+        {
+          "k": "inkGrams",
+          "v": "Siyoh (g)"
+        },
+        {
+          "k": "inkLitres",
+          "v": "Siyoh (L)"
+        },
+        {
+          "k": "tacLimit",
+          "v": "TAC chegarasi"
+        },
+        {
+          "k": "tacOk",
+          "v": "TAC me'yorda"
+        },
+        {
+          "k": "stockInsufficient",
+          "v": "Yetarli emas"
+        },
+        {
+          "k": "stockUnknown",
+          "v": "Ma'lum emas"
+        },
+        {
+          "k": "inputSeries",
+          "v": "Raqamlar ketma-ketligi"
+        },
+        {
+          "k": "tacTotal",
+          "v": "TAC jami"
+        },
+        {
+          "k": "totalInk",
+          "v": "Jami siyoh"
+        },
+        {
+          "k": "inkByChannel",
+          "v": "Kanal bo'yicha siyoh (gramm)"
+        },
+        {
+          "k": "paperTypeLabel",
+          "v": "Qog'oz turi"
+        },
+        {
+          "k": "utilizationLabel",
+          "v": "Varaq utilizatsiyasi"
+        },
+        {
+          "k": "channelCyan",
+          "v": "Cyan (C)"
+        },
+        {
+          "k": "channelMagenta",
+          "v": "Magenta (M)"
+        },
+        {
+          "k": "channelYellow",
+          "v": "Yellow (Y)"
+        },
+        {
+          "k": "channelBlack",
+          "v": "Key/Black (K)"
+        }
+      ],
+      "englishInRu": []
+    },
+    "production": {
+      "total": 428,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "bom",
+          "v": "Materiallar spetsifikatsiyasi (BOM)"
+        },
+        {
+          "k": "qualityControl",
+          "v": "Sifat nazorati"
+        },
+        {
+          "k": "finishedGoods",
+          "v": "Tayyor mahsulot"
+        },
+        {
+          "k": "maintenance",
+          "v": "Texnik xizmat"
+        },
+        {
+          "k": "defectRate",
+          "v": "Nuqson darajasi"
+        },
+        {
+          "k": "overallEquipmentEffectiveness",
+          "v": "Umumiy uskunalar samaradorligi"
+        },
+        {
+          "k": "qualityRate",
+          "v": "Sifat darajasi"
+        },
+        {
+          "k": "actualQuantity",
+          "v": "Haqiqiy miqdor"
+        },
+        {
+          "k": "orderNumber",
+          "v": "Buyurtma raqami"
+        },
+        {
+          "k": "customerName",
+          "v": "Mijoz nomi"
+        },
+        {
+          "k": "productName",
+          "v": "Mahsulot nomi"
+        },
+        {
+          "k": "flute",
+          "v": "Gofra turi"
+        },
+        {
+          "k": "batchNumber",
+          "v": "Partiya raqami"
+        },
+        {
+          "k": "activeOrders",
+          "v": "Faol Buyurtmalar"
+        },
+        {
+          "k": "completedOrders",
+          "v": "Tayyor Buyurtmalar"
+        },
+        {
+          "k": "recentOrders",
+          "v": "Oxirgi Buyurtmalar"
+        },
+        {
+          "k": "quickActions",
+          "v": "Tezkor Harakatlar"
+        },
+        {
+          "k": "noOrders",
+          "v": "Buyurtmalar mavjud emas"
+        },
+        {
+          "k": "noTasks",
+          "v": "Vazifalar mavjud emas"
+        },
+        {
+          "k": "thisWeek",
+          "v": "bu hafta"
+        },
+        {
+          "k": "totalPlan",
+          "v": "Jami reja"
+        },
+        {
+          "k": "oeeEfficiency",
+          "v": "OEE (Samaradorlik)"
+        },
+        {
+          "k": "defectiveProduct",
+          "v": "Yaroqsiz mahsulot"
+        },
+        {
+          "k": "noDataYet",
+          "v": "Hozircha ma'lumot yo'q"
+        },
+        {
+          "k": "last7Days",
+          "v": "So'nggi 7 kun"
+        },
+        {
+          "k": "last14Days",
+          "v": "So'nggi 14 kun"
+        },
+        {
+          "k": "last30Days",
+          "v": "So'nggi 30 kun"
+        },
+        {
+          "k": "noDataFound",
+          "v": "Ma'lumot topilmadi"
+        },
+        {
+          "k": "capacityPerHour",
+          "v": "Quvvat (dona/soat)"
+        },
+        {
+          "k": "selectType",
+          "v": "Turni tanlang"
+        },
+        {
+          "k": "enterProductData",
+          "v": "Mahsulot ma'lumotlarini kiriting"
+        },
+        {
+          "k": "nameRu",
+          "v": "Nomi (Ruscha)"
+        },
+        {
+          "k": "measureUnit",
+          "v": "O'lchov birligi"
+        },
+        {
+          "k": "selectUnit",
+          "v": "O'lchov birligini tanlang"
+        },
+        {
+          "k": "standardCost",
+          "v": "Standart tannarx (so'm)"
+        },
+        {
+          "k": "enterOrderData",
+          "v": "Buyurtma ma'lumotlarini kiriting"
+        },
+        {
+          "k": "selectProduct",
+          "v": "Mahsulotni tanlang"
+        },
+        {
+          "k": "selectPriority",
+          "v": "Ustuvorlikni tanlang"
+        },
+        {
+          "k": "selectStatus",
+          "v": "Holatni tanlang"
+        },
+        {
+          "k": "cancelledStatus",
+          "v": "Bekor qilindi"
+        },
+        {
+          "k": "durationMinutes",
+          "v": "Davomiyligi (daqiqa)"
+        },
+        {
+          "k": "maintenanceCategory",
+          "v": "Texnik xizmat (Maintenance)"
+        },
+        {
+          "k": "productDeleted",
+          "v": "Mahsulot o'chirildi"
+        },
+        {
+          "k": "orderDeleted",
+          "v": "Buyurtma o'chirildi"
+        },
+        {
+          "k": "confirmDeleteProduct",
+          "v": "Haqiqatan ham bu mahsulotni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+        },
+        {
+          "k": "confirmDeleteOrder",
+          "v": "Haqiqatan ham bu buyurtmani o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+        },
+        {
+          "k": "employeeId",
+          "v": "Xodim ID"
+        },
+        {
+          "k": "selectEmployee",
+          "v": "Xodimni tanlang"
+        },
+        {
+          "k": "dateRange",
+          "v": "Sana Oralig'i"
+        },
+        {
+          "k": "loadAnalysisDesc",
+          "v": "Yuklama tahlili uchun davr tanlang"
+        },
+        {
+          "k": "loadAnalysisTab",
+          "v": "Yuklama Tahlili"
+        },
+        {
+          "k": "capacityData",
+          "v": "Quvvat Ma'lumotlari"
+        },
+        {
+          "k": "defineCapacity",
+          "v": "Work Center quvvatini aniqlang"
+        },
+        {
+          "k": "totalWorkCenters",
+          "v": "Jami Work Centers"
+        },
+        {
+          "k": "workCenterLoadChart",
+          "v": "Work Center Yuklama Grafigi"
+        },
+        {
+          "k": "criticalWorkCenters",
+          "v": "Critical Work Centers"
+        },
+        {
+          "k": "bottlenecksHighLoad",
+          "v": "Bottleneck'lar va yuqori yuklama"
+        },
+        {
+          "k": "noBottlenecksFound",
+          "v": "Bottleneck topilmadi"
+        },
+        {
+          "k": "noCapacityData",
+          "v": "Quvvat ma'lumotlari topilmadi"
+        },
+        {
+          "k": "noCapacityEntries",
+          "v": "Quvvat ma'lumotlari yo'q"
+        },
+        {
+          "k": "availableHours",
+          "v": "Available Hours"
+        },
+        {
+          "k": "materialType",
+          "v": "Material turi"
+        },
+        {
+          "k": "costPerUnit",
+          "v": "Birlik narxi"
+        },
+        {
+          "k": "totalCostLabel",
+          "v": "Umumiy narx"
+        },
+        {
+          "k": "byType",
+          "v": "Tur bo'yicha"
+        },
+        {
+          "k": "byMachine",
+          "v": "Dastgoh bo'yicha"
+        },
+        {
+          "k": "topCauses",
+          "v": "Asosiy sabablar"
+        },
+        {
+          "k": "maxWasteCostLabel",
+          "v": "Maksimal narx"
+        },
+        {
+          "k": "machineId",
+          "v": "Dastgoh ID"
+        },
+        {
+          "k": "operatorId",
+          "v": "Operator ID"
+        },
+        {
+          "k": "orderId",
+          "v": "Buyurtma ID"
+        },
+        {
+          "k": "material_defect",
+          "v": "Material nuqsoni"
+        },
+        {
+          "k": "thisMonth",
+          "v": "Bu oy"
+        },
+        {
+          "k": "searchRouting",
+          "v": "Routing raqami, mahsulot..."
+        },
+        {
+          "k": "routingDeleted",
+          "v": "Routing o'chirildi"
+        },
+        {
+          "k": "operationDeleted",
+          "v": "Operatsiya o'chirildi"
+        },
+        {
+          "k": "operationSequence",
+          "v": "Operatsiyalar ketma-ketligi"
+        },
+        {
+          "k": "operationNumber",
+          "v": "Operatsiya Raqami"
+        },
+        {
+          "k": "operationName",
+          "v": "Operatsiya Nomi"
+        },
+        {
+          "k": "machineTimeLabel",
+          "v": "Dastgoh vaqti (soat)"
+        },
+        {
+          "k": "laborTimeLabel",
+          "v": "Mehnat vaqti (soat)"
+        },
+        {
+          "k": "fillAllFields",
+          "v": "Barcha maydonlarni to'ldiring"
+        },
+        {
+          "k": "capacityPlanningDesc",
+          "v": "Work Center quvvatlari va yuklama tahlili"
+        },
+        {
+          "k": "loadedHours",
+          "v": "Loaded Hours"
+        },
+        {
+          "k": "pp.status.cancelled",
+          "v": "Bekor qilingan"
+        },
+        {
+          "k": "mes.certificate.required",
+          "v": "Bu operatsiya uchun sertifikat talab etiladi"
+        },
+        {
+          "k": "mes.defectRate",
+          "v": "Nuqson darajasi"
+        },
+        {
+          "k": "qc.title",
+          "v": "Sifat nazorati (QC)"
+        },
+        {
+          "k": "qc.defectType",
+          "v": "Nuqson turi"
+        },
+        {
+          "k": "mro.maintenance",
+          "v": "Texnik xizmat"
+        },
+        {
+          "k": "mro.schedule",
+          "v": "Texnik xizmat jadvali"
+        },
+        {
+          "k": "mro.status.maintenance",
+          "v": "Texnik xizmatda"
+        },
+        {
+          "k": "mm.title",
+          "v": "Material menejment (MM)"
+        },
+        {
+          "k": "mm.requisition",
+          "v": "Material so'rovi"
+        },
+        {
+          "k": "mm.purchase",
+          "v": "Xarid buyurtmasi"
+        },
+        {
+          "k": "mm.stockLevel",
+          "v": "Zaxira darajasi"
+        },
+        {
+          "k": "mm.minStock",
+          "v": "Minimal zaxira"
+        },
+        {
+          "k": "mm.reorderPoint",
+          "v": "Qayta buyurtma nuqtasi"
+        },
+        {
+          "k": "crp_calculated",
+          "v": "CRP hisoblandi"
+        },
+        {
+          "k": "crp_loadError",
+          "v": "CRP yuklay olmadim"
+        },
+        {
+          "k": "crp_avgLoad",
+          "v": "O'rtacha yuklama"
+        },
+        {
+          "k": "crp_bottlenecks",
+          "v": "Bottleneck markazlar"
+        },
+        {
+          "k": "crp_normalLoad",
+          "v": "Normal yuklama"
+        },
+        {
+          "k": "crp_loadDiagram",
+          "v": "Yuklama Diagrammasi"
+        },
+        {
+          "k": "crp_statusHigh",
+          "v": "Yuqori yuklama"
+        },
+        {
+          "k": "mrp_description",
+          "v": "To'liq MRP matritsasi: Lot-for-Lot, EOQ, POQ, Wagner-Whitin"
+        },
+        {
+          "k": "mrp_lotSizingMethod",
+          "v": "Lot-Sizing usuli"
+        },
+        {
+          "k": "mrp_horizon",
+          "v": "Gorizont (davrlar)"
+        },
+        {
+          "k": "mrp_calculated",
+          "v": "MRP hisoblandi"
+        },
+        {
+          "k": "mrp_totalMaterials",
+          "v": "Jami materiallar"
+        },
+        {
+          "k": "mrp_withNetReq",
+          "v": "Netto talabli materiallar"
+        },
+        {
+          "k": "mrp_matrix",
+          "v": "MRP Matritsasi"
+        },
+        {
+          "k": "mrp_selectMethodMsg",
+          "v": "Usul va gorizontni tanlang, keyin hisoblang"
+        },
+        {
+          "k": "mrp_ss",
+          "v": "Xavfsizlik zahirasi"
+        },
+        {
+          "k": "statusLow",
+          "v": "Holat Low"
+        },
+        {
+          "k": "statusHigh",
+          "v": "Holat High"
+        }
+      ],
+      "englishInRu": []
+    },
+    "public": {
+      "total": 150,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "nav.about",
+          "v": "Biz haqimizda"
+        },
+        {
+          "k": "hero.ctaMore",
+          "v": "Batafsil ma'lumot"
+        },
+        {
+          "k": "products.all",
+          "v": "Barcha mahsulotlar"
+        },
+        {
+          "k": "products.custom",
+          "v": "Maxsus buyurtma"
+        },
+        {
+          "k": "products.notFound",
+          "v": "Mahsulotlar topilmadi"
+        },
+        {
+          "k": "calc.title",
+          "v": "Narx kalkulyatori"
+        },
+        {
+          "k": "calc.size",
+          "v": "O'lcham (sm)"
+        },
+        {
+          "k": "calc.price",
+          "v": "Taxminiy narx"
+        },
+        {
+          "k": "contact.title",
+          "v": "Biz bilan bog'laning"
+        },
+        {
+          "k": "contact.email",
+          "v": "Email"
+        },
+        {
+          "k": "contact.messageSent",
+          "v": "Xabar yuborildi!"
+        },
+        {
+          "k": "contact.willContact",
+          "v": "Tez orada siz bilan bog'lanamiz"
+        },
+        {
+          "k": "contact.form.email",
+          "v": "Email"
+        },
+        {
+          "k": "contact.form.messagePlaceholder",
+          "v": "Xabaringizni yozing..."
+        },
+        {
+          "k": "footer.rights",
+          "v": "Barcha huquqlar himoyalangan"
+        },
+        {
+          "k": "footer.privacy",
+          "v": "Maxfiylik siyosati"
+        },
+        {
+          "k": "common.error",
+          "v": "Xatolik yuz berdi"
+        },
+        {
+          "k": "services.title",
+          "v": "Bizning xizmatlarimiz"
+        },
+        {
+          "k": "services.freeConsult",
+          "v": "Bepul maslahat uchun biz bilan bog'laning"
+        },
+        {
+          "k": "about.title",
+          "v": "Biz haqimizda"
+        },
+        {
+          "k": "about.whyUs",
+          "v": "Nega aynan biz?"
+        },
+        {
+          "k": "about.ourMission",
+          "v": "Bizning missiyamiz"
+        },
+        {
+          "k": "portfolio.partners",
+          "v": "Bizning hamkorlarimiz"
+        },
+        {
+          "k": "order.company",
+          "v": "Kompaniya nomi"
+        },
+        {
+          "k": "order.success",
+          "v": "Buyurtma muvaffaqiyatli yuborildi!"
+        },
+        {
+          "k": "order.received",
+          "v": "Buyurtma qabul qilindi!"
+        },
+        {
+          "k": "order.subtitle",
+          "v": "Formani to'ldiring, biz siz bilan bog'lanamiz"
+        },
+        {
+          "k": "order.phone",
+          "v": "Telefon raqami"
+        },
+        {
+          "k": "order.email",
+          "v": "Email"
+        },
+        {
+          "k": "order.productType",
+          "v": "Mahsulot turi"
+        },
+        {
+          "k": "order.coffeeCups",
+          "v": "Qahva stakanlari"
+        },
+        {
+          "k": "order.drinkCups",
+          "v": "Ichimlik stakanlari"
+        },
+        {
+          "k": "order.foodBoxes",
+          "v": "Oziq-ovqat qutilari"
+        },
+        {
+          "k": "order.customOrder",
+          "v": "Maxsus buyurtma"
+        },
+        {
+          "k": "login.email",
+          "v": "Email"
+        },
+        {
+          "k": "categories.ourCategories",
+          "v": "Mahsulotlarimiz toifalari"
+        },
+        {
+          "k": "categories.coffee",
+          "v": "Qahva uchun"
+        },
+        {
+          "k": "categories.icecream",
+          "v": "Muzqaymoq uchun"
+        },
+        {
+          "k": "categories.drinks",
+          "v": "Ichimliklar uchun"
+        },
+        {
+          "k": "categories.food",
+          "v": "Oziq-ovqat uchun"
+        },
+        {
+          "k": "cta.contact",
+          "v": "Biz bilan bog'laning va bepul maslahat oling"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "contact.email",
+          "v": "Email"
+        },
+        {
+          "k": "contact.form.email",
+          "v": "Email"
+        },
+        {
+          "k": "order.email",
+          "v": "Email"
+        },
+        {
+          "k": "login.email",
+          "v": "Email"
+        }
+      ]
+    },
+    "qc": {
+      "total": 72,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "defectMgmt.rootCause",
+          "v": "root Cause"
+        },
+        {
+          "k": "paperParams.byCategory",
+          "v": "By Toifa"
+        },
+        {
+          "k": "certs.expiringSoon",
+          "v": "expiring Soon"
+        },
+        {
+          "k": "certs.daysLeft",
+          "v": "days Left"
+        },
+        {
+          "k": "qcTrend.latestPass",
+          "v": "latest Pass"
+        },
+        {
+          "k": "qcTrend.avgDpmo",
+          "v": "avg Dpmo"
+        },
+        {
+          "k": "qcTrend.sigmaLevel",
+          "v": "sigma Level"
+        },
+        {
+          "k": "qcTrend.totalInspections",
+          "v": "Jami Inspections"
+        },
+        {
+          "k": "qcTrend.byPeriod",
+          "v": "by Period"
+        },
+        {
+          "k": "qcTrend.passRate",
+          "v": "pass Rate"
+        },
+        {
+          "k": "qcTrend.defectRate",
+          "v": "Defekt Rate"
+        },
+        {
+          "k": "reclamations.overSla",
+          "v": "over Sla"
+        },
+        {
+          "k": "supplierQc.gradeA",
+          "v": "grade A"
+        },
+        {
+          "k": "supplierQc.gradeD",
+          "v": "Grade daqiqa"
+        },
+        {
+          "k": "supplierQc.avgPassRate",
+          "v": "avg Pass Rate"
+        },
+        {
+          "k": "supplierQc.passRate",
+          "v": "pass Rate"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "defectMgmt.rootCause",
+          "v": "root Cause"
+        },
+        {
+          "k": "certs.expiringSoon",
+          "v": "expiring Soon"
+        },
+        {
+          "k": "certs.daysLeft",
+          "v": "days Left"
+        },
+        {
+          "k": "qcTrend.latestPass",
+          "v": "latest Pass"
+        },
+        {
+          "k": "qcTrend.avgDpmo",
+          "v": "avg Dpmo"
+        },
+        {
+          "k": "qcTrend.sigmaLevel",
+          "v": "sigma Level"
+        },
+        {
+          "k": "qcTrend.byPeriod",
+          "v": "by Period"
+        },
+        {
+          "k": "qcTrend.passRate",
+          "v": "pass Rate"
+        },
+        {
+          "k": "reclamations.overSla",
+          "v": "over Sla"
+        },
+        {
+          "k": "supplierQc.gradeA",
+          "v": "grade A"
+        },
+        {
+          "k": "supplierQc.avgPassRate",
+          "v": "avg Pass Rate"
+        },
+        {
+          "k": "supplierQc.passRate",
+          "v": "pass Rate"
+        }
+      ]
+    },
+    "qcreview": {
+      "total": 3,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "emptyDesc",
+          "v": "Ma'lumot topilmadi"
+        }
+      ],
+      "englishInRu": []
+    },
+    "quarantine": {
+      "total": 8,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "emptyDesc",
+          "v": "Ma'lumot topilmadi"
+        },
+        {
+          "k": "hoursInQuarantine",
+          "v": "Hours In Karantin"
+        },
+        {
+          "k": "qcDecision",
+          "v": "qc Decision"
+        },
+        {
+          "k": "notePlaceholder",
+          "v": "Izoh Placeholder"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "qcDecision",
+          "v": "qc Decision"
+        }
+      ]
+    },
+    "reports": {
+      "total": 5,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "selectReport",
+          "v": "Hisobotni tanlang"
+        }
+      ],
+      "englishInRu": []
+    },
+    "requests": {
+      "total": 15,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "targetWarehouse",
+          "v": "Maqsadli ombor"
+        },
+        {
+          "k": "notePlaceholder",
+          "v": "Izoh Placeholder"
+        },
+        {
+          "k": "newRequest",
+          "v": "new Request"
+        },
+        {
+          "k": "myRequests",
+          "v": "my Requests"
+        },
+        {
+          "k": "toFulfill",
+          "v": "to Fulfill"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "newRequest",
+          "v": "new Request"
+        },
+        {
+          "k": "myRequests",
+          "v": "my Requests"
+        },
+        {
+          "k": "toFulfill",
+          "v": "to Fulfill"
+        }
+      ]
+    },
+    "sd": {
+      "total": 101,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "dashboard",
+          "v": "SD paneli"
+        },
+        {
+          "k": "orderNumber",
+          "v": "Buyurtma raqami"
+        },
+        {
+          "k": "orderDate",
+          "v": "Buyurtma sanasi"
+        },
+        {
+          "k": "orderStatus",
+          "v": "Buyurtma holati"
+        },
+        {
+          "k": "orderCreated",
+          "v": "Buyurtma yaratildi"
+        },
+        {
+          "k": "orderCancelled",
+          "v": "Buyurtma bekor qilindi"
+        },
+        {
+          "k": "customerName",
+          "v": "Mijoz nomi"
+        },
+        {
+          "k": "customerCode",
+          "v": "Mijoz kodi"
+        },
+        {
+          "k": "deliveryNote",
+          "v": "Yuk xati"
+        },
+        {
+          "k": "invoiceNumber",
+          "v": "Faktura raqami"
+        },
+        {
+          "k": "invoiceDate",
+          "v": "Faktura sanasi"
+        },
+        {
+          "k": "invoiceDueDate",
+          "v": "To'lov muddati"
+        },
+        {
+          "k": "invoiceAmount",
+          "v": "Faktura summasi"
+        },
+        {
+          "k": "advancePayment",
+          "v": "Avans to'lov"
+        },
+        {
+          "k": "paymentDate",
+          "v": "To'lov sanasi"
+        },
+        {
+          "k": "paymentAmount",
+          "v": "To'lov summasi"
+        },
+        {
+          "k": "paymentMethod",
+          "v": "To'lov usuli"
+        },
+        {
+          "k": "paymentStatus",
+          "v": "To'lov holati"
+        },
+        {
+          "k": "partiallyPaid",
+          "v": "Qisman to'langan"
+        },
+        {
+          "k": "overdue",
+          "v": "Muddati o'tgan"
+        },
+        {
+          "k": "totalAmount",
+          "v": "Jami summa"
+        },
+        {
+          "k": "netAmount",
+          "v": "Sof summa"
+        },
+        {
+          "k": "taxAmount",
+          "v": "Soliq summasi"
+        },
+        {
+          "k": "discountAmount",
+          "v": "Chegirma summasi"
+        },
+        {
+          "k": "remainingBalance",
+          "v": "Qolgan balans"
+        },
+        {
+          "k": "creditLimit",
+          "v": "Kredit limit"
+        },
+        {
+          "k": "debtorAnalysis",
+          "v": "Debitorlik tahlili"
+        },
+        {
+          "k": "aging",
+          "v": "Qarzdorlik muddati"
+        },
+        {
+          "k": "agingReport",
+          "v": "Qarzdorlik muddati hisoboti"
+        },
+        {
+          "k": "unitPrice",
+          "v": "Birlik narxi"
+        },
+        {
+          "k": "subtotal",
+          "v": "Oraliq jami"
+        },
+        {
+          "k": "kpi",
+          "v": "KPI ko'rsatkichlari"
+        },
+        {
+          "k": "salesTarget",
+          "v": "Sotuv maqsadi"
+        },
+        {
+          "k": "salesActual",
+          "v": "Haqiqiy sotuv"
+        },
+        {
+          "k": "salesPerformance",
+          "v": "Sotuv samaradorligi"
+        },
+        {
+          "k": "leads",
+          "v": "Potensial mijozlar"
+        },
+        {
+          "k": "status.cancelled",
+          "v": "Bekor qilindi"
+        },
+        {
+          "k": "creditNote",
+          "v": "Kredit nota"
+        },
+        {
+          "k": "salesManager",
+          "v": "Sotuv menejeri"
+        },
+        {
+          "k": "priceList",
+          "v": "Narxlar ro'yxati"
+        },
+        {
+          "k": "taxRate",
+          "v": "Soliq stavkasi"
+        },
+        {
+          "k": "orderItems",
+          "v": "Buyurtma bandlari"
+        },
+        {
+          "k": "trackingNumber",
+          "v": "Kuzatuv raqami"
+        }
+      ],
+      "englishInRu": []
+    },
+    "security": {
+      "total": 67,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "dashboard",
+          "v": "Xavfsizlik paneli"
+        },
+        {
+          "k": "blockedIPs",
+          "v": "Bloklangan IP'lar"
+        },
+        {
+          "k": "allowedIPs",
+          "v": "Ruxsat etilgan IP'lar"
+        },
+        {
+          "k": "ipAddress",
+          "v": "IP manzil"
+        },
+        {
+          "k": "ipRange",
+          "v": "IP oralig'i"
+        },
+        {
+          "k": "subnet",
+          "v": "Quyi tarmoq"
+        },
+        {
+          "k": "whitelistReason",
+          "v": "Oq ro'yxat sababi"
+        },
+        {
+          "k": "blacklistReason",
+          "v": "Qora ro'yxat sababi"
+        },
+        {
+          "k": "authLogs",
+          "v": "Autentifikatsiya jurnali"
+        },
+        {
+          "k": "bruteForce",
+          "v": "Kuch bilan hujum"
+        },
+        {
+          "k": "rateLimit",
+          "v": "So'rovlar chastotasi"
+        },
+        {
+          "k": "twoFactor",
+          "v": "Ikki faktorli autentifikatsiya"
+        },
+        {
+          "k": "backupCodes",
+          "v": "Zaxira kodlar"
+        },
+        {
+          "k": "activeSessions",
+          "v": "Faol sessiyalar"
+        },
+        {
+          "k": "deviceInfo",
+          "v": "Qurilma ma'lumoti"
+        },
+        {
+          "k": "userAgent",
+          "v": "Brauzer ma'lumoti"
+        },
+        {
+          "k": "lastActivity",
+          "v": "Oxirgi faoliyat"
+        },
+        {
+          "k": "passwordPolicy",
+          "v": "Parol siyosati"
+        },
+        {
+          "k": "passwordStrength",
+          "v": "Parol kuchliligi"
+        },
+        {
+          "k": "minLength",
+          "v": "Minimal uzunlik"
+        },
+        {
+          "k": "passwordExpiry",
+          "v": "Parol muddati"
+        },
+        {
+          "k": "certificateExpiry",
+          "v": "Sertifikat muddati"
+        },
+        {
+          "k": "firewall",
+          "v": "Xavfsizlik devori"
+        },
+        {
+          "k": "securityScan",
+          "v": "Xavfsizlik skaneri"
+        },
+        {
+          "k": "auditLog",
+          "v": "Audit jurnali"
+        },
+        {
+          "k": "auditTrail",
+          "v": "Audit yo'li"
+        },
+        {
+          "k": "timestamp",
+          "v": "Vaqt belgisi"
+        },
+        {
+          "k": "privacyPolicy",
+          "v": "Maxfiylik siyosati"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "userAgent",
+          "v": "User Agent"
+        }
+      ]
+    },
+    "settings": {
+      "total": 63,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "generalSettings",
+          "v": "Umumiy sozlamalar"
+        },
+        {
+          "k": "systemSettings",
+          "v": "Tizim sozlamalari"
+        },
+        {
+          "k": "profileSettings",
+          "v": "Profil sozlamalari"
+        },
+        {
+          "k": "securitySettings",
+          "v": "Xavfsizlik sozlamalari"
+        },
+        {
+          "k": "languageSettings",
+          "v": "Til sozlamalari"
+        },
+        {
+          "k": "darkMode",
+          "v": "Qorong'u rejim"
+        },
+        {
+          "k": "lightMode",
+          "v": "Yorug' rejim"
+        },
+        {
+          "k": "companySettings",
+          "v": "Kompaniya sozlamalari"
+        },
+        {
+          "k": "companyName",
+          "v": "Kompaniya nomi"
+        },
+        {
+          "k": "companyAddress",
+          "v": "Kompaniya manzili"
+        },
+        {
+          "k": "taxSettings",
+          "v": "Soliq sozlamalari"
+        },
+        {
+          "k": "currencySettings",
+          "v": "Valyuta sozlamalari"
+        },
+        {
+          "k": "defaultCurrency",
+          "v": "Standart valyuta"
+        },
+        {
+          "k": "dateFormat",
+          "v": "Sana formati"
+        },
+        {
+          "k": "timezone",
+          "v": "Vaqt zonasi"
+        },
+        {
+          "k": "backupSettings",
+          "v": "Zaxira nusxa sozlamalari"
+        },
+        {
+          "k": "telegramBot",
+          "v": "Telegram bot"
+        },
+        {
+          "k": "apiKeys",
+          "v": "API kalitlar"
+        },
+        {
+          "k": "auditLog",
+          "v": "Audit jurnali"
+        },
+        {
+          "k": "systemLog",
+          "v": "Tizim jurnali"
+        },
+        {
+          "k": "about",
+          "v": "Tizim haqida"
+        },
+        {
+          "k": "title",
+          "v": "Tizim sozlamalari"
+        },
+        {
+          "k": "language.current",
+          "v": "Hozirgi til"
+        },
+        {
+          "k": "audit.title",
+          "v": "Audit jurnali"
+        },
+        {
+          "k": "audit.ip",
+          "v": "IP manzil"
+        },
+        {
+          "k": "backup.title",
+          "v": "Zaxira nusxa"
+        },
+        {
+          "k": "backup.schedule",
+          "v": "Avtomatik zaxira jadvali"
+        },
+        {
+          "k": "telegram.title",
+          "v": "Telegram bot"
+        },
+        {
+          "k": "telegram.token",
+          "v": "Bot tokeni"
+        },
+        {
+          "k": "telegram.chatId",
+          "v": "Chat ID"
+        }
+      ],
+      "englishInRu": []
+    },
+    "validation": {
+      "total": 29,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "email",
+          "v": "To'g'ri email kiriting"
+        },
+        {
+          "k": "phone",
+          "v": "To'g'ri telefon raqam kiriting"
+        },
+        {
+          "k": "url",
+          "v": "To'g'ri URL kiriting"
+        },
+        {
+          "k": "number",
+          "v": "Faqat raqam kiriting"
+        },
+        {
+          "k": "integer",
+          "v": "Faqat butun son kiriting"
+        },
+        {
+          "k": "positive",
+          "v": "Musbat son kiriting"
+        },
+        {
+          "k": "pattern",
+          "v": "Noto'g'ri format"
+        },
+        {
+          "k": "unique",
+          "v": "Bu qiymat allaqachon mavjud"
+        },
+        {
+          "k": "dateFormat",
+          "v": "Noto'g'ri sana formati"
+        },
+        {
+          "k": "strongPassword",
+          "v": "Kuchli parol kiriting"
+        },
+        {
+          "k": "selectOption",
+          "v": "Variantni tanlang"
+        },
+        {
+          "k": "invalidAmount",
+          "v": "Noto'g'ri summa"
+        },
+        {
+          "k": "decimal",
+          "v": "Raqam kiriting (masalan: 12.50)"
+        }
+      ],
+      "englishInRu": []
+    },
+    "variance": {
+      "total": 22,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "subtitle",
+          "v": "Ostki sarlavha"
+        },
+        {
+          "k": "orderIdLabel",
+          "v": "Buyurtma raqami"
+        },
+        {
+          "k": "notFound",
+          "v": "not Found"
+        },
+        {
+          "k": "stdCost",
+          "v": "std Cost"
+        },
+        {
+          "k": "actualCost",
+          "v": "actual Cost"
+        },
+        {
+          "k": "auditRequired",
+          "v": "Audit Majburiy"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "notFound",
+          "v": "not Found"
+        },
+        {
+          "k": "stdCost",
+          "v": "std Cost"
+        },
+        {
+          "k": "actualCost",
+          "v": "actual Cost"
+        }
+      ]
+    },
+    "warehouse": {
+      "total": 311,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "stockLevel",
+          "v": "Zaxira darajasi"
+        },
+        {
+          "k": "goodsReceipt",
+          "v": "Tovar qabuli"
+        },
+        {
+          "k": "cycleCount",
+          "v": "Siklik hisob"
+        },
+        {
+          "k": "minStock",
+          "v": "Minimal zaxira"
+        },
+        {
+          "k": "maxStock",
+          "v": "Maksimal zaxira"
+        },
+        {
+          "k": "reorderPoint",
+          "v": "Qayta buyurtma nuqtasi"
+        },
+        {
+          "k": "safetyStock",
+          "v": "Xavfsizlik zaxirasi"
+        },
+        {
+          "k": "expired",
+          "v": "Muddati o'tgan"
+        },
+        {
+          "k": "fefo",
+          "v": "FEFO (Muddati tugaydigani birinchi)"
+        },
+        {
+          "k": "fifo",
+          "v": "FIFO (Birinchi kelgani birinchi)"
+        },
+        {
+          "k": "batchTracking",
+          "v": "Partiya kuzatuvi"
+        },
+        {
+          "k": "serialNumber",
+          "v": "Seriya raqami"
+        },
+        {
+          "k": "warehouseReport",
+          "v": "Ombor hisoboti"
+        },
+        {
+          "k": "stockReport",
+          "v": "Zaxira hisoboti"
+        },
+        {
+          "k": "movementHistory",
+          "v": "Harakat tarixi"
+        },
+        {
+          "k": "deliveryNote",
+          "v": "Yuk xati"
+        },
+        {
+          "k": "waybill",
+          "v": "Yo'l varaqasi"
+        },
+        {
+          "k": "materialCode",
+          "v": "Material kodi"
+        },
+        {
+          "k": "materialName",
+          "v": "Material nomi"
+        },
+        {
+          "k": "materialGroup",
+          "v": "Material guruhi"
+        },
+        {
+          "k": "unitOfMeasure",
+          "v": "O'lchov birligi"
+        },
+        {
+          "k": "warehouseManager",
+          "v": "Ombor mudiri"
+        },
+        {
+          "k": "warehouseDashboard",
+          "v": "Ombor paneli"
+        },
+        {
+          "k": "warehouseDashboardSubtitle",
+          "v": "Real vaqtda ombor holati va tahlil"
+        },
+        {
+          "k": "totalMaterials",
+          "v": "Jami Materiallar"
+        },
+        {
+          "k": "stockValue",
+          "v": "Zaxira Qiymati"
+        },
+        {
+          "k": "lowStock",
+          "v": "Kam Qoldiq"
+        },
+        {
+          "k": "pendingReceipts",
+          "v": "Kutilayotgan Qabul"
+        },
+        {
+          "k": "overdueReservations",
+          "v": "Muddati O'tgan Bron"
+        },
+        {
+          "k": "stockValueTrend",
+          "v": "Zaxira Qiymati Dinamikasi"
+        },
+        {
+          "k": "movementSummary",
+          "v": "Harakat Xulosasi"
+        },
+        {
+          "k": "topMaterials",
+          "v": "Top 10 Materiallar"
+        },
+        {
+          "k": "sortByValue",
+          "v": "Qiymat bo'yicha"
+        },
+        {
+          "k": "sortByMovement",
+          "v": "Harakat bo'yicha"
+        },
+        {
+          "k": "lowStockAlerts",
+          "v": "Kam qoldiq materiallar"
+        },
+        {
+          "k": "pendingQC",
+          "v": "Kutilayotgan QC"
+        },
+        {
+          "k": "expiringBatches",
+          "v": "Muddati tugayotgan partiyalar"
+        },
+        {
+          "k": "overdueTasks",
+          "v": "Muddati o'tgan vazifalar"
+        },
+        {
+          "k": "quickActions",
+          "v": "Tezkor Amallar"
+        },
+        {
+          "k": "warehousesNotFound",
+          "v": "Omborlar topilmadi"
+        },
+        {
+          "k": "grTodayReceipts",
+          "v": "Bugungi qabullar"
+        },
+        {
+          "k": "grPendingQc",
+          "v": "QC kutmoqda"
+        },
+        {
+          "k": "grMonthlyValue",
+          "v": "Oylik qiymat"
+        },
+        {
+          "k": "grAllStatuses",
+          "v": "Barcha holatlar"
+        },
+        {
+          "k": "grSupplier",
+          "v": "Yetkazib beruvchi"
+        },
+        {
+          "k": "grReceiptDate",
+          "v": "Qabul sanasi"
+        },
+        {
+          "k": "grSelectWarehouse",
+          "v": "Ombor tanlang"
+        },
+        {
+          "k": "grSelectSupplier",
+          "v": "Yetkazib beruvchi tanlang"
+        },
+        {
+          "k": "grInvoiceDate",
+          "v": "Hisob-faktura sanasi"
+        },
+        {
+          "k": "grReceiptDetails",
+          "v": "Qabul tafsilotlari"
+        },
+        {
+          "k": "grAcceptedQty",
+          "v": "Qabul qilingan"
+        },
+        {
+          "k": "grRejectedQty",
+          "v": "Rad etilgan"
+        },
+        {
+          "k": "grUnitCost",
+          "v": "Birlik narx"
+        },
+        {
+          "k": "grQcStatus",
+          "v": "QC holati"
+        },
+        {
+          "k": "grQcNotes",
+          "v": "QC izohi"
+        },
+        {
+          "k": "grSelectMaterial",
+          "v": "Materialni tanlang"
+        },
+        {
+          "k": "grStatusPendingQc",
+          "v": "QC kutmoqda"
+        },
+        {
+          "k": "grStatusQcPassed",
+          "v": "QC o'tdi"
+        },
+        {
+          "k": "grStatusQcFailed",
+          "v": "QC rad etildi"
+        },
+        {
+          "k": "grStatusReceived",
+          "v": "Qabul qilindi"
+        },
+        {
+          "k": "grStatusCancelled",
+          "v": "Bekor qilindi"
+        },
+        {
+          "k": "grStatusFailed",
+          "v": "Rad etildi"
+        },
+        {
+          "k": "grStatusNotRequired",
+          "v": "Talab qilinmaydi"
+        },
+        {
+          "k": "grNoDataFound",
+          "v": "Ma'lumotlar topilmadi"
+        },
+        {
+          "k": "grNoLines",
+          "v": "Qatorlar yo'q"
+        },
+        {
+          "k": "grReceiptCreated",
+          "v": "Qabul yaratildi"
+        },
+        {
+          "k": "grReceiptCompleted",
+          "v": "Qabul yakunlandi"
+        },
+        {
+          "k": "icStatsTotalThisMonth",
+          "v": "Bu oy jami"
+        },
+        {
+          "k": "icStatsWithVariances",
+          "v": "Farqli hisoblar"
+        },
+        {
+          "k": "icStatsTotalVarianceValue",
+          "v": "Umumiy farq qiymati"
+        },
+        {
+          "k": "icTableCountNumber",
+          "v": "Hisob raqami"
+        },
+        {
+          "k": "icTableTotalItems",
+          "v": "Jami elementlar"
+        },
+        {
+          "k": "icFilterAllStatuses",
+          "v": "Barcha holatlar"
+        },
+        {
+          "k": "icFilterAllWarehouses",
+          "v": "Barcha omborlar"
+        },
+        {
+          "k": "icFormCountDate",
+          "v": "Hisob sanasi"
+        },
+        {
+          "k": "icFormCountType",
+          "v": "Hisob turi"
+        },
+        {
+          "k": "icFormSelectWarehouse",
+          "v": "Omborni tanlang"
+        },
+        {
+          "k": "icFormSelectType",
+          "v": "Turni tanlang"
+        },
+        {
+          "k": "icFormSelectUser",
+          "v": "Xodimni tanlang"
+        },
+        {
+          "k": "icDetailTitle",
+          "v": "Inventarizatsiya tafsilotlari"
+        },
+        {
+          "k": "icDetailMaterialCode",
+          "v": "Material kodi"
+        },
+        {
+          "k": "icDetailBookQuantity",
+          "v": "Kitob miqdori"
+        },
+        {
+          "k": "icDetailSummaryTitle",
+          "v": "Farq xulosa"
+        },
+        {
+          "k": "icDetailSummaryTotal",
+          "v": "Umumiy farq"
+        },
+        {
+          "k": "icMsgCreateSuccess",
+          "v": "Inventarizatsiya yaratildi"
+        },
+        {
+          "k": "title",
+          "v": "Ombor (WMS)"
+        },
+        {
+          "k": "inventory.unit",
+          "v": "O'lchov birligi"
+        },
+        {
+          "k": "inventory.minLevel",
+          "v": "Minimal daraja"
+        },
+        {
+          "k": "inventory.currentLevel",
+          "v": "Joriy daraja"
+        },
+        {
+          "k": "movement.type",
+          "v": "Harakat turi"
+        },
+        {
+          "k": "receipt.purchaseOrder",
+          "v": "Xarid buyurtmasi"
+        },
+        {
+          "k": "receipt.qcRequired",
+          "v": "Sifat nazorati talab etiladi"
+        },
+        {
+          "k": "fg.title",
+          "v": "Tayyor mahsulot ombori (FG)"
+        },
+        {
+          "k": "fg.stock",
+          "v": "Tayyor mahsulot zaxirasi"
+        },
+        {
+          "k": "rental.title",
+          "v": "Ombor ijarasi"
+        },
+        {
+          "k": "rental.invoice",
+          "v": "Ijara hisob-fakturasi"
+        },
+        {
+          "k": "rental.autoGenerated",
+          "v": "Ijara hisob-fakturasi avtomatik yaratildi"
+        },
+        {
+          "k": "sd.title",
+          "v": "Sotuv (SD)"
+        },
+        {
+          "k": "sd.order",
+          "v": "Sotuv buyurtmasi"
+        },
+        {
+          "k": "sd.deal.won",
+          "v": "Bitim yutildi!"
+        },
+        {
+          "k": "sd.delivery.complete",
+          "v": "Yetkazib berildi"
+        },
+        {
+          "k": "posStock.totalItems",
+          "v": "Jami elementlar"
+        },
+        {
+          "k": "posStock.lowStock",
+          "v": "low Stock"
+        },
+        {
+          "k": "posStock.warehouseFilter",
+          "v": "Ombor Filtr"
+        },
+        {
+          "k": "posStock.minStock",
+          "v": "min Stock"
+        },
+        {
+          "k": "posSync.allSynced",
+          "v": "All Sinxronlangan"
+        },
+        {
+          "k": "posSync.syncAll",
+          "v": "sync All"
+        },
+        {
+          "k": "posSync.pendingItems",
+          "v": "Kutilmoqda Elementlar"
+        },
+        {
+          "k": "posSync.lastSync",
+          "v": "last Sync"
+        },
+        {
+          "k": "posSync.neverSynced",
+          "v": "Never Sinxronlangan"
+        }
+      ],
+      "englishInRu": [
+        {
+          "k": "posStock.lowStock",
+          "v": "low Stock"
+        },
+        {
+          "k": "posStock.minStock",
+          "v": "min Stock"
+        },
+        {
+          "k": "posSync.syncAll",
+          "v": "sync All"
+        },
+        {
+          "k": "posSync.lastSync",
+          "v": "last Sync"
+        }
+      ]
+    },
+    "wms": {
+      "total": 70,
+      "onlyInUz": [],
+      "onlyInRu": [],
+      "emptyInUz": [],
+      "emptyInRu": [],
+      "englishInUz": [
+        {
+          "k": "title",
+          "v": "Material Balansi"
+        },
+        {
+          "k": "materialBalance",
+          "v": "Material Balansi"
+        },
+        {
+          "k": "internalRequests",
+          "v": "Ichki so'rovlar"
+        },
+        {
+          "k": "internalRequest",
+          "v": "Ichki so'rov"
+        },
+        {
+          "k": "requestDate",
+          "v": "So'rov sanasi"
+        },
+        {
+          "k": "requestedItems",
+          "v": "So'ralgan materiallar"
+        },
+        {
+          "k": "rejected",
+          "v": "Rad etilgan"
+        },
+        {
+          "k": "requestApproved",
+          "v": "So'rov tasdiqlandi"
+        },
+        {
+          "k": "requestRejected",
+          "v": "So'rov rad etildi"
+        },
+        {
+          "k": "materialIssued",
+          "v": "Material berildi"
+        },
+        {
+          "k": "materialCode",
+          "v": "Material kodi"
+        },
+        {
+          "k": "materialName",
+          "v": "Material nomi"
+        },
+        {
+          "k": "materialType",
+          "v": "Material turi"
+        },
+        {
+          "k": "unit",
+          "v": "O'lchov birligi"
+        },
+        {
+          "k": "requestedQty",
+          "v": "So'ralgan miqdor"
+        },
+        {
+          "k": "issuedQty",
+          "v": "Berilgan miqdor"
+        },
+        {
+          "k": "remainingQty",
+          "v": "Qolgan miqdor"
+        },
+        {
+          "k": "availableQty",
+          "v": "Mavjud miqdor"
+        },
+        {
+          "k": "approvalNote",
+          "v": "Tasdiq izohi"
+        },
+        {
+          "k": "noRequests",
+          "v": "So'rovlar mavjud emas"
+        },
+        {
+          "k": "filterByStatus",
+          "v": "Holat bo'yicha filtr"
+        },
+        {
+          "k": "requestCreated",
+          "v": "So'rov yaratildi"
+        },
+        {
+          "k": "error",
+          "v": "Xatolik yuz berdi"
+        },
+        {
+          "k": "avg_turnover",
+          "v": "O'rtacha aylanma"
+        },
+        {
+          "k": "dead_stock_count",
+          "v": "O'lik zaxiralar"
+        },
+        {
+          "k": "status_ordered",
+          "v": "Buyurtma berildi"
+        },
+        {
+          "k": "status_requisition_creating",
+          "v": "Talab yaratilmoqda"
+        },
+        {
+          "k": "turnover_title",
+          "v": "Inventar Aylanmasi (DIO tahlili)"
+        },
+        {
+          "k": "no_data",
+          "v": "Tahlil uchun ma'lumot topilmadi"
+        },
+        {
+          "k": "col_dio",
+          "v": "DIO (kun)"
+        },
+        {
+          "k": "col_avg_balance",
+          "v": "O'rtacha Qoldiq"
+        },
+        {
+          "k": "col_current_stock",
+          "v": "Joriy Qoldiq"
+        },
+        {
+          "k": "col_last_movement",
+          "v": "Oxirgi Harakat"
+        },
+        {
+          "k": "col_days_idle",
+          "v": "Harakatsiz (kun)"
+        },
+        {
+          "k": "col_estimated_value",
+          "v": "Taxminiy Qiymat"
+        }
+      ],
+      "englishInRu": []
+    }
+  },
+  "summary": {
+    "totalKeys": 5433,
+    "onlyInUz": 0,
+    "onlyInRu": 0,
+    "emptyInUz": 0,
+    "emptyInRu": 0,
+    "englishInUz": 1852,
+    "englishInRu": 77
+  }
+}

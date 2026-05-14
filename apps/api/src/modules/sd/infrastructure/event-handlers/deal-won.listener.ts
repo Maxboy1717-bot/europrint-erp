@@ -1,3 +1,8 @@
+/**
+ * @module deal-won.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { CommandBus } from '@nestjs/cqrs';
@@ -23,7 +28,7 @@ export class DealWonListener {
       const command = new CreateOrderCommand(
         event.companyId,
         event.totalAmount,
-        'USD',
+        event.currency ?? 'UZS',
         false,
         false,
         event.assignedTo,

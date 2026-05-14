@@ -1,3 +1,8 @@
+/**
+ * @module erp-events.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 export const ERP_EVENTS = {
   ORDER_CREATED: 'order.created',
   ORDER_UPDATED: 'order.updated',

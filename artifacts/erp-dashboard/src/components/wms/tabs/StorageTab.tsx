@@ -1,3 +1,8 @@
+/**
+ * @module StorageTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, CheckCircle } from "lucide-react";
@@ -15,10 +20,10 @@ export function StorageTab({ storage, basic }: StorageTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={AlertTriangle} label="30 kun ichida tugaydi" value={String(storage.count30Days || 0)} color={(storage.count30Days || 0) > 0 ? "text-destructive" : "text-green-600"} />
-        <KpiCard icon={Clock} label="60 kun ichida tugaydi" value={String(storage.count60Days || 0)} color={(storage.count60Days || 0) > 0 ? "text-yellow-600" : "text-green-600"} />
-        <KpiCard icon={CheckCircle} label="FIFO muvofiqlik" value={storage.fifoCompliance ? "Ha" : "Yo'q"} color={storage.fifoCompliance ? "text-green-600" : "text-destructive"} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <KpiCard icon={AlertTriangle} label="30 kun ichida tugaydi" value={String(storage.count30Days || 0)} color={(storage.count30Days || 0) > 0 ? "text-destructive" : "text-[var(--ep-green)]"} />
+        <KpiCard icon={Clock} label="60 kun ichida tugaydi" value={String(storage.count60Days || 0)} color={(storage.count60Days || 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
+        <KpiCard icon={CheckCircle} label="FIFO muvofiqlik" value={storage.fifoCompliance ? "Ha" : "Yo'q"} color={storage.fifoCompliance ? "text-[var(--ep-green)]" : "text-destructive"} />
       </div>
       {(storage.expiringBatches?.length ?? 0) > 0 ? (
         <Card>
@@ -52,7 +57,7 @@ export function StorageTab({ storage, basic }: StorageTabProps) {
         </Card>
       ) : (
         <Card><CardContent className="py-8 text-center">
-          <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+          <CheckCircle className="h-8 w-8 text-[var(--ep-green)] mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Muddati yaqin partiyalar yo'q</p>
         </CardContent></Card>
       )}

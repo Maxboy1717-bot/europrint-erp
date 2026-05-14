@@ -1,0 +1,443 @@
+{
+  "summary": {
+    "totalFiles": 1546,
+    "hardcodedTotal": 39,
+    "hardcodedFiles": 31,
+    "missingKeysTotal": 11,
+    "missingUzOnly": 0,
+    "missingRuOnly": 0,
+    "missingBoth": 11,
+    "topHardcodedFiles": [
+      [
+        "pages/EmployeeProfile.tsx",
+        3
+      ],
+      [
+        "hooks/useAuth.tsx",
+        2
+      ],
+      [
+        "pages/FinanceApproval.tsx",
+        2
+      ],
+      [
+        "pages/MarketingBudget.tsx",
+        2
+      ],
+      [
+        "pages/MarketingCalendar.tsx",
+        2
+      ],
+      [
+        "pages/MarketingContent.tsx",
+        2
+      ],
+      [
+        "pages/SDKpi.tsx",
+        2
+      ],
+      [
+        "components/cc/NewDocumentModal.tsx",
+        1
+      ],
+      [
+        "components/chat/page/ChatLayout.tsx",
+        1
+      ],
+      [
+        "components/chat/page/VoiceRecorder.tsx",
+        1
+      ],
+      [
+        "components/crm/lead/LeadDetailSheet.tsx",
+        1
+      ],
+      [
+        "components/qc/SPCChart.tsx",
+        1
+      ],
+      [
+        "pages/AIFinancePageSections2.tsx",
+        1
+      ],
+      [
+        "pages/CashRegister.tsx",
+        1
+      ],
+      [
+        "pages/EmployeeProfileMockup.tsx",
+        1
+      ]
+    ],
+    "topMissingKeysFiles": [
+      [
+        "pos-monitor/pages/PosMaterialDetail.tsx",
+        2
+      ],
+      [
+        "pages/iot/IoTProductionDashboard.tsx",
+        1
+      ],
+      [
+        "pages/iot/IoTProductionDashboardDialogs.tsx",
+        1
+      ],
+      [
+        "pages/WarehouseMaterialKitsSections.tsx",
+        1
+      ],
+      [
+        "pos-monitor/layout/PosLayout.tsx",
+        1
+      ],
+      [
+        "pos-monitor/pages/PosAdmin.tsx",
+        1
+      ],
+      [
+        "pos-monitor/pages/PosLedger.tsx",
+        1
+      ],
+      [
+        "pos-monitor/pages/PosLogin.tsx",
+        1
+      ],
+      [
+        "pos-monitor/pages/PosMovementDetail.tsx",
+        1
+      ],
+      [
+        "pos-monitor/pages/PosWarehouses.tsx",
+        1
+      ]
+    ]
+  },
+  "findings": {
+    "hardcoded": [
+      {
+        "file": "components/cc/NewDocumentModal.tsx",
+        "line": 245,
+        "type": "JSX-text",
+        "text": "1 && step"
+      },
+      {
+        "file": "components/chat/page/ChatLayout.tsx",
+        "line": 249,
+        "type": "alert-arg",
+        "text": "Upload xatosi"
+      },
+      {
+        "file": "components/chat/page/VoiceRecorder.tsx",
+        "line": 44,
+        "type": "JSX-text",
+        "text": "(prev.length"
+      },
+      {
+        "file": "components/crm/lead/LeadDetailSheet.tsx",
+        "line": 224,
+        "type": "JSX-text",
+        "text": "Deal (Kelishuv)"
+      },
+      {
+        "file": "components/qc/SPCChart.tsx",
+        "line": 42,
+        "type": "JSX-text",
+        "text": "ucl || d.value"
+      },
+      {
+        "file": "hooks/useAuth.tsx",
+        "line": 59,
+        "type": "JSX-text",
+        "text": "Promise"
+      },
+      {
+        "file": "hooks/useAuth.tsx",
+        "line": 60,
+        "type": "JSX-text",
+        "text": "Promise"
+      },
+      {
+        "file": "pages/AIFinancePageSections2.tsx",
+        "line": 203,
+        "type": "JSX-text",
+        "text": "Yetkazuvchi (vendor)"
+      },
+      {
+        "file": "pages/CashRegister.tsx",
+        "line": 96,
+        "type": "JSX-text",
+        "text": "Dashboard"
+      },
+      {
+        "file": "pages/EmployeeProfile.tsx",
+        "line": 163,
+        "type": "JSX-text",
+        "text": "async (): Promise"
+      },
+      {
+        "file": "pages/EmployeeProfile.tsx",
+        "line": 279,
+        "type": "JSX-text",
+        "text": "c.expiryDate && new Date(c.expiryDate)"
+      },
+      {
+        "file": "pages/EmployeeProfile.tsx",
+        "line": 280,
+        "type": "JSX-text",
+        "text": "= today && new Date(c.expiryDate)"
+      },
+      {
+        "file": "pages/EmployeeProfileMockup.tsx",
+        "line": 129,
+        "type": "JSX-text",
+        "text": "Email"
+      },
+      {
+        "file": "pages/Employees.tsx",
+        "line": 115,
+        "type": "JSX-text",
+        "text": "u.hireDate && now - new Date(u.hireDate).getTime()"
+      },
+      {
+        "file": "pages/FinanceApproval.tsx",
+        "line": 45,
+        "type": "JSX-text",
+        "text": ")?.items ?? (d as Record"
+      },
+      {
+        "file": "pages/FinanceApproval.tsx",
+        "line": 45,
+        "type": "JSX-text",
+        "text": ")?.data ?? (d as Record"
+      },
+      {
+        "file": "pages/FinanceExtendedSections.tsx",
+        "line": 190,
+        "type": "JSX-text",
+        "text": "GL Hujjatlar (Audit Log)"
+      },
+      {
+        "file": "pages/HRAlertBanner.tsx",
+        "line": 67,
+        "type": "JSX-text",
+        "text": "a.overdue_hours"
+      },
+      {
+        "file": "pages/HRDashboardSections.tsx",
+        "line": 263,
+        "type": "JSX-text",
+        "text": ": alert.severity === \"warning\" ?"
+      },
+      {
+        "file": "pages/IdealRasmPage.tsx",
+        "line": 75,
+        "type": "JSX-text",
+        "text": ": trend === \"down\" ?"
+      },
+      {
+        "file": "pages/MarketingBudget.tsx",
+        "line": 78,
+        "type": "JSX-text",
+        "text": "Marketing Byudjeti"
+      },
+      {
+        "file": "pages/MarketingBudget.tsx",
+        "line": 79,
+        "type": "title",
+        "text": "Marketing Byudjeti"
+      },
+      {
+        "file": "pages/MarketingCalendar.tsx",
+        "line": 95,
+        "type": "JSX-text",
+        "text": "Marketing Taqvim"
+      },
+      {
+        "file": "pages/MarketingCalendar.tsx",
+        "line": 96,
+        "type": "title",
+        "text": "Marketing Taqvim"
+      },
+      {
+        "file": "pages/MarketingContent.tsx",
+        "line": 165,
+        "type": "JSX-text",
+        "text": "Marketing Kontent"
+      },
+      {
+        "file": "pages/MarketingContent.tsx",
+        "line": 166,
+        "type": "title",
+        "text": "Marketing Kontent"
+      },
+      {
+        "file": "pages/MESDashboard.tsx",
+        "line": 125,
+        "type": "JSX-text",
+        "text": "MES Monitor"
+      },
+      {
+        "file": "pages/MROExtended.tsx",
+        "line": 105,
+        "type": "JSX-text",
+        "text": "Number(i.quantity)"
+      },
+      {
+        "file": "pages/OrderApprovalWorkflowSections.tsx",
+        "line": 265,
+        "type": "JSX-text",
+        "text": ": item.approval?.status === \"rejected\" ?"
+      },
+      {
+        "file": "pages/PIPPage.tsx",
+        "line": 252,
+        "type": "JSX-text",
+        "text": "Progress (%)"
+      },
+      {
+        "file": "pages/RecruiterKPIPageTables.tsx",
+        "line": 107,
+        "type": "JSX-text",
+        "text": "Progress (60% maqsad)"
+      },
+      {
+        "file": "pages/SDKpi.tsx",
+        "line": 53,
+        "type": "JSX-text",
+        "text": "Savdo KPI"
+      },
+      {
+        "file": "pages/SDKpi.tsx",
+        "line": 54,
+        "type": "title",
+        "text": "Savdo KPI"
+      },
+      {
+        "file": "pages/TechPPSections.tsx",
+        "line": 169,
+        "type": "JSX-text",
+        "text": "OEE Monitor (Real-time)"
+      },
+      {
+        "file": "pages/WMSExtended.tsx",
+        "line": 99,
+        "type": "JSX-text",
+        "text": "Number(s.quantity ?? 0)"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 58,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/pages/PosAdmin.tsx",
+        "line": 21,
+        "type": "JSX-text",
+        "text": "Promise"
+      },
+      {
+        "file": "pos-monitor/pages/PosMaterialDetail.tsx",
+        "line": 83,
+        "type": "JSX-text",
+        "text": "Material ID:"
+      },
+      {
+        "file": "pos-monitor/pages/RequisitionDetail.tsx",
+        "line": 99,
+        "type": "JSX-text",
+        "text": "Promise"
+      }
+    ],
+    "missingKeys": [
+      {
+        "file": "pages/iot/IoTProductionDashboard.tsx",
+        "line": 146,
+        "key": "Izohlang...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/iot/IoTProductionDashboardDialogs.tsx",
+        "line": 114,
+        "key": "Yuklanmoqda...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/WarehouseMaterialKitsSections.tsx",
+        "line": 108,
+        "key": "Qidirish...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/layout/PosLayout.tsx",
+        "line": 127,
+        "key": "common.posMonitor",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/pages/PosAdmin.tsx",
+        "line": 98,
+        "key": "common.adminOnly",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/pages/PosLedger.tsx",
+        "line": 183,
+        "key": "common.docNo",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/pages/PosLogin.tsx",
+        "line": 154,
+        "key": "common.admin1",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/pages/PosMaterialDetail.tsx",
+        "line": 59,
+        "key": "common.analytics",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/pages/PosMaterialDetail.tsx",
+        "line": 130,
+        "key": "common.docNo",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/pages/PosMovementDetail.tsx",
+        "line": 144,
+        "key": "common.supplierDoc",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pos-monitor/pages/PosWarehouses.tsx",
+        "line": 102,
+        "key": "common.materialTur",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      }
+    ]
+  }
+}

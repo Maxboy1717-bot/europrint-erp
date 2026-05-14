@@ -1,5 +1,44 @@
 /**
- * funnel.service.ts — TZ-42: Win-Rate + Funnel Conversion + Pipeline Velocity
+ * @module funnel.service
+ * @description Sales-funnel analytics: win-rate, stage-by-stage conversion,
+ *   and pipeline velocity. Composes the data shown on the CRM Funnel
+ *   Analytics dashboard.
+ *
+ *   Three formulas:
+ *     winRate     = won / (won + lost) × 100
+ *     conversion  = movedToNext / entered × 100   (per stage)
+ *     velocity    = opportunities × winRate × avgDealSize / avgCycleDays
+ *
+ *   `velocity` answers "how many UZS of pipeline value do we convert per
+ *   day?" — the single number that managers can compare across teams and
+ *   across periods. Higher = faster cash collection.
+ * @layer Service (CRM analytics)
+ *
+ * WHY VELOCITY FORMULA INCLUDES winRate
+ *   Raw pipeline × deal size doesn't account for the fact that not every
+ *   open opportunity closes. Multiplying by historical win-rate weights
+ *   the calculation by realistic conversion. This matches the standard
+ *   "pipeline velocity" definition (Mark Roberge / Hubspot playbook).
+ *
+ * WHY avgCycleDays defaults to 30, not 1
+ *   With no `close_date` on any row, average cycle is undefined. Defaulting
+ *   to 30 days (one month) lets velocity still compute as "monthly revenue
+ *   rate"; setting it to 1 would massively over-state velocity.
+ *
+ * WHY composeFunnelData EXISTS (instead of controller orchestration)
+ *   Reviewer Rule 6 forbids the controller from chaining queries and
+ *   running formulas. This method does the orchestration so the controller
+ *   becomes a single `return service.composeFunnelData()` call.
+ *
+ *   The `unwrapResult` helper at the top of the file is local on purpose:
+ *   we want service-level "fallback on Err" behaviour without exporting an
+ *   HTTP-aware unwrap that would tempt callers to throw inside services.
+ *
+ * WHY STAGE DATA IS FILTERED BY `is_success`/`is_fail` IN SQL
+ *   Stage semantics (won/lost flags) belong to the `crm_stages` config,
+ *   not to the deal itself — same stage might be "won" for one pipeline
+ *   and a pure intermediate for another. Joining on stage keeps the
+ *   classification accurate per-pipeline.
  */
 
 import { Injectable } from '@nestjs/common';

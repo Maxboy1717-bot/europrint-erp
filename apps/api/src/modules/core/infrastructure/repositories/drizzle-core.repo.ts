@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-core.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -49,7 +54,7 @@ export class DrizzleCoreRepo implements ICoreRepo {
   async findAllDepartments(_filters?: { isActive?: boolean; parentId?: string }): Promise<Result<Department[]>> {
     try {
       const r = await db.select().from(departments).orderBy(sql`${departments.id}`).then(r => castTo<DbRow[]>(r));
-      return Ok((r ?? []).map((row) => this.mapToDepartment(row)));
+      return Ok((Array.isArray(r) ? r : []).map((row) => this.mapToDepartment(row)));
     } catch (e: unknown) {
       this.logger.error(`findAllDepartments error: ${errMsg(e)}`);
       return Err(errMsg(e));
@@ -101,7 +106,7 @@ export class DrizzleCoreRepo implements ICoreRepo {
   async findAllPositions(_filters?: { departmentId?: string; isActive?: boolean }): Promise<Result<Position[]>> {
     try {
       const r = await db.select().from(positions).orderBy(sql`${positions.id}`).then(r => castTo<DbRow[]>(r));
-      return Ok((r ?? []).map((row) => this.mapToPosition(row)));
+      return Ok((Array.isArray(r) ? r : []).map((row) => this.mapToPosition(row)));
     } catch (e: unknown) {
       this.logger.error(`findAllPositions error: ${errMsg(e)}`);
       return Err(errMsg(e));

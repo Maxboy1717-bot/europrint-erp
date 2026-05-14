@@ -1,3 +1,8 @@
+/**
+ * @module SDContracts
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, fetchWithAuth } from "@/lib/queryClient";
@@ -8,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { PageState } from "@/components/ui/page-state";
 import { useToast } from "@/hooks/use-toast";
 import { FileCheck, Search, CheckCircle, Clock, Eye } from "lucide-react";
+import { EPPageHeader } from "@/components/ep";
 
 interface ContractItem {
   id: string;
@@ -30,7 +36,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold",
-  sent: "bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-xs font-semibold",
+  sent: "bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold",
   signed: "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold",
   cancelled: "bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold",
 };
@@ -61,7 +67,7 @@ export default function SDContracts() {
 
   const signMut = useMutation({
     mutationFn: (id: string) =>
-      apiRequest("PUT", `/api/sd/contracts/${id}/sign`, {}),
+      apiRequest("PATCH", `/api/sd/contracts/${id}/sign`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/contracts"] });
       setSignDialog(null);
@@ -82,24 +88,25 @@ export default function SDContracts() {
   };
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6">
-      <h1 className="text-4xl font-light tracking-tight text-on-surface mb-2">
-        Shartnomalar <span className="font-bold text-primary">Boshqaruvi</span>
-      </h1>
-      <p className="text-on-surface-variant mb-6">Shartnomalar arxivi va holat boshqaruvi</p>
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Shartnomalar Boshqaruvi</b></>}
+        title="Shartnomalar Boshqaruvi"
+        subtitle="Shartnomalar arxivi va holat boshqaruvi"
+      />
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Jami</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">{stats.total}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{stats.total}</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Imzolandi</p>
-          <p className="text-4xl font-bold tracking-tight text-green-600 mt-1">{stats.signed}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Imzolandi</p>
+          <p className="text-4xl font-bold tracking-tight text-[var(--ep-green)] mt-1">{stats.signed}</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Kutilmoqda</p>
-          <p className="text-4xl font-bold tracking-tight text-amber-600 mt-1">{stats.pending}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kutilmoqda</p>
+          <p className="text-4xl font-bold tracking-tight text-[var(--ep-yellow)] mt-1">{stats.pending}</p>
         </div>
       </div>
 
@@ -143,26 +150,26 @@ export default function SDContracts() {
         emptyTitle="Shartnomalar topilmadi"
         emptyDescription="Taklifnoma tasdiqlanganida avtomatik yaratiladi."
       >
-        <div className="bg-surface-container-lowest rounded-xl overflow-hidden border-none">
+        <div className="bg-card rounded-xl overflow-hidden border-none">
           <table className="w-full text-left">
             <thead>
               <tr>
-                <th className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Shartnoma №</th>
-                <th className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Buyurtma</th>
-                <th className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Holat</th>
-                <th className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Sana</th>
-                <th className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right">Amallar</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Shartnoma №</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Buyurtma</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</th>
               </tr>
             </thead>
             <tbody>
               {(Array.isArray(filtered) ? filtered : []).map((c) => (
-                <tr key={c.id} className="hover:bg-surface-container-low transition-colors cursor-pointer" onClick={() => setSelected(c)} data-testid={`card-contract-${c.id}`}>
-                  <td className="py-4 px-6 font-semibold text-on-surface">{c.contractNumber || "—"}</td>
+                <tr key={c.id} className="hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => setSelected(c)} data-testid={`card-contract-${c.id}`}>
+                  <td className="py-4 px-6 font-semibold text-foreground">{c.contractNumber || "—"}</td>
                   <td className="py-4 px-6">
-                    <div className="text-sm text-on-surface font-medium">
+                    <div className="text-sm text-foreground font-medium">
                       {c.orderNumber || c.orderId?.slice(0, 8)}
                     </div>
-                    {c.templateType && <div className="text-xs text-on-surface-variant font-medium">{TEMPLATE_LABELS[c.templateType] || c.templateType}</div>}
+                    {c.templateType && <div className="text-xs text-muted-foreground font-medium">{TEMPLATE_LABELS[c.templateType] || c.templateType}</div>}
                   </td>
                   <td className="py-4 px-6">
                     <span className={STATUS_COLORS[c.status] || ""}>
@@ -171,12 +178,12 @@ export default function SDContracts() {
                   </td>
                   <td className="py-4 px-6 text-sm">
                     {c.signedAt ? (
-                      <span className="text-green-600 flex items-center gap-1 font-semibold">
+                      <span className="text-[var(--ep-green)] flex items-center gap-1 font-semibold">
                         <CheckCircle className="w-3.5 h-3.5" />
                         {new Date(c.signedAt).toLocaleDateString("uz-UZ")}
                       </span>
                     ) : (
-                      <span className="text-on-surface-variant flex items-center gap-1 font-medium">
+                      <span className="text-muted-foreground flex items-center gap-1 font-medium">
                         <Clock className="w-3.5 h-3.5" />
                         {new Date(c.createdAt).toLocaleDateString("uz-UZ")}
                       </span>
@@ -215,11 +222,11 @@ export default function SDContracts() {
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Shartnoma — {selected?.contractNumber}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Shartnoma — {selected?.contractNumber}</DialogTitle>
           </DialogHeader>
           {selected && (
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
                   <Label className="text-muted-foreground text-xs">Holat</Label>
                   <div className="mt-1">
@@ -243,7 +250,7 @@ export default function SDContracts() {
                 {selected.signedAt && (
                   <div>
                     <Label className="text-muted-foreground text-xs">Imzolandi</Label>
-                    <p className="font-medium text-green-600 mt-1">
+                    <p className="font-medium text-[var(--ep-green)] mt-1">
                       {new Date(selected.signedAt).toLocaleDateString("uz-UZ")}
                     </p>
                   </div>
@@ -267,7 +274,7 @@ export default function SDContracts() {
       <Dialog open={!!signDialog} onOpenChange={() => setSignDialog(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Shartnomani imzolandi deb belgilash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Shartnomani imzolandi deb belgilash</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             <strong>{signDialog?.contractNumber}</strong> shartnomasi imzolandi deb belgilanadi.

@@ -1,12 +1,11 @@
 /**
- * usePermissions — RBAC hook (frontend tomon).
+ * @module usePermissions
+ * @description Canonical frontend RBAC hook. Source of truth is the backend
+ * `/api/auth/me/permissions` (the position_permissions table). When a legacy
+ * user has no position_id, a hardcoded role-based map is used as fallback
+ * (see ARCHITECTURE.md §7.7).
  *
- * Asosiy manba: BACKEND `/api/auth/me/permissions` (position_permissions jadvali).
- * Fallback: hardcoded role-based map (legacy users uchun position_id yo'q bo'lsa).
- *
- * ARCHITECTURE.md §7.7 — position-based dynamic RBAC.
- *
- * Foydalanish:
+ * @example
  *   const { hasPermission, hasFeature, canAccess, isAdmin } = usePermissions();
  *   if (hasPermission('CRM', 'WRITE')) { ... }
  *   if (hasFeature('crm.leads.export')) { ... }
@@ -46,8 +45,8 @@ const MODULE_ALIAS: Record<string, string> = {
   LMS: "LMS",
   MARKETING: "ECOMMERCE",
   DESIGN: "DESIGN",
-  SECURITY: "POS",
-  IOT: "PP",
+  SECURITY: "security",
+  IOT: "iot",
   LOGISTICS: "LOGISTICS",
   MRO: "MM",
   SETTINGS: "MDM",
@@ -79,9 +78,25 @@ function levelMeets(actual: string | undefined, required: string): boolean {
   return actualScore >= requiredScore;
 }
 
+// Mirror of ROLE_ALIASES from useAuth.tsx — keep in sync with backend
+const ROLE_ALIASES: Record<string, string> = {
+  admin: "super_admin", superadmin: "super_admin", super_admin: "super_admin",
+  director: "director", ceo: "director", manager: "director",
+  sales: "sales_manager", sales_manager: "sales_manager", crm_manager: "sales_manager", marketing: "sales_manager",
+  designer: "designer",
+  technologist: "technologist", technolog: "technologist",
+  pp_manager: "pp_viewer", pp_viewer: "pp_viewer", production_manager: "pp_viewer",
+  operator: "operator",
+  warehouse: "warehouse_manager", warehouse_manager: "warehouse_manager", wm_manager: "warehouse_manager", logistics_manager: "warehouse_manager",
+  qc: "qc_manager", qc_manager: "qc_manager",
+  finance: "finance_manager", finance_manager: "finance_manager", cfo: "finance_manager", accountant: "finance_manager",
+  hr: "hr_manager", hr_manager: "hr_manager", lms_admin: "hr_manager",
+  department_head: "department_head",
+};
+
 function normalizeRole(role: string | undefined | null): string | null {
   if (!role) return null;
-  return role;
+  return ROLE_ALIASES[role.toLowerCase()] ?? role.toLowerCase();
 }
 
 export function usePermissions() {

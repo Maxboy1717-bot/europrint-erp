@@ -1,3 +1,8 @@
+/**
+ * @module record-payment.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { FINANCE_REPO } from '../../domain/repositories/i-finance.repo';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger, Inject } from '@nestjs/common';
@@ -8,8 +13,6 @@ import { GlPostingService } from '../../domain/services/gl-posting.service';
 import { AppErr, Err, Ok, Result, isErr } from '@common/result';
 
 export class RecordPaymentCommand {
-  private readonly logger = new Logger(RecordPaymentCommand.name);
-
   constructor(public readonly paymentId: number,
     public readonly invoiceId: number,
     public readonly customerId: number,
@@ -40,21 +43,45 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
         return Err(AppErr('NOT_FOUND', 'Invoice not found'));
       }
 
+      // Map raw snake_case DB row to camelCase to avoid NaN arithmetic
       const raw = invoiceResult.data;
-      const invoice = Invoice.create({
+      const invoiceData = {
         id:            raw['id'] as number,
-        customerId:    raw['customerId'] as number,
-        invoiceNumber: raw['invoiceNumber'] as string,
+        totalAmount:   parseFloat(String(raw['total_amount'] ?? raw['totalAmount'] ?? '0')),
+        paidAmount:    parseFloat(String(raw['paid_amount'] ?? raw['paidAmount'] ?? '0')),
+        dueDate:       (raw['due_date'] ?? raw['dueDate']) as Date,
+        invoiceNumber: String(raw['invoice_number'] ?? raw['invoiceNumber'] ?? raw['id']),
+        customerId:    (raw['customer_id'] ?? raw['customerId']) as number,
         status:        raw['status'] as import('../../domain/aggregates/invoice.aggregate').InvoiceProps['status'],
-        totalAmount:   raw['totalAmount'] as number,
-        paidAmount:    raw['paidAmount'] as number,
-        dueDate:       raw['dueDate'] as Date,
-        createdAt:     raw['createdAt'] as Date,
-      });
+        createdAt:     (raw['created_at'] ?? raw['createdAt']) as Date,
+      };
+      const invoice = Invoice.create(invoiceData);
 
-      if (command.amount + invoice.paidAmount >= invoice.totalAmount) {
-        const finalAmount = command.amount + invoice.paidAmount;
+      const commandAmountCents  = Math.round(command.amount * 100);
+      const paidAmountCents     = Math.round(invoice.paidAmount * 100);
+      const totalAmountCents    = Math.round(invoice.totalAmount * 100);
+      const remainingCents      = totalAmountCents - paidAmountCents;
+      const finalAmountCents    = commandAmountCents + paidAmountCents;
+
+      // Overpayment guard
+      if (commandAmountCents > remainingCents) {
+        return Err('Ortiqcha to\'lov ruxsat etilmaydi');
+      }
+
+      const paymentStatus = finalAmountCents >= totalAmountCents ? 'completed' : 'partial';
+
+      if (finalAmountCents >= totalAmountCents) {
+        const finalAmount = finalAmountCents / 100;
         invoice.markAsFullyPaid(finalAmount);
+
+        await this.financeRepo.recordPayment({
+          paymentId: command.paymentId,
+          invoiceId: command.invoiceId,
+          amount: command.amount,
+          status: paymentStatus,
+          recordedBy: command.recordedBy,
+          recordedAt: command.paymentDate,
+        });
 
         const glResult = await this.glPostingService.postCustomerPayment(
           command.paymentId,
@@ -64,15 +91,6 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
         if (isErr(glResult)) {
           return Err(`GL posting failed: ${glResult.error.message}`);
         }
-
-        await this.financeRepo.recordPayment({
-          paymentId: command.paymentId,
-          invoiceId: command.invoiceId,
-          amount: command.amount,
-          status: 'recorded',
-          recordedBy: command.recordedBy,
-          recordedAt: command.paymentDate,
-        });
 
         const events = invoice.getDomainEvents();
         for (const event of events) {
@@ -88,6 +106,15 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
 
       invoice.markAsPartiallyPaid(command.amount);
 
+      await this.financeRepo.recordPayment({
+        paymentId: command.paymentId,
+        invoiceId: command.invoiceId,
+        amount: command.amount,
+        status: paymentStatus,
+        recordedBy: command.recordedBy,
+        recordedAt: command.paymentDate,
+      });
+
       const glResult2 = await this.glPostingService.postCustomerPayment(
         command.paymentId,
         command.amount
@@ -96,15 +123,6 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
       if (isErr(glResult2)) {
         return Err(`GL posting failed: ${glResult2.error.message}`);
       }
-
-      await this.financeRepo.recordPayment({
-        paymentId: command.paymentId,
-        invoiceId: command.invoiceId,
-        amount: command.amount,
-        status: 'recorded',
-        recordedBy: command.recordedBy,
-        recordedAt: command.paymentDate,
-      });
 
       const events = invoice.getDomainEvents();
       for (const event of events) {

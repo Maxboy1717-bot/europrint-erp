@@ -1,3 +1,8 @@
+/**
+ * @module pos-printer-config.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { PRINTER_DEFAULT_PORT } from '@common/constants/app.constants';
 import { Injectable } from '@nestjs/common';

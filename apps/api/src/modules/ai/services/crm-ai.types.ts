@@ -1,3 +1,8 @@
+/**
+ * @module crm-ai.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 export interface LeadScoreResult {
   score: number;
   grade: 'HOT' | 'WARM' | 'COLD';

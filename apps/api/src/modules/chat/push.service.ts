@@ -1,10 +1,13 @@
+/**
+ * @module push.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import webpush from 'web-push';
-import { db } from '@shared/db';
-import { chatPushSubscriptions } from '@shared/db/schema-chat';
-import { eq, and } from 'drizzle-orm';
 import { Result, safeCall } from '@common/result';
+import { PushNotificationRepository } from './repositories/push-notification.repository';
 
 export interface PushPayload {
   title: string;
@@ -28,48 +31,39 @@ export interface RegisterPushInput {
 export class PushService {
   private readonly logger = new Logger(PushService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly pushRepo: PushNotificationRepository,
+  ) {}
 
   async register(
     userId: string,
     input: RegisterPushInput,
   ): Promise<Result<{ id: string }>> {
-    return safeCall(async () => {
-      const inserted = await db.insert(chatPushSubscriptions).values({
-        user_id:     userId,
-        channel:     input.channel,
-        endpoint:    input.endpoint ?? null,
-        p256dh:      input.p256dh ?? null,
-        auth:        input.auth ?? null,
-        fcm_token:   input.fcmToken ?? null,
-        apns_token:  input.apnsToken ?? null,
-        device_info: input.deviceInfo ?? null,
-        is_active:   true,
-      }).returning({ id: chatPushSubscriptions.id });
-      const safe = Array.isArray(inserted) ? inserted : [];
-      const row = safe[0];
-      if (!row) throw new Error('Push subscription saqlanmadi');
-      return { id: String(row.id) };
-    }, 'DB_ERROR');
+    return this.pushRepo.insert(userId, {
+      channel:     input.channel,
+      endpoint:    input.endpoint ?? null,
+      p256dh:      input.p256dh ?? null,
+      auth:        input.auth ?? null,
+      fcm_token:   input.fcmToken ?? null,
+      apns_token:  input.apnsToken ?? null,
+      device_info: input.deviceInfo ?? null,
+    });
   }
 
   async unregister(userId: string): Promise<Result<{ removed: number }>> {
-    return safeCall(async () => {
-      await db.update(chatPushSubscriptions)
-        .set({ is_active: false })
-        .where(eq(chatPushSubscriptions.user_id, userId));
-      return { removed: 1 };
-    }, 'DB_ERROR');
+    const r = await this.pushRepo.deactivateForUser(userId);
+    if (!r.ok) return r;
+    return { ok: true, data: { removed: 1 } };
   }
 
   async sendToUser(userId: string, payload: PushPayload): Promise<Result<{ delivered: number }>> {
     return safeCall(async () => {
-      const subs = await db.select().from(chatPushSubscriptions).where(
-        and(eq(chatPushSubscriptions.user_id, userId), eq(chatPushSubscriptions.is_active, true)),
-      );
-      const safeSubs = Array.isArray(subs) ? subs : [];
+      const subsR = await this.pushRepo.findActiveByUser(userId);
+      if (!subsR.ok) throw new Error(subsR.error.message);
+      const subs = subsR.data;
       let delivered = 0;
-      for (const sub of safeSubs) {
+      for (const sub of subs) {
         const ok = await this.dispatch(sub as Record<string, unknown>, payload);
         if (ok) delivered += 1;
       }
@@ -136,14 +130,16 @@ export class PushService {
       this.logger.warn('FCM_SERVER_KEY not set — FCM skipped');
       return false;
     }
-    this.logger.log(`FCM → token=${token.slice(0, 12)}... ${payload.title}`);
+    // WHY: do not log the raw token (Rule 15). Only emit non-sensitive metadata.
+    this.logger.log(`FCM dispatch: ${payload.title}`);
     return true;
   }
 
   private async sendApns(sub: Record<string, unknown>, payload: PushPayload): Promise<boolean> {
     const token = String(sub['apns_token'] ?? '');
     if (!token) return false;
-    this.logger.log(`APNS → token=${token.slice(0, 12)}... ${payload.title}`);
+    // WHY: do not log the raw token (Rule 15).
+    this.logger.log(`APNS dispatch: ${payload.title}`);
     return true;
   }
 }

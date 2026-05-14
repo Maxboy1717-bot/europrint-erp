@@ -1,3 +1,8 @@
+/**
+ * @module hr-shifts-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { assertOk, throwFromError, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';

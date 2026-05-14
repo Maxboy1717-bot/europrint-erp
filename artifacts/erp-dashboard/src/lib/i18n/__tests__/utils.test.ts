@@ -1,3 +1,8 @@
+/**
+ * @module utils.test
+ * @description Jest / Vitest test suite.
+ */
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getStoredLanguage, setStoredLanguage, isValidLanguage } from '../utils';
 import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY } from '../constants';

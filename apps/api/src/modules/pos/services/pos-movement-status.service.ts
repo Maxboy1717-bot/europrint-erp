@@ -1,3 +1,8 @@
+/**
+ * @module pos-movement-status.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
@@ -17,16 +22,17 @@ type ConfirmStep     = typeof movementConfirmations.$inferInsert['step'];
 type ConfirmDecision = typeof movementConfirmations.$inferInsert['decision'];
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  draft: ['qc_pending', 'pending', 'cancelled'],
-  qc_pending: ['qc_approved', 'qc_rework', 'qc_rejected'],
-  qc_approved: ['pending', 'cancelled'],
-  qc_rework: ['qc_pending'],
-  qc_rejected: ['cancelled'],
-  pending: ['approved', 'cancelled'],
-  approved: ['ai_processing', 'completed'],
-  ai_processing: ['completed', 'cancelled'],
-  completed: [],
-  cancelled: [],
+  draft:        ['karantin', 'qc_pending', 'pending', 'cancelled'],
+  karantin:     ['qc_pending', 'cancelled'],
+  qc_pending:   ['qc_approved', 'qc_rework', 'qc_rejected'],
+  qc_approved:  ['pending', 'cancelled'],
+  qc_rework:    ['qc_pending'],
+  qc_rejected:  ['cancelled'],
+  pending:      ['approved', 'cancelled'],
+  approved:     ['ai_processing', 'completed'],
+  ai_processing:['completed', 'cancelled'],
+  completed:    [],
+  cancelled:    [],
 };
 
 function isTransitionAllowed(from: string, to: string): boolean {

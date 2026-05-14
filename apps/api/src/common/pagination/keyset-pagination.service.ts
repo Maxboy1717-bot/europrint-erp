@@ -112,7 +112,7 @@ export class KeysetPaginationService {
       if (!decoded.ok) return decoded as Result<PageResult<T>, AppError>;
 
       const cursorTs = new Date(decoded.data.createdAt).getTime();
-      const idx = (allItems ?? []).findIndex(
+      const idx = (Array.isArray(allItems) ? allItems : []).findIndex(
         item =>
           new Date(item.createdAt).getTime() === cursorTs &&
           item.id === decoded.data.id,

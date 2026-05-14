@@ -1,3 +1,8 @@
+/**
+ * @module start-session.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { Ok, Err } from '@common/result';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, ForbiddenException, Logger } from '@nestjs/common';
@@ -8,7 +13,8 @@ import { ProductionSession } from '../../domain/aggregates/production-session.ag
 export class StartSessionCommand {
   constructor(public sessionId: number,
     public workCenterId: number,
-    public operatorId: number) {}
+    public operatorId: number,
+    public courseId: number = 0) {}
 }
 
 @CommandHandler(StartSessionCommand)
@@ -42,7 +48,7 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       // For now, we assume certification is required for certain work centers
       const certResult = await this.mesRepo.checkOperatorCertification(
         command.operatorId,
-        1, // course id placeholder
+        command.courseId,
       );
 
       const certData = certResult.ok ? certResult.data as { valid?: boolean; courseName?: string; expiresAt?: string } : null;

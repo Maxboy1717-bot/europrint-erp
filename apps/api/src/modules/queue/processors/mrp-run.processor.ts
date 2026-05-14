@@ -254,7 +254,7 @@ export class MrpRunProcessor extends WorkerHost {
         return { rows: [] };
       });
 
-      const dailyDemands = (demandRows.rows ?? []).map((d: Record<string, unknown>) => Number(d['daily_demand']) || 0);
+      const dailyDemands = (Array.isArray(demandRows.rows) ? demandRows.rows : []).map((d: Record<string, unknown>) => Number(d['daily_demand']) || 0);
 
       if (dailyDemands.length < 2) continue;
 
@@ -272,8 +272,7 @@ export class MrpRunProcessor extends WorkerHost {
         return { rows: [] };
       });
 
-      const leadTimeSeries = (ltRows.rows ?? [])
-        .map((row: Record<string, unknown>) => Math.max(0, Number(row['actual_lead_days']) || 0))
+      const leadTimeSeries = (Array.isArray(ltRows.rows) ? ltRows.rows : []).map((row: Record<string, unknown>) => Math.max(0, Number(row['actual_lead_days']) || 0))
         .filter((d: number) => d > 0);
 
       const ssResult = this.ssSvc.calculate({

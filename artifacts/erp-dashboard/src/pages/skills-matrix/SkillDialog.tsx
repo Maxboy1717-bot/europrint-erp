@@ -1,3 +1,8 @@
+/**
+ * @module SkillDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -26,16 +31,16 @@ export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, 
           Ko'nikma yaratish
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl" data-testid="dialog-create-skill">
+      <DialogContent className="max-w-2xl p-6" data-testid="dialog-create-skill">
         <DialogHeader>
-          <DialogTitle>{editingSkill ? "Ko'nikmani tahrirlash" : "Ko'nikma yaratish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{editingSkill ? "Ko'nikmani tahrirlash" : "Ko'nikma yaratish"}</DialogTitle>
           <DialogDescription>
             {editingSkill ? "Ko'nikma ma'lumotlarini yangilang" : "Ko'nikmalar matritsa uchun yangi ko'nikma yarating"}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="code" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kod</FormLabel>
@@ -51,7 +56,7 @@ export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, 
                 </FormItem>
               )} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nom (O'zbekcha)</FormLabel>
@@ -67,7 +72,7 @@ export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, 
                 </FormItem>
               )} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tavsif (O'zbekcha)</FormLabel>

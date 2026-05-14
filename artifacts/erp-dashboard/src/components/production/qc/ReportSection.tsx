@@ -1,3 +1,8 @@
+/**
+ * @module ReportSection
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,7 +17,7 @@ export function ReportSection() {
           <p className="text-sm text-muted-foreground">Sifat nazorati bo'yicha yakuniy statistik ko'rsatkichlar</p>
         </div>
         <div className="flex gap-2">
-          <Badge variant="outline" className="px-3 py-1 bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="px-3 py-1 bg-blue-50 text-[var(--ep-blue)] border-blue-200">
             Haftalik hisobot: 14.10 - 20.10
           </Badge>
         </div>
@@ -20,10 +25,10 @@ export function ReportSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { label: "O'rtacha Sifat Bali", value: "94.2", unit: "100 dan", icon: Target, color: "text-blue-600" },
-          { label: "Brak Ulushi", value: "2.1%", unit: "Umumiy massadan", icon: TrendingDown, color: "text-red-600" },
-          { label: "Testlar Soni", value: "156", unit: "Ushbu haftada", icon: BarChart3, color: "text-indigo-600" },
-          { label: "KPI Bajarilishi", value: "98.5%", unit: "Maqsad: 95%", icon: Zap, color: "text-green-600" },
+          { label: "O'rtacha Sifat Bali", value: "94.2", unit: "100 dan", icon: Target, color: "text-[var(--ep-blue)]" },
+          { label: "Brak Ulushi", value: "2.1%", unit: "Umumiy massadan", icon: TrendingDown, color: "text-[var(--ep-red)]" },
+          { label: "Testlar Soni", value: "156", unit: "Ushbu haftada", icon: BarChart3, color: "text-[var(--ep-blue)]" },
+          { label: "KPI Bajarilishi", value: "98.5%", unit: "Maqsad: 95%", icon: Zap, color: "text-[var(--ep-green)]" },
         ]).map((s, i) => (
           <Card key={`k-${i}`}>
             <CardContent className="pt-6">
@@ -45,8 +50,8 @@ export function ReportSection() {
           <CardContent className="h-64 flex items-end justify-between px-4 pb-2">
             {([65, 80, 75, 90, 85, 95, 88]).map((h, i) => (
               <div key={`k-${i}`} className="flex flex-col items-center gap-2 w-full">
-                <div className="w-8 bg-primary/20 rounded-t hover:bg-primary/40 transition-colors relative group" style={{ height: `${h * 2}px` }}>
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">{h}%</div>
+                <div className="w-8 bg-primary/10 rounded-t hover:bg-primary/40 transition-colors relative group" style={{ height: `${h * 2}px` }}>
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">{h}%</div>
                 </div>
                 <span className="text-[10px] text-muted-foreground">{["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"][i]}</span>
               </div>
@@ -57,7 +62,7 @@ export function ReportSection() {
         <Card>
           <CardHeader><CardTitle className="text-sm">Top Defekt Turlari</CardTitle></CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
                 <TableHead>Defekt</TableHead>
                 <TableHead className="text-right">%</TableHead>
@@ -70,7 +75,7 @@ export function ReportSection() {
                   { name: "O'lcham xatosi", val: 10, color: "bg-blue-500" },
                   { name: "Boshqa", val: 5, color: "bg-slate-400" },
                 ]).map((d, i) => (
-                  <TableRow key={`k-${i}`}>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="text-xs font-medium py-2">{d.name}</TableCell>
                     <TableCell className="text-right py-2">
                       <div className="flex items-center justify-end gap-2 text-xs">
@@ -83,7 +88,7 @@ export function ReportSection() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>

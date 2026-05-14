@@ -1,3 +1,8 @@
+/**
+ * @module resizable
+ * @description React UI component.
+ */
+
 "use client"
 
 import { GripVertical } from "lucide-react"

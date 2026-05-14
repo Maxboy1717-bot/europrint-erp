@@ -1,3 +1,8 @@
+/**
+ * @module cron.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
 import { TelegramModule } from '../telegram/telegram.module'
@@ -29,6 +34,7 @@ import { CandidateArchiveCron } from './candidate-archive.cron'
 import { AbsenceBlockCron } from './absence-block.cron'
 import { VacancyDeadlineCron } from './vacancy-deadline.cron'
 import { RetentionCron } from './retention.cron'
+import { KanbanRecurringCron } from './kanban-recurring.cron'
 import { CronStatusService } from './cron-status.service'
 import { AbsenceBlockRepository } from './repositories/absence-block.repository'
 import { EnpsCronRepository } from './repositories/enps-cron.repository'
@@ -69,6 +75,8 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     VacancyDeadlineCron,
     // Data retention cron (Task #180)
     RetentionCron,
+    // Kanban — takrorlanuvchi kartalar yaratish (har kuni 07:00)
+    KanbanRecurringCron,
     // Cron repositories (Drizzle ORM)
     AbsenceBlockRepository,
     EnpsCronRepository,

@@ -1,3 +1,8 @@
+/**
+ * @module ComplaintsTab
+ * @description React UI component.
+ */
+
 import { SdComplaintsData } from "./sd-types";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -64,34 +69,34 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard icon={ShieldAlert} label="Jami" value={String(totalCount)}
-          gradient="from-slate-500 to-gray-500" />
-        <KpiCard icon={CheckCircle} label="Hal qilingan" value={String(resolvedCount)} color="text-emerald-600"
-          gradient="from-emerald-500 to-teal-500" />
+          gradient="" />
+        <KpiCard icon={CheckCircle} label="Hal qilingan" value={String(resolvedCount)} color="text-[var(--ep-green)]"
+          gradient="" />
         <KpiCard icon={XCircle} label="Ochiq" value={String(openCount)}
-          color={openCount > 0 ? "text-rose-600" : "text-emerald-600"}
-          gradient="from-rose-500 to-pink-500" />
+          color={openCount > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}
+          gradient="" />
         <KpiCard icon={Clock} label="O'rtacha hal vaqti" value={`${complaints.averageResolutionDays || 0} kun`}
-          gradient="from-amber-500 to-orange-500" />
+          gradient="" />
       </div>
 
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0"
+            <Button size="sm" className="bg-primary text-white border-0"
               data-testid="btn-add-complaint">
               <Plus className="h-4 w-4 mr-1" />Shikoyat qo'shish
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Shikoyat qo'shish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Shikoyat qo'shish</DialogTitle></DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-3">
                 <FormField control={form.control} name="type" render={({ field }) => (
                   <FormItem><FormLabel>Shikoyat turi</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger data-testid="select-complaint-type"><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger data-testid="select-complaint-type" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
                         {Object.entries(typeLabel).filter(([k]) => k !== "complaint").map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
                       </SelectContent>
@@ -140,14 +145,14 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
                 </div>
                 <p className="text-sm">{c.description || c.notes}</p>
                 {c.resolution && (
-                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
+                  <p className="text-xs text-[var(--ep-green)] dark:text-emerald-400 mt-1.5 flex items-center gap-1">
                     <CheckCircle className="h-3 w-3" />Yechim: {c.resolution}
                   </p>
                 )}
                 {c.satisfaction_score && (
                   <div className="flex items-center gap-0.5 mt-1.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={`s-${i}`} className={`h-3.5 w-3.5 ${i < c.satisfaction_score ? "text-amber-500 fill-amber-500" : "text-muted-foreground/30"}`} />
+                      <Star key={`s-${i}`} className={`h-3.5 w-3.5 ${i < c.satisfaction_score ? "text-[var(--ep-yellow)] fill-amber-500" : "text-muted-foreground/30"}`} />
                     ))}
                   </div>
                 )}

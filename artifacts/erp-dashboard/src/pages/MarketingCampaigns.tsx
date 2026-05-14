@@ -1,3 +1,8 @@
+/**
+ * @module MarketingCampaigns
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
@@ -12,10 +17,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Target, Pencil, Trash2, BarChart2, Users, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { MarketingCampaign } from "@shared/schema";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
+import { useTranslation } from '@/lib/i18n';
 const statusLabels: Record<string, string> = { draft: "Qoralama", active: "Faol", paused: "To'xtatilgan", completed: "Tugallangan" };
 const typeLabels: Record<string, string> = { digital: "Raqamli", print: "Bosma", social: "Ijtimoiy tarmoq", email: "Email", event: "Tadbir" };
 const platformLabels: Record<string, string> = { telegram: "Telegram", instagram: "Instagram", facebook: "Facebook", google: "Google", other: "Boshqa" };
@@ -38,66 +44,66 @@ interface CampaignStats {
 function CampaignStatsRow({ campaignId }: { campaignId: string }) {
   const { data: stats, isLoading } = useQuery<CampaignStats>({
     queryKey: ["/api/marketing/campaigns", campaignId, "stats"],
-    queryFn: () => fetch(`/api/marketing/campaigns/${campaignId}/stats`, { credentials: "include" }).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/marketing/campaigns/${campaignId}/stats`).then(r => r.json()),
   });
 
   if (isLoading) return (
-    <div className="grid grid-cols-4 gap-3 pt-3 border-t border-outline-variant mt-3">
-      {Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-10" />)}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-border mt-3">
+      {Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-10 rounded-lg" />)}
     </div>
   );
 
   if (!stats) return null;
 
   return (
-    <div className="space-y-3 pt-3 border-t border-outline-variant mt-3" data-testid={`campaign-stats-${campaignId}`}>
+    <div className="space-y-3 pt-3 border-t border-border mt-3" data-testid={`campaign-stats-${campaignId}`}>
       {/* Qator 1: Lid statistikasi */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="text-center">
-          <p className="text-xs text-on-surface-variant flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><Users className="h-3 w-3" />Jami lidlar</p>
-          <p className="text-lg font-bold text-on-surface">{stats.totalLeads}</p>
+          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><Users className="h-3 w-3" />Jami lidlar</p>
+          <p className="text-lg font-bold text-foreground">{stats.totalLeads}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-on-surface-variant flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><TrendingUp className="h-3 w-3" />CRM ga o'tgan</p>
-          <p className="text-lg font-bold text-green-600">{stats.convertedLeads}</p>
+          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><TrendingUp className="h-3 w-3" />CRM ga o'tgan</p>
+          <p className="text-lg font-bold text-[var(--ep-green)]">{stats.convertedLeads}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-on-surface-variant flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><BarChart2 className="h-3 w-3" />Konversiya</p>
-          <p className="text-lg font-bold text-blue-600">{stats.conversionRate}%</p>
+          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><BarChart2 className="h-3 w-3" />Konversiya</p>
+          <p className="text-lg font-bold text-[var(--ep-blue)]">{stats.conversionRate}%</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-on-surface-variant uppercase font-semibold tracking-wider">ROI</p>
-          <p className={`text-lg font-bold ${stats.roi !== null ? (stats.roi >= 0 ? "text-green-600" : "text-red-500") : "text-on-surface-variant"}`}>
+          <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">ROI</p>
+          <p className={`text-lg font-bold ${stats.roi !== null ? (stats.roi >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]") : "text-muted-foreground"}`}>
             {stats.roi !== null ? `${stats.roi}%` : "—"}
           </p>
         </div>
       </div>
       {/* Qator 2: ROAS, CPL, CPA (Task #2) */}
-      <div className="grid grid-cols-3 gap-3 bg-surface-container rounded-lg p-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-muted/60 rounded-lg p-3">
         <div className="text-center">
-          <p className="text-xs text-on-surface-variant uppercase font-semibold tracking-wider mb-1">ROAS</p>
-          <p className={`text-base font-bold ${stats.roas !== null && stats.roas >= 4 ? "text-green-600" : stats.roas !== null && stats.roas >= 2 ? "text-amber-600" : "text-red-500"}`}>
+          <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">ROAS</p>
+          <p className={`text-base font-bold ${stats.roas !== null && stats.roas >= 4 ? "text-[var(--ep-green)]" : stats.roas !== null && stats.roas >= 2 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {stats.roas !== null ? `${stats.roas}x` : "—"}
           </p>
-          <p className="text-xs text-on-surface-variant">Target: 4x</p>
+          <p className="text-xs text-muted-foreground">{"Maqsad: 4x"}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-on-surface-variant uppercase font-semibold tracking-wider mb-1">CPL</p>
-          <p className="text-base font-bold text-on-surface">
+          <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">CPL</p>
+          <p className="text-base font-bold text-foreground">
             {stats.cpl !== null ? `${stats.cpl.toLocaleString()} so'm` : "—"}
           </p>
-          <p className="text-xs text-on-surface-variant">Har 1 lid narxi</p>
+          <p className="text-xs text-muted-foreground">Har 1 lid narxi</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-on-surface-variant uppercase font-semibold tracking-wider mb-1">CPA</p>
-          <p className="text-base font-bold text-on-surface">
+          <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">CPA</p>
+          <p className="text-base font-bold text-foreground">
             {stats.cpa !== null ? `${stats.cpa.toLocaleString()} so'm` : "—"}
           </p>
-          <p className="text-xs text-on-surface-variant">Har 1 konversiya</p>
+          <p className="text-xs text-muted-foreground">Har 1 konversiya</p>
         </div>
       </div>
       {stats.estimatedRevenue > 0 && (
-        <div className="text-xs text-on-surface-variant flex items-center gap-1">
+        <div className="text-xs text-muted-foreground flex items-center gap-1">
           <BarChart2 className="h-3 w-3" />
           Taxminiy daromad: {stats.estimatedRevenue.toLocaleString()} so'm (o'rtacha buyurtma × konversiyalar)
         </div>
@@ -107,6 +113,7 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
 }
 
 export default function MarketingCampaigns() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -162,70 +169,71 @@ export default function MarketingCampaigns() {
     return "outline";
   };
 
-  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24" />)}</div>;
+  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
 
-  if (isError) return <div className="p-4"><ErrorState onRetry={refetch} /></div>;
+  if (isError) return <div className="p-4"><EPErrorState onRetry={refetch} /></div>;
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6" data-testid="marketing-campaigns">
+    <div className="space-y-6" data-testid="marketing-campaigns">
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
-        <h1 className="text-4xl font-light tracking-tight text-on-surface">
-          Kampaniyalar <span className="font-bold text-primary">Boshqaruvi</span>
-        </h1>
+        <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Kampaniyalar Boshqaruvi</b></>}
+        title="Kampaniyalar Boshqaruvi"
+      />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold" data-testid="button-create-campaign">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-campaign">
+              <Plus className="h-4 w-4" />
               Yangi Kampaniya
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg bg-surface-container-lowest border-none ">
-            <DialogHeader><DialogTitle className="text-on-surface font-bold">{editId ? "Kampaniyani tahrirlash" : "Yangi Kampaniya"}</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-lg bg-card border-none p-6">
+            <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "Kampaniyani tahrirlash" : "Yangi Kampaniya"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-on-surface-variant">Nomi *</Label><Input className="bg-surface border-outline-variant" data-testid="input-campaign-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-on-surface-variant">Tavsif</Label><Textarea className="bg-surface border-outline-variant" data-testid="input-campaign-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Turi</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-surface border-outline-variant" data-testid="select-campaign-type"><SelectValue /></SelectTrigger><SelectContent className="bg-surface-container-lowest border-outline-variant">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Platforma</Label><Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}><SelectTrigger className="bg-surface border-outline-variant" data-testid="select-campaign-platform"><SelectValue /></SelectTrigger><SelectContent className="bg-surface-container-lowest border-outline-variant">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">Nomi *</Label><Input className="bg-background border-border" data-testid="input-campaign-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">Tavsif</Label><Textarea className="bg-background border-border" data-testid="input-campaign-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Turi</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-type"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Platforma</Label><Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-platform"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Holat</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-surface border-outline-variant" data-testid="select-campaign-status"><SelectValue /></SelectTrigger><SelectContent className="bg-surface-container-lowest border-outline-variant">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Byudjet</Label><Input className="bg-surface border-outline-variant" data-testid="input-campaign-budget" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="0" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Holat</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-status"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Byudjet</Label><Input className="bg-background border-border" data-testid="input-campaign-budget" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="0" /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Boshlanish</Label><Input className="bg-surface border-outline-variant" type="date" data-testid="input-campaign-start" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Tugash</Label><Input className="bg-surface border-outline-variant" type="date" data-testid="input-campaign-end" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Boshlanish</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-start" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Tugash</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-end" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
               </div>
-              <Button onClick={handleSubmit} disabled={!form.name || createMutation.isPending || updateMutation.isPending} className="w-full bg-gradient-to-br from-primary to-primary-dim text-white font-bold h-11" data-testid="button-submit-campaign">{editId ? "Saqlash" : "Yaratish"}</Button>
+              <Button onClick={handleSubmit} disabled={!form.name || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-campaign">{editId ? "Saqlash" : "Yaratish"}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
       {campaigns?.length === 0 ? (
-        <div className="bg-surface-container-lowest rounded-xl p-6 text-center text-on-surface-variant">Hozircha kampaniyalar yo'q. Yangi kampaniya yarating.</div>
+        <div className="bg-card rounded-xl p-6 text-center text-muted-foreground">Hozircha kampaniyalar yo'q. Yangi kampaniya yarating.</div>
       ) : (
         <div className="grid gap-6">
           {campaigns?.map((c) => (
-            <div key={c.id} className="bg-surface-container-lowest rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow overflow-hidden" data-testid={`card-campaign-${c.id}`}>
+            <div key={c.id} className="bg-card rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow overflow-hidden" data-testid={`card-campaign-${c.id}`}>
               <div className="flex flex-row items-start justify-between gap-4 mb-4">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xl font-bold text-on-surface truncate">{c.name}</h3>
-                  <p className="text-sm text-on-surface-variant mt-2 line-clamp-2">{c.description}</p>
+                  <h3 className="text-xl font-bold text-foreground truncate">{c.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{c.description}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-9 w-9 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high no-default-hover-elevate"
+                    className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate"
                     onClick={() => toggleStats(c.id)}
                     data-testid={`button-toggle-stats-${c.id}`}
                     title="Statistika"
                   >
-                    {expandedStats.has(c.id) ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    {expandedStats.has(c.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high no-default-hover-elevate" onClick={() => handleEdit(c)} data-testid={`button-edit-campaign-${c.id}`}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 text-on-surface-variant hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(c.id)} data-testid={`button-delete-campaign-${c.id}`}><Trash2 className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate" onClick={() => handleEdit(c)} data-testid={`button-edit-campaign-${c.id}`}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(c.id)} data-testid={`button-delete-campaign-${c.id}`}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
               <div>
@@ -233,23 +241,23 @@ export default function MarketingCampaigns() {
                   <Badge variant={statusColor(c.status)} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
                     {statusLabels[c.status || "draft"] || c.status}
                   </Badge>
-                  <Badge variant="outline" className="border-outline-variant text-on-surface-variant rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
+                  <Badge variant="outline" className="border-border text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
                     {typeLabels[c.type || "digital"] || c.type}
                   </Badge>
                   {c.platform && (
-                    <Badge variant="outline" className="border-outline-variant text-on-surface-variant rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
+                    <Badge variant="outline" className="border-border text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
                       {platformLabels[c.platform] || c.platform}
                     </Badge>
                   )}
                   {c.budget && (
-                    <Badge className="bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
+                    <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
                       {Number(c.budget).toLocaleString()} so'm
                     </Badge>
                   )}
                 </div>
                 
                 {/* Campaign cards with progress bars */}
-                <div className="w-full bg-surface-container rounded-full h-1.5 mb-4">
+                <div className="w-full bg-muted/60 rounded-full h-1.5 mb-4">
                    <div className="h-1.5 bg-primary rounded-full" style={{ width: c.status === 'completed' ? '100%' : c.status === 'active' ? '65%' : '15%' }}></div>
                 </div>
 

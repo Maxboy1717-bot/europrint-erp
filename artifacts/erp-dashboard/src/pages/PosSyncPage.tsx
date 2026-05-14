@@ -1,3 +1,8 @@
+/**
+ * @module PosSyncPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
@@ -5,10 +10,10 @@ import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw, Cloud, CloudOff, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
 
 interface PosTerminal {
   id: number;
@@ -71,10 +76,11 @@ export default function PosSyncPage() {
   const onlineCount = items.filter((t) => t.isOnline).length;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t('posSync.title', 'POS Sinxronizatsiya')}</b></>}
         title={t('posSync.title', 'POS Sinxronizatsiya')}
-        description={t('posSync.description', 'Terminallar holati va offline tranzaksiyalar')}
+        subtitle={t('posSync.description', 'Terminallar holati va offline tranzaksiyalar')}
         actions={
           <Button
             disabled={syncAllMutation.isPending}
@@ -98,23 +104,23 @@ export default function PosSyncPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1">
-              <Cloud className="h-4 w-4 text-emerald-600" />
+              <Cloud className="h-4 w-4 text-[var(--ep-green)]" />
               {t('posSync.online', 'Online')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-emerald-600">{onlineCount}</p>
+            <p className="text-3xl font-bold text-[var(--ep-green)]">{onlineCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertCircle className="h-4 w-4 text-[var(--ep-yellow)]" />
               {t('posSync.pending', 'Kutilayotgan')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-yellow-600">{totalPending}</p>
+            <p className="text-3xl font-bold text-[var(--ep-yellow)]">{totalPending}</p>
           </CardContent>
         </Card>
       </div>
@@ -126,7 +132,7 @@ export default function PosSyncPage() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
             </div>
           ) : items.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
@@ -144,14 +150,14 @@ export default function PosSyncPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         {term.isOnline ? (
-                          <Cloud className="h-4 w-4 text-emerald-600" />
+                          <Cloud className="h-4 w-4 text-[var(--ep-green)]" />
                         ) : (
-                          <CloudOff className="h-4 w-4 text-rose-600" />
+                          <CloudOff className="h-4 w-4 text-[var(--ep-red)]" />
                         )}
                         <span className="font-medium">{term.name}</span>
                         <Badge variant="outline" className="text-xs">{term.code}</Badge>
                         {stale ? (
-                          <Badge variant="destructive" className="text-xs">STALE</Badge>
+                          <EPStatusPill tone="danger" className="text-xs">STALE</EPStatusPill>
                         ) : null}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">

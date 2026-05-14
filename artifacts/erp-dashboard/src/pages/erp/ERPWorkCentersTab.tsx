@@ -1,3 +1,8 @@
+/**
+ * @module ERPWorkCentersTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -39,7 +44,7 @@ export function ERPWorkCentersTab() {
   const save = useMutation({
     mutationFn: async (data: InsertWorkCenter) => {
       if (editingWorkCenter) {
-        await apiRequest("PATCH", `/api/erp/work-centers/${editingWorkCenter.id}`, data);
+        await apiRequest("PUT", `/api/erp/work-centers/${editingWorkCenter.id}`, data);
       } else {
         await apiRequest("POST", "/api/erp/work-centers", data);
       }
@@ -97,9 +102,9 @@ export function ERPWorkCentersTab() {
                   {tCommon('add')}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[500px] p-6">
                 <DialogHeader>
-                  <DialogTitle>{editingWorkCenter ? t('editWorkCenter') : t('newWorkCenter')}</DialogTitle>
+                  <DialogTitle className="text-[18px] font-semibold">{editingWorkCenter ? t('editWorkCenter') : t('newWorkCenter')}</DialogTitle>
                   <DialogDescription>{t('enterWorkCenterData')}</DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -123,7 +128,7 @@ export function ERPWorkCentersTab() {
                         <FormLabel>{tCommon('type')} <span className="text-destructive">*</span></FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-work-center-type">
+                            <SelectTrigger data-testid="select-work-center-type" className="h-9">
                               <SelectValue placeholder={t('selectType')} />
                             </SelectTrigger>
                           </FormControl>
@@ -165,7 +170,7 @@ export function ERPWorkCentersTab() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{tCommon('code')}</TableHead>
@@ -178,21 +183,21 @@ export function ERPWorkCentersTab() {
               </TableHeader>
               <TableBody>
                 {([1, 2, 3, 4, 5]).map((i) => (
-                  <TableRow key={`k-${i}`}>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell><Skeleton className="h-4 w-16 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32 rounded-lg" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12 rounded-lg" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           ) : workCenters.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">{t('noWorkCentersFound')}</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">{t('noWorkCentersFound')}</div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{tCommon('code')}</TableHead>
@@ -205,7 +210,7 @@ export function ERPWorkCentersTab() {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(workCenters) ? workCenters : []).map((center) => (
-                  <TableRow key={center.id} data-testid={`row-work-center-${center.id}`}>
+                  <TableRow key={center.id} data-testid={`row-work-center-${center.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{center.code}</TableCell>
                     <TableCell>{center.name}</TableCell>
                     <TableCell>
@@ -230,7 +235,7 @@ export function ERPWorkCentersTab() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

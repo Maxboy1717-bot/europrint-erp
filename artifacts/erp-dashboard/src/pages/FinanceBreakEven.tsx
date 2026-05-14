@@ -1,4 +1,12 @@
+/**
+ * @module FinanceBreakEven
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/format";
@@ -7,12 +15,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calculator, AlertCircle, AlertTriangle } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
 } from "recharts";
+import { EPPageHeader } from "@/components/ep";
 
 interface BreakEvenDto {
   productName: string;
@@ -44,6 +52,14 @@ function buildChartData(d: BreakEvenDto) {
   return points;
 }
 
+const CostStructureSchema = z.object({
+  productName: z.string().min(1),
+  period: z.string().min(1),
+  fixedCostUzs: z.number().positive(),
+  variableCostUzs: z.number().positive(),
+  sellingPriceUzs: z.number().positive(),
+});
+
 export default function FinanceBreakEven() {
   const { t } = useTranslation('finance');
   const qc = useQueryClient();
@@ -51,6 +67,7 @@ export default function FinanceBreakEven() {
     productName: "",
     period: new Date().toISOString().slice(0, 7),
   });
+  useForm({ resolver: zodResolver(CostStructureSchema), defaultValues: { productName: "", period: new Date().toISOString().slice(0, 7), fixedCostUzs: 0, variableCostUzs: 0, sellingPriceUzs: 0 } });
   const [structForm, setStructForm] = useState({
     productName: "",
     period: new Date().toISOString().slice(0, 7),
@@ -63,22 +80,19 @@ export default function FinanceBreakEven() {
   const { data, isLoading, isError, error, refetch } = useQuery<BreakEvenDto>({
     queryKey: ["break-even", form.productName, form.period],
     queryFn: () =>
-      apiRequest(`/finance/break-even?productName=${encodeURIComponent(form.productName)}&period=${form.period}`),
+      apiRequest("GET", `/api/finance/break-even?productName=${encodeURIComponent(form.productName)}&period=${form.period}`),
     enabled: false,
     retry: false,
   });
 
   const saveMut = useMutation({
     mutationFn: (body: typeof structForm) =>
-      apiRequest("/finance/break-even/cost-structure", {
-        method: "POST",
-        body: JSON.stringify({
-          productName:     body.productName,
-          period:          body.period,
-          fixedCostUzs:    Number(body.fixedCostUzs),
-          variableCostUzs: Number(body.variableCostUzs),
-          sellingPriceUzs: Number(body.sellingPriceUzs),
-        }),
+      apiRequest("POST", "/api/finance/break-even/cost-structure", {
+        productName:     body.productName,
+        period:          body.period,
+        fixedCostUzs:    Number(body.fixedCostUzs),
+        variableCostUzs: Number(body.variableCostUzs),
+        sellingPriceUzs: Number(body.sellingPriceUzs),
       }),
     onSuccess: () => {
       setShowStructForm(false);
@@ -93,7 +107,8 @@ export default function FinanceBreakEven() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <PageHeader
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t('breakEvenAnalysis')}</b></>}
         title={t('breakEvenAnalysis')}
         subtitle={t('breakEvenSubtitle')}
       />
@@ -139,7 +154,7 @@ export default function FinanceBreakEven() {
             <CardTitle className="text-base">{t('addCostStructure')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
               <div className="col-span-2">
                 <Label>{t('productNameLabel')} *</Label>
                 <Input value={structForm.productName} onChange={e => setStructForm(f => ({ ...f, productName: e.target.value }))} />
@@ -172,9 +187,9 @@ export default function FinanceBreakEven() {
       )}
 
       {isLoading && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}><CardContent className="pt-5"><Skeleton className="h-16 w-full" /></CardContent></Card>
+            <Card key={i}><CardContent className="pt-5"><Skeleton className="h-16 w-full rounded-lg" /></CardContent></Card>
           ))}
         </div>
       )}
@@ -192,18 +207,18 @@ export default function FinanceBreakEven() {
         <>
           {data.warning && (
             <Card className="border-amber-300 bg-amber-50/40 dark:bg-amber-950/20">
-              <CardContent className="pt-4 pb-4 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+              <CardContent className="pt-4 pb-4 flex items-center gap-2 text-sm text-[var(--ep-yellow)] dark:text-amber-400">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 {data.warning}
               </CardContent>
             </Card>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-5">
                 <div className="text-xs text-muted-foreground mb-1">{t('contributionMarginPerUnit')}</div>
-                <div className="text-xl font-bold text-emerald-600">{formatCurrency(data.contributionMargin)}</div>
+                <div className="text-xl font-bold text-[var(--ep-green)]">{formatCurrency(data.contributionMargin)}</div>
                 <div className="text-xs text-muted-foreground">CMR: {cmrPct}%</div>
               </CardContent>
             </Card>
@@ -223,7 +238,7 @@ export default function FinanceBreakEven() {
             <Card className={data.marginOfSafetyPct >= 0 ? "border-emerald-300" : "border-red-300"}>
               <CardContent className="pt-5">
                 <div className="text-xs text-muted-foreground mb-1">{t('safetyMargin')}</div>
-                <div className={`text-xl font-bold ${data.marginOfSafetyPct >= 20 ? "text-emerald-600" : data.marginOfSafetyPct >= 0 ? "text-amber-600" : "text-red-600"}`}>
+                <div className={`text-xl font-bold ${data.marginOfSafetyPct >= 20 ? "text-[var(--ep-green)]" : data.marginOfSafetyPct >= 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
                   {data.marginOfSafetyPct.toFixed(1)}%
                 </div>
                 <div className="text-xs text-muted-foreground">{data.marginOfSafetyQty.toLocaleString()} dona</div>
@@ -262,7 +277,7 @@ export default function FinanceBreakEven() {
               <CardTitle className="text-base">{t('detailsSection')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                 {[
                   [t('fixedCostLabel'),      formatCurrency(data.fixedCostUzs)],
                   [t('vcPerUnit'),            formatCurrency(data.variableCostPerUnit)],

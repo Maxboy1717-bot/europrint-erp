@@ -1,3 +1,8 @@
+/**
+ * @module LeadActivities
+ * @description React UI component.
+ */
+
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Activity, Clock } from "lucide-react";
@@ -34,7 +39,7 @@ export function LeadActivities({ activities, history, lead }: LeadActivitiesProp
                       <p className="font-medium">{act.subject}</p>
                       <p className="text-xs text-muted-foreground">
                         {act.type} • {act.dueDate ? format(new Date(act.dueDate), "dd.MM.yyyy") : "Muddat yo'q"}
-                        {act.isDone && <span className="ml-1 text-green-600">✓</span>}
+                        {act.isDone && <span className="ml-1 text-[var(--ep-green)]">✓</span>}
                       </p>
                     </div>
                   </div>

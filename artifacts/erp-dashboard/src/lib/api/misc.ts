@@ -1,3 +1,8 @@
+/**
+ * @module misc
+ * @description Frontend utility / library module.
+ */
+
 import { apiRequest } from "@/lib/queryClient";
 
 export const notificationsApi = {
@@ -125,7 +130,7 @@ export const iotApi = {
   createAlert: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/iot/alerts", data),
   acknowledgeAlert: (id: number | string) =>
-    apiRequest("PATCH", `/api/iot/alerts/${id}/acknowledge`),
+    apiRequest("POST", `/api/iot/alerts/${id}/acknowledge`),
   createDevice: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/iot/devices", data),
   updateDevice: (id: number | string, data: Record<string, unknown>) =>

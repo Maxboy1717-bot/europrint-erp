@@ -1,3 +1,8 @@
+/**
+ * @module objectAcl
+ * @description Source module. See exports for details.
+ */
+
 import { InternalServerErrorException } from '@nestjs/common';
 import { File } from "@google-cloud/storage";
 

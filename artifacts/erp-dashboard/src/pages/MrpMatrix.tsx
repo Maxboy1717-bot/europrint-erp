@@ -1,3 +1,8 @@
+/**
+ * @module MrpMatrix
+ * @description React page component. Route-level UI.
+ */
+
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -7,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Play, Package, AlertTriangle, CheckCircle2, TrendingDown } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
 
 interface MrpPeriod {
   period: number;
@@ -84,10 +89,12 @@ export default function MrpMatrix() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <PageHeader
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t('mrp_title')}</b></>}
         title={t('mrp_title')}
-        description={t('mrp_description')}
-        icon={<Package className="w-6 h-6" />}
+        subtitle={t('mrp_description')}
+        icon={<Package className="w-6 h-6"
+      />}
       />
 
       {/* Controls */}
@@ -97,7 +104,7 @@ export default function MrpMatrix() {
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-muted-foreground">{t('mrp_lotSizingMethod')}</label>
               <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger className="w-56">
+                <SelectTrigger className="w-56 h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,7 +117,7 @@ export default function MrpMatrix() {
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-muted-foreground">{t('mrp_horizon')}</label>
               <Select value={String(horizon)} onValueChange={(v) => setHorizon(Number(v))}>
-                <SelectTrigger className="w-28">
+                <SelectTrigger className="w-28 h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -138,7 +145,7 @@ export default function MrpMatrix() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <Package className="w-8 h-8 text-blue-500" />
+                <Package className="w-8 h-8 text-[var(--ep-blue)]" />
                 <div>
                   <p className="text-2xl font-bold">{result.lines?.length ?? 0}</p>
                   <p className="text-sm text-muted-foreground">{t('mrp_totalMaterials')}</p>
@@ -149,7 +156,7 @@ export default function MrpMatrix() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <AlertTriangle className="w-8 h-8 text-amber-500" />
+                <AlertTriangle className="w-8 h-8 text-[var(--ep-yellow)]" />
                 <div>
                   <p className="text-2xl font-bold">{itemsWithReq}</p>
                   <p className="text-sm text-muted-foreground">{t('mrp_withNetReq')}</p>
@@ -160,7 +167,7 @@ export default function MrpMatrix() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-8 h-8 text-green-500" />
+                <CheckCircle2 className="w-8 h-8 text-[var(--ep-green)]" />
                 <div>
                   <p className="text-2xl font-bold">{totalPlanned}</p>
                   <p className="text-sm text-muted-foreground">{t('mrp_plannedOrders')}</p>
@@ -175,7 +182,7 @@ export default function MrpMatrix() {
       {runMrp.isPending && (
         <Card>
           <CardContent className="pt-5 space-y-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
           </CardContent>
         </Card>
       )}
@@ -190,7 +197,7 @@ export default function MrpMatrix() {
           <CardContent className="overflow-x-auto p-0">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
                   <TableHead className="sticky left-0 bg-muted/50 min-w-[140px]">{t('mrp_material')}</TableHead>
                   <TableHead className="min-w-[80px]">{t('mrp_ss')}</TableHead>
                   <TableHead className="min-w-[80px]">{t('mrp_method')}</TableHead>
@@ -202,7 +209,7 @@ export default function MrpMatrix() {
               <TableBody>
                 {result.lines.map((line) => (
                   <React.Fragment key={line.itemId}>
-                    <TableRow className="border-t-2 border-border">
+                    <TableRow className="border-t-2 border-border hover:bg-muted/40 transition-colors">
                       <TableCell className="sticky left-0 bg-background font-medium" rowSpan={4}>
                         <div>
                           <p className="font-semibold text-sm truncate max-w-[130px]">{line.itemName ?? line.itemId}</p>
@@ -213,10 +220,10 @@ export default function MrpMatrix() {
                         <Badge variant="outline" className="text-xs">{line.safetyStock}</Badge>
                       </TableCell>
                       <TableCell rowSpan={4}>
-                        <Badge variant="secondary" className="text-xs">{line.lotSizingMethod}</Badge>
+                        <EPStatusPill tone="neutral" className="text-xs">{line.lotSizingMethod}</EPStatusPill>
                       </TableCell>
                     </TableRow>
-                    <TableRow className="text-xs">
+                    <TableRow className="text-xs hover:bg-muted/40 transition-colors">
                       {line.periods.map((p, pi) => (
                         <TableCell key={`${line.itemId}-demand-${pi}`} className="text-center text-muted-foreground">
                           <div className="text-[10px] text-muted-foreground/70">{t('mrp_demand')}</div>
@@ -224,7 +231,7 @@ export default function MrpMatrix() {
                         </TableCell>
                       ))}
                     </TableRow>
-                    <TableRow className="text-xs bg-muted/20">
+                    <TableRow className="text-xs bg-muted/20 hover:bg-muted/40 transition-colors">
                       {line.periods.map((p, pi) => (
                         <TableCell key={`${line.itemId}-balance-${pi}`} className="text-center">
                           <div className="text-[10px] text-muted-foreground/70">{t('mrp_balance')}</div>
@@ -234,12 +241,12 @@ export default function MrpMatrix() {
                         </TableCell>
                       ))}
                     </TableRow>
-                    <TableRow className="text-xs">
+                    <TableRow className="text-xs hover:bg-muted/40 transition-colors">
                       {line.periods.map((p, pi) => (
                         <TableCell key={`${line.itemId}-planned-${pi}`} className="text-center">
                           <div className="text-[10px] text-muted-foreground/70">{t('mrp_planned_short')}</div>
                           {p.plannedOrders > 0 ? (
-                            <Badge className="text-[10px] px-1 py-0 bg-green-600 hover:bg-green-700">
+                            <Badge className="text-[10px] px-1 py-0 bg-green-600 hover:bg-[var(--ep-green)]/90">
                               {p.plannedOrders}
                             </Badge>
                           ) : (

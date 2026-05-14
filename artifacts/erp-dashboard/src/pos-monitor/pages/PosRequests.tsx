@@ -1,3 +1,8 @@
+/**
+ * @module PosRequests
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
@@ -36,7 +41,7 @@ function NewRequestModal({ onClose, onCreated, t }: { onClose: () => void; onCre
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>Material ID *</label>
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t('common.materialId')}</label>
             <input className="pos-input" placeholder="Material karta ID" value={materialId} onChange={e => setMaterialId(e.target.value)} />
           </div>
           <div>
@@ -98,9 +103,9 @@ export default function PosRequests() {
     void loadData();
   }
 
-  const myReqs     = (requests ?? []).filter(r => r.status !== "COMPLETED");
-  const toApprove  = (requests ?? []).filter(r => r.status === "SUBMITTED");
-  const toFulfill  = (requests ?? []).filter(r => r.status === "APPROVED");
+  const myReqs     = (Array.isArray(requests) ? requests : []).filter(r => r.status !== "COMPLETED");
+  const toApprove  = (Array.isArray(requests) ? requests : []).filter(r => r.status === "SUBMITTED");
+  const toFulfill  = (Array.isArray(requests) ? requests : []).filter(r => r.status === "APPROVED");
 
   const list = activeTab === "my" ? myReqs : activeTab === "approve" ? toApprove : toFulfill;
 
@@ -130,7 +135,7 @@ export default function PosRequests() {
 
       {!loading && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {(list ?? []).map(req => (
+          {(Array.isArray(list) ? list : []).map(req => (
             <div key={req.id} className="pos-card pos-fade-in">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <span className="pos-mono" style={{ fontWeight: 700, color: "var(--pos-accent)", fontSize: 15 }}>
@@ -154,7 +159,7 @@ export default function PosRequests() {
 
               {req.lines && req.lines.length > 0 && (
                 <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginBottom: 10 }}>
-                  {req.lines.length} ta material · Jami: {(req.lines ?? []).reduce((s, l) => s + l.requestedQty, 0)} birlik
+                  {req.lines.length} ta material · Jami: {(Array.isArray(req.lines) ? req.lines : []).reduce((s, l) => s + l.requestedQty, 0)} birlik
                 </div>
               )}
 

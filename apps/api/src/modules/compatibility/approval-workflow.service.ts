@@ -1,3 +1,8 @@
+/**
+ * @module approval-workflow.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -83,7 +88,7 @@ export class ApprovalWorkflowService {
   async bulkApprove(ids: string[], approvedBy: string): Promise<Result<{ total: number; succeeded: number; failed: number }>> {
     const result = await safeCall(() =>
       Promise.allSettled(
-        (ids ?? []).map((id) => this.repo.approve(id, { approvedBy, approvedAt: _time.now(), notes: null, updatedAt: _time.now() })),
+        (Array.isArray(ids) ? ids : []).map((id) => this.repo.approve(id, { approvedBy, approvedAt: _time.now(), notes: null, updatedAt: _time.now() })),
       ),
     );
     if (!result.ok) return Err(result.error);

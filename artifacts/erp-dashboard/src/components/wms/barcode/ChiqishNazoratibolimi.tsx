@@ -1,3 +1,8 @@
+/**
+ * @module ChiqishNazoratibolimi
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +32,7 @@ export function ChiqishNazoratibolimi() {
     },
   });
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <Skeleton className="h-40 w-full rounded-lg" />;
 
   return (
     <Card>

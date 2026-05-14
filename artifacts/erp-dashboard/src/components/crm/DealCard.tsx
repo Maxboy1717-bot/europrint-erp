@@ -1,3 +1,8 @@
+/**
+ * @module DealCard
+ * @description React UI component.
+ */
+
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -77,7 +82,7 @@ export function DealCard({ deal, isDragging = false, onClick }: DealCardProps) {
         {/* Opportunity */}
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
-          <span className="font-semibold text-green-600">
+          <span className="font-semibold text-[var(--ep-green)]">
             {Number(deal.opportunity).toLocaleString()} {deal.currencyId}
           </span>
         </div>
@@ -115,8 +120,8 @@ export function DealCard({ deal, isDragging = false, onClick }: DealCardProps) {
         {deal.assignedById && (
           <div className="flex items-center gap-2 pt-2 border-t">
             <Avatar className="h-6 w-6">
-              <AvatarFallback className="text-xs">
-                {deal.assignedById.slice(0, 2).toUpperCase()}
+              <AvatarFallback className="text-xs bg-muted">
+                <User className="h-3 w-3 text-muted-foreground" />
               </AvatarFallback>
             </Avatar>
             <span className="text-xs text-muted-foreground">Mas'ul</span>

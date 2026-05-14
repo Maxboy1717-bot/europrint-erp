@@ -1,3 +1,8 @@
+/**
+ * @module inspection.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -5,6 +10,7 @@ import { db } from '@shared/db';
 import { hr_tz2_room_reference_photos, hr_tz2_ai_room_analysis } from '@shared/db';
 import { eq, desc, gte, sql, and } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
+import { extractDrizzleError } from '@common/utils/drizzle-error.util';
 
 type Row = Record<string, unknown>;
 
@@ -59,31 +65,38 @@ export class InspectionRepository {
         .from(hr_tz2_room_reference_photos)
         .orderBy(hr_tz2_room_reference_photos.room_code);
 
-      const latest = await db
-        .select({
-          room_code:         hr_tz2_ai_room_analysis.room_code,
-          analyzed_at:       hr_tz2_ai_room_analysis.analyzed_at,
-          cleanliness_score: hr_tz2_ai_room_analysis.cleanliness_score,
-          order_score:       hr_tz2_ai_room_analysis.order_score,
-          equipment_ok:      hr_tz2_ai_room_analysis.equipment_ok,
-          issues:            hr_tz2_ai_room_analysis.issues,
-          anomalies:         hr_tz2_ai_room_analysis.anomalies,
-          current_photo_url: hr_tz2_ai_room_analysis.current_photo_url,
-          pdf_url:           hr_tz2_ai_room_analysis.pdf_url,
-        })
-        .from(hr_tz2_ai_room_analysis)
-        .where(
-          sql`${hr_tz2_ai_room_analysis.analyzed_at} = (
-            SELECT MAX(a2.analyzed_at)
-            FROM hr_tz2_ai_room_analysis a2
-            WHERE a2.room_code = ${hr_tz2_ai_room_analysis.room_code}
-          )`,
-        )
-        .limit(100);
+      // Fetch latest analysis per room — guarded separately so a missing
+      // hr_tz2_ai_room_analysis table (migration not yet applied) doesn't
+      // prevent returning the reference-photo list.
+      let latestByCode = new Map<string, Row>();
+      try {
+        const latest = await db
+          .select({
+            room_code:         hr_tz2_ai_room_analysis.room_code,
+            analyzed_at:       hr_tz2_ai_room_analysis.analyzed_at,
+            cleanliness_score: hr_tz2_ai_room_analysis.cleanliness_score,
+            order_score:       hr_tz2_ai_room_analysis.order_score,
+            equipment_ok:      hr_tz2_ai_room_analysis.equipment_ok,
+            issues:            hr_tz2_ai_room_analysis.issues,
+            anomalies:         hr_tz2_ai_room_analysis.anomalies,
+            current_photo_url: hr_tz2_ai_room_analysis.current_photo_url,
+            pdf_url:           hr_tz2_ai_room_analysis.pdf_url,
+          })
+          .from(hr_tz2_ai_room_analysis)
+          .orderBy(desc(hr_tz2_ai_room_analysis.analyzed_at));
 
-      const latestByCode = new Map<string, Row>(
-        ((latest as Row[]) ?? []).map((r) => [String(r['room_code']), r]),
-      );
+        // Keep only the latest row per room_code (table already ordered DESC)
+        for (const row of latest as Row[]) {
+          const code = String(row['room_code'] ?? '');
+          if (code && !latestByCode.has(code)) latestByCode.set(code, row);
+        }
+      } catch (analysisErr: unknown) {
+        this.logger.warn(
+          'findAllRooms: hr_tz2_ai_room_analysis unavailable — %s',
+          extractDrizzleError(analysisErr),
+        );
+        // Continue with empty analysis map — rooms still returned without scores
+      }
 
       const result = ((refs as Row[]) ?? []).map((ref) => {
         const la = latestByCode.get(String(ref['room_code'])) ?? null;

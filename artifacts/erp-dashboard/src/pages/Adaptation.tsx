@@ -1,3 +1,8 @@
+/**
+ * @module Adaptation
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -6,11 +11,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Users, FileText, PartyPopper, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AdaptationProgram, WelcomeEvent } from "@shared/schema";
-import { ErrorState } from "@/components/ui/error-state";
 import { ProgramsTab } from "./adaptation/ProgramsTab";
 import { NewEmployeesTab } from "./adaptation/NewEmployeesTab";
 import { FeedbackTab } from "./adaptation/FeedbackTab";
 import { WelcomeEventsTab } from "./adaptation/WelcomeEventsTab";
+import { EPErrorState } from "@/components/ep";
 
 interface NewEmployeeResponse {
   id: string;
@@ -92,26 +97,26 @@ export default function Adaptation() {
   const isLoading = isLoadingPrograms || isLoadingEmployees || isLoadingFeedbacks || isLoadingEvents;
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
         <div>
-          <Skeleton className="h-9 w-48" />
-          <Skeleton className="h-5 w-96 mt-2" />
+          <Skeleton className="h-9 w-48 rounded-lg" />
+          <Skeleton className="h-5 w-96 mt-2 rounded-lg" />
         </div>
-        <Skeleton className="h-10 w-full max-w-2xl" />
+        <Skeleton className="h-10 w-full max-w-2xl rounded-lg" />
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="h-6 w-48 rounded-lg" />
+            <Skeleton className="h-4 w-64 mt-2 rounded-lg" />
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {([1, 2, 3, 4, 5]).map((i) => (
-                <Skeleton key={`k-${i}`} className="h-16 w-full" />
+                <Skeleton key={`k-${i}`} className="h-16 w-full rounded-lg" />
               ))}
             </div>
           </CardContent>
@@ -121,10 +126,10 @@ export default function Adaptation() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Adaptatsiya</h1>
+          <h1 className="ep-h1">Adaptatsiya</h1>
           <p className="text-muted-foreground">
             Yangi xodimlarni kompaniyaga moslashtirishni boshqarish
           </p>
@@ -136,7 +141,7 @@ export default function Adaptation() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="programs" data-testid="tab-programs">
             <FileText className="w-4 h-4 mr-2" />
             Dasturlar

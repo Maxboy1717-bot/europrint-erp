@@ -1,3 +1,8 @@
+/**
+ * @module crm-bitrix-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
@@ -86,5 +91,30 @@ export class CrmBitrixCompatController {
   @Roles('super_admin', 'director')
   async deleteRobot(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.deleteRobot(parseInt(id, 10) || 0));
+  }
+
+  @Patch('robots/:id')
+  @Roles('super_admin', 'director')
+  @UsePipes(new ZodValidationPipe(UpdateRobotDtoSchema))
+  async patchRobot(@Param('id') id: string, @Body() body: UpdateRobotDto) {
+    return unwrapOrThrow(await this.svc.updateRobot(parseInt(id, 10) || 0, body));
+  }
+
+  @Post('robots/:id/toggle')
+  @Roles('super_admin', 'director', 'manager')
+  async postToggleRobot(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.toggleRobot(parseInt(id, 10) || 0));
+  }
+
+  @Patch('proposals/:id/stage')
+  async updateProposalStage(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    const status = String(body.status ?? body.stageId ?? body.stage_id ?? '');
+    return unwrapOrThrow(await this.svc.updateProposalStage(parseInt(id, 10) || 0, status));
+  }
+
+  @Patch('invoices/:id/stage')
+  async updateInvoiceStage(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    const status = String(body.status ?? body.stageId ?? body.stage_id ?? '');
+    return unwrapOrThrow(await this.svc.updateInvoiceStage(parseInt(id, 10) || 0, status));
   }
 }

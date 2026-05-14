@@ -1,3 +1,8 @@
+/**
+ * @module uzbek-tin.validator
+ * @description Source module. See exports for details.
+ */
+
 import {
   registerDecorator,
   ValidationOptions,

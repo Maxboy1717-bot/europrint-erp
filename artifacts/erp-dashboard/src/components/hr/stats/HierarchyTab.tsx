@@ -1,3 +1,8 @@
+/**
+ * @module HierarchyTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Building2 } from "lucide-react";
 

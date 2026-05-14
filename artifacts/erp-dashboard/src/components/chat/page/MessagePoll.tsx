@@ -1,3 +1,8 @@
+/**
+ * @module MessagePoll
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from "react";
 import { BarChart2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -88,7 +93,7 @@ export function MessagePoll({ messageId, poll, isMe }: Props) {
                     "absolute inset-0 transition-all",
                     isMe
                       ? iChose ? "bg-primary-foreground/30" : "bg-primary-foreground/10"
-                      : iChose ? "bg-primary/15" : "bg-muted/40"
+                      : iChose ? "bg-primary/10" : "bg-muted/40"
                   )}
                   style={{ width: `${pct}%` }}
                 />

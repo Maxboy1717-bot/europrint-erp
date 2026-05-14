@@ -1,3 +1,8 @@
+/**
+ * @module field
+ * @description React UI component.
+ */
+
 "use client"
 
 import { useMemo } from "react"

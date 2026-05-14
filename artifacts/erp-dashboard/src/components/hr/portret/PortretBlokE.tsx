@@ -1,3 +1,8 @@
+/**
+ * @module PortretBlokE
+ * @description React UI component.
+ */
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +33,7 @@ export function PortretBlokE({ portret, onChange }: PortretBlokEProps) {
         />
       </div>
 
-      <div className="flex items-center space-x-2 py-2 border rounded-lg px-3 bg-surface-container-low">
+      <div className="flex items-center space-x-2 py-2 border rounded-lg px-3 bg-muted/40">
         <Checkbox
           id="exp_req"
           checked={portret.experience_required ?? false}

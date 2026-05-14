@@ -1,3 +1,8 @@
+/**
+ * @module StepExperience
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +37,7 @@ export function StepExperience({ portret, onChange }: StepExperienceProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-3 p-3 bg-surface-container-low rounded-lg border border-border/40">
+      <div className="flex flex-col gap-3 p-3 bg-muted/40 rounded-lg border border-border/40">
         <div className="flex items-center justify-between">
           <Label className="text-xs">15. Oldingi ish tajribasi majburiymi?</Label>
           <div className="flex gap-1">

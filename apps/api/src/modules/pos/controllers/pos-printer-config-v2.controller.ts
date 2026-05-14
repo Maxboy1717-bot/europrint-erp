@@ -1,3 +1,8 @@
+/**
+ * @module pos-printer-config-v2.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import { PRINTER_DEFAULT_PORT } from '@common/constants/app.constants';
 import { Controller, Post, Param, HttpCode, HttpStatus, UseGuards, UseInterceptors, ParseIntPipe, NotFoundException } from '@nestjs/common';

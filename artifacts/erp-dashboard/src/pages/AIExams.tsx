@@ -1,8 +1,13 @@
+/**
+ * @module AIExams
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, CheckCircle2, Clock, XCircle, Plus, Trash2 } from "lucide-react";
+import { Eye, CheckCircle2, Clock, XCircle, Plus, Trash2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -15,8 +20,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AssignAIExamDialog } from "@/components/AssignAIExamDialog";
 import { useState } from "react";
-import { ErrorState } from "@/components/ui/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 interface AIExamAttempt {
   id: string;
@@ -108,37 +113,38 @@ export default function AIExams() {
 
   const getScoreColor = (score: number | null) => {
     if (!score) return "text-muted-foreground";
-    if (score >= 90) return "text-green-600 dark:text-green-400";
-    if (score >= 75) return "text-blue-600 dark:text-blue-400";
-    if (score >= 50) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
+    if (score >= 90) return "text-[var(--ep-green)] dark:text-green-400";
+    if (score >= 75) return "text-[var(--ep-blue)] dark:text-blue-400";
+    if (score >= 50) return "text-[var(--ep-yellow)] dark:text-yellow-400";
+    return "text-[var(--ep-red)] dark:text-red-400";
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <EPLoader size={32} />
       </div>
     );
   }
 
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface" data-testid="heading-ai-exams">
-            AI <span className="font-bold text-primary">Imtixonlar</span>
-          </h1>
-          <p className="text-on-surface-variant mt-2">Barcha AI imtixon natijalari va tahlillar</p>
+          <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">AI Imtixonlar</b></>}
+        title="AI Imtixonlar"
+        subtitle="Barcha AI imtixon natijalari va tahlillar"
+      />
         </div>
         <Button 
           onClick={() => setShowAssignDialog(true)} 
           data-testid="button-assign-ai-exam"
-          className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
+          className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
         >
           <Plus className="w-4 h-4 mr-2" />
           AI Imtixon Tayinlash
@@ -147,20 +153,20 @@ export default function AIExams() {
 
       <div className="grid gap-4">
         {!attempts || attempts.length === 0 ? (
-          <Card className="bg-surface-container-lowest border-outline-variant shadow-none">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-on-surface-variant">
-              <XCircle className="h-12 w-12 text-on-surface-variant/30 mb-4" />
+          <Card className="bg-card border-border shadow-none">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <XCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <p>Hozircha AI imtixon topshirilmagan</p>
             </CardContent>
           </Card>
         ) : (
           (Array.isArray(attempts) ? attempts : []).map((attempt) => (
-            <Card key={attempt.id} className="bg-surface-container-lowest border-outline-variant shadow-none hover:bg-surface-container-low transition-colors" data-testid={`card-attempt-${attempt.id}`}>
+            <Card key={attempt.id} className="bg-card border-border shadow-none hover:bg-muted/40 transition-colors" data-testid={`card-attempt-${attempt.id}`}>
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1 flex-1">
-                    <CardTitle className="text-lg text-on-surface">{attempt.fullName}</CardTitle>
-                    <div className="space-y-1 text-sm text-on-surface-variant">
+                    <CardTitle className="text-[14px] font-semibold text-foreground">{attempt.fullName}</CardTitle>
+                    <div className="space-y-1 text-sm text-muted-foreground">
                       <div>Tabel: {attempt.employeeId}</div>
                       <div>Lavozim: {attempt.positionName}</div>
                       <div>Boshlangan: {new Date(attempt.startedAt).toLocaleString("uz-UZ")}</div>
@@ -187,7 +193,7 @@ export default function AIExams() {
                     onClick={() => setSelectedAttempt(attempt.id)}
                     disabled={attempt.status === "in_progress"}
                     data-testid={`button-view-${attempt.id}`}
-                    className="bg-surface-container text-on-surface hover:bg-surface-container-high border-none rounded-lg px-4 py-2 font-medium"
+                    className="bg-muted/60 text-foreground hover:bg-muted border-none rounded-lg px-4 py-2 font-medium"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Batafsil ko'rish
@@ -211,9 +217,9 @@ export default function AIExams() {
       </div>
 
       <Dialog open={!!selectedAttempt} onOpenChange={() => setSelectedAttempt(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-6">
           <DialogHeader>
-            <DialogTitle>AI Imtixon Natijalari</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">AI Imtixon Natijalari</DialogTitle>
             <DialogDescription>
               {attemptDetail && (
                 <div className="space-y-1 text-sm">
@@ -323,7 +329,7 @@ export default function AIExams() {
             </ScrollArea>
           ) : (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <EPLoader size={32} />
             </div>
           )}
         </DialogContent>

@@ -1,3 +1,8 @@
+/**
+ * @module schema-pos-retail
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, uuid, text, boolean, timestamp,
   decimal, integer, jsonb, index,

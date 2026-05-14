@@ -1,3 +1,8 @@
+/**
+ * @module QCBolimi
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +18,7 @@ export function QCBolimi() {
   const { data: qcMateriallar, isLoading } = useQuery<QcBarcodeItem[]>({
     queryKey: ["/api/barcode-warehouse/barcodes", { status: "QC_HOLD" }],
     queryFn: async () => {
-      const res = await fetch("/api/barcode-warehouse/barcodes?status=QC_HOLD", { credentials: "include" });
+      const res = await apiRequest('GET', "/api/barcode-warehouse/barcodes?status=QC_HOLD");
       if (!res.ok) return [];
       const data = await res.json();
       return Array.isArray(data) ? data : [];
@@ -38,7 +43,7 @@ export function QCBolimi() {
     },
   });
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <Skeleton className="h-40 w-full rounded-lg" />;
 
   return (
     <Card>

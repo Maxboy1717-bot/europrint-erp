@@ -1,3 +1,8 @@
+/**
+ * @module use-hr-discipline
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/utils";
 

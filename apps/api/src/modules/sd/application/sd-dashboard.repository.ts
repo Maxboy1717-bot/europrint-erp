@@ -1,3 +1,8 @@
+/**
+ * @module sd-dashboard.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
@@ -10,7 +15,7 @@ const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => sa
 export class SdDashboardRepository {
   async getOverview(): Promise<Result<Row>>  {
   try {  
-      const rows = await exec(sql`SELECT COUNT(*)::int AS total_orders, COUNT(*) FILTER (WHERE status = 'pending')::int AS pending_orders, COUNT(*) FILTER (WHERE status = 'in_production')::int AS in_production, COUNT(*) FILTER (WHERE status = 'delivered')::int AS delivered, COALESCE(SUM(total_amount) FILTER (WHERE DATE(created_at) >= DATE_TRUNC('month', NOW())), 0)::numeric(15,2) AS monthly_revenue, COALESCE(SUM(total_amount) FILTER (WHERE DATE(created_at) >= DATE_TRUNC('week', NOW())), 0)::numeric(15,2) AS weekly_revenue, COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = CURRENT_DATE), 0)::numeric(15,2) AS today_revenue, COUNT(*) FILTER (WHERE advance_paid = false AND advance_required = true)::int AS pending_advance FROM sales_orders WHERE created_at >= NOW() - INTERVAL '90 days'`);
+      const rows = await exec(sql`SELECT COUNT(*)::int AS total_orders, COUNT(*) FILTER (WHERE status = 'pending')::int AS pending_orders, COUNT(*) FILTER (WHERE status = 'in_production')::int AS in_production, COUNT(*) FILTER (WHERE status = 'delivered')::int AS delivered, COALESCE(SUM(total_amount) FILTER (WHERE DATE(created_at) >= DATE_TRUNC('month', NOW())), 0)::numeric(15,2) AS monthly_revenue, COALESCE(SUM(total_amount) FILTER (WHERE DATE(created_at) >= DATE_TRUNC('week', NOW())), 0)::numeric(15,2) AS weekly_revenue, COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = CURRENT_DATE), 0)::numeric(15,2) AS today_revenue, COUNT(*) FILTER (WHERE advance_paid = false AND advance_required = true)::int AS pending_advance FROM sales_orders WHERE created_at >= NOW() - INTERVAL '90 days' AND deleted_at IS NULL`);
       return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -19,7 +24,7 @@ export class SdDashboardRepository {
 
   async getTopCustomers(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT customer_name, COUNT(*)::int AS order_count, COALESCE(SUM(total_amount), 0)::numeric(15,2) AS total_revenue FROM sales_orders WHERE created_at >= DATE_TRUNC('month', NOW()) GROUP BY customer_name ORDER BY total_revenue DESC LIMIT 5`);  } catch (_e) {
+      return exec(sql`SELECT o.customer_id, c.name AS customer_name, COUNT(o.id)::int AS order_count, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_revenue FROM sales_orders o LEFT JOIN sd_customers c ON c.id::text = o.customer_id::text WHERE o.created_at >= DATE_TRUNC('month', NOW()) AND o.deleted_at IS NULL GROUP BY o.customer_id, c.name ORDER BY total_revenue DESC LIMIT 5`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -28,9 +33,9 @@ export class SdDashboardRepository {
   async getPendingAdvanceOrders(mid: number | null, lim: number): Promise<Result<Row[]>>  {
   try {  
       return mid
-        ? exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} WHERE o.advance_paid_amount < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') ORDER BY o.created_at ASC LIMIT ${lim}`)
-        : exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o WHERE o.advance_paid_amount < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
-    return Ok([]);
+        ? exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} WHERE o.advance_paid_amount < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
+        : exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o WHERE o.advance_paid_amount < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
+    return Err(String(_e));
   }
 
   }
@@ -38,9 +43,9 @@ export class SdDashboardRepository {
   async getPendingTechCheckpoints(mid: number | null, lim: number): Promise<Result<Row[]>>  {
   try {  
       return mid
-        ? exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.module_status AS tech_checkpoint_status, 'tech_checkpoint' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} WHERE o.module_status = 'pending' AND o.status NOT IN ('cancelled', 'delivered') ORDER BY o.created_at ASC LIMIT ${lim}`)
-        : exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.module_status AS tech_checkpoint_status, 'tech_checkpoint' AS action_type FROM sales_orders o WHERE o.module_status = 'pending' AND o.status NOT IN ('cancelled', 'delivered') ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
-    return Ok([]);
+        ? exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.module_status AS tech_checkpoint_status, 'tech_checkpoint' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} WHERE o.module_status = 'pending' AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
+        : exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.module_status AS tech_checkpoint_status, 'tech_checkpoint' AS action_type FROM sales_orders o WHERE o.module_status = 'pending' AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
+    return Err(String(_e));
   }
 
   }

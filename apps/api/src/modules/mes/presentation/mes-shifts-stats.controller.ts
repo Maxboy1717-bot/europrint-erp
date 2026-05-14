@@ -1,3 +1,8 @@
+/**
+ * @module mes-shifts-stats.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
@@ -118,14 +123,14 @@ export class MesShiftsStatsController {
   }
 
   @Get('orders')
-  async getOrders() { return { data: [], total: 0 }; }
+  async getOrders() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('orders/:id')
-  async getOrderById(@Param('id') id: string) { return { id, status: 'pending' }; }
+  async getOrderById(@Param('id') _id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('shifts')
-  async getShifts() { return { data: [], total: 0 }; }
+  async getShifts() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('maintenance')
-  async getMaintenance() { return { data: [], total: 0 }; }
+  async getMaintenance() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 }

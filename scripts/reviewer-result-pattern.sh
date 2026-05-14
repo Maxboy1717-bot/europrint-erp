@@ -79,19 +79,37 @@ if [ -d "$REPO_DIR" ]; then
   while IFS= read -r file; do
     fname="$(basename "$file")"
 
-    # Total async metod satrlari — void/never qaytaradiganlarni chiqar
-    # (return type shu satrda bo'ladi deb taxmin qilinadi — TS standart uslubi)
-    total_async=$(grep -E "^\s+async [a-zA-Z_][a-zA-Z0-9_]*\s*\(" "$file" 2>/dev/null \
-      | grep -vE "Promise<void>|Promise<never>|: void\b" \
-      | wc -l | tr -d ' ')
+    # Total async metod satrlari — void/never qaytaradiganlarni chiqar.
+    # Uses an awk window: look at the async line + next 5 lines for void/never.
+    total_async=$(awk '
+      /^\s+async [a-zA-Z_][a-zA-Z0-9_]*\s*\(/ {
+        win = $0
+        save_nr = NR
+        for (i = 1; i <= 5; i++) {
+          if ((getline next_line) > 0) {
+            win = win " " next_line
+            if (next_line ~ /\{[^{}]*$/) break   # body started
+          } else break
+        }
+        if (win ~ /Promise<void>|Promise<never>|: void\b/) next
+        count++
+      }
+      END { print count + 0 }
+    ' "$file" 2>/dev/null)
     [ "${total_async:-0}" -eq 0 ] && continue
 
-    # Promise<Result< bo'lgan metod satrlari
-    with_result=$(grep -cE "Promise<Result<" "$file" 2>/dev/null || echo 0)
-    with_result="${with_result//[^0-9]/}"
-    with_result="${with_result:-0}"
+    # Count Promise<Result< occurrences (single-line) PLUS multi-line cases
+    # where a bare "Promise<" trails into a "Result<" on a subsequent line.
+    single=$(grep -cE "Promise<Result<" "$file" 2>/dev/null || echo 0)
+    single="${single//[^0-9]/}"
+    # Find async methods whose line ends with "Promise<" — assume their next
+    # non-blank line begins with "Result<".
+    multi=$(grep -cE "^\s+async .*Promise<\s*$" "$file" 2>/dev/null || echo 0)
+    multi="${multi//[^0-9]/}"
+    with_result=$(( ${single:-0} + ${multi:-0} ))
 
     unguarded=$(( total_async - with_result ))
+    [ "$unguarded" -lt 0 ] && unguarded=0
 
     if [ "$unguarded" -le 0 ]; then
       ok "$fname — barcha $total_async ta metod Promise<Result<>>"

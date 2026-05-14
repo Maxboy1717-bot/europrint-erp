@@ -1,5 +1,11 @@
+/**
+ * @module use-crm
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, safeArray } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function useCRMDashboard() {
   return useQuery({ queryKey: ["/api/crm/dashboard"] });
@@ -95,6 +101,7 @@ export function useMarkDealWon() {
 }
 
 export function useSendLeadEmail() {
+  const { toast } = useToast();
   return useMutation({
     mutationFn: ({
       leadId,
@@ -103,5 +110,24 @@ export function useSendLeadEmail() {
       leadId: string | number;
       [key: string]: unknown;
     }) => apiRequest("POST", `/api/crm/leads/${leadId}/emails`, data),
+    onSuccess: () => {
+      toast({ title: "Email yuborildi", variant: "default" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Xatolik", description: err.message, variant: "destructive" });
+    },
+  });
+}
+
+export function useDoneActivity() {
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: (activityId: string | number) =>
+      apiRequest("PATCH", `/api/crm/activities/${activityId}/done`, {}),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["/api/crm/activities"] }),
+    onError: (err: Error) => {
+      toast({ title: "Xatolik", description: err.message, variant: "destructive" });
+    },
   });
 }

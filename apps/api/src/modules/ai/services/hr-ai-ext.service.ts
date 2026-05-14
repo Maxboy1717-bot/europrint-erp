@@ -1,30 +1,27 @@
+/**
+ * @module hr-ai-ext.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
 import { AiRouterService } from '../application/services/ai-router.service';
-import { db } from '@shared/db';
-import {
-  hrToolTestResults,
-  users,
-  positions,
-} from '@europrint/schemas';
-import { eq } from 'drizzle-orm';
+import { AiDataRepository } from './ai-data.repository';
 import type { ToolTestAnalysis } from './hr-ai.service';
 
 @Injectable()
 export class HrAiExtService {
   private readonly logger = new Logger(HrAiExtService.name);
 
-  constructor(private readonly ai: AiRouterService) {}
+  constructor(
+    private readonly ai:       AiRouterService,
+    private readonly dataRepo: AiDataRepository,
+  ) {}
 
   async analyzeToolTest(toolTestId: number, positionTitle: string, userId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
       this.logger.log(`hr ai ext: AI tahlil boshlanmoqda`);
-      const [test] = (await db
-        .select()
-        .from(hrToolTestResults)
-        .where(eq(hrToolTestResults.id, toolTestId))
-        .limit(1)) as Array<Record<string, unknown>>;
-  
+      const test = await this.dataRepo.getToolTestById(toolTestId);
       if (!test) throw new InternalServerErrorException(`Tool Test #${toolTestId} topilmadi`);
   
       const prompt = `
@@ -161,15 +158,7 @@ JSON formatda (O'zbek tilida):
     kpiData: Record<string, unknown>,
     userId: number,
   ): Promise<{ overallRating: string; achievements: string[]; improvements: string[]; nextGoals: string[] }> {
-    const [emp] = await db
-      .select({
-        fullName: users.fullName,
-        positionName: (positions).name,
-      })
-      .from(users)
-      .leftJoin(positions, eq(users.positionId, positions.id))
-      .where(eq(users.id, employeeId))
-      .limit(1);
+    const emp = await this.dataRepo.getEmployeeWithPosition(employeeId);
 
     const prompt = `
 EuroPrint xodimi performance tahlili.

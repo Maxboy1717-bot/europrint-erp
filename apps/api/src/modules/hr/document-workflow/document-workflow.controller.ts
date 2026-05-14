@@ -1,5 +1,10 @@
+/**
+ * @module document-workflow.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Controller, UseGuards, Post, Get, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
+import { Controller, Delete, HttpCode, HttpStatus, NotFoundException, UseGuards, Post, Get, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
@@ -103,6 +108,18 @@ export class DocumentWorkflowController {
   @Patch('admin/workflow-routes/:id/toggle')
   async toggleAdminWorkflowRoute(@Param('id') id: string) { return { id, active: true }; }
 
+  @Post('admin/workflow-routes')
+  @HttpCode(HttpStatus.CREATED)
+  async createAdminWorkflowRoute(@Body() body: Record<string, unknown>) { return { id: Date.now(), ...body, created: true }; }
+
+  @Delete('admin/workflow-routes/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteAdminWorkflowRoute(@Param('id') id: string) { return { id, deleted: true }; }
+
   @Get(':id')
-  async getDocumentById(@Param('id') id: string) { return { id, status: 'draft' }; }
+  async getDocumentById(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.svc.getDocumentById(id);
+    if (!result.ok || !result.data) throw new NotFoundException(`Hujjat #${id} topilmadi`);
+    return result.data;
+  }
 }

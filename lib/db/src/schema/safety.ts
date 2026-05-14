@@ -1,12 +1,18 @@
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date } from "drizzle-orm/pg-core";
+/**
+ * @module safety
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
 
 export const safetyIncidents = pgTable("safety_incidents", {
   id: serial("id").primaryKey(),
-  reportedBy: integer("reported_by").references(() => employees.id),
-  affectedEmployeeId: integer("affected_employee_id").references(() => employees.id),
+  reportedBy: integer("reported_by").references(() => employees.id, { onDelete: "set null" }),
+  affectedEmployeeId: integer("affected_employee_id").references(() => employees.id, { onDelete: "set null" }),
   incidentDate: date("incident_date").notNull(),
   incidentTime: varchar("incident_time", { length: 5 }),
   incidentType: varchar("incident_type", { length: 50 }),
@@ -29,11 +35,16 @@ export const safetyIncidents = pgTable("safety_incidents", {
   closedDate: date("closed_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("safety_incidents_severity_chk", sql`${t.severity} IS NULL OR ${t.severity} IN ('minor','moderate','severe','critical')`),
+  check("safety_incidents_inv_status_chk", sql`${t.investigationStatus} IS NULL OR ${t.investigationStatus} IN ('open','in_progress','closed')`),
+  check("safety_incidents_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('reported','investigating','closed','rejected')`),
+  check("safety_incidents_days_lost_chk", sql`${t.daysLost} IS NULL OR ${t.daysLost} >= 0`),
+]);
 
 export const ppeCompliance = pgTable("ppe_compliance", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   ppeType: varchar("ppe_type", { length: 50 }),
   issueDate: date("issue_date"),
   expiryDate: date("expiry_date"),
@@ -58,15 +69,17 @@ export const safetyTrainings = pgTable("safety_trainings", {
 
 export const safetyTrainingRecords = pgTable("safety_training_records", {
   id: serial("id").primaryKey(),
-  trainingId: integer("training_id").references(() => safetyTrainings.id).notNull(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  trainingId: integer("training_id").references(() => safetyTrainings.id, { onDelete: "cascade" }).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   completedDate: date("completed_date"),
   expiryDate: date("expiry_date"),
   score: decimal("score", { precision: 5, scale: 2 }),
   isPassed: boolean("is_passed").default(false),
   certificateUrl: text("certificate_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("safety_training_records_score_chk", sql`${t.score} IS NULL OR (${t.score} >= 0 AND ${t.score} <= 100)`),
+]);
 
 export const hazardZones = pgTable("hazard_zones", {
   id: serial("id").primaryKey(),

@@ -1,3 +1,8 @@
+/**
+ * @module pos-pdf.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 export interface PdfMovementData {
   movementNumber:  string;
   typeCode:        string;

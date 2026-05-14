@@ -1,9 +1,16 @@
+/**
+ * @module erp-orders.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import {
   Controller,
   Get,
   Post,
   Put,
+  Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -53,11 +60,31 @@ export class ErpOrdersController {
     return r;
   }
 
+  @Post('orders')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createOrder(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createOrder(body));
+  }
+
   @Put('orders/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
   async updateOrder(@Param('id') id: string, @Body() body: ErpBodyDto) {
     return unwrapOrThrow(await this.svc.updateOrder(safeInt(id, 0), body));
+  }
+
+  @Patch('orders/:id')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async patchOrder(@Param('id') id: string, @Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.updateOrder(safeInt(id, 0), body));
+  }
+
+  @Delete('orders/:id')
+  @Roles(...ERP_WRITE)
+  async deleteOrder(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteOrder(safeInt(id, 0)));
   }
 
   @Get('work-centers')
@@ -75,11 +102,31 @@ export class ErpOrdersController {
     return r;
   }
 
+  @Post('work-centers')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createWorkCenter(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createWorkCenter(body));
+  }
+
   @Put('work-centers/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
   async updateWorkCenter(@Param('id') id: string, @Body() body: ErpBodyDto) {
     return unwrapOrThrow(await this.svc.updateWorkCenter(safeInt(id, 0), body));
+  }
+
+  @Patch('work-centers/:id')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async patchWorkCenter(@Param('id') id: string, @Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.updateWorkCenter(safeInt(id, 0), body));
+  }
+
+  @Delete('work-centers/:id')
+  @Roles(...ERP_WRITE)
+  async deleteWorkCenter(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteWorkCenter(safeInt(id, 0)));
   }
 
   @Get('work-centers/:id/stats')

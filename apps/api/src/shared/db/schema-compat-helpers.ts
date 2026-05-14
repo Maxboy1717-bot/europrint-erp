@@ -1,3 +1,8 @@
+/**
+ * @module schema-compat-helpers
+ * @description Source module. See exports for details.
+ */
+
 import { timestamp } from 'drizzle-orm/pg-core';
 export { pgTable, uuid, text, boolean, timestamp, decimal, integer, serial, varchar } from 'drizzle-orm/pg-core';
 export { createId } from '@paralleldrive/cuid2';

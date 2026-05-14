@@ -1,6 +1,11 @@
+/**
+ * @module mm-inventory
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -12,8 +17,8 @@ import { materialCards, materialBatches, batches } from "./mm-materials";
 
 export const aiMaterialInsights = pgTable("ai_material_insights", {
   id: serial("id").primaryKey(),
-  materialId: varchar("material_id").references(() => rawMaterials.id),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
+  materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   insightType: varchar("insight_type", { length: 30 }).notNull(), // forecast, anomaly, recommendation, trend
   insightDate: varchar("insight_date", { length: 10 }).notNull(), // YYYY-MM-DD
   confidence: numericMoney("confidence"), // 0-100
@@ -25,7 +30,7 @@ export const aiMaterialInsights = pgTable("ai_material_insights", {
   payload: jsonb("payload"), // Qo'shimcha ma'lumotlar (forecast values, etc.)
   actionRequired: boolean("action_required").notNull().default(false),
   actionTaken: boolean("action_taken").notNull().default(false),
-  actionTakenBy: varchar("action_taken_by").references(() => users.id),
+  actionTakenBy: varchar("action_taken_by").references(() => users.id, { onDelete: "set null" }),
   actionTakenAt: timestamp("action_taken_at"),
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -61,7 +66,7 @@ export const inventoryCounts = pgTable("inventory_counts", {
   id: serial("id").primaryKey(),
   countNumber: varchar("count_number", { length: 50 }).notNull().unique(),
   countDate: varchar("count_date", { length: 10 }).notNull(), // YYYY-MM-DD
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   countType: varchar("count_type", { length: 20 }).notNull(), // full, cycle, spot
   status: varchar("status", { length: 20 }).notNull().default("planned"), // planned, in_progress, completed, approved
   totalItems: integer("total_items").default(0),
@@ -70,13 +75,18 @@ export const inventoryCounts = pgTable("inventory_counts", {
   totalBookValue: numericMoney("total_book_value").default(0),
   totalCountedValue: numericMoney("total_counted_value").default(0),
   totalVariance: numericMoney("total_variance").default(0),
-  assignedTo: integer("assigned_to").references(() => users.id),
-  approvedBy: integer("approved_by").references(() => users.id),
+  assignedTo: integer("assigned_to").references(() => users.id, { onDelete: "set null" }),
+  approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   completedAt: timestamp("completed_at"),
   approvedAt: timestamp("approved_at"),
 }, (t) => [
+  check("inventory_counts_status_chk", sql`${t.status} IN ('planned','in_progress','completed','approved')`),
+  check("inventory_counts_count_type_chk", sql`${t.countType} IN ('full','cycle','spot')`),
+  check("inventory_counts_total_items_chk", sql`${t.totalItems} IS NULL OR ${t.totalItems} >= 0`),
+  check("inventory_counts_book_value_chk", sql`${t.totalBookValue} IS NULL OR ${t.totalBookValue} >= 0`),
+  check("inventory_counts_counted_value_chk", sql`${t.totalCountedValue} IS NULL OR ${t.totalCountedValue} >= 0`),
   index("idx_inventory_counts_warehouse_id").on(t.warehouseId),
   index("idx_inventory_counts_status").on(t.status),
   index("idx_inventory_counts_count_date").on(t.countDate),
@@ -103,8 +113,8 @@ export type InsertInventoryCount = z.infer<typeof insertInventoryCountSchema>;
 export const inventoryCountLines = pgTable("inventory_count_lines", {
   id: serial("id").primaryKey(),
   countId: integer("count_id").notNull().references(() => inventoryCounts.id, { onDelete: "cascade" }),
-  materialId: integer("material_id").references(() => rawMaterials.id),
-  productId: integer("product_id").references(() => products.id),
+  materialId: integer("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
+  productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
   itemType: varchar("item_type", { length: 20 }).notNull(), // material, product
   bookQuantity: numericMoney("book_quantity").notNull(),
   countedQuantity: numericMoney("counted_quantity"),
@@ -115,7 +125,7 @@ export const inventoryCountLines = pgTable("inventory_count_lines", {
   countedValue: numericMoney("counted_value"),
   valueVariance: numericMoney("value_variance"),
   reason: text("reason"), // Farq sababi
-  countedBy: integer("counted_by").references(() => users.id),
+  countedBy: integer("counted_by").references(() => users.id, { onDelete: "set null" }),
   countedAt: timestamp("counted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
@@ -143,7 +153,7 @@ export type InsertInventoryCountLine = z.infer<typeof insertInventoryCountLineSc
 export const aiReservationRequests = pgTable("ai_reservation_requests", {
   id: serial("id").primaryKey(),
   orderId: varchar("order_id"),
-  requestedBy: varchar("requested_by").references(() => users.id),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "set null" }),
   materialType: varchar("material_type", { length: 50 }).notNull(),
   requiredQuantity: numericMoney("required_quantity").notNull(),
   unit: varchar("unit", { length: 20 }).notNull().default("kg"),
@@ -215,22 +225,22 @@ export type InsertAiMaterialBatch = z.infer<typeof insertAiMaterialBatchSchema>;
 export const materialBarcodes = pgTable("material_barcodes", {
   id: serial("id").primaryKey(),
   barcodeId: varchar("barcode_id", { length: 100 }).notNull().unique(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id),
+  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
   lotNumber: varchar("lot_number", { length: 50 }),
   quantity: numericMoney("quantity").notNull(),
   remainingQuantity: numericMoney("remaining_quantity").notNull(),
   reservedQuantity: numericMoney("reserved_quantity").notNull().default(0),
   uom: varchar("uom", { length: 20 }).notNull(),
   currentLocation: varchar("current_location", { length: 100 }).notNull().default("RECEIVING"),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
-  binId: varchar("bin_id").references(() => warehouseBins.id),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
+  binId: varchar("bin_id").references(() => warehouseBins.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("QC_HOLD"),
   receivedDate: timestamp("received_date"),
   productionDate: varchar("production_date", { length: 10 }),
   expiryDate: varchar("expiry_date", { length: 10 }),
   gtin: varchar("gtin", { length: 14 }),
   sscc: varchar("sscc", { length: 18 }),
-  vendorId: varchar("vendor_id").references(() => vendors.id),
+  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
   poNumber: varchar("po_number", { length: 50 }),
   goodsReceiptId: varchar("goods_receipt_id"),
   parentBarcodeId: varchar("parent_barcode_id"),
@@ -238,9 +248,9 @@ export const materialBarcodes = pgTable("material_barcodes", {
   totalCost: numericMoney("total_cost").default(0),
   qcStatus: varchar("qc_status", { length: 20 }).default("pending"),
   qcNotes: text("qc_notes"),
-  qcInspectorId: varchar("qc_inspector_id").references(() => users.id),
+  qcInspectorId: varchar("qc_inspector_id").references(() => users.id, { onDelete: "set null" }),
   qcDate: timestamp("qc_date"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (t) => [
@@ -270,8 +280,8 @@ export type InsertMaterialBarcode = z.infer<typeof insertMaterialBarcodeSchema>;
 export const productionConsumption = pgTable("production_consumption", {
   id: serial("id").primaryKey(),
   productionOrderId: varchar("production_order_id").notNull(),
-  barcodeId: varchar("barcode_id").references(() => materialBarcodes.id).notNull(),
-  operatorId: varchar("operator_id").references(() => users.id).notNull(),
+  barcodeId: varchar("barcode_id").references(() => materialBarcodes.id, { onDelete: "cascade" }).notNull(),
+  operatorId: varchar("operator_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
   qtyIssued: numericMoney("qty_issued").notNull(),
   qtyUsed: numericMoney("qty_used").default(0),
   qtyScrap: numericMoney("qty_scrap").default(0),

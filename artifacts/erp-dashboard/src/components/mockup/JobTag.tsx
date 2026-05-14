@@ -1,3 +1,8 @@
+/**
+ * @module JobTag
+ * @description React UI component.
+ */
+
 import type { ReactNode } from "react";
 
 type JobTagVariant = 'dark' | 'blue' | 'pink' | 'purple' | 'green' | 'orange';

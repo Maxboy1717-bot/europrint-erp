@@ -1,3 +1,8 @@
+/**
+ * @module approve-purchase-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Err , Ok } from '@common/result';
 import { Inject, BadRequestException, Logger } from '@nestjs/common';

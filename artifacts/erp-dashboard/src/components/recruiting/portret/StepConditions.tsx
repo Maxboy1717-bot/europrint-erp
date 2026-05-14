@@ -1,3 +1,8 @@
+/**
+ * @module StepConditions
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +29,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
         <Badge variant="outline" className="text-[9px]">Kandidatga ma'lumot</Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label className="text-xs mb-1 block">Ish haqi (min)</Label>
           <Input
@@ -45,7 +50,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label className="text-xs mb-1 block">Sinov muddati (oy)</Label>
           <Input
@@ -70,7 +75,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
 
       <div>
         <Label className="text-xs mb-2 block">Ijtimoiy paket</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-2">
           {(Array.isArray(socialPackageOptions) ? socialPackageOptions : []).map(opt => (
             <button
               key={opt}
@@ -78,7 +83,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
               className={`text-[10px] py-1 px-2 rounded-md border text-left transition-all ${
                 (Array.isArray(portret.social_package) ? portret.social_package : []).includes(opt)
                   ? "bg-primary/10 border-primary text-primary font-medium"
-                  : "bg-surface border-border/50 text-muted-foreground hover:border-primary/30"
+                  : "bg-background border-border/50 text-muted-foreground hover:border-primary/30"
               }`}
             >
               {opt}

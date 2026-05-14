@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-sales-order.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { runQuery } from '@shared/db';
@@ -24,51 +29,58 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         order.getTotalAmount(), (castTo<Row>(order))['createdBy'],
       );
       return { ok: true as const, data: order };
-    } catch { return { ok: true as const, data: order }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async findById(id: number): Promise<Result<SalesOrder | null>> {
     try {
-      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE id = ${id} LIMIT 1`);
+      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`);
       if (!r.rows[0]) return { ok: true as const, data: null };
       return { ok: true as const, data: this.toDomain(r.rows[0] as Row) };
-    } catch { return { ok: true as const, data: null }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async findByOrderNumber(orderNumber: string): Promise<Result<SalesOrder | null>> {
     try {
-      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE order_number = ${orderNumber} LIMIT 1`);
+      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE order_number = ${orderNumber} AND deleted_at IS NULL LIMIT 1`);
       if (!r.rows[0]) return { ok: true as const, data: null };
       return { ok: true as const, data: this.toDomain(r.rows[0] as Row) };
-    } catch { return { ok: true as const, data: null }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async findByCompanyId(companyId: number, limit: number, offset: number): Promise<Result<SalesOrder[]>> {
     try {
-      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE company_id = ${companyId} LIMIT ${limit} OFFSET ${offset}`);
+      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE company_id = ${companyId} AND deleted_at IS NULL LIMIT ${limit} OFFSET ${offset}`);
       return { ok: true as const, data: ((r.rows as Row[]) ?? []).map((row) => this.toDomain(row)) };
-    } catch { return { ok: true as const, data: [] }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async findByStatus(status: string, limit: number, offset: number): Promise<Result<SalesOrder[]>> {
     try {
-      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE status = ${status} LIMIT ${limit} OFFSET ${offset}`);
+      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE status = ${status} AND deleted_at IS NULL LIMIT ${limit} OFFSET ${offset}`);
       return { ok: true as const, data: ((r.rows as Row[]) ?? []).map((row) => this.toDomain(row)) };
-    } catch { return { ok: true as const, data: [] }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
+  }
+
+  async findAll(limit: number, offset: number): Promise<Result<SalesOrder[]>> {
+    try {
+      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`);
+      return { ok: true as const, data: ((r.rows as Row[]) ?? []).map((row) => this.toDomain(row)) };
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async findPendingAdvanceOrders(limit: number, offset: number): Promise<Result<SalesOrder[]>> {
     try {
-      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE advance_status IN ('pending', 'partial') LIMIT ${limit} OFFSET ${offset}`);
+      const r = await runQuery<Row>(sql`SELECT * FROM sd_sales_orders WHERE advance_status IN ('pending', 'partial') AND deleted_at IS NULL LIMIT ${limit} OFFSET ${offset}`);
       return { ok: true as const, data: ((r.rows as Row[]) ?? []).map((row) => this.toDomain(row)) };
-    } catch { return { ok: true as const, data: [] }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async update(order: SalesOrder): Promise<Result<void>> {
     try {
       await execSdSalesOrderUpdate(order.getStatus(), order.getAdvanceStatus(), order.getId());
       return { ok: true as const, data: undefined };
-    } catch { return { ok: true as const, data: undefined }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async updateAdvancePaidWithLock(
@@ -155,19 +167,19 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     try {
       await execSdSalesOrderDelete(id);
       return { ok: true as const, data: undefined };
-    } catch { return { ok: true as const, data: undefined }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   async count(): Promise<Result<number>> {
     try {
       const r = await runQuery<{ count: number }>(sql`SELECT COUNT(*)::int AS count FROM sd_sales_orders`);
       return { ok: true as const, data: Number(r.rows[0]?.count ?? 0) };
-    } catch { return { ok: true as const, data: 0 }; }
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
   private toDomain(row: Row): SalesOrder {
     const statusResult = SoStatus.create(String(row.status ?? 'draft'));
-    const moneyResult = Money.of(Number(row.total_amount ?? 0), 'USD');
+    const moneyResult = Money.of(Number(row.total_amount ?? 0), String(row.currency ?? 'UZS'));
     return new SalesOrder({
       id: Number(row.id ?? 0), orderNumber: String(row.order_number ?? ''),
       status: statusResult.data as SoStatus, companyId: Number(row.company_id ?? 0),

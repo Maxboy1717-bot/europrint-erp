@@ -1,10 +1,16 @@
+/**
+ * @module PublicFooter
+ * @description React UI component.
+ */
+
 import { Link } from 'wouter';
 import { Phone, Mail, MapPin, Send } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
 import logoImage from '@assets/Logo_Euro_Print_1769616882846.png';
 
+import { useTranslation } from '@/lib/i18n';
 export default function PublicFooter() {
-  const { t } = useLanguage();
+  const { t } = useTranslation('common');
   const currentYear = new Date().getFullYear();
 
   const links = [
@@ -95,8 +101,8 @@ export default function PublicFooter() {
             <form className="flex gap-2">
               <input
                 type="email"
-                placeholder="Email"
-                className="flex-1 px-4 py-3 rounded-lg text-sm bg-surface-container-lowest/10 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/40"
+                placeholder={t('email1')}
+                className="flex-1 px-4 py-3 rounded-lg text-sm bg-card/10 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/40"
                 data-testid="input-footer-email"
               />
               <button 

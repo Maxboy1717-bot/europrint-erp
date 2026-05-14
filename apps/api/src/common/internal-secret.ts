@@ -1,3 +1,8 @@
+/**
+ * @module internal-secret
+ * @description Source module. See exports for details.
+ */
+
 import { ForbiddenException } from '@nestjs/common';
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;

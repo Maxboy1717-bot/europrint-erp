@@ -76,8 +76,8 @@
   "probability": "Вероятность",
   "expectedRevenue": "Ожидаемый доход",
   "closingDate": "Дата закрытия",
-  "won": "Выигран",
-  "lost": "Проигран",
+  "won": "Выиграно",
+  "lost": "Проиграно",
   "open": "Открыт",
   "qualified": "Квалифицирован",
   "contacted": "Связались",
@@ -376,10 +376,7 @@
   "rfmDesc": "TZ-41: K-Means++ (k=6) · Давность · Частота · Сумма",
   "cluster": "Кластеризовать",
   "recluster": "Пересчитать",
-  "won": "Выиграно",
-  "lost": "Проиграно",
   "winRateGauge": "Показатель Win Rate",
-  "deals": "Сделки",
   "baseRevenue": "Базовый доход",
   "cohortSize": "Объём",
   "retention": "Удержание",
@@ -395,5 +392,7 @@
   "monetaryAxis": "Monetary (нормализованный)",
   "recencyLabel": "Recency",
   "frequencyLabel": "Frequency",
-  "monetaryLabel": "Monetary"
+  "monetaryLabel": "Monetary",
+  "deal001": "deal-001",
+  "winRate1": "Win Rate"
 }

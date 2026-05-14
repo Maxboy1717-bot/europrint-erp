@@ -1,3 +1,8 @@
+/**
+ * @module finance-ai.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -45,7 +50,7 @@ DAVR: So'nggi ${periodDays} kun
 JAMI HUJJATLAR: ${stats?.totalDocs ?? 0}
 
 OXIRGI 20 TA HUJJAT:
-${(recentDocs ?? []).map(d => `${d.docType} | ${d.docNumber} | ${d.status} | ${d.date}`).join('\n')}
+${(Array.isArray(recentDocs) ? recentDocs : []).map(d => `${d.docType} | ${d.docNumber} | ${d.status} | ${d.date}`).join('\n')}
 
 EuroPrint bosma mahsulotlar kompaniyasi.
 Odatdagi operatsiyalar: to'lovlar, fakturalar, hisobotlar.

@@ -1,3 +1,8 @@
+/**
+ * @module SparePartsPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
@@ -8,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/ui/page-state";
 import { Search, Package, AlertTriangle, DollarSign } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
 interface SparePart {
   id: number;
@@ -94,9 +100,9 @@ export default function SparePartsPage() {
                     <td className="p-2 text-muted-foreground">{p.warehouseLocation ?? '—'}</td>
                     <td className="text-center p-2">
                       {p.isLow ? (
-                        <Badge variant="destructive">KAM</Badge>
+                        <EPStatusPill tone="danger">KAM</EPStatusPill>
                       ) : (
-                        <Badge variant="outline" className="text-emerald-700">OK</Badge>
+                        <Badge variant="outline" className="text-[var(--ep-green)]">OK</Badge>
                       )}
                     </td>
                   </tr>

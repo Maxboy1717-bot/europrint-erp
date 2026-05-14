@@ -1,3 +1,8 @@
+/**
+ * @module chat.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { ChatRoomService } from './chat-room.service';
@@ -83,7 +88,7 @@ export class ChatService {
   getRoomsForUser(userId: number) { return this.roomSvc.getRoomsForUser(userId); }
   getRoomById(roomId: string | number) { return this.roomSvc.getRoomById(roomId); }
   getRoomMembers(roomId: string | number) { return this.roomSvc.getRoomMembers(roomId); }
-  createGroupRoom(name: string, memberIds: number[], createdBy: number) { return this.roomSvc.createGroupRoom(name, memberIds, createdBy); }
+  createGroupRoom(name: string, memberIds: number[], createdBy: number, type: 'GROUP' | 'CHANNEL' = 'GROUP') { return this.roomSvc.createGroupRoom(name, memberIds, createdBy, type); }
   addMemberToRoom(roomId: string | number, userId: number) { return this.roomSvc.addMemberToRoom(roomId, userId); }
   markRoomAsRead(roomId: string | number, userId: number) { return this.roomSvc.markRoomAsRead(roomId, userId); }
   isRoomMember(roomId: string | number, userId: number) { return this.roomSvc.isRoomMember(roomId, userId); }
@@ -94,6 +99,7 @@ export class ChatService {
   }
   getTotalUnreadCount(userId: number) { return this.roomSvc.getTotalUnreadCount(userId); }
   getAllEmployees(search?: string) { return this.roomSvc.getAllEmployees(search); }
+  getTodayBirthdays() { return this.roomSvc.getTodayBirthdays(); }
   toggleMemberMute(roomId: string, userId: string, muted: boolean) { return this.roomSvc.toggleMemberMute(roomId, userId, muted); }
   getOrCreateDepartmentRooms(userId: number) { return this.roomSvc.getOrCreateDepartmentRooms(userId); }
 

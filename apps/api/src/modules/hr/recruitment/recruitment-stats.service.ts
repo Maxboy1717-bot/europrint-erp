@@ -1,3 +1,8 @@
+/**
+ * @module recruitment-stats.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -26,9 +31,9 @@ export class RecruitmentStatsService {
       const productivityCounts = (productivityCountsResult.ok ? productivityCountsResult.data : []) as Array<Record<string, unknown>>;
       const sourceCounts = (sourceCountsResult.ok ? sourceCountsResult.data : []) as Array<Record<string, unknown>>;
 
-      const getCount = (stage: string) => Number((stageCounts ?? []).find((s) => s['stage'] === stage)?.['cnt'] ?? 0);
+      const getCount = (stage: string) => Number((Array.isArray(stageCounts) ? stageCounts : []).find((s) => s['stage'] === stage)?.['cnt'] ?? 0);
       const sourceBreakdown: Record<string, number> = {};
-      (sourceCounts ?? []).forEach((s) => { if (s['source']) sourceBreakdown[s['source'] as string] = Number(s['cnt']); });
+      (Array.isArray(sourceCounts) ? sourceCounts : []).forEach((s) => { if (s['source']) sourceBreakdown[s['source'] as string] = Number(s['cnt']); });
 
       const stats = {
         recruiterId, weekStart, weekEnd,
@@ -45,9 +50,9 @@ export class RecruitmentStatsService {
         hired:                getCount('HIRED'),
         rejected:             getCount('REJECTED'),
         sourceBreakdown,
-        flagmanCount:     Number((productivityCounts ?? []).find((p) => p['category'] === 'FLAGMAN')?.['cnt'] ?? 0),
-        protsessnikCount: Number((productivityCounts ?? []).find((p) => p['category'] === 'PROTSESSNIK')?.['cnt'] ?? 0),
-        trabldaykerCount: Number((productivityCounts ?? []).find((p) => p['category'] === 'TRABLDAYKER')?.['cnt'] ?? 0),
+        flagmanCount:     Number((Array.isArray(productivityCounts) ? productivityCounts : []).find((p) => p['category'] === 'FLAGMAN')?.['cnt'] ?? 0),
+        protsessnikCount: Number((Array.isArray(productivityCounts) ? productivityCounts : []).find((p) => p['category'] === 'PROTSESSNIK')?.['cnt'] ?? 0),
+        trabldaykerCount: Number((Array.isArray(productivityCounts) ? productivityCounts : []).find((p) => p['category'] === 'TRABLDAYKER')?.['cnt'] ?? 0),
       };
 
       const kpiScore = this.calculateKpiScore(stats);
@@ -103,7 +108,7 @@ export class RecruitmentStatsService {
     return safeCall(async () => {
       const rowsResult = await this.repo.getChannelAnalytics();
       const rows = (rowsResult.ok ? rowsResult.data : []) as Array<Record<string, unknown>>;
-      return { data: (rows ?? []).map((r) => ({ ...r, ch_key: ((r['ch_key'] as string | null) ?? 'UNKNOWN').toUpperCase() })) };
+      return { data: (Array.isArray(rows) ? rows : []).map((r) => ({ ...r, ch_key: ((r['ch_key'] as string | null) ?? 'UNKNOWN').toUpperCase() })) };
     });
   }
 }

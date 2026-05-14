@@ -1,7 +1,15 @@
+/**
+ * @module sales.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  AuditInterceptor } from '@common/interceptors/audit.interceptor';import { safeInt } from '../hr/common/db-rows';import {  Controller,
+  AuditInterceptor } from '@common/interceptors/audit.interceptor';import { safeInt } from '../hr/common/db-rows';import {  Body, Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Logger,
+  Post,
   Query,
   UseGuards,
   UseInterceptors,
@@ -71,6 +79,17 @@ export class SalesController {
     const _rGenerateForecast = await this.svc.generateForecast(
       managerId ? safeInt(managerId, 0) : null,
       period ?? null,
+    );
+    assertOk(_rGenerateForecast);
+    return _rGenerateForecast.data;
+  }
+
+  @Post('forecast/generate')
+  @HttpCode(HttpStatus.OK)
+  async postGenerateForecast(@Body() body: Record<string, unknown>) {
+    const _rGenerateForecast = await this.svc.generateForecast(
+      body.managerId ? safeInt(String(body.managerId), 0) : null,
+      body.period ? String(body.period) : null,
     );
     assertOk(_rGenerateForecast);
     return _rGenerateForecast.data;

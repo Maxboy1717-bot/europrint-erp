@@ -1,3 +1,8 @@
+/**
+ * @module ai-wms.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   AiWmsReorderPointDtoSchema,

@@ -1,3 +1,8 @@
+/**
+ * @module three-way-match.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Get, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -6,7 +11,7 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ThreeWayMatchService } from './three-way-match.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
+import { parsePagination } from '@common/pipes/parse-pagination.pipe';
 import { unwrapOrInternal } from '@common/http-result';
 
 const CAN_VIEW  = ['admin', 'super_admin', 'director', 'finance_manager', 'accountant', 'procurement_manager'];
@@ -24,7 +29,7 @@ export class ThreeWayMatchController {
   @Roles(...CAN_VIEW)
   async getResults(@Query() q: Record<string, string>) {
     const poId = q['poId'] ? parseInt(q['poId'], 10) : null;
-    const limit = Math.min(parseInt(q['limit'] ?? '50', 10), MAX_QUERY_LIMIT);
+    const { limit } = parsePagination(q['limit']);
     return unwrapOrInternal(await this.svc.getResults(poId, limit));
   }
 

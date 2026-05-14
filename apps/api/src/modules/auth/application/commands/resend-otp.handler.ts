@@ -1,3 +1,8 @@
+/**
+ * @module resend-otp.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result, isErr } from '@common/result';
 import { OtpSessionRepository } from '../../infrastructure/repositories/otp-session.repository';

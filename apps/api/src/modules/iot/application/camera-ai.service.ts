@@ -1,3 +1,8 @@
+/**
+ * @module camera-ai.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { DrizzleCameraAiRepo } from '../infrastructure/repositories/drizzle-camera-ai.repo';

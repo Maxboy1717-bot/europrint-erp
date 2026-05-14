@@ -1,3 +1,8 @@
+/**
+ * @module Home
+ * @description Source module. See exports for details.
+ */
+
 import { Link } from "wouter";
 import {
   ArrowRight, CheckCircle2, Printer, Package, Megaphone,

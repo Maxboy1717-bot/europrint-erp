@@ -1,3 +1,8 @@
+/**
+ * @module ExpenseManagement
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,10 +21,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ErrorState } from "@/components/ui/error-state";
 import { PageState } from "@/components/ui/page-state";
 import { Wallet, CheckCircle, XCircle, Clock, Send, DollarSign, FileText, Plus, Receipt, CreditCard, LucideIcon } from "lucide-react";
+import { EPErrorState } from "@/components/ep";
 
+import { useTranslation } from '@/lib/i18n';
 interface ExpenseRequest {
   id: string;
   requestNumber: string;
@@ -69,6 +76,7 @@ const expenseFormSchema = z.object({
 });
 
 export default function ExpenseManagement() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -134,14 +142,14 @@ export default function ExpenseManagement() {
 
   if (isError) {
     return (
-      <div className="p-4 md:p-6">
-        <ErrorState onRetry={refetch} />
+      <div>
+        <EPErrorState onRetry={refetch} />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6" data-testid="page-expense-management">
+    <div className="space-y-6" data-testid="page-expense-management">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Kassa Nazorat va Xarajatlar</h1>
@@ -153,20 +161,20 @@ export default function ExpenseManagement() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Yangi xarajat so'rovi</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold">Yangi xarajat so'rovi</DialogTitle>
               <DialogDescription>Xarajat uchun so'rov yarating</DialogDescription>
             </DialogHeader>
             <form onSubmit={form.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
               <div>
                 <Label>Kategoriya</Label>
                 <Select onValueChange={(v) => form.setValue("category", v)}>
-                  <SelectTrigger data-testid="select-category"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-category" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="office_supplies">Ofis jihozlari</SelectItem>
                     <SelectItem value="production">Ishlab chiqarish</SelectItem>
                     <SelectItem value="transport">Transport</SelectItem>
                     <SelectItem value="maintenance">Ta'mirlash</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="marketing">{t('marketing')}</SelectItem>
                     <SelectItem value="other">Boshqa</SelectItem>
                   </SelectContent>
                 </Select>
@@ -194,10 +202,10 @@ export default function ExpenseManagement() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900"><Send className="w-5 h-5 text-blue-600" /></div><div><p className="text-sm text-muted-foreground">Yuborilgan</p><p className="text-2xl font-bold">{totalSubmitted}</p></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-green-100 dark:bg-green-900"><CheckCircle className="w-5 h-5 text-green-600" /></div><div><p className="text-sm text-muted-foreground">Tasdiqlangan</p><p className="text-2xl font-bold">{totalApproved}</p></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900"><DollarSign className="w-5 h-5 text-purple-600" /></div><div><p className="text-sm text-muted-foreground">Jami summa</p><p className="text-2xl font-bold">{(totalAmount / 1000000).toFixed(1)}M</p></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-orange-100 dark:bg-orange-900"><Receipt className="w-5 h-5 text-orange-600" /></div><div><p className="text-sm text-muted-foreground">Avans to'lovlar</p><p className="text-2xl font-bold">{(advancePayments || []).length}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900"><Send className="w-5 h-5 text-[var(--ep-blue)]" /></div><div><p className="text-sm text-muted-foreground">Yuborilgan</p><p className="text-2xl font-bold">{totalSubmitted}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-green-100 dark:bg-green-900"><CheckCircle className="w-5 h-5 text-[var(--ep-green)]" /></div><div><p className="text-sm text-muted-foreground">Tasdiqlangan</p><p className="text-2xl font-bold">{totalApproved}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900"><DollarSign className="w-5 h-5 text-[var(--ep-purple)]" /></div><div><p className="text-sm text-muted-foreground">Jami summa</p><p className="text-2xl font-bold">{(totalAmount / 1000000).toFixed(1)}M</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-orange-100 dark:bg-orange-900"><Receipt className="w-5 h-5 text-[var(--ep-primary)]" /></div><div><p className="text-sm text-muted-foreground">Avans to'lovlar</p><p className="text-2xl font-bold">{(advancePayments || []).length}</p></div></div></CardContent></Card>
       </div>
 
       <Tabs defaultValue="requests" className="w-full">
@@ -208,9 +216,9 @@ export default function ExpenseManagement() {
         <TabsContent value="requests">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-              <CardTitle className="text-lg">So'rovlar</CardTitle>
+              <CardTitle className="text-[14px] font-semibold">So'rovlar</CardTitle>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-36" data-testid="select-status-filter"><SelectValue placeholder="Holat" /></SelectTrigger>
+                <SelectTrigger className="w-36 h-9" data-testid="select-status-filter"><SelectValue placeholder="Holat" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Barchasi</SelectItem>
                   <SelectItem value="submitted">Yuborilgan</SelectItem>
@@ -235,7 +243,7 @@ export default function ExpenseManagement() {
                 emptyTitle="Hali so'rov mavjud emas"
                 emptyDescription="Yangi xarajat so'rovini yarating."
               >
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Raqam</TableHead>
@@ -248,7 +256,7 @@ export default function ExpenseManagement() {
                   </TableHeader>
                   <TableBody>
                     {(Array.isArray(requests) ? requests : []).map((r) => (
-                      <TableRow key={r.id} data-testid={`row-expense-${r.id}`}>
+                      <TableRow key={r.id} data-testid={`row-expense-${r.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-mono text-sm">{r.requestNumber}</TableCell>
                         <TableCell>{r.requester?.fullName || "-"}</TableCell>
                         <TableCell><Badge variant="outline">{r.category}</Badge></TableCell>
@@ -257,31 +265,59 @@ export default function ExpenseManagement() {
                         <TableCell>
                           {r.status === "submitted" && (
                             <div className="flex gap-1">
-                              <Button size="sm" variant="outline" onClick={() => approveMutation.mutate({ id: r.id, action: "approve" })} data-testid={`button-approve-${r.id}`}>
-                                <CheckCircle className="w-3 h-3" />
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => approveMutation.mutate({ id: r.id, action: "reject" })} data-testid={`button-reject-${r.id}`}>
-                                <XCircle className="w-3 h-3" />
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="outline" data-testid={`button-approve-${r.id}`}>
+                                    <CheckCircle className="w-3 h-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Tasdiqlashni xohlaysizmi?</AlertDialogTitle>
+                                    <AlertDialogDescription>So'rov {r.requestNumber} tasdiqlanadi.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => approveMutation.mutate({ id: r.id, action: "approve" })}>Tasdiqlash</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="outline" data-testid={`button-reject-${r.id}`}>
+                                    <XCircle className="w-3 h-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Rad etishni xohlaysizmi?</AlertDialogTitle>
+                                    <AlertDialogDescription>So'rov {r.requestNumber} rad etiladi.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => approveMutation.mutate({ id: r.id, action: "reject" })}>Rad etish</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           )}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
               </PageState>
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="advances">
           <Card>
-            <CardHeader><CardTitle className="text-lg">Avans to'lovlar</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-[14px] font-semibold">Avans to'lovlar</CardTitle></CardHeader>
             <CardContent>
               {(advancePayments || []).length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">Hali avans to'lov mavjud emas</div>
+                <div className="text-center py-8 text-[13px] text-muted-foreground">Hali avans to'lov mavjud emas</div>
               ) : (
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Raqam</TableHead>
@@ -293,7 +329,7 @@ export default function ExpenseManagement() {
                   </TableHeader>
                   <TableBody>
                     {(advancePayments || []).map((p) => (
-                      <TableRow key={p.id} data-testid={`row-advance-${p.id}`}>
+                      <TableRow key={p.id} data-testid={`row-advance-${p.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-mono">{p.requestNumber}</TableCell>
                         <TableCell><Badge variant="outline">{p.paymentType}</Badge></TableCell>
                         <TableCell>{p.vendor?.name || p.employee?.fullName || "-"}</TableCell>
@@ -302,7 +338,7 @@ export default function ExpenseManagement() {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
               )}
             </CardContent>
           </Card>

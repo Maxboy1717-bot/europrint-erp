@@ -1,3 +1,8 @@
+/**
+ * @module AbcAnalysisTab
+ * @description React UI component.
+ */
+
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PieChartIcon, RefreshCw } from "lucide-react";
@@ -31,6 +36,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency } from "@/lib/format";
 import { AbcData, AbcItem, TranslationType, ABC_COLORS, PIE_COLORS } from "./types";
+import { apiRequest } from '@/lib/queryClient';
 
 interface AbcAnalysisTabProps {
   t: TranslationType;
@@ -43,9 +49,7 @@ export function AbcAnalysisTab({ t, period, setPeriod }: AbcAnalysisTabProps) {
     queryKey: ["/api/warehouse/reports/abc-analysis", period],
     queryFn: async () => {
       const params = new URLSearchParams({ period });
-      const res = await fetch(`/api/warehouse/reports/abc-analysis?${params}`, {
-        credentials: "include",
-      });
+      const res = await apiRequest('GET', `/api/warehouse/reports/abc-analysis?${params}`);
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },
@@ -63,10 +67,10 @@ export function AbcAnalysisTab({ t, period, setPeriod }: AbcAnalysisTabProps) {
   if (isLoadingAbc) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24" />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}
         </div>
-        <Skeleton className="h-64" />
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     );
   }
@@ -77,7 +81,7 @@ export function AbcAnalysisTab({ t, period, setPeriod }: AbcAnalysisTabProps) {
         <div className="flex items-center gap-2">
           <Label>{t.abc.period}</Label>
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-32" data-testid="select-period">
+            <SelectTrigger className="w-32 h-9" data-testid="select-period">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -130,7 +134,7 @@ export function AbcAnalysisTab({ t, period, setPeriod }: AbcAnalysisTabProps) {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px]">
-              <Table>
+              <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t.abc.material}</TableHead>
@@ -142,7 +146,7 @@ export function AbcAnalysisTab({ t, period, setPeriod }: AbcAnalysisTabProps) {
                 </TableHeader>
                 <TableBody>
                   {abcData?.data?.map((item: AbcItem) => (
-                    <TableRow key={item.materialId} data-testid={`row-abc-${item.materialId}`}>
+                    <TableRow key={item.materialId} data-testid={`row-abc-${item.materialId}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell className="text-right">{formatCurrency(item.totalValue)} {t.common.sum}</TableCell>
                       <TableCell className="text-right">{item.percentage.toFixed(2)}%</TableCell>
@@ -166,7 +170,7 @@ export function AbcAnalysisTab({ t, period, setPeriod }: AbcAnalysisTabProps) {
                     </TableRow>
                   )}
                 </TableBody>
-              </Table>
+              </Table></div>
             </ScrollArea>
           </CardContent>
         </Card>

@@ -1,3 +1,8 @@
+/**
+ * @module queries-pp
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { boms_int, routings_int, production_orders_int, routing_operations_int } from '@shared/db';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
@@ -8,8 +13,8 @@ export async function execSavePo(
   soId: number | null, status: string, bomId: number | null,
   routingId: number | null, plannedStart: unknown, plannedEnd: unknown,
   createdBy: string | null = null,
-): Promise<void> {
-  await db.insert(production_orders_int).values({
+): Promise<number> {
+  const rows = await db.insert(production_orders_int).values({
     sales_order_id: soId,
     status,
     bom_id: bomId,
@@ -21,7 +26,8 @@ export async function execSavePo(
     quantity: 1,
     unit: 'pcs',
     created_by: createdBy,
-  }).onConflictDoNothing();
+  }).returning({ id: production_orders_int.id });
+  return rows[0]?.id ?? 0;
 }
 
 export async function queryPo(id: number): Promise<DbRow | null> {
@@ -34,14 +40,15 @@ export async function queryPoByStatus(status: string): Promise<DbRow[]> {
   return rows as DbRow[];
 }
 
-export async function execSaveBom(productName: string, version: string, createdBy: string | null = null): Promise<void> {
-  await db.insert(boms_int).values({
+export async function execSaveBom(productName: string, version: string, createdBy: string | null = null): Promise<number> {
+  const rows = await db.insert(boms_int).values({
     product_name: productName,
     version,
     is_active: true,
     created_by: createdBy,
     items: [],
-  }).onConflictDoNothing();
+  }).onConflictDoNothing().returning({ id: boms_int.id });
+  return rows[0]?.id ?? 0;
 }
 
 export async function queryBom(id: number): Promise<DbRow | null> {
@@ -57,14 +64,16 @@ export async function queryBomByProduct(productId: number): Promise<DbRow | null
   return (rows[0] ?? null) as DbRow | null;
 }
 
-export async function execSaveRouting(productId: number, createdBy: string | null = null): Promise<void> {
-  await db.insert(routings_int).values({
-    name: String(productId),
+export async function execSaveRouting(productId: number, name: string, version: number, createdBy: string | null = null): Promise<number> {
+  const rows = await db.insert(routings_int).values({
+    name,
     is_active: true,
     created_by: createdBy,
     steps: [],
     work_centers: [],
-  }).onConflictDoNothing();
+  }).onConflictDoNothing().returning({ id: routings_int.id });
+  void productId; void version;
+  return rows[0]?.id ?? 0;
 }
 
 export async function queryRouting(id: number): Promise<DbRow | null> {

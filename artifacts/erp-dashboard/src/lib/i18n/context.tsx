@@ -1,3 +1,8 @@
+/**
+ * @module context
+ * @description Frontend utility / library module.
+ */
+
 import {
   createContext,
   useCallback,

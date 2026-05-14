@@ -1,6 +1,11 @@
+/**
+ * @module CameraAnalysisWorkbench
+ * @description React UI component.
+ */
+
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Upload, Database, Scan, Zap } from "lucide-react";
+import { Upload, Database, Scan, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { analyzeByMissions } from "../api";
 import type { CameraAiRow } from "../types";
 import { normalizeCategories } from "../taskCatalog";
+import { EPLoader } from "@/components/ep";
 import "../camera-ai-visual.css";
 
 function fileToBase64(file: File): Promise<string> {
@@ -86,13 +92,13 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
     <div className="cai-module cai-lab-shell">
       <div className="cai-lab-head flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/25 to-violet-500/20 border border-cyan-500/30">
-            <Scan className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl from-cyan-500/25 to-violet-500/20 border border-cyan-500/30">
+            <Scan className="h-5 w-5 text-[var(--ep-cyan)] dark:text-cyan-400" />
           </div>
           <div>
             <h3 className="font-bold text-lg tracking-tight flex items-center gap-2">
               {lang === "uz" ? "Tahlil laboratoriyasi" : "Лаборатория"}
-              <Zap className="h-4 w-4 text-amber-500" />
+              <Zap className="h-4 w-4 text-[var(--ep-yellow)]" />
             </h3>
             <p className="text-xs text-muted-foreground">
               {lang === "uz"
@@ -105,12 +111,12 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
 
       <div className="p-5 sm:p-6 space-y-6">
         <div className="grid gap-5 lg:grid-cols-2">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1">
+          <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               {lang === "uz" ? "Kamera" : "Камера"}
             </Label>
             <Select value={cameraId} onValueChange={setCameraId}>
-              <SelectTrigger className="rounded-xl h-11 border-cyan-500/20">
+              <SelectTrigger className="rounded-xl h-9 border-cyan-500/20">
                 <SelectValue placeholder="..." />
               </SelectTrigger>
               <SelectContent>
@@ -122,15 +128,15 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              <span className="font-semibold text-cyan-700 dark:text-cyan-400">
+              <span className="font-semibold text-[var(--ep-cyan)] dark:text-cyan-400">
                 {lang === "uz" ? "Faol topshiriqlar: " : "Задачи: "}
               </span>
               {missions.length ? missions.join(", ") : lang === "uz" ? "yo‘q (panelda tanlang)" : "нет"}
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1">
+          <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               {lang === "uz" ? "Kadr fayli" : "Кадр"}
             </Label>
             <input
@@ -146,7 +152,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
                   setBase64(b);
                   setPreview(URL.createObjectURL(f));
                 } catch {
-                  toast({ variant: "destructive", title: "File" });
+                  toast({ variant: "destructive", title: "Fayl" });
                 }
               }}
             />
@@ -155,7 +161,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
               onClick={() => inputRef.current?.click()}
               className="cai-lab-drop w-full cursor-pointer"
             >
-              <Upload className="h-8 w-8 text-cyan-600/70" />
+              <Upload className="h-8 w-8 text-[var(--ep-cyan)]/70" />
               <span className="text-sm font-medium text-foreground">
                 {lang === "uz" ? "Rasmni tanlash yoki bu yerga torting" : "Выберите изображение"}
               </span>
@@ -174,7 +180,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
           <div className="flex items-center gap-3">
             <Switch id="cai-persist" checked={persist} onCheckedChange={setPersist} />
             <Label htmlFor="cai-persist" className="flex items-center gap-2 cursor-pointer text-sm">
-              <Database className="h-4 w-4 text-violet-600" />
+              <Database className="h-4 w-4 text-[var(--ep-purple)]" />
               {lang === "uz" ? "Bazaga yozish (alert / buzilish)" : "Запись в БД"}
             </Label>
           </div>
@@ -184,7 +190,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
             className="cai-btn-primary rounded-xl gap-2 h-11 px-8"
             onClick={() => runMutation.mutate()}
           >
-            {runMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scan className="h-4 w-4" />}
+            {runMutation.isPending ? <EPLoader /> : <Scan className="h-4 w-4" />}
             {lang === "uz" ? "Tahlilni boshlash" : "Запустить"}
           </Button>
         </div>

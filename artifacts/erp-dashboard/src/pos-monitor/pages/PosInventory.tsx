@@ -1,3 +1,8 @@
+/**
+ * @module PosInventory
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { inventoryApi } from "../api/pos-monitor.api";
@@ -131,7 +136,7 @@ export default function PosInventory() {
               </tr>
             </thead>
             <tbody>
-              {(plans ?? []).map(plan => (
+              {(Array.isArray(plans) ? plans : []).map(plan => (
                 <tr key={plan.id}>
                   <td className="pos-mono" style={{ color: "var(--pos-accent)", fontWeight: 600 }}>{plan.planNumber ?? `#${plan.id}`}</td>
                   <td>{plan.warehouseId ?? "—"}</td>
@@ -173,7 +178,7 @@ export default function PosInventory() {
             <table className="pos-table">
               <thead>
                 <tr>
-                  <th>Material ID</th>
+                  <th>{t('common.materialId')}</th>
                   <th>{t("inventory.systemQty")}</th>
                   <th>{t("inventory.actualQty")}</th>
                   <th>{t("inventory.difference")}</th>
@@ -181,7 +186,7 @@ export default function PosInventory() {
                 </tr>
               </thead>
               <tbody>
-                {(variances ?? []).map((v) => {
+                {(Array.isArray(variances) ? variances : []).map((v) => {
                   const diff = v.varianceQty ?? (v.actualQty - v.systemQty);
                   const isShort = diff < 0;
                   return (

@@ -1,3 +1,8 @@
+/**
+ * @module IshChiqarishBolimi
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -57,7 +62,7 @@ export function IshChiqarishBolimi() {
           <Label className="text-xs">Miqdor *</Label>
           <Input data-testid="input-issue-qty" type="number" step="0.1" placeholder="0.0" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <Label className="text-xs">Operator ID</Label>
             <Input data-testid="input-issue-operator" placeholder="ID" value={formData.operatorId} onChange={(e) => setFormData({ ...formData, operatorId: e.target.value })} />

@@ -1,3 +1,8 @@
+/**
+ * @module chat.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -14,11 +19,13 @@ import { ChatNotificationRepository } from './repositories/chat-notification.rep
 import { ChatAdminRepository } from './repositories/chat-admin.repository';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
 import { ChatMessageRepository } from './repositories/chat-message.repository';
+import { PushNotificationRepository } from './repositories/push-notification.repository';
 import { ChatController } from './chat.controller';
 import { ChatAdvancedController } from './chat-advanced.controller';
 import { ChatExtController } from './chat-ext.controller';
 import { PushService } from './push.service';
 import { UploadService } from './upload.service';
+import { VideoTokenService } from './video-token.service';
 import { TelegramBotsModule } from '../hr/telegram-bots/telegram-bots.module';
 
 @Module({
@@ -40,7 +47,9 @@ import { TelegramBotsModule } from '../hr/telegram-bots/telegram-bots.module';
     ChatNotificationRepository, ChatAdminRepository,
     ChatRoomRepository, ChatMessageRepository,
     PushService,
+    PushNotificationRepository,
     UploadService,
+    VideoTokenService,
   ],
   exports: [ChatService, ChatGateway, PushService, UploadService],
 })

@@ -1,3 +1,8 @@
+/**
+ * @module delete-position.command
+ * @description Source module. See exports for details.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/types/result.type';

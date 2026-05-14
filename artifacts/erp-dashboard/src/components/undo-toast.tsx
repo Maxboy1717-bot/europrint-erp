@@ -1,3 +1,8 @@
+/**
+ * @module undo-toast
+ * @description React UI component.
+ */
+
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Undo2 } from "lucide-react";

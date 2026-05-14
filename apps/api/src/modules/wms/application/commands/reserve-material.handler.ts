@@ -1,3 +1,8 @@
+/**
+ * @module reserve-material.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err , Ok } from '@common/result';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';

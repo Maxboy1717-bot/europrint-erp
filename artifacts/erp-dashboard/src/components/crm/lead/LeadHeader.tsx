@@ -1,3 +1,8 @@
+/**
+ * @module LeadHeader
+ * @description React UI component.
+ */
+
 import { format } from "date-fns";
 import { TrendingUp } from "lucide-react";
 import { SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -13,11 +18,11 @@ interface LeadHeaderProps {
 }
 
 export function LeadHeader({ lead, leadId, leadScore, currentStage, onStageChange }: LeadHeaderProps) {
-  const scoreColor = leadScore >= 70 ? "text-green-600" : leadScore >= 40 ? "text-yellow-600" : "text-red-600";
+  const scoreColor = leadScore >= 70 ? "text-[var(--ep-green)]" : leadScore >= 40 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]";
   const scoreBg = leadScore >= 70 ? "bg-green-100" : leadScore >= 40 ? "bg-yellow-100" : "bg-red-100";
 
   return (
-    <SheetHeader className="p-6 pb-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+    <SheetHeader className="p-6 pb-4 bg-green-500 border-b">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <SheetTitle data-testid="text-lead-title" className="text-xl">
@@ -40,7 +45,7 @@ export function LeadHeader({ lead, leadId, leadScore, currentStage, onStageChang
           Score: {leadScore}/100
         </div>
         {lead?.opportunity ? (
-          <Badge variant="outline" className="text-green-700 border-green-300">
+          <Badge variant="outline" className="text-[var(--ep-green)] border-green-300">
             {lead.opportunity.toLocaleString()} UZS
           </Badge>
         ) : null}

@@ -1,3 +1,8 @@
+/**
+ * @module toaster
+ * @description React UI component.
+ */
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,

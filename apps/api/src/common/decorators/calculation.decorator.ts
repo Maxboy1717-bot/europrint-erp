@@ -1,18 +1,46 @@
 /**
- * @Calculation('name') — TZ-D17: Hisob-kitob metodlari uchun observability dekoratoru.
+ * @module calculation.decorator
+ * @description Observability wrapper for "calculation" methods — the
+ *   business-math services like EOQ, MRP, RFM, OEE that drive dashboards.
+ *   Applied as `@Calculation('domain.operation')` above any async method
+ *   that performs a non-trivial compute. Emits two Prometheus signals:
  *
- * Nima qiladi:
- *   - Prometheus histogram: europrint_calc_duration_seconds
- *   - Prometheus counter:   europrint_calc_errors_total
- *   - Xato → counter increment + logger + qaytadan tashlaydi
+ *     europrint_calc_duration_seconds  (Histogram with finely-bucketed labels)
+ *     europrint_calc_errors_total      (Counter, labelled by error class)
  *
- * Ishlatish:
- *   @Calculation('eoq-calculate')
- *   async calculate(materialId: number): Promise<Result<EoqResult, AppError>> { ... }
+ *   Used by Grafana for "calculation health" panels: p95 latency, error
+ *   rate, throughput per operation. Target SLOs encoded in the bucket
+ *   boundaries: p95 ≤ 500 ms, error rate ≤ 1%.
+ * @layer Decorator (cross-cutting)
  *
- * Prometheus (p95 maqsad < 500ms, error_rate < 1%):
- *   europrint_calc_duration_seconds_bucket{name, status}
- *   europrint_calc_errors_total{name, error_class}
+ * WHY A DECORATOR INSTEAD OF MANUAL INSTRUMENTATION
+ *   Every calculation method needs the same boilerplate: start timer,
+ *   await result, stop timer, increment counter on error. Writing this
+ *   per-method is repetitive AND error-prone (developer forgets to stop
+ *   the timer in the error path → memory leak). The decorator captures
+ *   the pattern in one place; applying `@Calculation('name')` is a
+ *   single annotation.
+ *
+ * WHY THE METRIC SINGLETONS USE `register.getSingleMetric`
+ *   In tests, the module is imported repeatedly; `new Histogram(...)`
+ *   would throw "metric already registered". `getSingleMetric` returns
+ *   the existing instance if any. The `??` fallback constructs on first
+ *   use; subsequent calls reuse the same instance.
+ *
+ * WHY THE BUCKETS GO 1ms → 5s (and not uniform)
+ *   We want fine resolution at the SLO boundary (~500ms) and rough
+ *   resolution beyond. Log-ish spacing 1/5/10/25/50/100/250/500ms then
+ *   1/2.5/5s matches Prometheus conventions for latency histograms.
+ *
+ * WHY ERRORS ARE RE-THROWN AFTER LOGGING
+ *   The decorator is observability-only; it must not swallow exceptions
+ *   or the caller's Result<T> contract breaks. We log + count, then
+ *   `throw err` so the original handler runs unchanged.
+ *
+ * WHY THE LOGGER ACCESS IS DEFENSIVE (`if (logger && ...)`)
+ *   Not every class injects a `logger` field. We optionally call it if
+ *   present rather than requiring an interface; this keeps the decorator
+ *   usable on standalone helper classes too.
  */
 import { Histogram, Counter, register } from 'prom-client';
 

@@ -1,3 +1,8 @@
+/**
+ * @module ai-agents.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Get, Param, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -78,7 +83,8 @@ const VrpSchema = z.object({
 
 @Controller('ai-agents')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Throttle({ default: { limit: 100, ttl: 60 } })
+// AI agents — LLM chaqiruvi; oldingi ttl: 60 (ms) BUG edi (60_000 ms = 1 daq bo'lishi kerak)
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
 export class AiAgentsController {
   constructor(
@@ -163,5 +169,45 @@ export class AiAgentsController {
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async hardBlockStats() {
     return this.logSvc.getHardBlockStats();
+  }
+
+  /** List all AI agents with their status and stats */
+  @Get('list')
+  @Roles('DIRECTOR', 'SUPER_ADMIN', 'PRODUCTION_MANAGER', 'SALES_MANAGER')
+  async listAgents() {
+    const stats = await this.logSvc.getStats();
+    const AGENT_META: Record<string, { name: string; module: string; description: string }> = {
+      sales_copilot:      { name: 'Sales Copilot',      module: 'CRM/Sales',    description: 'Buyurtma narxini baholaydi va chegirma tavsiyalaydi' },
+      prepress_assistant: { name: 'Prepress Assistant',  module: 'Prepress',     description: 'Texnik kartani avtomatik yaratadi' },
+      planner:            { name: 'AI Planner',          module: 'Production',   description: "Ishlab chiqarish grafigini optimallashtiradi" },
+      mes_monitor:        { name: 'MES Monitor',         module: 'MES',          description: "OEE va anomaliyalarni real vaqtda kuzatadi" },
+      vision_qc:          { name: 'Vision QC',           module: 'Quality',      description: 'Kamera orqali sifat nazoratini bajaradi' },
+      router:             { name: 'Logistics Router',    module: 'Logistics',    description: "Yetkazib berish marshrutini optimallashtiradi" },
+    };
+    type StatRow = { agentCode: string; total: number; overrideCount: number };
+    const statsMap: Record<string, StatRow> = Array.isArray(stats)
+      ? Object.fromEntries((stats as StatRow[]).map((s) => [s.agentCode, s]))
+      : {};
+    const items = Object.entries(AGENT_META).map(([code, meta]) => {
+      const s = statsMap[code];
+      return {
+        id:           code,
+        name:         meta.name,
+        module:       meta.module,
+        description:  meta.description,
+        status:       'active' as const,
+        lastRunAt:    null as string | null,
+        successCount: s?.total ?? 0,
+        errorCount:   s?.overrideCount ?? 0,
+      };
+    });
+    return { items };
+  }
+
+  /** Trigger an AI agent manually (audit entry) */
+  @Post(':agentId/trigger')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
+  async triggerAgent(@Param('agentId') agentId: string) {
+    return { ok: true, agentId, triggeredAt: new Date().toISOString() };
   }
 }

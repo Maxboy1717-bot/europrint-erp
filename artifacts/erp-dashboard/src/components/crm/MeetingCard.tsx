@@ -1,3 +1,8 @@
+/**
+ * @module MeetingCard
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,7 +81,7 @@ export function MeetingCard({
           <div
             className={cn(
               "p-3 rounded-lg shrink-0",
-              "bg-blue-500/10 text-blue-500"
+              "bg-blue-500/10 text-[var(--ep-blue)]"
             )}
           >
             <Calendar className="h-5 w-5" />
@@ -132,7 +137,7 @@ export function MeetingCard({
                         key={attendee.id}
                         className="h-6 w-6 border-2 border-background"
                       >
-                        <AvatarFallback className="text-[10px] bg-purple-500 text-white">
+                        <AvatarFallback className="text-[10px] bg-[var(--ep-purple)] text-white">
                           {attendee.name
                             .split(" ")
                             .map((n) => n[0])
@@ -161,7 +166,7 @@ export function MeetingCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-green-600 border-green-500/40 hover:bg-green-500/10"
+                    className="text-[var(--ep-green)] border-green-500/40 hover:bg-[var(--ep-green)]/90/10"
                     onClick={() => onMarkCompleted?.(meeting.id)}
                     data-testid="button-mark-completed"
                   >
@@ -172,7 +177,7 @@ export function MeetingCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-600 border-red-500/40 hover:bg-red-500/10"
+                    className="text-[var(--ep-red)] border-red-500/40 hover:bg-[var(--ep-red)]/90/10"
                     onClick={() => onMarkCancelled?.(meeting.id)}
                     data-testid="button-mark-cancelled"
                   >

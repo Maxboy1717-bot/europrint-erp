@@ -1,0 +1,17 @@
+{
+  "targetWarehouse": "Целевой склад",
+  "priority": "Приоритет",
+  "needDate": "Дата потребности",
+  "lines": "lines",
+  "addLine": "Добавить Line",
+  "notePlaceholder": "Заметка Placeholder",
+  "submit": "Отправить",
+  "newRequest": "new Request",
+  "title": "Заголовок",
+  "myRequests": "my Requests",
+  "toApprove": "To Одобрить",
+  "toFulfill": "to Fulfill",
+  "approve": "Одобрить",
+  "reject": "Отклонить",
+  "fulfill": "fulfill"
+}

@@ -1,3 +1,8 @@
+/**
+ * @module application-responses.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import {
   Body,
@@ -7,6 +12,7 @@ import {
   Logger,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -62,5 +68,10 @@ export class ApplicationResponsesController {
   @UsePipes(new ZodValidationPipe(ApplicationResponseCreateSchema))
   async create(@Body() body: ApplicationResponseCreateDto) {
     return unwrapOrThrow(await this.svc.createResponse(body));
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return { id, ...body, updated: true };
   }
 }

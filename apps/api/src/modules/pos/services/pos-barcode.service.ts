@@ -1,3 +1,8 @@
+/**
+ * @module pos-barcode.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { SECONDS_PER_HOUR, POLL_INTERVAL_MS, MS_PER_SECOND } from '@common/constants/app.constants';
 import { castTo } from '@common/db-rows';
 /**

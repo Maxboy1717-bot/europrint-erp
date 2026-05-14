@@ -1,3 +1,8 @@
+/**
+ * @module employee.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 /**
  * POS — Employee Controller
@@ -18,6 +23,7 @@ import { RequirePermission } from '@common/decorators/require-permission.decorat
 
 import { EmployeeLedgerService } from '../../pos/employee-ledger.service';
 import { EmployeeWriteOffService } from '../../pos/employee-write-off.service';
+import { PosEmployeeBalanceService } from '../services/pos-employee-balance.service';
 
 import {
   CreateWriteOffActDto,
@@ -38,8 +44,9 @@ import { unwrapOrInternal } from '@common/http-result';
 export class EmployeeController {
   private readonly logger = new Logger(EmployeeController.name);
   constructor(
-    private readonly ledgerService:  EmployeeLedgerService,
-    private readonly writeOffService: EmployeeWriteOffService,
+    private readonly ledgerService:         EmployeeLedgerService,
+    private readonly writeOffService:       EmployeeWriteOffService,
+    private readonly employeeBalanceSvc:    PosEmployeeBalanceService,
   ) {}
 
   // ─── Xodim Balansi ────────────────────────────────────────────────────────
@@ -175,5 +182,51 @@ export class EmployeeController {
         ? 'Xodim barcha inventarlarni qaytargan. Chiqish ruxsat etilgan.'
         : `DIQQAT: Xodimda ${unresolvedAssets.length} ta qaytarilmagan aktiv va ${liabilitiesData.length} ta ochiq javobgarlik ishi bor!`,
     };
+  }
+
+  // ─── Mening inventarim (My Inventory) ────────────────────────────────────
+
+  @Get('me/inventory')
+  @RequirePermission('pos.employee.read_own')
+  @ApiOperation({ summary: 'Mening joriy inventarim (qo\'ldagi materiallar)' })
+  async getMyInventory(@CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrInternal(await this.employeeBalanceSvc.getMyInventory(user.id));
+  }
+
+  // ─── Chiqish cheklovi ro'yxati (HR Exit Checklist) ───────────────────────
+
+  @Get('me/checklist')
+  @RequirePermission('pos.employee.read_own')
+  @ApiOperation({ summary: 'Xodim chiqish cheklovi — qaytarish kerak bo\'lgan materiallar' })
+  async getMyChecklist(@CurrentUser() user: AuthenticatedUser) {
+    return this.employeeBalanceSvc.getHRChecklist(user.id);
+  }
+
+  // ─── Material qaytarish so'rovi ───────────────────────────────────────────
+
+  @Post('me/return')
+  @RequirePermission('pos.employee.read_own')
+  @ApiOperation({ summary: 'Material qaytarish so\'rovi yaratish (INTERNAL_RETURN harakati)' })
+  async requestReturn(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: { materialCardId: number; quantity: number; reason?: string },
+  ) {
+    return unwrapOrInternal(
+      await this.employeeBalanceSvc.requestReturn(
+        user.id,
+        body.materialCardId,
+        body.quantity,
+        body.reason,
+      ),
+    );
+  }
+
+  // ─── HR blok tekshiruvi (:id bo'yicha) ───────────────────────────────────
+
+  @Get(':id/hr-check')
+  @RequirePermission('pos.employee.dismiss_check')
+  @ApiOperation({ summary: 'HR: Xodim ishdan chiqishdan oldin inventar blokirovka tekshiruvi' })
+  async checkHRBlock(@Param('id', ParseIntPipe) userId: number) {
+    return this.employeeBalanceSvc.checkHRBlock(userId);
   }
 }

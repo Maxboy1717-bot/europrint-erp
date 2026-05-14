@@ -1,3 +1,8 @@
+/**
+ * @module CreateCountDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,16 +37,16 @@ export function CreateCountDialog({
 }: CreateCountDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] p-6">
         <DialogHeader>
-          <DialogTitle>Yangi Inventarizatsiya</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Yangi Inventarizatsiya</DialogTitle>
           <DialogDescription>
             Material va mahsulotlar sanovini boshlash uchun ma'lumotlarni kiriting
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="countDate">Sana *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="countDate">Sana *</Label>
             <Input 
               id="countDate" 
               type="date" 
@@ -50,13 +55,13 @@ export function CreateCountDialog({
               data-testid="input-count-date"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="warehouse">Omborxona *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="warehouse">Omborxona *</Label>
             <Select 
               value={form.warehouseId} 
               onValueChange={(value) => setForm({ ...form, warehouseId: value })}
             >
-              <SelectTrigger id="warehouse" data-testid="select-warehouse">
+              <SelectTrigger id="warehouse" data-testid="select-warehouse" className="h-9">
                 <SelectValue placeholder="Omborni tanlang" />
               </SelectTrigger>
               <SelectContent>
@@ -66,13 +71,13 @@ export function CreateCountDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="countType">Hisoblash turi *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="countType">Hisoblash turi *</Label>
             <Select 
               value={form.countType} 
               onValueChange={(value) => setForm({ ...form, countType: value })}
             >
-              <SelectTrigger id="countType" data-testid="select-count-type">
+              <SelectTrigger id="countType" data-testid="select-count-type" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -82,8 +87,8 @@ export function CreateCountDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Izoh</Label>
+          <div className="space-y-1">
+          <Label htmlFor="notes">Izoh</Label>
             <Textarea 
               id="notes" 
               placeholder="Qo'shimcha ma'lumotlar..." 

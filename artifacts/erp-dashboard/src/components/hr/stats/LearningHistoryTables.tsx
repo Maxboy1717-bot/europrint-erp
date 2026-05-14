@@ -1,3 +1,8 @@
+/**
+ * @module LearningHistoryTables
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +27,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
           <CardDescription>O'quv jarayoni holati</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Kurs nomi</TableHead>
@@ -32,7 +37,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
             </TableHeader>
             <TableBody>
               {(Array.isArray(assignments) ? assignments : []).slice(0, 5).map((assignment: Assignment) => (
-                <TableRow key={assignment.id} data-testid={`row-assignment-${assignment.id}`}>
+                <TableRow key={assignment.id} data-testid={`row-assignment-${assignment.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{assignment.courseName}</TableCell>
                   <TableCell>{assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString('uz-UZ') : "—"}</TableCell>
                   <TableCell>
@@ -46,13 +51,13 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
               ))}
               {assignments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     Ma'lumot topilmadi
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 
@@ -66,7 +71,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
           <CardDescription>Muvaffaqiyatli topshirilgan kurslar</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Kurs nomi</TableHead>
@@ -76,7 +81,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
             </TableHeader>
             <TableBody>
               {(Array.isArray(certificates) ? certificates : []).slice(0, 5).map((certificate: Certificate) => (
-                <TableRow key={certificate.id} data-testid={`row-certificate-${certificate.id}`}>
+                <TableRow key={certificate.id} data-testid={`row-certificate-${certificate.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{certificate.courseName}</TableCell>
                   <TableCell>{certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString('uz-UZ') : "—"}</TableCell>
                   <TableCell>
@@ -86,13 +91,13 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
               ))}
               {certificates.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     Ma'lumot topilmadi
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

@@ -1,12 +1,20 @@
-import { Body, Controller, Get, Inject, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes, Logger , InternalServerErrorException } from '@nestjs/common';
+/**
+ * @module sd-orders.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, Inject, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes, Logger , InternalServerErrorException } from '@nestjs/common';
 import { unwrapOrThrow } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { ConfirmAdvancePaymentDtoSchema, ConfirmAdvancePaymentDto } from './dto/confirm-advance-payment.dto';
 import { Throttle} from '@nestjs/throttler';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '../../auth/guards/roles.guard';
 import { Roles} from '../../auth/decorators/roles.decorator';
 import { Role} from '../../auth/enums/role.enum';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 import { AuditInterceptor} from '../../shared/interceptors/audit.interceptor';
 import { CreateOrderCommand} from '../application/commands/create-order.handler';
 import { UpdateOrderStatusCommand} from '../application/commands/update-order-status.handler';
@@ -22,11 +30,10 @@ import { TechCheckpointDtoSchema} from './dto/tech-checkpoint.dto';
 import { ConfirmAdvancePaymentCommand } from '../application/commands/confirm-advance-payment.handler';
 import { LOGGER} from '../../shared/infrastructure/logger.provider';
 
-import { QUERY_TIMEOUT_MS } from '@common/constants/app.constants';
 @Controller('sd/orders')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
-@Throttle({ default: { limit: 100, ttl: QUERY_TIMEOUT_MS}})
+@Throttle({ default: { limit: 100, ttl: 60_000 } })
 export class SdOrdersController {
   private readonly logger = new Logger(SdOrdersController.name);
 
@@ -61,7 +68,7 @@ export class SdOrdersController {
 
  @Get(':id')
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
- async getOrder(@Param('id') id: number) {
+ async getOrder(@Param('id', ParseIntPipe) id: number) {
   this.logger.log('Fetching order');
   const query = new GetOrderByIdQuery(id);
   const res = await this.queryBus.execute(query);
@@ -70,7 +77,7 @@ export class SdOrdersController {
 
  @Post()
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
- async createOrder(@Body() dto: Record<string, unknown>) {
+ async createOrder(@Body() dto: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
   const validated = CreateOrderDtoSchema.parse(dto);
   this.logger.log('Creating order');
 
@@ -80,7 +87,7 @@ export class SdOrdersController {
    validated.currency,
    validated.designFlag,
    validated.sampleFlag,
-   1,
+   user.id,
   );
 
   const res = await this.commandBus.execute(command);
@@ -89,7 +96,7 @@ export class SdOrdersController {
 
  @Patch(':id/status')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async updateStatus(@Param('id') id: number, @Body() dto: Record<string, unknown>) {
+ async updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   this.logger.log('Updating order status');
 
@@ -100,18 +107,18 @@ export class SdOrdersController {
 
  @Post(':id/advance-bypass')
  @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
- async bypassAdvance(@Param('id') id: number, @Body() dto: Record<string, unknown>) {
+ async bypassAdvance(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
   const validated = AdvanceBypassDtoSchema.parse(dto);
   this.logger.log('Approving advance bypass');
 
-  const command = new ApproveAdvanceBypassCommand(id, 1, validated.reason);
+  const command = new ApproveAdvanceBypassCommand(id, user.id, validated.reason);
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
 
  @Patch(':id/tech-checkpoint')
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN)
- async approveCheckpoint(@Param('id') id: number, @Body() dto: Record<string, unknown>) {
+ async approveCheckpoint(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>) {
   const validated = TechCheckpointDtoSchema.parse(dto);
   this.logger.log('Approving tech checkpoint');
 
@@ -123,8 +130,17 @@ export class SdOrdersController {
  @Post(':id/advance-payment')
  @Roles(Role.FINANCE, Role.FINANCE_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  @UsePipes(new ZodValidationPipe(ConfirmAdvancePaymentDtoSchema))
- async confirmAdvancePayment(@Param('id') id: number, @Body() dto: ConfirmAdvancePaymentDto) {
+ async confirmAdvancePayment(@Param('id', ParseIntPipe) id: number, @Body() dto: ConfirmAdvancePaymentDto) {
   const command = new ConfirmAdvancePaymentCommand(Number(id), dto.amount, dto.idempotencyKey);
+  const res = await this.commandBus.execute(command);
+  return unwrapOrThrow(res);
+ }
+
+ @Put(':id/status')
+ @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ async putOrderStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>) {
+  const validated = UpdateStatusDtoSchema.parse(dto);
+  const command = new UpdateOrderStatusCommand(id, validated.newStatus);
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
  }

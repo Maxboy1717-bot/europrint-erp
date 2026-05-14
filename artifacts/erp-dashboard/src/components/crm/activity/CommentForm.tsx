@@ -1,3 +1,8 @@
+/**
+ * @module CommentForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -21,16 +26,19 @@ export function CommentForm({ entityType, entityId }: CommentFormProps) {
 
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
-      return apiRequest("POST", "/api/crm/comments", {
-        entityType,
-        entityId,
-        content,
-      });
+      // Backend expects: { text, lead_id?, deal_id? }
+      const payload: Record<string, unknown> = { text: content };
+      if (entityType === "leads") payload.lead_id = entityId;
+      else if (entityType === "deals") payload.deal_id = entityId;
+      return apiRequest("POST", "/api/crm/comments", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/comments", entityType, entityId] });
       toast({ title: "Izoh qo'shildi" });
       setCommentForm({ content: "", mentions: [], attachments: [] });
+    },
+    onError: () => {
+      toast({ title: "Xatolik", description: "Izoh qo'shishda xatolik yuz berdi", variant: "destructive" });
     },
   });
 
@@ -54,7 +62,7 @@ export function CommentForm({ entityType, entityId }: CommentFormProps) {
         </Button>
       </div>
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => addCommentMutation.mutate(commentForm.content)}
         disabled={!commentForm.content.trim() || addCommentMutation.isPending}
         data-testid="button-save-comment"

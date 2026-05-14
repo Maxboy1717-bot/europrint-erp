@@ -1,6 +1,12 @@
+/**
+ * @module ProductionReport
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -26,6 +32,7 @@ import { ProductionOrder, PaginationData } from "@/components/production/report/
 
 export default function ProductionReportPage() {
   const [, navigate] = useLocation();
+  const { isAuthenticated } = useAuth();
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
 
@@ -36,6 +43,7 @@ export default function ProductionReportPage() {
       if (!r.ok) throw new Error("Xato");
       return r.json();
     },
+    enabled: !!isAuthenticated,
   });
 
   const orders = data?.orders || [];
@@ -43,18 +51,17 @@ export default function ProductionReportPage() {
   const stats = data?.stats || { total: 0, completed: 0, in_progress: 0, delayed: 0 };
 
   const statsCards = [
-    { label: "Jami Buyurtmalar", value: formatNum(stats.total), icon: Factory, color: "text-blue-600" },
-    { label: "Bajarildi", value: formatNum(stats.completed), icon: CheckCircle, color: "text-green-600" },
-    { label: "Jarayonda", value: formatNum(stats.in_progress), icon: Clock, color: "text-orange-600" },
-    { label: "Kechikkan", value: formatNum(stats.delayed), icon: AlertCircle, color: "text-red-600" },
+    { label: "Jami Buyurtmalar", value: formatNum(stats.total), icon: Factory, color: "text-[var(--ep-blue)]" },
+    { label: "Bajarildi", value: formatNum(stats.completed), icon: CheckCircle, color: "text-[var(--ep-green)]" },
+    { label: "Jarayonda", value: formatNum(stats.in_progress), icon: Clock, color: "text-[var(--ep-primary)]" },
+    { label: "Kechikkan", value: formatNum(stats.delayed), icon: AlertCircle, color: "text-[var(--ep-red)]" },
   ];
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
-      <div className="max-w-[1400px] mx-auto space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Ishlab Chiqarish Hisoboti</h1>
+            <h1 className="ep-h1">Ishlab Chiqarish Hisoboti</h1>
             <p className="text-muted-foreground mt-1">Smena va haftalik ish unumdorligi tahlili</p>
           </div>
           <div className="flex items-center gap-2">
@@ -74,7 +81,7 @@ export default function ProductionReportPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
-                  <SelectTrigger className="w-[180px]"><SelectValue placeholder="Holat" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[180px] h-9"><SelectValue placeholder="Holat" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Barcha holatlar</SelectItem>
                     {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
@@ -86,14 +93,14 @@ export default function ProductionReportPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               {(Array.isArray(statsCards) ? statsCards : []).map((card) => (
                 <Card key={card.label}>
                   <CardContent className="pt-4 pb-3">
                     <div className="flex items-start justify-between gap-1">
                       <div>
                         <p className="text-xs text-muted-foreground">{card.label}</p>
-                        {isLoading ? <Skeleton className="h-7 w-16 mt-1" /> : <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>}
+                        {isLoading ? <Skeleton className="h-7 w-16 mt-1 rounded-lg" /> : <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>}
                       </div>
                       <card.icon className={`w-5 h-5 ${card.color} mt-0.5`} />
                     </div>
@@ -104,7 +111,7 @@ export default function ProductionReportPage() {
 
             <Card>
               <CardContent className="p-0">
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="pl-4">Raqam</TableHead>
@@ -122,7 +129,7 @@ export default function ProductionReportPage() {
                   <TableBody>
                     {isLoading ? (
                       Array.from({ length: 6 }).map((_, i) => (
-                        <TableRow key={`k-${i}`}>{Array.from({ length: 10 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}</TableRow>
+                        <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">{Array.from({ length: 10 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full rounded-lg" /></TableCell>)}</TableRow>
                       ))
                     ) : orders.length === 0 ? (
                       <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">Buyurtmalar topilmadi</TableCell></TableRow>
@@ -138,7 +145,7 @@ export default function ProductionReportPage() {
                             <TableCell className="text-sm text-muted-foreground">{TYPE_LABELS[order.productionType || ""] || order.productionType || "—"}</TableCell>
                             <TableCell className="text-right tabular-nums text-sm">{formatNum(order.plannedQuantity)}</TableCell>
                             <TableCell className="text-right tabular-nums text-sm">
-                              <span className={completion >= 100 ? "text-green-600 font-semibold" : completion >= 50 ? "text-yellow-600" : ""}>{formatNum(order.confirmedQuantity)}</span>
+                              <span className={completion >= 100 ? "text-[var(--ep-green)] font-semibold" : completion >= 50 ? "text-[var(--ep-yellow)]" : ""}>{formatNum(order.confirmedQuantity)}</span>
                               <span className="text-xs text-muted-foreground ml-1">({completion}%)</span>
                             </TableCell>
                             <TableCell className="text-right tabular-nums text-sm">{formatMoney(order.plannedCost)}</TableCell>
@@ -152,7 +159,7 @@ export default function ProductionReportPage() {
                       })
                     )}
                   </TableBody>
-                </Table>
+                </Table></div>
               </CardContent>
             </Card>
 
@@ -171,7 +178,6 @@ export default function ProductionReportPage() {
           <TabsContent value="shifts"><ShiftReportsTab /></TabsContent>
           <TabsContent value="weekly"><WeeklyReportsTab /></TabsContent>
         </Tabs>
-      </div>
     </div>
   );
 }

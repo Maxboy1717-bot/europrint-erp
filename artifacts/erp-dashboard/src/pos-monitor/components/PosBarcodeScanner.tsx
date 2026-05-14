@@ -1,3 +1,8 @@
+/**
+ * @module PosBarcodeScanner
+ * @description React UI component.
+ */
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { barcodeApi } from "../api/pos-monitor.api";
@@ -248,7 +253,7 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
               {t("barcode.scanHistory")}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {(history ?? []).map((b) => (
+              {(Array.isArray(history) ? history : []).map((b) => (
                 <button
                   key={b}
                   className="pos-btn pos-btn-ghost"

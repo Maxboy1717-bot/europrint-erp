@@ -1,3 +1,8 @@
+/**
+ * @module wms-extended.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
@@ -129,5 +134,5 @@ export class WmsExtendedController {
   }
 
   @Get('movements')
-  async getMovements() { return { data: [], total: 0 }; }
+  async getMovements() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 }

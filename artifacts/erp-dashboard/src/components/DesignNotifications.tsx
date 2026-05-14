@@ -1,3 +1,8 @@
+/**
+ * @module DesignNotifications
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, CheckCircle, MessageCircle, Clock, AlertCircle } from "lucide-react";
@@ -47,13 +52,13 @@ export function DesignNotifications() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'status_update':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-[var(--ep-green)]" />;
       case 'message':
-        return <MessageCircle className="h-5 w-5 text-blue-600" />;
+        return <MessageCircle className="h-5 w-5 text-[var(--ep-blue)]" />;
       case 'deadline':
-        return <Clock className="h-5 w-5 text-orange-600" />;
+        return <Clock className="h-5 w-5 text-[var(--ep-primary)]" />;
       default:
-        return <AlertCircle className="h-5 w-5 text-on-surface-variant" />;
+        return <AlertCircle className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -66,10 +71,10 @@ export function DesignNotifications() {
           className="relative"
           data-testid="button-notifications"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500"
+              className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs bg-red-500"
               data-testid="badge-notification-count"
             >
               {unreadCount}

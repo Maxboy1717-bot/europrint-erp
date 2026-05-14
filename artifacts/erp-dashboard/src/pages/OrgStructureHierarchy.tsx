@@ -1,3 +1,8 @@
+/**
+ * @module OrgStructureHierarchy
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -15,14 +20,13 @@ import {
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ErrorState } from "@/components/ui/error-state";
-
 import { OrgNode, OrgStats, LEVEL_COLORS, LEVEL_LABELS } from "@/components/hr/org/types";
 import { countNodes } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
 import { AddNodeDialog } from "@/components/hr/org/AddNodeDialog";
 import { TreeCanvas } from "@/components/hr/org/TreeCanvas";
 import { safeStorage } from '@/lib/safeStorage';
+import { EPErrorState, EPStatusPill } from "@/components/ep";
 
 export default function OrgStructureHierarchy() {
   const [, navigate] = useLocation();
@@ -53,6 +57,17 @@ export default function OrgStructureHierarchy() {
     },
     onSuccess: (d) => toast({ title: d.message || "Xabar yuborildi" }),
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const moveMutation = useMutation({
+    mutationFn: ({ nodeId, newParentId }: { nodeId: number; newParentId: number }) =>
+      apiRequest("PATCH", `/api/org-structure/nodes/${nodeId}/move`, { newParentId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });
+      toast({ title: "Bo'lim ko'chirildi", description: "Tashkiliy tuzilma yangilandi" });
+    },
+    onError: () => toast({ title: "Ko'chirishda xatolik", variant: "destructive" }),
   });
 
   const handleZoomIn = useCallback(() => setScale((s) => Math.min(3, s * 1.2)), []);
@@ -124,7 +139,7 @@ export default function OrgStructureHierarchy() {
 
   function filterTree(nodes: OrgNode[], query: string): OrgNode[] {
     const q = query.toLowerCase();
-    return (nodes ?? []).map((n) => {
+    return (Array.isArray(nodes) ? nodes : []).map((n) => {
       const filteredChildren = filterTree(n.children || [], query);
       const matchesSearch = !q || n.name.toLowerCase().includes(q) || (n.nameRu || "").toLowerCase().includes(q) || (n.headUserName || "").toLowerCase().includes(q);
       const matchesStatus = filterStatus === "all" || (filterStatus === "vacant" && !n.headUserName) || (filterStatus === "filled" && !!n.headUserName);
@@ -152,7 +167,7 @@ export default function OrgStructureHierarchy() {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
-              <Network className="h-5 w-5 text-[#ff5d2e]" />
+              <Network className="h-5 w-5 text-primary" />
               Tashkiliy Tuzilma
             </h1>
             <p className="text-xs text-muted-foreground">Ierarxik ko'rinish · barcha bo'limlar va xodimlar</p>
@@ -167,7 +182,7 @@ export default function OrgStructureHierarchy() {
             <Button size="sm" variant="outline" onClick={() => notifyMutation.mutate()} disabled={notifyMutation.isPending}>
               <Bell className="h-3.5 w-3.5 mr-1" />Vakantlar
             </Button>
-            <Button size="sm" className="bg-[#ff5d2e] hover:bg-[#e04e22]" onClick={() => { setAddParentId(undefined); setAddOpen(true); }}>
+            <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => { setAddParentId(undefined); setAddOpen(true); }}>
               <Plus className="h-3.5 w-3.5 mr-1" />Bo'lim qo'shish
             </Button>
           </div>
@@ -184,11 +199,11 @@ export default function OrgStructureHierarchy() {
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           <div className="relative flex-1 min-w-[160px] max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input className="pl-8 h-8 text-sm" placeholder="Qidirish (ism, rahbar...)" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input className="pl-8 h-9 text-sm" placeholder="Qidirish (ism, rahbar...)" value={search} onChange={(e) => setSearch(e.target.value)} />
             {search && <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch("")}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>}
           </div>
 
-          {hasFilter && <Badge variant="secondary" className="text-xs h-8 px-2">{totalFiltered} ta topildi</Badge>}
+          {hasFilter && <EPStatusPill tone="neutral" className="text-xs h-8 px-2">{totalFiltered} ta topildi</EPStatusPill>}
 
           <div className="flex items-center gap-1 border rounded-md px-2 h-8">
             <Filter className="h-3 w-3 text-muted-foreground mr-1" />
@@ -205,7 +220,7 @@ export default function OrgStructureHierarchy() {
           </div>
 
           <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as "all" | "vacant" | "filled")}>
-            <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 w-28 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Barchasi</SelectItem>
               <SelectItem value="vacant">Vakant</SelectItem>
@@ -230,8 +245,8 @@ export default function OrgStructureHierarchy() {
         style={{ backgroundImage: "radial-gradient(circle, #33333315 1px, transparent 1px)", backgroundSize: "24px 24px" }}
         onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
       >
-        {isLoading && <div className="flex items-center justify-center h-full"><div className="text-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#ff5d2e] mx-auto mb-3" /><p className="text-sm text-muted-foreground">Yuklanmoqda...</p></div></div>}
-        {isError && <div className="flex items-center justify-center h-full"><ErrorState onRetry={refetch} /></div>}
+        {isLoading && <div className="flex items-center justify-center h-full"><div className="text-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3" /><p className="text-sm text-muted-foreground">Yuklanmoqda...</p></div></div>}
+        {isError && <div className="flex items-center justify-center h-full"><EPErrorState onRetry={refetch} /></div>}
         {!isLoading && !isError && filteredNodes.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <AlertCircle className="h-12 w-12 text-muted-foreground opacity-40" />
@@ -241,7 +256,12 @@ export default function OrgStructureHierarchy() {
         )}
         {!isLoading && !isError && filteredNodes.length > 0 && (
           <div style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transformOrigin: "0 0", transition: isDragging ? "none" : "transform 0.08s ease-out", display: "inline-block", padding: 16 }}>
-            <TreeCanvas roots={filteredNodes} onNodeClick={(id) => navigate(`/org-structure/hierarchy/node/${id}`)} onAddChild={handleAddChild} />
+            <TreeCanvas
+              roots={filteredNodes}
+              onNodeClick={(id) => navigate(`/org-structure/hierarchy/node/${id}`)}
+              onAddChild={handleAddChild}
+              onMoveNode={moveMutation.mutate}
+            />
           </div>
         )}
       </div>

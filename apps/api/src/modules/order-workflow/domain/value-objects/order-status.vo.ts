@@ -1,3 +1,8 @@
+/**
+ * @module order-status.vo
+ * @description Value object. Immutable domain primitive with validation in its factory.
+ */
+
 import { Result, Ok, Err } from '@common/types/result.type';
 
 export const ORDER_STATUSES = [

@@ -1,7 +1,7 @@
 /**
  * TZ-17 SaaS Infratuzilma — Tenant va litsenziya jadvallari
  */
-import { serial, pgTable, varchar, text, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { serial, pgTable, varchar, text, integer, boolean, timestamp, jsonb, check } from "drizzle-orm/pg-core";
 import { numericMoney } from "./numeric-money";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -35,7 +35,10 @@ export const tenants = pgTable("saas_tenants", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("saas_tenants_plan_chk", sql`${t.plan} IN ('basic','starter','professional','enterprise')`),
+  check("saas_tenants_status_chk", sql`${t.status} IN ('trial','active','suspended','cancelled')`),
+]);
 
 export const insertTenantSchema = createInsertSchema(tenants, {
   name: z.string().min(2, "Nomi kamida 2 belgi"),

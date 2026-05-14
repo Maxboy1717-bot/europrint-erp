@@ -1,7 +1,13 @@
+/**
+ * @module AsyncBoundary
+ * @description React UI component.
+ */
+
 import * as React from "react";
-import { Loader2, AlertCircle, Inbox } from "lucide-react";
+import { AlertCircle, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { EPLoader } from "@/components/ep";
 /**
  * AsyncBoundary — sahifaning 4 holatini birga boshqaradi:
  *   1. loading  → Spinner
@@ -77,7 +83,7 @@ export function AsyncBoundary({
         style={{ minHeight }}
         data-testid="async-loading"
       >
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <EPLoader size={32} />
       </div>
     );
   }
@@ -89,8 +95,8 @@ export function AsyncBoundary({
         style={{ minHeight }}
         data-testid="async-error"
       >
-        <AlertCircle className="h-10 w-10 text-red-500" />
-        <p className="text-sm text-on-surface-variant max-w-md">
+        <AlertCircle className="h-10 w-10 text-[var(--ep-red)]" />
+        <p className="text-sm text-muted-foreground max-w-md">
           {errorText ?? getErrorMessage(error)}
         </p>
         {onRetry && (
@@ -110,8 +116,8 @@ export function AsyncBoundary({
         style={{ minHeight }}
         data-testid="async-empty"
       >
-        <Inbox className="h-10 w-10 text-on-surface-variant" />
-        <p className="text-sm text-on-surface-variant">{emptyText}</p>
+        <Inbox className="h-10 w-10 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">{emptyText}</p>
       </div>
     );
   }

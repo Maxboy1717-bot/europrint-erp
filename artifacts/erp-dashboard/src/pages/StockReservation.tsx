@@ -1,6 +1,10 @@
+/**
+ * @module StockReservation
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ErrorState } from "@/components/ui/error-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +23,7 @@ import {
   OptimizationResult,
   ReservationRequestData,
 } from "@/components/wms/reservation/types";
+import { EPErrorState } from "@/components/ep";
 
 export default function StockReservation() {
   const { toast } = useToast();
@@ -148,8 +153,8 @@ export default function StockReservation() {
 
   if (dashboardError) {
     return (
-      <div className="space-y-6 p-6">
-        <ErrorState onRetry={refetchDashboard} />
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+        <EPErrorState onRetry={refetchDashboard} />
       </div>
     );
   }

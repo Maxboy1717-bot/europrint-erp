@@ -1,3 +1,8 @@
+/**
+ * @module AssignAIExamDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+import { EPLoader } from "@/components/ep";
 interface AssignAIExamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,7 +53,7 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
 
   const assignMutation = useMutation({
     mutationFn: async (userIds: string[]) => {
-      const promises = (userIds ?? []).map(userId => {
+      const promises = (Array.isArray(userIds) ? userIds : []).map(userId => {
         const user = (Array.isArray(users) ? users : []).find(u => u.id === userId);
         if (!user || !user.positionId) {
           throw new Error(`User ${userId} does not have a position`);
@@ -55,7 +61,7 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
         return apiRequest("POST", "/api/ai-exam/assign", {
           userId,
           positionId: user.positionId,
-        }).then(res => res.json());
+        });
       });
       return Promise.all(promises).catch((err: unknown) => {
         console.error('AI imtixon tayinlash xatosi:', err);
@@ -102,7 +108,7 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
   const toggleUser = (userId: string) => {
     setSelectedUsers(prev =>
       prev.includes(userId)
-        ? (prev ?? []).filter(id => id !== userId)
+        ? (Array.isArray(prev) ? prev : []).filter(id => id !== userId)
         : [...prev, userId]
     );
   };
@@ -117,19 +123,19 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-6">
         <DialogHeader>
-          <DialogTitle>AI Imtixon Tayinlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">AI Imtixon Tayinlash</DialogTitle>
           <DialogDescription>
             Xodimlarga AI tomonidan yaratilgan 35 savollik imtixonni tayinlang
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="deptFilter">Tashkiliy tuzilma bo'yicha filter</Label>
+          <div className="space-y-1">
+          <Label htmlFor="deptFilter">Tashkiliy tuzilma bo'yicha filter</Label>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-              <SelectTrigger data-testid="select-org-structure-filter">
+              <SelectTrigger data-testid="select-org-structure-filter" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -162,10 +168,10 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
           <ScrollArea className="h-64 border border-border rounded-md p-4">
             {usersLoading || departmentsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <EPLoader size={24} />
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-[13px] text-muted-foreground">
                 Xodimlar topilmadi
               </div>
             ) : (
@@ -216,7 +222,7 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
               disabled={assignMutation.isPending || selectedUsers.length === 0}
               data-testid="button-submit"
             >
-              {assignMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {assignMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
               {assignMutation.isPending ? "Tayinlanmoqda..." : "Tayinlash"}
             </Button>
           </DialogFooter>

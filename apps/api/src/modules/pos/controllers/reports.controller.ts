@@ -99,4 +99,25 @@ export class ReportsController {
   async getLiabilityReport() {
     return unwrapOrThrow(await this.reportsService.getLiabilityReport());
   }
+
+  @Get('abc-analysis')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: 'ABC tahlil — materiallarni qiymat bo\'yicha A/B/C sinflashtirish (Pareto 80/95/100)' })
+  @ApiQuery({ name: 'warehouseId', required: false, description: 'Ombor bo\'yicha filtr' })
+  async getAbcAnalysis(@Query('warehouseId') warehouseId?: string) {
+    return unwrapOrThrow(await this.reportsService.getAbcAnalysis(warehouseId));
+  }
+
+  @Get('inactive-materials')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: 'N kundan beri harakatsiz materiallar (minimal qoldiq bilan)' })
+  @ApiQuery({ name: 'days', required: false, description: 'Harakatsizlik kunlari (default: 90)' })
+  @ApiQuery({ name: 'warehouseId', required: false })
+  async getInactiveMaterials(
+    @Query('days') days?: string,
+    @Query('warehouseId') warehouseId?: string,
+  ) {
+    const inactiveDays = days ? parseInt(days, 10) : 90;
+    return unwrapOrThrow(await this.reportsService.getInactiveMaterials(inactiveDays, warehouseId));
+  }
 }

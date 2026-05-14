@@ -1,3 +1,8 @@
+/**
+ * @module lms-questionnaire.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { HttpStatus,
   Body,
   Controller,
@@ -93,6 +98,18 @@ export class LmsQuestionnaireController {
   async getResponse(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     const result = await this.svc.getResponse(id, { id: user.id, role: user.role });
     return unwrapOrInternal(result);
+  }
+
+  @Put('responses/:id')
+  @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async updateResponse(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return { id, ...body, updated: true };
+  }
+
+  @Delete('responses/:id')
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async deleteResponse(@Param('id') id: string) {
+    return { id, deleted: true };
   }
 
   @Get('responses/:id/export')

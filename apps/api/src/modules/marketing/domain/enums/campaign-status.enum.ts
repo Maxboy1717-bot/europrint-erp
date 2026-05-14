@@ -1,3 +1,8 @@
+/**
+ * @module campaign-status.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum CampaignStatus {
   DRAFT = 'draft',
   ACTIVE = 'active',

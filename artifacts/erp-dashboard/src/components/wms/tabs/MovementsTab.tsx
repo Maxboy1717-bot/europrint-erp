@@ -1,3 +1,8 @@
+/**
+ * @module MovementsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +30,9 @@ export function MovementsTab({ movements, basic }: MovementsTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={TrendingUp} label="30 kun kirim" value={fmtQty(movements.last30Days?.totalIn, basic.unitOfMeasure)} color="text-green-600" />
-        <KpiCard icon={TrendingDown} label="30 kun chiqim" value={fmtQty(movements.last30Days?.totalOut, basic.unitOfMeasure)} color="text-red-600" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <KpiCard icon={TrendingUp} label="30 kun kirim" value={fmtQty(movements.last30Days?.totalIn, basic.unitOfMeasure)} color="text-[var(--ep-green)]" />
+        <KpiCard icon={TrendingDown} label="30 kun chiqim" value={fmtQty(movements.last30Days?.totalOut, basic.unitOfMeasure)} color="text-[var(--ep-red)]" />
         <KpiCard icon={RefreshCw} label="Aylanma" value={movements.last30Days?.turnoverDays !== null ? `${movements.last30Days?.turnoverDays} kun` : "Noma'lum"} sub="zaxira necha kunda aylandi" />
       </div>
 

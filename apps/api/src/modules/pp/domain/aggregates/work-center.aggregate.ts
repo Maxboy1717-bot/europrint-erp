@@ -1,3 +1,8 @@
+/**
+ * @module work-center.aggregate
+ * @description Source module. See exports for details.
+ */
+
 export enum WorkCenterType {
   LINE = 'line',
   MACHINE = 'machine',

@@ -1,3 +1,8 @@
+/**
+ * @module audit.interceptor
+ * @description NestJS interceptor. Wraps request/response pipeline.
+ */
+
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger, HttpStatus } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';

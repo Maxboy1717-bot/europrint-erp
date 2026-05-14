@@ -1,3 +1,8 @@
+/**
+ * @module BirthdayWidget
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -7,9 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Cake, Gift, Bell, Settings, PartyPopper } from "lucide-react";
-
-const CURRENT_USER_ID = 1;
 const TODAY = new Date();
 
 interface BirthdayEmployee { id: number; full_name: string; department_name?: string; age?: number; birth_date?: string; next_birthday?: string; }
@@ -17,7 +21,7 @@ interface BirthdayEmployee { id: number; full_name: string; department_name?: st
 function BirthdayBanner({ employees }: { employees: BirthdayEmployee[] }) {
   if (employees.length === 0) return null;
   return (
-    <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl p-4 text-white">
+    <div className="rounded-xl p-4 text-white">
       <div className="flex items-center gap-3">
         <PartyPopper className="h-6 w-6" />
         <div>
@@ -32,6 +36,8 @@ function BirthdayBanner({ employees }: { employees: BirthdayEmployee[] }) {
 }
 
 export default function BirthdayWidget() {
+  const { user } = useAuth();
+  const currentUserId = user?.employeeId ?? user?.id ?? 0;
   const { toast } = useToast();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState({ notify_colleagues: true, notify_self_evening: true });
@@ -47,12 +53,12 @@ export default function BirthdayWidget() {
   });
 
   const { data: mySettings } = useQuery<{ notify_colleagues?: boolean; notify_self_evening?: boolean }>({
-    queryKey: ["/api/hr/birthdays/settings", CURRENT_USER_ID],
-    queryFn: () => apiRequest("GET", `/api/hr/birthdays/settings/${CURRENT_USER_ID}`),
+    queryKey: ["/api/hr/birthdays/settings", currentUserId],
+    queryFn: () => apiRequest("GET", `/api/hr/birthdays/settings/${currentUserId}`),
   });
 
   const saveMut = useMutation({
-    mutationFn: () => apiRequest("PUT", `/api/hr/birthdays/settings/${CURRENT_USER_ID}`, settings),
+    mutationFn: () => apiRequest("PUT", `/api/hr/birthdays/settings/${currentUserId}`, settings),
     onSuccess: () => {
       toast({ title: "✅ Sozlamalar saqlandi!" });
       setSettingsOpen(false);
@@ -60,7 +66,7 @@ export default function BirthdayWidget() {
     onError: () => toast({ title: "Xato", variant: "destructive" }),
   });
 
-  const isSelfBirthday = (Array.isArray(todayBirthdays) ? todayBirthdays : []).some((e) => e.id === CURRENT_USER_ID);
+  const isSelfBirthday = (Array.isArray(todayBirthdays) ? todayBirthdays : []).some((e) => e.id === currentUserId);
   const hour = TODAY.getHours();
 
   return (
@@ -81,7 +87,7 @@ export default function BirthdayWidget() {
       <div className="flex-1 overflow-auto p-6 space-y-5">
         {/* Self birthday banner (shown after 18:00) */}
         {isSelfBirthday && hour >= 18 && (
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-5 text-white text-center">
+          <div className="rounded-xl p-5 text-white text-center">
             <div className="text-4xl mb-2">🎂</div>
             <h2 className="text-xl font-bold mb-1">Tug'ilgan kuningiz bilan!</h2>
             <p className="opacity-90 text-sm">EuroPrint jamoasi siz bilan faxrlanadi. Baxt, sog'lik va muvaffaqiyat tilaymiz!</p>
@@ -100,9 +106,9 @@ export default function BirthdayWidget() {
           </CardHeader>
           <CardContent>
             {loadingToday ? (
-              <div className="text-center py-4 text-muted-foreground">Yuklanmoqda...</div>
+              <div className="text-center py-4 text-[13px] text-muted-foreground">Yuklanmoqda...</div>
             ) : todayBirthdays.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-6 text-[13px] text-muted-foreground">
                 <Cake className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">Bugun tug'ilgan kun yo'q</p>
               </div>
@@ -111,7 +117,7 @@ export default function BirthdayWidget() {
                 {(Array.isArray(todayBirthdays) ? todayBirthdays : []).map((emp) => (
                   <div key={emp.id} className="flex items-center justify-between bg-pink-50 rounded-lg px-4 py-3 border border-pink-100">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                      <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         {emp.full_name?.charAt(0)}
                       </div>
                       <div>
@@ -132,15 +138,15 @@ export default function BirthdayWidget() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Bell className="h-4 w-4 text-purple-500" />
+              <Bell className="h-4 w-4 text-[var(--ep-purple)]" />
               Keyingi 7 kundagi tug'ilgan kunlar
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loadingUpcoming ? (
-              <div className="text-center py-4 text-muted-foreground">Yuklanmoqda...</div>
+              <div className="text-center py-4 text-[13px] text-muted-foreground">Yuklanmoqda...</div>
             ) : upcomingBirthdays.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-6 text-[13px] text-muted-foreground">
                 <Gift className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">Keyingi 7 kunda tug'ilgan kun yo'q</p>
               </div>
@@ -153,7 +159,7 @@ export default function BirthdayWidget() {
                   return (
                     <div key={emp.id} className="flex items-center justify-between py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600">
+                        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-[var(--ep-purple)]">
                           {emp.full_name?.charAt(0)}
                         </div>
                         <div>
@@ -203,8 +209,8 @@ export default function BirthdayWidget() {
 
       {/* Settings dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Tug'ilgan kun bildirishnoma sozlamalari</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Tug'ilgan kun bildirishnoma sozlamalari</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-3">
               <input

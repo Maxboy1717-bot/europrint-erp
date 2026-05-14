@@ -1,3 +1,8 @@
+/**
+ * @module technology.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Ok, Err, Result } from '@common/result';
 import {
@@ -17,7 +22,7 @@ export class TechnologyRepository {
     
     return safeCall(async () => {
       const rows = await queryTechOrders(status);
-      return (rows ?? []).map(row => ({
+      return (Array.isArray(rows) ? rows : []).map(row => ({
         id: String(row.id ?? ''), papkaNo: String(row.papkaNo ?? ''), mijozNomi: String(row.mijozNomi ?? ''),
         mahsulotNomi: String(row.mahsulotNomi ?? ''), mahsulotTuri: String(row.mahsulotTuri ?? ''),
         tiraj: Number(row.tiraj ?? 0), formatA: Number(row.formatA ?? 0), formatB: Number(row.formatB ?? 0),
@@ -89,7 +94,7 @@ export class TechnologyRepository {
       const warnings: { code: string; level: string; message: string }[] = [];
       if (!techCardFound) warnings.push({ code: 'NO_TECH_CARD', level: 'warning', message: 'Texnologik karta topilmadi' });
       if (!row.format_width || !row.format_height) warnings.push({ code: 'NO_FORMAT', level: 'error', message: 'Format oʻlchamlari kiritilmagan' });
-      const score = Math.max(40, 100 - (warnings ?? []).filter(w => w.level === 'error').length * 30 - warnings.filter(w => w.level === 'warning').length * 10);
+      const score = Math.max(40, 100 - (Array.isArray(warnings) ? warnings : []).filter(w => w.level === 'error').length * 30 - warnings.filter(w => w.level === 'warning').length * 10);
       const status = score >= 80 ? 'passed' : score >= 50 ? 'warnings' : 'failed';
       return { orderId, orderNo: String(row.order_number ?? ''), score, status, warnings, techCardFound, recommendation: warnings.length === 0 ? 'Barcha tekshiruvlar muvaffaqiyatli oʻtdi' : `${warnings.length} ta muammo aniqlandi` };
     }, 'DB_ERROR');

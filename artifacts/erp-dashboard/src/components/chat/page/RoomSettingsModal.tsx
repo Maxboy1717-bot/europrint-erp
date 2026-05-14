@@ -1,3 +1,8 @@
+/**
+ * @module RoomSettingsModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Bell, BellOff, Archive, ChevronDown } from "lucide-react";
 import { ChatRoom, useChatStore } from "@/store/chatStore";
+import { apiRequest } from '@/lib/queryClient';
 
 const EMOJI_PRESETS = ["💬", "📢", "🚀", "🎯", "💡", "🔥", "⚡", "🌟", "📋", "🏢", "👥", "🎨", "📊", "🔧", "🌐"];
 
@@ -34,11 +40,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const updateMutation = useMutation({
     mutationFn: async (data: { name?: string; description?: string; avatarEmoji?: string }) => {
-      const res = await fetch(`/api/chat/rooms/${room.id}`, {
-        method: "PATCH",
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, data);
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Server error" }));
         throw new Error(err.error || "Failed to update room");
@@ -63,11 +65,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const muteMutation = useMutation({
     mutationFn: async (duration: string) => {
-      const res = await fetch(`/api/chat/rooms/${room.id}/mute`, {
-        method: "POST",
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ duration }),
-      });
+      const res = await apiRequest('POST', `/api/chat/rooms/${room.id}/mute`, { duration });
       if (!res.ok) throw new Error("Failed to mute");
       return res.json();
     },
@@ -79,11 +77,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/chat/rooms/${room.id}`, {
-        method: "PATCH",
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ isArchived: true }),
-      });
+      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, { isArchived: true });
       if (!res.ok) throw new Error("Failed to archive");
       return res.json();
     },
@@ -99,9 +93,9 @@ export function RoomSettingsModal({ room, onClose }: Props) {
   return (
     <>
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Xona sozlamalari</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Xona sozlamalari</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -116,7 +110,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
                     onClick={() => setAvatarEmoji(emoji)}
                     className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition-all
                       ${avatarEmoji === emoji
-                        ? "bg-primary/20 ring-2 ring-primary scale-110"
+                        ? "bg-primary/10 ring-2 ring-primary scale-110"
                         : "hover:bg-muted"
                       }`}
                   >
@@ -125,7 +119,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
                 ))}
                 {avatarEmoji && !EMOJI_PRESETS.includes(avatarEmoji) && (
                   <button
-                    className="w-9 h-9 rounded-xl text-lg flex items-center justify-center bg-primary/20 ring-2 ring-primary"
+                    className="w-9 h-9 rounded-xl text-lg flex items-center justify-center bg-primary/10 ring-2 ring-primary"
                   >
                     {avatarEmoji}
                   </button>
@@ -212,7 +206,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-2 text-sm text-orange-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                className="gap-2 text-sm text-[var(--ep-primary)] hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 onClick={() => setConfirmArchive(true)}
                 disabled={archiveMutation.isPending}
               >

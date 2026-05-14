@@ -1,3 +1,8 @@
+/**
+ * @module BusinessTripDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,30 +42,30 @@ export function BusinessTripDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Xizmat safari (K командировка)</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Xizmat safari (K командировка)</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="destination">Manzil</Label>
+          <div className="space-y-1">
+          <Label htmlFor="destination">Manzil</Label>
             <Input
               id="destination"
               value={form.destination}
               onChange={(e) => updateField("destination", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="purpose">Maqsad</Label>
+          <div className="space-y-1">
+          <Label htmlFor="purpose">Maqsad</Label>
             <Textarea
               id="purpose"
               value={form.purpose}
               onChange={(e) => updateField("purpose", e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Boshlanish sanasi</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="startDate">Boshlanish sanasi</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -68,8 +73,8 @@ export function BusinessTripDialog({
                 onChange={(e) => updateField("startDate", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">Tugash sanasi</Label>
+            <div className="space-y-1">
+          <Label htmlFor="endDate">Tugash sanasi</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -78,9 +83,9 @@ export function BusinessTripDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-2">
-              <Label htmlFor="daily">Sutkalik</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="space-y-1">
+          <Label htmlFor="daily">Sutkalik</Label>
               <Input
                 id="daily"
                 type="number"
@@ -88,8 +93,8 @@ export function BusinessTripDialog({
                 onChange={(e) => updateField("dailyAllowance", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="transport">Transport</Label>
+            <div className="space-y-1">
+          <Label htmlFor="transport">Transport</Label>
               <Input
                 id="transport"
                 type="number"
@@ -97,8 +102,8 @@ export function BusinessTripDialog({
                 onChange={(e) => updateField("transportCost", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="hotel">Turar joy</Label>
+            <div className="space-y-1">
+          <Label htmlFor="hotel">Turar joy</Label>
               <Input
                 id="hotel"
                 type="number"

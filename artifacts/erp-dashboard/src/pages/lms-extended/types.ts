@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React page component. Route-level UI.
+ */
+
 import { BookOpen, ClipboardList, Award, Trophy, Zap, DollarSign, FileText, Star, type LucideIcon } from "lucide-react";
 
 export interface LMSCourse {

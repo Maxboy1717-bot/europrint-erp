@@ -1,3 +1,8 @@
+/**
+ * @module production-order.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { AggregateRoot } from '@nestjs/cqrs';
 import { Err } from '@common/result';
 import { Result } from '@common/result';

@@ -1,10 +1,15 @@
+/**
+ * @module leads.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { marketingLeads } from '@europrint/schemas';
-import { eq, and, isNull, desc } from 'drizzle-orm';
+import { eq, and, isNull, desc, count } from 'drizzle-orm';
 
 @Injectable()
 export class LeadsRepository {
@@ -44,10 +49,29 @@ export class LeadsRepository {
   }
 
   async softDelete(id: number): Promise<Result<void>> {
-  try {  
+  try {
       await db.update(marketingLeads).set({ deletedAt: _time.now() }).where(eq(marketingLeads.id, id));  return Ok();  } catch (_e) {
     return Err(String(_e));
   }
 
+  }
+
+  async getLossAnalysis(): Promise<Result<{ total: number; breakdown: Array<{ reason: string; count: number; percent: number }> }>> {
+    try {
+      const rows = await db
+        .select({ reason: marketingLeads.lostReason, cnt: count() })
+        .from(marketingLeads)
+        .where(and(eq(marketingLeads.status, 'lost'), isNull(marketingLeads.deletedAt)))
+        .groupBy(marketingLeads.lostReason);
+      const total = rows.reduce((s, r) => s + Number(r.cnt), 0);
+      const breakdown = rows.map(r => ({
+        reason: r.reason ?? 'other',
+        count: Number(r.cnt),
+        percent: total > 0 ? Math.round((Number(r.cnt) / total) * 100) : 0,
+      }));
+      return Ok({ total, breakdown });
+    } catch (_e) {
+      return Err(String(_e));
+    }
   }
 }

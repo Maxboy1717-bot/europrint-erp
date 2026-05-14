@@ -1,5 +1,11 @@
+/**
+ * @module SevenFunctionsDashboard
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Card,
   CardContent,
@@ -27,8 +33,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState, EPStatusPill } from "@/components/ep";
 interface FunctionKpi {
   id: string;
   functionId: string;
@@ -67,16 +72,16 @@ const FunctionCardSkeleton = () => (
   <Card>
     <CardHeader className="pb-3">
       <div className="flex items-start justify-between gap-2">
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-6 w-12" />
+        <Skeleton className="h-6 w-32 rounded-lg" />
+        <Skeleton className="h-6 w-12 rounded-lg" />
       </div>
     </CardHeader>
     <CardContent className="space-y-4">
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-4/5" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-4/5 rounded-full" />
       <div className="flex gap-2 pt-2">
-        <Skeleton className="h-6 w-12" />
-        <Skeleton className="h-9 w-24" />
+        <Skeleton className="h-6 w-12 rounded-lg" />
+        <Skeleton className="h-9 w-24 rounded-lg" />
       </div>
     </CardContent>
   </Card>
@@ -84,7 +89,6 @@ const FunctionCardSkeleton = () => (
 
 export default function SevenFunctionsDashboard() {
   const { t } = useTranslation("hr");
-  const { t: tCommon } = useTranslation("common");
   const { toast } = useToast();
   const [selectedFunctionId, setSelectedFunctionId] = useState<string | null>(null);
 
@@ -105,15 +109,24 @@ export default function SevenFunctionsDashboard() {
     return IconComponent ? <IconComponent className="h-6 w-6" /> : <Target className="h-6 w-6" />;
   };
 
-  const handleAIAnalysis = () => {
-    toast({
-      title: "AI tahlil",
-      description: "AI tahlil tez orada ishga tushadi",
-    });
-  };
+  const aiAnalysisMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/seven-functions/ai-analysis");
+      return res.json();
+    },
+    onSuccess: (data: { summary?: string }) => {
+      toast({
+        title: "AI tahlil",
+        description: data?.summary ?? "7 ta funksiya KPI tahlili tayyor",
+      });
+    },
+    onError: () => {
+      toast({ title: "Xatolik", description: "AI tahlil amalga oshmadi", variant: "destructive" });
+    },
+  });
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   if (isLoading) {
@@ -122,7 +135,7 @@ export default function SevenFunctionsDashboard() {
         module="hr"
         title="7 ta Asosiy Funksiya - Vysotskiy Modeli"
         icon={<BarChart3 className="h-5 w-5" />}
-        actions={<Skeleton className="h-9 w-32" />}
+        actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {([1, 2, 3, 4, 5, 6]).map((i) => (
@@ -143,7 +156,8 @@ export default function SevenFunctionsDashboard() {
       actions={
         <Button
           data-testid="button-ai-analysis"
-          onClick={handleAIAnalysis}
+          onClick={() => aiAnalysisMutation.mutate()}
+          disabled={aiAnalysisMutation.isPending}
           variant="outline"
         >
           <TrendingUp className="h-4 w-4 mr-2" />
@@ -183,7 +197,7 @@ export default function SevenFunctionsDashboard() {
                         {getIcon(func.iconType)}
                       </div>
                       <div className="flex-1">
-                        <CardTitle className="text-lg font-semibold">
+                        <CardTitle className="text-[14px] font-semibold font-semibold">
                           {func.functionName}
                         </CardTitle>
                         {func.functionNameUz && (
@@ -208,12 +222,11 @@ export default function SevenFunctionsDashboard() {
                   )}
 
                   <div className="flex items-center justify-between pt-2">
-                    <Badge
-                      variant="secondary"
+                    <EPStatusPill tone="neutral"
                       data-testid={`badge-kpi-count-${func.id}`}
                     >
                       {kpiCount} KPI
-                    </Badge>
+                    </EPStatusPill>
                   </div>
 
                   <Button
@@ -259,9 +272,9 @@ export default function SevenFunctionsDashboard() {
                 <div className="space-y-4">
                   {([1, 2, 3]).map((i) => (
                     <div key={`k-${i}`} className="space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-2 w-full" />
-                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-32 rounded-lg" />
+                      <Skeleton className="h-2 w-full rounded-lg" />
+                      <Skeleton className="h-4 w-24 rounded-lg" />
                     </div>
                   ))}
                 </div>

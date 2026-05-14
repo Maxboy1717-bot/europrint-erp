@@ -1,3 +1,8 @@
+/**
+ * @module crm-extended.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -72,7 +77,7 @@ export class CrmExtendedCompatService {
       const rows: Row[] = r.ok ? dbRows(r.data) : [];
       const openDeals = (Array.isArray(rows) ? rows : []).filter((d) => d['stage'] !== 'WON' && d['stage'] !== 'LOST').length;
       const closedThisMonth = (Array.isArray(rows) ? rows : []).filter((d) => d['closed_this_month']).length;
-      const pipelineValue = (rows ?? []).reduce((s, d) => s + Number(d['opportunity'] ?? 0), 0);
+      const pipelineValue = (Array.isArray(rows) ? rows : []).reduce((s, d) => s + Number(d['opportunity'] ?? 0), 0);
       return { teamPerformance: rows, openDeals, closedThisMonth, pipelineValue };
     });
   }

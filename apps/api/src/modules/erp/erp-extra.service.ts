@@ -1,3 +1,8 @@
+/**
+ * @module erp-extra.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { ErpExtraRepository } from './erp-extra.repository';
@@ -57,4 +62,9 @@ export class ErpExtraService {
   async listDashboardStats() {
     return this.repo.listDashboardStats();
   }
+
+  async createOrder(body: Record<string, unknown>) { return this.repo.createOrder(body); }
+  async deleteOrder(id: number) { return this.repo.deleteOrder(id); }
+  async createWorkCenter(body: Record<string, unknown>) { return this.repo.createWorkCenter(body); }
+  async deleteWorkCenter(id: number) { return this.repo.deleteWorkCenter(id); }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module pagination.util
+ * @description Source module. See exports for details.
+ */
+
 import { PaginatedResult } from '../types/result.type'
 
 export interface PaginationParams {

@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { Phone, Calendar as CalendarIcon, ListTodo, FileText, Video, Mail, Smartphone, MessageCircle, MessageSquare, PhoneIncoming, PhoneOutgoing } from "lucide-react";
 
 export interface Activity {
@@ -49,9 +54,9 @@ export const ACTIVITY_TYPE_OPTIONS = [
 ];
 
 export const PRIORITY_OPTIONS = [
-  { value: "low", label: "Past", color: "text-green-500" },
-  { value: "medium", label: "O'rta", color: "text-yellow-500" },
-  { value: "high", label: "Yuqori", color: "text-red-500" },
+  { value: "low", label: "Past", color: "text-[var(--ep-green)]" },
+  { value: "medium", label: "O'rta", color: "text-[var(--ep-yellow)]" },
+  { value: "high", label: "Yuqori", color: "text-[var(--ep-red)]" },
 ];
 
 export const WHATSAPP_TEMPLATES = [

@@ -1,3 +1,8 @@
+/**
+ * @module GlTab
+ * @description React UI component.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { glApi } from "../api/pos-monitor.api";
 

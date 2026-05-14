@@ -1,3 +1,8 @@
+/**
+ * @module transition-status.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 import { ORDER_STATUSES } from '../../domain/value-objects/order-status.vo';
 

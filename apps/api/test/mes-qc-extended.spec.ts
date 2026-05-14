@@ -1,3 +1,8 @@
+/**
+ * @module mes-qc-extended.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { MesMaintenanceController } from '../src/modules/mes/presentation/mes-maintenance.controller';
 import { MesShiftsStatsController } from '../src/modules/mes/presentation/mes-shifts-stats.controller';

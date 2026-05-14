@@ -61,5 +61,6 @@
   "backup.schedule": "Расписание автоматического резервного копирования",
   "telegram.title": "Telegram бот",
   "telegram.token": "Токен бота",
-  "telegram.chatId": "ID чата"
+  "telegram.chatId": "ID чата",
+  "website": "Веб-сайт"
 }

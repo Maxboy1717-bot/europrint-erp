@@ -1,3 +1,8 @@
+/**
+ * @module AIAgentsPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
@@ -5,10 +10,10 @@ import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bot, Activity, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { EPPageHeader } from "@/components/ep";
 
 interface AiAgent {
   id: string;
@@ -22,9 +27,9 @@ interface AiAgent {
 }
 
 const STATUS_CONFIG: Record<AiAgent["status"], { label: string; className: string; icon: typeof Activity }> = {
-  active: { label: "Faol", className: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
-  paused: { label: "Pauza", className: "bg-yellow-100 text-yellow-700", icon: Activity },
-  error:  { label: "Xato",  className: "bg-rose-100 text-rose-700", icon: AlertTriangle },
+  active: { label: "Faol", className: "bg-emerald-100 text-[var(--ep-green)]", icon: CheckCircle2 },
+  paused: { label: "Pauza", className: "bg-yellow-100 text-[var(--ep-yellow)]", icon: Activity },
+  error:  { label: "Xato",  className: "bg-rose-100 text-[var(--ep-red)]", icon: AlertTriangle },
 };
 
 export default function AIAgentsPage() {
@@ -55,7 +60,7 @@ export default function AIAgentsPage() {
       <Card key={agent.id}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-blue-600" />
+            <Bot className="h-5 w-5 text-[var(--ep-blue)]" />
             <CardTitle className="text-sm font-medium">{agent.name}</CardTitle>
           </div>
           <Badge className={cfg.className}>
@@ -65,18 +70,18 @@ export default function AIAgentsPage() {
         </CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground mb-3">{agent.description}</p>
-          <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
             <div>
               <span className="text-muted-foreground">Modul:</span>
               <span className="ml-1 font-medium">{agent.module}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Muvaffaqiyat:</span>
-              <span className="ml-1 font-medium text-emerald-600">{agent.successCount}</span>
+              <span className="ml-1 font-medium text-[var(--ep-green)]">{agent.successCount}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Xatolar:</span>
-              <span className="ml-1 font-medium text-rose-600">{agent.errorCount}</span>
+              <span className="ml-1 font-medium text-[var(--ep-red)]">{agent.errorCount}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Oxirgi:</span>
@@ -99,15 +104,16 @@ export default function AIAgentsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t('agents.title', 'AI Agentlar')}</b></>}
         title={t('agents.title', 'AI Agentlar')}
-        description={t('agents.description', '6 ta AI agent: planning, sales-copilot, prepress, mes-monitor, supplier-rating, fraud-detect')}
+        subtitle={t('agents.description', '6 ta AI agent: planning, sales-copilot, prepress, mes-monitor, supplier-rating, fraud-detect')}
       />
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48" />
+            <Skeleton key={i} className="h-48 rounded-lg" />
           ))}
         </div>
       ) : agents.length === 0 ? (

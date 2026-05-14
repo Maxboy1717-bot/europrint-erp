@@ -1,3 +1,8 @@
+/**
+ * @module scheduling-network.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeDiv } from '@common/math/math-utils';
@@ -23,7 +28,7 @@ export class SchedulingNetworkService {
       return Err(makeSchedErr('Faoliyatlar ro\'yxati bo\'sh'));
     }
 
-    const actMap = new Map((safeActivities ?? []).map((a) => [a.id, a]));
+    const actMap = new Map((Array.isArray(safeActivities) ? safeActivities : []).map((a) => [a.id, a]));
 
     for (const a of safeActivities) {
       for (const p of a.predecessors) {
@@ -44,7 +49,7 @@ export class SchedulingNetworkService {
       }
     }
 
-    const queue = (safeActivities ?? []).filter((a) => (inDegree.get(a.id) ?? 0) === 0).map((a) => a.id);
+    const queue = (Array.isArray(safeActivities) ? safeActivities : []).filter((a) => (inDegree.get(a.id) ?? 0) === 0).map((a) => a.id);
     const topoOrder: string[] = [];
     const tempDegree = new Map(inDegree);
 
@@ -71,13 +76,13 @@ export class SchedulingNetworkService {
       if (!act) continue;
       const safePreds = Array.isArray(act.predecessors) ? act.predecessors : [];
       const esVal = safePreds.length
-        ? Math.max(...(safePreds ?? []).map((p) => ef.get(p) ?? 0))
+        ? Math.max(...(Array.isArray(safePreds) ? safePreds : []).map((p) => ef.get(p) ?? 0))
         : 0;
       es.set(id, esVal);
       ef.set(id, esVal + safeNum(act.duration));
     }
 
-    const projectDuration = Math.max(...(safeActivities ?? []).map((a) => ef.get(a.id) ?? 0));
+    const projectDuration = Math.max(...(Array.isArray(safeActivities) ? safeActivities : []).map((a) => ef.get(a.id) ?? 0));
 
     const lf = new Map<string, number>();
     const ls = new Map<string, number>();
@@ -93,7 +98,7 @@ export class SchedulingNetworkService {
       ls.set(id, lfVal - safeNum(act.duration));
     }
 
-    const cpmActivities: CpmActivity[] = (safeActivities ?? []).map((a) => {
+    const cpmActivities: CpmActivity[] = (Array.isArray(safeActivities) ? safeActivities : []).map((a) => {
       const totalFloat = safeNum(ls.get(a.id)) - safeNum(es.get(a.id));
       return {
         id: a.id,
@@ -128,7 +133,7 @@ export class SchedulingNetworkService {
       return Err(makeSchedErr('PERT faoliyatlar ro\'yxati bo\'sh'));
     }
 
-    const converted: Activity[] = (safeActs ?? []).map((a) => ({
+    const converted: Activity[] = (Array.isArray(safeActs) ? safeActs : []).map((a) => ({
       id: a.id,
       duration: safeDiv(safeNum(a.optimistic) + 4 * safeNum(a.mostLikely) + safeNum(a.pessimistic), 6),
       predecessors: a.predecessors,
@@ -137,15 +142,15 @@ export class SchedulingNetworkService {
     const cpmResult = await this.calculateCpm(converted);
     if (!cpmResult.ok) return Err(cpmResult.error);
 
-    const pertActivities = (cpmResult?.data?.activities ?? []).map((ca) => {
-      const pa = (safeActs ?? []).find((a) => a.id === ca.id);
+    const pertActivities = (Array.isArray(cpmResult?.data?.activities) ? cpmResult?.data?.activities : []).map((ca) => {
+      const pa = (Array.isArray(safeActs) ? safeActs : []).find((a) => a.id === ca.id);
       const range = pa ? safeNum(pa.pessimistic) - safeNum(pa.optimistic) : 0;
       const variance = (safeDiv(range, 6)) ** 2;
       return { ...ca, expectedDuration: ca.duration, variance };
     });
 
-    const criticalActivities = (pertActivities ?? []).filter((a) => a.isCritical);
-    const projectVariance = (criticalActivities ?? []).reduce((s, a) => s + a.variance, 0);
+    const criticalActivities = (Array.isArray(pertActivities) ? pertActivities : []).filter((a) => a.isCritical);
+    const projectVariance = (Array.isArray(criticalActivities) ? criticalActivities : []).reduce((s, a) => s + a.variance, 0);
 
     return Ok({
       activities: pertActivities,

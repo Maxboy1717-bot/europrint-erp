@@ -1,3 +1,8 @@
+/**
+ * @module report-bot-data.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql, eq } from 'drizzle-orm';

@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 export function statusRangi(status: string) {
   const ranglar: Record<string, string> = {
     QC_HOLD: "bg-yellow-600",

@@ -1,6 +1,11 @@
+/**
+ * @module kanban-core
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "../core-schema";
@@ -17,7 +22,9 @@ export const kanbanBoards = pgTable("kanban_boards", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("kanban_boards_type_chk", sql`${t.type} IN ('crm_deals','tasks','custom')`),
+]);
 
 
 export const insertKanbanBoardSchema = createInsertSchema(kanbanBoards, {
@@ -34,7 +41,7 @@ export type InsertKanbanBoard = z.infer<typeof insertKanbanBoardSchema>;
 // Kanban Columns (Ustunlar)
 export const kanbanColumns = pgTable("kanban_columns", {
   id: serial("id").primaryKey(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id).notNull(),
+  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(), // To Do, In Progress, Done
   sortOrder: integer("sort_order").notNull().default(0),
   color: varchar("color", { length: 20 }),
@@ -59,13 +66,13 @@ export type InsertKanbanColumn = z.infer<typeof insertKanbanColumnSchema>;
 // Kanban Cards (Kartalar)
 export const kanbanCards = pgTable("kanban_cards", {
   id: serial("id").primaryKey(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id).notNull(),
-  columnId: varchar("column_id").references(() => kanbanColumns.id).notNull(),
+  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "cascade" }).notNull(),
+  columnId: varchar("column_id").references(() => kanbanColumns.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   relatedType: varchar("related_type", { length: 20 }), // deal, order, task, none
   relatedId: varchar("related_id", { length: 100 }), // crm_deals.id yoki boshqa
-  ownerUserId: varchar("owner_user_id").references(() => users.id),
+  ownerUserId: varchar("owner_user_id").references(() => users.id, { onDelete: "set null" }),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"), // low, normal, high, urgent
   dueDate: varchar("due_date", { length: 10 }), // YYYY-MM-DD
   sortOrder: integer("sort_order").notNull().default(0),
@@ -85,7 +92,7 @@ export const kanbanCards = pgTable("kanban_cards", {
   telegramChatId: varchar("telegram_chat_id", { length: 100 }),
   // Qabul qilish/bajarish workflow
   acceptedAt: timestamp("accepted_at"),
-  acceptedById: varchar("accepted_by_id").references(() => users.id),
+  acceptedById: varchar("accepted_by_id").references(() => users.id, { onDelete: "set null" }),
   completedAt: timestamp("completed_at"),
   completionReport: text("completion_report"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -98,6 +105,10 @@ export const kanbanCards = pgTable("kanban_cards", {
   index("idx_kanban_cards_priority").on(t.priority),
   index("idx_kanban_cards_created_at").on(t.createdAt),
   index("idx_kanban_cards_deleted_at").on(t.deletedAt),
+  check("kanban_cards_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("kanban_cards_source_chk", sql`${t.source} IN ('kanban','telegram','email')`),
+  check("kanban_cards_related_type_chk", sql`${t.relatedType} IS NULL OR ${t.relatedType} IN ('deal','order','task','none')`),
+  check("kanban_cards_recurrence_chk", sql`${t.recurrencePattern} IS NULL OR ${t.recurrencePattern} IN ('daily','weekly','monthly','yearly')`),
 ]);
 
 
@@ -124,8 +135,8 @@ export type InsertKanbanCard = z.infer<typeof insertKanbanCardSchema>;
 // Kanban Comments (Kommentlar)
 export const kanbanComments = pgTable("kanban_comments", {
   id: serial("id").primaryKey(),
-  cardId: varchar("card_id").references(() => kanbanCards.id).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   comment: text("comment").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

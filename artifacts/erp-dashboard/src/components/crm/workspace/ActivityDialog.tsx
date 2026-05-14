@@ -1,3 +1,8 @@
+/**
+ * @module ActivityDialog
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +23,8 @@ import {
 import { Plus } from "lucide-react";
 import { ActivityDialogProps } from "./types";
 
-export function ActivityDialog({
-  open,
+import { useTranslation } from '@/lib/i18n';
+export function ActivityDialog({open,
   onOpenChange,
   form,
   setForm,
@@ -27,6 +32,7 @@ export function ActivityDialog({
   isPending,
   activityTypes,
 }: ActivityDialogProps) {
+  const { t } = useTranslation('common');
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -42,7 +48,7 @@ export function ActivityDialog({
               value={form.type}
               onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}
             >
-              <SelectTrigger data-testid="select-activity-type">
+              <SelectTrigger data-testid="select-activity-type" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -65,19 +71,19 @@ export function ActivityDialog({
               data-testid="input-activity-subject"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Bog'liq ob'ekt</Label>
               <Select
                 value={form.entityType}
                 onValueChange={(v) => setForm((f) => ({ ...f, entityType: v }))}
               >
-                <SelectTrigger data-testid="select-activity-entity">
+                <SelectTrigger data-testid="select-activity-entity" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="lead">Lead</SelectItem>
-                  <SelectItem value="deal">Deal</SelectItem>
+                  <SelectItem value="deal">{t('deal')}</SelectItem>
                   <SelectItem value="contact">Kontakt</SelectItem>
                 </SelectContent>
               </Select>

@@ -1,3 +1,8 @@
+/**
+ * @module hr-dashboard.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
@@ -222,5 +227,63 @@ export class HrDashboardRepository {
       `);
       return rows.rows as Record<string, unknown>[];
       }, 'DB_ERROR');
+  }
+
+  async getAlumni(): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          e.id,
+          COALESCE(e.first_name, '') || ' ' || COALESCE(e.last_name, '') AS "fullName",
+          COALESCE(p.name, '—')                                          AS "lastPosition",
+          COALESCE(d.name, '—')                                          AS department,
+          COALESCE(oc.last_working_day::text, e.updated_at::text, '')    AS "exitDate",
+          COALESCE(oc.dismissal_type, e.employment_status, '—')          AS "exitReason",
+          COALESCE(oc.dismissal_type, 'resignation')                     AS "exitType",
+          CASE WHEN e.hire_date IS NOT NULL
+               THEN ROUND(EXTRACT(DAY FROM COALESCE(oc.last_working_day, NOW()) - e.hire_date) / 365.0, 1)::float
+               ELSE 0 END                                                AS "yearsOfService",
+          false                                                          AS "hasBoomerang",
+          'unknown'                                                      AS "networkStatus",
+          NULL                                                           AS "lastContactDate"
+        FROM employees e
+        LEFT JOIN positions p    ON p.id = e.position_id
+        LEFT JOIN departments d  ON d.id = e.department_id
+        LEFT JOIN offboarding_cases oc ON oc.employee_id = e.id
+        WHERE e.is_active = false
+           OR e.status NOT IN ('active', 'on_leave', 'probation')
+        ORDER BY COALESCE(oc.last_working_day, e.updated_at) DESC NULLS LAST
+        LIMIT 200
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async createDailyReport(dto: {
+    user_id:         number;
+    report_date:     string;
+    tasks_completed?: string;
+  }): Promise<Result<Row>> {
+    return safeCall(async () => {
+      // Resolve employee_id from user_id (fallback to user_id when no employee record exists)
+      const empRows = await db
+        .select({ id: hrEmployees.id })
+        .from(hrEmployees)
+        .where(eq(hrEmployees.user_id, dto.user_id))
+        .limit(1);
+      const employee_id = empRows[0]?.id ?? dto.user_id;
+
+      const rows = await db
+        .insert(hr_daily_reports)
+        .values({
+          employee_id,
+          report_date:     dto.report_date,
+          tasks_completed: dto.tasks_completed ?? null,
+          status:          'submitted',
+          submitted_at:    sql`NOW()`,
+        })
+        .returning();
+      return castTo<Row>(rows[0] ?? {});
+    }, 'DB_ERROR');
   }
 }

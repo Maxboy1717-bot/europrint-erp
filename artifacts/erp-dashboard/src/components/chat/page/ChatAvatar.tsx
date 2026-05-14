@@ -1,3 +1,8 @@
+/**
+ * @module ChatAvatar
+ * @description React UI component.
+ */
+
 import { cn } from "@/lib/utils";
 
 const COLORS = [

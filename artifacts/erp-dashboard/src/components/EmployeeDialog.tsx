@@ -1,3 +1,8 @@
+/**
+ * @module EmployeeDialog
+ * @description React UI component.
+ */
+
 import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +36,7 @@ import { HouseholdSection } from "./hr/employee-dialog/HouseholdSection";
 import { OrgStructureSection } from "./hr/employee-dialog/OrgStructureSection";
 import { ProfileImageSection } from "./hr/employee-dialog/ProfileImageSection";
 import { useEmployeeMutation } from "./hr/employee-dialog/useEmployeeMutation";
+import { apiRequest } from '@/lib/queryClient';
 
 export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogProps) {
   const { toast } = useToast();
@@ -191,23 +197,13 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       const formData = new FormData();
       formData.append("image", selectedFile);
       try {
-        await fetch(`/api/employees/${empId}/profile-image`, {
-          method: "POST",
-          headers: getAuthHeaders(),
-          credentials: "include",
-          body: formData,
-        });
+        await apiRequest('POST', `/api/employees/${empId}/profile-image`);
       } catch {
         // Silently fail — asosiy xodim yaratilgan, rasm yuklash optional
       }
     }
     // Org functions — JSON, Authorization header bilan
-    const orgRes = await fetch(`/api/employees/${empId}/assign-org-functions`, {
-      method: "POST",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ orgDepartmentIds: selectedOrgDepts }),
-    });
+    const orgRes = await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
     if (!orgRes.ok) {
       const orgError = await orgRes.json().catch(() => ({ error: "Funktsiyalarni saqlashda xatolik" }));
       toast({
@@ -230,9 +226,9 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Xodim ma'lumotlarini tahrirlash" : "Yangi xodim qo'shish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{isEdit ? "Xodim ma'lumotlarini tahrirlash" : "Yangi xodim qo'shish"}</DialogTitle>
           <DialogDescription>
             {isEdit ? "Xodim ma'lumotlarini o'zgartiring" : "Yangi xodim ma'lumotlarini kiriting"}
           </DialogDescription>

@@ -1,3 +1,8 @@
+/**
+ * @module PermissionGuard
+ * @description React UI component.
+ */
+
 import type { ReactNode } from "react";
 import { usePermission } from "@/hooks/usePermission";
 import type { Permission } from "@/lib/permissions";

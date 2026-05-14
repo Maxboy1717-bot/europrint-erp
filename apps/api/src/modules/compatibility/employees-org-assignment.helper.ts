@@ -45,9 +45,11 @@ export async function validateOrgDepartmentsExist(orgIds: number[]): Promise<voi
       "Xodim kamida bitta tashkiliy bo'limga (org_department) biriktirilishi shart",
     );
   }
+  // Parameterized IN list using sql.join — no sql.raw() with user-controlled values
+  const paramList = sql.join(orgIds.map(id => sql`${id}`), sql`, `);
   const result = await rawSql(sql`
     SELECT id FROM org_departments
-    WHERE id IN ${sql.raw(`(${orgIds.join(',')})`)} AND is_active = true
+    WHERE id IN (${paramList}) AND is_active = true
   `);
   const found = new Set(dbRows(result).map((r) => Number(r['id'])));
   const missing = orgIds.filter((id) => !found.has(id));

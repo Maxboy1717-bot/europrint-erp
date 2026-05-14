@@ -1,3 +1,8 @@
+/**
+ * @module analytics-types
+ * @description React page component. Route-level UI.
+ */
+
 export interface TopUser {
   userId: number;
   fullName: string;

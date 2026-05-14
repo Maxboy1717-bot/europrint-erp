@@ -1,3 +1,8 @@
+/**
+ * @module objectStorage
+ * @description Source module. See exports for details.
+ */
+
 import { InternalServerErrorException } from '@nestjs/common';
 import { Storage, File } from "@google-cloud/storage";
 import { Readable } from "stream";

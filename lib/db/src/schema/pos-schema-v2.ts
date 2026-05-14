@@ -12,7 +12,7 @@ import { numericMoney } from './numeric-money';
 import { sql, relations } from 'drizzle-orm';
 import {
   serial, pgTable, text, varchar, integer, boolean,
-  timestamp, jsonb, unique, index, pgEnum, inet, bigserial,
+  timestamp, jsonb, unique, index, pgEnum, inet, bigserial, check,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -245,6 +245,7 @@ export const employeeInventoryLedger = pgTable('employee_inventory_ledger', {
   index('idx_ledger_user_mat').on(t.userId, t.materialCardId),
   index('idx_ledger_txn_date').on(t.transactionDate),
   index('idx_ledger_user_id').on(t.userId),
+  check("emp_inv_ledger_entry_type_chk", sql`${t.entryType} IN ('in','out')`),
 ]);
 
 // ─── 6. EMPLOYEE_WRITE_OFF_ACTS — Hisobdan chiqarish akti ────────────────────
@@ -267,6 +268,7 @@ export const employeeWriteOffActs = pgTable('employee_write_off_acts', {
 }, (t) => [
   index('idx_write_off_user').on(t.userId),
   index('idx_write_off_status').on(t.status),
+  check("emp_write_off_acts_status_chk", sql`${t.status} IN ('DRAFT','PENDING','APPROVED','REJECTED')`),
 ]);
 
 export const employeeWriteOffActLines = pgTable('employee_write_off_act_lines', {
@@ -342,6 +344,7 @@ export const productionMaterialAllocs = pgTable('production_material_allocs', {
   index('idx_prod_alloc_order').on(t.productionOrderId),
   index('idx_prod_alloc_mat').on(t.materialCardId),
   index('idx_prod_alloc_status').on(t.status),
+  check("prod_material_allocs_status_chk", sql`${t.status} IN ('ACTIVE','COMPLETED','RETURNED')`),
 ]);
 
 // ─── 9. STOCK_RESERVATIONS — AI bron tizimi ───────────────────────────────────
@@ -391,6 +394,7 @@ export const posSerialNumberItems = pgTable('pos_serial_number_items', {
   index('idx_serial_mat').on(t.materialCardId),
   index('idx_serial_user').on(t.assignedToUserId),
   index('idx_serial_status').on(t.status),
+  check("pos_serial_items_status_chk", sql`${t.status} IN ('IN_WAREHOUSE','ISSUED','RETURNED','DAMAGED','WRITTEN_OFF')`),
 ]);
 
 // ─── 11. POS_INVENTORY_COUNTS — Inventarizatsiya ─────────────────────────────
@@ -456,6 +460,7 @@ export const posOfflineQueue = pgTable('pos_offline_queue', {
 }, (t) => [
   index('idx_offline_sync').on(t.syncStatus),
   index('idx_offline_terminal').on(t.terminalId),
+  check("pos_offline_queue_sync_status_chk", sql`${t.syncStatus} IN ('PENDING','SYNCED','FAILED','CONFLICT')`),
 ]);
 
 // ─── 13. POS_BARCODE_PRINT_QUEUE — Chop etish navbati ────────────────────────
@@ -478,6 +483,8 @@ export const posBarcodePrintQueue = pgTable('pos_barcode_print_queue', {
 }, (t) => [
   index('idx_print_status').on(t.status),
   index('idx_print_mat').on(t.materialCardId),
+  check("pos_barcode_print_format_chk", sql`${t.printFormat} IN ('ZPL','PDF','EPL')`),
+  check("pos_barcode_print_trigger_chk", sql`${t.triggerType} IN ('AUTO','MANUAL')`),
 ]);
 
 // ─── 14. POS_DAMAGE_QC_LINKS — Zarar → QC ────────────────────────────────────
@@ -502,6 +509,7 @@ export const posDamageQcLinks = pgTable('pos_damage_qc_links', {
 }, (t) => [
   index('idx_damage_qc_movement').on(t.posMovementId),
   index('idx_damage_qc_decision').on(t.qcDecision),
+  check("pos_damage_qc_decision_chk", sql`${t.qcDecision} IN ('PENDING_QC','REPAIR','RETURN_TO_SUPPLIER','WRITE_OFF','USE_AS_IS')`),
 ]);
 
 // ─── 15. DEPARTMENT_WAREHOUSE_MAP ─────────────────────────────────────────────
@@ -559,6 +567,7 @@ export const materialCardSuggestions = pgTable('material_card_suggestions', {
 }, (t) => [
   index('idx_mc_suggest_status').on(t.status),
   index('idx_mc_suggest_barcode').on(t.unknownBarcode),
+  check("mc_suggestions_status_chk", sql`${t.status} IN ('PENDING','APPROVED','REJECTED')`),
 ]);
 
 // ─── 18. POS_THREE_WAY_MATCH — 3-way match ───────────────────────────────────

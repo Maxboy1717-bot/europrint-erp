@@ -1,3 +1,8 @@
+/**
+ * @module get-inspection-stats.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { PERCENT_BASIS } from '@common/constants/app.constants';
 import { Injectable, Logger } from '@nestjs/common';

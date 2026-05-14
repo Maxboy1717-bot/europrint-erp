@@ -1,3 +1,8 @@
+/**
+ * @module chat-advanced.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { assertFound, assertRequired, assertValidated, assertDefined } from '@common/assertions';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
@@ -128,7 +133,7 @@ export class ChatAdvancedController {
       roomId,
       user.id,
       body.question.trim(),
-      (body?.options ?? []).filter((o) => o.trim()),
+      (Array.isArray(body?.options) ? body?.options : []).filter((o) => o.trim()),
       body.isMultiple ?? false,
       body.isAnonymous ?? false,
     );
@@ -233,7 +238,7 @@ export class ChatAdvancedController {
     const roomId = String(body.roomId);
 
     const members = await this.chatService.getRoomMembers(roomId);
-    assertRequired((members ?? []).find((m) => m.userId === user.id), 'Not a member of this room');
+    assertRequired((Array.isArray(members) ? members : []).find((m) => m.userId === user.id), 'Not a member of this room');
 
 
     const storageResult = await safeCall(async () => {

@@ -1,3 +1,8 @@
+/**
+ * @module WeeklyRevenueChart
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
@@ -22,7 +27,7 @@ export function WeeklyRevenueChart({ data, isLoading }: WeeklyRevenueChartProps)
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full rounded-lg" />
         ) : (
           <div className="glass-chart">
             <ResponsiveContainer width="100%" height={300}>

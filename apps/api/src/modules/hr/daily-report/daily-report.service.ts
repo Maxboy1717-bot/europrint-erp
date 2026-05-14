@@ -1,3 +1,8 @@
+/**
+ * @module daily-report.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -6,6 +11,7 @@ import { Cron } from '@nestjs/schedule';
 import { HrV2Events } from '../events/hr-v2-events';
 import { safeCall, Result, AppError } from '@common/result';
 import { DailyReportRepository } from './daily-report.repository';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 @Injectable()
 export class DailyReportService {
@@ -22,16 +28,26 @@ export class DailyReportService {
     tasksCompleted?: string;
     metrics?: string;
     tomorrowPlan?: string;
+    // Raw metric fields — assembled into metrics JSON if metrics not provided
+    blockers?: string;
+    mood?: string;
+    productiveHours?: number;
   }) {
     return safeCall(async () => {
       const reportDate = dto.reportDate || _time.now().toISOString().split('T')[0];
       const tasksCompleted = dto.tasksCompleted || '';
+      // Assemble metrics JSON from structured fields when raw string not supplied
+      const metrics = dto.metrics || (
+        (dto.blockers || dto.mood || dto.productiveHours)
+          ? JSON.stringify({ blockers: dto.blockers, mood: dto.mood, productiveHours: dto.productiveHours })
+          : undefined
+      );
 
       const row = await this.repo.upsertReport({
         employeeId: dto.employeeId,
         reportDate,
         tasksCompleted,
-        metrics: dto.metrics,
+        metrics,
         tomorrowPlan: dto.tomorrowPlan,
       });
 
@@ -69,6 +85,91 @@ export class DailyReportService {
 
   async getByDate(date: string) {
     return this.repo.getByDate(date);
+  }
+
+  async generatePdf(reportId: number): Promise<Result<Uint8Array, AppError>> {
+    return safeCall(async () => {
+      const r = await this.repo.findByIdWithEmployee(reportId);
+      if (!r.ok || !r.data) throw new NotFoundException(`Daily report #${reportId} topilmadi`);
+      const row = r.data as Record<string, unknown>;
+
+      const pdf = await PDFDocument.create();
+      const page = pdf.addPage([595.28, 841.89]); // A4
+      const font     = await pdf.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+      const { width, height } = page.getSize();
+      const margin = 50;
+      let y = height - margin;
+
+      // Header bar
+      page.drawRectangle({ x: 0, y: height - 60, width, height: 60, color: rgb(0.13, 0.47, 0.71) });
+      page.drawText('EuroPrint ERP', { x: margin, y: height - 42, size: 20, font: fontBold, color: rgb(1, 1, 1) });
+      page.drawText('Kunlik Hisobot', { x: width - 170, y: height - 42, size: 14, font, color: rgb(0.9, 0.9, 0.9) });
+
+      y = height - 80;
+
+      const line = (label: string, value: string, bold = false) => {
+        page.drawText(`${label}:`, { x: margin, y, size: 10, font: fontBold, color: rgb(0.3, 0.3, 0.3) });
+        page.drawText(value || '—', { x: 200, y, size: 10, font: bold ? fontBold : font, color: rgb(0, 0, 0) });
+        y -= 18;
+      };
+
+      const section = (title: string) => {
+        y -= 8;
+        page.drawRectangle({ x: margin, y: y - 2, width: width - 2 * margin, height: 18, color: rgb(0.93, 0.95, 0.98) });
+        page.drawText(title, { x: margin + 5, y: y + 1, size: 10, font: fontBold, color: rgb(0.13, 0.47, 0.71) });
+        y -= 22;
+      };
+
+      section('Xodim Ma\'lumotlari');
+      line('Xodim', String(row['employee_name'] ?? ''));
+      line('Lavozim', String(row['position_name'] ?? ''));
+      line('Bo\'lim', String(row['department_name'] ?? ''));
+
+      section('Hisobot Ma\'lumotlari');
+      line('Hisobot sanasi', String(row['report_date'] ?? ''));
+      line('Status', String(row['status'] ?? ''));
+      line('Topshirilgan', row['submitted_at'] ? new Date(String(row['submitted_at'])).toLocaleString('uz-UZ') : '—');
+
+      section('Bajarilgan Ishlar');
+      const tasks = String(row['tasks_completed'] ?? '');
+      // Word-wrap tasks text
+      const words = tasks.split(' ');
+      let lineText = '';
+      for (const word of words) {
+        const testLine = lineText ? lineText + ' ' + word : word;
+        if (testLine.length > 75) {
+          page.drawText(lineText, { x: margin, y, size: 10, font, color: rgb(0, 0, 0) });
+          y -= 15;
+          lineText = word;
+        } else {
+          lineText = testLine;
+        }
+      }
+      if (lineText) { page.drawText(lineText, { x: margin, y, size: 10, font, color: rgb(0, 0, 0) }); y -= 15; }
+
+      const metricsStr = String(row['metrics'] ?? '');
+      if (metricsStr) {
+        section('Metriklar');
+        page.drawText(metricsStr.slice(0, 200), { x: margin, y, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
+        y -= 15;
+      }
+
+      const tomorrowPlan = String(row['tomorrow_plan'] ?? '');
+      if (tomorrowPlan) {
+        section('Ertangi Reja');
+        page.drawText(tomorrowPlan.slice(0, 200), { x: margin, y, size: 10, font, color: rgb(0, 0, 0) });
+        y -= 15;
+      }
+
+      // Footer
+      page.drawLine({ start: { x: margin, y: 50 }, end: { x: width - margin, y: 50 }, thickness: 0.5, color: rgb(0.7, 0.7, 0.7) });
+      page.drawText(`EuroPrint ERP — Kunlik Hisobot #${reportId} — ${new Date().toLocaleString('uz-UZ')}`, {
+        x: margin, y: 35, size: 8, font, color: rgb(0.5, 0.5, 0.5),
+      });
+
+      return pdf.save();
+    });
   }
 
   @Cron('0 17 * * 1-6')

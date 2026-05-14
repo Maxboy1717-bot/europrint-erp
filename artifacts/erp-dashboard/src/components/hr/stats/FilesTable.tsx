@@ -1,3 +1,8 @@
+/**
+ * @module FilesTable
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -72,14 +77,14 @@ export function FilesTable({
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Fayl yuklash</DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold">Fayl yuklash</DialogTitle>
                 <DialogDescription>
                   Xodim uchun yangi hujjat yuklang
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="file">Fayl</Label>
+                <div className="space-y-1">
+          <Label htmlFor="file">Fayl</Label>
                   <Input
                     id="file"
                     type="file"
@@ -87,8 +92,8 @@ export function FilesTable({
                     data-testid="input-file"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Tavsif (ixtiyoriy)</Label>
+                <div className="space-y-1">
+          <Label htmlFor="description">Tavsif (ixtiyoriy)</Label>
                   <Textarea
                     id="description"
                     value={fileDescription}
@@ -124,7 +129,7 @@ export function FilesTable({
             <div className="text-muted-foreground">Yuklanmoqda...</div>
           </div>
         ) : files.length > 0 ? (
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Fayl nomi</TableHead>
@@ -137,7 +142,7 @@ export function FilesTable({
             </TableHeader>
             <TableBody>
               {(Array.isArray(files) ? files : []).map((file: EmployeeFile) => (
-                <TableRow key={file.id} data-testid={`row-file-${file.id}`}>
+                <TableRow key={file.id} data-testid={`row-file-${file.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{file.fileName}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{file.fileType}</Badge>
@@ -175,7 +180,7 @@ export function FilesTable({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
             <FileText className="w-12 h-12 text-muted-foreground mb-4" />

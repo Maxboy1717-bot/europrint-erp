@@ -1,3 +1,8 @@
+/**
+ * @module get-inspections.query
+ * @description Source module. See exports for details.
+ */
+
 export class GetInspectionsQuery {
   constructor(readonly status?: string,
     readonly inspectorId?: string,

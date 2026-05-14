@@ -1,3 +1,8 @@
+/**
+ * @module QualityCertificatesPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -58,7 +63,7 @@ export default function QualityCertificatesPage() {
 
       <Section title={t('certs.list', "Sertifikatlar")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}</div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('certs.empty', "Sertifikat yo'q")}</p>
         ) : (
@@ -70,18 +75,18 @@ export default function QualityCertificatesPage() {
                 <div key={c.id} className="border rounded-md p-3 flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Award className="h-4 w-4 text-yellow-600" />
+                      <Award className="h-4 w-4 text-[var(--ep-yellow)]" />
                       <span className="font-medium">{c.certNumber}</span>
                       <Badge variant={c.status === "valid" ? "default" : "destructive"}>
                         {c.status}
                       </Badge>
                       {expiringSoonFlag ? (
-                        <Badge variant="outline" className="text-yellow-700">
+                        <Badge variant="outline" className="text-[var(--ep-yellow)]">
                           {days} {t('certs.daysLeft', "kun")}
                         </Badge>
                       ) : null}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
                       <span>Mahsulot: <strong>{c.productName}</strong></span>
                       <span>Mijoz: <strong>{c.customerName ?? '—'}</strong></span>
                       <span>Berildi: <strong>{c.issueDate}</strong></span>

@@ -1,3 +1,8 @@
+/**
+ * @module pos-reports.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { PosReportsRepository } from '../repositories/pos-reports.repository';
@@ -32,5 +37,13 @@ export class PosReportsService {
 
   async getLiabilityReport() {
     return this.repo.getLiabilityReport();
+  }
+
+  async getAbcAnalysis(warehouseId?: string) {
+    return this.repo.getAbcAnalysis(warehouseId);
+  }
+
+  async getInactiveMaterials(inactiveDays = 90, warehouseId?: string) {
+    return this.repo.getInactiveMaterials(inactiveDays, warehouseId);
   }
 }

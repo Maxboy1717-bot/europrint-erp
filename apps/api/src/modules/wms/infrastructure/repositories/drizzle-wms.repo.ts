@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-wms.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -54,7 +59,7 @@ export class DrizzleWmsRepository implements IWmsRepository {
   async getStockByMaterialAndWarehouse(materialId: number, warehouseId: number): Promise<Result<Stock[]>> {
     try {
       const rows = await queryStockByMaterialAndWarehouse(materialId, warehouseId);
-      return Ok((rows ?? []).map(toStock));
+      return Ok((Array.isArray(rows) ? rows : []).map(toStock));
     } catch {
       this.logger.error('Failed to get stock');
       return Err('Oqish xatoligi');
@@ -64,7 +69,7 @@ export class DrizzleWmsRepository implements IWmsRepository {
   async getFefoStock(materialId: number, warehouseId: number): Promise<Result<Stock[]>> {
     try {
       const rows = await queryFefoStock(materialId, warehouseId);
-      return Ok((rows ?? []).map(toStock));
+      return Ok((Array.isArray(rows) ? rows : []).map(toStock));
     } catch {
       this.logger.error('Failed to get FEFO stock');
       return Err('FEFO stock oqishda xatolik');
@@ -73,7 +78,7 @@ export class DrizzleWmsRepository implements IWmsRepository {
 
   async reserveMaterial(materialId: number, warehouseId: number, amount: number): Promise<Result<void>> {
     try {
-      const rows = await queryStockByMaterialAndWarehouse(materialId, warehouseId);
+      const rows = await queryFefoStock(materialId, warehouseId);
       let remainingAmount = amount;
       for (const row of rows) {
         if (remainingAmount <= 0) break;
@@ -92,16 +97,38 @@ export class DrizzleWmsRepository implements IWmsRepository {
     }
   }
 
-  async issueGoods(materialId: number, warehouseId: number, amount: number): Promise<Result<void>> {
+  async issueGoods(materialId: number, warehouseId: number, amount: number, reservationId?: number | null): Promise<Result<void>> {
     try {
       const rows = await queryFefoStock(materialId, warehouseId);
       let remainingAmount = amount;
+      const isReservedIssue = reservationId != null && reservationId > 0;
+
       for (const row of rows) {
         if (remainingAmount <= 0) break;
-        const toIssue = Math.min(Number(row['reserved_quantity']), remainingAmount);
-        if (toIssue > 0) {
-          await execUpdateStockIssued(row['id'], Number(row['quantity']) - toIssue, Number(row['reserved_quantity']) - toIssue);
-          remainingAmount -= toIssue;
+
+        if (isReservedIssue) {
+          // Reserved issue: deduct from reserved_quantity and current quantity
+          const toIssue = Math.min(Number(row['reserved_quantity']), remainingAmount);
+          if (toIssue > 0) {
+            await execUpdateStockIssued(
+              row['id'],
+              Number(row['quantity']) - toIssue,
+              Number(row['reserved_quantity']) - toIssue,
+            );
+            remainingAmount -= toIssue;
+          }
+        } else {
+          // Ad-hoc issue: deduct from available (quantity - reserved_quantity), reserved unchanged
+          const available = Number(row['quantity']) - Number(row['reserved_quantity']);
+          const toIssue = Math.min(available, remainingAmount);
+          if (toIssue > 0) {
+            await execUpdateStockIssued(
+              row['id'],
+              Number(row['quantity']) - toIssue,
+              Number(row['reserved_quantity']), // reserved_quantity unchanged
+            );
+            remainingAmount -= toIssue;
+          }
         }
       }
       if (remainingAmount > 0) return Err("Yetarli miqdor yo'q");
@@ -125,7 +152,7 @@ export class DrizzleWmsRepository implements IWmsRepository {
   async getAllStockByStatus(warehouseId: number): Promise<Result<Stock[]>> {
     try {
       const rows = await queryAllStockByWarehouse(warehouseId);
-      return Ok((rows ?? []).map(toStock));
+      return Ok((Array.isArray(rows) ? rows : []).map(toStock));
     } catch {
       this.logger.error('Failed to get all stock');
       return Err('Oqish xatoligi');

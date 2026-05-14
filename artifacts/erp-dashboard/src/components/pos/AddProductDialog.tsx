@@ -1,3 +1,8 @@
+/**
+ * @module AddProductDialog
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -36,13 +41,13 @@ export function AddProductDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid="dialog-add-product">
+      <DialogContent data-testid="dialog-add-product" className="p-6">
         <DialogHeader>
-          <DialogTitle>{tCommon('create')}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{tCommon('create')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="barcode"
@@ -88,7 +93,7 @@ export function AddProductDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <FormField
                 control={form.control}
                 name="unitPrice"
@@ -108,7 +113,7 @@ export function AddProductDialog({
                     <FormLabel>{t('unit')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-product-unit"><SelectValue /></SelectTrigger>
+                        <SelectTrigger data-testid="select-product-unit" className="h-9"><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="dona">Dona</SelectItem>

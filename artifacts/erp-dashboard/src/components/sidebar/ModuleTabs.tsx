@@ -1,3 +1,8 @@
+/**
+ * @module ModuleTabs
+ * @description React UI component.
+ */
+
 import { useMemo } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "@/lib/i18n";
@@ -36,22 +41,21 @@ export function ModuleTabs({ activeModule, onModuleChange }: ModuleSidebarProps)
     <div className="flex items-end h-full gap-0">
       {(Array.isArray(filteredModules) ? filteredModules : []).map(([key, group]) => {
         const isActive = activeModule === key;
-        const tzNum = key.replace("tz", "");
         return (
           <button
             key={key}
             onClick={() => handleModuleClick(key)}
             data-testid={`tab-${key}`}
+            title={group.title}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-3 text-xs font-medium border-b-2 transition-all duration-150 whitespace-nowrap",
+              "flex items-center gap-1.5 px-2.5 xl:px-3 py-3 text-[12px] font-medium border-b-2 transition-colors duration-100 whitespace-nowrap",
               isActive
-                ? "text-primary dark:text-blue-400 border-primary dark:border-blue-400"
-                : "text-on-surface-variant dark:text-slate-400 border-transparent hover:text-on-surface dark:hover:text-slate-200"
+                ? "text-primary border-primary"
+                : "text-muted-foreground border-transparent hover:text-foreground"
             )}
           >
             <group.icon className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden xl:inline">{group.title}</span>
-            <span className="xl:hidden">{tzNum}</span>
           </button>
         );
       })}

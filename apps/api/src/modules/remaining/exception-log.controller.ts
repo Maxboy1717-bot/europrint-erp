@@ -1,4 +1,9 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query, UseGuards , UseInterceptors, HttpStatus } from '@nestjs/common';
+/**
+ * @module exception-log.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -95,6 +100,21 @@ export class ExceptionLogController {
   @HttpCode(HttpStatus.CREATED)
   async materialNotReturned(@Body() body: ExceptionLogCreateDto, @CurrentUser() user: { id: number; role: string }) {
     return unwrapOrInternal(await this.svc.materialNotReturned(body, user.id));
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() _user: { id: number; role: string },
+  ) {
+    return unwrapOrInternal(await this.svc.update(id, body));
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteOne(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.deleteOne(id));
   }
 
   @Post('cert-expiry-check')

@@ -1,3 +1,8 @@
+/**
+ * @module PosMovementDetail
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
@@ -136,7 +141,7 @@ export default function PosMovementDetail() {
                 <div style={{ fontWeight: 500 }}>{movement.toWarehouseId ?? "—"}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>Supplier Doc</div>
+                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t('common.supplierDoc')}</div>
                 <div className="pos-mono">{movement.supplierDoc ?? "—"}</div>
               </div>
               <div>
@@ -150,10 +155,10 @@ export default function PosMovementDetail() {
             </div>
             <table className="pos-table">
               <thead>
-                <tr><th>Material ID</th><th>Miqdor</th><th>Birlik narxi</th><th>Jami</th><th>Lot</th><th>Muddat</th></tr>
+                <tr><th>{t('common.materialId')}</th><th>Miqdor</th><th>Birlik narxi</th><th>Jami</th><th>Lot</th><th>Muddat</th></tr>
               </thead>
               <tbody>
-                {(movement.lines ?? []).map(line => (
+                {(Array.isArray(movement.lines) ? movement.lines : []).map(line => (
                   <tr key={line.id}>
                     <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{line.materialCardId}</td>
                     <td className="pos-mono">{line.qty}</td>

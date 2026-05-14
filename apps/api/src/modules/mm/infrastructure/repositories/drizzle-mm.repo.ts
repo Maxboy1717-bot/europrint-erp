@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-mm.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -79,7 +84,7 @@ export class DrizzleMmRepository implements IMmRepository {
   async getAllPoByStatus(status: string): Promise<Result<PurchaseOrder[]>> {
     try {
       const result = await runQuery<DbRow>(sql`SELECT * FROM purchase_orders WHERE status = ${status}`);
-      return Ok((result.rows ?? []).map((r) => new PurchaseOrder(r['id'] as number, String(r['po_number'] ?? ''), r['vendor_id'] as number, Number(r['created_by'] ?? 0))));
+      return Ok((Array.isArray(result.rows) ? result.rows : []).map((r) => new PurchaseOrder(r['id'] as number, String(r['po_number'] ?? ''), r['vendor_id'] as number, Number(r['created_by'] ?? 0))));
     } catch (error: unknown) {
       this.logger.error('Failed to get purchase orders');
       return Err('Oqish xatoligi');

@@ -1,3 +1,8 @@
+/**
+ * @module ProbationReviewDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -28,9 +33,9 @@ const SCORE_CRITERIA = [
 type ScoreKey = typeof SCORE_CRITERIA[number]["key"];
 
 const DECISIONS = [
-  { value: "continue",      label: "Davom ettirish",   icon: CheckCircle,   color: "text-green-600", border: "border-green-400", bg: "bg-green-50" },
-  { value: "extended_trial",label: "Qo'shimcha sinov", icon: AlertTriangle,  color: "text-amber-600", border: "border-amber-400", bg: "bg-amber-50" },
-  { value: "terminate",     label: "Tugatish",          icon: XCircle,        color: "text-red-600",   border: "border-red-400",   bg: "bg-red-50" },
+  { value: "continue",      label: "Davom ettirish",   icon: CheckCircle,   color: "text-[var(--ep-green)]", border: "border-green-400", bg: "bg-green-50" },
+  { value: "extended_trial",label: "Qo'shimcha sinov", icon: AlertTriangle,  color: "text-[var(--ep-yellow)]", border: "border-amber-400", bg: "bg-amber-50" },
+  { value: "terminate",     label: "Tugatish",          icon: XCircle,        color: "text-[var(--ep-red)]",   border: "border-red-400",   bg: "bg-red-50" },
 ] as const;
 
 export interface ProbationReview {
@@ -90,9 +95,9 @@ function ScoreRow({
   onChange: (v: number) => void;
 }) {
   const color =
-    value >= 8 ? "text-green-600 bg-green-50" :
-    value >= 5 ? "text-amber-600 bg-amber-50" :
-    "text-red-600 bg-red-50";
+    value >= 8 ? "text-[var(--ep-green)] bg-green-50" :
+    value >= 5 ? "text-[var(--ep-yellow)] bg-amber-50" :
+    "text-[var(--ep-red)] bg-red-50";
 
   return (
     <div className="flex items-center gap-3">
@@ -181,15 +186,15 @@ export function ProbationReviewDialog({
 
   const typeLabel = reviewType === "30" ? "30-Kun" : "90-Kun";
   const avgColor =
-    avgScore >= 8 ? "text-green-600 bg-green-50 border-green-200" :
-    avgScore >= 5 ? "text-amber-600 bg-amber-50 border-amber-200" :
-    "text-red-600 bg-red-50 border-red-200";
+    avgScore >= 8 ? "text-[var(--ep-green)] bg-green-50 border-green-200" :
+    avgScore >= 5 ? "text-[var(--ep-yellow)] bg-amber-50 border-amber-200" :
+    "text-[var(--ep-red)] bg-red-50 border-red-200";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         {/* Header */}
-        <div className="bg-[#1a1a2e] text-white px-6 pt-5 pb-4">
+        <div className="from-primary to-amber-500 text-white px-6 pt-5 pb-4">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <ClipboardCheck className="w-5 h-5 text-orange-400" />
@@ -203,7 +208,7 @@ export function ProbationReviewDialog({
           {/* Kirish ma'lumotlari */}
           <div className="space-y-3">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Kirish ma'lumotlari</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs mb-1 block">Xodim ismi</Label>
                 <Input
@@ -267,7 +272,7 @@ export function ProbationReviewDialog({
           <div className="space-y-3">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Kuzatuvlar</p>
             <div>
-              <Label className="text-xs mb-1 block text-green-700">✓ Kuchli tomonlar</Label>
+              <Label className="text-xs mb-1 block text-[var(--ep-green)]">✓ Kuchli tomonlar</Label>
               <Textarea
                 value={observations.strengths}
                 onChange={e => setObservations(prev => ({ ...prev, strengths: e.target.value }))}
@@ -277,7 +282,7 @@ export function ProbationReviewDialog({
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block text-amber-700">↗ Rivojlanish sohalari</Label>
+              <Label className="text-xs mb-1 block text-[var(--ep-yellow)]">↗ Rivojlanish sohalari</Label>
               <Textarea
                 value={observations.improvements}
                 onChange={e => setObservations(prev => ({ ...prev, improvements: e.target.value }))}
@@ -291,7 +296,7 @@ export function ProbationReviewDialog({
           {/* Qaror */}
           <div className="space-y-3">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Qaror</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {(Array.isArray(DECISIONS) ? DECISIONS : []).map(d => {
                 const Icon = d.icon;
                 const isSelected = decision === d.value;
@@ -332,7 +337,7 @@ export function ProbationReviewDialog({
           <Button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || !decision}
-            className="bg-[#1a1a2e] hover:bg-[#2a2a4e] text-white gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             data-testid="button-save-probation-review"
           >
             <ClipboardCheck className="w-4 h-4" />

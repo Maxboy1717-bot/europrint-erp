@@ -1,3 +1,8 @@
+/**
+ * @module About
+ * @description Source module. See exports for details.
+ */
+
 import { Link } from "wouter";
 import { CheckCircle2, Users, Award, Clock, Building2, Printer, ShieldCheck, ArrowRight, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";

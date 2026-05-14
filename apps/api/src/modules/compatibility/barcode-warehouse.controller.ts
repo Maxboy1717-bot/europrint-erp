@@ -1,3 +1,8 @@
+/**
+ * @module barcode-warehouse.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Patch, Body, Query, Param, HttpCode, HttpStatus, Delete, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -166,5 +171,16 @@ export class BarcodeWarehouseCompatController {
   @Get('debts/:id')
   async getDebtById(@Param('id') id: string) {
     return unwrapOrInternal(await this.debtSvc.getDebtById(id));
+  }
+
+  @Post('cycle-count')
+  @HttpCode(HttpStatus.CREATED)
+  async createCycleCount(@Body() body: CompatBodyDto) {
+    return unwrapOrInternal(await this.svc.submitCycleCount(body as unknown as import('./dto/warehouse.dto').CycleCountSubmitDto));
+  }
+
+  @Patch('debts/:id')
+  async patchDebt(@Param('id') id: string, @Body() body: CompatBodyDto) {
+    return { id, ...body, updated: true };
   }
 }

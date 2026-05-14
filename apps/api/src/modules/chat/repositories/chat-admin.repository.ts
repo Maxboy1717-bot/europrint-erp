@@ -1,3 +1,8 @@
+/**
+ * @module chat-admin.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { db } from '@shared/db';
@@ -24,7 +29,7 @@ export class ChatAdminRepository {
         .groupBy(chatRooms.id)
         .orderBy(sql`${chatRooms.created_at} DESC`)
         .limit(100);
-      return Ok((rows ?? []).map((r) => ({
+      return Ok((Array.isArray(rows) ? rows : []).map((r) => ({
         id:          String(r.id),
         name:        String(r.name ?? ''),
         type:        String(r.type ?? ''),
@@ -47,7 +52,7 @@ export class ChatAdminRepository {
         .innerJoin(appUsers, sql`${appUsers.id}::text = ${chatMembers.user_id}`)
         .where(eq(chatMembers.room_id, roomId))
         .orderBy(sql`${chatMembers.joined_at} DESC`);
-      return Ok((rows ?? []).map((r) => ({
+      return Ok((Array.isArray(rows) ? rows : []).map((r) => ({
         userId:   String(r.user_id),
         fullName: String(r.full_name ?? ''),
         role:     String(r.role ?? 'member'),

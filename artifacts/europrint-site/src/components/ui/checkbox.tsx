@@ -1,3 +1,8 @@
+/**
+ * @module checkbox
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { Check } from "lucide-react"

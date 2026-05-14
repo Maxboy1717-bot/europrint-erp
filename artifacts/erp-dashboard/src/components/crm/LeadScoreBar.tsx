@@ -1,3 +1,8 @@
+/**
+ * @module LeadScoreBar
+ * @description React UI component.
+ */
+
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
@@ -17,9 +22,9 @@ export function LeadScoreBar({
   const tier = score >= 70 ? "hot" : score >= 40 ? "warm" : "cold";
 
   const tierConfig = {
-    hot: { label: "Issiq", color: "text-green-600", bg: "bg-green-500" },
-    warm: { label: "Iliq", color: "text-yellow-600", bg: "bg-yellow-500" },
-    cold: { label: "Sovuq", color: "text-red-600", bg: "bg-red-500" },
+    hot: { label: "Issiq", color: "text-[var(--ep-green)]", bg: "bg-green-500" },
+    warm: { label: "Iliq", color: "text-[var(--ep-yellow)]", bg: "bg-yellow-500" },
+    cold: { label: "Sovuq", color: "text-[var(--ep-red)]", bg: "bg-red-500" },
   };
 
   const config = tierConfig[tier];

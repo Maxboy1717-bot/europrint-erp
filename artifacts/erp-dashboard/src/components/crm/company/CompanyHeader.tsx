@@ -1,3 +1,8 @@
+/**
+ * @module CompanyHeader
+ * @description React UI component.
+ */
+
 import { SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +33,7 @@ export function CompanyHeader({ company, isEditMode, onEditClick }: CompanyHeade
                 <Badge variant="outline">STIR: {company.stir}</Badge>
               )}
               {company.customerCategory && (
-                <Badge className={company.customerCategory === 'A' ? 'bg-green-100 text-green-700' : company.customerCategory === 'B' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}>
+                <Badge className={company.customerCategory === 'A' ? 'bg-green-100 text-[var(--ep-green)]' : company.customerCategory === 'B' ? 'bg-blue-100 text-[var(--ep-blue)]' : 'bg-gray-100 text-gray-700'}>
                   {company.customerCategory} kategoriya
                 </Badge>
               )}

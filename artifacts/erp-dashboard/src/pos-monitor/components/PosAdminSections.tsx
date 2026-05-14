@@ -1,6 +1,12 @@
+/**
+ * @module PosAdminSections
+ * @description React UI component.
+ */
+
 import { glApi } from "../api/pos-monitor.api";
 import { apiRequest } from "@/lib/queryClient";
 
+import { useTranslation } from '@/lib/i18n';
 /**
  * Universal safe array helper — backend turli format yuborsa ham
  * ([] | {items:[]} | {data:[]} | undefined | null) → har doim T[].
@@ -27,25 +33,8 @@ export interface GlLog      { id: number; movementId: number; stageName: string;
 export interface AuditEntry { id: number; action: string; resource?: string; userId?: number; createdAt?: string; ipAddress?: string; }
 export interface SyncStatus { total: number; pending: number; synced: number; conflict: number; }
 
-export function SectionHeader({ title, onRefresh }: { title: string; onRefresh: () => void }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-      <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div>
-      <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={onRefresh}>🔄 Yangilash</button>
-    </div>
-  );
-}
-
-export function LoadingOrError({ loading, error }: { loading: boolean; error: string }) {
-  if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>;
-  if (error)   return <div style={{ textAlign: "center", padding: 16, color: "var(--pos-danger)", fontSize: 13 }}>{error}</div>;
-  return null;
-}
-
-export function WarehousesSection({ data, loading, error, onRefresh, onToggle }: {
-  data: Warehouse[] | null; loading: boolean; error: string;
-  onRefresh: () => void; onToggle: (id: number, active: boolean) => void;
-}) {
+export function SectionHeader({ title, onRefresh }: { title: string; onRefresh: () => void }) { return ( <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}> <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div> <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={onRefresh}>🔄 Yangilash</button> </div> ); } export function LoadingOrError({ loading, error }: { loading: boolean; error: string }) { if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>; if (error) return <div style={{ textAlign: "center", padding: 16, color: "var(--pos-danger)", fontSize: 13 }}>{error}</div>; return null; } export function WarehousesSection({ data, loading, error, onRefresh, onToggle }: { data: Warehouse[] | null; loading: boolean; error: string; onRefresh: () => void; onToggle: (id: number, active: boolean) => void; }) {
+  const { t } = useTranslation('common');
   return (
     <div className="pos-card">
       <SectionHeader title="Omborlar" onRefresh={onRefresh} />
@@ -212,7 +201,7 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>Harakat</th><th>Bosqich</th><th>Yozuvlar</th><th>Status</th><th>Amal</th></tr></thead>
+          <thead><tr><th>Harakat</th><th>Bosqich</th><th>Yozuvlar</th><th>{"Holat"}</th><th>Amal</th></tr></thead>
           <tbody>
             {safeArr(data).map(g => (
               <tr key={g.id}>
@@ -238,7 +227,7 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
 export function AuditLogSection({ data, loading, error, onRefresh }: { data: AuditEntry[] | null; loading: boolean; error: string; onRefresh: () => void }) {
   return (
     <div className="pos-card">
-      <SectionHeader title="Audit log" onRefresh={onRefresh} />
+      <SectionHeader title={"Audit log"} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">

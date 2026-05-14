@@ -1,3 +1,8 @@
+/**
+ * @module document-workflow.processor
+ * @description BullMQ queue processor. Consumes jobs of one queue.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';

@@ -1,3 +1,8 @@
+/**
+ * @module error-boundary
+ * @description React UI component.
+ */
+
 import React, { ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -1,3 +1,8 @@
+/**
+ * @module OrgNodeDetail
+ * @description React page component. Route-level UI.
+ */
+
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +27,7 @@ import { StatsTab, VacantTab } from "@/components/hr/orgnode/ExtraTabs";
 import { useOrgNodeData } from "@/components/hr/orgnode/useOrgNodeData";
 import { NODE_TYPE_LABELS, LEVEL_COLORS } from "@/components/hr/orgnode/types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EPStatusPill } from "@/components/ep";
 
 export default function OrgNodeDetail() {
   const { nodeId, node, isLoading, isError, deleteMutation, onRefresh, navigate } = useOrgNodeData();
@@ -33,7 +39,7 @@ export default function OrgNodeDetail() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#ff5d2e]" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
     );
   }
@@ -77,8 +83,8 @@ export default function OrgNodeDetail() {
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Badge style={{ background: "rgba(255,255,255,0.25)", color: "white", border: "none" }}>{NODE_TYPE_LABELS[node.nodeType] || node.nodeType}</Badge>
               <span className="text-white/60 text-xs">#{node.id} · Daraja {node.hierarchyLevel}</span>
-              {!node.isActive && <Badge variant="destructive" className="text-xs">Nofaol</Badge>}
-              {isVacant && <Badge className="text-xs bg-red-500/30 text-white border-none flex items-center gap-1"><UserX className="h-3 w-3" />Vakant</Badge>}
+              {!node.isActive && <EPStatusPill tone="danger" className="text-xs">Nofaol</EPStatusPill>}
+              {isVacant && <Badge className="text-xs bg-[var(--ep-red)]/30 text-white border-none flex items-center gap-1"><UserX className="h-3 w-3" />Vakant</Badge>}
             </div>
             <h1 className="text-2xl font-bold">{node.name}</h1>
             {node.nameRu && <p className="text-white/70 text-sm mt-0.5">{node.nameRu}</p>}
@@ -86,7 +92,7 @@ export default function OrgNodeDetail() {
           </div>
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)} data-testid="button-edit-node"><Pencil className="h-3.5 w-3.5 mr-1" />Tahrirlash</Button>
-            <Button size="sm" style={{ background: "#ff5d2e", color: "white" }} className="hover:opacity-90" onClick={() => setMoveOpen(true)} data-testid="button-move-node"><MoveRight className="h-3.5 w-3.5 mr-1" />Ko'chirish</Button>
+            <Button size="sm" className="bg-primary text-primary-foreground" style={{}} className="hover:opacity-90" onClick={() => setMoveOpen(true)} data-testid="button-move-node"><MoveRight className="h-3.5 w-3.5 mr-1" />Ko'chirish</Button>
             <Button size="sm" variant="destructive" onClick={() => setDeleteConfirmOpen(true)} disabled={deleteMutation.isPending} data-testid="button-delete-node"><Trash2 className="h-3.5 w-3.5 mr-1" />O'chirish</Button>
             <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20" onClick={() => navigate("/org-structure/hierarchy")}><ArrowLeft className="h-3.5 w-3.5 mr-1" />Ortga</Button>
           </div>

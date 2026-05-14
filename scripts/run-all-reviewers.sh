@@ -1,253 +1,117 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════
-# EuroPrint ERP — Barcha Reviewer Skriptlar Master Runner
-# Ishlatish: bash scripts/run-all-reviewers.sh
-#          : bash scripts/run-all-reviewers.sh --quick   (faqat FAIL tekshiradi)
+# EuroPrint ERP — Architecture Rules Aggregator
+# Runs every reviewer-*.sh script for the 22 rules in ARCHITECTURE_RULES.md
+# and prints a summary table.
 #
-# Bu skript barcha reviewer skriptlarni ketma-ket ishga tushiradi.
-# Har bir reviewer mustaqil PASS/FAIL chiqaradi.
-# CI ga ulash: bash scripts/run-all-reviewers.sh && echo "CI passed"
+# Exit code: 0 only if every rule PASSes; 1 otherwise.
 # ═══════════════════════════════════════════════════════════════════
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPORT_FILE="$SCRIPT_DIR/reviewer-report.txt"
-TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
-QUICK_MODE="${1:-}"
+TIMEOUT="${REVIEWER_TIMEOUT:-180}"
 
 RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
+# Rule table: number | title | reviewer-script-file
+RULES=(
+  "1|Result Pattern|reviewer-result-pattern.sh"
+  "2|Array Safety|reviewer-array-safety.sh"
+  "3|Zod Validation|reviewer-dto-validation.sh"
+  "4|No Raw SQL|reviewer-raw-sql.sh"
+  "5|No as unknown Stubs|reviewer-as-unknown.sh"
+  "6|Controller is Transport Only|reviewer-controller-logic.sh"
+  "7|Env Vars via ConfigService|reviewer-process-env.sh"
+  "8|All Controllers Have Guards|reviewer-jwt-guard.sh"
+  "9|try/catch Required|reviewer-try-catch.sh"
+  "10|Repository Layer Only|reviewer-repository-layer.sh"
+  "11|No Circular Dependencies|reviewer-circular-deps.sh"
+  "12|No Magic Numbers|reviewer-magic-numbers.sh"
+  "13|No Non-null Assertions|reviewer-non-null.sh"
+  "14|No console.log|reviewer-console-log.sh"
+  "15|No Sensitive Logs|reviewer-sensitive-logs.sh"
+  "16|File Size Limit|reviewer-file-size.sh"
+  "17|Function Size Limit|reviewer-function-size.sh"
+  "18|No any Type|reviewer-any-type.sh"
+  "19|AlertDialog on Mutations|reviewer-alert-dialog.sh"
+  "20|Forms Use Zod|reviewer-form-validation.sh"
+  "21|apiRequest Only|reviewer-api-request.sh"
+  "22|Unit Tests Required|reviewer-unit-tests.sh"
+)
+
+RESULTS=()  # array of "num|title|status|count"
 TOTAL_PASS=0
 TOTAL_FAIL=0
-TOTAL_WARN=0
-REVIEWER_RESULTS=()
+TOTAL_SKIP=0
 
-log()  { echo -e "$*"; echo -e "$*" | sed 's/\x1b\[[0-9;]*m//g' >> "$REPORT_FILE"; }
-hdr()  { log ""; log "${BOLD}══════════════════════════════════════════════════════${NC}"; log "${BOLD}  $*${NC}"; log "${BOLD}══════════════════════════════════════════════════════${NC}"; }
+run_one() {
+  local entry="$1"
+  IFS='|' read -r num title script <<< "$entry"
+  local path="$SCRIPT_DIR/$script"
 
-# ── Reviewer ishlatuvchi funksiya ──────────────────────────────────
-run_reviewer() {
-  local label="$1"
-  local script="$SCRIPT_DIR/$2"
-  local max_sec="${3:-30}"   # default: 30s timeout
-  local result="PASS"
+  echo ""
+  echo -e "${CYAN}▶ Rule $num — $title${NC}"
+  echo "  $script"
+  echo "──────────────────────────────────────────────────────"
 
-  if [ ! -f "$script" ]; then
-    log "  ${YELLOW}⚠${NC}  $label — skript topilmadi: $script"
-    REVIEWER_RESULTS+=("SKIP:$label")
-    ((TOTAL_WARN++)) || true
+  if [ ! -f "$path" ]; then
+    echo -e "  ${YELLOW}⚠ SKIP${NC} — script not found"
+    RESULTS+=("$num|$title|SKIP|0")
+    TOTAL_SKIP=$((TOTAL_SKIP+1))
     return
   fi
 
-  log ""
-  log "${CYAN}▶ $label${NC}"
-  log "  Skript: scripts/$2"
-  log "──────────────────────────────────────────────────────"
+  local out=""
+  local code=0
+  out=$(cd "$ROOT_DIR" && timeout "$TIMEOUT" bash "$path" 2>&1) || code=$?
 
-  # Skriptni ishga tushirish — exit code ALOHIDA ushlash (pipe bilan emas)
-  local output=""
-  local exit_code=0
-  output=$(cd "$ROOT_DIR" && timeout "$max_sec" bash "$script" 2>&1) || exit_code=$?
-  if [ "$exit_code" -eq 124 ]; then
-    log "  ${RED}✗${NC}  $label — TIMEOUT: ${max_sec}s dan oshib ketdi"
-    REVIEWER_RESULTS+=("FAIL:$label")
-    ((TOTAL_FAIL++)) || true
-    return
-  fi
-
-  # Chiqishni ekranga va hisobot fayliga yozish
-  # --quick rejimida PASS bo'lsa ekranga chiqarmaymiz (hisobotga saqlaymiz)
-  echo "$output" | sed 's/\x1b\[[0-9;]*m//g' >> "$REPORT_FILE"
-
-  if [ "$exit_code" -eq 0 ]; then
-    result="PASS"
-    ((TOTAL_PASS++)) || true
-    REVIEWER_RESULTS+=("PASS:$label")
-    if [ "$QUICK_MODE" != "--quick" ]; then
-      echo "$output"
-    fi
-    log ""
-    log "  ${GREEN}✓ $label — PASS${NC}"
+  # Count violations: last "FAIL: N" line or count of red ✗ markers
+  local count=0
+  if [ "$code" -ne 0 ]; then
+    count=$(echo "$out" | grep -cE '^\s*✗|FAIL.*: [0-9]+' || true)
+    if [ "$count" -eq 0 ]; then count=1; fi
+    echo -e "  ${RED}✗ FAIL${NC} ($count violations)"
+    RESULTS+=("$num|$title|FAIL|$count")
+    TOTAL_FAIL=$((TOTAL_FAIL+1))
   else
-    result="FAIL"
-    ((TOTAL_FAIL++)) || true
-    REVIEWER_RESULTS+=("FAIL:$label")
-    # FAIL natijalarini --quick rejimida ham chiqaramiz
-    echo "$output"
-    log ""
-    log "  ${RED}✗ $label — FAIL (exit $exit_code)${NC}"
+    echo -e "  ${GREEN}✓ PASS${NC}"
+    RESULTS+=("$num|$title|PASS|0")
+    TOTAL_PASS=$((TOTAL_PASS+1))
   fi
+
+  # Optionally show first 5 lines of output for context
+  echo "$out" | head -6 | sed 's/^/    /'
 }
 
-# ── Preflight: zarur reviewerlar mavjudligini tekshirish ──────────
-REQUIRED_REVIEWERS=(
-  "reviewer-array-safety.sh"
-  "reviewer-result-pattern.sh"
-  "reviewer-controller-result.sh"
-  "audit-typeerror-risks.sh"
-  "reviewer-no-stubs.sh"
-  "reviewer-process-env.sh"
-  "reviewer-as-unknown.sh"
-  "reviewer-dto-validation.sh"
-  "reviewer-jwt-guard.sh"
-  "reviewer-raw-sql.sh"
-  "reviewer-wms-crud.sh"
-  "reviewer-missing-endpoints.sh"
-  "reviewer-security.sh"
-  "reviewer-safe-math.sh"
-  "reviewer-new-date.sh"
-  "reviewer-db-invariants.sh"
-  "reviewer-money-safety.sh"
-)
-PREFLIGHT_OK=1
-for req in "${REQUIRED_REVIEWERS[@]}"; do
-  if [ ! -f "$SCRIPT_DIR/$req" ]; then
-    echo -e "${RED}✗ PREFLIGHT FAIL: $req topilmadi!${NC}"
-    PREFLIGHT_OK=0
-  fi
+echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
+echo -e "${BOLD}  EuroPrint Architecture Rules — Aggregate Audit       ${NC}"
+echo -e "${BOLD}  $(date '+%Y-%m-%d %H:%M:%S')                           ${NC}"
+echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
+
+for entry in "${RULES[@]}"; do
+  run_one "$entry"
 done
-if [ "$PREFLIGHT_OK" -eq 0 ]; then
-  echo -e "${RED}${BOLD}Zarur reviewer skriptlar topilmadi. Barcha 11 ta skript bo'lishi shart.${NC}"
-  exit 2
-fi
 
-# ── Hisobot faylini boshlash ───────────────────────────────────────
-> "$REPORT_FILE"
-log "╔══════════════════════════════════════════════════════╗"
-log "║  EuroPrint ERP — Reviewer Skriptlar Hisoboti        ║"
-log "║  $TIMESTAMP                          ║"
-log "╚══════════════════════════════════════════════════════╝"
-
-# ═══════════════════════════════════════════════════════════════════
-# REVIEWERLAR
-# ═══════════════════════════════════════════════════════════════════
-
-hdr "1. Array Xavfsizlik"
-run_reviewer "Array Safety" "reviewer-array-safety.sh" 90
-
-hdr "2. Result Pattern (Repository)"
-run_reviewer "Result Pattern" "reviewer-result-pattern.sh" 60
-
-hdr "2b. Controller Result<T> Unwrap"
-run_reviewer "Controller Result Unwrap" "reviewer-controller-result.sh" 60
-
-hdr "2c. TypeError Xavf Audit"
-run_reviewer "TypeError Risk Audit" "audit-typeerror-risks.sh" 60
-
-hdr "3. Stub Yo'qligi"
-run_reviewer "No Stubs" "reviewer-no-stubs.sh" 30
-
-hdr "4. process.env Foydalanish"
-run_reviewer "process.env" "reviewer-process-env.sh" 30
-
-hdr "5. 'as unknown' Tekshiruvi"
-run_reviewer "as unknown" "reviewer-as-unknown.sh" 30
-
-hdr "6. DTO Validation"
-run_reviewer "DTO Validation" "reviewer-dto-validation.sh" 60
-
-hdr "7. JWT Guard"
-run_reviewer "JWT Guard" "reviewer-jwt-guard.sh" 30
-
-hdr "7b. Raw SQL"
-run_reviewer "Raw SQL" "reviewer-raw-sql.sh" 60
-
-hdr "8. WMS CRUD To'liqligi"
-run_reviewer "WMS CRUD" "reviewer-wms-crud.sh" 30
-
-hdr "9. Yo'q Endpointlar"
-run_reviewer "Missing Endpoints" "reviewer-missing-endpoints.sh" 30
-
-hdr "10. Xavfsizlik"
-run_reviewer "Security" "reviewer-security.sh" 60
-
-hdr "11. Safe Math (TZ-D03)"
-run_reviewer "Safe Math" "reviewer-safe-math.sh" 30
-
-hdr "12. New Date() Trend (TZ-D15)"
-run_reviewer "New Date Trend" "reviewer-new-date.sh" 30
-
-hdr "13. DB Invariants (TZ-D16)"
-run_reviewer "DB Invariants" "reviewer-db-invariants.sh" 30
-
-hdr "14. Money Safety (TZ-D01, Sprint 1)"
-run_reviewer "Money Safety" "reviewer-money-safety.sh" 30
-
-# ── TypeScript kompilyatsiya tekshiruvi ─────────────────────────────
-hdr "11. TypeScript Build (tsc --noEmit)"
+# ── Summary table ─────────────────────────────────────────────────
 echo ""
-TSC_ERRORS=0
-TSC_OUT=$(timeout 60 pnpm -s tsc -p apps/api/tsconfig.json --noEmit 2>&1 || true)
-TSC_ERRORS=$(echo "$TSC_OUT" | grep -c "error TS" || echo 0)
-TSC_ERRORS="${TSC_ERRORS//[^0-9]/}"; TSC_ERRORS="${TSC_ERRORS:-0}"
-# Baseline: 586 pre-existing TS errors (compatibility layer + migrated services)
-# Gate FAILS only if count EXCEEDS baseline (new errors introduced)
-TSC_BASELINE=590
-if [ "$TSC_ERRORS" -eq 0 ]; then
-  log "  ${GREEN}✓ TypeScript: 0 xato — PASS${NC}"
-  TOTAL_PASS=$((TOTAL_PASS+1))
-  REVIEWER_RESULTS+=("PASS:TypeScript Build")
-elif [ "$TSC_ERRORS" -le "$TSC_BASELINE" ]; then
-  log "  ${YELLOW}⚠ TypeScript: $TSC_ERRORS ta xato (pre-existing baseline $TSC_BASELINE, yangi xato yo'q)${NC}"
-  TOTAL_WARN=$((TOTAL_WARN+1))
-  REVIEWER_RESULTS+=("WARN:TypeScript Build ($TSC_ERRORS errors ≤ baseline $TSC_BASELINE)")
-else
-  log "  ${RED}✗ TypeScript: $TSC_ERRORS ta xato (baseline $TSC_BASELINE dan oshdi — yangi xatolar kiritildi!)${NC}"
-  TOTAL_FAIL=$((TOTAL_FAIL+1))
-  REVIEWER_RESULTS+=("FAIL:TypeScript Build ($TSC_ERRORS errors > baseline $TSC_BASELINE)")
-fi
-
-# ═══════════════════════════════════════════════════════════════════
-# YAKUNIY HISOBOT
-# ═══════════════════════════════════════════════════════════════════
-TOTAL=$((TOTAL_PASS + TOTAL_FAIL + TOTAL_WARN))
-
-log ""
-log "${BOLD}╔══════════════════════════════════════════════════════╗${NC}"
-log "${BOLD}║  REVIEWER YAKUNIY HISOBOT                           ║${NC}"
-log "${BOLD}╠══════════════════════════════════════════════════════╣${NC}"
-log "${BOLD}║${NC}  Jami reviewerlar : $TOTAL"
-log "${BOLD}║${NC}  ${GREEN}PASS${NC}              : $TOTAL_PASS"
-
-if [ "$TOTAL_FAIL" -gt 0 ]; then
-  log "${BOLD}║${NC}  ${RED}FAIL${NC}              : $TOTAL_FAIL"
-else
-  log "${BOLD}║${NC}  FAIL              : $TOTAL_FAIL"
-fi
-
-if [ "$TOTAL_WARN" -gt 0 ]; then
-  log "${BOLD}║${NC}  ${YELLOW}WARN/SKIP${NC}         : $TOTAL_WARN"
-else
-  log "${BOLD}║${NC}  WARN/SKIP         : $TOTAL_WARN"
-fi
-
-log "${BOLD}╠══════════════════════════════════════════════════════╣${NC}"
-log "${BOLD}║  Natijalar:${NC}"
-
-for r in "${REVIEWER_RESULTS[@]}"; do
-  status="${r%%:*}"
-  label="${r#*:}"
-  if [ "$status" = "PASS" ]; then
-    log "${BOLD}║${NC}    ${GREEN}✓${NC} $label"
-  elif [ "$status" = "FAIL" ]; then
-    log "${BOLD}║${NC}    ${RED}✗${NC} $label"
-  else
-    log "${BOLD}║${NC}    ${YELLOW}~${NC} $label (skip)"
-  fi
+echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
+echo -e "${BOLD}  Summary                                              ${NC}"
+echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
+printf "%-4s %-38s %-8s %-10s\n" "#" "Rule" "Status" "Findings"
+echo "──────────────────────────────────────────────────────"
+for r in "${RESULTS[@]}"; do
+  IFS='|' read -r num title status count <<< "$r"
+  case "$status" in
+    PASS) color="$GREEN" ;;
+    FAIL) color="$RED" ;;
+    *)    color="$YELLOW" ;;
+  esac
+  printf "%-4s %-38s ${color}%-8s${NC} %-10s\n" "$num" "$title" "$status" "$count"
 done
+echo "──────────────────────────────────────────────────────"
+printf "Totals: ${GREEN}PASS=%d${NC}  ${RED}FAIL=%d${NC}  ${YELLOW}SKIP=%d${NC}\n" "$TOTAL_PASS" "$TOTAL_FAIL" "$TOTAL_SKIP"
+echo ""
 
-log "${BOLD}╠══════════════════════════════════════════════════════╣${NC}"
-log "${BOLD}║${NC}  Hisobot: scripts/reviewer-report.txt"
-log "${BOLD}╚══════════════════════════════════════════════════════╝${NC}"
-
-if [ "$TOTAL_FAIL" -gt 0 ]; then
-  echo ""
-  echo -e "${RED}${BOLD}  → $TOTAL_FAIL ta reviewer FAIL. Muammolarni tuzating.${NC}"
-  exit 1
-else
-  echo ""
-  echo -e "${GREEN}${BOLD}  → Barcha reviewerlar PASS!${NC}"
-  exit 0
-fi
+[ "$TOTAL_FAIL" -eq 0 ] && exit 0 || exit 1

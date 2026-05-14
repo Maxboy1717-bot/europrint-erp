@@ -1,12 +1,17 @@
+/**
+ * @module ProgressPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, Activity } from "lucide-react";
+import { EPPageHeader } from "@/components/ep";
 
 interface ProgressStage {
   stage: string;
@@ -45,15 +50,16 @@ export default function ProgressPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t('progress.title', 'Jarayon holati')}</b></>}
         title={t('progress.title', 'Jarayon holati')}
-        description={t('progress.description', 'O2C tsikl bosqichlari real-time progress')}
+        subtitle={t('progress.description', 'O2C tsikl bosqichlari real-time progress')}
       />
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -72,7 +78,7 @@ export default function ProgressPage() {
               <CardTitle className="text-sm">{t('progress.active', 'Faol buyurtmalar')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-blue-600">{data?.activeOrders ?? 0}</p>
+              <p className="text-3xl font-bold text-[var(--ep-blue)]">{data?.activeOrders ?? 0}</p>
             </CardContent>
           </Card>
 
@@ -81,7 +87,7 @@ export default function ProgressPage() {
               <CardTitle className="text-sm">{t('progress.completed', "Bugun tugatildi")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-emerald-600">{data?.completedToday ?? 0}</p>
+              <p className="text-3xl font-bold text-[var(--ep-green)]">{data?.completedToday ?? 0}</p>
             </CardContent>
           </Card>
 
@@ -90,7 +96,7 @@ export default function ProgressPage() {
               <CardTitle className="text-sm">{t('progress.blocked', 'Bloklangan')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-rose-600">{data?.blockedCount ?? 0}</p>
+              <p className="text-3xl font-bold text-[var(--ep-red)]">{data?.blockedCount ?? 0}</p>
             </CardContent>
           </Card>
         </div>

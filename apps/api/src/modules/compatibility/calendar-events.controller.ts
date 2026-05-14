@@ -1,5 +1,10 @@
+/**
+ * @module calendar-events.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query,
+  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -7,7 +12,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { CalendarEventsService } from './calendar-events.service';
 
@@ -35,12 +40,12 @@ export class CalendarEventsController {
 
   @Get()
   async getAll(@Query('type') type?: string) {
-    return unwrapOrBadRequest(await this.svc.getAll(type));
+    return unwrapOrInternal(await this.svc.getAll(type));
   }
 
   @Get('upcoming')
   async getUpcoming() {
-    return unwrapOrBadRequest(await this.svc.getUpcoming());
+    return unwrapOrInternal(await this.svc.getUpcoming());
   }
 
   @Post()
@@ -65,5 +70,11 @@ export class CalendarEventsController {
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {
     return unwrapOrNotFound(await this.svc.delete(id));
+  }
+
+  @Patch(':id')
+  async patch(@Param('id') id: string, @Body() body: unknown) {
+    const dto = EventSchema.partial().parse(body);
+    return unwrapOrNotFound(await this.svc.update(id, dto));
   }
 }

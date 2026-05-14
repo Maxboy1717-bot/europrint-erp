@@ -1,3 +1,8 @@
+/**
+ * @module queries-fi-extra
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { cost_centers, profit_centers } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';

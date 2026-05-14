@@ -1,3 +1,8 @@
+/**
+ * @module cashflow-forecast.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -163,7 +168,7 @@ export class CashflowForecastService {
     weekData: WeekRaw[], inflowMultiplier: number, startDate: Date,
   ): WeeklyForecast[] {
     let cumulative = opening;
-    return (weekData ?? []).map((w, idx) => {
+    return (Array.isArray(weekData) ? weekData : []).map((w, idx) => {
       const ws       = new Date(startDate.getTime() + idx * 7 * 86400_000);
       const we       = new Date(startDate.getTime() + (idx + 1) * 7 * 86400_000 - 1);
       const arCol    = roundTo(w.arCol    * inflowMultiplier, 2);

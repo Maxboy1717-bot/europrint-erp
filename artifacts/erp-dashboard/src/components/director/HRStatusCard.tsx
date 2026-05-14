@@ -1,3 +1,8 @@
+/**
+ * @module HRStatusCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users } from "lucide-react";
@@ -19,12 +24,12 @@ export function HRStatusCard({ hr, hrLoad }: HRStatusCardProps) {
       <CardContent>
         {hrLoad ? <Skeleton className="h-32 rounded-lg" /> : (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {([
                 { label: "Jami xodim", val: hr?.employees?.total ?? 0, color: "text-foreground" },
-                { label: "Ishda", val: hr?.attendance?.present ?? 0, color: "text-emerald-600" },
-                { label: "Kelmagan", val: hr?.attendance?.absent ?? 0, color: "text-red-600" },
-                { label: "Kech keldi", val: hr?.attendance?.late ?? 0, color: "text-amber-600" },
+                { label: "Ishda", val: hr?.attendance?.present ?? 0, color: "text-[var(--ep-green)]" },
+                { label: "Kelmagan", val: hr?.attendance?.absent ?? 0, color: "text-[var(--ep-red)]" },
+                { label: "Kech keldi", val: hr?.attendance?.late ?? 0, color: "text-[var(--ep-yellow)]" },
               ]).map((item, i) => (
                 <div key={`k-${i}`} className="rounded-lg bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">{item.label}</p>

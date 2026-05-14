@@ -1,3 +1,8 @@
+/**
+ * @module user-logged-in.event
+ * @description Domain event payload. Emitted via @nestjs/event-emitter or CQRS event bus.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 export class UserLoggedInEvent {

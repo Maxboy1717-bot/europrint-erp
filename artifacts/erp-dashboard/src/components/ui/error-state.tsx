@@ -1,3 +1,8 @@
+/**
+ * @module error-state
+ * @description React UI component.
+ */
+
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

@@ -1,3 +1,8 @@
+/**
+ * @module input
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

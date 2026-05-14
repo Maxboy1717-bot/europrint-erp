@@ -1,3 +1,8 @@
+/**
+ * @module crm-leads-ops.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { safeCall, Result } from '@common/result';
 import { CrmLeadsOpsRepository } from './crm-leads-ops.repository';

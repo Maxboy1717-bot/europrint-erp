@@ -1,3 +1,8 @@
+/**
+ * @module crm-bitrix-compat.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { CrmBitrixCompatRepository } from './crm-bitrix-compat.repository';
@@ -46,5 +51,13 @@ export class CrmBitrixCompatService {
       await this.repo.deleteRobot(id);
       return { deleted: true };
     });
+  }
+
+  async updateProposalStage(id: number, status: string) {
+    return this.repo.updateProposalStage(id, status);
+  }
+
+  async updateInvoiceStage(id: number, status: string) {
+    return this.repo.updateInvoiceStage(id, status);
   }
 }

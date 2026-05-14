@@ -1,3 +1,8 @@
+/**
+ * @module sprint5-migration.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ddlRun } from '@shared/db';
 import { sql } from 'drizzle-orm';

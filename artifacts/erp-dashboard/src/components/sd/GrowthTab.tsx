@@ -1,3 +1,8 @@
+/**
+ * @module GrowthTab
+ * @description React UI component.
+ */
+
 import { SdGrowthData } from "./sd-types";
 import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
 import {
@@ -13,10 +18,10 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
   const trend = growth.trend ?? (growth.totalOrders > 3 ? "growing" : growth.totalOrders > 0 ? "stable" : "new");
 
   const trendConf: Record<string, { label: string; icon: typeof TrendingUp; cls: string; bg: string }> = {
-    growing: { label: "O'sish tendensiyasi", icon: TrendingUp, cls: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" },
-    stable: { label: "Barqaror holat", icon: TrendingUp, cls: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800" },
-    declining: { label: "Pasayish tendensiyasi", icon: TrendingDown, cls: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800" },
-    new: { label: "Yangi mijoz", icon: Target, cls: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800" },
+    growing: { label: "O'sish tendensiyasi", icon: TrendingUp, cls: "text-[var(--ep-green)]", bg: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" },
+    stable: { label: "Barqaror holat", icon: TrendingUp, cls: "text-[var(--ep-blue)]", bg: "bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800" },
+    declining: { label: "Pasayish tendensiyasi", icon: TrendingDown, cls: "text-[var(--ep-red)]", bg: "bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800" },
+    new: { label: "Yangi mijoz", icon: Target, cls: "text-[var(--ep-purple)]", bg: "bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800" },
   };
   const tc = trendConf[trend] || trendConf.stable;
 
@@ -24,12 +29,12 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <KpiCard icon={DollarSign} label={`${currentYear - 1} yil`} value={fmtMoney(growth.lastYearTotal)}
-          gradient="from-slate-500 to-gray-500" />
+          gradient="" />
         <KpiCard icon={DollarSign} label={`${currentYear} (hozirgacha)`} value={fmtMoney(growth.thisYearTotal)}
-          gradient="from-sky-500 to-blue-500" />
+          gradient="" />
         <KpiCard icon={Target} label="Yil prognozi" value={fmtMoney(growth.projectedThisYear)}
           sub={rate !== 0 ? `${rate >= 0 ? "+" : ""}${rate}% o'zgarish` : undefined}
-          gradient="from-emerald-500 to-teal-500" />
+          gradient="" />
       </div>
 
       {/* Trend indicator */}
@@ -43,7 +48,7 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
             {rate !== 0 && (
               <p className="text-sm text-muted-foreground">
                 O'tgan yilga nisbatan{" "}
-                <span className={`font-medium ${rate >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                <span className={`font-medium ${rate >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
                   {rate >= 0 ? "+" : ""}{rate}%
                 </span>
               </p>
@@ -61,14 +66,14 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
       {(growth.riskSignals || []).length > 0 && (
         <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 overflow-hidden">
           <div className="px-4 py-3 border-b border-orange-200 dark:border-orange-800">
-            <h3 className="text-sm font-semibold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[var(--ep-primary)] dark:text-orange-400 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />Xavf signallari
             </h3>
           </div>
           <div className="p-4">
             <ul className="space-y-2">
               {growth.riskSignals.map((s: string, i: number) => (
-                <li key={`rs-${i}`} className="flex items-center gap-2.5 text-sm text-orange-700 dark:text-orange-400">
+                <li key={`rs-${i}`} className="flex items-center gap-2.5 text-sm text-[var(--ep-primary)] dark:text-orange-400">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />{s}
                 </li>
               ))}

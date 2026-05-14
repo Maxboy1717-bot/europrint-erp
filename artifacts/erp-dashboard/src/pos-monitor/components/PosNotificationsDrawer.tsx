@@ -1,3 +1,8 @@
+/**
+ * @module PosNotificationsDrawer
+ * @description React UI component.
+ */
+
 import { useEffect, useState } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { notificationsApi } from "../api/pos-monitor.api";
@@ -41,12 +46,12 @@ export default function PosNotificationsDrawer({ onClose }: Props) {
 
   async function markRead(id: number) {
     await notificationsApi.markRead(id);
-    setItems(prev => (prev ?? []).map(n => n.id === id ? { ...n, isRead: true } : n));
+    setItems(prev => (Array.isArray(prev) ? prev : []).map(n => n.id === id ? { ...n, isRead: true } : n));
   }
 
   async function markAll() {
     await notificationsApi.markAllRead();
-    setItems(prev => (prev ?? []).map(n => ({ ...n, isRead: true })));
+    setItems(prev => (Array.isArray(prev) ? prev : []).map(n => ({ ...n, isRead: true })));
   }
 
   const icon = (type: string) => TYPE_ICONS[type] ?? TYPE_ICONS["DEFAULT"];
@@ -77,7 +82,7 @@ export default function PosNotificationsDrawer({ onClose }: Props) {
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {(items ?? []).map(notif => (
+          {(Array.isArray(items) ? items : []).map(notif => (
             <div
               key={notif.id}
               style={{

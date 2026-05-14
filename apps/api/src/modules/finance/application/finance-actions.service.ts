@@ -1,3 +1,8 @@
+/**
+ * @module finance-actions.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { FinanceActionsRepository } from './finance-actions.repository';
 import { Result } from '@common/result';
@@ -22,5 +27,13 @@ export class FinanceActionsService {
 
   getPendingAdvances() {
     return this.repo.getPendingAdvances();
+  }
+
+  createApEntry(data: Record<string, unknown>) {
+    return this.repo.createApEntry(data);
+  }
+
+  createArEntry(data: Record<string, unknown>) {
+    return this.repo.createArEntry(data);
   }
 }

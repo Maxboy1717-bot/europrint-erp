@@ -1,16 +1,22 @@
+/**
+ * @module AddCourseDialog
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 import { Separator } from "@/components/ui/separator";
 import { CourseBasicInfoForm } from "./lms/CourseBasicInfoForm";
 import { CourseContentForm } from "./lms/CourseContentForm";
 import { CourseSettingsForm } from "./lms/CourseSettingsForm";
 import { MentorForm } from "./lms/MentorForm";
 
+import { EPLoader } from "@/components/ep";
 interface Course {
   id: string;
   code: string;
@@ -148,7 +154,7 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
       };
       
       if (isEditMode && course) {
-        return await apiRequest("PATCH", `/api/courses/${course.id}`, payload);
+        return await apiRequest("PUT", `/api/courses/${course.id}`, payload);
       } else {
         return await apiRequest("POST", "/api/courses", payload);
       }
@@ -196,9 +202,9 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? "Kursni tahrirlash" : "Yangi kurs qo'shish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{isEditMode ? "Kursni tahrirlash" : "Yangi kurs qo'shish"}</DialogTitle>
           <DialogDescription>
             {isEditMode ? "Kurs ma'lumotlarini yangilang" : "Yangi o'quv kursini yaratish uchun quyidagi ma'lumotlarni kiriting"}
           </DialogDescription>
@@ -237,7 +243,7 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
               Bekor qilish
             </Button>
             <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit">
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
               {isEditMode ? "Yangilash" : "Saqlash"}
             </Button>
           </DialogFooter>

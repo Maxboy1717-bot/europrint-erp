@@ -1,3 +1,8 @@
+/**
+ * @module ReceiveMaterialPanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +14,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { PackagePlus, Loader2 } from "lucide-react";
+import { PackagePlus } from "lucide-react";
 import { MaterialCardItem } from "./types";
 
+import { EPLoader } from "@/components/ep";
 interface ReceiveFormProps {
   form: {
     materialCardId: string;
@@ -38,13 +44,13 @@ export function ReceiveMaterialPanel({ form, materials, onChange, onReceive, isP
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label className="text-xs">Material tanlang</Label>
           <Select
             value={form.materialCardId}
             onValueChange={(val) => onChange({ materialCardId: val })}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="Materialni tanlang" />
             </SelectTrigger>
             <SelectContent>
@@ -56,7 +62,7 @@ export function ReceiveMaterialPanel({ form, materials, onChange, onReceive, isP
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Miqdor</Label>
             <Input
@@ -84,7 +90,7 @@ export function ReceiveMaterialPanel({ form, materials, onChange, onReceive, isP
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Lot / Partiya</Label>
             <Input
@@ -112,7 +118,7 @@ export function ReceiveMaterialPanel({ form, materials, onChange, onReceive, isP
           data-testid="button-receive"
         >
           {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            <EPLoader className="mr-1" />
           ) : (
             <PackagePlus className="h-4 w-4 mr-1" />
           )}

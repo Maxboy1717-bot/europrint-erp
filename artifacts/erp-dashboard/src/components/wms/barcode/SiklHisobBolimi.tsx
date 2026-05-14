@@ -1,3 +1,8 @@
+/**
+ * @module SiklHisobBolimi
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

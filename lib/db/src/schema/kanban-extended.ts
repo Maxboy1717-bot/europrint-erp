@@ -1,3 +1,8 @@
+/**
+ * @module kanban-extended
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { pgTable, serial, integer, varchar, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { kanbanCards } from './kanban-schema';
 import { users } from './users';

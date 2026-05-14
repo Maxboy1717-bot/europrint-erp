@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+/**
+ * @module employees.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IEmployeesRepository, EMPLOYEES_REPO } from './i-employees.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -6,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class EmployeesService {
   private readonly logger = new Logger(EmployeesService.name);
 
-  constructor(@Inject(EMPLOYEES_REPO) private readonly employeesRepo: IEmployeesRepository) {}
+  constructor(
+    @Inject(EMPLOYEES_REPO) private readonly employeesRepo: IEmployeesRepository,
+    private readonly events: EventEmitter2,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}, currentUser?: Record<string, unknown>): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -50,8 +59,10 @@ export class EmployeesService {
     return safeCall(async () => {
     const result = await this.employeesRepo.create(dto);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    return result.data;
-  
+    const employee = result.data;
+    this.events.emit('employee.created', { employeeId: employee['id'], photoUrl: employee['photo_url'] ?? employee['avatar'] });
+    return employee;
+
     });}
 
   async update(id: number, dto: Record<string, unknown>){

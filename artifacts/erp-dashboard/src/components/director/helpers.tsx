@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +30,7 @@ export function TrendChip({ change, trend }: { change?: string; trend?: string }
   return (
     <span className={cn(
       "inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-md",
-      up ? "bg-emerald-50 text-emerald-700" : down ? "bg-red-50 text-red-600" : "bg-muted text-muted-foreground"
+      up ? "bg-emerald-50 text-[var(--ep-green)]" : down ? "bg-red-50 text-[var(--ep-red)]" : "bg-muted text-muted-foreground"
     )}>
       {up ? <ArrowUpRight className="w-3 h-3" /> : down ? <ArrowDownRight className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
       {change}

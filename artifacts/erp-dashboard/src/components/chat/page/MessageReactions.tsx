@@ -1,3 +1,8 @@
+/**
+ * @module MessageReactions
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { ChatReaction } from "@/store/chatStore";
@@ -42,7 +47,7 @@ export function MessageReactions({ messageId, reactions = [], onReact, compact }
             className={cn(
               "flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-all",
               iReacted
-                ? "bg-primary/15 border-primary/40 text-primary font-medium"
+                ? "bg-primary/10 border-primary/40 text-primary font-medium"
                 : "bg-muted/50 border-border/40 text-foreground hover:bg-muted/80"
             )}
           >

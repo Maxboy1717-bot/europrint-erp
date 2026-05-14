@@ -6,7 +6,7 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, X, CheckCheck, ArrowRight, AlertCircle, Package, GraduationCap, Info } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -208,7 +208,7 @@ export function NotificationBell({
     onMarkRead?.(id);
     if (!propNotifications) {
       setLocalNotifs((prev) =>
-        (prev ?? []).map((n) => (n.id === id ? { ...n, read: true } : n))
+        (Array.isArray(prev) ? prev : []).map((n) => (n.id === id ? { ...n, read: true } : n))
       );
     }
   }, [onMarkRead, propNotifications]);
@@ -216,14 +216,14 @@ export function NotificationBell({
   const handleMarkAllRead = useCallback(() => {
     onMarkAllRead?.();
     if (!propNotifications) {
-      setLocalNotifs((prev) => (prev ?? []).map((n) => ({ ...n, read: true })));
+      setLocalNotifs((prev) => (Array.isArray(prev) ? prev : []).map((n) => ({ ...n, read: true })));
     }
   }, [onMarkAllRead, propNotifications]);
 
   const handleDismiss = useCallback((id: string | number) => {
     onDismiss?.(id);
     if (!propNotifications) {
-      setLocalNotifs((prev) => (prev ?? []).filter((n) => n.id !== id));
+      setLocalNotifs((prev) => (Array.isArray(prev) ? prev : []).filter((n) => n.id !== id));
     }
   }, [onDismiss, propNotifications]);
 
@@ -349,7 +349,7 @@ export function NotificationBell({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full h-8 text-xs text-primary hover:text-primary hover:bg-primary/5 gap-1"
+                  className="w-full h-9 text-xs text-primary hover:text-primary hover:bg-primary/5 gap-1"
                   onClick={() => {
                     setOpen(false);
                     onViewAll?.();
@@ -427,7 +427,7 @@ export function AppHeader({
         >
           <Avatar className="w-7 h-7">
             {userAvatar && (
-              <img src={userAvatar} alt={userName ?? "Foydalanuvchi"} className="rounded-full" />
+              <AvatarImage src={userAvatar} alt={userName ?? "Foydalanuvchi"} />
             )}
             <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
               {initials}

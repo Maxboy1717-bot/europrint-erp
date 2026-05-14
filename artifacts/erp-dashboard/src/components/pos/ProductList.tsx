@@ -1,3 +1,8 @@
+/**
+ * @module ProductList
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +34,7 @@ export function ProductList({
         </Button>
       </CardHeader>
       <CardContent className="p-0">
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Shtrix-kod</TableHead>
@@ -47,11 +52,11 @@ export function ProductList({
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Mahsulotlar mavjud emas</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Mahsulotlar mavjud emas</TableCell>
               </TableRow>
             ) : (
               (Array.isArray(products) ? products : []).map((p) => (
-                <TableRow key={p.id}>
+                <TableRow key={p.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-mono text-xs">{p.barcode}</TableCell>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{p.category || "-"}</TableCell>
@@ -66,7 +71,7 @@ export function ProductList({
               ))
             )}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
   );

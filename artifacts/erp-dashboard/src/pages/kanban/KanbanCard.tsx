@@ -1,157 +1,365 @@
+/**
+ * @module KanbanCard
+ * @description React page component. Route-level UI.
+ */
+
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { GripVertical, Flame, Check, Play, Paperclip, MessageSquare } from "lucide-react";
+import { Calendar, MessageSquare, Paperclip, CheckSquare, Clock, User } from "lucide-react";
 import {
-  type CardWithOwner, type T,
-  PRIORITY_CONFIG, TAG_COLORS,
-  getDeadlineCategory, formatDeadlineUzbek, formatTimeHMS, formatTimeShort,
+  type CardWithOwner,
+  getDeadlineCategory, formatDeadlineUzbek,
 } from "./kanban-types";
+import { getProp } from "./kanban-utils";
 
-export function SortableTaskCard({ card, onClick, t }: { card: CardWithOwner; onClick: () => void; t: Record<string, Record<string, string>> }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id! });
+// ── Priority config ────────────────────────────────────────────────────────
+const PRIORITY: Record<string, { accent: string; label: string; labelColor: string; labelBg: string }> = {
+  urgent: { accent: "#EF4444", label: "Kritik",    labelColor: "#B91C1C", labelBg: "rgba(239,68,68,0.10)"   },
+  high:   { accent: "#F59E0B", label: "Yuqori",    labelColor: "#92400E", labelBg: "rgba(245,158,11,0.10)"  },
+  normal: { accent: "#3B82F6", label: "O'rtacha",  labelColor: "#1D4ED8", labelBg: "rgba(59,130,246,0.10)"  },
+  low:    { accent: "#22C55E", label: "Past",       labelColor: "#15803D", labelBg: "rgba(34,197,94,0.10)"   },
+};
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+// ── Deadline helpers ───────────────────────────────────────────────────────
+function deadlineStyle(dueDate: string): { color: string; bg: string } {
+  const cat = getDeadlineCategory(dueDate);
+  if (cat === "overdue")  return { color: "#DC2626", bg: "rgba(239,68,68,0.08)"  };
+  if (cat === "today")    return { color: "#D97706", bg: "rgba(245,158,11,0.10)" };
+  if (cat === "thisWeek") return { color: "#2563EB", bg: "rgba(59,130,246,0.08)" };
+  return                         { color: "#6B7280", bg: "rgba(107,114,128,0.08)"};
+}
+function deadlineText(dueDate: string): string {
+  const cat = getDeadlineCategory(dueDate);
+  const d = new Date(dueDate);
+  const hm = `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+  if (cat === "overdue") return "Kechikkan!";
+  if (cat === "today")   return `Bugun ${hm}`;
+  return formatDeadlineUzbek(dueDate);
+}
 
-  const priorityConfig = PRIORITY_CONFIG[card.priority as keyof typeof PRIORITY_CONFIG] || PRIORITY_CONFIG.normal;
-  const hasSubtasks = (card.subtasksCount || 0) > 0;
-  const hasComments = (card.commentsCount || 0) > 0;
-  const hasFiles = (card.filesCount || 0) > 0;
-  const hasChecklist = typeof card.checklistProgress === "number";
-  const isTracking = !!card.activeTimeTrack;
-  const isHighPriority = card.priority === "high" || card.priority === "urgent";
+// ── Avatar helpers ─────────────────────────────────────────────────────────
+const GRADIENTS = [
+  "linear-gradient(135deg,#6366F1,#8B5CF6)",
+  "linear-gradient(135deg,#3B82F6,#06B6D4)",
+  "linear-gradient(135deg,#10B981,#059669)",
+  "linear-gradient(135deg,#F59E0B,#EF4444)",
+  "linear-gradient(135deg,#EC4899,#A855F7)",
+  "linear-gradient(135deg,#14B8A6,#3B82F6)",
+];
+function initials(name: string): string {
+  return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+}
+function avatarGrad(name: string): string {
+  return GRADIENTS[name.charCodeAt(0) % GRADIENTS.length];
+}
 
-  const getDeadlineBadgeStyle = () => {
-    if (!card.dueDate) return "";
-    const category = getDeadlineCategory(card.dueDate);
-    switch (category) {
-      case "overdue": return "bg-red-500 text-white";
-      case "today": return "bg-lime-500 text-white";
-      case "thisWeek": return "bg-emerald-500 text-white";
-      case "nextWeek": return "bg-sky-500 text-white";
-      default: return "bg-gray-400 text-white";
-    }
-  };
+// ── Column opacity ─────────────────────────────────────────────────────────
+function columnOpacity(colName?: string): number {
+  if (!colName) return 1;
+  const l = colName.toLowerCase();
+  if (l.includes("bajarildi") || l.includes("done") || l.includes("tugatil") || l.includes("completed")) return 0.65;
+  if (l.includes("bekor") || l.includes("cancel")) return 0.40;
+  return 1;
+}
 
-  const getDeadlineLabel = () => {
-    if (!card.dueDate) return "";
-    const category = getDeadlineCategory(card.dueDate);
-    const date = new Date(card.dueDate);
-    const timeStr = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-    switch (category) {
-      case "overdue": return `Kechikkan, ${timeStr}`;
-      case "today": return `Bugun, ${timeStr}`;
-      default: return formatDeadlineUzbek(card.dueDate);
-    }
-  };
+// ── Tag colours ────────────────────────────────────────────────────────────
+const TAG_PALETTE = [
+  { color: "#7C3AED", bg: "rgba(124,58,237,0.09)" },
+  { color: "#DB2777", bg: "rgba(219,39,119,0.09)" },
+  { color: "#0891B2", bg: "rgba(8,145,178,0.09)"  },
+  { color: "#059669", bg: "rgba(5,150,105,0.09)"  },
+  { color: "#D97706", bg: "rgba(217,119,6,0.09)"  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sortable Task Card  (Bitrix24 uslubi)
+// ─────────────────────────────────────────────────────────────────────────────
+export function SortableTaskCard({
+  card,
+  onClick,
+  columnName,
+}: {
+  card:        CardWithOwner;
+  onClick:     () => void;
+  columnName?: string;
+}) {
+  const {
+    attributes, listeners, setNodeRef,
+    transform, transition, isDragging,
+  } = useSortable({ id: String(card.id ?? "") });
+
+  const p       = PRIORITY[(card.priority ?? "normal")] ?? PRIORITY.normal;
+  const opacity = isDragging ? 0.90 : columnOpacity(columnName);
+
+  const dueDate = card.dueDate ?? getProp<string>(card, 'due_date');
+  const ds      = dueDate ? deadlineStyle(dueDate) : null;
+  const isOverdue = dueDate ? getDeadlineCategory(dueDate) === "overdue" : false;
+
+  const tags               = Array.isArray(card.tags) ? card.tags.slice(0, 3) : [];
+  const subtasksCount      = card.subtasksCount    ?? 0;
+  const subtasksCompleted  = card.subtasksCompleted ?? 0;
+  const hasChecklist       = subtasksCount > 0;
+  const checkPct           = hasChecklist ? Math.round((subtasksCompleted / subtasksCount) * 100) : 0;
+  const commentsCount      = card.commentsCount ?? 0;
+  const filesCount         = card.filesCount    ?? 0;
+  const hasActiveTimer     = !!(card as CardWithOwner).activeTimeTrack;
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      data-testid={`card-${card.id}`}
-      className="bg-surface-container-lowest dark:bg-slate-800 shadow-sm rounded-lg border border-outline-variant/20 dark:border-slate-700 p-3 cursor-pointer hover-elevate group relative"
-      onClick={onClick}
+      style={{
+        transform:  CSS.Transform.toString(transform),
+        transition,
+        opacity,
+        zIndex: isDragging ? 999 : undefined,
+      }}
+      className="mb-2 select-none"
+      {...attributes}
+      {...listeners}
     >
-      <div {...attributes} {...listeners} className="absolute top-2 left-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
-      </div>
-      
-      <div className="flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2">
-            {isHighPriority && (
-              <Flame className={`h-4 w-4 flex-shrink-0 ${card.priority === "urgent" ? "text-red-500" : "text-orange-500"}`} />
-            )}
-            <p className="font-medium text-sm leading-tight">{card.title}</p>
-          </div>
-          {!isHighPriority && (
-            <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${priorityConfig.dotColor}`} />
-          )}
-        </div>
+      <div
+        data-testid={`card-${card.id}`}
+        onClick={onClick}
+        style={{
+          background:    "#FFFFFF",
+          borderRadius:  10,
+          border:        isOverdue
+            ? "1px solid rgba(239,68,68,0.40)"
+            : "1px solid rgba(226,232,240,0.80)",
+          boxShadow:     isDragging
+            ? "0 8px 24px rgba(0,0,0,0.14)"
+            : "0 1px 3px rgba(0,0,0,0.06)",
+          cursor:        "pointer",
+          display:       "flex",
+          position:      "relative",
+          overflow:      "hidden",
+          transition:    "box-shadow 0.15s, border-color 0.15s",
+        }}
+        onMouseEnter={e => {
+          if (!isDragging) {
+            const el = e.currentTarget as HTMLElement;
+            el.style.boxShadow     = "0 4px 12px rgba(0,0,0,0.10)";
+            el.style.borderColor   = isOverdue ? "rgba(239,68,68,0.55)" : "rgba(148,163,184,0.60)";
+          }
+        }}
+        onMouseLeave={e => {
+          if (!isDragging) {
+            const el = e.currentTarget as HTMLElement;
+            el.style.boxShadow     = "0 1px 3px rgba(0,0,0,0.06)";
+            el.style.borderColor   = isOverdue ? "rgba(239,68,68,0.40)" : "rgba(226,232,240,0.80)";
+          }
+        }}
+      >
+        {/* ── Left accent strip ──────────────────────────────────────────── */}
+        <div style={{
+          width:           4,
+          flexShrink:      0,
+          background:      p.accent,
+          borderRadius:    "10px 0 0 10px",
+          alignSelf:       "stretch",
+        }} />
 
-        {card.tags && card.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {card.tags.slice(0, 3).map((tag, idx) => (
-              <span key={tag.id} className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${TAG_COLORS[idx % TAG_COLORS.length]}`}>
-                {tag.name}
+        {/* ── Card body ─────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, padding: "10px 12px 9px", minWidth: 0 }}>
+
+          {/* Row 1: priority label + ID */}
+          <div className="flex items-center justify-between gap-1" style={{ marginBottom: 6 }}>
+            <span style={{
+              fontSize:      9.5, fontWeight: 700, letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              color:         p.labelColor, background: p.labelBg,
+              padding:       "2px 7px", borderRadius: 5, lineHeight: 1.4,
+            }}>
+              {p.label}
+            </span>
+            <div className="flex items-center gap-1.5">
+              {hasActiveTimer && (
+                <span title="Vaqt kuzatilmoqda" style={{ color: "#10B981", display: "flex", alignItems: "center" }}>
+                  <Clock style={{ width: 10, height: 10 }} />
+                </span>
+              )}
+              <span style={{ fontSize: 9.5, color: "#94A3B8", fontFamily: "monospace", letterSpacing: "0.03em" }}>
+                #{String(card.id ?? "").slice(-6)}
               </span>
-            ))}
-            {card.tags.length > 3 && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-surface-container dark:bg-gray-700 text-on-surface-variant dark:text-gray-300">+{card.tags.length - 3}</span>
-            )}
+            </div>
           </div>
-        )}
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {hasChecklist && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1">
-              <Check className="h-3 w-3" />
-              {card.subtasksCompleted}/{card.subtasksCount}
-            </span>
-          )}
+          {/* Title */}
+          <p
+            className="font-semibold leading-snug line-clamp-2"
+            style={{ fontSize: 13, color: "#1E293B", marginBottom: 8 }}
+          >
+            {card.title}
+          </p>
 
-          {isTracking && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
-              <Play className="h-2.5 w-2.5 fill-current" />
-              {formatTimeHMS((card.totalTrackedTime || 0) * 60)} / {formatTimeShort(card.targetTime || 0)}
-            </span>
-          )}
-
-          {hasFiles && (
-            <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-surface-container-low dark:bg-gray-800 text-on-surface-variant dark:text-on-surface-variant flex items-center gap-0.5">
-              <Paperclip className="h-3 w-3" />
-              {card.filesCount}
-            </span>
-          )}
-
-          {hasComments && (
-            <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-surface-container-low dark:bg-gray-800 text-on-surface-variant dark:text-on-surface-variant flex items-center gap-0.5">
-              <MessageSquare className="h-3 w-3" />
-              {card.commentsCount}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between mt-1">
-          {card.dueDate ? (
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${getDeadlineBadgeStyle()}`}>
-              {getDeadlineLabel()}
-            </span>
-          ) : (
-            <div />
-          )}
-
-          {card.owner && (
-            <div className="flex items-center -space-x-2">
-              <Avatar className="h-6 w-6 border-2 border-white dark:border-slate-800 ring-0">
-                <AvatarImage src={card.owner.profileImageUrl || undefined} />
-                <AvatarFallback className="text-[9px] bg-gradient-to-br from-blue-500 to-purple-500 text-white">
-                  {card.owner.fullName.split(" ").map(n => n[0]).join("").substring(0, 2)}
-                </AvatarFallback>
-              </Avatar>
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1" style={{ marginBottom: 7 }}>
+              {tags.map((tag, i) => {
+                const tc  = TAG_PALETTE[i % TAG_PALETTE.length];
+                const nm  = getProp<string>(tag, 'name') ?? "";
+                return (
+                  <span key={nm || i} style={{
+                    fontSize: 9.5, fontWeight: 600,
+                    color: tc.color, background: tc.bg,
+                    padding: "2px 7px", borderRadius: 999,
+                  }}>
+                    {nm}
+                  </span>
+                );
+              })}
             </div>
           )}
+
+          {/* Checklist progress */}
+          {hasChecklist && (
+            <div style={{ marginBottom: 8 }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 3 }}>
+                <span style={{ fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 3 }}>
+                  <CheckSquare style={{ width: 10, height: 10 }} />
+                  {subtasksCompleted}/{subtasksCount}
+                </span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: checkPct === 100 ? "#10B981" : "#94A3B8" }}>
+                  {checkPct}%
+                </span>
+              </div>
+              <div style={{ height: 3, background: "rgba(226,232,240,0.80)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{
+                  height:     "100%",
+                  width:      `${checkPct}%`,
+                  background: checkPct === 100 ? "#10B981" : p.accent,
+                  borderRadius: 3,
+                  transition: "width 0.4s ease-out",
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* Bottom row ─────────────────────────────────────────────────── */}
+          <div className="flex items-center justify-between gap-1" style={{ marginTop: 4 }}>
+
+            {/* Left: deadline + counts */}
+            <div className="flex items-center gap-2 min-w-0 flex-wrap">
+              {dueDate && ds && (
+                <span style={{
+                  fontSize: 10.5, fontWeight: 600,
+                  color: ds.color, background: ds.bg,
+                  padding: "2px 7px", borderRadius: 5,
+                  display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap",
+                }}>
+                  <Calendar style={{ width: 9, height: 9 }} />
+                  {deadlineText(dueDate)}
+                </span>
+              )}
+
+              {commentsCount > 0 && (
+                <span style={{
+                  fontSize: 10, color: "#94A3B8",
+                  display: "flex", alignItems: "center", gap: 2,
+                }}>
+                  <MessageSquare style={{ width: 10, height: 10 }} />
+                  {commentsCount}
+                </span>
+              )}
+              {filesCount > 0 && (
+                <span style={{
+                  fontSize: 10, color: "#94A3B8",
+                  display: "flex", alignItems: "center", gap: 2,
+                }}>
+                  <Paperclip style={{ width: 10, height: 10 }} />
+                  {filesCount}
+                </span>
+              )}
+            </div>
+
+            {/* Right: assignee avatar + name */}
+            {card.owner ? (
+              <div className="flex items-center gap-1.5 shrink-0" style={{ minWidth: 0 }}>
+                <div
+                  className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
+                  title={card.owner.fullName}
+                  style={{
+                    width: 22, height: 22, fontSize: 8.5,
+                    background: avatarGrad(card.owner.fullName),
+                    border: "1.5px solid rgba(255,255,255,0.80)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+                  }}
+                >
+                  {initials(card.owner.fullName)}
+                </div>
+                <span style={{
+                  fontSize: 10.5, fontWeight: 500,
+                  color: "#64748B",
+                  maxWidth: 72,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {card.owner.fullName.split(" ")[0]}
+                </span>
+              </div>
+            ) : (
+              <div
+                className="flex items-center gap-1 shrink-0"
+                style={{ color: "#CBD5E1", fontSize: 10 }}
+                title="Tayinlanmagan"
+              >
+                <User style={{ width: 12, height: 12 }} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Drag overlay
+// ─────────────────────────────────────────────────────────────────────────────
 export function CardOverlay({ card }: { card: CardWithOwner }) {
-  const priorityConfig = PRIORITY_CONFIG[card.priority as keyof typeof PRIORITY_CONFIG] || PRIORITY_CONFIG.normal;
+  const p = PRIORITY[(card.priority ?? "normal")] ?? PRIORITY.normal;
   return (
-    <div className="bg-card border rounded-md p-3 w-72">
-      <div className="flex items-start gap-2">
-        <GripVertical className="h-4 w-4 text-muted-foreground mt-1" />
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{card.title}</p>
-          <div className={`h-2 w-2 rounded-full mt-2 ${priorityConfig.dotColor}`} />
+    <div style={{
+      background:   "#FFFFFF",
+      borderRadius: 10,
+      border:       "1px solid rgba(148,163,184,0.60)",
+      boxShadow:    "0 12px 32px rgba(0,0,0,0.18)",
+      display:      "flex",
+      overflow:     "hidden",
+      width:        272,
+      transform:    "rotate(1.5deg) scale(1.02)",
+      opacity:      0.95,
+    }}>
+      <div style={{ width: 4, flexShrink: 0, background: p.accent }} />
+      <div style={{ flex: 1, padding: "10px 12px 9px" }}>
+        <div className="flex items-center justify-between gap-1" style={{ marginBottom: 6 }}>
+          <span style={{
+            fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase",
+            color: p.labelColor, background: p.labelBg, padding: "2px 7px", borderRadius: 5, lineHeight: 1.4,
+          }}>
+            {p.label}
+          </span>
+          <span style={{ fontSize: 9.5, color: "#94A3B8", fontFamily: "monospace" }}>
+            #{String(card.id ?? "").slice(-6)}
+          </span>
         </div>
+        <p className="font-semibold line-clamp-2" style={{ fontSize: 13, color: "#1E293B", marginBottom: 6 }}>
+          {card.title}
+        </p>
+        {card.owner && (
+          <div className="flex items-center gap-1.5">
+            <div style={{
+              width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+              background: avatarGrad(card.owner.fullName),
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 8, fontWeight: 700, color: "#fff",
+            }}>
+              {initials(card.owner.fullName)}
+            </div>
+            <span style={{ fontSize: 10.5, color: "#64748B" }}>
+              {card.owner.fullName.split(" ")[0]}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

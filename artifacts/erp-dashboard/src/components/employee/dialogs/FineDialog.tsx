@@ -1,3 +1,8 @@
+/**
+ * @module FineDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,13 +42,13 @@ export function FineDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Jarima qo'llash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Jarima qo'llash</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="fineDate">Sana</Label>
+          <div className="space-y-1">
+          <Label htmlFor="fineDate">Sana</Label>
             <Input
               id="fineDate"
               type="date"
@@ -51,8 +56,8 @@ export function FineDialog({
               onChange={(e) => updateField("fineDate", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount">Summa (UZS)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="amount">Summa (UZS)</Label>
             <Input
               id="amount"
               type="number"
@@ -60,8 +65,8 @@ export function FineDialog({
               onChange={(e) => updateField("amount", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Jarima turi</Label>
+          <div className="space-y-1">
+          <Label>Jarima turi</Label>
             <Select
               value={form.fineType}
               onValueChange={(val) => updateField("fineType", val)}
@@ -77,8 +82,8 @@ export function FineDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Tavsif</Label>
+          <div className="space-y-1">
+          <Label htmlFor="description">Tavsif</Label>
             <Textarea
               id="description"
               value={form.description}

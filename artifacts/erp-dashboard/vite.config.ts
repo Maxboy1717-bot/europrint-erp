@@ -1,3 +1,8 @@
+/**
+ * @module vite.config
+ * @description Configuration loader. Wraps env vars via @nestjs/config ConfigService.
+ */
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -287,6 +292,12 @@ export default defineConfig({
         target: nestApiUrl,
         changeOrigin: true,
         ws: true,
+      },
+      // Fayl yuklash/ko'rish: /storage/... → nestjs /api/storage/...
+      "/storage": {
+        target: nestApiUrl,
+        changeOrigin: true,
+        rewrite: (path: string) => `/api${path}`,
       },
       "/socket.io": {
         target: nestApiUrl,

@@ -1,9 +1,15 @@
+/**
+ * @module lms-lessons.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -59,6 +65,15 @@ export class LmsLessonsController {
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   @UsePipes(new ZodValidationPipe(UpdateLessonSchema))
   async updateLesson(@Param('id') id: string, @Body() dto: UpdateLessonDto) {
+    const result = await this.svc.updateLesson(id, dto);
+    const data = unwrapOrInternal(result);
+    return { message: 'Dars yangilandi', data };
+  }
+
+  @Patch(':id')
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  @UsePipes(new ZodValidationPipe(UpdateLessonSchema))
+  async patchLesson(@Param('id') id: string, @Body() dto: UpdateLessonDto) {
     const result = await this.svc.updateLesson(id, dto);
     const data = unwrapOrInternal(result);
     return { message: 'Dars yangilandi', data };

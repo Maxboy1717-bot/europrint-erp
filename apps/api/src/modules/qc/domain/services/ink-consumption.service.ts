@@ -1,18 +1,45 @@
 /**
- * TZ-34: TAC Siyoh Qoplami + Ink Consumption — Industrial Print Industry Standard
+ * @module ink-consumption.service
+ * @description Estimates CMYK ink consumption (grams, litres, UZS) for a
+ *   print run, validates **Total Area Coverage (TAC)** against the substrate's
+ *   ISO 12647-2 limit, and checks inventory sufficiency.
  *
- * TAC = (C + M + Y + K) × 100%
- * TAC_max: gazeta=240%, kitob=280%, premium=320% (ISO 12647-2)
+ *   Formula:
+ *     TAC%    = (C + M + Y + K) × 100         (sum of per-channel coverages)
+ *     grams   = sheetAreaM² × coverage% × ChannelRate × sheets
+ *     litres  = grams / (density × 1000)
+ *     costUZS = grams × ChannelCost
  *
- * Ink gram/litre per channel:
- *   grams  = sheetAreaM2 × coverage_pct × RATE[channel] × N_sheets
- *   litres = grams / (density[channel] × 1000)
+ *   TAC limits (ISO 12647-2):
+ *     newspaper  240%   thin uncoated paper, low ink absorption
+ *     book       280%   standard coated paper
+ *     premium    320%   high-grade coated stock
  *
- * Per-channel ISO rates, densities and cost composition are sourced from
- * industry lookup tables to allow per-substrate customisation.
+ * @layer Domain Service (QC + prepress)
  *
- * Inventory sufficiency: queries warehouse_materials for current ink stock
- * and marks each channel as sufficient/insufficient.
+ * WHY THIS LIVES IN QC, NOT PP
+ *   QC owns the prepress preflight pass. Sales/PP estimate raw print runs;
+ *   QC verifies the design *can be printed* within paper/ink constraints
+ *   BEFORE the job hits the press. Catching TAC overshoot here saves a
+ *   plate-making + first-run scrap cost (~3M UZS per job).
+ *
+ * WHY ISO 12647-2 RATES, NOT FACTORY MEASURED
+ *   ISO rates are a defensible baseline accepted by every customer auditor.
+ *   Factory-measured rates would be ~5-10% lower (our presses run optimised
+ *   ink mixes) but they drift with ink lot, ambient humidity, plate age.
+ *   Using ISO gives consistent, slightly conservative cost quotes — favourable
+ *   for the customer. The lookup constants below are kept inline because
+ *   they're tied to the ISO standard, not a business decision.
+ *
+ * WHY INVENTORY LOOKUP IS BEST-EFFORT (.catch returns [])
+ *   The consumption estimate is the primary output. If WMS is offline or the
+ *   ink card naming is non-standard, the calc still returns valid grams/litres;
+ *   `inventory[ch].sufficient` becomes `null` ("unknown") and the UI shows
+ *   a "stock check unavailable" indicator instead of failing the estimate.
+ *
+ * WHY ROUNDING IS 1/1000
+ *   Customers see consumption to 3 decimals (e.g. "0.847 litre Cyan"). The
+ *   round helper sits at top-of-module so any extension uses the same scale.
  */
 
 import { Injectable } from '@nestjs/common';

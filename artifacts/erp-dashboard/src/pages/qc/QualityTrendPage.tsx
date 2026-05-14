@@ -1,3 +1,8 @@
+/**
+ * @module QualityTrendPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -57,7 +62,7 @@ export default function QualityTrendPage() {
           icon={<Activity className="h-4 w-4" />}
           variant={latest && latest.passRate > 95 ? "success" : "warning"}
           trend={trendDirection}
-          trendValue={previous ? `${(latest!.passRate - previous.passRate).toFixed(1)}%` : undefined}
+          trendValue={previous && latest ? `${((latest.passRate ?? 0) - previous.passRate).toFixed(1)}%` : undefined}
         />
         <KpiCard
           label={t('qcTrend.avgDpmo', "O'rtacha DPMO")}
@@ -80,7 +85,7 @@ export default function QualityTrendPage() {
 
       <Section title={t('qcTrend.byPeriod', "Davr bo'yicha")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10" />)}</div>
+          <div className="space-y-2">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('qcTrend.empty', "Ma'lumot yo'q")}</p>
         ) : (
@@ -103,12 +108,12 @@ export default function QualityTrendPage() {
                     <tr key={p.period} className="border-b">
                       <td className="p-2 font-medium">{p.period}</td>
                       <td className="text-right p-2">{p.passRate}%</td>
-                      <td className="text-right p-2 text-rose-600">{p.defectRate}%</td>
+                      <td className="text-right p-2 text-[var(--ep-red)]">{p.defectRate}%</td>
                       <td className="text-right p-2">{p.dpmo.toLocaleString()}</td>
                       <td className="text-center p-2">
                         <Badge variant="outline" className={
-                          ps.variant === "success" ? "text-emerald-700" :
-                          ps.variant === "warning" ? "text-yellow-700" : "text-rose-700"
+                          ps.variant === "success" ? "text-[var(--ep-green)]" :
+                          ps.variant === "warning" ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"
                         }>
                           {ps.sigma}
                         </Badge>

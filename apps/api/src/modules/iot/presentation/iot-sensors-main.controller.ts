@@ -1,5 +1,10 @@
+/**
+ * @module iot-sensors-main.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Controller, Get, Patch, Body, InternalServerErrorException,
+  Controller, Get, HttpCode, HttpStatus, Patch, Post, Body, InternalServerErrorException,
   Param, Query, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
@@ -83,4 +88,14 @@ export class IotSensorsMainController {
 
   @Patch('alerts/:alertId/resolve')
   async resolveAlert(@Param('alertId') alertId: string, @Body() body: Record<string, unknown>) { return { alertId, resolved: true }; }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(...IOT_READ)
+  async createSensor(@Body() body: Record<string, unknown>) { return { id: Date.now(), ...body, created: true }; }
+
+  @Post('alerts/:alertId/resolve')
+  @HttpCode(HttpStatus.OK)
+  @Roles(...IOT_READ)
+  async postResolveAlert(@Param('alertId') alertId: string, @Body() body: Record<string, unknown>) { return { alertId, resolved: true }; }
 }

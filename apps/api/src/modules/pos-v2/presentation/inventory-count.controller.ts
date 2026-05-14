@@ -1,3 +1,8 @@
+/**
+ * @module inventory-count.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, parseSafe } from '@common/assertions';
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -5,6 +10,7 @@ import {
 Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   Patch,
@@ -42,6 +48,20 @@ export class InventoryCountController {
  constructor(private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus) {}
 
+ @Post()
+ @HttpCode(HttpStatus.CREATED)
+ async createCount(
+ @Query() query: Record<string, unknown>,
+ @CurrentUser() user: AuthenticatedUser,
+ ): Promise<{ data: InventoryCount[]; total: number; page: number; limit: number}> {
+ const dto = parseSafe(GetCountsDtoSchema, query, 'Invalid request body');
+ const dtoAny = dto as Record<string, unknown>;
+ const res = await this.commandBus.execute(
+ new StartInventoryCountCommand(dto.warehouseId ?? '', String(user.id), dtoAny['notes'] as string | undefined),
+ );
+ return unwrapOrThrow(res);
+}
+
  @Get()
  async findCounts(
  @Query() query: Record<string, unknown>,
@@ -61,7 +81,7 @@ export class InventoryCountController {
  ): Promise<InventoryCount> {
  const result = await this.queryBus.execute(new GetCountsQuery());
  assertOk(result);
- const count = (result?.data?.data ?? []).find((c: InventoryCount) => c.id === countId);
+ const count = (Array.isArray(result?.data?.data) ? result?.data?.data : []).find((c: InventoryCount) => c.id === countId);
  assertFound(count, 'Inventarizatsiya topilmadi');
  return count;
 }

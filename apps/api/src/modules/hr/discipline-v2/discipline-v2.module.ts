@@ -1,3 +1,8 @@
+/**
+ * @module discipline-v2.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { DisciplineV2Service } from './discipline-v2.service';
 import { DisciplineV2Repository } from './discipline-v2.repository';

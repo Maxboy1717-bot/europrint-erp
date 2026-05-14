@@ -1,3 +1,8 @@
+/**
+ * @module useGoodsReceivingTranslations
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 
 export function useGoodsReceivingTranslations() {

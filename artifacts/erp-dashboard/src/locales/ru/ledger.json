@@ -1,0 +1,13 @@
+{
+  "title": "Заголовок",
+  "getPdf": "Получить PDF",
+  "totalItems": "Всего элементов",
+  "totalValue": "Всего Value",
+  "expiringSoon": "expiring Soon",
+  "history": "history",
+  "issuedDate": "Issued Дата",
+  "returnDeadline": "return Deadline",
+  "returnItem": "return Item",
+  "returnQty": "return Qty",
+  "returnReason": "return Reason"
+}

@@ -1,3 +1,8 @@
+/**
+ * @module crm-activities.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   CreateActivityDtoSchema,

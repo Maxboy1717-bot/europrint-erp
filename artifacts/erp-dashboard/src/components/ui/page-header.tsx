@@ -1,3 +1,8 @@
+/**
+ * @module page-header
+ * @description React UI component.
+ */
+
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +50,7 @@ export function PageHeader({
     <div className={cn("flex flex-row items-center justify-between gap-4 mb-8", className)}>
       <div className="flex flex-col gap-1">
         <h1 
-          className="text-4xl font-light tracking-tight text-on-surface"
+          className="ep-h1 text-foreground"
           data-testid={testId}
         >
           {title}
@@ -54,7 +59,7 @@ export function PageHeader({
           )}
         </h1>
         {(subtitle ?? description) && (
-          <p className="text-sm text-on-surface-variant">
+          <p className="text-sm text-muted-foreground">
             {subtitle ?? description}
           </p>
         )}

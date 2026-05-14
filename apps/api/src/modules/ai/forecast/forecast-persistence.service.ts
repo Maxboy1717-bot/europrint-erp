@@ -1,3 +1,45 @@
+/**
+ * @module forecast-persistence.service
+ * @description Persists forecast outputs to `forecast_series` and reads back
+ *   historical actuals. Sits between the pure math services (Holt-Winters,
+ *   Croston, EMA, linear) and the DB. Different forecast methods write
+ *   alongside each other so dashboards can compare model accuracy.
+ *
+ *   Method enum:
+ *     EMA       Exponential moving average
+ *     HW        Holt-Winters (seasonal smoothing)
+ *     LINEAR    Linear regression
+ *     CROSTON   Croston/TSB for sporadic intermittent demand
+ *     ENSEMBLE  Weighted blend (used after enough comparison data)
+ * @layer Service (AI/forecast)
+ *
+ * WHY EACH FORECAST METHOD WRITES TO THE SAME TABLE (not separate tables)
+ *   The `forecast_series` schema has a `method` discriminator column.
+ *   Single-table storage lets the dashboard render "all methods, same chart"
+ *   for accuracy comparison. Separate tables would force joins or unions on
+ *   every read.
+ *
+ *   When we eventually pick a single best method per material, the others
+ *   are kept as a benchmark — useful for re-tuning later.
+ *
+ * WHY upsertRecords (not append)
+ *   Forecasts get refreshed nightly. A second run for the same
+ *   (materialId, period, method) tuple must REPLACE the prior value, not
+ *   create a duplicate. Upsert on the natural key ensures the table grows
+ *   linearly with periods, not with forecast runs.
+ *
+ * WHY EMPTY INPUT → Ok(0) (not Err)
+ *   The caller may compute "no forecast needed this run" (e.g., zero
+ *   historical data for a brand-new SKU). That's normal; returning Err
+ *   would force every caller to special-case it. Ok(0) means "I wrote
+ *   zero rows, nothing failed".
+ *
+ * WHY DB error code is 'DB_ERROR' (not 'INTERNAL')
+ *   Lets the controller distinguish forecast-math failures (caught
+ *   upstream) from DB connection issues (caught here). The Director
+ *   AI-Audit panel separates them in its error breakdown.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';

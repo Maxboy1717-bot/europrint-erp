@@ -1,3 +1,8 @@
+/**
+ * @module use-notifications
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, safeArray } from "@/lib/queryClient";
 
@@ -41,7 +46,7 @@ export function useMarkNotificationRead() {
 export function useMarkAllRead() {
   return useMutation({
     mutationFn: () =>
-      apiRequest("PATCH", "/api/notifications/my/mark-all-read", {}),
+      apiRequest("POST", "/api/notifications/my/mark-all-read", {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/my"] });
       queryClient.invalidateQueries({
@@ -54,7 +59,7 @@ export function useMarkAllRead() {
 export function useUpdateNotificationPreferences() {
   return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiRequest("PATCH", "/api/notifications/preferences", data),
+      apiRequest("PUT", "/api/notifications/preferences", data),
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ["/api/notifications/preferences"],

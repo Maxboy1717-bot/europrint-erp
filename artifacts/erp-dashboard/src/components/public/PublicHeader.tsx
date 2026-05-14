@@ -1,3 +1,8 @@
+/**
+ * @module PublicHeader
+ * @description React UI component.
+ */
+
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X } from 'lucide-react';

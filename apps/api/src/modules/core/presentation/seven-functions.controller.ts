@@ -1,3 +1,8 @@
+/**
+ * @module seven-functions.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Put, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';

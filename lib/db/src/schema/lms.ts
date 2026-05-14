@@ -1,4 +1,10 @@
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+/**
+ * @module lms
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, jsonb, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
@@ -26,7 +32,7 @@ export const courses = pgTable("courses", {
 
 export const courseModules = pgTable("course_modules", {
   id: serial("id").primaryKey(),
-  courseId: integer("course_id").references(() => courses.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: "cascade" }).notNull(),
   moduleNumber: integer("module_number").notNull(),
   titleUz: varchar("title_uz", { length: 200 }).notNull(),
   titleRu: varchar("title_ru", { length: 200 }),
@@ -39,7 +45,7 @@ export const courseModules = pgTable("course_modules", {
 
 export const lessons = pgTable("lessons", {
   id: serial("id").primaryKey(),
-  moduleId: integer("module_id").references(() => courseModules.id).notNull(),
+  moduleId: integer("module_id").references(() => courseModules.id, { onDelete: "cascade" }).notNull(),
   lessonNumber: integer("lesson_number").notNull(),
   titleUz: varchar("title_uz", { length: 200 }).notNull(),
   titleRu: varchar("title_ru", { length: 200 }),
@@ -55,8 +61,8 @@ export const lessons = pgTable("lessons", {
 
 export const tests = pgTable("tests", {
   id: serial("id").primaryKey(),
-  courseId: integer("course_id").references(() => courses.id),
-  moduleId: integer("module_id").references(() => courseModules.id),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: "set null" }),
+  moduleId: integer("module_id").references(() => courseModules.id, { onDelete: "set null" }),
   titleUz: varchar("title_uz", { length: 200 }).notNull(),
   titleRu: varchar("title_ru", { length: 200 }),
   testType: varchar("test_type", { length: 30 }),
@@ -71,7 +77,7 @@ export const tests = pgTable("tests", {
 
 export const testQuestions = pgTable("test_questions", {
   id: serial("id").primaryKey(),
-  testId: integer("test_id").references(() => tests.id).notNull(),
+  testId: integer("test_id").references(() => tests.id, { onDelete: "cascade" }).notNull(),
   questionText: text("question_text").notNull(),
   questionType: varchar("question_type", { length: 30 }),
   options: jsonb("options"),
@@ -84,8 +90,8 @@ export const testQuestions = pgTable("test_questions", {
 
 export const testAttempts = pgTable("test_attempts", {
   id: serial("id").primaryKey(),
-  testId: integer("test_id").references(() => tests.id).notNull(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  testId: integer("test_id").references(() => tests.id, { onDelete: "cascade" }).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   attemptNumber: integer("attempt_number").default(1),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
@@ -100,8 +106,8 @@ export const testAttempts = pgTable("test_attempts", {
 
 export const certificates = pgTable("certificates", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
-  courseId: integer("course_id").references(() => courses.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: "cascade" }).notNull(),
   certificateNumber: varchar("certificate_number", { length: 50 }).unique(),
   issuedDate: date("issued_date").notNull(),
   expiryDate: date("expiry_date"),
@@ -113,8 +119,8 @@ export const certificates = pgTable("certificates", {
 
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
-  courseId: integer("course_id").references(() => courses.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: "cascade" }).notNull(),
   enrolledAt: timestamp("enrolled_at").defaultNow(),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
@@ -127,12 +133,14 @@ export const enrollments = pgTable("enrollments", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("uq_enrollment_emp_course").on(table.employeeId, table.courseId),
+  check("enrollments_status_chk", sql`${table.status} IS NULL OR ${table.status} IN ('enrolled','in_progress','completed','dropped')`),
+  check("enrollments_progress_chk", sql`${table.progressPercent} IS NULL OR (${table.progressPercent} >= 0 AND ${table.progressPercent} <= 100)`),
 ]);
 
 export const positionRequiredCourses = pgTable("position_required_courses", {
   id: serial("id").primaryKey(),
   positionId: integer("position_id").notNull(),
-  courseId: integer("course_id").references(() => courses.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: "cascade" }).notNull(),
   isMandatory: boolean("is_mandatory").default(true),
   deadlineDays: integer("deadline_days"),
   blocksMesAccess: boolean("blocks_mes_access").default(false),

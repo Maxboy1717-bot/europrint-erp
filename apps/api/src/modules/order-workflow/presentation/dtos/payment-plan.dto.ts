@@ -1,3 +1,8 @@
+/**
+ * @module payment-plan.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 
 const DUE_TYPES = ['ADVANCE', 'MILESTONE', 'NET_30', 'ON_DELIVERY'] as const;

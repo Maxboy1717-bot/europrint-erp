@@ -1,4 +1,9 @@
-import { Controller, Get, Post, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+/**
+ * @module finance-ap.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, Post, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { Roles } from '@common/decorators/roles.decorator';

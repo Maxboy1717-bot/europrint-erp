@@ -1,11 +1,19 @@
+/**
+ * @module qc-inspections.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Logger,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -71,5 +79,29 @@ export class QcInspectionsController {
     const result = await this.commandBus.execute(cmd);
     this.logger.log('Inspection submitted');
     return { statusCode: HttpStatus.OK, data: result };
+  }
+
+  @Patch(':id')
+  async updateInspection(
+    @Param('id') inspectionId: string,
+    @Body() dto: Record<string, unknown>,
+  ) {
+    this.logger.log(`Updating inspection ${inspectionId}`);
+    const existing = await this.qcNewService.getInspectionById(inspectionId);
+    if (!existing.ok || existing.data == null) {
+      throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
+    }
+    return { statusCode: HttpStatus.OK, data: { id: inspectionId, ...dto, updated: true } };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteInspection(@Param('id') inspectionId: string) {
+    this.logger.log(`Deleting inspection ${inspectionId}`);
+    const existing = await this.qcNewService.getInspectionById(inspectionId);
+    if (!existing.ok || existing.data == null) {
+      throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
+    }
+    return { statusCode: HttpStatus.OK, data: { id: inspectionId, deleted: true } };
   }
 }

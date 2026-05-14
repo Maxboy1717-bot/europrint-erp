@@ -1,3 +1,8 @@
+/**
+ * @module org-structure.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -130,6 +135,31 @@ export class OrgStructureController {
   @Get('nodes/:nodeId/hr-requests')
   async getNodeHrRequests(@Param('nodeId') nodeId: string) { return { data: [], nodeId }; }
 
+  @Post('nodes/:nodeId/hr-requests')
+  async createNodeHrRequest(@Param('nodeId') nodeId: string, @Body() body: Record<string, unknown>) {
+    return { id: Date.now(), nodeId, ...body, created: true };
+  }
+
   @Get('nodes/:nodeId/portret')
   async getNodePortret(@Param('nodeId') nodeId: string) { return { nodeId, portret: null }; }
+
+  @Post('nodes/:nodeId/portret')
+  async createNodePortret(@Param('nodeId') nodeId: string, @Body() body: Record<string, unknown>) {
+    return { nodeId, ...body, created: true };
+  }
+
+  @Get('nodes/:nodeId/approval-chain')
+  async getApprovalChain(@Param('nodeId', ParseIntPipe) nodeId: number) {
+    return unwrapOrInternal(await this.service.getApprovalChain(nodeId));
+  }
+
+  @Get('nodes/:nodeId/direct-manager')
+  async getDirectManager(@Param('nodeId', ParseIntPipe) nodeId: number) {
+    return unwrapOrInternal(await this.service.getDirectManager(nodeId));
+  }
+
+  @Get('nodes/:nodeId/telegram-group')
+  async getTelegramGroup(@Param('nodeId', ParseIntPipe) nodeId: number) {
+    return unwrapOrInternal(await this.service.getTelegramGroupForNode(nodeId));
+  }
 }

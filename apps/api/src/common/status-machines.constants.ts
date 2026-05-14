@@ -1,3 +1,8 @@
+/**
+ * @module status-machines.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 export const STATUS_MACHINES: Record<string, Record<string, string[]>> = {
   sd_order: {
     draft: ['confirmed'],

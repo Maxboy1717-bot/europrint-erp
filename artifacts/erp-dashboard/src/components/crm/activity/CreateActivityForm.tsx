@@ -1,3 +1,8 @@
+/**
+ * @module CreateActivityForm
+ * @description React UI component.
+ */
+
 import { CallForm } from "./CallForm";
 import { CommentForm } from "./CommentForm";
 import { TaskForm } from "./TaskForm";

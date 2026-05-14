@@ -1,3 +1,8 @@
+/**
+ * @module i-maintenance.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Result } from '@common/types/result.type';
 import { MaintenanceOrder } from '../aggregates/maintenance-order.aggregate';
 

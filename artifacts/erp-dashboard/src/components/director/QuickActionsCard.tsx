@@ -1,3 +1,8 @@
+/**
+ * @module QuickActionsCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronRight, Zap, Play, Star, Wrench, Building2 } from "lucide-react";
 import { SectionTitle } from "@/components/director/helpers";

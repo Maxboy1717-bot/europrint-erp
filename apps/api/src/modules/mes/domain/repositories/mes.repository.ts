@@ -1,3 +1,8 @@
+/**
+ * @module mes.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { ProductionSession } from '../aggregates/production-session.aggregate';
 import { Result, Ok, Err } from '@common/result';
 

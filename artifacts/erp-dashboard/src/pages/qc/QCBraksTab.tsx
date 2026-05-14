@@ -1,3 +1,8 @@
+/**
+ * @module QCBraksTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, TriangleAlert, Plus, Search, ClipboardList } from "lucide-react";
+import { TriangleAlert, Plus, Search, ClipboardList } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQCBrakCostImpact, useQCInspections, useQCInspectionById } from "@/hooks/use-qc";
 
+import { useTranslation } from '@/lib/i18n';
+import { EPLoader } from "@/components/ep";
 interface Brak {
   id: string;
   brakDate: string;
@@ -25,6 +32,7 @@ interface Brak {
 }
 
 export function QCBraksTab() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [brakDialogOpen, setBrakDialogOpen] = useState(false);
   const [orderIdSearch, setOrderIdSearch] = useState("");
@@ -69,11 +77,11 @@ export function QCBraksTab() {
         </CardHeader>
         <CardContent>
           {braksLoading ? (
-            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <div className="flex justify-center py-8"><EPLoader className="w-6 h-6" /></div>
           ) : !braksData?.length ? (
-            <div className="text-center py-8 text-muted-foreground">Braklar yo'q</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">Braklar yo'q</div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Sana</TableHead>
@@ -86,7 +94,7 @@ export function QCBraksTab() {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(braksData) ? braksData : []).map(b => (
-                  <TableRow key={b.id} data-testid={`row-brak-${b.id}`}>
+                  <TableRow key={b.id} data-testid={`row-brak-${b.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{b.brakDate}</TableCell>
                     <TableCell><Badge variant="outline">{b.stage}</Badge></TableCell>
                     <TableCell className="font-medium">{b.quantity} dona</TableCell>
@@ -100,7 +108,7 @@ export function QCBraksTab() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>
@@ -127,11 +135,11 @@ export function QCBraksTab() {
               disabled={!orderIdSearch.trim()}
               data-testid="button-search-cost-impact"
             >
-              {costImpactLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              {costImpactLoading ? <EPLoader className="w-4 h-4" /> : <Search className="w-4 h-4" />}
             </Button>
           </div>
           {activeOrderId && costImpact && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div className="rounded-lg border p-3 text-center">
                 <p className="text-xs text-muted-foreground">Jami braklar</p>
                 <p className="text-xl font-bold">{costImpact.totalBraks}</p>
@@ -142,13 +150,13 @@ export function QCBraksTab() {
               </div>
               <div className="rounded-lg border p-3 text-center">
                 <p className="text-xs text-muted-foreground">Xarajat ta'siri</p>
-                <p className="text-xl font-bold text-red-600">
+                <p className="text-xl font-bold text-[var(--ep-red)]">
                   {costImpact.totalCostImpact > 0 ? `${costImpact.totalCostImpact.toLocaleString()} so'm` : "—"}
                 </p>
               </div>
               <div className="rounded-lg border p-3 text-center">
                 <p className="text-xs text-muted-foreground">Qayta ishlanadi</p>
-                <p className="text-xl font-bold text-green-600">{costImpact.reworkable}</p>
+                <p className="text-xl font-bold text-[var(--ep-green)]">{costImpact.reworkable}</p>
               </div>
             </div>
           )}
@@ -168,11 +176,11 @@ export function QCBraksTab() {
         </CardHeader>
         <CardContent>
           {inspectionsLoading ? (
-            <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            <div className="flex justify-center py-6"><EPLoader className="w-5 h-5" /></div>
           ) : !inspections.length ? (
             <p className="text-center text-sm text-muted-foreground py-4">Inspeksiyalar yo'q</p>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
@@ -206,17 +214,17 @@ export function QCBraksTab() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
 
           {selectedInspectionId && (
             <div className="mt-4 rounded-lg border p-4 bg-muted/30">
               {detailLoading ? (
-                <div className="flex justify-center py-4"><Loader2 className="w-4 h-4 animate-spin" /></div>
+                <div className="flex justify-center py-4"><EPLoader className="w-4 h-4" /></div>
               ) : inspectionDetail ? (
                 <div className="space-y-2">
                   <p className="text-sm font-semibold">Inspeksiya #{String(selectedInspectionId).slice(0, 8)}</p>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     {Object.entries(inspectionDetail as Record<string, unknown>)
                       .filter(([k]) => !['id', '__typename'].includes(k))
                       .slice(0, 8)
@@ -237,13 +245,13 @@ export function QCBraksTab() {
       </Card>
 
       <Dialog open={brakDialogOpen} onOpenChange={setBrakDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg p-6">
           <DialogHeader>
-            <DialogTitle>Brak Qayd etish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Brak Qayd etish</DialogTitle>
             <DialogDescription>Nuqsonli mahsulotni qayd eting</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Sana *</label>
                 <Input id="brak-date" type="date" defaultValue={new Date().toISOString().split("T")[0]} data-testid="input-brak-date" />
@@ -253,15 +261,15 @@ export function QCBraksTab() {
                 <Input id="brak-qty" type="number" placeholder="0" defaultValue="0" data-testid="input-brak-qty" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Bosqich *</label>
                 <Select onValueChange={(v) => { const el = document.getElementById("brak-stage-h") as HTMLInputElement; if(el) el.value = v; }}>
-                  <SelectTrigger data-testid="select-brak-stage">
+                  <SelectTrigger data-testid="select-brak-stage" className="h-9">
                     <SelectValue placeholder="Bosqich" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="incoming">Kiruvchi material</SelectItem>
+                    <SelectItem value="incoming">{t('kiruvchiMaterial')}</SelectItem>
                     <SelectItem value="production">Ishlab chiqarish</SelectItem>
                     <SelectItem value="final">Yakuniy nazorat</SelectItem>
                     <SelectItem value="warehouse">Ombor</SelectItem>
@@ -272,7 +280,7 @@ export function QCBraksTab() {
               <div>
                 <label className="text-sm font-medium">Sabab *</label>
                 <Select onValueChange={(v) => { const el = document.getElementById("brak-reason-h") as HTMLInputElement; if(el) el.value = v; }}>
-                  <SelectTrigger data-testid="select-brak-reason">
+                  <SelectTrigger data-testid="select-brak-reason" className="h-9">
                     <SelectValue placeholder="Sabab" />
                   </SelectTrigger>
                   <SelectContent>
@@ -310,7 +318,7 @@ export function QCBraksTab() {
                   createBrakMutation.mutate({ brakDate, quantity, stage, reason, description });
                 }}
               >
-                {createBrakMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {createBrakMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
                 Saqlash
               </Button>
             </DialogFooter>

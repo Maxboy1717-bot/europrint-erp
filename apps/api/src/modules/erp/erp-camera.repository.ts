@@ -1,3 +1,8 @@
+/**
+ * @module erp-camera.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
@@ -10,7 +15,7 @@ const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => sa
 export class ErpCameraRepository {
   async cameraEmployeeReports(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT cr.*, u.full_name, u.department_id, d.name AS department_name FROM camera_employee_reports cr LEFT JOIN users u ON u.id = cr.user_id LEFT JOIN departments d ON d.id = u.department_id ORDER BY cr.captured_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT cr.*, (u.first_name || ' ' || u.last_name) AS full_name, u.department_id, d.name AS department_name FROM camera_employee_reports cr LEFT JOIN users u ON u.id = cr.user_id LEFT JOIN departments d ON d.id = u.department_id ORDER BY cr.captured_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -26,7 +31,7 @@ export class ErpCameraRepository {
 
   async cameraEmployeeReport(userId: number, limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT cr.*, u.full_name, d.name AS department_name FROM camera_employee_reports cr LEFT JOIN users u ON u.id = cr.user_id LEFT JOIN departments d ON d.id = u.department_id WHERE cr.user_id = ${userId} ORDER BY cr.captured_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT cr.*, (u.first_name || ' ' || u.last_name) AS full_name, d.name AS department_name FROM camera_employee_reports cr LEFT JOIN users u ON u.id = cr.user_id LEFT JOIN departments d ON d.id = u.department_id WHERE cr.user_id = ${userId} ORDER BY cr.captured_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -34,7 +39,7 @@ export class ErpCameraRepository {
 
   async cameraEmployeeFallback(userId: number, limit: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT ce.*, u.full_name FROM camera_events ce LEFT JOIN users u ON u.id::text = ce.description WHERE u.id = ${userId} ORDER BY ce.created_at DESC LIMIT ${limit}`);  } catch (_e) {
+      return exec(sql`SELECT ce.*, (u.first_name || ' ' || u.last_name) AS full_name FROM camera_events ce LEFT JOIN users u ON u.id::text = ce.description WHERE u.id = ${userId} ORDER BY ce.created_at DESC LIMIT ${limit}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -43,8 +48,8 @@ export class ErpCameraRepository {
   async liveDetections(cameraId?: number): Promise<Result<Row[]>>  {
   try {  
       return cameraId
-        ? exec(sql`SELECT ce.*, u.full_name FROM camera_events ce LEFT JOIN users u ON u.id::text = ce.description WHERE ce.created_at > NOW() - INTERVAL '5 minutes' AND ce.camera_id = ${String(cameraId)} ORDER BY ce.created_at DESC LIMIT 50`)
-        : exec(sql`SELECT ce.*, u.full_name FROM camera_events ce LEFT JOIN users u ON u.id::text = ce.description WHERE ce.created_at > NOW() - INTERVAL '5 minutes' ORDER BY ce.created_at DESC LIMIT 50`);  } catch (_e) {
+        ? exec(sql`SELECT ce.*, (u.first_name || ' ' || u.last_name) AS full_name FROM camera_events ce LEFT JOIN users u ON u.id::text = ce.description WHERE ce.created_at > NOW() - INTERVAL '5 minutes' AND ce.camera_id = ${String(cameraId)} ORDER BY ce.created_at DESC LIMIT 50`)
+        : exec(sql`SELECT ce.*, (u.first_name || ' ' || u.last_name) AS full_name FROM camera_events ce LEFT JOIN users u ON u.id::text = ce.description WHERE ce.created_at > NOW() - INTERVAL '5 minutes' ORDER BY ce.created_at DESC LIMIT 50`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -80,7 +85,7 @@ export class ErpCameraRepository {
 
   async getEmployeeMetrics(userId: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT u.id, u.full_name, u.department_id, COUNT(DISTINCT ce.id) AS total_detections, COUNT(DISTINCT DATE(ce.created_at)) AS active_days, MAX(ce.created_at) AS last_seen FROM users u LEFT JOIN camera_events ce ON ce.description = u.id::text WHERE u.id = ${userId} GROUP BY u.id, u.full_name, u.department_id`);
+      const r = await exec(sql`SELECT u.id, (u.first_name || ' ' || u.last_name) AS full_name, u.department_id, COUNT(DISTINCT ce.id) AS total_detections, COUNT(DISTINCT DATE(ce.created_at)) AS active_days, MAX(ce.created_at) AS last_seen FROM users u LEFT JOIN camera_events ce ON ce.description = u.id::text WHERE u.id = ${userId} GROUP BY u.id, u.first_name, u.last_name, u.department_id`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

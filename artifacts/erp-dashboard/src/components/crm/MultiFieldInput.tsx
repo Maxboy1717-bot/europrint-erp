@@ -1,3 +1,8 @@
+/**
+ * @module MultiFieldInput
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,7 +33,7 @@ export function MultiFieldInput({
   };
 
   const handleRemove = (index: number) => {
-    onChange((value ?? []).filter((_, i) => i !== index));
+    onChange((Array.isArray(value) ? value : []).filter((_, i) => i !== index));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

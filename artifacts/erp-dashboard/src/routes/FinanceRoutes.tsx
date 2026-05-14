@@ -1,3 +1,8 @@
+/**
+ * @module FinanceRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
 const FinanceDashboard = lazy(() => import("@/pages/FinanceDashboard"));
@@ -27,6 +32,7 @@ const AssetManagement = lazy(() => import("@/pages/AssetManagement"));
 const FinanceExtended = lazy(() => import("@/pages/FinanceExtended"));
 const GLChartOfAccounts = lazy(() => import("@/pages/GLChartOfAccounts"));
 const CfoConfigSettings = lazy(() => import("@/pages/CfoConfigSettings"));
+const AIFinancePage = lazy(() => import("@/pages/AIFinancePage"));
 
 export const FINANCE_ROUTES: [string, React.ComponentType][] = [
   ['/finance-dashboard',               FinanceDashboard],
@@ -61,4 +67,5 @@ export const FINANCE_ROUTES: [string, React.ComponentType][] = [
   ['/finance/variance',                FinanceVariance],
   ['/finance/break-even',              FinanceBreakEven],
   ['/finance/pricing-tiers',           PricingTiers],
+  ['/ai/finance',                      AIFinancePage],
 ];

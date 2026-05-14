@@ -1,3 +1,8 @@
+/**
+ * @module AddNodeDialog
+ * @description React UI component.
+ */
+
 import { useState, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -64,9 +69,9 @@ export function AddNodeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Yangi bo'lim qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Yangi bo'lim qo'shish</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div>

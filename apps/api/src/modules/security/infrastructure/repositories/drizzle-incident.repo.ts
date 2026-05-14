@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-incident.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -71,7 +76,7 @@ export class DrizzleIncidentRepository implements IIncidentRepo {
           throw error;
         }),
     ])
-      .then(([items, total]) => (Ok({ items: (items ?? []).map((row) => this.toDomain(row)), total })))
+      .then(([items, total]) => (Ok({ items: (Array.isArray(items) ? items : []).map((row) => this.toDomain(row)), total })))
       .catch((error) => {
         return Err((error as Error).message);
       });
@@ -83,7 +88,7 @@ export class DrizzleIncidentRepository implements IIncidentRepo {
       .from(security_incidents)
       .where(ne(security_incidents.status, 'closed'))
       .execute()
-      .then((rows) => (Ok((rows ?? []).map((row) => this.toDomain(row)),)))
+      .then((rows) => (Ok((Array.isArray(rows) ? rows : []).map((row) => this.toDomain(row)),)))
       .catch((error) => {
         this.logger.error('Error finding open incidents');
         return Err((error as Error).message);

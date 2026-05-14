@@ -1,3 +1,8 @@
+/**
+ * @module AddAttendanceDialog
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,8 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
 interface AddAttendanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -82,9 +88,9 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>Davomat qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Davomat qo'shish</DialogTitle>
           <DialogDescription>
             Xodim davomatini qayd qilish
           </DialogDescription>
@@ -92,10 +98,10 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!userId && (
-            <div className="space-y-2">
-              <Label htmlFor="userId">Xodim *</Label>
+            <div className="space-y-1">
+          <Label htmlFor="userId">Xodim *</Label>
               <Select value={formData.userId} onValueChange={(value) => setFormData({ ...formData, userId: value })}>
-                <SelectTrigger data-testid="select-employee">
+                <SelectTrigger data-testid="select-employee" className="h-9">
                   <SelectValue placeholder="Xodimni tanlang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -109,9 +115,9 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Sana *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="date">Sana *</Label>
               <Input
                 id="date"
                 type="date"
@@ -124,10 +130,10 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Holat *</Label>
+            <div className="space-y-1">
+          <Label htmlFor="status">Holat *</Label>
               <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as "present" | "absent" | "leave" | "sick" })}>
-                <SelectTrigger data-testid="select-status">
+                <SelectTrigger data-testid="select-status" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -140,9 +146,9 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="checkIn">Kelish vaqti (HH:MM)</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="checkIn">Kelish vaqti (HH:MM)</Label>
               <Input
                 id="checkIn"
                 type="time"
@@ -152,8 +158,8 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="checkOut">Ketish vaqti (HH:MM)</Label>
+            <div className="space-y-1">
+          <Label htmlFor="checkOut">Ketish vaqti (HH:MM)</Label>
               <Input
                 id="checkOut"
                 type="time"
@@ -164,9 +170,9 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="minutesLate">Kechikish (daqiqa)</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="minutesLate">Kechikish (daqiqa)</Label>
               <Input
                 id="minutesLate"
                 type="number"
@@ -181,8 +187,8 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="minutesEarly">Erta ketish (daqiqa)</Label>
+            <div className="space-y-1">
+          <Label htmlFor="minutesEarly">Erta ketish (daqiqa)</Label>
               <Input
                 id="minutesEarly"
                 type="number"
@@ -198,8 +204,8 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Izoh</Label>
+          <div className="space-y-1">
+          <Label htmlFor="notes">Izoh</Label>
             <Textarea
               id="notes"
               placeholder="Qo'shimcha ma'lumot..."
@@ -220,7 +226,7 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
               Bekor qilish
             </Button>
             <Button type="submit" disabled={createMutation.isPending || !formData.userId} data-testid="button-submit">
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
               Saqlash
             </Button>
           </DialogFooter>

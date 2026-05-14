@@ -1,3 +1,8 @@
+/**
+ * @module create-position.command
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -25,7 +30,7 @@ export class CreatePositionHandler implements ICommandHandler<CreatePositionComm
       return Err('Lavozilarni topishda xato');
     }
 
-    const codeTaken = (allPos?.data ?? []).some((p) => p.code === data.code);
+    const codeTaken = (Array.isArray(allPos?.data) ? allPos?.data : []).some((p) => p.code === data.code);
     if (codeTaken) {
       return Err('Bu kod allaqachon ishlatilgan');
     }

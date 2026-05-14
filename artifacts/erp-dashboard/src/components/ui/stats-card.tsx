@@ -1,3 +1,8 @@
+/**
+ * @module stats-card
+ * @description React UI component.
+ */
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { LucideIcon } from "lucide-react"
@@ -91,8 +96,8 @@ export function StatsCard({
               <span className={cn(
                 "inline-flex items-center text-xs font-medium px-1.5 py-0.5 rounded",
                 (trend.positive !== false && trend.isPositive !== false)
-                  ? "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400" 
-                  : "text-red-600 bg-red-500/10 dark:text-red-400"
+                  ? "text-[var(--ep-green)] bg-emerald-500/10 dark:text-emerald-400" 
+                  : "text-[var(--ep-red)] bg-red-500/10 dark:text-red-400"
               )}>
                 {typeof trend.value === 'string' ? trend.value : `${trend.positive !== false ? "↑" : "↓"} ${Math.abs(trend.value)}%`}
               </span>

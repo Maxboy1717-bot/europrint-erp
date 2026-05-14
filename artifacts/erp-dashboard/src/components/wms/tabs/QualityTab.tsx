@@ -1,3 +1,8 @@
+/**
+ * @module QualityTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -14,7 +19,7 @@ interface QualityTabProps {
 export function QualityTab({ quality, basic }: QualityTabProps) {
   if (!quality) return <div className="text-muted-foreground text-sm py-8 text-center">Sifat ma'lumotlari yo'q</div>;
 
-  const ratingColor = quality.overallRating === "A" ? "text-green-600" : quality.overallRating === "B" ? "text-blue-600" : "text-yellow-600";
+  const ratingColor = quality.overallRating === "A" ? "text-[var(--ep-green)]" : quality.overallRating === "B" ? "text-[var(--ep-blue)]" : "text-[var(--ep-yellow)]";
   const acceptanceRate = quality.acceptanceRate ?? 100;
   const totalBatches = quality.totalBatches ?? 0;
   const quarantineBatches = quality.quarantineBatches ?? 0;
@@ -28,11 +33,11 @@ export function QualityTab({ quality, basic }: QualityTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard icon={Star} label="Sifat reytingi" value={quality.overallRating || "A"} color={ratingColor} />
-        <KpiCard icon={CheckCircle} label="Qabul darajasi" value={`${acceptanceRate}%`} color={acceptanceRate >= 90 ? "text-green-600" : "text-yellow-600"} />
+        <KpiCard icon={CheckCircle} label="Qabul darajasi" value={`${acceptanceRate}%`} color={acceptanceRate >= 90 ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]"} />
         <KpiCard icon={Package} label="Jami partiyalar" value={String(totalBatches)} />
-        <KpiCard icon={AlertTriangle} label="Karantinda" value={String(quarantineBatches)} color={quarantineBatches > 0 ? "text-yellow-600" : "text-green-600"} />
+        <KpiCard icon={AlertTriangle} label="Karantinda" value={String(quarantineBatches)} color={quarantineBatches > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
       </div>
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Sifat ko'rsatkichlari (Radar)</CardTitle></CardHeader>

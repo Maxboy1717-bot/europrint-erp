@@ -1,3 +1,8 @@
+/**
+ * @module WhatsAppForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -64,7 +69,7 @@ export function WhatsAppForm({ entityType, entityId, phone }: WhatsAppFormProps)
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">Shablon</Label>
         <Select value={whatsappForm.template} onValueChange={handleWhatsAppTemplateSelect}>
-          <SelectTrigger data-testid="select-whatsapp-template">
+          <SelectTrigger data-testid="select-whatsapp-template" className="h-9">
             <SelectValue placeholder="Shablonni tanlang" />
           </SelectTrigger>
           <SelectContent>
@@ -85,7 +90,7 @@ export function WhatsAppForm({ entityType, entityId, phone }: WhatsAppFormProps)
         />
       </div>
       <Button
-        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+        className="w-full bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white"
         onClick={() => sendWhatsAppMutation.mutate(whatsappForm)}
         disabled={!whatsappForm.message || !whatsappForm.phone || sendWhatsAppMutation.isPending}
         data-testid="button-send-whatsapp"

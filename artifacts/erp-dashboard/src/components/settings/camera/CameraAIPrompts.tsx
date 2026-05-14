@@ -1,3 +1,8 @@
+/**
+ * @module CameraAIPrompts
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,16 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { 
-  Bot, 
-  Camera, 
-  CheckCircle, 
-  Edit2, 
-  Save, 
-  Loader2 
-} from "lucide-react";
+import { Bot, Camera, CheckCircle, Edit2, Save } from "lucide-react";
 import { CameraWithPrompt, CAMERA_TYPES } from "./types";
 
+import { EPLoader } from "@/components/ep";
 export function CameraAIPrompts() {
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,14 +51,14 @@ export function CameraAIPrompts() {
     onError: () => toast({ title: "Xato", description: "Saqlashda xatolik", variant: "destructive" }),
   });
 
-  if (isLoading) return <div className="text-center py-8 text-muted-foreground">Yuklanmoqda...</div>;
+  if (isLoading) return <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>;
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-blue-500" />
+            <Bot className="h-5 w-5 text-[var(--ep-blue)]" />
             Har kamera uchun AI Prompt sozlamalari
           </CardTitle>
           <CardDescription>
@@ -68,7 +67,7 @@ export function CameraAIPrompts() {
         </CardHeader>
         <CardContent className="space-y-4">
           {cameras_list.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-[13px] text-muted-foreground">
               <Camera className="h-8 w-8 mx-auto mb-2 opacity-40" />
               <p>Hali kamera qo'shilmagan. Kameralar boshqaruvi sahifasiga o'ting.</p>
             </div>
@@ -90,7 +89,7 @@ export function CameraAIPrompts() {
                     </div>
                     <div className="flex items-center gap-2">
                       {saved[cam.id] && (
-                        <span className="text-green-600 text-sm flex items-center gap-1">
+                        <span className="text-[var(--ep-green)] text-sm flex items-center gap-1">
                           <CheckCircle className="h-3 w-3" /> Saqlandi
                         </span>
                       )}
@@ -98,7 +97,7 @@ export function CameraAIPrompts() {
                         <>
                           <Button size="sm" variant="outline" onClick={() => setEditingId(null)} data-testid={`button-cancel-prompt-${cam.id}`}>Bekor</Button>
                           <Button size="sm" onClick={() => saveMutation.mutate({ id: cam.id, ...loc })} disabled={saveMutation.isPending} data-testid={`button-save-prompt-${cam.id}`}>
-                            {saveMutation.isPending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Save className="h-3 w-3 mr-1" />} Saqlash
+                            {saveMutation.isPending ? <EPLoader size={12} className="mr-1" /> : <Save className="h-3 w-3 mr-1" />} Saqlash
                           </Button>
                         </>
                       ) : (
@@ -127,7 +126,7 @@ export function CameraAIPrompts() {
                         onValueChange={v => setLocalPrompts(p => ({ ...p, [cam.id]: { ...loc, sensitivity: v } }))}
                         disabled={!isEditing}
                       >
-                        <SelectTrigger className="w-28" data-testid={`select-sensitivity-${cam.id}`}>
+                        <SelectTrigger className="w-28 h-9" data-testid={`select-sensitivity-${cam.id}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

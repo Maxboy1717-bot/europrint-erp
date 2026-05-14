@@ -1,3 +1,8 @@
+/**
+ * @module NazoratTab
+ * @description React UI component.
+ */
+
 import { ChiqishNazoratibolimi } from "./ChiqishNazoratibolimi";
 import { OperatorQarzlariBolimi } from "./OperatorQarzlariBolimi";
 import { SiklHisobBolimi } from "./SiklHisobBolimi";

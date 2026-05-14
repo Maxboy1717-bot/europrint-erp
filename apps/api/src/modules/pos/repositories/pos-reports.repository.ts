@@ -1,3 +1,8 @@
+/**
+ * @module pos-reports.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { sql, db } from '@workspace/db';
 import { Ok, Err, Result, safeCall } from '@common/result';
 
@@ -54,10 +59,93 @@ export class PosReportsRepository {
   }
 
   async getLiabilityReport(): Promise<Result<Row[]>>  {
-  try {  
+  try {
       return exec(sql`SELECT elc.*, CONCAT(u.first_name, ' ', u.last_name) AS employee_name, u.department_code, mc.xom_ashyo AS material_name, mc.unit_of_measure FROM employee_liability_cases elc JOIN users u ON u.id = elc.user_id JOIN material_cards mc ON mc.id = elc.material_card_id WHERE elc.status IN ('OPEN', 'UNDER_REVIEW') ORDER BY elc.assessed_value::numeric DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 
+  }
+
+  async getAbcAnalysis(warehouseId?: string): Promise<Result<Row[]>> {
+    try {
+      const whereClause = warehouseId
+        ? sql`WHERE cs.warehouse_id = ${warehouseId}`
+        : sql`WHERE 1=1`;
+      return exec(sql`
+        WITH ranked AS (
+          SELECT
+            mc.id                AS material_card_id,
+            mc.xom_ashyo         AS material_name,
+            mc.unit_of_measure,
+            mc.material_type,
+            COALESCE(cs.quantity_on_hand, 0)    AS qty_on_hand,
+            COALESCE(mc.last_purchase_price, 0) AS unit_price,
+            COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.last_purchase_price, 0) AS total_value,
+            SUM(COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.last_purchase_price, 0))
+              OVER () AS grand_total
+          FROM current_stock cs
+          JOIN material_cards mc ON mc.id = cs.material_card_id
+          ${whereClause}
+          AND mc.is_active = true
+        ),
+        cumulative AS (
+          SELECT *,
+            SUM(total_value) OVER (ORDER BY total_value DESC) AS cumulative_value,
+            CASE
+              WHEN grand_total = 0 THEN 0
+              ELSE ROUND((total_value / grand_total * 100)::numeric, 2)
+            END AS pct_of_total,
+            ROUND((SUM(total_value) OVER (ORDER BY total_value DESC) / NULLIF(grand_total, 0) * 100)::numeric, 2) AS cumulative_pct
+          FROM ranked
+        )
+        SELECT
+          material_card_id,
+          material_name,
+          unit_of_measure,
+          material_type,
+          qty_on_hand,
+          unit_price,
+          total_value,
+          pct_of_total,
+          cumulative_pct,
+          CASE
+            WHEN cumulative_pct <= 80 THEN 'A'
+            WHEN cumulative_pct <= 95 THEN 'B'
+            ELSE 'C'
+          END AS abc_class
+        FROM cumulative
+        ORDER BY total_value DESC
+        LIMIT 500
+      `);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
+  async getInactiveMaterials(inactiveDays: number, warehouseId?: string): Promise<Result<Row[]>> {
+    try {
+      const whereWh = warehouseId ? sql`AND cs.warehouse_id = ${warehouseId}` : sql``;
+      return exec(sql`
+        SELECT
+          mc.id             AS material_card_id,
+          mc.xom_ashyo      AS material_name,
+          mc.unit_of_measure,
+          mc.material_type,
+          cs.warehouse_id,
+          COALESCE(cs.quantity_on_hand, 0) AS qty_on_hand,
+          cs.last_movement_at,
+          EXTRACT(DAY FROM NOW() - cs.last_movement_at)::int AS days_inactive
+        FROM current_stock cs
+        JOIN material_cards mc ON mc.id = cs.material_card_id
+        WHERE mc.is_active = true
+          AND COALESCE(cs.quantity_on_hand, 0) > 0
+          AND (cs.last_movement_at IS NULL OR cs.last_movement_at < NOW() - (${inactiveDays} || ' days')::interval)
+          ${whereWh}
+        ORDER BY days_inactive DESC NULLS FIRST
+        LIMIT 200
+      `);
+    } catch (_e) {
+      return Err(String(_e));
+    }
   }
 }

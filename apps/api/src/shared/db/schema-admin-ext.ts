@@ -1,3 +1,8 @@
+/**
+ * @module schema-admin-ext
+ * @description Source module. See exports for details.
+ */
+
 import { pgTable, uuid, text, boolean, integer, jsonb, timestamp, index } from 'drizzle-orm/pg-core';
 import { stub } from './schema-compat-helpers';
 

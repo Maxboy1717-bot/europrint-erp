@@ -1,3 +1,8 @@
+/**
+ * @module domain-event.base
+ * @description Source module. See exports for details.
+ */
+
 export class DomainEvent {
   readonly aggregateId: number;
   readonly aggregateName: string;

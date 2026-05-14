@@ -1,3 +1,8 @@
+/**
+ * @module app.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 // ─── Vaqt konstantalari ───────────────────────────────────────────────────────
 export const MS_PER_SECOND = 1_000;
 export const SECONDS_PER_MINUTE = 60;
@@ -137,3 +142,6 @@ export const TELEGRAM_TIMEOUT_MS = 10_000; // Telegram HTTP so'rovi taymaut
 
 // ─── Ma'lumotlar bazasi ─────────────────────────────────────────────────────
 export const DB_POOL_MAX_CONNECTIONS = 10; // DB ulanish havzasi maksimal hajmi
+
+// ─── Tizim foydalanuvchisi ──────────────────────────────────────────────────
+export const SYSTEM_USER_ID = 1; // avtomatik operatsiyalar uchun tizim foydalanuvchisi ID

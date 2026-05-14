@@ -1,3 +1,8 @@
+/**
+ * @module qc-defects.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -92,12 +97,24 @@ export class QcDefectsController {
   @Patch('approve/finance/:orderId')
   async approveFinance(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, approved: true }; }
 
+  @Post('approve/finance/:orderId')
+  async postApproveFinance(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, approved: true }; }
+
   @Patch('approve/qc/:orderId')
   async approveQc(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, approved: true }; }
+
+  @Post('approve/qc/:orderId')
+  async postApproveQc(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, approved: true }; }
 
   @Patch('reject/:orderId')
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, rejected: true }; }
 
+  @Post('reject/:orderId')
+  async postRejectOrder(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, rejected: true }; }
+
   @Patch('inspector-submit/:orderId')
   async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, submitted: true }; }
+
+  @Post('inspector-submit/:orderId')
+  async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, submitted: true }; }
 }

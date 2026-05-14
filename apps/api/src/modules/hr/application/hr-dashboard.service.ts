@@ -1,3 +1,8 @@
+/**
+ * @module hr-dashboard.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { HrDashboardRepository } from './hr-dashboard.repository';
@@ -56,5 +61,13 @@ export class HrDashboardService {
 
   async getShiftsToday(today: string) {
     return this.repo.getShiftsToday(today);
+  }
+
+  async getAlumni() {
+    return this.repo.getAlumni();
+  }
+
+  async createDailyReport(dto: { user_id: number; report_date: string; tasks_completed?: string }) {
+    return this.repo.createDailyReport(dto);
   }
 }

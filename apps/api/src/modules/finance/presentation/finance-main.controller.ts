@@ -1,6 +1,11 @@
+/**
+ * @module finance-main.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, InternalServerErrorException, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -9,6 +14,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GlService } from '../gl/gl.service';
 import { FinanceAccountingService } from '../application/finance-accounting.service';
 import { FinanceActionsService } from '../application/finance-actions.service';
+import { CashflowService } from '../cashflow/cashflow.service';
+import { BudgetsService } from '../budgets/budgets.service';
 import { RATE_USD_UZS, RATE_EUR_UZS, RATE_CNY_UZS } from '@common/constants/app.constants';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 
@@ -24,6 +31,8 @@ export class FinanceMainController {
     private readonly glSvc: GlService,
     private readonly accountingSvc: FinanceAccountingService,
     private readonly actionsSvc: FinanceActionsService,
+    private readonly cashflowSvc: CashflowService,
+    private readonly budgetsSvc: BudgetsService,
   ) {}
 
   @Get('dashboard')
@@ -51,18 +60,18 @@ export class FinanceMainController {
   }
 
   @Get('transactions')
-  getTransactions(@Query() _query: Record<string, unknown>) {
-    return { data: [], pagination: { total: 0, page: 1, limit: 20 } };
+  async getTransactions(@Query() query: Record<string, unknown>) {
+    return unwrapOrThrow(await this.cashflowSvc.findTransactions(query));
   }
 
   @Get('budget')
-  getBudget(@Query() _query: Record<string, unknown>) {
-    return { data: [], pagination: { total: 0, page: 1, limit: 20 } };
+  async getBudget(@Query() query: Record<string, unknown>) {
+    return unwrapOrThrow(await this.budgetsSvc.findAll(query));
   }
 
   @Get('cash-flow')
-  getCashFlow(@Query() _query: Record<string, unknown>) {
-    return { data: [], pagination: { total: 0, page: 1, limit: 20 } };
+  async getCashFlow(@Query() query: Record<string, unknown>) {
+    return unwrapOrThrow(await this.cashflowSvc.findTransactions(query));
   }
 
   @Get('reports')
@@ -76,8 +85,12 @@ export class FinanceMainController {
   }
 
   @Get('expenses')
-  getExpenses(@Query() _query: Record<string, unknown>) {
-    return { data: [], pagination: { total: 0, page: 1, limit: 20 } };
+  async getExpenses(@Query() query: Record<string, unknown>) {
+    return unwrapOrInternal(await this.accountingSvc.getExpenseReports(
+      query['status'] as string | undefined,
+      Number(query['page'] ?? 1),
+      Number(query['limit'] ?? 20),
+    ));
   }
 
   @Get('expense-reports')
@@ -96,17 +109,36 @@ export class FinanceMainController {
 
   @Get('loans')
   getLoans(@Query('status') _status?: string, @Query('page') _page?: string) {
-    return { items: [], total: 0 };
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('loans/:id')
   getLoanById(@Param('id') _id: string) {
-    return { loan: null };
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+  }
+
+  @Post('gl-entries')
+  @HttpCode(HttpStatus.CREATED)
+  async createGlEntry(@Body() body: Record<string, unknown>) {
+    return unwrapOrThrow(await this.glSvc.postDocument(body));
   }
 
   @Get('gl-entries/:id/reverse')
   getGlEntryReverse(@Param('id') _id: string) {
     return { reversed: false };
+  }
+
+  @Post('gl-entries/:id/reverse')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async postGlEntryReverse(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    // Full reversal requires fetching the original entry and posting a mirrored document.
+    // Wire to glSvc.reverseDocument once that method is implemented in Sprint 3.
+    const reversal = await this.glSvc.postDocument({
+      ...body,
+      description: `[REVERSAL] ${String(body.description ?? '')}`.trim(),
+      reversalOf: id,
+    });
+    return unwrapOrThrow(reversal);
   }
 
   @Get('accounting')
@@ -130,5 +162,21 @@ export class FinanceMainController {
         currency: 'UZS',
       },
     };
+  }
+
+  /** POST /api/finance/ap/entries — create accounts-payable entry */
+  @Post('ap/entries')
+  @HttpCode(HttpStatus.CREATED)
+  async createApEntry(@Body() body: Record<string, unknown>) {
+    const result = await this.actionsSvc.createApEntry(body);
+    return unwrapOrInternal(result);
+  }
+
+  /** POST /api/finance/ar/entries — create accounts-receivable entry */
+  @Post('ar/entries')
+  @HttpCode(HttpStatus.CREATED)
+  async createArEntry(@Body() body: Record<string, unknown>) {
+    const result = await this.actionsSvc.createArEntry(body);
+    return unwrapOrInternal(result);
   }
 }

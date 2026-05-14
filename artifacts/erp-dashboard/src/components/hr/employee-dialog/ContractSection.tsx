@@ -1,3 +1,8 @@
+/**
+ * @module ContractSection
+ * @description React UI component.
+ */
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -6,7 +11,7 @@ import { FormSectionProps } from "./types";
 export function ContractSection({ form }: FormSectionProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="shift"
@@ -15,7 +20,7 @@ export function ContractSection({ form }: FormSectionProps) {
               <FormLabel>Smena</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-shift">
+                  <SelectTrigger data-testid="select-shift" className="h-9">
                     <SelectValue placeholder="Smenani tanlang" />
                   </SelectTrigger>
                 </FormControl>
@@ -40,7 +45,7 @@ export function ContractSection({ form }: FormSectionProps) {
               <FormLabel>Ish haqi turi</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-salary-type">
+                  <SelectTrigger data-testid="select-salary-type" className="h-9">
                     <SelectValue placeholder="Turini tanlang" />
                   </SelectTrigger>
                 </FormControl>
@@ -56,7 +61,7 @@ export function ContractSection({ form }: FormSectionProps) {
           )}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="workshopZone"
@@ -78,7 +83,7 @@ export function ContractSection({ form }: FormSectionProps) {
               <FormLabel>Holati</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-status">
+                  <SelectTrigger data-testid="select-status" className="h-9">
                     <SelectValue placeholder="Holatni tanlang" />
                   </SelectTrigger>
                 </FormControl>
@@ -94,7 +99,7 @@ export function ContractSection({ form }: FormSectionProps) {
           )}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="hireDate"

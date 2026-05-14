@@ -1,3 +1,8 @@
+/**
+ * @module pp-work-centers.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertRequired } from '@common/assertions';
 import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger, BadRequestException } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';

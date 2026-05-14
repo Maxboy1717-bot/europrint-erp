@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 
 export const fmtNum = (n: unknown) => parseFloat(String(n || 0)) || 0;

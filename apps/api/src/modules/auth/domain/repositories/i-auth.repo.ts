@@ -1,3 +1,8 @@
+/**
+ * @module i-auth.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { AuthUserAggregate } from '../aggregates/auth-user.aggregate';
 
 export interface IAuthRepo {

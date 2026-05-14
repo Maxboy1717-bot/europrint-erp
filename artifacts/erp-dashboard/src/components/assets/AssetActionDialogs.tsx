@@ -1,3 +1,8 @@
+/**
+ * @module AssetActionDialogs
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,23 +60,23 @@ export function AssetActionDialogs({
       <Dialog open={isDisposalOpen} onOpenChange={setIsDisposalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("dialogTitleDispose")}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("dialogTitleDispose")}</DialogTitle>
             <DialogDescription>{selectedAsset ? `"${selectedAsset.assetName}" ${t("disposeConfirmText")}` : t("dialogTitleDispose")}</DialogDescription>
           </DialogHeader>
           {selectedAsset && (
             <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-md mb-2">
-              <div className="flex items-center gap-2 text-amber-500 mb-2">
+              <div className="flex items-center gap-2 text-[var(--ep-yellow)] mb-2">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm font-medium">{t("attention")}</span>
               </div>
               <p className="text-sm text-muted-foreground">{t("currentBalanceLabel")} <strong>{formatCurrency(selectedAsset.currentValue)}</strong></p>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>{t("colDisposalMethod")}</Label>
               <Select value={disposalForm.disposalMethod} onValueChange={(v) => setDisposalForm(f => ({ ...f, disposalMethod: v }))}>
-                <SelectTrigger data-testid="select-disposal-method"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-disposal-method" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="write_off">{t("disposalWriteOff")}</SelectItem>
                   <SelectItem value="sale">{t("disposalSale")}</SelectItem>
@@ -103,16 +108,16 @@ export function AssetActionDialogs({
       </Dialog>
 
       <Dialog open={isTransferOpen} onOpenChange={setIsTransferOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg p-6">
           <DialogHeader>
-            <DialogTitle>{t("dialogTitleTransfer")}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("dialogTitleTransfer")}</DialogTitle>
             <DialogDescription>{selectedAsset ? `"${selectedAsset.assetName}" ${t("transferAssetDialog")}` : t("transferAssetAlt")}</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>{t("labelAsset")}</Label>
               <Select value={transferForm.assetId ? String(transferForm.assetId) : ""} onValueChange={(v) => setTransferForm(f => ({ ...f, assetId: parseInt(v, 10) }))}>
-                <SelectTrigger data-testid="select-transfer-asset"><SelectValue placeholder={t("selectAsset")} /></SelectTrigger>
+                <SelectTrigger data-testid="select-transfer-asset" className="h-9"><SelectValue placeholder={t("selectAsset")} /></SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(assets) ? assets : []).filter(a => a.status === "active").map(a => (
                     <SelectItem key={a.id} value={String(a.id)}>{a.assetCode} — {a.assetName}</SelectItem>
@@ -151,16 +156,16 @@ export function AssetActionDialogs({
       </Dialog>
 
       <Dialog open={isInsuranceOpen} onOpenChange={setIsInsuranceOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-6">
           <DialogHeader>
-            <DialogTitle>{t("dialogTitleInsurance")}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("dialogTitleInsurance")}</DialogTitle>
             <DialogDescription>{selectedAsset ? `"${selectedAsset.assetName}" ${t("insuranceForAsset")}` : t("insuranceAlt")}</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>{t("labelAsset")}</Label>
               <Select value={insuranceForm.assetId ? String(insuranceForm.assetId) : ""} onValueChange={(v) => setInsuranceForm(f => ({ ...f, assetId: parseInt(v, 10) }))}>
-                <SelectTrigger data-testid="select-insurance-asset"><SelectValue placeholder={t("selectAsset")} /></SelectTrigger>
+                <SelectTrigger data-testid="select-insurance-asset" className="h-9"><SelectValue placeholder={t("selectAsset")} /></SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(assets) ? assets : []).map(a => (
                     <SelectItem key={a.id} value={String(a.id)}>{a.assetCode} — {a.assetName}</SelectItem>
@@ -179,7 +184,7 @@ export function AssetActionDialogs({
             <div className="space-y-1">
               <Label>{t("colCoverageType")}</Label>
               <Select value={insuranceForm.coverageType} onValueChange={(v) => setInsuranceForm(f => ({ ...f, coverageType: v }))}>
-                <SelectTrigger data-testid="select-coverage-type"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-coverage-type" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="comprehensive">{t("coverageFull")}</SelectItem>
                   <SelectItem value="third_party">{t("coverageThirdParty")}</SelectItem>

@@ -1,3 +1,8 @@
+/**
+ * @module schema-business-c-2
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, varchar, date,
 } from 'drizzle-orm/pg-core';
@@ -282,4 +287,21 @@ export const skill_catalog = pgTable('skill_catalog', {
   category:    text('category'),
   is_active:   boolean('is_active').default(true),
   created_at:  timestamp('created_at').defaultNow(),
+});
+
+// ─── SD Contracts ─────────────────────────────────────────────────────────────
+
+export const sd_contracts = pgTable('sd_contracts', {
+  id:              serial('id').primaryKey(),
+  contract_number: text('contract_number'),
+  order_id:        integer('order_id'),
+  order_number:    text('order_number'),
+  customer_id:     integer('customer_id'),
+  template_type:   text('template_type').default('standard'), // standard | vip | oneTime
+  papka_no:        text('papka_no'),
+  status:          text('status').default('draft'), // draft | sent | signed | cancelled
+  signed_at:       timestamp('signed_at'),
+  notes:           text('notes'),
+  created_at:      timestamp('created_at').defaultNow(),
+  updated_at:      timestamp('updated_at').defaultNow(),
 });

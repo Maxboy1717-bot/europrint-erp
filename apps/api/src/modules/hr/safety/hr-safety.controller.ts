@@ -1,5 +1,10 @@
+/**
+ * @module hr-safety.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-Controller, Get, Patch, Post, Body, Param, ParseIntPipe,
+Controller, Get, Patch, Post, Delete, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -37,6 +42,12 @@ export class HrSafetyController {
     const r = await this.svc.getIncidentById(id);
     const row = r.ok ? (r.data ?? {}) : {};
     return { data: row };
+  }
+
+  @Delete('incidents/:id')
+  async deleteIncident(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.updateIncident(id, { status: 'deleted' } as HrSafetyUpdateIncidentDto);
+    return { data: r.ok ? { deleted: true, id } : { deleted: false, id } };
   }
 
   @Patch('incidents/:id')

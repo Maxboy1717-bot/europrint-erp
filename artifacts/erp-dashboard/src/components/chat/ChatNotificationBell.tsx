@@ -1,3 +1,8 @@
+/**
+ * @module ChatNotificationBell
+ * @description React UI component.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { Bell, X, MessageSquare, AtSign, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -92,14 +97,14 @@ export function ChatNotificationBell() {
   const handleMarkAllRead = async () => {
     try {
       await apiRequest("PATCH", "/api/chat/notifications/read-all");
-      setNotifications(prev => (prev ?? []).map(n => ({ ...n, isRead: true })));
+      setNotifications(prev => (Array.isArray(prev) ? prev : []).map(n => ({ ...n, isRead: true })));
     } catch { /* ignore */ }
   };
 
   const handleMarkRead = async (id: string) => {
     try {
       await apiRequest("PATCH", `/api/chat/notifications/${id}/read`);
-      setNotifications(prev => (prev ?? []).map(n => n.id === id ? { ...n, isRead: true } : n));
+      setNotifications(prev => (Array.isArray(prev) ? prev : []).map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch { /* ignore */ }
   };
 
