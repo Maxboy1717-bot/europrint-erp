@@ -1,7 +1,13 @@
+/**
+ * @module goods-issue.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { AppErr, Err , Ok } from '@common/result';
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
+import { WmsGoodsIssuedEvent } from '../events/wms-goods-issued.event';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { IWmsRepository } from '../../domain/repositories/wms.repository';
@@ -62,12 +68,12 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
     }
 
     // Trigger 9: WMS Goods Issue → PP
-    this.eventBus.publish('WMS_GOODS_ISSUED', {
+    this.eventBus.publish(new WmsGoodsIssuedEvent({
       materialId: command.materialId,
       amount: command.amount,
       ppId: command.ppId,
       timestamp: _time.now(),
-    });
+    }));
 
     this.logger.log('Goods issued successfully');
     return Ok(undefined);

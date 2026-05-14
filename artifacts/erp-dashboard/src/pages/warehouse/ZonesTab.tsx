@@ -1,3 +1,8 @@
+/**
+ * @module ZonesTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -39,7 +44,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
     queryKey: ["/api/warehouse/warehouses", selectedWarehouseId, "zones"],
     queryFn: async () => {
       if (!selectedWarehouseId) return [];
-      const res = await fetch(`/api/warehouse/warehouses/${selectedWarehouseId}/zones`, { credentials: "include" });
+      const res = await apiRequest('GET', `/api/warehouse/warehouses/${selectedWarehouseId}/zones`);
       if (!res.ok) throw new Error("Failed to fetch zones");
       return res.json();
     },
@@ -100,7 +105,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
-          <SelectTrigger className="w-[240px]" data-testid="select-warehouse-zones">
+          <SelectTrigger className="w-full sm:w-[240px] h-9" data-testid="select-warehouse-zones">
             <SelectValue placeholder={t.selectWarehouse} />
           </SelectTrigger>
           <SelectContent>
@@ -120,7 +125,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
       ) : (
         <Card>
           <ScrollArea className="h-[500px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t.code}</TableHead>
@@ -134,8 +139,8 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
               <TableBody>
                 {isLoading ? (
                   Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={`k-${i}`}>
-                      {Array.from({ length: 6 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}
+                    <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                      {Array.from({ length: 6 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-20 rounded-lg" /></TableCell>)}
                     </TableRow>
                   ))
                 ) : zones.length === 0 ? (
@@ -147,7 +152,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
                   </TableRow>
                 ) : (
                   (Array.isArray(zones) ? zones : []).map(zone => (
-                    <TableRow key={zone.id} data-testid={`row-zone-${zone.id}`}>
+                    <TableRow key={zone.id} data-testid={`row-zone-${zone.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-mono">{zone.code}</TableCell>
                       <TableCell>
                         <div className="font-medium">{zone.name}</div>
@@ -158,29 +163,29 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
                       </TableCell>
                       <TableCell>{zone.capacity || "-"}</TableCell>
                       <TableCell>
-                        <Badge className={zone.isActive ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-on-surface-variant border-gray-500/40"}>
+                        <Badge className={zone.isActive ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-muted-foreground border-gray-500/40"}>
                           {zone.isActive ? t.active : t.inactive}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button size="icon" variant="ghost" onClick={() => handleEdit(zone)} data-testid={`btn-edit-zone-${zone.id}`}><Pencil className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeleteId(zone.id)} data-testid={`btn-delete-zone-${zone.id}`}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => setDeleteId(zone.id)} data-testid={`btn-delete-zone-${zone.id}`}><Trash2 className="h-4 w-4 text-[var(--ep-red)]" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         </Card>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
-            <DialogTitle>{editingZone ? t.editZone : t.createZone}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{editingZone ? t.editZone : t.createZone}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -188,7 +193,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
                 <FormItem>
                   <FormLabel>{t.selectWarehouse} <span className="text-destructive">*</span></FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value || selectedWarehouseId}>
-                    <FormControl><SelectTrigger data-testid="select-zone-warehouse"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger data-testid="select-zone-warehouse" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
                       {(Array.isArray(warehouses) ? warehouses : []).map(wh => <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>)}
                     </SelectContent>
@@ -196,7 +201,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
                   <FormMessage />
                 </FormItem>
               )} />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="code" render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t.code} <span className="text-destructive">*</span></FormLabel>
@@ -208,7 +213,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
                   <FormItem>
                     <FormLabel>{t.zoneType} <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger data-testid="select-zone-type"><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger data-testid="select-zone-type" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
                         {Object.entries(t.zoneTypes).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                       </SelectContent>

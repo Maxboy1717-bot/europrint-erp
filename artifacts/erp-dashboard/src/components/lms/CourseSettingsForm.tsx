@@ -1,3 +1,8 @@
+/**
+ * @module CourseSettingsForm
+ * @description React UI component.
+ */
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -24,11 +29,11 @@ interface CourseSettingsFormProps {
 export function CourseSettingsForm({ formData, setFormData }: CourseSettingsFormProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
           <Label htmlFor="level">Daraja</Label>
           <Select value={formData.level} onValueChange={(value: string) => setFormData({ ...formData, level: value as "beginner" | "intermediate" | "advanced" })}>
-            <SelectTrigger data-testid="select-level">
+            <SelectTrigger data-testid="select-level" className="h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -52,8 +57,8 @@ export function CourseSettingsForm({ formData, setFormData }: CourseSettingsForm
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
           <Label htmlFor="startDate">Boshlanish sanasi (ixtiyoriy)</Label>
           <Input
             id="startDate"
@@ -66,7 +71,7 @@ export function CourseSettingsForm({ formData, setFormData }: CourseSettingsForm
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="endDate">Tugash sanasi (ixtiyoriy)</Label>
           <Input
             id="endDate"

@@ -1,3 +1,8 @@
+/**
+ * @module ContactHeader
+ * @description React UI component.
+ */
+
 import { Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,14 +30,14 @@ export function ContactHeader({ contact, isLoading, isEditing, onEdit }: Contact
         <div className="flex-1">
           <SheetTitle data-testid="text-sheet-title">
             {isLoading ? (
-              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-6 w-48 rounded-lg" />
             ) : (
               getFullName()
             )}
           </SheetTitle>
           <SheetDescription data-testid="text-sheet-description">
             {isLoading ? (
-              <Skeleton className="h-4 w-32 mt-2" />
+              <Skeleton className="h-4 w-32 mt-2 rounded-lg" />
             ) : contact?.post ? (
               contact.post
             ) : (

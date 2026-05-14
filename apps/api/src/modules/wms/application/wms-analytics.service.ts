@@ -1,3 +1,8 @@
+/**
+ * @module wms-analytics.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
@@ -84,7 +89,7 @@ export class WmsAnalyticsService {
         LIMIT 200
       `);
 
-      const items: TurnoverItem[] = (rows.rows ?? []).map((r) => {
+      const items: TurnoverItem[] = (Array.isArray(rows.rows) ? rows.rows : []).map((r) => {
         const cogs = safeNum(r['annual_cogs']);
         const inv = safeNum(r['avg_inventory_value']);
         const inventoryTurnover = inv > 0 ? safeDiv(cogs, inv) : 0;
@@ -138,7 +143,7 @@ export class WmsAnalyticsService {
         LIMIT 100
       `);
 
-      const items: DeadStockItem[] = (rows.rows ?? []).map((r) => ({
+      const items: DeadStockItem[] = (Array.isArray(rows.rows) ? rows.rows : []).map((r) => ({
         materialId: safeNum(r['material_id']),
         materialName: String(r['material_name'] ?? ''),
         unitOfMeasure: String(r['unit_of_measure'] ?? 'EA'),
@@ -197,7 +202,7 @@ export class WmsAnalyticsService {
         LIMIT 50
       `);
 
-      const alerts: RopAlert[] = (rows.rows ?? []).map((r) => ({
+      const alerts: RopAlert[] = (Array.isArray(rows.rows) ? rows.rows : []).map((r) => ({
         materialId: safeNum(r['material_id']),
         materialCode: String(r['material_code'] ?? ''),
         materialName: String(r['material_name'] ?? ''),

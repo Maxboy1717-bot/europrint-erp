@@ -1,3 +1,8 @@
+/**
+ * @module utils
+ * @description React UI component.
+ */
+
 import { Phone, PhoneIncoming, PhoneOutgoing, Video, ListTodo, FileText, Mail, Smartphone, MessageCircle, MessageSquare } from "lucide-react";
 
 export const WhatsappIcon = ({ className }: { className?: string }) => (
@@ -30,23 +35,23 @@ export const getActivityIcon = (type: string, direction?: string) => {
 };
 
 export const getActivityColor = (type: string, completed?: boolean) => {
-  if (completed) return "text-green-500";
+  if (completed) return "text-[var(--ep-green)]";
   switch (type) {
     case "call":
-      return "text-blue-500";
+      return "text-[var(--ep-blue)]";
     case "meeting":
-      return "text-purple-500";
+      return "text-[var(--ep-purple)]";
     case "task":
-      return "text-orange-500";
+      return "text-[var(--ep-primary)]";
     case "note":
-      return "text-yellow-500";
+      return "text-[var(--ep-yellow)]";
     case "email":
-      return "text-cyan-500";
+      return "text-[var(--ep-cyan)]";
     case "sms":
-      return "text-green-500";
+      return "text-[var(--ep-green)]";
     case "whatsapp":
-      return "text-emerald-500";
+      return "text-[var(--ep-green)]";
     default:
-      return "text-on-surface-variant";
+      return "text-muted-foreground";
   }
 };

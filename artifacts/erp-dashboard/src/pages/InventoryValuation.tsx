@@ -1,7 +1,11 @@
+/**
+ * @module InventoryValuation
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { ErrorState } from "@/components/ui/error-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +37,7 @@ import { CountLinesDialog } from "@/components/wms/valuation/CountLinesDialog";
 import { CreateCountDialog } from "@/components/wms/valuation/CreateCountDialog";
 import { CreateAssetDialog } from "@/components/wms/valuation/CreateAssetDialog";
 import { useInventoryValuationMutations } from "@/components/wms/valuation/useInventoryValuationMutations";
+import { EPErrorState } from "@/components/ep";
 
 
 export default function InventoryValuation() {
@@ -124,22 +129,22 @@ export default function InventoryValuation() {
 
   if (countsError) {
     return (
-      <div className="min-h-screen bg-background p-6" data-testid="inventory-valuation-page">
-        <ErrorState onRetry={refetchCounts} />
+      <div className="p-6" data-testid="inventory-valuation-page">
+        <EPErrorState onRetry={refetchCounts} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background" data-testid="inventory-valuation-page">
-      <div className="border-b bg-gradient-to-r from-indigo-600 to-indigo-500 text-white">
-        <div className="container mx-auto px-4 py-4">
+    <div data-testid="inventory-valuation-page">
+      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
+        <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <ClipboardList className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold" data-testid="text-page-title">Inventarizatsiya</h1>
-                <p className="text-indigo-100 text-sm">Material va asosiy vositalar inventarizatsiyasi</p>
+                <p className="text-white/75 text-sm">Material va asosiy vositalar inventarizatsiyasi</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -157,7 +162,7 @@ export default function InventoryValuation() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6 pt-6">
         <ValuationOverview 
           totalCounts={totalCounts}
           inProgressCounts={inProgressCounts}
@@ -166,7 +171,7 @@ export default function InventoryValuation() {
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-md grid-cols-1 sm:grid-cols-2">
             <TabsTrigger value="material" data-testid="tab-material-inventory">
               <Package className="h-4 w-4 mr-2" />
               Material Inventarizatsiyasi
@@ -211,7 +216,7 @@ export default function InventoryValuation() {
                 {countsLoading ? (
                   <div className="space-y-2">
                     {([...Array(5)]).map((_, i) => (
-                      <Skeleton key={`k-${i}`} className="h-12 w-full" />
+                      <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
                     ))}
                   </div>
                 ) : (

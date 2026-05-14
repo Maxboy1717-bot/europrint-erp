@@ -1,8 +1,13 @@
+/**
+ * @module ai-interview-v2.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { db , runQuery } from '@shared/db';
+import { db , runQuery, rawSql } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 import { hr_interview_sessions, vacancies } from '@shared/db';
 import { safeCall, Result } from '@common/result';
@@ -11,19 +16,19 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class AiInterviewV2Repository {
-  async createSession(dto: { token: string; expiresAt: string; candidateName: string; candidateLanguage: string; candidateId?: number; vacancyId?: number; createdBy: number }): Promise<Result<Row>> {
+  async createSession(dto: { token: string; expiresAt: string; candidateName: string; candidateLanguage: string; candidateId?: number | null; vacancyId?: number | null; createdBy: number }): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.insert(hr_interview_sessions).values({
-        token:              dto.token,
-        expires_at:         new Date(dto.expiresAt),
-        candidate_name:     dto.candidateName,
-        candidate_language: dto.candidateLanguage,
-        status:             'pending',
-        candidate_id:       dto.candidateId ?? null,
-        vacancy_id:         dto.vacancyId ?? null,
-        created_by:         dto.createdBy,
-      }).returning();
-      return castTo<Row>((rows[0] ?? {}));
+      // Use rawSql to avoid Drizzle schema/DB column mismatch issues
+      const r = await rawSql(sql`
+        INSERT INTO hr_interview_sessions
+          (token, expires_at, candidate_name, candidate_language, status, candidate_id, vacancy_id, created_by)
+        VALUES
+          (${dto.token}, ${dto.expiresAt}::timestamptz, ${dto.candidateName}, ${dto.candidateLanguage ?? 'uz'},
+           'pending', ${dto.candidateId ?? null}, ${dto.vacancyId ?? null}, ${dto.createdBy})
+        RETURNING id, token, expires_at, candidate_name, candidate_language, status, candidate_id, vacancy_id, created_at
+      `);
+      const row = (r as { rows?: Row[] }).rows?.[0] ?? {};
+      return castTo<Row>(row);
       }, 'DB_ERROR');
   }
 

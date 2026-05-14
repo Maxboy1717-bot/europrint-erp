@@ -1,3 +1,8 @@
+/**
+ * @module IdealRasmPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +18,7 @@ import {
   BarChart3, Minus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
   ResponsiveContainer, Tooltip,
@@ -47,10 +53,10 @@ function formatValue(val: number, unit: string): string {
 }
 
 function pctColor(pct: number): string {
-  if (pct >= 100) return "text-emerald-600";
-  if (pct >= 80) return "text-blue-600";
-  if (pct >= 60) return "text-amber-600";
-  return "text-red-600";
+  if (pct >= 100) return "text-[var(--ep-green)]";
+  if (pct >= 80) return "text-[var(--ep-blue)]";
+  if (pct >= 60) return "text-[var(--ep-yellow)]";
+  return "text-[var(--ep-red)]";
 }
 
 function pctBg(pct: number): string {
@@ -64,7 +70,7 @@ function PctBadge({ pct }: { pct: number }) {
   const trend = pct >= 80 ? "up" : pct >= 60 ? "stable" : "down";
   return (
     <span className={cn("inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-md",
-      pct >= 80 ? "bg-emerald-50 text-emerald-700" : pct >= 60 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"
+      pct >= 80 ? "bg-emerald-50 text-[var(--ep-green)]" : pct >= 60 ? "bg-amber-50 text-[var(--ep-yellow)]" : "bg-red-50 text-[var(--ep-red)]"
     )}>
       {trend === "up" ? <TrendingUp className="w-3 h-3" /> : trend === "down" ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
       {pct}%
@@ -85,7 +91,7 @@ export default function IdealRasmPage() {
   const { data, isLoading, refetch } = useQuery<IdealRasmResponse>({
     queryKey: ["/api/ideal-rasm"],
     queryFn: async () => {
-      const res = await fetch("/api/ideal-rasm", { headers: getAuthHeaders() });
+      const res = await apiRequest('GET', "/api/ideal-rasm");
       if (!res.ok) throw new Error("Yuklab bo'lmadi");
       return res.json();
     },
@@ -113,11 +119,7 @@ export default function IdealRasmPage() {
         targetKey,
         targetValue,
       }));
-      const res = await fetch("/api/ideal-rasm", {
-        method: "PUT",
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ targets: payload }),
-      });
+      const res = await apiRequest('PUT', "/api/ideal-rasm", { targets: payload });
       if (!res.ok) throw new Error("Yangilashda xatolik");
       return res.json();
     },
@@ -183,7 +185,7 @@ export default function IdealRasmPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {([0, 1, 2, 3, 4]).map((i) => (
-            <Skeleton key={`k-${i}`} className="h-40 rounded-xl" />
+            <Skeleton key={`k-${i}`} className="h-40 rounded-lg" />
           ))}
         </div>
       ) : (
@@ -216,7 +218,7 @@ export default function IdealRasmPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Haqiqat</p>
                         <p className="text-lg font-bold text-foreground mt-0.5">
@@ -326,12 +328,12 @@ export default function IdealRasmPage() {
             <CardTitle className="text-base">Umumiy Baholash</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
               {([
                 { label: "Maqsadlar", value: targets.length, sub: "ta" },
-                { label: "≥80% Bajarilgan", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 80).length, sub: "ta", color: "text-emerald-600" },
-                { label: "60-80% Oralig'i", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 60 && t.achievementPct < 80).length, sub: "ta", color: "text-amber-600" },
-                { label: "<60% Past", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct < 60).length, sub: "ta", color: "text-red-600" },
+                { label: "≥80% Bajarilgan", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 80).length, sub: "ta", color: "text-[var(--ep-green)]" },
+                { label: "60-80% Oralig'i", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 60 && t.achievementPct < 80).length, sub: "ta", color: "text-[var(--ep-yellow)]" },
+                { label: "<60% Past", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct < 60).length, sub: "ta", color: "text-[var(--ep-red)]" },
               ]).map((item, i) => (
                 <div key={`k-${i}`} className="text-center rounded-xl bg-muted/30 p-4">
                   <p className={cn("text-2xl font-bold", item.color ?? "text-foreground")}>

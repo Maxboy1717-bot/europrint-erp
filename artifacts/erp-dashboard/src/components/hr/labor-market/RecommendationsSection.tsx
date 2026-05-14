@@ -1,3 +1,8 @@
+/**
+ * @module RecommendationsSection
+ * @description React UI component.
+ */
+
 import { Lightbulb, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +25,7 @@ export function RecommendationsSection({ recommendations, setRecommendations, on
           size="sm"
           variant="outline"
           type="button"
-          className="h-7 text-xs gap-1 border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
+          className="h-7 text-xs gap-1 border-yellow-500/40 text-yellow-400 hover:bg-[var(--ep-yellow)]/90/10"
           onClick={onGenerate}
           data-testid="btn-generate-recommendations"
         >

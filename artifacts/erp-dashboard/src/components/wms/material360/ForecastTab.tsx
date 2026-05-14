@@ -1,10 +1,15 @@
+/**
+ * @module ForecastTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtQty, fmtMoney, fmtDate, type ForecastInfo, type BasicInfo } from "./types";
 
 export function ForecastTab({ forecast, basic }: { forecast: ForecastInfo; basic: BasicInfo }) {
   const statusConf: Record<string, { label: string; cls: string }> = {
-    overdue: { label: "KECHIKDI", cls: "text-destructive" }, urgent: { label: "SHOSHILINCH", cls: "text-red-600" },
-    soon: { label: "Tez orada", cls: "text-yellow-600" }, ok: { label: "Normal", cls: "text-green-600" },
+    overdue: { label: "KECHIKDI", cls: "text-destructive" }, urgent: { label: "SHOSHILINCH", cls: "text-[var(--ep-red)]" },
+    soon: { label: "Tez orada", cls: "text-[var(--ep-yellow)]" }, ok: { label: "Normal", cls: "text-[var(--ep-green)]" },
     unknown: { label: "Noma'lum", cls: "text-muted-foreground" },
   };
   const s = statusConf[forecast.reorderDateStatus || "unknown"];

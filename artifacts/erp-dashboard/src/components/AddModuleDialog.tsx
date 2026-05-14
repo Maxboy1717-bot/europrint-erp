@@ -1,3 +1,8 @@
+/**
+ * @module AddModuleDialog
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,8 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
 const moduleSchema = z.object({
   title: z.string().min(1, "Modul nomi majburiy"),
   titleRu: z.string().min(1, "Modul nomi (Rus) majburiy"),
@@ -71,9 +77,9 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Yangi modul qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Yangi modul qo'shish</DialogTitle>
           <DialogDescription>
             Kursga yangi modul qo'shish uchun ma'lumotlarni kiriting
           </DialogDescription>
@@ -147,7 +153,7 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
                 Bekor qilish
               </Button>
               <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-module">
-                {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
                 Saqlash
               </Button>
             </DialogFooter>

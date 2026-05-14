@@ -1,6 +1,11 @@
+/**
+ * @module camera-recognition.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Controller, Get, InternalServerErrorException,
-  Param, ParseIntPipe, Patch, Query, UseGuards, UseInterceptors,
+  Controller, Get, HttpCode, HttpStatus, InternalServerErrorException,
+  Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
@@ -44,6 +49,22 @@ export class CameraRecognitionController {
   @Roles(...CAM_WRITE)
   @UseInterceptors(AuditInterceptor)
   async unflagLog(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.svc.unflagRecognitionLog(id));
+  }
+
+  @Post('recognition-logs/:id/flag')
+  @HttpCode(HttpStatus.OK)
+  @Roles(...CAM_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async postFlagLog(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.svc.flagRecognitionLog(id));
+  }
+
+  @Post('recognition-logs/:id/unflag')
+  @HttpCode(HttpStatus.OK)
+  @Roles(...CAM_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async postUnflagLog(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.unflagRecognitionLog(id));
   }
 }

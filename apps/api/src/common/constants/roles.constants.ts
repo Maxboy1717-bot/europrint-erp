@@ -1,3 +1,8 @@
+/**
+ * @module roles.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 // §7 - 11 rol va huquqlar
 
 export enum Role {

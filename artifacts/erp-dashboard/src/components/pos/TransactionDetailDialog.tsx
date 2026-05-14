@@ -1,3 +1,8 @@
+/**
+ * @module TransactionDetailDialog
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -24,12 +29,12 @@ export function TransactionDetailDialog({
 
   return (
     <Dialog open={!!transaction} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent data-testid="dialog-view-transaction">
+      <DialogContent data-testid="dialog-view-transaction" className="p-6">
         <DialogHeader>
-          <DialogTitle>{t('transactions')}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t('transactions')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 text-sm">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div><span className="text-muted-foreground">Tranzaksiya:</span> <span className="font-mono">{transaction.transactionNumber}</span></div>
             <div><span className="text-muted-foreground">Chek:</span> <span className="font-mono">{transaction.receiptNumber || "-"}</span></div>
             <div><span className="text-muted-foreground">Sana:</span> {formatDateTime(transaction.createdAt)}</div>
@@ -42,7 +47,7 @@ export function TransactionDetailDialog({
               </Badge>
             </div>
           </div>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Mahsulot</TableHead>
@@ -53,7 +58,7 @@ export function TransactionDetailDialog({
             </TableHeader>
             <TableBody>
               {(Array.isArray(transaction.items) ? transaction.items : []).map((item: TransactionItem, idx: number) => (
-                <TableRow key={idx}>
+                <TableRow key={idx} className="hover:bg-muted/40 transition-colors">
                   <TableCell>{item.name}</TableCell>
                   <TableCell className="text-center">{item.quantity}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
@@ -61,7 +66,7 @@ export function TransactionDetailDialog({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
           <div className="border-t pt-2 space-y-1">
             <div className="flex justify-between"><span>Jami:</span><span>{formatCurrency(transaction.subtotal)}</span></div>
             {transaction.discountAmount > 0 && (

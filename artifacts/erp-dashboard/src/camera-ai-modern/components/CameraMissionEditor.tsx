@@ -1,3 +1,8 @@
+/**
+ * @module CameraMissionEditor
+ * @description React UI component.
+ */
+
 import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
@@ -80,7 +85,7 @@ export function CameraMissionEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="cai-mission-dialog max-w-lg max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden border-cyan-500/30 bg-card sm:rounded-2xl">
+      <DialogContent className="cai-mission-dialog max-w-lg max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden border-cyan-500/30 bg-card sm:rounded-xl">
         <div className="cai-mission-header">
           <DialogHeader className="text-left space-y-2 p-0">
             <DialogTitle className="cai-mission-title">
@@ -101,7 +106,7 @@ export function CameraMissionEditor({
           <div className="space-y-6 py-4">
             {(Array.from(byGroup.entries()) as [AiTaskGroup, typeof AI_TASK_CATALOG][]).map(([group, tasks]) => (
               <div key={group}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-cyan-600 dark:text-cyan-400 mb-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ep-cyan)] dark:text-cyan-400 mb-2">
                   {lang === "uz" ? AI_TASK_GROUPS[group].uz : AI_TASK_GROUPS[group].ru}
                 </p>
                 <div className="space-y-2">
@@ -133,12 +138,12 @@ export function CameraMissionEditor({
         </ScrollArea>
 
         <div className="px-5 space-y-3 border-t border-border/80 pt-4 bg-muted/20">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1">
+          <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               {lang === "uz" ? "Sezgirlik" : "Чувствительность"}
             </Label>
             <Select value={sensitivity} onValueChange={(v) => setSensitivity(v as typeof sensitivity)}>
-              <SelectTrigger className="rounded-xl border-cyan-500/20">
+              <SelectTrigger className="rounded-xl border-cyan-500/20 h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -148,8 +153,8 @@ export function CameraMissionEditor({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1">
+          <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               {lang === "uz" ? "Operator prompti" : "Промпт оператора"}
             </Label>
             <Textarea

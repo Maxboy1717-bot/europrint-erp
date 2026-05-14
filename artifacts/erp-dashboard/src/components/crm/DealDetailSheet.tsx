@@ -1,3 +1,8 @@
+/**
+ * @module DealDetailSheet
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -160,7 +165,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto p-6">
         <SheetHeader>
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -205,7 +210,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="opportunity"
@@ -258,7 +263,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                       onValueChange={(val) => field.onChange(val === "none" ? null : Number(val))}
                     >
                       <FormControl>
-                        <SelectTrigger data-testid="select-deal-company">
+                        <SelectTrigger data-testid="select-deal-company" className="h-9">
                           <SelectValue placeholder="Kompaniya tanlang" />
                         </SelectTrigger>
                       </FormControl>
@@ -276,7 +281,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="beginDate"
@@ -361,7 +366,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
               <div className="flex items-center gap-2 text-sm">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Summa:</span>
-                <span className="font-semibold text-green-600">
+                <span className="font-semibold text-[var(--ep-green)]">
                   {deal?.opportunity.toLocaleString()} {deal?.currencyId}
                 </span>
               </div>

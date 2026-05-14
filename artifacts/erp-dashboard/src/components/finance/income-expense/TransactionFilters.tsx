@@ -1,3 +1,8 @@
+/**
+ * @module TransactionFilters
+ * @description React UI component.
+ */
+
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +42,7 @@ export function TransactionFilters({
   categories,
 }: TransactionFiltersProps) {
   const { t } = useTranslation("finance");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tCommon } = useTranslation('common');
 
   return (
     <div className="flex flex-wrap gap-3 mb-4 pb-4 border-b">
@@ -45,7 +50,7 @@ export function TransactionFilters({
         value={filters.type}
         onValueChange={(value) => setFilters((prev) => ({ ...prev, type: value }))}
       >
-        <SelectTrigger className="w-[150px]" data-testid="filter-type">
+        <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="filter-type">
           <SelectValue placeholder="Turi" />
         </SelectTrigger>
         <SelectContent>
@@ -61,7 +66,7 @@ export function TransactionFilters({
           setFilters((prev) => ({ ...prev, categoryId: value }))
         }
       >
-        <SelectTrigger className="w-[180px]" data-testid="filter-category">
+        <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="filter-category">
           <SelectValue placeholder={t("category")} />
         </SelectTrigger>
         <SelectContent>
@@ -78,7 +83,7 @@ export function TransactionFilters({
         value={filters.status}
         onValueChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
       >
-        <SelectTrigger className="w-[150px]" data-testid="filter-status">
+        <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="filter-status">
           <SelectValue placeholder={tCommon("status")} />
         </SelectTrigger>
         <SelectContent>
@@ -96,7 +101,7 @@ export function TransactionFilters({
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
           }
-          className="w-[150px]"
+          className="w-full sm:w-[150px]"
           data-testid="filter-date-from"
         />
         <span className="text-muted-foreground">—</span>
@@ -106,7 +111,7 @@ export function TransactionFilters({
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, dateTo: e.target.value }))
           }
-          className="w-[150px]"
+          className="w-full sm:w-[150px]"
           data-testid="filter-date-to"
         />
       </div>

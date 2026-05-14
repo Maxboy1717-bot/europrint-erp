@@ -1,3 +1,8 @@
+/**
+ * @module wms-fg-received.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { StartRentalTimerHandler, StartRentalTimerCommand } from '../../application/commands/start-rental-timer.handler';

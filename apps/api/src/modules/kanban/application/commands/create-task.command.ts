@@ -1,3 +1,8 @@
+/**
+ * @module create-task.command
+ * @description Source module. See exports for details.
+ */
+
 export class CreateTaskCommand {
   constructor(readonly title: string,
     readonly description: string,

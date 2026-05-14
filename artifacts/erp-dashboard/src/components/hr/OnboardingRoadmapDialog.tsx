@@ -1,3 +1,8 @@
+/**
+ * @module OnboardingRoadmapDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -197,10 +202,10 @@ export function OnboardingRoadmapDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { onClose(); setStep("form"); } }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Map className="h-5 w-5 text-emerald-500" />
+            <Map className="h-5 w-5 text-[var(--ep-green)]" />
             Yo'l Xaritasi — {candidateName}
           </DialogTitle>
         </DialogHeader>
@@ -222,7 +227,7 @@ export function OnboardingRoadmapDialog({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Lavozim nomi *</Label>
                 <Input
@@ -243,14 +248,14 @@ export function OnboardingRoadmapDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Nastavnik</Label>
                 <Select
                   value={form.nastavnik_id}
                   onValueChange={v => setForm(f => ({ ...f, nastavnik_id: v }))}
                 >
-                  <SelectTrigger className="h-8 text-sm mt-1">
+                  <SelectTrigger className="h-9 text-sm mt-1">
                     <SelectValue placeholder="Nastavnik tanlang" />
                   </SelectTrigger>
                   <SelectContent>
@@ -309,7 +314,7 @@ export function OnboardingRoadmapDialog({
                 value={form.sinov_muddat_oy}
                 onValueChange={v => setForm(f => ({ ...f, sinov_muddat_oy: v }))}
               >
-                <SelectTrigger className="h-8 text-sm mt-1">
+                <SelectTrigger className="h-9 text-sm mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -364,7 +369,7 @@ export function OnboardingRoadmapDialog({
                 {roadmapToShow.reglamentlar && roadmapToShow.reglamentlar.length > 0 && (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-4 w-4 text-blue-500" />
+                      <BookOpen className="h-4 w-4 text-[var(--ep-blue)]" />
                       <h3 className="font-semibold text-sm">O'qiladigan materiallar</h3>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -379,7 +384,7 @@ export function OnboardingRoadmapDialog({
 
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <ClipboardList className="h-4 w-4 text-amber-500" />
+                    <ClipboardList className="h-4 w-4 text-[var(--ep-yellow)]" />
                     <h3 className="font-semibold text-sm">Gantt-style Jadval (4 hafta)</h3>
                   </div>
                   <div className="space-y-3">
@@ -417,7 +422,7 @@ export function OnboardingRoadmapDialog({
 
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)]" />
                     <h3 className="font-semibold text-sm">Yakuniy Chek-list</h3>
                   </div>
                   <div className="space-y-1.5">

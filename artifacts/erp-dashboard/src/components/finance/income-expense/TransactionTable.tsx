@@ -1,3 +1,8 @@
+/**
+ * @module TransactionTable
+ * @description React UI component.
+ */
+
 import {
   Table,
   TableBody,
@@ -24,7 +29,7 @@ export function TransactionTable({
   loading,
 }: TransactionTableProps) {
   const { t } = useTranslation("finance");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tCommon } = useTranslation('common');
 
   const getCategoryName = (categoryId: string | null) => {
     if (!categoryId) return "-";
@@ -68,7 +73,7 @@ export function TransactionTable({
 
   if (transactions.length === 0 && !loading) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-[13px] text-muted-foreground">
         <Wallet className="h-12 w-12 mx-auto mb-2 opacity-50" />
         <p>{tCommon("noData")}</p>
       </div>
@@ -76,7 +81,7 @@ export function TransactionTable({
   }
 
   return (
-    <Table data-testid="table-transactions">
+    <div className="ep-table-scroll"><Table data-testid="table-transactions">
       <TableHeader>
         <TableRow>
           <TableHead>#</TableHead>
@@ -102,9 +107,9 @@ export function TransactionTable({
             <TableCell>
               <div className="flex items-center gap-2">
                 {tx.transactionType === "income" ? (
-                  <ArrowUpCircle className="h-4 w-4 text-green-500" />
+                  <ArrowUpCircle className="h-4 w-4 text-[var(--ep-green)]" />
                 ) : (
-                  <ArrowDownCircle className="h-4 w-4 text-red-500" />
+                  <ArrowDownCircle className="h-4 w-4 text-[var(--ep-red)]" />
                 )}
                 <span>
                   {tx.transactionType === "income" ? t("inflow") : t("outflow")}
@@ -115,7 +120,7 @@ export function TransactionTable({
             <TableCell>{tx.counterpartyName || "-"}</TableCell>
             <TableCell
               className={`text-right font-medium ${
-                tx.transactionType === "income" ? "text-green-500" : "text-red-500"
+                tx.transactionType === "income" ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"
               }`}
             >
               {tx.transactionType === "income" ? "+" : "-"}
@@ -125,6 +130,6 @@ export function TransactionTable({
           </TableRow>
         ))}
       </TableBody>
-    </Table>
+    </Table></div>
   );
 }

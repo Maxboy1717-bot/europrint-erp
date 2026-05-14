@@ -1,3 +1,8 @@
+/**
+ * @module QabulBolimi
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -16,7 +21,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowDownToLine } from "lucide-react";
 import { MaterialCardItem, WarehouseItem } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
 export function QabulBolimi() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     materialCardId: "",
@@ -93,9 +100,9 @@ export function QabulBolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-3">
         <div>
-          <Label className="text-xs">Material *</Label>
+          <Label className="text-xs">{t('material')}</Label>
           <Select value={formData.materialCardId} onValueChange={(v) => setFormData({ ...formData, materialCardId: v })}>
-            <SelectTrigger data-testid="select-material">
+            <SelectTrigger data-testid="select-material" className="h-9">
               <SelectValue placeholder="Material tanlang" />
             </SelectTrigger>
             <SelectContent>
@@ -105,7 +112,7 @@ export function QabulBolimi() {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <Label className="text-xs">Hujjatdagi miqdor *</Label>
             <Input data-testid="input-quantity" type="number" step="0.1" placeholder="0.0" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
@@ -115,11 +122,11 @@ export function QabulBolimi() {
             <Input data-testid="input-actual-weight" type="number" step="0.1" placeholder="Tarozi" value={formData.actualWeight} onChange={(e) => setFormData({ ...formData, actualWeight: e.target.value })} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <Label className="text-xs">O'lchov birligi</Label>
             <Select value={formData.uom} onValueChange={(v) => setFormData({ ...formData, uom: v })}>
-              <SelectTrigger data-testid="select-uom">
+              <SelectTrigger data-testid="select-uom" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -136,7 +143,7 @@ export function QabulBolimi() {
             <Input data-testid="input-lot" placeholder="LOT-..." value={formData.lotNumber} onChange={(e) => setFormData({ ...formData, lotNumber: e.target.value })} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <Label className="text-xs">Buyurtma raqami</Label>
             <Input data-testid="input-po" placeholder="PO-..." value={formData.poNumber} onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })} />
@@ -149,7 +156,7 @@ export function QabulBolimi() {
         <div>
           <Label className="text-xs">Ombor</Label>
           <Select value={formData.warehouseId} onValueChange={(v) => setFormData({ ...formData, warehouseId: v })}>
-            <SelectTrigger data-testid="select-warehouse">
+            <SelectTrigger data-testid="select-warehouse" className="h-9">
               <SelectValue placeholder="Ombor tanlang" />
             </SelectTrigger>
             <SelectContent>

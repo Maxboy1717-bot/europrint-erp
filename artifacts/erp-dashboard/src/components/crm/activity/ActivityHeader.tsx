@@ -1,3 +1,8 @@
+/**
+ * @module ActivityHeader
+ * @description React UI component.
+ */
+
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, MessageSquare, ListTodo, Mail, Smartphone, Calendar as CalendarIcon, Filter, ChevronDown } from "lucide-react";
 import { 
@@ -90,7 +95,7 @@ export function ActivityHeader({
             <ChevronDown className="h-3 w-3 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuContent align="end" className="w-full sm:w-[160px]">
           <DropdownMenuItem 
             className="text-xs" 
             onClick={() => setTimelineFilter("all")}

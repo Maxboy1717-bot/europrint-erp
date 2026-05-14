@@ -1,9 +1,9 @@
-import {
-  DndContext,
-  DragOverlay,
-  closestCorners,
-} from "@dnd-kit/core";
-import { ScrollArea } from "@/components/ui/scroll-area";
+/**
+ * @module KanbanView
+ * @description React UI component.
+ */
+
+import { DndContext, DragOverlay, closestCorners } from "@dnd-kit/core";
 import { KanbanColumn } from "@/pages/crm/KanbanColumn";
 import { EntityCard } from "@/pages/crm/EntityCard";
 import { KanbanViewProps } from "./types";
@@ -29,9 +29,20 @@ export function KanbanView({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <ScrollArea className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="flex h-full p-4 gap-4 min-w-max">
-          {(Array.isArray(stages) ? stages : []).map((stage) => (
+      {/* ── Gorizontal scroll ───────────────────────────────────── */}
+      <div
+        className="flex-1 overflow-x-auto overflow-y-hidden"
+        style={{
+          /* Safari smooth scroll */
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "thin",
+          scrollbarColor: "rgba(163,177,198,0.40) transparent",
+        }}
+      >
+        <div
+          className="flex h-full px-5 py-4 gap-5 min-w-max items-start"
+        >
+          {(Array.isArray(stages) ? stages : []).map((stage, idx) => (
             <KanbanColumn
               key={stage.stageId}
               stage={stage}
@@ -41,13 +52,26 @@ export function KanbanView({
               onEntityClick={onItemClick}
               onAddTask={onAddTask}
               onQuickAdd={() => onQuickAdd(stage.stageId)}
+              stageIndex={idx}
+              totalStages={stages.length}
             />
           ))}
         </div>
-      </ScrollArea>
-      <DragOverlay>
+      </div>
+
+      {/* ── Drag overlay: karta sichqoncha ostida ──────────────── */}
+      <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
         {activeItemId && activeItem ? (
-          <div className="w-72 shadow-2xl rotate-3 cursor-grabbing opacity-90 transition-transform duration-200">
+          <div
+            className="w-full sm:w-[270px] cursor-grabbing"
+            style={{
+              transform: "rotate(3deg) scale(1.03)",
+              boxShadow:
+                "12px 16px 40px rgba(163,177,198,0.55), -4px -4px 16px rgba(255,255,255,0.60)",
+              borderRadius: "16px",
+              opacity: 0.92,
+            }}
+          >
             <EntityCard
               entity={activeItem}
               entityType={activeEntity}

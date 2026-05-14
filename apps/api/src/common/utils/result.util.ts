@@ -1,3 +1,8 @@
+/**
+ * @module result.util
+ * @description Source module. See exports for details.
+ */
+
 import { Err } from '@common/result';
 import { Result, Ok, AppErr, AppErrorCode } from '../result';
 export class ResultUtil {

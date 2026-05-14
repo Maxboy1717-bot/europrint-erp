@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { ReactNode } from "react";
 
 export interface PosProduct {

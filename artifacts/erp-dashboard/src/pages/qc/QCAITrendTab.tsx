@@ -1,11 +1,17 @@
+/**
+ * @module QCAITrendTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Brain, AlertTriangle, RefreshCw } from "lucide-react";
+import { Brain, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 
+import { EPLoader } from "@/components/ep";
 interface AiTrendData {
   summary: { totalTests: number; totalBraks: number; avgPassRate: number; trend: string };
   weeklyTrend: Array<{ week: string; total: number; passed: number; failed: number; passRate: number }>;
@@ -23,7 +29,7 @@ export function QCAITrendTab() {
   if (aiTrendLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <EPLoader tone="muted" className="w-8 h-8" />
       </div>
     );
   }
@@ -40,7 +46,7 @@ export function QCAITrendTab() {
     <>
       <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
     <>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
           <CardHeader className="pb-1">
             <p className="text-sm text-muted-foreground">Jami testlar</p>
@@ -84,7 +90,7 @@ export function QCAITrendTab() {
         <CardContent className="space-y-2">
           {(Array.isArray(aiTrendData.aiInsights) ? aiTrendData.aiInsights : []).map((insight, i) => (
             <div key={`k-${i}`} className="flex gap-2 p-3 rounded-md bg-muted text-sm" data-testid={`text-ai-insight-${i}`}>
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-yellow-500" />
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[var(--ep-yellow)]" />
               <span>{insight}</span>
             </div>
           ))}
@@ -140,7 +146,7 @@ export function QCAITrendTab() {
             {aiTrendData.byStage.length === 0 ? (
               <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>
             ) : (
-              <Table>
+              <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Bosqich</TableHead>
@@ -149,13 +155,13 @@ export function QCAITrendTab() {
                 </TableHeader>
                 <TableBody>
                   {(Array.isArray(aiTrendData.byStage) ? aiTrendData.byStage : []).map((s, i) => (
-                    <TableRow key={`k-${i}`} data-testid={`row-brak-stage-${i}`}>
+                    <TableRow key={`k-${i}`} data-testid={`row-brak-stage-${i}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="text-sm capitalize">{s.stage}</TableCell>
                       <TableCell className="text-right font-medium">{s.count}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>

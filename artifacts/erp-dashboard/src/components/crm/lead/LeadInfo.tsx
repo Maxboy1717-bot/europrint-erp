@@ -1,3 +1,8 @@
+/**
+ * @module LeadInfo
+ * @description React UI component.
+ */
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save, X, Phone, Mail } from "lucide-react";
@@ -24,6 +29,7 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { Lead, LeadFormValues, leadFormSchema } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
 interface LeadInfoProps {
   lead: Lead | null;
   isEditing: boolean;
@@ -32,7 +38,8 @@ interface LeadInfoProps {
   onCancel: () => void;
 }
 
-export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: LeadInfoProps) {
+export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: LeadInfoProps) {
+  const { t } = useTranslation('common');
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
     values: lead
@@ -62,7 +69,7 @@ export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: Lea
             </FormItem>
           )} />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
                 <FormLabel>Ism</FormLabel>
@@ -114,14 +121,14 @@ export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: Lea
               <FormLabel>Manba</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-lead-source">
+                  <SelectTrigger data-testid="select-lead-source" className="h-9">
                     <SelectValue placeholder="Manbani tanlang" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="CALL">Telefon</SelectItem>
                   <SelectItem value="WEB">Sayt</SelectItem>
-                  <SelectItem value="EMAIL">Email</SelectItem>
+                  <SelectItem value="EMAIL">{t('email1')}</SelectItem>
                   <SelectItem value="TELEGRAM">Telegram</SelectItem>
                   <SelectItem value="REFERRAL">Tavsiya</SelectItem>
                   <SelectItem value="PARTNER">Hamkor</SelectItem>
@@ -159,7 +166,7 @@ export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: Lea
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <p className="text-sm text-muted-foreground">To'liq ism</p>
           <p className="font-medium">{([lead?.name, lead?.lastName]).filter(Boolean).join(" ") || "—"}</p>
@@ -187,7 +194,7 @@ export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: Lea
 
       {lead?.emails && lead.emails.length > 0 && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Email</p>
+          <p className="text-sm text-muted-foreground mb-1">{t('email1')}</p>
           <div className="space-y-1">
             {(Array.isArray(lead.emails) ? lead.emails : []).map((email, idx) => (
               <div key={idx} className="flex items-center gap-2">
@@ -200,7 +207,7 @@ export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: Lea
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <p className="text-sm text-muted-foreground">Manba</p>
           <p className="font-medium">{lead?.sourceId || "—"}</p>
@@ -208,7 +215,7 @@ export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: Lea
         {lead?.opportunity ? (
           <div>
             <p className="text-sm text-muted-foreground">Summa</p>
-            <p className="font-bold text-green-600">{lead.opportunity.toLocaleString()} UZS</p>
+            <p className="font-bold text-[var(--ep-green)]">{lead.opportunity.toLocaleString()} UZS</p>
           </div>
         ) : null}
       </div>
@@ -221,7 +228,7 @@ export function LeadInfo({ lead, isEditing, isPending, onSubmit, onCancel }: Lea
       )}
 
       <Separator />
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div>
           <p className="text-muted-foreground">Yaratilgan</p>
           <p>{lead?.dateCreate && format(new Date(lead.dateCreate), "dd.MM.yyyy HH:mm")}</p>

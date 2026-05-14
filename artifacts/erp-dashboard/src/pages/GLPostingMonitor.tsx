@@ -1,3 +1,8 @@
+/**
+ * @module GLPostingMonitor
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useLanguage } from "@/lib/i18n";
 import { BookOpen, CheckCircle, XCircle, Clock, TrendingUp, DollarSign, FileText, ArrowUpDown } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface GLStatusStat {
   status: string;
   count: number;
@@ -38,7 +43,7 @@ interface AccountMapEntry {
 }
 
 export default function GLPostingMonitor() {
-  const { t } = useLanguage();
+  const { t } = useTranslation('common');
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
@@ -82,11 +87,11 @@ export default function GLPostingMonitor() {
   const totalAmount = stats?.byStatus?.reduce((sum, s) => sum + (parseFloat(String(s.totalAmount)) || 0), 0) || 0;
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6" data-testid="page-gl-posting-monitor">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-gl-posting-monitor">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-page-title">Ombor → Moliya GL Posting</h1>
@@ -101,7 +106,7 @@ export default function GLPostingMonitor() {
         <Card data-testid="card-stat-posted">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-green-100 dark:bg-green-900"><CheckCircle className="w-5 h-5 text-green-600" /></div>
+              <div className="p-2 rounded-md bg-green-100 dark:bg-green-900"><CheckCircle className="w-5 h-5 text-[var(--ep-green)]" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Joylangan</p>
                 <p className="text-2xl font-bold">{totalPosted}</p>
@@ -112,7 +117,7 @@ export default function GLPostingMonitor() {
         <Card data-testid="card-stat-failed">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-red-100 dark:bg-red-900"><XCircle className="w-5 h-5 text-red-600" /></div>
+              <div className="p-2 rounded-md bg-red-100 dark:bg-red-900"><XCircle className="w-5 h-5 text-[var(--ep-red)]" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Xatolik</p>
                 <p className="text-2xl font-bold">{totalFailed}</p>
@@ -123,7 +128,7 @@ export default function GLPostingMonitor() {
         <Card data-testid="card-stat-pending">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-yellow-100 dark:bg-yellow-900"><Clock className="w-5 h-5 text-yellow-600" /></div>
+              <div className="p-2 rounded-md bg-yellow-100 dark:bg-yellow-900"><Clock className="w-5 h-5 text-[var(--ep-yellow)]" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Kutilmoqda</p>
                 <p className="text-2xl font-bold">{totalPending}</p>
@@ -134,7 +139,7 @@ export default function GLPostingMonitor() {
         <Card data-testid="card-stat-total-amount">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900"><DollarSign className="w-5 h-5 text-blue-600" /></div>
+              <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900"><DollarSign className="w-5 h-5 text-[var(--ep-blue)]" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Jami summa</p>
                 <p className="text-2xl font-bold">{(totalAmount / 1000000).toFixed(1)}M</p>
@@ -147,7 +152,7 @@ export default function GLPostingMonitor() {
       {accountMap && (
         <Card data-testid="card-account-mapping">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-            <CardTitle className="text-lg"><BookOpen className="w-4 h-4 inline mr-2" />Hisob Xaritasi (Account Mapping)</CardTitle>
+            <CardTitle className="text-[14px] font-semibold"><BookOpen className="w-4 h-4 inline mr-2" />Hisob Xaritasi (Account Mapping)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -164,10 +169,10 @@ export default function GLPostingMonitor() {
 
       <Card data-testid="card-postings-table">
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-          <CardTitle className="text-lg"><FileText className="w-4 h-4 inline mr-2" />GL Postinglar</CardTitle>
+          <CardTitle className="text-[14px] font-semibold"><FileText className="w-4 h-4 inline mr-2" />GL Postinglar</CardTitle>
           <div className="flex gap-2 flex-wrap">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-36" data-testid="select-status-filter"><SelectValue placeholder="Holat" /></SelectTrigger>
+              <SelectTrigger className="w-36 h-9" data-testid="select-status-filter"><SelectValue placeholder="Holat" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Barchasi</SelectItem>
                 <SelectItem value="posted">Joylangan</SelectItem>
@@ -176,11 +181,11 @@ export default function GLPostingMonitor() {
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-40" data-testid="select-type-filter"><SelectValue placeholder="Turi" /></SelectTrigger>
+              <SelectTrigger className="w-40 h-9" data-testid="select-type-filter"><SelectValue placeholder="Turi" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Barchasi</SelectItem>
                 <SelectItem value="GOODS_RECEIPT">Xom ashyo qabul</SelectItem>
-                <SelectItem value="GOODS_ISSUE">Material berish</SelectItem>
+                <SelectItem value="GOODS_ISSUE">{t('materialBerish')}</SelectItem>
                 <SelectItem value="PRODUCTION_RECEIPT">Tayyor mahsulot</SelectItem>
                 <SelectItem value="DELIVERY">Yetkazib berish</SelectItem>
               </SelectContent>
@@ -197,7 +202,7 @@ export default function GLPostingMonitor() {
               <p className="text-sm">Ombor operatsiyalari amalga oshirilganda avtomatik yaratiladi</p>
             </div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Raqam</TableHead>
@@ -211,7 +216,7 @@ export default function GLPostingMonitor() {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(postings) ? postings : []).map((p) => (
-                  <TableRow key={p.id} data-testid={`row-posting-${p.id}`}>
+                  <TableRow key={p.id} data-testid={`row-posting-${p.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-mono text-sm">{p.movementNumber || p.id.slice(0, 8)}</TableCell>
                     <TableCell><Badge variant="outline">{typeLabel(p.movementType)}</Badge></TableCell>
                     <TableCell>{p.quantity}</TableCell>
@@ -222,7 +227,7 @@ export default function GLPostingMonitor() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

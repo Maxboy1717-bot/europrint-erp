@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface StockBalanceItem extends Record<string, unknown> {
   materialId: string;
   name: string;

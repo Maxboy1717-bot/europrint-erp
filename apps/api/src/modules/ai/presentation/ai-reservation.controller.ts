@@ -1,3 +1,8 @@
+/**
+ * @module ai-reservation.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Param, Body, Query,
@@ -14,7 +19,7 @@ import { CreateReservationRequestDto, CreateBatchDto } from './dto/ai-reservatio
 
 @ApiTags('§15 AI Reservation')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai-reservation')
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER, Role.WAREHOUSE)

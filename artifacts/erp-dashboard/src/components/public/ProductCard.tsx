@@ -1,3 +1,8 @@
+/**
+ * @module ProductCard
+ * @description React UI component.
+ */
+
 import { Link } from 'wouter';
 import { Package, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
@@ -25,7 +30,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl" style={{ border: '1px solid rgba(0,0,0,0.04)' }} data-testid={`product-card-${product.id}`}>
+    <div className="group bg-card rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl" style={{ border: '1px solid rgba(0,0,0,0.04)' }} data-testid={`product-card-${product.id}`}>
       <Link href={`/site/product/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden" style={{ backgroundColor: '#FAFBFC' }}>
           {product.image ? (
@@ -39,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Package className="w-20 h-20 transition-colors duration-300" style={{ color: '#E5E7EB' }} />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
       </Link>
       

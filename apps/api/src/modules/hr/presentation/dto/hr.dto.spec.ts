@@ -1,3 +1,8 @@
+/**
+ * @module hr.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   HrCheckInSchema,

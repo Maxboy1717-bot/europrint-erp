@@ -1,3 +1,8 @@
+/**
+ * @module KpiCard
+ * @description React UI component.
+ */
+
 import type { ComponentType } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 

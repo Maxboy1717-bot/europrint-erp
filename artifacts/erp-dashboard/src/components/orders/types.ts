@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { LucideIcon } from "lucide-react";
 
 export interface Product {

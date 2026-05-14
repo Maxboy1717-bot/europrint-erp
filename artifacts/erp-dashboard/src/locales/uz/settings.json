@@ -61,5 +61,6 @@
   "backup.schedule": "Avtomatik zaxira jadvali",
   "telegram.title": "Telegram bot",
   "telegram.token": "Bot tokeni",
-  "telegram.chatId": "Chat ID"
+  "telegram.chatId": "Chat ID",
+  "website": "Veb-sayt"
 }

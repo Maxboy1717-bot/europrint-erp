@@ -1,3 +1,8 @@
+/**
+ * @module WelcomeEventsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -141,14 +146,12 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
                 Tadbir qo'shish
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl p-6">
               <DialogHeader>
-                <DialogTitle>
-                  {editingEvent?.id ? "Tadbirni tahrirlash" : "Yangi tadbir"}
-                </DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold"> {editingEvent?.id ? "Tadbirni tahrirlash" : "Yangi tadbir"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="title">Nomi (UZ)</Label>
                     <Input id="title" {...form.register("title")} data-testid="input-title" />
@@ -160,7 +163,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
                     {form.formState.errors.titleRu && <p className="text-sm text-destructive mt-1">{form.formState.errors.titleRu.message}</p>}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="description">Tavsif (UZ)</Label>
                     <Textarea id="description" {...form.register("description")} rows={3} data-testid="input-description" />
@@ -170,7 +173,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
                     <Textarea id="descriptionRu" {...form.register("descriptionRu")} rows={3} data-testid="input-description-ru" />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="eventDate">Sana</Label>
                     <Input id="eventDate" type="date" {...form.register("eventDate")} data-testid="input-event-date" />
@@ -184,7 +187,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
                     <Label>Holat</Label>
                     <Controller control={form.control} name="status" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-status"><SelectValue /></SelectTrigger>
+                        <SelectTrigger data-testid="select-status" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="planned">Rejalashtirilgan</SelectItem>
                           <SelectItem value="in_progress">Ketmoqda</SelectItem>
@@ -214,7 +217,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Tadbir nomi</TableHead>
@@ -232,7 +235,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
               </TableRow>
             )}
             {(Array.isArray(events) ? events : []).map((event: WelcomeEvent) => (
-              <TableRow key={event.id}>
+              <TableRow key={event.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium">{event.title}</TableCell>
                 <TableCell>{event.eventDate}</TableCell>
                 <TableCell>{event.eventTime || "-"}</TableCell>
@@ -255,7 +258,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
   );

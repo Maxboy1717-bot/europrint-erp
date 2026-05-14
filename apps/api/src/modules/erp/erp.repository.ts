@@ -1,3 +1,8 @@
+/**
+ * @module erp.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
@@ -114,11 +119,77 @@ export class ErpRepository {
   }
 
   async updateRoutingOperation(id: number, body: Row): Promise<Result<Row | null>>  {
-  try {  
+  try {
       const r = await exec(sql`UPDATE pp_routing_operations SET planned_duration = COALESCE(${body.plannedDuration ?? null}, planned_duration), work_center_id = COALESCE(${body.workCenterId ?? null}, work_center_id), updated_at = NOW() WHERE id = ${id} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
 
+  }
+
+  async createProduct(body: Row): Promise<Result<Row | null>> {
+  try {
+    const code = body.code ?? `MC-${Date.now()}`;
+    const r = await exec(sql`INSERT INTO material_cards (code, name, name_ru, unit, standard_cost, is_active) VALUES (${code}, ${body.name ?? 'Yangi mahsulot'}, ${body.nameRu ?? null}, ${body.unit ?? 'dona'}, ${body.standardCost ?? null}, ${body.isActive ?? true}) RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deleteProduct(id: number): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`UPDATE material_cards SET is_active = false WHERE id = ${id} RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async createBomHeader(body: Row): Promise<Result<Row | null>> {
+  try {
+    const bomNumber = body.bomNumber ?? `BOM-${Date.now()}`;
+    const r = await exec(sql`INSERT INTO bom_headers (bom_number, product_id, version) VALUES (${bomNumber}, ${body.productId ?? null}, ${body.version ?? '1.0'}) RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deleteBomHeader(id: number): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`DELETE FROM bom_headers WHERE id = ${id} RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deleteBomItem(id: number): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`DELETE FROM bom_items WHERE id = ${id} RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async createRouting(body: Row): Promise<Result<Row | null>> {
+  try {
+    const routingNumber = body.routingNumber ?? body.code ?? `RT-${Date.now()}`;
+    const r = await exec(sql`INSERT INTO routings (routing_number, product_id, version) VALUES (${routingNumber}, ${body.productId ?? null}, ${body.version ?? 1}) RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deleteRouting(id: number): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`DELETE FROM routings WHERE id = ${id} RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async createRoutingOperation(body: Row): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`INSERT INTO pp_routing_operations (routing_id, sequence_no, work_center_id, planned_duration) VALUES (${body.routingId ?? null}, ${body.sequenceNo ?? body.operationNumber ?? 1}, ${body.workCenterId ?? null}, ${body.plannedDuration ?? 0}) RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deleteRoutingOperation(id: number): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`DELETE FROM pp_routing_operations WHERE id = ${id} RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
   }
 }

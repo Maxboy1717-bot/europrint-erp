@@ -1,8 +1,13 @@
+/**
+ * @module camera-alerts.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
   Body, Controller, Get, InternalServerErrorException,
-  Param, ParseIntPipe, Post, Put, Query,
+  Param, ParseIntPipe, Patch, Post, Put, Query,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -50,6 +55,24 @@ export class CameraAlertsRouteController {
   @Roles(...CAM_WRITE)
   @UseInterceptors(AuditInterceptor)
   async resolve(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: Record<string, unknown>,
+  ) {
+    const dto = ResolveAlertBodySchema.parse(body);
+    return unwrapOrThrow(await this.svc.resolveCameraAlert(id, dto.notes));
+  }
+
+  @Patch(':id/acknowledge')
+  @Roles(...CAM_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async patchAcknowledge(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.svc.acknowledgeCameraAlert(id));
+  }
+
+  @Patch(':id/resolve')
+  @Roles(...CAM_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async patchResolve(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: Record<string, unknown>,
   ) {

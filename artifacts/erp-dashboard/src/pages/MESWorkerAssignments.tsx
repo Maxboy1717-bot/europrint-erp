@@ -1,3 +1,8 @@
+/**
+ * @module MESWorkerAssignments
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { mesApi } from "@/lib/api/mes";
@@ -29,9 +34,9 @@ interface Session {
 }
 
 function oeeColor(v: number) {
-  if (v >= 0.85) return "text-emerald-600";
-  if (v >= 0.70) return "text-amber-600";
-  return "text-red-600";
+  if (v >= 0.85) return "text-[var(--ep-green)]";
+  if (v >= 0.70) return "text-[var(--ep-yellow)]";
+  return "text-[var(--ep-red)]";
 }
 
 function statusDot(s: string) {
@@ -103,12 +108,12 @@ export default function MESWorkerAssignments() {
   }, {});
 
   const workerList = Object.entries(byWorker).map(([wId, ss]) => {
-    const active = (ss ?? []).filter(s => s.status === "running" || s.status === "active");
-    const totalProduced = (ss ?? []).reduce((a, s) => a + (s.actualQuantity || 0), 0);
-    const totalTarget   = (ss ?? []).reduce((a, s) => a + (s.targetQuantity || 0), 0);
-    const totalDefects  = (ss ?? []).reduce((a, s) => a + (s.defectQuantity || 0), 0);
-    const totalRunning  = (ss ?? []).reduce((a, s) => a + (s.runningTimeSeconds || 0), 0);
-    const oeeVals       = (ss ?? []).filter(s => s.oee != null).map(s => s.oee!);
+    const active = (Array.isArray(ss) ? ss : []).filter(s => s.status === "running" || s.status === "active");
+    const totalProduced = (Array.isArray(ss) ? ss : []).reduce((a, s) => a + (s.actualQuantity || 0), 0);
+    const totalTarget   = (Array.isArray(ss) ? ss : []).reduce((a, s) => a + (s.targetQuantity || 0), 0);
+    const totalDefects  = (Array.isArray(ss) ? ss : []).reduce((a, s) => a + (s.defectQuantity || 0), 0);
+    const totalRunning  = (Array.isArray(ss) ? ss : []).reduce((a, s) => a + (s.runningTimeSeconds || 0), 0);
+    const oeeVals       = (Array.isArray(ss) ? ss : []).filter(s => s.oee != null).map(s => s.oee as number);
     const avgOee        = oeeVals.length ? (Array.isArray(oeeVals) ? oeeVals : []).reduce((a, v) => a + v, 0) / oeeVals.length : null;
     const progress      = totalTarget > 0 ? Math.min(100, Math.round((totalProduced / totalTarget) * 100)) : 0;
     const isActive      = active.length > 0;
@@ -120,7 +125,7 @@ export default function MESWorkerAssignments() {
   const activeWorkers = (Array.isArray(workerList) ? workerList : []).filter(w => w.isActive).length;
 
   return (
-    <div className="flex-1 overflow-auto p-5 space-y-5">
+    <div className="flex flex-col flex-1 overflow-auto p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Xodim tayinlashlari</h1>
@@ -128,7 +133,7 @@ export default function MESWorkerAssignments() {
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="gap-1.5">
-            <Play className="w-3 h-3 text-emerald-500" /> {activeWorkers} faol
+            <Play className="w-3 h-3 text-[var(--ep-green)]" /> {activeWorkers} faol
           </Badge>
           <Badge variant="outline" className="gap-1.5">
             <Users className="w-3 h-3 text-muted-foreground" /> {workerList.length} xodim
@@ -138,10 +143,10 @@ export default function MESWorkerAssignments() {
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {([1,2,3,4,5,6]).map(i => <Skeleton key={`k-${i}`} className="h-48 rounded-xl" />)}
+          {([1,2,3,4,5,6]).map(i => <Skeleton key={`k-${i}`} className="h-48 rounded-lg" />)}
         </div>
       ) : workerList.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="text-center py-20 text-[13px] text-muted-foreground">
           <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p>Tayinlash topilmadi</p>
         </div>
@@ -169,7 +174,7 @@ export default function MESWorkerAssignments() {
                       <div className={cn(
                         "w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold",
                         w.isActive
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30"
+                          ? "bg-emerald-100 text-[var(--ep-green)] dark:bg-emerald-900/30"
                           : "bg-muted text-muted-foreground"
                       )}>
                         {w.wId.slice(-2).toUpperCase()}
@@ -212,7 +217,7 @@ export default function MESWorkerAssignments() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 pt-1 border-t">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-1 border-t">
                     <div className="text-center">
                       <p className={cn("text-sm font-bold",
                         w.avgOee ? oeeColor(w.avgOee) : "text-muted-foreground"
@@ -227,7 +232,7 @@ export default function MESWorkerAssignments() {
                     </div>
                     <div className="text-center">
                       <p className={cn("text-sm font-bold",
-                        Number(defectRate) > 5 ? "text-red-600" : "text-foreground"
+                        Number(defectRate) > 5 ? "text-[var(--ep-red)]" : "text-foreground"
                       )}>
                         {defectRate}%
                       </p>

@@ -1,3 +1,8 @@
+/**
+ * @module hr.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { HttpModule } from '@nestjs/axios';
@@ -5,6 +10,7 @@ import { FaceRecognitionService } from './attendance/face-recognition.service';
 import { TerritoryLogRepository } from './attendance/territory-log.repository';
 import { TerritoryLogService } from './attendance/territory-log.service';
 import { LateArrivalService } from './attendance/late-arrival.service';
+import { DisciplineRecordRepository } from './attendance/discipline-record.repository';
 import { RoomSnapshotCron } from './attendance/room-snapshot.cron';
 import { AttendanceFaceController } from './attendance/attendance-face.controller';
 import { TerritoryGateway } from './attendance/territory.gateway';
@@ -106,6 +112,7 @@ import { HrGsdController } from './presentation/hr-gsd.controller';
 import { HrGsdService } from './presentation/hr-gsd.service';
 import { HrGsdRepository } from './presentation/hr-gsd.repository';
 import { EmployeesForFaceController } from './presentation/employees-for-face.controller';
+import { HrEmployeeGoalsController } from './presentation/hr-employee-goals.controller';
 
 const commandHandlers = [
   RecordAttendanceHandler,
@@ -171,6 +178,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrGsdController,
     EmployeesForFaceController,
     AttendanceFaceController,
+    HrEmployeeGoalsController,
   ],
   providers: [
     HrRepository,
@@ -224,6 +232,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     TerritoryLogRepository,
     TerritoryLogService,
     LateArrivalService,
+    DisciplineRecordRepository,
     RoomSnapshotCron,
     TerritoryGateway,
   ],

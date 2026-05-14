@@ -12,6 +12,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStore } from "@/store/chatStore";
+import { useTranslation } from '@/lib/i18n';
 import {
   Search, Moon, Maximize2, Grid3x3, MessageSquare,
   Mail, Bell, Menu, Printer, LayoutGrid, ShoppingCart,
@@ -109,7 +110,8 @@ export interface MockupShellProps {
   onLogout?: () => void;
 }
 
-export function MockupShell({ children, onLogout: _onLogout }: MockupShellProps) {
+export function MockupShell({children, onLogout: _onLogout }: MockupShellProps) {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -145,7 +147,7 @@ export function MockupShell({ children, onLogout: _onLogout }: MockupShellProps)
     <div className="min-h-screen" style={{ background: 'var(--ep-bg)', color: 'var(--ep-text)', fontSize: 13, fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif' }}>
       {/* ============ SIDEBAR (chap, 248px, oq fon) ============ */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-50 w-[248px] overflow-y-auto bg-[hsl(var(--card))] border-r border-[hsl(var(--border))] transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 left-0 bottom-0 z-50 w-full sm:w-[248px] overflow-y-auto bg-[hsl(var(--card))] border-r border-[hsl(var(--border))] transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Profile block */}
         <div className="text-center px-4 pt-5 pb-4 border-b border-[hsl(var(--border))]">
@@ -311,7 +313,7 @@ export function MockupShell({ children, onLogout: _onLogout }: MockupShellProps)
               onClick={() => document.documentElement.requestFullscreen?.()}
               className="w-9 h-9 rounded-full inline-flex items-center justify-center hidden md:inline-flex"
               style={{ background: 'hsl(var(--muted))' }}
-              title="Fullscreen"
+              title={t('fullscreen')}
             >
               <Maximize2 className="h-4 w-4" />
             </button>

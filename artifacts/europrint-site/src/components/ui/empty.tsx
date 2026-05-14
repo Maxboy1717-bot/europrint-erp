@@ -1,3 +1,8 @@
+/**
+ * @module empty
+ * @description Source module. See exports for details.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"

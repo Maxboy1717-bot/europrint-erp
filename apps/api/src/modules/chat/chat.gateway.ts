@@ -1,3 +1,8 @@
+/**
+ * @module chat.gateway
+ * @description NestJS WebSocket gateway. Socket.IO handlers.
+ */
+
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -30,7 +35,13 @@ let _chatWsIsDev = true;
 function chatWsCorsAllowed(origin: string): boolean {
   if (!origin) return true;
   if (_chatWsAllowedOrigins.includes(origin)) return true;
-  if (_chatWsIsDev && (origin.endsWith('.replit.dev') || origin.endsWith('.repl.co'))) return true;
+  if (_chatWsIsDev && (
+    origin.startsWith('http://localhost') ||
+    origin.startsWith('https://localhost') ||
+    origin.startsWith('http://127.0.0.1') ||
+    origin.endsWith('.replit.dev') ||
+    origin.endsWith('.repl.co')
+  )) return true;
   return false;
 }
 
@@ -108,7 +119,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.join(`room:${room.id}`);
       }
 
-      client.emit('connected', { userId, rooms });
+      client.emit('connected', { userId, rooms, onlineUserIds: Array.from(this.userSockets.keys()) });
 
       const unread = await this.chatService.getTotalUnreadCount(userId);
       client.emit('unread_count', { count: unread });

@@ -1,3 +1,8 @@
+/**
+ * @module IdealVsActualPanel
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +11,7 @@ import { Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAuthHeaders } from "@/lib/queryClient";
 import type { IdealVsActual } from "./types";
+import { apiRequest } from '@/lib/queryClient';
 
 const FE_PROFIT_TARGET = 100_000_000;
 const FE_REVENUE_TARGET = 800_000_000;
@@ -14,7 +20,7 @@ export function IdealVsActualPanel() {
   const { data, isLoading } = useQuery<IdealVsActual>({
     queryKey: ["/api/director/ideal-vs-actual"],
     queryFn: async () => {
-      const res = await fetch("/api/director/ideal-vs-actual", { headers: getAuthHeaders() });
+      const res = await apiRequest('GET', "/api/director/ideal-vs-actual");
       if (!res.ok) throw new Error("ideal-vs-actual failed");
       return res.json() as Promise<IdealVsActual>;
     },
@@ -65,7 +71,7 @@ export function IdealVsActualPanel() {
                     <span className="text-xs text-muted-foreground">{item.actual} / {item.target} so'm</span>
                     <span className={cn(
                       "text-xs font-bold px-1.5 py-0.5 rounded",
-                      item.deviation >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                      item.deviation >= 0 ? "bg-emerald-50 text-[var(--ep-green)]" : "bg-red-50 text-[var(--ep-red)]"
                     )}>
                       {item.deviation >= 0 ? "+" : ""}{item.deviation}%
                     </span>

@@ -1,3 +1,8 @@
+/**
+ * @module positions
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { pgTable, serial, varchar, integer, boolean, timestamp, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -8,7 +13,7 @@ export const positions = pgTable("positions", {
   code: varchar("code", { length: 50 }).notNull().unique(),
   nameUz: varchar("name_uz", { length: 150 }).notNull(),
   nameRu: varchar("name_ru", { length: 150 }),
-  departmentId: integer("department_id").references(() => departments.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   level: integer("level").default(1),
   rbacTier: varchar("rbac_tier", { length: 20 }).notNull().default("standard"),
   isManagement: boolean("is_management").default(false).notNull(),

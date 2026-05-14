@@ -1,3 +1,8 @@
+/**
+ * @module useErpOfflineSync
+ * @description React custom hook.
+ */
+
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {

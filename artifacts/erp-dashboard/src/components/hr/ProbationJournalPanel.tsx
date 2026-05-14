@@ -1,3 +1,8 @@
+/**
+ * @module ProbationJournalPanel
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, safeArray } from "@/lib/queryClient";
@@ -111,7 +116,7 @@ export function ProbationJournalPanel({
   const daysLeft = calcDaysLeft(endDate);
   const progress = calcProgress(startDate, endDate);
 
-  const nextWeek = (entries.length > 0 ? Math.max(...(entries ?? []).map(e => e.week_number)) + 1 : 1);
+  const nextWeek = (entries.length > 0 ? Math.max(...(Array.isArray(entries) ? entries : []).map(e => e.week_number)) + 1 : 1);
 
   const addMutation = useMutation({
     mutationFn: () =>
@@ -183,7 +188,7 @@ export function ProbationJournalPanel({
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-emerald-400" />
-          <span className="font-semibold text-sm text-on-surface">Sinov Davri Kuzatuvi</span>
+          <span className="font-semibold text-sm text-foreground">Sinov Davri Kuzatuvi</span>
           <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 border text-[10px]">
             {probationMonths} oy
           </Badge>
@@ -202,7 +207,7 @@ export function ProbationJournalPanel({
           <Button
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+            className="h-6 text-[10px] px-2 border-emerald-500/40 text-emerald-400 hover:bg-[var(--ep-green)]/90/10"
             onClick={handleOpenAdd}
             data-testid="button-add-probation-entry"
           >
@@ -278,10 +283,10 @@ export function ProbationJournalPanel({
             return (
               <div
                 key={entry.id}
-                className="bg-surface-container rounded-lg p-3 border border-border/30 text-xs space-y-1.5"
+                className="bg-muted/60 rounded-lg p-3 border border-border/30 text-xs space-y-1.5"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-on-surface">
+                  <span className="font-semibold text-foreground">
                     {entry.week_number}-hafta
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -323,7 +328,7 @@ export function ProbationJournalPanel({
 
       {/* Add Entry Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-400" />
@@ -331,7 +336,7 @@ export function ProbationJournalPanel({
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs mb-1 block">Hafta raqami *</Label>
                 <Input
@@ -346,7 +351,7 @@ export function ProbationJournalPanel({
               <div>
                 <Label className="text-xs mb-1 block">Kayfiyat (1-5) *</Label>
                 <Select value={form.mood_score} onValueChange={v => setForm(f => ({ ...f, mood_score: v }))}>
-                  <SelectTrigger data-testid="select-probation-mood">
+                  <SelectTrigger data-testid="select-probation-mood" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -363,7 +368,7 @@ export function ProbationJournalPanel({
             <div>
               <Label className="text-xs mb-1 block">Vazifalar holati</Label>
               <Select value={form.tasks_status} onValueChange={v => setForm(f => ({ ...f, tasks_status: v }))}>
-                <SelectTrigger data-testid="select-probation-tasks">
+                <SelectTrigger data-testid="select-probation-tasks" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -424,7 +429,7 @@ export function ProbationJournalPanel({
 
       {/* Edit Dates Dialog */}
       <Dialog open={editingDates} onOpenChange={setEditingDates}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm">
               <CalendarDays className="w-4 h-4 text-emerald-400" />

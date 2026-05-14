@@ -1,3 +1,8 @@
+/**
+ * @module TechAccessTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,29 +98,29 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
       <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/20">
+        <Card className="from-blue-500/10 to-blue-600/10 border-blue-500/20">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Tizim roli</p>
-                <p className="text-lg font-bold text-blue-600 mt-1">
+                <p className="text-lg font-bold text-[var(--ep-blue)] mt-1">
                   {ROLE_LABELS[employeeRole] || employeeRole}
                 </p>
               </div>
-              <Key className="h-6 w-6 text-blue-500" />
+              <Key className="h-6 w-6 text-[var(--ep-blue)]" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`border ${hasIoTAccess ? "bg-gradient-to-br from-green-500/10 to-green-600/10 border-green-500/20" : "bg-muted/30"}`}>
+        <Card className={`border ${hasIoTAccess ? "from-green-500/10 to-green-600/10 border-green-500/20" : "bg-muted/30"}`}>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">IoT Planshet kirish</p>
                 {hasIoTAccess ? (
                   <div className="flex items-center gap-1 mt-1">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="font-bold text-green-600">Ruxsat bor</span>
+                    <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
+                    <span className="font-bold text-[var(--ep-green)]">Ruxsat bor</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 mt-1">
@@ -129,12 +134,12 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/20">
+        <Card className="from-purple-500/10 to-purple-600/10 border-purple-500/20">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Ochiq modullar</p>
-                <p className="text-2xl font-bold text-purple-600">{allowedModules.length}</p>
+                <p className="text-2xl font-bold text-[var(--ep-purple)]">{allowedModules.length}</p>
                 <p className="text-xs text-muted-foreground">{ALL_MODULES.length} dan</p>
                 {employeeHireDate && (
                   <p className="text-xs text-muted-foreground mt-1">
@@ -147,7 +152,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
                   </p>
                 )}
               </div>
-              <Shield className="h-6 w-6 text-purple-500" />
+              <Shield className="h-6 w-6 text-[var(--ep-purple)]" />
             </div>
           </CardContent>
         </Card>
@@ -162,7 +167,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
           <CardDescription>Rol asosidagi tizim ruxsatlari</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {(Array.isArray(ALL_MODULES) ? ALL_MODULES : []).map((module) => {
               const hasAccess = allowedModules.includes(module);
               return (
@@ -170,7 +175,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
                   key={module}
                   className={`flex items-center gap-2 rounded-md p-3 border ${
                     hasAccess
-                      ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400"
+                      ? "bg-green-500/10 border-green-500/20 text-[var(--ep-green)] dark:text-green-400"
                       : "bg-muted/30 border-border text-muted-foreground"
                   }`}
                   data-testid={`module-access-${module}`}
@@ -189,7 +194,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
       </Card>
 
       {loadingCertificates ? (
-        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full rounded-lg" />
       ) : (
         <Card>
           <CardHeader>
@@ -205,7 +210,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
                 {(Array.isArray(certBasedAccess) ? certBasedAccess : []).map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 rounded-md p-3 bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400"
+                    className="flex items-center gap-2 rounded-md p-3 bg-blue-500/10 border border-blue-500/20 text-[var(--ep-blue)] dark:text-blue-400"
                     data-testid={`cert-access-${idx}`}
                   >
                     <CheckCircle className="h-4 w-4 shrink-0" />

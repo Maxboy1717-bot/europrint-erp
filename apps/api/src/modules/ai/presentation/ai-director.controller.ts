@@ -1,3 +1,8 @@
+/**
+ * @module ai-director.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {Controller, Post, Get, Body, UseGuards, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
@@ -18,7 +23,7 @@ import { unwrapOrInternal } from '@common/http-result';
 
 @ApiTags('AI — Director')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
 @Controller('ai/director')
 export class AiDirectorController {

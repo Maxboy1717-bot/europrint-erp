@@ -1,3 +1,8 @@
+/**
+ * @module advance-approved.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { IPpRepository } from '../../domain/repositories/pp.repository';

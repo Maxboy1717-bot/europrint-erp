@@ -1,3 +1,8 @@
+/**
+ * @module data-retention.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { ensureDataRetentionArchiveTables } from '@common/database/ddl-migrations';
 import { execArchivePosMovements, execArchiveEmployeeDocuments, execArchiveManagementDocuments } from '@common/database/queries-data-retention';

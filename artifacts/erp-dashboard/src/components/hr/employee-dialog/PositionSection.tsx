@@ -1,3 +1,8 @@
+/**
+ * @module PositionSection
+ * @description React UI component.
+ */
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormSectionProps, Department, Position } from "./types";
@@ -14,7 +19,7 @@ export function PositionSection({ form, departments, positions }: PositionSectio
     : positions;
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <FormField
         control={form.control}
         name="departmentId"
@@ -23,7 +28,7 @@ export function PositionSection({ form, departments, positions }: PositionSectio
             <FormLabel>Bo'lim</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
-                <SelectTrigger data-testid="select-department">
+                <SelectTrigger data-testid="select-department" className="h-9">
                   <SelectValue placeholder="Bo'limni tanlang" />
                 </SelectTrigger>
               </FormControl>
@@ -47,7 +52,7 @@ export function PositionSection({ form, departments, positions }: PositionSectio
             <FormLabel>Lavozim</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
-                <SelectTrigger data-testid="select-position">
+                <SelectTrigger data-testid="select-position" className="h-9">
                   <SelectValue placeholder="Lavozimni tanlang" />
                 </SelectTrigger>
               </FormControl>

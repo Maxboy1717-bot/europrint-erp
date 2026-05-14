@@ -1,3 +1,8 @@
+/**
+ * @module production-facts.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Ok, Err, Result, safeCall } from '@common/result';
@@ -13,12 +18,12 @@ export class ProductionFactsRepository {
   async getAll(startDate: string | null, endDate: string | null, papkaNo: string | null, operatorId: string | null, workCenterId: string | null): Promise<Result<Row[]>>  {
   try {  
       return startDate && endDate && papkaNo && operatorId && workCenterId
-        ? exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, u.full_name as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id WHERE pf.fact_date >= ${startDate} AND pf.fact_date <= ${endDate} AND pf.papka_no = ${papkaNo} AND pf.operator_id = ${operatorId} AND pf.work_center_id = ${workCenterId} ORDER BY pf.fact_date DESC`)
+        ? exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, (u.first_name || ' ' || u.last_name) as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id WHERE pf.fact_date >= ${startDate} AND pf.fact_date <= ${endDate} AND pf.papka_no = ${papkaNo} AND pf.operator_id = ${operatorId} AND pf.work_center_id = ${workCenterId} ORDER BY pf.fact_date DESC`)
         : startDate && endDate && papkaNo
-        ? exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, u.full_name as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id WHERE pf.fact_date >= ${startDate} AND pf.fact_date <= ${endDate} AND pf.papka_no = ${papkaNo} ORDER BY pf.fact_date DESC`)
+        ? exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, (u.first_name || ' ' || u.last_name) as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id WHERE pf.fact_date >= ${startDate} AND pf.fact_date <= ${endDate} AND pf.papka_no = ${papkaNo} ORDER BY pf.fact_date DESC`)
         : startDate && endDate
-        ? exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, u.full_name as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id WHERE pf.fact_date >= ${startDate} AND pf.fact_date <= ${endDate} ORDER BY pf.fact_date DESC`)
-        : exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, u.full_name as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id ORDER BY pf.fact_date DESC`);  } catch (_e) {
+        ? exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, (u.first_name || ' ' || u.last_name) as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id WHERE pf.fact_date >= ${startDate} AND pf.fact_date <= ${endDate} ORDER BY pf.fact_date DESC`)
+        : exec(sql`SELECT pf.id, pf.papka_no, pf.fact_date, pf.operator_id, (u.first_name || ' ' || u.last_name) as operator_name, pf.work_center_id, wc.name as work_center_name, pf.planned_qty, pf.actual_qty, pf.variance, pf.defects, pf.notes, pf.created_at FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id LEFT JOIN work_centers wc ON wc.id::text = pf.work_center_id ORDER BY pf.fact_date DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -36,7 +41,7 @@ export class ProductionFactsRepository {
 
   async getOperators(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT pf.operator_id, u.full_name as operator_name, COUNT(*) as total_facts, AVG(pf.variance) as avg_variance, SUM(pf.defects) as total_defects, SUM(pf.actual_qty) as total_actual_qty FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id GROUP BY pf.operator_id, u.full_name ORDER BY SUM(pf.actual_qty) DESC`);  } catch (_e) {
+      return exec(sql`SELECT pf.operator_id, (u.first_name || ' ' || u.last_name) as operator_name, COUNT(*) as total_facts, AVG(pf.variance) as avg_variance, SUM(pf.defects) as total_defects, SUM(pf.actual_qty) as total_actual_qty FROM production_facts_sm72 pf LEFT JOIN users u ON u.id::text = pf.operator_id GROUP BY pf.operator_id, u.first_name, u.last_name ORDER BY SUM(pf.actual_qty) DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 

@@ -1,3 +1,8 @@
+/**
+ * @module integration-mro.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Result, AppError } from '@common/result';
 import { IntegrationMroRepository } from './integration-mro.repo';

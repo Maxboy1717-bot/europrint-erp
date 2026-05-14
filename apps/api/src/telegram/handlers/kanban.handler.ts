@@ -1,3 +1,8 @@
+/**
+ * @module kanban.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common'
 import { TelegramService } from '../telegram.service'
 

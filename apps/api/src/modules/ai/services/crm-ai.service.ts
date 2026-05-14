@@ -1,3 +1,8 @@
+/**
+ * @module crm-ai.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { AI_SHORT_MAX_TOKENS, AI_MAX_TOKENS_STANDARD } from '@common/constants/app.constants';
 /**
  * CRM AI Service — Lead scoring, Deal probability, Churn risk, Next best action
@@ -5,9 +10,7 @@ import { AI_SHORT_MAX_TOKENS, AI_MAX_TOKENS_STANDARD } from '@common/constants/a
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
 import { AiRouterService } from '../application/services/ai-router.service';
-import { db } from '@shared/db';
-import { crmLeads, crmDeals, crmContacts } from '@europrint/schemas';
-import { eq, and, isNull } from 'drizzle-orm';
+import { AiDataRepository } from './ai-data.repository';
 import type { LeadScoreResult, DealProbabilityResult, ChurnRiskResult } from './crm-ai.types';
 export type { LeadScoreResult, DealProbabilityResult, ChurnRiskResult };
 
@@ -15,18 +18,16 @@ export type { LeadScoreResult, DealProbabilityResult, ChurnRiskResult };
 export class CrmAiService {
   private readonly logger = new Logger(CrmAiService.name);
 
-  constructor(private readonly ai: AiRouterService) {}
+  constructor(
+    private readonly ai:       AiRouterService,
+    private readonly dataRepo: AiDataRepository,
+  ) {}
 
   // ─── Lead Scoring ────────────────────────────────────────────────────────
 
   async scoreLead(leadId: number, userId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
-      const [lead] = (await db
-        .select()
-        .from(crmLeads)
-        .where(and(eq(crmLeads.id, leadId), isNull(crmLeads.deleted_at)))
-        .limit(1)) as Array<Record<string, unknown>>;
-  
+      const lead = await this.dataRepo.getLeadById(leadId);
       if (!lead) throw new InternalServerErrorException(`Lead #${leadId} topilmadi`);
   
       const prompt = `
@@ -77,12 +78,7 @@ export class CrmAiService {
   // ─── Deal Probability ────────────────────────────────────────────────────
 
   async predictDealProbability(dealId: number, userId: number): Promise<DealProbabilityResult> {
-    const [deal] = (await db
-      .select()
-      .from(crmDeals)
-      .where(and(eq(crmDeals.id, dealId), isNull(crmDeals.deleted_at)))
-      .limit(1)) as Array<Record<string, unknown>>;
-
+    const deal = await this.dataRepo.getDealById(dealId);
     if (!deal) throw new InternalServerErrorException(`Deal #${dealId} topilmadi`);
 
     const prompt = `
@@ -138,11 +134,7 @@ JSON formatda:
   // ─── Churn Risk ──────────────────────────────────────────────────────────
 
   async assessChurnRisk(contactId: number, activityData: Record<string, unknown>, userId: number): Promise<ChurnRiskResult> {
-    const [contact] = (await db
-      .select()
-      .from(crmContacts)
-      .where(eq(crmContacts.id, contactId))
-      .limit(1)) as Array<Record<string, unknown>>;
+    const contact = await this.dataRepo.getContactById(contactId);
 
     const prompt = `
 EuroPrint CRM: Mijoz ketish xavfini baholang.
@@ -245,11 +237,7 @@ JSON formatda:
     lastActivities: string[],
     userId: number,
   ): Promise<{ action: string; priority: 'HIGH' | 'MEDIUM' | 'LOW'; deadline: string; script?: string }> {
-    const [deal] = await db
-      .select({ title: crmDeals.title, amount: crmDeals.amount, stage_id: crmDeals.stage_id })
-      .from(crmDeals)
-      .where(eq(crmDeals.id, dealId))
-      .limit(1);
+    const deal = await this.dataRepo.getDealSummaryById(dealId);
 
     const prompt = `
 EuroPrint CRM: Keyingi eng yaxshi harakat nima?

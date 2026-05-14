@@ -1,3 +1,8 @@
+/**
+ * @module integration-mro.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body, Controller, Get, HttpCode, Param, Patch, Post, Put,
   Query, UseGuards, UseInterceptors, UsePipes, HttpStatus } from '@nestjs/common';

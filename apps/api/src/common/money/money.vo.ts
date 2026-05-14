@@ -1,3 +1,8 @@
+/**
+ * @module money.vo
+ * @description Value object. Immutable domain primitive with validation in its factory.
+ */
+
 import Decimal from 'decimal.js';
 
 Decimal.set({ rounding: Decimal.ROUND_HALF_EVEN, toExpNeg: -18, toExpPos: 18 });
@@ -108,6 +113,6 @@ export class Money {
   }
 
   static sum(items: Money[], currency = 'UZS'): Money {
-    return (items ?? []).reduce((acc, m) => acc.add(m), Money.zero(currency));
+    return (Array.isArray(items) ? items : []).reduce((acc, m) => acc.add(m), Money.zero(currency));
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module PermissionButton
+ * @description React UI component.
+ */
+
 import * as React from "react";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import {

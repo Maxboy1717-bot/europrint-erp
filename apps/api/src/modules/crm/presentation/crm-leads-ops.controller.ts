@@ -1,3 +1,8 @@
+/**
+ * @module crm-leads-ops.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
@@ -36,7 +41,7 @@ export class CrmLeadsOpsController {
     return r[0];
   }
 
-  @Patch(':id/stage')
+  @Patch(':id/pipeline-stage')
   @UsePipes(new ZodValidationPipe(UpdateLeadStageDtoSchema))
   async updateStage(@Param('id') id: string, @Body() body: UpdateLeadStageDto) {
     const stageId = safeInt(body.stage_id, 0);

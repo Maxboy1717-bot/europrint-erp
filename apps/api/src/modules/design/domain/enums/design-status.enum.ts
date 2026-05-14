@@ -1,3 +1,8 @@
+/**
+ * @module design-status.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum DesignStatus {
   NEW = 'new',
   AI_GENERATED = 'ai_generated',

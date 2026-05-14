@@ -1,3 +1,8 @@
+/**
+ * @module dispatch-delivery.command
+ * @description Source module. See exports for details.
+ */
+
 export class DispatchDeliveryCommand {
   constructor(readonly deliveryId: string,
     readonly orderId: number,

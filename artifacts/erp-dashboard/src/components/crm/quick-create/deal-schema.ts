@@ -1,3 +1,8 @@
+/**
+ * @module deal-schema
+ * @description React UI component.
+ */
+
 import { z } from "zod";
 
 export const CURRENCIES = [

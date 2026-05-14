@@ -1,3 +1,8 @@
+/**
+ * @module camera-heatmap-reports.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body, Controller, Get, InternalServerErrorException,
   Param, Post, Query,
@@ -72,4 +77,12 @@ export class CameraReportsController {
     const dto = ReportGenerateBodySchema.parse(body);
     return unwrapOrThrow(await this.svc.generateReport('excel', dto.date_from, dto.date_to));
   }
+
+  @Get('generate-pdf')
+  @Roles(...CAM_READ)
+  async downloadPdf(@Query('period') period?: string) { return { url: null, period }; }
+
+  @Get('generate-excel')
+  @Roles(...CAM_READ)
+  async downloadExcel(@Query('period') period?: string) { return { url: null, period }; }
 }

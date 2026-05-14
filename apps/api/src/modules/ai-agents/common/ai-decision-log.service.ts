@@ -1,3 +1,49 @@
+/**
+ * @module ai-decision-log.service
+ * @description Centralised log + idempotency cache for every AI-agent
+ *   decision. Every agent (production, supplier, IoT, HR-perf, etc.) writes
+ *   its action proposals here BEFORE applying them. Three jobs:
+ *
+ *     1. **Idempotency** — same input within 1 hour returns the cached
+ *        decision instead of re-calling the LLM. Saves cost + latency.
+ *     2. **Audit trail** — every model output recorded with confidence,
+ *        latency, cost, model version → traceable for compliance + Director.
+ *     3. **Stats** — per-agent rollups for the Director AI-Audit dashboard
+ *        (auto-rate, override-rate, p95 latency, total spend).
+ * @layer Service (AI-agents cross-cutting)
+ *
+ * WHY 1-HOUR IDEMPOTENCY WINDOW
+ *   Production state changes fast — overtime, machine status, inventory.
+ *   A cached decision from yesterday would act on stale facts. 1 hour
+ *   matches our shortest agent cadence (MES monitor runs every 5 min, but
+ *   its inputs are bucketed to the hour to avoid thrashing).
+ *
+ *   The hash key includes `bucketHour` so cache invalidation is automatic
+ *   at the hour boundary — no manual cache-clear endpoint needed.
+ *
+ * WHY SHA-256 OF JSON STRINGIFY FOR THE INPUT HASH
+ *   We need a stable key for "same logical input". `JSON.stringify` is not
+ *   strictly stable (object key order can vary) but for our agent inputs
+ *   (structured DTOs) it's good enough — and a real canonicaliser would
+ *   need a separate dependency. If we hit false-negative cache misses, swap
+ *   for `safe-stable-stringify`.
+ *
+ * WHY UUID NORMALISATION (toEntityUuid)
+ *   The `aiDecisionLog.entityId` column is UUID-typed for indexing speed.
+ *   But agents reference entities by different ID formats: production
+ *   orders use INT, customers use UUID, machines use string codes. We
+ *   deterministically map non-UUID strings to a SHA-256-derived UUID v4
+ *   so the same logical entity always lands on the same row regardless of
+ *   the source ID format. The bit-twiddling at `parseInt(h[16], 16) & 0x3 | 0x8`
+ *   sets the UUID variant bits (RFC 4122 §4.1.1) so PG accepts it.
+ *
+ * WHY HumanOverride TRACKING MATTERS
+ *   The Director AI-Audit panel shows "decisions overridden by humans".
+ *   A high override rate on an agent means its model needs retuning. We
+ *   record both the auto decision AND the human override on the same row
+ *   so the audit query can compute override rate without a join.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { db, aiDecisionLog } from '@shared/db';
@@ -138,14 +184,18 @@ export class AiDecisionLogService {
   }
 
   async getRecentDecisions(agentCode: string, limit = 50, onlyIncorrect = false) {
-    const baseWhere = onlyIncorrect
-      ? sql`agent_code = ${agentCode} AND human_override IS NOT NULL`
-      : eq(aiDecisionLog.agentCode, agentCode);
-    return db.select()
-      .from(aiDecisionLog)
-      .where(baseWhere)
-      .orderBy(sql`created_at DESC`)
-      .limit(limit);
+    try {
+      const baseWhere = onlyIncorrect
+        ? sql`agent_code = ${agentCode} AND human_override IS NOT NULL`
+        : eq(aiDecisionLog.agentCode, agentCode);
+      return await db.select()
+        .from(aiDecisionLog)
+        .where(baseWhere)
+        .orderBy(sql`created_at DESC`)
+        .limit(limit);
+    } catch (e) {
+      throw new Error(`aiDecisionLog.getRecentDecisions: ${String(e)}`);
+    }
   }
 
   async getHardBlockStats() {

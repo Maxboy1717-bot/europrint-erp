@@ -1,3 +1,8 @@
+/**
+ * @module AddDisciplineDialog
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,8 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
 interface AddDisciplineDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,9 +80,9 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>Intizom yozuvi qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Intizom yozuvi qo'shish</DialogTitle>
           <DialogDescription>
             Xodimga ogohlantirish, jazo yoki mukofot berish
           </DialogDescription>
@@ -84,10 +90,10 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!userId && (
-            <div className="space-y-2">
-              <Label htmlFor="userId">Xodim *</Label>
+            <div className="space-y-1">
+          <Label htmlFor="userId">Xodim *</Label>
               <Select value={formData.userId} onValueChange={(value) => setFormData({ ...formData, userId: value })}>
-                <SelectTrigger data-testid="select-employee">
+                <SelectTrigger data-testid="select-employee" className="h-9">
                   <SelectValue placeholder="Xodimni tanlang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -101,11 +107,11 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Turi *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="type">Turi *</Label>
               <Select value={formData.type} onValueChange={(value: string) => setFormData({ ...formData, type: value as "warning" | "penalty" | "reward" })}>
-                <SelectTrigger data-testid="select-type">
+                <SelectTrigger data-testid="select-type" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -116,8 +122,8 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="amount">Summa (so'm)</Label>
+            <div className="space-y-1">
+          <Label htmlFor="amount">Summa (so'm)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -133,8 +139,8 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="reason">Sabab (O'zbek) *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="reason">Sabab (O'zbek) *</Label>
             <Textarea
               id="reason"
               placeholder="Sabab va tafsilot..."
@@ -146,8 +152,8 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="reasonRu">Sabab (Rus)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="reasonRu">Sabab (Rus)</Label>
             <Textarea
               id="reasonRu"
               placeholder="Причина и подробности..."
@@ -158,10 +164,10 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="givenBy">Kim berdi *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="givenBy">Kim berdi *</Label>
             <Select value={formData.givenBy} onValueChange={(value) => setFormData({ ...formData, givenBy: value })}>
-              <SelectTrigger data-testid="select-given-by">
+              <SelectTrigger data-testid="select-given-by" className="h-9">
                 <SelectValue placeholder="HR/Admin tanlang" />
               </SelectTrigger>
               <SelectContent>
@@ -189,7 +195,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
               disabled={createMutation.isPending || !formData.userId || !formData.givenBy} 
               data-testid="button-submit"
             >
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
               Saqlash
             </Button>
           </DialogFooter>

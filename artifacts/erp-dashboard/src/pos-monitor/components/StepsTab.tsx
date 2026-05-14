@@ -1,3 +1,8 @@
+/**
+ * @module StepsTab
+ * @description React UI component.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { movementsApi } from "../api/pos-monitor.api";
 

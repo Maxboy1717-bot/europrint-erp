@@ -1,3 +1,8 @@
+/**
+ * @module VoiceRecorder
+ * @description React UI component.
+ */
+
 import { useState, useRef } from 'react';
 import { Mic, Square, Trash2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -78,7 +83,7 @@ export function VoiceRecorder({ onSend, onCancel }: Props) {
             <Trash2 className="h-4 w-4" />
           </Button>
           <div className="flex-1 flex items-center gap-1">
-            <Square className="h-3 w-3 text-red-500 animate-pulse" />
+            <Square className="h-3 w-3 text-[var(--ep-red)] animate-pulse" />
             <span className="text-xs">{durationSec}s</span>
             <div className="flex-1 flex items-end gap-0.5 h-6 ml-2">
               {waveform.slice(-40).map((v, i) => (

@@ -1,3 +1,8 @@
+/**
+ * @module telegram.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Ok, Err, safeCall, Result, AppError } from '@common/result';
 import { Injectable, Logger } from '@nestjs/common'
 import TelegramBot from 'node-telegram-bot-api'

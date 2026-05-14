@@ -1,3 +1,8 @@
+/**
+ * @module crm-bitrix-compat.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
@@ -120,5 +125,25 @@ export class CrmBitrixCompatRepository {
 
   async deleteRobot(id: number): Promise<void> {
     await db.delete(crm_robots).where(eq(crm_robots.id, id));
+  }
+
+  async updateProposalStage(id: number, status: string): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await db.update(crm_proposals)
+        .set({ status: status as typeof crm_proposals.$inferInsert['status'], updated_at: new Date() })
+        .where(eq(crm_proposals.id, id))
+        .returning();
+      return (rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
+  }
+
+  async updateInvoiceStage(id: number, status: string): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await db.update(invoices)
+        .set({ status: status as typeof invoices.$inferInsert['status'], updated_at: new Date() })
+        .where(eq(invoices.id, String(id)))
+        .returning();
+      return (rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
   }
 }

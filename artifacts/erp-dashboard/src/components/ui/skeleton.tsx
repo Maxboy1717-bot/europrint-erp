@@ -1,3 +1,8 @@
+/**
+ * @module skeleton
+ * @description React UI component.
+ */
+
 import { cn } from "@/lib/utils"
 
 function Skeleton({

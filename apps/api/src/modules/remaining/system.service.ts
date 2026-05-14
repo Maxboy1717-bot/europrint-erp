@@ -1,3 +1,8 @@
+/**
+ * @module system.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import * as os from 'os';
 import { Ok, Result, safeCall } from '@common/result';

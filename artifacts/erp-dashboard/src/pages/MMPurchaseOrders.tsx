@@ -1,3 +1,8 @@
+/**
+ * @module MMPurchaseOrders
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -17,10 +22,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { PurchaseOrder, Vendor, RawMaterial, PurchaseOrderItem } from "@shared/schema";
 import { z } from "zod";
-import { ErrorState } from "@/components/ui/error-state";
 import { PageState } from "@/components/ui/page-state";
-import { PageHeader } from "@/components/ui/page-header";
-
+import { EPPageHeader, EPErrorState } from "@/components/ep";
 const poFormSchema = z.object({
   poNumber: z.string().optional().default(""),
   vendorId: z.string().min(1, "Yetkazib beruvchi kerak"),
@@ -137,7 +140,7 @@ export default function MMPurchaseOrders() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "draft":
-        return <Badge className="bg-surface-container text-on-surface-variant rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><FileText className="h-3 w-3" />Qoralama</Badge>;
+        return <Badge className="bg-muted/60 text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><FileText className="h-3 w-3" />Qoralama</Badge>;
       case "sent":
         return <Badge className="bg-blue-100 text-blue-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><Truck className="h-3 w-3" />Yuborilgan</Badge>;
       case "confirmed":
@@ -179,48 +182,48 @@ export default function MMPurchaseOrders() {
 
   if (isError) {
     return (
-      <div className="flex-1 overflow-auto bg-surface p-6">
-        <ErrorState onRetry={refetch} />
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+        <EPErrorState onRetry={refetch} />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Xarid"
-        boldWord="Buyurtmalari"
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Xarid Buyurtmalari</b></>}
+        title="Xarid Buyurtmalari"
         subtitle="Xarid buyurtmalarini boshqarish"
         data-testid="text-mm-po-title"
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
         {([
-          { id: "all", label: "Barchasi", icon: ShoppingBag, color: "text-on-surface-variant" },
-          { id: "draft", label: "Qoralama", icon: FileText, color: "text-on-surface-variant" },
-          { id: "sent", label: "Yuborilgan", icon: Truck, color: "text-blue-500" },
-          { id: "confirmed", label: "Tasdiqlangan", icon: Clock, color: "text-amber-500" },
-          { id: "received", label: "Qabul qilingan", icon: CheckCircle, color: "text-green-500" },
-          { id: "cancelled", label: "Bekor qilingan", icon: XCircle, color: "text-error" },
+          { id: "all", label: "Barchasi", icon: ShoppingBag, color: "text-muted-foreground" },
+          { id: "draft", label: "Qoralama", icon: FileText, color: "text-muted-foreground" },
+          { id: "sent", label: "Yuborilgan", icon: Truck, color: "text-[var(--ep-blue)]" },
+          { id: "confirmed", label: "Tasdiqlangan", icon: Clock, color: "text-[var(--ep-yellow)]" },
+          { id: "received", label: "Qabul qilingan", icon: CheckCircle, color: "text-[var(--ep-green)]" },
+          { id: "cancelled", label: "Bekor qilingan", icon: XCircle, color: "text-[var(--ep-red)]" },
         ]).map((status) => (
           <div
             key={status.id}
-            className={`cursor-pointer transition-colors p-5 rounded-lg bg-surface-container-lowest ${statusFilter === status.id ? "ring-2 ring-primary" : ""}`}
+            className={`cursor-pointer transition-colors p-5 rounded-lg bg-card ${statusFilter === status.id ? "ring-2 ring-primary" : ""}`}
             onClick={() => setStatusFilter(status.id)}
             data-testid={`filter-${status.id}`}
           >
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{status.label}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{status.label}</p>
               <status.icon className={`h-4 w-4 ${status.color}`} />
             </div>
-            <p className="text-4xl font-bold tracking-tight text-on-surface">{statusCounts[status.id as keyof typeof statusCounts]}</p>
+            <p className="text-4xl font-bold tracking-tight text-foreground">{statusCounts[status.id as keyof typeof statusCounts]}</p>
           </div>
         ))}
       </div>
 
-      <Card className="bg-surface-container-lowest border-none rounded-xl">
+      <Card className="bg-card border-none rounded-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <Package className="h-5 w-5 text-primary" />
             Xarid buyurtmalari ro'yxati
           </CardTitle>
@@ -240,33 +243,33 @@ export default function MMPurchaseOrders() {
             emptyTitle="Xarid buyurtmalari topilmadi"
             emptyDescription="Yangi xarid buyurtmasini yarating."
           >
-            <Table data-testid="purchase-orders-table">
+            <div className="ep-table-scroll"><Table data-testid="purchase-orders-table">
               <TableHeader>
-                <TableRow className="bg-surface-container hover:bg-surface-container border-none">
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">PO raqami</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Yetkazuvchi</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Sana</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right">Summa</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Holat</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right">Amallar</TableHead>
+                <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">PO raqami</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Yetkazuvchi</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Summa</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(Array.isArray(filteredOrders) ? filteredOrders : []).map((order) => (
-                  <TableRow key={order.id} className="hover:bg-surface-container-low transition-colors border-none">
-                    <TableCell className="py-3 px-6 font-medium text-on-surface">{order.poNumber}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{getVendorName(order.vendorId)}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{new Date(order.orderDate).toLocaleDateString()}</TableCell>
-                    <TableCell className="py-3 px-6 text-right font-semibold text-on-surface">
+                  <TableRow key={order.id} className="hover:bg-muted/40 transition-colors border-none">
+                    <TableCell className="py-3 px-6 font-medium text-foreground">{order.poNumber}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{getVendorName(order.vendorId)}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{new Date(order.orderDate).toLocaleDateString()}</TableCell>
+                    <TableCell className="py-3 px-6 text-right font-semibold text-foreground">
                       {formatCurrency(Number(order.totalAmount))} {order.currency}
                     </TableCell>
                     <TableCell className="py-3 px-6">{getStatusBadge(order.status)}</TableCell>
                     <TableCell className="py-3 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} className="hover:bg-surface-container-high text-on-surface">
+                        <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} className="hover:bg-muted text-foreground">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(order.id)} className="hover:bg-red-50 text-error">
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(order.id)} className="hover:bg-red-50 text-[var(--ep-red)]">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -274,15 +277,15 @@ export default function MMPurchaseOrders() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </PageState>
         </CardContent>
       </Card>
 
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl p-6">
           <DialogHeader>
-            <DialogTitle>Buyurtma tafsilotlari</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Buyurtma tafsilotlari</DialogTitle>
             <DialogDescription>
               {viewOrder?.poNumber}
             </DialogDescription>
@@ -290,7 +293,7 @@ export default function MMPurchaseOrders() {
 
           {viewOrder && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">PO raqami</p>
                   <p className="font-medium" data-testid="view-po-number">{viewOrder.poNumber}</p>
@@ -320,7 +323,7 @@ export default function MMPurchaseOrders() {
               {viewOrder.items && viewOrder.items.length > 0 && (
                 <div>
                   <h4 className="font-semibold mb-2">Buyurtma elementlari</h4>
-                  <Table data-testid="view-items-table">
+                  <div className="ep-table-scroll"><Table data-testid="view-items-table">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Xom ashyo</TableHead>
@@ -332,7 +335,7 @@ export default function MMPurchaseOrders() {
                     </TableHeader>
                     <TableBody>
                       {(Array.isArray(viewOrder.items) ? viewOrder.items : []).map((item, index) => (
-                        <TableRow key={item.id || index} data-testid={`view-item-${index}`}>
+                        <TableRow key={item.id || index} data-testid={`view-item-${index}`} className="hover:bg-muted/40 transition-colors">
                           <TableCell>{getMaterialName(item.rawMaterialId)}</TableCell>
                           <TableCell>{item.quantity}</TableCell>
                           <TableCell>{item.unit}</TableCell>
@@ -341,7 +344,7 @@ export default function MMPurchaseOrders() {
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
+                  </Table></div>
                 </div>
               )}
             </div>

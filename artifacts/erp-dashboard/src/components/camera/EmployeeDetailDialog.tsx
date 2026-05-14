@@ -1,4 +1,10 @@
+/**
+ * @module EmployeeDetailDialog
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +30,7 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
+import { useTranslation } from '@/lib/i18n';
 interface EmployeeDetailDialogProps {
   userId: string | null;
   open: boolean;
@@ -113,14 +120,11 @@ const VIOLATION_ICONS: Record<string, LucideIconComponent> = {
   bosh_turish: Coffee,
 };
 
-export default function EmployeeDetailDialog({ userId, open, onOpenChange }: EmployeeDetailDialogProps) {
+export default function EmployeeDetailDialog({userId, open, onOpenChange }: EmployeeDetailDialogProps) {
+  const { t } = useTranslation('common');
   const { data: employeeData, isLoading } = useQuery<EmployeeDetailData>({
     queryKey: ["/api/erp/camera-reports/employees", userId],
-    queryFn: async () => {
-      const response = await fetch(`/api/erp/camera-reports/employees/${userId}`);
-      if (!response.ok) throw new Error("Failed to fetch employee data");
-      return response.json();
-    },
+    queryFn: () => apiRequest<EmployeeDetailData>('GET', `/api/erp/camera-reports/employees/${userId}`),
     enabled: !!userId && open,
   });
 
@@ -129,7 +133,7 @@ export default function EmployeeDetailDialog({ userId, open, onOpenChange }: Emp
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-6">
           <div className="flex items-center justify-center py-12">
             <div className="animate-pulse">Yuklanmoqda...</div>
           </div>
@@ -143,7 +147,7 @@ export default function EmployeeDetailDialog({ userId, open, onOpenChange }: Emp
   if (!employee) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl p-6">
           <div className="text-center py-8">
             <p className="text-muted-foreground">Xodim ma'lumotlari topilmadi</p>
           </div>
@@ -160,7 +164,7 @@ export default function EmployeeDetailDialog({ userId, open, onOpenChange }: Emp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" data-testid="dialog-employee-detail">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-6" data-testid="dialog-employee-detail">
         <DialogHeader>
           <DialogTitle className="text-2xl">Xodim Monitoring Ma'lumotlari</DialogTitle>
         </DialogHeader>
@@ -178,7 +182,7 @@ export default function EmployeeDetailDialog({ userId, open, onOpenChange }: Emp
                 </Avatar>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold" data-testid="text-employee-name">{employee.fullName}</h2>
-                  <div className="grid grid-cols-2 gap-2 mt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                     <div className="flex items-center gap-2 text-sm">
                       <User className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">ID:</span>
@@ -407,7 +411,7 @@ export default function EmployeeDetailDialog({ userId, open, onOpenChange }: Emp
                               {alert.screenshotUrl && (
                                 <img 
                                   src={alert.screenshotUrl} 
-                                  alt="Alert screenshot" 
+                                  alt={t('alertScreenshot')} 
                                   className="mt-2 rounded-lg max-w-xs"
                                 />
                               )}

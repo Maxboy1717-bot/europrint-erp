@@ -1,3 +1,8 @@
+/**
+ * @module assign-driver.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err } from '@common/result';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, BadRequestException, Logger } from '@nestjs/common';

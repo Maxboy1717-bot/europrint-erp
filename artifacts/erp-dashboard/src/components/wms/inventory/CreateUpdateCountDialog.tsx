@@ -1,3 +1,8 @@
+/**
+ * @module CreateUpdateCountDialog
+ * @description React UI component.
+ */
+
 import {
   Dialog,
   DialogContent,
@@ -16,10 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+;
 import { WarehouseData, UserData, InventoryCountFormValues } from "./types";
 import { useInventoryCountTranslations } from "./useInventoryCountTranslations";
 
+import { EPLoader } from "@/components/ep";
 interface CreateUpdateCountDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,11 +53,9 @@ export function CreateUpdateCountDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] p-6">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t.actions.edit : t.actions.create}
-          </DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold"> {isEditing ? t.actions.edit : t.actions.create}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -70,7 +74,7 @@ export function CreateUpdateCountDialog({
               value={formData.warehouseId}
               onValueChange={(val) => onFormChange({ warehouseId: val })}
             >
-              <SelectTrigger id="warehouse" data-testid="select-warehouse">
+              <SelectTrigger id="warehouse" data-testid="select-warehouse" className="h-9">
                 <SelectValue placeholder={t.form.selectWarehouse} />
               </SelectTrigger>
               <SelectContent>
@@ -88,7 +92,7 @@ export function CreateUpdateCountDialog({
               value={formData.countType}
               onValueChange={(val) => onFormChange({ countType: val })}
             >
-              <SelectTrigger id="countType" data-testid="select-type">
+              <SelectTrigger id="countType" data-testid="select-type" className="h-9">
                 <SelectValue placeholder={t.form.selectType} />
               </SelectTrigger>
               <SelectContent>
@@ -104,7 +108,7 @@ export function CreateUpdateCountDialog({
               value={formData.assignedTo}
               onValueChange={(val) => onFormChange({ assignedTo: val })}
             >
-              <SelectTrigger id="assignedTo" data-testid="select-user">
+              <SelectTrigger id="assignedTo" data-testid="select-user" className="h-9">
                 <SelectValue placeholder={t.form.selectUser} />
               </SelectTrigger>
               <SelectContent>
@@ -132,7 +136,7 @@ export function CreateUpdateCountDialog({
             {t.actions.cancel}
           </Button>
           <Button onClick={onSubmit} disabled={isPending} data-testid="button-save">
-            {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {isPending && <EPLoader className="w-4 h-4 mr-2" />}
             {t.actions.save}
           </Button>
         </DialogFooter>

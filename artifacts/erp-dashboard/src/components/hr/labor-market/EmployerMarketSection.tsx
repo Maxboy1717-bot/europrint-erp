@@ -1,3 +1,8 @@
+/**
+ * @module EmployerMarketSection
+ * @description React UI component.
+ */
+
 import { Trash2, Plus, Building2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -32,14 +37,14 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
   function removeCompetitor(i: number) {
     setEmployerMarket(prev => ({
       ...prev,
-      competitors: (prev.competitors ?? []).filter((_, idx) => idx !== i),
+      competitors: (Array.isArray(prev.competitors) ? prev.competitors : []).filter((_, idx) => idx !== i),
     }));
   }
 
   function updateCompetitor(i: number, field: keyof Competitor, value: string | number) {
     setEmployerMarket(prev => ({
       ...prev,
-      competitors: (prev.competitors ?? []).map((c, idx) =>
+      competitors: (Array.isArray(prev.competitors) ? prev.competitors : []).map((c, idx) =>
         idx === i ? { ...c, [field]: value } : c
       ),
     }));
@@ -85,7 +90,7 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
         {(Array.isArray(employerMarket.competitors) ? employerMarket.competitors : []).map((comp, i) => (
           <div
             key={`k-${i}`}
-            className="bg-surface-container rounded-lg p-3 space-y-2 border border-border/40"
+            className="bg-muted/60 rounded-lg p-3 space-y-2 border border-border/40"
             data-testid={`competitor-row-${i}`}
           >
             <div className="flex items-center justify-between gap-2">
@@ -99,7 +104,7 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <Label className="text-[10px] mb-0.5 block">Kompaniya nomi</Label>
                 <Input
@@ -155,7 +160,7 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
         <Button
           size="sm"
           variant="outline"
-          className="w-full h-8 text-xs gap-1 border-dashed"
+          className="w-full h-9 text-xs gap-1 border-dashed"
           onClick={addCompetitor}
           data-testid="btn-add-competitor"
         >

@@ -1,3 +1,8 @@
+/**
+ * @module LaborMarketSheet
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -150,7 +155,7 @@ export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full max-w-2xl overflow-y-auto"
+        className="w-full max-w-2xl overflow-y-auto p-6"
       >
         <SheetHeader className="mb-4">
           <SheetTitle className="flex items-center gap-2 text-base">

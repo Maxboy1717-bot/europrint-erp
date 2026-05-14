@@ -1,3 +1,8 @@
+/**
+ * @module EmployeeStats
+ * @description React page component. Route-level UI.
+ */
+
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,8 +15,6 @@ import { AddAttendanceDialog } from "@/components/AddAttendanceDialog";
 import { AddDisciplineDialog } from "@/components/AddDisciplineDialog";
 import { AbcAnalysisCard } from "@/components/AbcAnalysisCard";
 import { EditPersonalInfoDialog } from "@/components/EditPersonalInfoDialog";
-import { ErrorState } from "@/components/ui/error-state";
-
 import { EmployeeHeader } from "@/components/hr/stats/EmployeeHeader";
 import { OrganizationalStructure } from "@/components/hr/stats/OrganizationalStructure";
 import { StatsOverview } from "@/components/hr/stats/StatsOverview";
@@ -40,6 +43,7 @@ import {
   EmployeeFile,
   AbcAnalysis as LocalAbcAnalysis,
 } from "@/components/hr/stats/types";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 export default function EmployeeStats() {
   const { id } = useParams();
@@ -140,7 +144,7 @@ export default function EmployeeStats() {
   }
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   if (!employee) {
@@ -160,16 +164,15 @@ export default function EmployeeStats() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/employees")} data-testid="button-back-icon" className="rounded-full hover:bg-surface-container-high">
-          <ArrowLeft className="w-5 h-5 text-on-surface" />
+        <Button variant="ghost" size="icon" onClick={() => navigate("/employees")} data-testid="button-back-icon" className="rounded-full hover:bg-muted">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            Xodim <span className="font-bold text-primary">Statistikasi</span>
-          </h1>
-          <p className="text-on-surface-variant">
-            To'liq ma'lumotlar va o'qish jarayoni
-          </p>
+          <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Xodim Statistikasi</b></>}
+        title="Xodim Statistikasi"
+        subtitle="To'liq ma'lumotlar va o'qish jarayoni"
+      />
         </div>
       </div>
 
@@ -201,7 +204,7 @@ export default function EmployeeStats() {
       />
 
       <Tabs defaultValue="activity" className="space-y-4">
-        <TabsList className="bg-surface-container rounded-lg p-1">
+        <TabsList className="bg-muted/60 rounded-lg p-1">
           <TabsTrigger value="activity">Faoliyat</TabsTrigger>
           <TabsTrigger value="learning">O'quv jarayoni</TabsTrigger>
           <TabsTrigger value="files">Fayllar</TabsTrigger>

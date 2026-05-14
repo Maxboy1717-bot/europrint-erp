@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface Company {
   id: number;
   title: string;
@@ -59,9 +64,9 @@ export interface CreditLimitResponse {
 }
 
 export const RISK_COLORS: Record<string, string> = {
-  low: "bg-green-100 text-green-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  high: "bg-red-100 text-red-700",
+  low: "bg-green-100 text-[var(--ep-green)]",
+  medium: "bg-yellow-100 text-[var(--ep-yellow)]",
+  high: "bg-red-100 text-[var(--ep-red)]",
 };
 
 export const RISK_LABELS: Record<string, string> = {

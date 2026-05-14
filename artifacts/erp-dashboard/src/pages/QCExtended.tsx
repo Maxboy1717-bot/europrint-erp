@@ -1,3 +1,8 @@
+/**
+ * @module QCExtended
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -58,7 +63,7 @@ export default function QCExtended() {
   const meta = tabMeta[activeTab] || tabMeta["vendor"];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex justify-end px-6 pt-3">
         <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })}>
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -69,7 +74,7 @@ export default function QCExtended() {
         <div className="flex-1 overflow-auto p-6">
           <ModuleSectionHeader
             moduleName="Sifat Nazorati"
-            moduleColor="text-rose-600"
+            moduleColor="text-[var(--ep-red)]"
             sectionTitle={meta.title}
             icon={meta.icon}
           />

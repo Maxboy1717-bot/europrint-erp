@@ -1,3 +1,8 @@
+/**
+ * @module ai-exam.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Delete, Param,
@@ -9,13 +14,13 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }   from '../../auth/guards/roles.guard';
 import { Roles }        from '../../auth/decorators/roles.decorator';
 import { Role }         from '../../auth/types/role';
-import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrNotFound, unwrapOrInternal } from '@common/http-result';
 import { AiExamService } from '../application/services/ai-exam.service';
 import { AssignAiExamDto, SubmitAiExamDto } from './dto/ai-exam.dto';
 
 @ApiTags('§15 AI Exam')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai-exam')
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.HR_MANAGER)
@@ -27,7 +32,7 @@ export class AiExamController {
   @Get('attempts')
   @ApiOperation({ summary: 'Barcha AI imtihon urinishlari ro`yxati' })
   async getAttempts() {
-    return unwrapOrBadRequest(await this.service.getAttempts());
+    return unwrapOrInternal(await this.service.getAttempts());
   }
 
   @Get('attempt/:id')
@@ -42,6 +47,12 @@ export class AiExamController {
   @ApiOperation({ summary: 'AI imtihon tayinlash' })
   async assignExam(@Body() dto: AssignAiExamDto) {
     return unwrapOrBadRequest(await this.service.assignExam(dto.userId, dto.positionId));
+  }
+
+  @Get('attempt')
+  @ApiOperation({ summary: 'AI imtihon urinishlari ro`yxati (alias)' })
+  async getAttemptsAlias() {
+    return unwrapOrInternal(await this.service.getAttempts());
   }
 
   @Post('attempt')

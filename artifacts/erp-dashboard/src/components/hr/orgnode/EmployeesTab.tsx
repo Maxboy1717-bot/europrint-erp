@@ -1,3 +1,8 @@
+/**
+ * @module EmployeesTab
+ * @description React UI component.
+ */
+
 import { useLocation } from "wouter";
 import { Users, Clock, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +34,7 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
             className="hover:shadow transition-shadow cursor-pointer"
             onClick={() => navigate(`/employees/${emp.id}`)}>
             <CardContent className="py-3 px-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-[#ff5d2e]/20 flex items-center justify-center text-sm font-bold text-[#ff5d2e] shrink-0">
+              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
                 {emp.fullName?.charAt(0)}
               </div>
               <div className="min-w-0 flex-1">
@@ -53,7 +58,7 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
                     </Badge>
                   )}
                   {emp.salary != null && (
-                    <span className="text-xs text-green-700 font-medium flex items-center gap-0.5">
+                    <span className="text-xs text-[var(--ep-green)] font-medium flex items-center gap-0.5">
                       {Number(emp.salary).toLocaleString("uz-UZ")} so'm
                     </span>
                   )}

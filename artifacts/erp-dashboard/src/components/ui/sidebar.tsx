@@ -1,3 +1,8 @@
+/**
+ * @module sidebar
+ * @description React UI component.
+ */
+
 "use client"
 
 import * as React from "react"
@@ -18,6 +23,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useTranslation } from '@/lib/i18n';
 import {
   Tooltip,
   TooltipContent,
@@ -45,6 +51,7 @@ type SidebarContextProps = {
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
 
 function useSidebar() {
+  const { t } = useTranslation('common');
   const context = React.useContext(SidebarContext)
   if (!context) {
     throw new Error("useSidebar must be used within a SidebarProvider.")
@@ -619,12 +626,11 @@ function SidebarMenuSkeleton({
     >
       {showIcon && (
         <Skeleton
-          className="size-4 rounded-md"
+          className="size-4 rounded-lg"
           data-sidebar="menu-skeleton-icon"
         />
       )}
-      <Skeleton
-        className="h-4 max-w-[var(--skeleton-width)] flex-1"
+      <Skeleton className="h-4 max-w-[var(--skeleton-width)] flex-1 rounded-lg"
         data-sidebar="menu-skeleton-text"
         style={
           {

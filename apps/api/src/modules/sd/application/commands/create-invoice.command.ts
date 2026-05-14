@@ -1,3 +1,8 @@
+/**
+ * @module create-invoice.command
+ * @description Source module. See exports for details.
+ */
+
 export interface InvoiceItem {
   name: string;
   quantity: number;

@@ -1,3 +1,8 @@
+/**
+ * @module lifecycle-block.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { MS_PER_DAY, SECONDS_PER_DAY, MS_PER_SECOND, POLL_INTERVAL_MS } from '@common/constants/app.constants';
 /**
  * POS — Lifecycle Block Service

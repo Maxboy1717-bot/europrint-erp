@@ -1,3 +1,8 @@
+/**
+ * @module position-folder.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { position_folders, orgDepartments, employeeOrgDepartments } from '@shared/db';

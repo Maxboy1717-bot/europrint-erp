@@ -8,19 +8,11 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  Eye,
-  EyeOff,
-  ArrowRight,
-  Loader2,
-  Users,
-  Building2,
-  Zap,
-  ShieldCheck,
-} from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Users, Building2, Zap, ShieldCheck } from "lucide-react";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
 import { safeStorage } from '@/lib/safeStorage';
 
+import { EPLoader } from "@/components/ep";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface LoginRedesignProps {
@@ -226,7 +218,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
           </div>
 
           {/* Stats grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {(Array.isArray(HERO_STATS) ? HERO_STATS : []).map(({ icon: Icon, label, sublabel }) => (
               <div
                 key={label}
@@ -316,10 +308,10 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             {form.error && (
               <div
                 role="alert"
-                className="flex items-start gap-2 bg-error/10 border border-error/20 rounded-lg px-3 py-2.5"
+                className="flex items-start gap-2 bg-[var(--ep-red)]/10 border border-error/20 rounded-lg px-3 py-2.5"
               >
-                <span className="text-error text-xs mt-0.5">⚠</span>
-                <p className="text-error text-xs">{form.error}</p>
+                <span className="text-[var(--ep-red)] text-xs mt-0.5">⚠</span>
+                <p className="text-[var(--ep-red)] text-xs">{form.error}</p>
               </div>
             )}
 
@@ -339,7 +331,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             >
               {form.isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <EPLoader className="w-4 h-4" />
                   Kirilmoqda...
                 </>
               ) : (

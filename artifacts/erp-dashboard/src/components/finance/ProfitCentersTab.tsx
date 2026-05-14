@@ -1,3 +1,8 @@
+/**
+ * @module ProfitCentersTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -123,20 +128,20 @@ export function ProfitCentersTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant" data-testid="text-profit-centers-title">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground" data-testid="text-profit-centers-title">
           Foyda Markazlari
         </h3>
         <Dialog open={isAddOpen || !!editingItem} onOpenChange={(open) => !open && closeDialog()}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsAddOpen(true)} data-testid="button-add-profit-center" className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
+            <Button onClick={() => setIsAddOpen(true)} data-testid="button-add-profit-center" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
               <Plus className="mr-2 h-4 w-4" />
               Yangi qo'shish
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-surface-container-lowest border-none rounded-xl">
+          <DialogContent className="max-w-md bg-card border-none rounded-xl p-6">
             <DialogHeader>
-              <DialogTitle className="text-on-surface">{editingItem ? "Tahrirlash" : "Yangi foyda markazi"}</DialogTitle>
-              <DialogDescription className="text-on-surface-variant">
+              <DialogTitle className="text-foreground">{editingItem ? "Tahrirlash" : "Yangi foyda markazi"}</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Foyda markazi ma'lumotlarini kiriting
               </DialogDescription>
             </DialogHeader>
@@ -144,50 +149,50 @@ export function ProfitCentersTab() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField control={form.control} name="code" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-on-surface-variant">Kod</FormLabel>
+                    <FormLabel className="text-muted-foreground">Kod</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="PC001" data-testid="input-profit-center-code" className="bg-surface border-outline-variant text-on-surface" />
+                      <Input {...field} placeholder="PC001" data-testid="input-profit-center-code" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-on-surface-variant">Nomi (UZ)</FormLabel>
+                    <FormLabel className="text-muted-foreground">Nomi (UZ)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Asosiy sotish" data-testid="input-profit-center-name" className="bg-surface border-outline-variant text-on-surface" />
+                      <Input {...field} placeholder="Asosiy sotish" data-testid="input-profit-center-name" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="nameRu" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-on-surface-variant">Nomi (RU)</FormLabel>
+                    <FormLabel className="text-muted-foreground">Nomi (RU)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Основные продажи" data-testid="input-profit-center-name-ru" className="bg-surface border-outline-variant text-on-surface" />
+                      <Input {...field} placeholder="Основные продажи" data-testid="input-profit-center-name-ru" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-on-surface-variant">Tavsif</FormLabel>
+                    <FormLabel className="text-muted-foreground">Tavsif</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Foyda markazi haqida..." data-testid="input-profit-center-description" className="bg-surface border-outline-variant text-on-surface" />
+                      <Textarea {...field} placeholder="Foyda markazi haqida..." data-testid="input-profit-center-description" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="managerId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-on-surface-variant">Rahbar</FormLabel>
+                    <FormLabel className="text-muted-foreground">Rahbar</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-profit-center-manager" className="bg-surface border-outline-variant text-on-surface">
+                        <SelectTrigger data-testid="select-profit-center-manager" className="bg-background border-border text-foreground h-9">
                           <SelectValue placeholder="Rahbarni tanlang" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-surface-container-lowest border-none">
+                      <SelectContent className="bg-card border-none">
                         {(Array.isArray(users) ? users : []).map((user) => (
                           <SelectItem key={user.id} value={user.id}>{user.fullName}</SelectItem>
                         ))}
@@ -197,10 +202,10 @@ export function ProfitCentersTab() {
                   </FormItem>
                 )} />
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={closeDialog} className="bg-surface-container text-on-surface rounded-lg px-4 py-2 text-sm font-medium hover:bg-surface-container-high border-none">
+                  <Button type="button" variant="outline" onClick={closeDialog} className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none">
                     Bekor qilish
                   </Button>
-                  <Button type="submit" data-testid="button-save-profit-center" className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
+                  <Button type="submit" data-testid="button-save-profit-center" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
                     {editingItem ? "Saqlash" : "Yaratish"}
                   </Button>
                 </DialogFooter>
@@ -210,42 +215,42 @@ export function ProfitCentersTab() {
         </Dialog>
       </div>
 
-      <Card className="bg-surface-container-lowest border-none rounded-xl">
+      <Card className="bg-card border-none rounded-xl">
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
-              <TableRow className="bg-surface-container hover:bg-surface-container border-none">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Kod</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Nomi</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Tavsif</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Rahbar</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Holati</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right">Amallar</TableHead>
+              <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Kod</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Nomi</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tavsif</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Rahbar</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holati</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-on-surface-variant">Yuklanmoqda...</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell>
                 </TableRow>
               ) : profitCenters.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-on-surface-variant">Foyda markazlari topilmadi</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Foyda markazlari topilmadi</TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(profitCenters) ? profitCenters : []).map((item) => (
-                  <TableRow key={item.id} data-testid={`row-profit-center-${item.id}`} className="hover:bg-surface-container-low transition-colors border-none">
-                    <TableCell className="py-3 px-6 font-mono text-on-surface">{item.code}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">
+                  <TableRow key={item.id} data-testid={`row-profit-center-${item.id}`} className="hover:bg-muted/40 transition-colors border-none">
+                    <TableCell className="py-3 px-6 font-mono text-foreground">{item.code}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">
                       <div>
                         <div className="font-medium">{item.name}</div>
-                        {item.nameRu && <div className="text-[11px] text-on-surface-variant">{item.nameRu}</div>}
+                        {item.nameRu && <div className="text-[11px] text-muted-foreground">{item.nameRu}</div>}
                       </div>
                     </TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface max-w-[200px] truncate">{item.description || "-"}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{getUserName(item.managerId)}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground max-w-[200px] truncate">{item.description || "-"}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{getUserName(item.managerId)}</TableCell>
                     <TableCell className="py-3 px-6">
-                      <Badge className={item.isActive ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none" : "bg-surface-container text-on-surface rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"}>
+                      <Badge className={item.isActive ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none" : "bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"}>
                         {item.isActive ? "Faol" : "Nofaol"}
                       </Badge>
                     </TableCell>
@@ -253,7 +258,7 @@ export function ProfitCentersTab() {
                       <div className="flex justify-end gap-2">
                         <Button size="icon" variant="ghost" onClick={() => openEditDialog(item)}
                           data-testid={`button-edit-profit-center-${item.id}`}
-                          className="hover:bg-surface-container-high text-on-surface">
+                          className="hover:bg-muted text-foreground">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <DeleteConfirmDialog
@@ -268,7 +273,7 @@ export function ProfitCentersTab() {
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

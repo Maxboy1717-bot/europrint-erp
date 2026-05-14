@@ -1,3 +1,8 @@
+/**
+ * @module mm.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Material } from '../aggregates/material.aggregate';
 import { PurchaseOrder } from '../aggregates/purchase-order.aggregate';
 import { Result, Ok, Err } from '@common/result';

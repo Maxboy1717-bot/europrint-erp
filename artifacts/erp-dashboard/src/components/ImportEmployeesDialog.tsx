@@ -1,3 +1,8 @@
+/**
+ * @module ImportEmployeesDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -12,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ImportEmployeesDialogProps {
@@ -29,10 +34,7 @@ export function ImportEmployeesDialog({
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch("/api/employees/import", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await apiRequest('POST', "/api/employees/import");
 
       if (!response.ok) {
         const error = await response.json();
@@ -119,9 +121,9 @@ export function ImportEmployeesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] p-6">
         <DialogHeader>
-          <DialogTitle>Xodimlarni import qilish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Xodimlarni import qilish</DialogTitle>
           <DialogDescription>
             Excel yoki CSV fayl orqali xodimlarni ommaviy import qilish
           </DialogDescription>
@@ -138,15 +140,15 @@ export function ImportEmployeesDialog({
           <Button
             variant="outline"
             onClick={handleDownloadTemplate}
-            className="w-full"
+            className="w-full gap-2"
             data-testid="button-download-template"
           >
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            <FileSpreadsheet className="w-4 h-4" />
             Shablon faylni yuklab olish
           </Button>
 
-          <div className="space-y-2">
-            <Label htmlFor="file">Fayl tanlash</Label>
+          <div className="space-y-1">
+          <Label htmlFor="file">Fayl tanlash</Label>
             <Input
               id="file"
               type="file"

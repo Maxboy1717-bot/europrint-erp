@@ -1,3 +1,8 @@
+/**
+ * @module SyndromeAnalysis
+ * @description React UI component.
+ */
+
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle } from "lucide-react";

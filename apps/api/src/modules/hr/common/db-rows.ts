@@ -1,3 +1,8 @@
+/**
+ * @module db-rows
+ * @description Source module. See exports for details.
+ */
+
 import { Logger } from '@nestjs/common';
 
 export type DbRow = Record<string, unknown>;

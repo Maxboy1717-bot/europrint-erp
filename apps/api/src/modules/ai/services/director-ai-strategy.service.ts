@@ -1,3 +1,8 @@
+/**
+ * @module director-ai-strategy.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { MAX_NAME_LENGTH } from '@common/constants/app.constants';
@@ -7,37 +12,18 @@ import { MAX_NAME_LENGTH } from '@common/constants/app.constants';
 import { Injectable, Logger } from '@nestjs/common';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
 import { AiRouterService } from '../application/services/ai-router.service';
-import { db } from '@shared/db';
-import {
-  users,
-  crmLeads,
-  crmDeals,
-  hrCandidateFunnels,
-} from '@europrint/schemas';
-import { count, eq, isNull } from 'drizzle-orm';
-
-export interface StrategicRecommendations {
-  shortTerm: string[];    // 1-3 oy
-  mediumTerm: string[];   // 3-12 oy
-  longTerm: string[];     // 1-3 yil
-  topPriority: string;
-  estimatedROI: string;
-}
-
-export interface ExecutiveSummary {
-  date: string;
-  headline: string;
-  keyMetrics: Array<{ name: string; value: string; trend: 'UP' | 'DOWN' | 'STABLE' }>;
-  alerts: string[];
-  recommendations: string[];
-  overallHealth: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
-}
+import { AiDataRepository } from './ai-data.repository';
+import type { StrategicRecommendations, ExecutiveSummary } from './director-ai.types';
+export type { StrategicRecommendations, ExecutiveSummary };
 
 @Injectable()
 export class DirectorAiStrategyService {
   private readonly logger = new Logger(DirectorAiStrategyService.name);
 
-  constructor(private readonly ai: AiRouterService) {}
+  constructor(
+    private readonly ai:       AiRouterService,
+    private readonly dataRepo: AiDataRepository,
+  ) {}
 
   // ─── Strategik tavsiyalar ────────────────────────────────────────────────
 
@@ -114,48 +100,30 @@ JSON formatda:
     return safeCall(async () => {
       this.logger.log(`director ai strategy: AI tahlil boshlanmoqda`);
       const today = _time.now();
-  
-      const [totalEmployees] = await db
-        .select({ cnt: count() })
-        .from(users)
-        .where(isNull(users.deletedAt));
-  
-      const [activeLeads] = await db
-        .select({ cnt: count() })
-        .from(crmLeads)
-        .where(isNull(crmLeads.deleted_at));
-  
-      const [activeDeals] = await db
-        .select({ cnt: count() })
-        .from(crmDeals)
-        .where(isNull(crmDeals.deleted_at));
-  
-      const [openPositions] = await db
-        .select({ cnt: count() })
-        .from(hrCandidateFunnels)
-        .where(eq(hrCandidateFunnels.isActive, true));
-  
+      const { totalEmployees, activeLeads, activeDeals, openPositions } =
+        await this.dataRepo.getExecutiveSummaryMetrics();
+
       const prompt = `
   EuroPrint bugungi ijroiya xulosasi.
-  
+
   REAL MA'LUMOTLAR (${today.toLocaleDateString('uz-UZ')}):
-  - Jami xodimlar: ${totalEmployees?.cnt ?? 0}
-  - Faol leadlar: ${activeLeads?.cnt ?? 0}
-  - Faol bitimlar: ${activeDeals?.cnt ?? 0}
-  - Rekruting funnelda: ${openPositions?.cnt ?? 0} nomzod
-  
+  - Jami xodimlar: ${totalEmployees}
+  - Faol leadlar: ${activeLeads}
+  - Faol bitimlar: ${activeDeals}
+  - Rekruting funnelda: ${openPositions} nomzod
+
   EuroPrint bosma kompaniyasi, Toshkent.
-  
+
   Qisqa ijroiya xulosasi (1 paragraf), asosiy metriklar va tavsiyalar.
-  
+
   JSON formatda:
   {
     "date": "${today.toISOString().split('T')[0]}",
     "headline": "...",
     "keyMetrics": [
-      {"name": "Xodimlar", "value": "${totalEmployees?.cnt ?? 0}", "trend": "STABLE"},
-      {"name": "Faol leadlar", "value": "${activeLeads?.cnt ?? 0}", "trend": "UP"},
-      {"name": "Faol bitimlar", "value": "${activeDeals?.cnt ?? 0}", "trend": "STABLE"}
+      {"name": "Xodimlar", "value": "${totalEmployees}", "trend": "STABLE"},
+      {"name": "Faol leadlar", "value": "${activeLeads}", "trend": "UP"},
+      {"name": "Faol bitimlar", "value": "${activeDeals}", "trend": "STABLE"}
     ],
     "alerts": ["..."],
     "recommendations": ["...", "..."],
@@ -176,8 +144,8 @@ JSON formatda:
           date: today.toISOString().split('T')[0],
           headline: 'EuroPrint kunlik holat',
           keyMetrics: [
-            { name: 'Xodimlar', value: String(totalEmployees?.cnt ?? 0), trend: 'STABLE' },
-            { name: 'Leadlar', value: String(activeLeads?.cnt ?? 0), trend: 'STABLE' },
+            { name: 'Xodimlar', value: String(totalEmployees), trend: 'STABLE' },
+            { name: 'Leadlar', value: String(activeLeads), trend: 'STABLE' },
           ],
           alerts: [],
           recommendations: [],
@@ -195,8 +163,8 @@ JSON formatda:
         date: today.toISOString().split('T')[0],
         headline: 'EuroPrint kunlik holat',
         keyMetrics: [
-          { name: 'Xodimlar', value: String(totalEmployees?.cnt ?? 0), trend: 'STABLE' },
-          { name: 'Leadlar', value: String(activeLeads?.cnt ?? 0), trend: 'STABLE' },
+          { name: 'Xodimlar', value: String(totalEmployees), trend: 'STABLE' },
+          { name: 'Leadlar', value: String(activeLeads), trend: 'STABLE' },
         ],
         alerts: [],
         recommendations: [],

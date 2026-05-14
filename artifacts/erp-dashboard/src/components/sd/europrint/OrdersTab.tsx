@@ -1,3 +1,8 @@
+/**
+ * @module OrdersTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -34,7 +39,7 @@ export function OrdersTab() {
 
   const statusMut = useMutation({
     mutationFn: ({ id, status, note }: { id: string | number; status: string; note?: string }) =>
-      apiRequest("PUT", `/api/sd/orders/${id}/status`, { status, note }),
+      apiRequest("PATCH", `/api/sd/orders/${id}/status`, { status, note }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       if (selected?.id) queryClient.invalidateQueries({ queryKey: ["/api/sd/orders", selected.id] });
@@ -63,7 +68,7 @@ export function OrdersTab() {
     <div className="flex gap-4 h-[calc(100vh-200px)]">
       <div className="w-80 flex flex-col gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger data-testid="select-order-status-filter"><SelectValue placeholder="Barcha holat" /></SelectTrigger>
+          <SelectTrigger data-testid="select-order-status-filter" className="h-9"><SelectValue placeholder="Barcha holat" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Barchasi</SelectItem>
             {Object.entries(ORDER_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
@@ -113,13 +118,13 @@ export function OrdersTab() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 border-t pt-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
                   <div><div className="text-xs text-muted-foreground">Jami</div>
                     <div className="font-bold">{fmt(detail?.totalAmount || selected.totalAmount)} so'm</div></div>
                   <div><div className="text-xs text-muted-foreground">To'landi</div>
-                    <div className="font-bold text-green-600">{fmt(detail?.advancePaid || 0)} so'm</div></div>
+                    <div className="font-bold text-[var(--ep-green)]">{fmt(detail?.advancePaid || 0)} so'm</div></div>
                   <div><div className="text-xs text-muted-foreground">Qoldiq</div>
-                    <div className="font-bold text-red-600">{fmt(detail?.balanceDue || 0)} so'm</div></div>
+                    <div className="font-bold text-[var(--ep-red)]">{fmt(detail?.balanceDue || 0)} so'm</div></div>
                 </div>
 
                 {detail?.deliveryDate && (

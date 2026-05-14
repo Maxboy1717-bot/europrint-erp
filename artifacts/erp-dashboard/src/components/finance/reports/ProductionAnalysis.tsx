@@ -1,3 +1,8 @@
+/**
+ * @module ProductionAnalysis
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, Calculator, BarChart3 } from "lucide-react";
@@ -6,12 +11,14 @@ import { formatCurrency } from "@/lib/format";
 import { formatPercent, formatDays, formatShortCurrency } from "./helpers";
 import { ProductionEfficiency } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
 interface ProductionAnalysisProps {
   data: ProductionEfficiency | undefined;
   isLoading: boolean;
 }
 
-export function ProductionAnalysis({ data, isLoading }: ProductionAnalysisProps) {
+export function ProductionAnalysis({data, isLoading }: ProductionAnalysisProps) {
+  const { t } = useTranslation('common');
   return (
     <>
       <div className="grid gap-6 lg:grid-cols-2">
@@ -26,7 +33,7 @@ export function ProductionAnalysis({ data, isLoading }: ProductionAnalysisProps)
             {isLoading ? (
               <div className="space-y-4">
                 {([...Array(5)]).map((_, i) => (
-                  <Skeleton key={`k-${i}`} className="h-12 w-full" />
+                  <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
                 ))}
               </div>
             ) : (
@@ -37,19 +44,19 @@ export function ProductionAnalysis({ data, isLoading }: ProductionAnalysisProps)
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
                   <span>Uskunalar yuklanishi</span>
-                  <span className="font-bold text-blue-600">{formatPercent(data?.efficiencyMetrics?.machineUtilization)}</span>
+                  <span className="font-bold text-[var(--ep-blue)]">{formatPercent(data?.efficiencyMetrics?.machineUtilization)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
                   <span>Mehnat samaradorligi</span>
-                  <span className="font-bold text-green-600">{formatPercent(data?.efficiencyMetrics?.laborEfficiency)}</span>
+                  <span className="font-bold text-[var(--ep-green)]">{formatPercent(data?.efficiencyMetrics?.laborEfficiency)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
                   <span>Sifat ko'rsatkichi</span>
-                  <span className="font-bold text-purple-600">{formatPercent(data?.efficiencyMetrics?.qualityRate)}</span>
+                  <span className="font-bold text-[var(--ep-purple)]">{formatPercent(data?.efficiencyMetrics?.qualityRate)}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-600/10 to-emerald-600/10 border border-green-500/30">
+                <div className="flex items-center justify-between p-3 rounded-lg from-green-600/10 to-emerald-600/10 border border-green-500/30">
                   <span className="font-medium">OEE (Umumiy samaradorlik)</span>
-                  <span className="font-bold text-green-600 text-lg">{formatPercent(data?.efficiencyMetrics?.overallEquipmentEfficiency)}</span>
+                  <span className="font-bold text-[var(--ep-green)] text-lg">{formatPercent(data?.efficiencyMetrics?.overallEquipmentEfficiency)}</span>
                 </div>
               </div>
             )}
@@ -67,17 +74,17 @@ export function ProductionAnalysis({ data, isLoading }: ProductionAnalysisProps)
             {isLoading ? (
               <div className="space-y-4">
                 {([...Array(5)]).map((_, i) => (
-                  <Skeleton key={`k-${i}`} className="h-12 w-full" />
+                  <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
                 ))}
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                   <span className="font-medium">Jami daromad</span>
-                  <span className="font-bold text-green-600">{formatCurrency(data?.costAnalysis?.totalRevenue || 0)}</span>
+                  <span className="font-bold text-[var(--ep-green)]">{formatCurrency(data?.costAnalysis?.totalRevenue || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span>Material xarajatlari</span>
+                  <span>{t('materialXarajatlari')}</span>
                   <span className="font-medium">{formatCurrency(data?.costAnalysis?.materialCost || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
@@ -90,9 +97,9 @@ export function ProductionAnalysis({ data, isLoading }: ProductionAnalysisProps)
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                   <span className="font-medium">Jami tannarx</span>
-                  <span className="font-bold text-red-600">{formatCurrency(data?.costAnalysis?.totalProductionCost || 0)}</span>
+                  <span className="font-bold text-[var(--ep-red)]">{formatCurrency(data?.costAnalysis?.totalProductionCost || 0)}</span>
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-[var(--ep-blue)] text-white">
                   <span className="font-bold">Foyda marjasi</span>
                   <span className="font-bold text-lg">{formatPercent(data?.costAnalysis?.profitMargin)}</span>
                 </div>
@@ -111,7 +118,7 @@ export function ProductionAnalysis({ data, isLoading }: ProductionAnalysisProps)
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full rounded-lg" />
           ) : (
             <div className="glass-chart">
               <ResponsiveContainer width="100%" height={300}>

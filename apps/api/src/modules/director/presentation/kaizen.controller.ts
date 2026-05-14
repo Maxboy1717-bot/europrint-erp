@@ -1,3 +1,8 @@
+/**
+ * @module kaizen.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { BadRequestException, Body, Controller, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';

@@ -1,3 +1,8 @@
+/**
+ * @module GLChartOfAccounts
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { BookOpen, Search, ChevronRight, ChevronDown } from "lucide-react";
 import { safeArray } from "@/lib/queryClient";
+import { EPStatusPill } from "@/components/ep";
 
 interface GLAccount {
   id?: string | number;
@@ -111,18 +117,18 @@ export default function GLChartOfAccounts() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BookOpen className="h-5 w-5 text-primary" />
           <h1 className="font-semibold text-base">GL Hisoblar Jadvali</h1>
-          <Badge variant="secondary">{accounts.length} hisob</Badge>
+          <EPStatusPill tone="neutral">{accounts.length} hisob</EPStatusPill>
         </div>
         <div className="flex gap-2">
           <div className="relative w-56">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              className="pl-8 h-8 text-sm"
+              className="pl-8 h-9 text-sm"
               placeholder="Kod yoki nom..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -166,15 +172,15 @@ export default function GLChartOfAccounts() {
                 </span>
                 <span className="text-sm font-medium capitalize">{type}</span>
               </div>
-              <Badge variant="secondary" className="text-xs">
+              <EPStatusPill tone="neutral" className="text-xs">
                 {items.length} ta
-              </Badge>
+              </EPStatusPill>
             </button>
 
             {expandedGroups.has(type) && items.length > 0 && (
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
+                <div className="ep-table-scroll"><Table>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       <TableHead className="w-20">Kod</TableHead>
                       <TableHead>Nomi (UZ)</TableHead>
@@ -211,7 +217,7 @@ export default function GLChartOfAccounts() {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
               </CardContent>
             )}
           </Card>

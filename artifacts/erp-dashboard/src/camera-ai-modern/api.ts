@@ -1,3 +1,8 @@
+/**
+ * @module api
+ * @description Source module. See exports for details.
+ */
+
 import { apiRequest } from "@/lib/queryClient";
 import type { CameraAiRow, DashboardStatsBrief, CameraAlertBrief } from "./types";
 

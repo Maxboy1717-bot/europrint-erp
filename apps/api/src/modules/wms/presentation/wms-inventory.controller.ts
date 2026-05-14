@@ -1,7 +1,12 @@
+/**
+ * @module wms-inventory.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertRequired } from '@common/assertions';
 import { MAX_EXPORT_LIMIT } from '@common/constants/app.constants';
 import {
-  Controller, Get, Delete, Patch, Body, Param, ParseIntPipe,
+  Controller, Get, Post, Delete, Patch, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, Query, Logger, BadRequestException, NotFoundException,
 } from '@nestjs/common';
 import { assertOk, throwFromError, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
@@ -36,6 +41,12 @@ export class WmsInventoryController {
     private queryBus: QueryBus,
     private readonly crudSvc: WmsCrudService,
   ) {}
+
+  @Post()
+  @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
+  async createInventoryAdjustment() {
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+  }
 
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER, Role.WAREHOUSE_KEEPER)

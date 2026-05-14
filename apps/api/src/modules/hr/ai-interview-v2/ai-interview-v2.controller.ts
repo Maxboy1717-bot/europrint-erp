@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertValidated } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors, BadRequestException } from '@nestjs/common';
@@ -10,8 +15,9 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { Public } from '@common/decorators/public.decorator';
 
 const CreateSessionSchema = z.object({
-  candidate_id:       z.number().int().optional(),
-  vacancy_id:         z.number().int().optional(),
+  candidate_id:       z.number().int().nullable().optional(),
+  vacancy_id:         z.number().int().nullable().optional(),
+  pipeline_entry_id:  z.number().int().nullable().optional(),
   candidate_name:     z.string().min(1),
   candidate_language: z.string().optional(),
   scheduled_at:       z.string().optional(),

@@ -1,3 +1,8 @@
+/**
+ * @module Customer360View
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,18 +39,18 @@ const TABS = [
 ];
 
 const SEG_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
-  A: { bg: "from-emerald-500 to-teal-500", text: "text-emerald-700 dark:text-emerald-300", ring: "ring-emerald-500/30" },
-  B: { bg: "from-sky-500 to-blue-500", text: "text-sky-700 dark:text-sky-300", ring: "ring-sky-500/30" },
-  C: { bg: "from-amber-500 to-orange-500", text: "text-amber-700 dark:text-amber-300", ring: "ring-amber-500/30" },
-  D: { bg: "from-rose-500 to-red-500", text: "text-rose-700 dark:text-rose-300", ring: "ring-rose-500/30" },
+  A: { bg: "", text: "text-[var(--ep-green)] dark:text-emerald-300", ring: "ring-emerald-500/30" },
+  B: { bg: "", text: "text-[var(--ep-blue)] dark:text-sky-300", ring: "ring-sky-500/30" },
+  C: { bg: "", text: "text-[var(--ep-yellow)] dark:text-amber-300", ring: "ring-amber-500/30" },
+  D: { bg: "", text: "text-[var(--ep-red)] dark:text-rose-300", ring: "ring-rose-500/30" },
 };
 
 const SEG_LABELS: Record<string, string> = { A: "VIP", B: "Doimiy", C: "Oddiy", D: "Xavfli" };
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  active: { label: "Aktiv", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" },
+  active: { label: "Aktiv", cls: "bg-emerald-100 text-[var(--ep-green)] dark:bg-emerald-900/50 dark:text-emerald-300" },
   inactive: { label: "Nofaol", cls: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
-  blacklist: { label: "Qora ro'yxat", cls: "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300" },
+  blacklist: { label: "Qora ro'yxat", cls: "bg-rose-100 text-[var(--ep-red)] dark:bg-rose-900/50 dark:text-rose-300" },
 };
 
 export function Customer360View({ customerId, onBack }: { customerId: number; onBack: () => void }) {
@@ -57,9 +62,9 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-32 w-full rounded-2xl" />
-        <Skeleton className="h-10 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-32 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-64 w-full rounded-lg" />
       </div>
     );
   }
@@ -67,7 +72,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
   if (!data || data.error) {
     return (
       <div className="text-center py-16">
-        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
           <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
         </div>
         <p className="text-muted-foreground font-medium">{data?.error || "Ma'lumot yuklanmadi"}</p>
@@ -95,9 +100,9 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
   return (
     <div className="space-y-4">
       {/* ── Hero Header Card ── */}
-      <div className="relative overflow-hidden rounded-2xl border bg-card">
+      <div className="relative overflow-hidden rounded-xl border bg-card">
         {/* Gradient accent */}
-        <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${segColor.bg}`} />
+        <div className={`absolute inset-x-0 top-0 h-1 ${segColor.bg}`} />
 
         <div className="p-4 lg:p-5">
           {/* Top row: back + status */}
@@ -114,7 +119,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
           {/* Main info row */}
           <div className="flex items-start gap-4 flex-wrap">
             {/* Avatar */}
-            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${segColor.bg} flex items-center justify-center shadow-lg ring-4 ${segColor.ring} shrink-0`}>
+            <div className={`w-14 h-14 rounded-xl ${segColor.bg} flex items-center justify-center shadow-lg ring-4 ${segColor.ring} shrink-0`}>
               {basic.customerType === "individual"
                 ? <User className="h-7 w-7 text-white" />
                 : <Building2 className="h-7 w-7 text-white" />}
@@ -158,12 +163,12 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
           </div>
 
           {/* Quick KPIs */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t">
             {[
-              { label: "Buyurtmalar", value: String(totalOrders), icon: ShoppingCart, color: "text-sky-600" },
-              { label: "Jami daromad", value: fmtMoney(totalRevenue), icon: TrendingUp, color: "text-emerald-600" },
-              { label: "Ochiq qarz", value: fmtMoney(openDebt), icon: CreditCard, color: openDebt > 0 ? "text-rose-600" : "text-emerald-600" },
-              { label: "Kredit limiti", value: fmtMoney(basic.creditLimit || 0), icon: Wallet, color: "text-violet-600" },
+              { label: "Buyurtmalar", value: String(totalOrders), icon: ShoppingCart, color: "text-[var(--ep-blue)]" },
+              { label: "Jami daromad", value: fmtMoney(totalRevenue), icon: TrendingUp, color: "text-[var(--ep-green)]" },
+              { label: "Ochiq qarz", value: fmtMoney(openDebt), icon: CreditCard, color: openDebt > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]" },
+              { label: "Kredit limiti", value: fmtMoney(basic.creditLimit || 0), icon: Wallet, color: "text-[var(--ep-purple)]" },
             ].map(kpi => (
               <div key={kpi.label} className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center ${kpi.color}`}>
@@ -196,7 +201,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
 
         <div className="mt-3">
           <TabsContent value="basic">
-            <BasicTab data={basic} contacts={data.contacts || []} />
+            <BasicTab data={basic} contacts={data.contacts || []} decisionMakers={data.decisionMakers || []} />
           </TabsContent>
           <TabsContent value="orders">
             <OrdersTab orders={data.orders} />
@@ -205,13 +210,13 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
             <FinanceTab finance={data.finance} />
           </TabsContent>
           <TabsContent value="communications">
-            <CommunicationsTab customerId={customerId} communications={data.communications} />
+            <CommunicationsTab customerId={customerId} communications={data.communications} sentiment={data.sentiment} nps={data.nps} />
           </TabsContent>
           <TabsContent value="complaints">
             <ComplaintsTab customerId={customerId} complaints={data.complaints} />
           </TabsContent>
           <TabsContent value="segmentation">
-            <SegmentationTab segmentation={data.segmentation} />
+            <SegmentationTab segmentation={data.segmentation} journey={data.journey} internalIntelligence={data.internalIntelligence} />
           </TabsContent>
           <TabsContent value="growth">
             <GrowthTab growth={data.growth} />
@@ -223,7 +228,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
             <ContractsTab customerId={customerId} contracts={data.contracts} />
           </TabsContent>
           <TabsContent value="ltv">
-            <LtvTab ltv={data.ltv} orders={data.orders} />
+            <LtvTab ltv={data.ltv} orders={data.orders} predictive={data.predictive} />
           </TabsContent>
         </div>
       </Tabs>

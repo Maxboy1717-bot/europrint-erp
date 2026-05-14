@@ -1,3 +1,8 @@
+/**
+ * @module queries-questionnaire
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { questionnaire_questions, questionnaire_templates } from '@shared/db';
 import { eq } from 'drizzle-orm';

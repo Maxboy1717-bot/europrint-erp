@@ -1,3 +1,8 @@
+/**
+ * @module IsoSettingsSection
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Settings as SettingsIcon } from "lucide-react";
@@ -8,7 +13,7 @@ export function IsoSettingsSection({ type }: { type: "iso" | "settings" }) {
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-            <Shield className="h-6 w-6 text-blue-600" />
+            <Shield className="h-6 w-6 text-[var(--ep-blue)]" />
           </div>
           <div>
             <h2 className="text-xl font-bold">ISO Standartlari va Audit</h2>

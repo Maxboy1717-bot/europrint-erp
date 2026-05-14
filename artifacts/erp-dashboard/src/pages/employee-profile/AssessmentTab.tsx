@@ -1,3 +1,8 @@
+/**
+ * @module AssessmentTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,11 +14,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Star, TrendingUp, TrendingDown, Minus, Users, UserCheck, Shield, Link2, Plus, Brain } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getAuthHeaders } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
+import { EPStatusPill } from "@/components/ep";
 
 interface Assessment {
   id: string;
@@ -33,10 +40,10 @@ interface AssessmentTabProps {
 }
 
 const REVIEWER_TYPES = [
-  { value: "manager", label: "Rahbar bahosi", icon: Shield, color: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
-  { value: "peer", label: "Hamkasb bahosi (anonim)", icon: Users, color: "bg-green-500/10 text-green-700 border-green-500/20" },
-  { value: "subordinate", label: "Qo'l ostidagi xodim", icon: UserCheck, color: "bg-purple-500/10 text-purple-700 border-purple-500/20" },
-  { value: "service_chain", label: "Xizmat zanjiri", icon: Link2, color: "bg-orange-500/10 text-orange-700 border-orange-500/20" },
+  { value: "manager", label: "Rahbar bahosi", icon: Shield, color: "bg-blue-500/10 text-[var(--ep-blue)] border-blue-500/20" },
+  { value: "peer", label: "Hamkasb bahosi (anonim)", icon: Users, color: "bg-green-500/10 text-[var(--ep-green)] border-green-500/20" },
+  { value: "subordinate", label: "Qo'l ostidagi xodim", icon: UserCheck, color: "bg-purple-500/10 text-[var(--ep-purple)] border-purple-500/20" },
+  { value: "service_chain", label: "Xizmat zanjiri", icon: Link2, color: "bg-orange-500/10 text-[var(--ep-primary)] border-orange-500/20" },
 ];
 
 function StarRating({ score, size = "md" }: { score: number; size?: "sm" | "md" | "lg" }) {
@@ -53,7 +60,8 @@ function StarRating({ score, size = "md" }: { score: number; size?: "sm" | "md" 
   );
 }
 
-export function AssessmentTab({ employeeId }: AssessmentTabProps) {
+export function AssessmentTab({employeeId }: AssessmentTabProps) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -67,9 +75,10 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
   const { data: assessments = [], isLoading } = useQuery<Assessment[]>({
     queryKey: ["/api/employees", employeeId, "assessments"],
     queryFn: async () => {
-      const res = await fetch(`/api/employees/${employeeId}/assessments`, { credentials: "include" });
+      const res = await apiRequest('GET', `/api/employees/${employeeId}/assessments`);
       if (!res.ok) return [];
-      return res.json();
+      const json = await res.json();
+      return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
     },
     enabled: !!employeeId,
   });
@@ -132,53 +141,53 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/10 border-amber-500/20">
+        <Card className="from-amber-500/10 to-amber-600/10 border-amber-500/20">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Umumiy 360° baho</p>
                 {overallAvg ? (
                   <>
-                    <p className="text-2xl font-bold text-amber-600">{overallAvg.toFixed(1)}/5</p>
+                    <p className="text-2xl font-bold text-[var(--ep-yellow)]">{overallAvg.toFixed(1)}/5</p>
                     <StarRating score={Math.round(overallAvg)} size="sm" />
                   </>
                 ) : (
                   <p className="text-2xl font-bold text-muted-foreground">—</p>
                 )}
               </div>
-              <Brain className="h-6 w-6 text-amber-500" />
+              <Brain className="h-6 w-6 text-[var(--ep-yellow)]" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/20">
+        <Card className="from-blue-500/10 to-blue-600/10 border-blue-500/20">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Baholar soni</p>
-                <p className="text-2xl font-bold text-blue-600">{assessments.length}</p>
+                <p className="text-2xl font-bold text-[var(--ep-blue)]">{assessments.length}</p>
               </div>
-              <Users className="h-6 w-6 text-blue-500" />
+              <Users className="h-6 w-6 text-[var(--ep-blue)]" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border-green-500/20">
+        <Card className="from-green-500/10 to-green-600/10 border-green-500/20">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Trend</p>
+                <p className="text-xs text-muted-foreground">{t('trend1')}</p>
                 {trendData.length >= 2 ? (
                   <div className="flex items-center gap-1">
                     {trendData[trendData.length - 1].avg > trendData[trendData.length - 2].avg ? (
                       <>
-                        <TrendingUp className="h-5 w-5 text-green-500" />
-                        <span className="text-lg font-bold text-green-600">O'sish</span>
+                        <TrendingUp className="h-5 w-5 text-[var(--ep-green)]" />
+                        <span className="text-lg font-bold text-[var(--ep-green)]">O'sish</span>
                       </>
                     ) : trendData[trendData.length - 1].avg < trendData[trendData.length - 2].avg ? (
                       <>
-                        <TrendingDown className="h-5 w-5 text-red-500" />
-                        <span className="text-lg font-bold text-red-600">Kamayish</span>
+                        <TrendingDown className="h-5 w-5 text-[var(--ep-red)]" />
+                        <span className="text-lg font-bold text-[var(--ep-red)]">Kamayish</span>
                       </>
                     ) : (
                       <>
@@ -191,7 +200,7 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
                   <p className="text-lg font-bold text-muted-foreground">Ma'lumot yo'q</p>
                 )}
               </div>
-              <TrendingUp className="h-6 w-6 text-green-500" />
+              <TrendingUp className="h-6 w-6 text-[var(--ep-green)]" />
             </div>
           </CardContent>
         </Card>
@@ -206,15 +215,15 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
               Baho qo'shish
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md p-6">
             <DialogHeader>
-              <DialogTitle>Yangi 360° baho</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold">Yangi 360° baho</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Bahovchi turi</Label>
+              <div className="space-y-1">
+          <Label>Bahovchi turi</Label>
                 <Select value={form.reviewerType} onValueChange={(v) => setForm({ ...form, reviewerType: v })}>
-                  <SelectTrigger data-testid="select-reviewer-type">
+                  <SelectTrigger data-testid="select-reviewer-type" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -238,8 +247,8 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
                 </div>
               </div>
               {!form.isAnonymous && (
-                <div className="space-y-2">
-                  <Label>Bahovchi ismi</Label>
+                <div className="space-y-1">
+          <Label>Bahovchi ismi</Label>
                   <Input
                     value={form.reviewerName}
                     onChange={(e) => setForm({ ...form, reviewerName: e.target.value })}
@@ -248,8 +257,8 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
                   />
                 </div>
               )}
-              <div className="space-y-2">
-                <Label>Baho (1-5)</Label>
+              <div className="space-y-1">
+          <Label>Baho (1-5)</Label>
                 <div className="flex items-center gap-2">
                   {([1, 2, 3, 4, 5]).map((s) => (
                     <button
@@ -267,8 +276,8 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
                   <span className="text-sm font-medium text-muted-foreground ml-1">{form.score}/5</span>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Izoh</Label>
+              <div className="space-y-1">
+          <Label>Izoh</Label>
                 <Input
                   value={form.comment}
                   onChange={(e) => setForm({ ...form, comment: e.target.value })}
@@ -292,10 +301,10 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-40" />
-          <Skeleton className="h-40" />
-          <Skeleton className="h-40" />
-          <Skeleton className="h-40" />
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,9 +315,9 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
                   <rt.icon className="h-4 w-4" />
                   {rt.label}
                   {rt.avg !== null && (
-                    <Badge variant="secondary" className="ml-auto">
+                    <EPStatusPill tone="neutral" className="ml-auto">
                       {rt.avg.toFixed(1)}/5
-                    </Badge>
+                    </EPStatusPill>
                   )}
                 </CardTitle>
               </CardHeader>
@@ -350,7 +359,7 @@ export function AssessmentTab({ employeeId }: AssessmentTabProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+              <TrendingUp className="h-4 w-4" />
               Baho trendi (so'nggi 6 oy)
             </CardTitle>
             <CardDescription>Oylik o'rtacha 360° baho dinamikasi</CardDescription>

@@ -1,3 +1,8 @@
+/**
+ * @module resources.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
@@ -112,17 +117,17 @@ export class ResourcesCompatService {
           COALESCE(od.node_type, 'department')          AS "nodeType",
           od.parent_id                                  AS "parentId",
           od.head_user_id::text                         AS "headUserId",
-          u.full_name                                   AS "headUserName",
+          (u.first_name || ' ' || u.last_name)          AS "headUserName",
           u.employee_id                                 AS "headEmployeeId",
           od.color                                      AS color,
           od.description                                AS description,
           (SELECT COUNT(*)::int
              FROM employee_org_departments eod
-             JOIN users eu ON eu.id = eod.user_id AND eu.deleted_at IS NULL
+             JOIN users eu ON eu.id = eod.user_id
             WHERE eod.org_department_id = od.id)        AS "employeeCount"
         FROM org_departments od
         LEFT JOIN users u
-          ON u.id = od.head_user_id AND u.deleted_at IS NULL
+          ON u.id = od.head_user_id
         WHERE od.is_active = true
         ORDER BY od.level NULLS FIRST, od.sort_order, od.id
         LIMIT ${lim} OFFSET ${off}
@@ -230,11 +235,30 @@ export class ResourcesCompatService {
   
     });}
 
+  async assignKpiTemplate(id: string, templateKey: string){
+    return safeCall(async () => {
+      const marker = `[KPI:${templateKey}]`;
+      const result = await rawSql(sql`
+        UPDATE positions
+        SET description = CASE
+          WHEN description IS NULL THEN ${marker}
+          WHEN description LIKE '[KPI:%]%' THEN REGEXP_REPLACE(description, '^\\[KPI:[^\\]]*\\]', ${marker})
+          ELSE (${marker} || ' ' || description)
+        END,
+        updated_at = NOW()
+        WHERE id = ${si(id)} RETURNING id, name_uz, description
+      `);
+      const found = dbRows(result)[0];
+      if (!found) throw new NotFoundException('Lavozim topilmadi');
+      return found;
+    });
+  }
+
   async deletePosition(id: string){
     return safeCall(async () => {
     await rawSql(sql`UPDATE positions SET is_active = false WHERE id = ${si(id)}`)
     return { ok: true, deleted: true };
-  
+
     });}
 
   async createWarehouse(body: Record<string, unknown>){

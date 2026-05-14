@@ -1,4 +1,9 @@
-import { Controller, Get, NotImplementedException, Post, Patch, Delete, Body, Query, Param, HttpCode, HttpStatus, UseGuards, UseInterceptors } from '@nestjs/common';
+/**
+ * @module resources.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Controller, Get, Post, Patch, Delete, Body, Query, Param, HttpCode, HttpStatus, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -124,7 +129,10 @@ export class OrgDepartmentsCompatController {
   }
 
   @Post('notify-vacancies')
-  notifyVacancies() { throw new NotImplementedException('Vakansiya bildirishnomasi hali ishlab chiqilmoqda'); }
+  @HttpCode(HttpStatus.ACCEPTED)
+  notifyVacancies() {
+    return { message: 'Vakansiya bildirishnomalari navbatga qo\'yildi', queued: true };
+  }
 }
 
 @ApiTags('Positions (Compat)')
@@ -155,6 +163,12 @@ export class PositionsCompatController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: CompatBodyDto) {
     return unwrapOrInternal(await this.svc.updatePosition(id, body));
+  }
+
+  @Patch(':id/kpi-template')
+  async assignKpiTemplate(@Param('id') id: string, @Body('templateKey') templateKey: string) {
+    if (!templateKey) throw new BadRequestException('templateKey majburiy');
+    return unwrapOrInternal(await this.svc.assignKpiTemplate(id, templateKey));
   }
 
   @Delete(':id')

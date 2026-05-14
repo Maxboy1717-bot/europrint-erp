@@ -1,12 +1,19 @@
+/**
+ * @module ContactView
+ * @description React UI component.
+ */
+
 import { User, Briefcase, Building2, Phone, Mail, Calendar } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Contact } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
 interface ContactViewProps {
   contact: Contact | null;
 }
 
-export function ContactView({ contact }: ContactViewProps) {
+export function ContactView({contact }: ContactViewProps) {
+  const { t } = useTranslation('common');
   const getFullName = () => {
     if (!contact) return "";
     return [contact.lastName, contact.name, contact.secondName]
@@ -72,7 +79,7 @@ export function ContactView({ contact }: ContactViewProps) {
           <div className="flex items-start gap-3">
             <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
-              <div className="text-sm text-muted-foreground">Email</div>
+              <div className="text-sm text-muted-foreground">{t('email1')}</div>
               <div className="space-y-1">
                 {(Array.isArray(contact.emails) ? contact.emails : []).map((email, idx) => (
                   <div key={idx} className="font-medium" data-testid={`text-view-email-${idx}`}>
@@ -111,7 +118,7 @@ export function ContactView({ contact }: ContactViewProps) {
 
       <Separator />
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div>
           <div className="text-muted-foreground">Yaratilgan</div>
           <div data-testid="text-view-created">

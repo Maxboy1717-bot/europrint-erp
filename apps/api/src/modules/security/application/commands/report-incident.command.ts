@@ -1,3 +1,8 @@
+/**
+ * @module report-incident.command
+ * @description Source module. See exports for details.
+ */
+
 export class ReportIncidentCommand {
   constructor(readonly type: string,
     readonly severity: string,

@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface NodeEmployee {
   id: number;
   fullName: string;

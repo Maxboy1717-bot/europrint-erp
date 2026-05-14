@@ -1,3 +1,8 @@
+/**
+ * @module chat-notification.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -40,7 +45,7 @@ export class ChatNotificationRepository {
         .limit(50);
     });
     if (isErr(res)) return Err(res.error);
-    const items: ChatNotificationItem[] = Array.isArray(res.data) ? res.data.map((r) => ({
+    const items: ChatNotificationItem[] = Array.isArray(res.data) ? (Array.isArray(res.data) ? res.data : []).map((r) => ({
       id:        String(r.id),
       type:      'MESSAGE' as const,
       roomId:    String(r.room_id),
@@ -147,7 +152,7 @@ export class ChatNotificationRepository {
         .limit(50);
     });
     if (isErr(res)) return Ok([]);
-    const tasks: MessageTask[] = Array.isArray(res.data) ? res.data.map((r) => ({
+    const tasks: MessageTask[] = Array.isArray(res.data) ? (Array.isArray(res.data) ? res.data : []).map((r) => ({
       id:         String(r.id),
       roomId:     String(r.room_id ?? ''),
       messageId:  String(r.message_id ?? ''),

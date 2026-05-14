@@ -1,3 +1,8 @@
+/**
+ * @module crm-ai-extended.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { AutofillDtoSchema } from './crm-ai-extended.dto';
 
 describe('AutofillDtoSchema', () => {

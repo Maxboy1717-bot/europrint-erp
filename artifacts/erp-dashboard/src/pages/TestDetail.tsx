@@ -1,3 +1,8 @@
+/**
+ * @module TestDetail
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -19,8 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
 export default function TestDetail() {
   const { id } = useParams();
   const [, navigate] = useLocation();
@@ -127,26 +131,27 @@ export default function TestDetail() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/tests")} data-testid="button-back" className="hover:bg-surface-container-high text-on-surface">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/tests")} data-testid="button-back" className="hover:bg-muted text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-4xl font-light tracking-tight text-on-surface mb-2">
-              {test.title.split(' ')[0]} <span className="font-bold text-primary">{test.title.split(' ').slice(1).join(' ')}</span>
-            </h1>
-            <div className="flex items-center gap-3 text-sm text-on-surface-variant font-medium">
-              <Badge variant="outline" className="bg-surface-container text-on-surface border-none shadow-none">O'tish: {test.passPercentage}%</Badge>
+            <EPPageHeader
+        breadcrumb={<>Dashboard · LMS · <b className="text-foreground">{test.title}</b></>}
+        title={test.title}
+      />
+            <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
+              <Badge variant="outline" className="bg-muted/60 text-foreground border-none shadow-none">O'tish: {test.passPercentage}%</Badge>
               <span>•</span>
-              <Badge variant="outline" className="bg-surface-container text-on-surface border-none shadow-none">{test.timeLimit ? `${test.timeLimit} daqiqa` : "Cheksiz vaqt"}</Badge>
+              <Badge variant="outline" className="bg-muted/60 text-foreground border-none shadow-none">{test.timeLimit ? `${test.timeLimit} daqiqa` : "Cheksiz vaqt"}</Badge>
               <span>•</span>
-              <Badge variant="outline" className="bg-surface-container text-on-surface border-none shadow-none">{test.maxAttempts} urinish</Badge>
+              <Badge variant="outline" className="bg-muted/60 text-foreground border-none shadow-none">{test.maxAttempts} urinish</Badge>
             </div>
           </div>
         </div>
@@ -161,18 +166,18 @@ export default function TestDetail() {
         </Button>
       </div>
 
-      <Card className="bg-surface-container-lowest border-outline-variant shadow-none">
+      <Card className="bg-card border-border shadow-none">
         <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
           <div>
-            <CardTitle className="text-on-surface">Savollar</CardTitle>
-            <CardDescription className="text-on-surface-variant">
+            <CardTitle className="text-foreground">Savollar</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Jami {questions.length} ta savol
             </CardDescription>
           </div>
           <Button 
             onClick={() => setShowAddQuestion(true)} 
             data-testid="button-add-question"
-            className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
+            className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
           >
             <Plus className="w-4 h-4 mr-2" />
             Savol qo'shish
@@ -203,9 +208,9 @@ export default function TestDetail() {
                           {getTypeBadge(question.type)}
                           {getDifficultyBadge(question.difficulty)}
                           {question.category && (
-                            <Badge variant="secondary" className="text-xs">
+                            <EPStatusPill tone="neutral" className="text-xs">
                               {question.category}
-                            </Badge>
+                            </EPStatusPill>
                           )}
                         </div>
                         <p className="text-base font-medium">{question.question}</p>
@@ -235,9 +240,9 @@ export default function TestDetail() {
                             </span>
                             <span className="text-sm">{option}</span>
                             {question.correctAnswer === String(optIndex + 1) && (
-                              <Badge variant="default" className="ml-auto text-xs">
+                              <EPStatusPill tone="success" className="ml-auto text-xs">
                                 To'g'ri
-                              </Badge>
+                              </EPStatusPill>
                             )}
                           </div>
                         ))}

@@ -1,3 +1,8 @@
+/**
+ * @module SickLeaveDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,14 +43,14 @@ export function SickLeaveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Kasalik varaqasini qayd etish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Kasalik varaqasini qayd etish</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Boshlanish sanasi</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="startDate">Boshlanish sanasi</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -53,8 +58,8 @@ export function SickLeaveDialog({
                 onChange={(e) => updateField("startDate", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">Tugash sanasi</Label>
+            <div className="space-y-1">
+          <Label htmlFor="endDate">Tugash sanasi</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -63,32 +68,32 @@ export function SickLeaveDialog({
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="diagnosis">Tashxis</Label>
+          <div className="space-y-1">
+          <Label htmlFor="diagnosis">Tashxis</Label>
             <Input
               id="diagnosis"
               value={form.diagnosis}
               onChange={(e) => updateField("diagnosis", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="hospital">Shifoxona nomi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="hospital">Shifoxona nomi</Label>
             <Input
               id="hospital"
               value={form.hospitalName}
               onChange={(e) => updateField("hospitalName", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="doctor">Shifokor ismi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="doctor">Shifokor ismi</Label>
             <Input
               id="doctor"
               value={form.doctorName}
               onChange={(e) => updateField("doctorName", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="docNum">Hujjat raqami</Label>
+          <div className="space-y-1">
+          <Label htmlFor="docNum">Hujjat raqami</Label>
             <Input
               id="docNum"
               value={form.documentNumber}

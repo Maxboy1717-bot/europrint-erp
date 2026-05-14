@@ -241,7 +241,10 @@ export class PosWarehouseIntegrationService {
   }
 
   /**
-   * Movement tarixi (jurnal).
+   * Movement tarixi (jurnal) — yangi POS Monitor harakatlari (pos_movements)
+   * + eski jadval (material_movements) — UNION ALL bilan birlashtiriladi.
+   *
+   * Shu sababli ERP /warehouse/hub/ va POS Monitor BIR XIL harakatlarni ko'radi.
    */
   async getMovementHistory(filters?: {
     materialCardId?: number;
@@ -250,23 +253,83 @@ export class PosWarehouseIntegrationService {
     limit?: number;
   }): Promise<Result<unknown, AppError>> {
     return safeCall(async () => {
-      const conditions: ReturnType<typeof sql>[] = [];
-      if (filters?.materialCardId) conditions.push(sql`material_id = ${filters.materialCardId}`);
-      if (filters?.movementType) conditions.push(sql`movement_type = ${filters.movementType}`);
-      const where = conditions.length > 0 ? sql.join([sql`WHERE`, ...conditions], sql` AND `) : sql``;
+      const lim = Math.min(filters?.limit ?? 100, 500);
+      const matFilter   = filters?.materialCardId ?? null;
+      const whFilter    = filters?.warehouseId    ?? null;
+      const typeFilter  = filters?.movementType   ?? null;
 
+      // pos_movements (YANGI POS Monitor harakatlari) — har bir movement uchun
+      // pos_movement_lines dan birinchi qatorni olamiz (material, miqdor)
+      // material_movements (LEGACY) — eski yozuvlar
+      // UNION ALL — ikkalasini birlashtiramiz
       const rows = await rawSql(sql`
-        SELECT
-          mm.id, mm.material_id AS "materialId", mm.material_name AS "materialName",
-          mm.movement_type AS "movementType", mm.quantity, mm.unit,
-          mm.barcode, mm.scanned_at AS "scannedAt", mm.performed_by AS "performedBy",
-          mm.reason, mm.notes, mm.created_at AS "createdAt",
-          u.full_name AS "performedByName"
-        FROM material_movements mm
-        LEFT JOIN users u ON u.id = mm.performed_by
-        ${where}
-        ORDER BY mm.created_at DESC
-        LIMIT ${Math.min(filters?.limit ?? 100, 500)}
+        SELECT * FROM (
+          -- ── YANGI: pos_movements (POS Monitor yaratgan harakatlar) ──
+          SELECT
+            pm.id,
+            COALESCE(pml.material_card_id, 0)             AS "materialId",
+            COALESCE(mc.xom_ashyo, mc.kod, '—')           AS "materialName",
+            pm.movement_type                              AS "movementType",
+            COALESCE(pml.quantity, 0)                     AS quantity,
+            COALESCE(pml.unit, mc.unit_of_measure, '')    AS unit,
+            NULL::text                                    AS barcode,
+            NULL::timestamp                               AS "scannedAt",
+            pm.created_by                                 AS "performedBy",
+            pm.return_reason                              AS reason,
+            pm.notes,
+            pm.created_at                                 AS "createdAt",
+            pm.movement_number                            AS "movementNumber",
+            pm.status                                     AS status,
+            pm.from_warehouse_id                          AS "fromWarehouseId",
+            pm.to_warehouse_id                            AS "toWarehouseId",
+            COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '') AS "performedByName",
+            'pos_monitor'                                 AS source
+          FROM pos_movements pm
+          LEFT JOIN LATERAL (
+            SELECT material_card_id, quantity, unit
+            FROM pos_movement_lines
+            WHERE movement_id = pm.id
+            ORDER BY id ASC
+            LIMIT 1
+          ) pml ON true
+          LEFT JOIN material_cards mc ON mc.id = pml.material_card_id
+          LEFT JOIN users u ON u.id = pm.created_by
+          WHERE pm.deleted_at IS NULL
+            AND (${matFilter}::int  IS NULL OR pml.material_card_id = ${matFilter})
+            AND (${typeFilter}::text IS NULL OR pm.movement_type    = ${typeFilter})
+            AND (${whFilter}::int   IS NULL
+                 OR pm.from_warehouse_id = ${whFilter}
+                 OR pm.to_warehouse_id   = ${whFilter})
+
+          UNION ALL
+
+          -- ── LEGACY: material_movements (eski harakatlar) ──
+          SELECT
+            mm.id + 1000000  AS id,                  -- ID konflikt oldini olish
+            mm.material_id   AS "materialId",
+            mm.material_name AS "materialName",
+            mm.movement_type AS "movementType",
+            mm.quantity,
+            mm.unit,
+            mm.barcode,
+            mm.scanned_at    AS "scannedAt",
+            mm.performed_by  AS "performedBy",
+            mm.reason,
+            mm.notes,
+            mm.created_at    AS "createdAt",
+            'LEGACY-' || mm.id::text AS "movementNumber",
+            'completed'      AS status,
+            NULL::int        AS "fromWarehouseId",
+            NULL::int        AS "toWarehouseId",
+            COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '') AS "performedByName",
+            'legacy'         AS source
+          FROM material_movements mm
+          LEFT JOIN users u ON u.id = mm.performed_by
+          WHERE (${matFilter}::int  IS NULL OR mm.material_id   = ${matFilter})
+            AND (${typeFilter}::text IS NULL OR mm.movement_type = ${typeFilter})
+        ) combined
+        ORDER BY "createdAt" DESC NULLS LAST
+        LIMIT ${lim}
       `);
       return dbRows(rows);
     });

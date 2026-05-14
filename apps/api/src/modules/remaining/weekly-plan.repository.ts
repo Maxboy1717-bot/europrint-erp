@@ -1,3 +1,8 @@
+/**
+ * @module weekly-plan.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
@@ -78,11 +83,38 @@ export class WeeklyPlanRepository {
   }
 
   async approve(planId: number, userId: number): Promise<Result<Row | null>>  {
-  try {  
+  try {
       const r = await exec(sql`UPDATE weekly_plans SET status = 'approved', approved_by = ${userId}, approved_at = NOW(), updated_at = NOW() WHERE id = ${planId} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
 
+  }
+
+  async updatePlanById(planId: number, patch: Row): Promise<Result<Row | null>> {
+    try {
+      const { gsd_target, top5_tasks, success_factors, resources_needed, status } = patch;
+      const r = await exec(sql`
+        UPDATE weekly_plans
+        SET gsd_target       = COALESCE(${gsd_target       ?? null}, gsd_target),
+            top5_tasks       = COALESCE(${top5_tasks       != null ? JSON.stringify(top5_tasks) : null}::jsonb, top5_tasks),
+            success_factors  = COALESCE(${success_factors  ?? null}, success_factors),
+            resources_needed = COALESCE(${resources_needed ?? null}, resources_needed),
+            status           = COALESCE(${status           ?? null}, status),
+            updated_at       = NOW()
+        WHERE id = ${planId}
+        RETURNING *
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+    } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deletePlan(planId: number): Promise<Result<boolean>> {
+    try {
+      const check = await exec(sql`SELECT id FROM weekly_plans WHERE id = ${planId} LIMIT 1`);
+      if (!check.ok || !check.data[0]) return Ok(false);
+      await exec(sql`DELETE FROM weekly_plans WHERE id = ${planId}`);
+      return Ok(true);
+    } catch (_e) { return Err(String(_e)); }
   }
 }

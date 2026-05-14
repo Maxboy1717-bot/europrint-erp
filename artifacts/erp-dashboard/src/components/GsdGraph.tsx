@@ -1,3 +1,8 @@
+/**
+ * @module GsdGraph
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
@@ -55,7 +60,7 @@ function VarianceBadge({ variance }: { variance: number | null }) {
   return (
     <span className={cn(
       "inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-md",
-      positive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+      positive ? "bg-emerald-50 text-[var(--ep-green)]" : "bg-red-50 text-[var(--ep-red)]"
     )}>
       {positive
         ? <TrendingUp className="w-3 h-3" />
@@ -74,7 +79,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
     queryKey: [`/api/hr/gsd/employees/${employeeId}/history`],
     enabled: !!employeeId,
     queryFn: async () => {
-      const res = await fetch(`/api/hr/gsd/employees/${employeeId}/history?months=12`, { credentials: "include" });
+      const res = await apiRequest('GET', `/api/hr/gsd/employees/${employeeId}/history?months=12`);
       if (!res.ok) throw new Error("GSD tarix yuklanmadi");
       return res.json() as Promise<GsdData>;
     },
@@ -122,7 +127,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
     return (
       <Card>
         <CardHeader className="pb-3">
-          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-5 w-48 rounded-lg" />
         </CardHeader>
         <CardContent>
           <Skeleton className="h-48 w-full rounded-lg" />
@@ -164,7 +169,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
         {addOpen && canEdit && (
           <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
             <p className="text-sm font-semibold">Haftalik natija kiritish</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="gsd-week">Hafta sanasi</Label>
                 <Input
@@ -264,7 +269,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
               </LineChart>
             </ResponsiveContainer>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="rounded-xl bg-muted/40 p-3 text-center">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">O'tgan hafta</p>
                 <p className="text-xl font-bold text-foreground">

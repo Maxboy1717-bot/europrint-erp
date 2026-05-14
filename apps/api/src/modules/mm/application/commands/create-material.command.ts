@@ -1,3 +1,8 @@
+/**
+ * @module create-material.command
+ * @description Source module. See exports for details.
+ */
+
 export class CreateMaterialCommand {
   constructor(public readonly materialCode: string,
     public readonly name: string,

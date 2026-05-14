@@ -1,6 +1,11 @@
+/**
+ * @module ai-planning.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  Controller, Get, Post, Put, Param, Body,
+  Controller, Get, Patch, Post, Put, Param, Body,
   UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -23,7 +28,7 @@ import {
 
 @ApiTags('§15 AI Planning')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai-planning')
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
@@ -64,6 +69,13 @@ export class AiPlanningController {
   @ApiOperation({ summary: 'AI rejalashtirishda konfiguratsiyani yangilash' })
   @UsePipes(new ZodValidationPipe(UpdatePlanningConfigDtoSchema))
   async updateConfig(@Body() dto: UpdatePlanningConfigDto) {
+    return unwrapOrBadRequest(await this.service.updateConfig(dto));
+  }
+
+  @Patch('config')
+  @UseInterceptors(AuditInterceptor)
+  @UsePipes(new ZodValidationPipe(UpdatePlanningConfigDtoSchema))
+  async patchConfig(@Body() dto: UpdatePlanningConfigDto) {
     return unwrapOrBadRequest(await this.service.updateConfig(dto));
   }
 

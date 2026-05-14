@@ -1,3 +1,8 @@
+/**
+ * @module LabelPrintDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -22,6 +27,7 @@ import { Printer, Download, Copy, CheckCircle, XCircle, AlertCircle } from "luci
 import { useToast } from "@/hooks/use-toast";
 import type { BatchData } from "./barcode-types";
 import type { translations } from "./barcode-types";
+import { apiRequest } from '@/lib/queryClient';
 
 type TranslationType = typeof translations.uz;
 
@@ -58,12 +64,7 @@ export function LabelPrintDialog({
       if (!batch) throw new Error("Batch tanlanmagan");
 
       if (format === "PDF") {
-        const res = await fetch(`/api/warehouse/label/print`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ batchId: batch.id, format: "PDF", copies }),
-        });
+        const res = await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format: "PDF", copies });
         if (!res.ok) throw new Error("PDF generatsiyada xatolik");
 
         const blob = await res.blob();
@@ -82,12 +83,7 @@ export function LabelPrintDialog({
         } as LabelPrintResult;
       }
 
-      const res = await fetch(`/api/warehouse/label/print`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batchId: batch.id, format, copies }),
-      });
+      const res = await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format, copies });
 
       if (!res.ok) throw new Error("Xatolik");
       return res.json() as Promise<LabelPrintResult>;
@@ -124,7 +120,7 @@ export function LabelPrintDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setResult(null); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5 text-primary" />
@@ -133,7 +129,7 @@ export function LabelPrintDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="p-4 bg-surface-container rounded-lg space-y-2 text-sm">
+          <div className="p-4 bg-muted/60 rounded-lg space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t.batchNumber}:</span>
               <span className="font-mono font-bold">{batch.batchNumber}</span>
@@ -156,11 +152,11 @@ export function LabelPrintDialog({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t.labelFormat}</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label>{t.labelFormat}</Label>
               <Select value={format} onValueChange={(v) => setFormat(v as "ZPL" | "EPL" | "PDF")}>
-                <SelectTrigger data-testid="select-label-format">
+                <SelectTrigger data-testid="select-label-format" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -186,8 +182,8 @@ export function LabelPrintDialog({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t.labelCopies}</Label>
+            <div className="space-y-1">
+          <Label>{t.labelCopies}</Label>
               <Input
                 type="number"
                 min={1}
@@ -248,7 +244,7 @@ export function LabelPrintDialog({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleCopyContent(result.content!)}
+                    onClick={() => handleCopyContent(result.content ?? '')}
                     className="w-full"
                     data-testid="button-copy-label-content"
                   >

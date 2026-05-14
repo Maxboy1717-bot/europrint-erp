@@ -1,4 +1,10 @@
-import { pgTable, serial, integer, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
+/**
+ * @module kaizen-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, varchar, text, timestamp, boolean, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -9,19 +15,21 @@ import { users } from "./core-schema";
 
 export const kaizenSuggestions = pgTable("kaizen_suggestions", {
   id: serial("id").primaryKey(),
-  employeeId: varchar("employee_id").references(() => users.id).notNull(),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
   departmentId: integer("department_id"),
   title: varchar("title", { length: 300 }).notNull(),
   description: text("description").notNull(),
   expectedImpact: text("expected_impact"),
   status: varchar("status", { length: 30 }).notNull().default("submitted"),
-  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   implementedAt: timestamp("implemented_at"),
   resultMeasured: text("result_measured"),
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  check("kaizen_suggestions_status_chk", sql`${t.status} IN ('submitted','review','approved','rejected','implementing','completed')`),
+]);
 
 export const insertKaizenSuggestionSchema = createInsertSchema(kaizenSuggestions, {
   title: z.string().min(3, "Sarlavha kamida 3 belgi bo'lishi kerak"),

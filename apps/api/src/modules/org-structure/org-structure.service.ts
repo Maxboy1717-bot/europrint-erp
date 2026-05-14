@@ -1,3 +1,8 @@
+/**
+ * @module org-structure.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { OrgStructureRepository } from './org-structure.repository';
@@ -16,14 +21,14 @@ export class OrgStructureService {
       if (!nodes.ok) throw new Error(nodes.error.message);
       const nodeMap = new Map<number, Record<string, unknown>>();
 
-      (nodes?.data ?? []).forEach(n => {
+      (Array.isArray(nodes?.data) ? nodes?.data : []).forEach(n => {
         const cap = parseInt(String(n.capacity)) || 0;
         const emp = Number(n.employeeCount) || 0;
         nodeMap.set(Number(n.id), { ...n, children: [], employees: [], vacantCount: Math.max(0, cap - emp) });
       });
 
       const roots: Record<string, unknown>[] = [];
-      (nodes?.data ?? []).forEach(n => {
+      (Array.isArray(nodes?.data) ? nodes?.data : []).forEach(n => {
         const node = nodeMap.get(Number(n.id));
         if (!node) return;
         if (n.parentId && nodeMap.has(Number(n.parentId))) {
@@ -123,6 +128,27 @@ export class OrgStructureService {
     return safeCall(async () => {
       await this.repo.assignUser(userId, nodeId);
       return { message: "Xodim bo'limga biriktirildi" };
+    });
+  }
+
+  async getApprovalChain(nodeId: number) {
+    return safeCall(async () => {
+      const r = await this.repo.getApprovalChain(nodeId);
+      return { chain: r.ok ? r.data : [] };
+    });
+  }
+
+  async getDirectManager(nodeId: number) {
+    return safeCall(async () => {
+      const r = await this.repo.getDirectManager(nodeId);
+      return { manager: r.ok ? r.data : null };
+    });
+  }
+
+  async getTelegramGroupForNode(nodeId: number) {
+    return safeCall(async () => {
+      const r = await this.repo.getTelegramGroupForNode(nodeId);
+      return { telegramGroup: r.ok ? r.data : null };
     });
   }
 }

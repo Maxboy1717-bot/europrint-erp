@@ -1,3 +1,8 @@
+/**
+ * @module lms-tests.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { Result } from '@common/result';

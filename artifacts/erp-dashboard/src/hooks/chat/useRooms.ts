@@ -1,15 +1,18 @@
+/**
+ * @module useRooms
+ * @description React custom hook.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { ChatRoom } from "@/store/chatStore";
+import { apiRequest } from '@/lib/queryClient';
 
 export function useRooms() {
   return useQuery<ChatRoom[]>({
     queryKey: ["chat-rooms"],
     queryFn: async () => {
-      const res = await fetch("/api/chat/rooms", {
-        credentials: "include",
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('GET', "/api/chat/rooms");
       if (!res.ok) throw new Error("Failed to load rooms");
       const data = await res.json();
       return Array.isArray(data) ? data : data.rooms ?? [];
@@ -24,10 +27,7 @@ export function useRoomMembers(roomId: string | null) {
     queryKey: ["chat-room-members", roomId],
     enabled: !!roomId,
     queryFn: async () => {
-      const res = await fetch(`/api/chat/rooms/${roomId}/members`, {
-        credentials: "include",
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('GET', `/api/chat/rooms/${roomId}/members`);
       if (!res.ok) throw new Error("Failed to load members");
       return res.json();
     },

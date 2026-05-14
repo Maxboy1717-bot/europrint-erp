@@ -1,3 +1,8 @@
+/**
+ * @module camera
+ * @description Frontend utility / library module.
+ */
+
 import { apiRequest } from "@/lib/queryClient";
 
 export const cameraApi = {

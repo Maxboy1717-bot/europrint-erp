@@ -1,17 +1,24 @@
+/**
+ * @module BasicTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Layers, Box, CheckCircle } from "lucide-react";
 import { KpiCard } from "./KpiCard";
 import { fmtDate, type BasicInfo } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
 export function BasicTab({ basic }: { basic: BasicInfo }) {
+  const { t } = useTranslation('common');
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={Package} label="Material kodi" value={basic.kod || "—"} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard icon={Package} label={t('materialKodi')} value={basic.kod || "—"} />
         <KpiCard icon={Layers} label="Kategoriya" value={basic.category || "—"} />
         <KpiCard icon={Box} label="O'lchov birligi" value={basic.unitOfMeasure || "—"} />
         <KpiCard icon={CheckCircle} label="Holat" value={basic.isActive ? "Aktiv" : "Arxiv"}
-          color={basic.isActive ? "text-green-600" : "text-muted-foreground"} />
+          color={basic.isActive ? "text-[var(--ep-green)]" : "text-muted-foreground"} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>

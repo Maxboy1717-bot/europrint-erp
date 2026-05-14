@@ -1,3 +1,8 @@
+/**
+ * @module list-orders.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result, Err, Ok } from '@common/types/result.type';
@@ -46,7 +51,7 @@ export class ListOrdersHandler implements IQueryHandler<ListOrdersQuery> {
     });
     if (!result.ok) return Err(result.error);
 
-    const items = (result.data.items ?? []).map((o: OrderAggregate) => this.toListItem(o));
+    const items = (Array.isArray(result.data.items) ? result.data.items : []).map((o: OrderAggregate) => this.toListItem(o));
     return Ok({ items, total: result.data.total });
   }
 

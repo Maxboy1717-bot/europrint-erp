@@ -1,3 +1,8 @@
+/**
+ * @module security.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 

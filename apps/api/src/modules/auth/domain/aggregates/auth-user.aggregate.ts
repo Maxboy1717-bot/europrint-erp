@@ -1,3 +1,8 @@
+/**
+ * @module auth-user.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { PasswordValueObject } from '../value-objects/password.vo';

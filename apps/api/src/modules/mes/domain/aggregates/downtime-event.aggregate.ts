@@ -1,3 +1,8 @@
+/**
+ * @module downtime-event.aggregate
+ * @description Source module. See exports for details.
+ */
+
 export class DowntimeEvent {
   constructor(public readonly id: string,
     public readonly sessionId: string,

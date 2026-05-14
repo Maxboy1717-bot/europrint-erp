@@ -1,3 +1,8 @@
+/**
+ * @module Footer
+ * @description Source module. See exports for details.
+ */
+
 import { Link } from "wouter";
 import { Phone, Mail, MapPin, Facebook, Instagram, Send } from "lucide-react";
 

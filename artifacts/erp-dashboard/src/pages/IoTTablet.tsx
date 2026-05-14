@@ -1,4 +1,8 @@
-import { ErrorState } from "@/components/ui/error-state";
+/**
+ * @module IoTTablet
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useIoTTablet } from "./iot/useIoTTablet";
@@ -7,6 +11,7 @@ import { IoTSchedulePanel } from "./iot/IoTSchedulePanel";
 import { IoTChecklistModal } from "./iot/IoTChecklistModal";
 import { IoTCompletionReport } from "./iot/IoTCompletionReport";
 import { IoTProductionDashboard } from "./iot/IoTProductionDashboard";
+import { EPErrorState } from "@/components/ep";
 
 export default function IoTTablet() {
   const iot = useIoTTablet();
@@ -50,7 +55,7 @@ export default function IoTTablet() {
   }
 
   if (iot.isError) {
-    return <ErrorState onRetry={iot.refetch} />;
+    return <EPErrorState onRetry={iot.refetch} />;
   }
 
   return (

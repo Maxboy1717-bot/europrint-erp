@@ -1,3 +1,8 @@
+/**
+ * @module StubPage
+ * @description React page component. Route-level UI.
+ */
+
 import { Construction } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";

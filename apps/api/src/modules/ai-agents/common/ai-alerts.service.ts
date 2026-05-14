@@ -1,3 +1,8 @@
+/**
+ * @module ai-alerts.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { TelegramService } from '@modules/notifications/domain/services/telegram.service';
@@ -185,14 +190,20 @@ export class AiAlertsService {
       hitlReason: event.hitlReason,
     });
 
-    const directors = await db.execute<{ telegram_chat_id: string }>(sql`
-      SELECT e.telegram_chat_id
-      FROM employees e
-      WHERE LOWER(e.status) = 'active'
-        AND e.telegram_chat_id IS NOT NULL
-        AND LOWER(e.role) = 'director'
-      LIMIT 3
-    `).then((r) => r.rows).catch(() => [] as { telegram_chat_id: string }[]);
+    let directors: { telegram_chat_id: string }[] = [];
+    try {
+      const directorRows = await db.execute<{ telegram_chat_id: string }>(sql`
+        SELECT e.telegram_chat_id
+        FROM employees e
+        WHERE LOWER(e.status) = 'active'
+          AND e.telegram_chat_id IS NOT NULL
+          AND LOWER(e.role) = 'director'
+        LIMIT 3
+      `);
+      directors = directorRows.rows;
+    } catch (e) {
+      this.logger.warn(`aiAlerts.directors lookup failed: ${String(e)}`);
+    }
 
     const formatted    = new Intl.NumberFormat('uz-UZ').format(event.price);
     const creditPct    = (event.creditUtil * 100).toFixed(1);

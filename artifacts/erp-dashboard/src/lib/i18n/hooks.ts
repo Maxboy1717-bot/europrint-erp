@@ -1,3 +1,8 @@
+/**
+ * @module hooks
+ * @description Frontend utility / library module.
+ */
+
 import { useCallback } from 'react';
 import { useLanguageContext } from './context';
 import { getTranslation, interpolate } from './loader';

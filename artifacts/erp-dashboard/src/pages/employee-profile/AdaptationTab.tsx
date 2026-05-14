@@ -1,3 +1,8 @@
+/**
+ * @module AdaptationTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -70,7 +75,7 @@ function MentorCard({
 
   const mutation = useMutation({
     mutationFn: (empId: number) =>
-      apiRequest("PATCH", `/api/hr/adaptation/${recordId}`, { [field]: empId }).then(r => r.json()),
+      apiRequest("PATCH", `/api/hr/adaptation/${recordId}`, { [field]: empId }),
     onSuccess: () => {
       toast({ title: "Tayinlandi", description: `${title} yangilandi` });
       setOpen(false);
@@ -86,10 +91,10 @@ function MentorCard({
           <Icon className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-on-surface-variant">{title}</p>
-          <p className="font-semibold text-on-surface text-sm truncate">{name ?? "Tayinlanmagan"}</p>
-          {email && <p className="text-xs text-on-surface-variant mt-0.5 truncate">{email}</p>}
-          {phone && <p className="text-xs text-on-surface-variant truncate">{phone}</p>}
+          <p className="text-xs text-muted-foreground">{title}</p>
+          <p className="font-semibold text-foreground text-sm truncate">{name ?? "Tayinlanmagan"}</p>
+          {email && <p className="text-xs text-muted-foreground mt-0.5 truncate">{email}</p>}
+          {phone && <p className="text-xs text-muted-foreground truncate">{phone}</p>}
         </div>
         {isHr && recordId && (
           <Button size="icon" variant="ghost" className="shrink-0" onClick={() => { setVal(""); setOpen(true); }}>
@@ -104,8 +109,8 @@ function MentorCard({
             <DialogHeader>
               <DialogTitle>{title} tayinlash</DialogTitle>
             </DialogHeader>
-            <div className="space-y-2">
-              <Label>Xodim ID</Label>
+            <div className="space-y-1">
+          <Label>Xodim ID</Label>
               <Input type="number" placeholder="Xodim ID kiriting" value={val} onChange={e => setVal(e.target.value)} />
             </div>
             <DialogFooter>
@@ -129,7 +134,7 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["/api/hr/adaptation", employeeId],
     queryFn: () =>
-      apiRequest("GET", `/api/hr/adaptation/${employeeId}`).then(r => r.json()),
+      apiRequest("GET", `/api/hr/adaptation/${employeeId}`),
     enabled: !!employeeId,
   });
 
@@ -148,16 +153,16 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
 
   const statusConfig = {
     not_started: { label: "Boshlanmagan", color: "bg-slate-200 text-slate-600" },
-    at_risk:     { label: "Xavf ostida",  color: "bg-red-100 text-red-700" },
-    on_track:    { label: "Muvofiq",      color: "bg-amber-100 text-amber-700" },
-    excellent:   { label: "A'lo",         color: "bg-green-100 text-green-700" },
-    completed:   { label: "Yakunlangan",  color: "bg-blue-100 text-blue-700" },
+    at_risk:     { label: "Xavf ostida",  color: "bg-red-100 text-[var(--ep-red)]" },
+    on_track:    { label: "Muvofiq",      color: "bg-amber-100 text-[var(--ep-yellow)]" },
+    excellent:   { label: "A'lo",         color: "bg-green-100 text-[var(--ep-green)]" },
+    completed:   { label: "Yakunlangan",  color: "bg-blue-100 text-[var(--ep-blue)]" },
   }[status] ?? { label: status, color: "bg-slate-200 text-slate-600" };
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["/api/hr/adaptation", employeeId] });
 
   if (isLoading) {
-    return <div className="space-y-4">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-20 w-full" />)}</div>;
+    return <div className="space-y-4">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-20 w-full rounded-lg" />)}</div>;
   }
 
   return (
@@ -170,12 +175,12 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
             {overallScore !== null ? (
               <ScoreCircle score={overallScore} size="lg" />
             ) : (
-              <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center text-on-surface-variant text-sm">—</div>
+              <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">—</div>
             )}
             <div>
-              <p className="text-xs text-on-surface-variant">Umumiy ball</p>
-              <p className="font-semibold text-on-surface">{overallScore !== null ? `${overallScore.toFixed(1)} / 5.0` : "Ma'lumot yo'q"}</p>
-              {ad.programName && <p className="text-xs text-on-surface-variant mt-0.5">{ad.programName}</p>}
+              <p className="text-xs text-muted-foreground">Umumiy ball</p>
+              <p className="font-semibold text-foreground">{overallScore !== null ? `${overallScore.toFixed(1)} / 5.0` : "Ma'lumot yo'q"}</p>
+              {ad.programName && <p className="text-xs text-muted-foreground mt-0.5">{ad.programName}</p>}
               <Badge className={`text-xs mt-1 ${statusConfig.color}`}>{statusConfig.label}</Badge>
             </div>
           </CardContent>
@@ -184,21 +189,21 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
         {/* Progress */}
         <Card className="border-border/50">
           <CardContent className="p-5">
-            <p className="text-xs text-on-surface-variant mb-2">Moslashuv Jarayoni</p>
+            <p className="text-xs text-muted-foreground mb-2">Moslashuv Jarayoni</p>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary shrink-0" />
               <span className="text-sm font-medium">
                 {ad.currentWeek ?? weeklyScores.length} / {ad.totalWeeks ?? 12} hafta
               </span>
             </div>
-            <div className="mt-2 h-2 w-full bg-surface-container rounded-full overflow-hidden">
+            <div className="mt-2 h-2 w-full bg-muted/60 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all"
                 style={{ width: `${((ad.currentWeek ?? weeklyScores.length) / (ad.totalWeeks ?? 12)) * 100}%` }}
               />
             </div>
             {ad.assignedDate && (
-              <p className="text-xs text-on-surface-variant mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Boshlangan: {new Date(ad.assignedDate).toLocaleDateString("uz-UZ")}
               </p>
             )}
@@ -208,9 +213,9 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
         {/* HR Notes (compact) */}
         <Card className="border-border/50">
           <CardContent className="p-5">
-            <p className="text-xs text-on-surface-variant mb-1">HR Izohi</p>
-            <p className="text-sm text-on-surface line-clamp-4">
-              {ad.hrNotes ?? <span className="text-on-surface-variant/50 italic">Izoh yo'q</span>}
+            <p className="text-xs text-muted-foreground mb-1">HR Izohi</p>
+            <p className="text-sm text-foreground line-clamp-4">
+              {ad.hrNotes ?? <span className="text-muted-foreground/50 italic">Izoh yo'q</span>}
             </p>
           </CardContent>
         </Card>
@@ -247,10 +252,10 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
       {/* At-risk warning */}
       {overallScore !== null && overallScore < 3.0 && (
         <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl">
-          <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-[var(--ep-red)] shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-red-700 dark:text-red-400 text-sm">Moslashuv xavf ostida</p>
-            <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">
+            <p className="font-semibold text-[var(--ep-red)] dark:text-red-400 text-sm">Moslashuv xavf ostida</p>
+            <p className="text-xs text-[var(--ep-red)] dark:text-red-500 mt-0.5">
               Umumiy ball 3.0 dan past. HR bilan suhbat va qo'shimcha qo'llab-quvvatlash tavsiya etiladi.
             </p>
           </div>
@@ -267,7 +272,7 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
         </CardHeader>
         <CardContent>
           {weeklyScores.length === 0 ? (
-            <div className="text-center py-10 text-on-surface-variant">
+            <div className="text-center py-10 text-[13px] text-muted-foreground">
               <Star className="w-10 h-10 mx-auto mb-3 opacity-20" />
               <p className="text-sm">Haftalik baholashlar hali kiritilmagan</p>
               <p className="text-xs mt-1 opacity-60">HR mentor tomonidan baholash amalga oshirilgach ko'rinadi</p>
@@ -275,21 +280,21 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
           ) : (
             <div className="space-y-3">
               {(Array.isArray(weeklyScores) ? weeklyScores : []).map(ws => (
-                <div key={ws.week} className="flex items-center gap-4 p-3 rounded-lg bg-surface-container-low">
+                <div key={ws.week} className="flex items-center gap-4 p-3 rounded-lg bg-muted/40">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="text-xs font-bold text-primary">{ws.week}H</span>
                   </div>
                   <ScoreCircle score={ws.score} size="sm" />
                   <div className="flex-1 min-w-0">
-                    {ws.comment && <p className="text-xs text-on-surface-variant line-clamp-1">{ws.comment}</p>}
+                    {ws.comment && <p className="text-xs text-muted-foreground line-clamp-1">{ws.comment}</p>}
                     {ws.reviewedAt && (
-                      <p className="text-[10px] text-on-surface-variant/60 mt-0.5">
+                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                         {new Date(ws.reviewedAt).toLocaleDateString("uz-UZ")}
                       </p>
                     )}
                   </div>
                   <div className="shrink-0">
-                    <div className="w-20 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div className="w-20 h-1.5 bg-muted/60 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${ws.score >= 4 ? "bg-green-400" : ws.score >= 3 ? "bg-amber-400" : "bg-red-400"}`}
                         style={{ width: `${ws.score * 20}%` }}

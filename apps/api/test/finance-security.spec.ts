@@ -1,3 +1,8 @@
+/**
+ * @module finance-security.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import * as fs from 'fs';
 import * as path from 'path';

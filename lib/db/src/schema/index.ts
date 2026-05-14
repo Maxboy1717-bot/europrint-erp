@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 export * from "./core-schema";
 export * from "./crm-schema";
 export * from "./design-schema";
@@ -53,3 +58,8 @@ export * from "./orders-registry-schema";
 export * from "./hr-tz2-schema";
 export * from "./order-workflow-schema";
 export * from "./hr-architecture-additions";
+export * from "./pos-retail";
+export * from "./admin-assets";
+export * from "./fi-financial-reports";
+export * from "./communication-center";
+export * from "./sd-customer-relations";

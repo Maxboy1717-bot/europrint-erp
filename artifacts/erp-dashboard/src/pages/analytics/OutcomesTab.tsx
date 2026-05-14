@@ -1,13 +1,19 @@
+/**
+ * @module OutcomesTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Target, Award, TrendingUp, Loader2, RefreshCw } from "lucide-react";
+import { Target, Award, TrendingUp, RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ComposedChart, Line } from "recharts";
 import type { LearningOutcomes, FunnelData, ScoreDistribution, UserActivityItem, DepartmentStat, PositionStat, SkillsMatrixItem } from "./analytics-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 
+import { EPLoader } from "@/components/ep";
 interface OutcomesTabProps {
   learningOutcomes: LearningOutcomes | undefined;
   outcomesLoading: boolean;
@@ -47,13 +53,13 @@ export function OutcomesTab({
           {([1, 2, 3]).map((i) => (
             <Card key={`k-${i}`}>
               <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32 rounded-lg" />
+                <Skeleton className="h-4 w-4 rounded-full" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 mb-2" />
-                <Skeleton className="h-4 w-40 mb-2" />
-                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-8 w-20 mb-2 rounded-lg" />
+                <Skeleton className="h-4 w-40 mb-2 rounded-lg" />
+                <Skeleton className="h-2 w-full rounded-lg" />
               </CardContent>
             </Card>
           ))}
@@ -116,13 +122,13 @@ export function OutcomesTab({
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {([1, 2, 3, 4]).map((i) => (
                   <div key={`k-${i}`} className="text-center p-4 rounded-lg border bg-card">
-                    <Skeleton className="h-12 w-16 mx-auto mb-2" />
-                    <Skeleton className="h-4 w-24 mx-auto mb-2" />
-                    <Skeleton className="h-6 w-16 mx-auto" />
+                    <Skeleton className="h-12 w-16 mx-auto mb-2 rounded-lg" />
+                    <Skeleton className="h-4 w-24 mx-auto mb-2 rounded-lg" />
+                    <Skeleton className="h-6 w-16 mx-auto rounded-lg" />
                   </div>
                 ))}
               </div>
-              <Skeleton className="h-[200px] w-full" />
+              <Skeleton className="h-[200px] w-full rounded-lg" />
             </div>
           ) : funnelData ? (
             <div className="space-y-4">
@@ -133,21 +139,21 @@ export function OutcomesTab({
                   <Badge variant="outline" className="mt-2">100%</Badge>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-blue-600">{funnelData.started}</div>
+                  <div className="text-3xl font-bold text-[var(--ep-blue)]">{funnelData.started}</div>
                   <p className="text-sm text-muted-foreground mt-1">Boshladi</p>
                   <Badge variant="outline" className="mt-2">
                     {(funnelData.assigned ?? 0) > 0 ? Math.round((funnelData.started / (funnelData.assigned ?? 1)) * 100) : 0}%
                   </Badge>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-green-600">{funnelData.completed}</div>
+                  <div className="text-3xl font-bold text-[var(--ep-green)]">{funnelData.completed}</div>
                   <p className="text-sm text-muted-foreground mt-1">Tugatdi</p>
                   <Badge variant="outline" className="mt-2">
                     {(funnelData.assigned ?? 0) > 0 ? Math.round((funnelData.completed / (funnelData.assigned ?? 1)) * 100) : 0}%
                   </Badge>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-yellow-600">{funnelData.certificated}</div>
+                  <div className="text-3xl font-bold text-[var(--ep-yellow)]">{funnelData.certificated}</div>
                   <p className="text-sm text-muted-foreground mt-1">Sertifikat oldi</p>
                   <Badge variant="outline" className="mt-2">
                     {(funnelData.assigned ?? 0) > 0 ? Math.round(((funnelData.certificated ?? 0) / (funnelData.assigned ?? 1)) * 100) : 0}%
@@ -191,7 +197,7 @@ export function OutcomesTab({
           <CardContent>
             {scoreDistLoading ? (
               <div className="h-[300px] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <EPLoader size={32} tone="muted" />
               </div>
             ) : scoreDistribution?.distribution && scoreDistribution.distribution.length > 0 ? (
               <div className="glass-chart">
@@ -330,7 +336,7 @@ export function OutcomesTab({
         <CardContent>
           {skillsMatrixLoading ? (
             <div className="h-[350px] flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <EPLoader size={32} tone="muted" />
             </div>
           ) : skillsMatrix.length > 0 ? (
             <div className="glass-chart">

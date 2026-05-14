@@ -1,3 +1,8 @@
+/**
+ * @module ideal-rasm.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
@@ -27,7 +32,7 @@ export class IdealRasmService {
 
       const targetsRaw = (targets.ok ? targets.data as Record<string, unknown>[] : []);
       const targetsArr = Array.isArray(targetsRaw) ? targetsRaw : [];
-      const enriched = (targetsArr ?? []).map((t) => ({
+      const enriched = (Array.isArray(targetsArr) ? targetsArr : []).map((t) => ({
         ...t,
         actualValue:    actuals[String(t['target_key'])] ?? 0,
         achievementPct: safeNum(t['target_value']) > 0

@@ -1,3 +1,8 @@
+/**
+ * @module queries-kanban
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { kanban_columns, kanban_cards } from '@shared/db';
 import { eq, and, sql } from 'drizzle-orm';

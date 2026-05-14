@@ -1,3 +1,8 @@
+/**
+ * @module JobOfferDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -99,7 +104,7 @@ export function JobOfferDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-orange-400" />
@@ -109,7 +114,7 @@ export function JobOfferDialog({
 
         {!saved ? (
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs mb-1 block">Lavozim <span className="text-red-400">*</span></Label>
                 <Input
@@ -130,7 +135,7 @@ export function JobOfferDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs mb-1 block">Ishga kirish sanasi <span className="text-red-400">*</span></Label>
                 <Input
@@ -143,7 +148,7 @@ export function JobOfferDialog({
               <div>
                 <Label className="text-xs mb-1 block">Sinov muddati (oy)</Label>
                 <Select value={form.probation_months} onValueChange={set("probation_months")}>
-                  <SelectTrigger data-testid="select-offer-probation">
+                  <SelectTrigger data-testid="select-offer-probation" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -156,7 +161,7 @@ export function JobOfferDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs mb-1 block">Maosh (sinov muddati, UZS)</Label>
                 <Input
@@ -179,11 +184,11 @@ export function JobOfferDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs mb-1 block">Ish tartibi (grafik)</Label>
                 <Select value={form.work_schedule} onValueChange={set("work_schedule")}>
-                  <SelectTrigger data-testid="select-offer-schedule">
+                  <SelectTrigger data-testid="select-offer-schedule" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

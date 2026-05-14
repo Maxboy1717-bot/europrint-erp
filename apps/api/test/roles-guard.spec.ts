@@ -1,3 +1,8 @@
+/**
+ * @module roles-guard.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';

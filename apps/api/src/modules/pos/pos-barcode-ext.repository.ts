@@ -1,3 +1,8 @@
+/**
+ * @module pos-barcode-ext.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 
 import { Injectable } from '@nestjs/common';
 import { materialCardSuggestions, materialCards, posBarcodePrintQueue, db, sql, eq, and } from '@workspace/db';

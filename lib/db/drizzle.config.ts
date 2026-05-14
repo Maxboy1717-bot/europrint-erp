@@ -1,3 +1,8 @@
+/**
+ * @module drizzle.config
+ * @description Configuration loader. Wraps env vars via @nestjs/config ConfigService.
+ */
+
 import { defineConfig } from "drizzle-kit";
 import path from "path";
 

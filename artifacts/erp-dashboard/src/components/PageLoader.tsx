@@ -1,9 +1,15 @@
-import { Loader2 } from "lucide-react";
+/**
+ * @module PageLoader
+ * @description React UI component.
+ */
 
+;
+
+import { EPLoader } from "@/components/ep";
 export function PageLoader() {
   return (
     <div className="flex flex-col items-center justify-center h-[50vh] gap-3" data-testid="page-loader">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <EPLoader className="w-8 h-8" />
       <p className="text-sm text-muted-foreground">Yuklanmoqda...</p>
     </div>
   );

@@ -1,4 +1,9 @@
-import { Body, Controller, Get, Param, Put, UseGuards , UseInterceptors} from '@nestjs/common';
+/**
+ * @module ideal-rasm.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, Param, Post, Put, UseGuards , UseInterceptors} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -13,6 +18,11 @@ import { unwrapOrInternal } from '@common/http-result';
 @Controller('ideal-rasm')
 export class IdealRasmController {
   constructor(private readonly svc: IdealRasmService) {}
+
+  @Post()
+  async create() {
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+  }
 
   @Get()
   async getAll() {

@@ -1,3 +1,8 @@
+/**
+ * @module tech-three-checkpoint.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { db } from '@shared/db';

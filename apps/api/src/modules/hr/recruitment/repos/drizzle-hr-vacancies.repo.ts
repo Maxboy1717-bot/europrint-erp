@@ -1,10 +1,16 @@
+/**
+ * @module drizzle-hr-vacancies.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, rawSql } from '@shared/db';
 import { vacancies, candidates, hrCandidateFunnels, hrFunnelHistory } from '@europrint/schemas';
 import { eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
+import { dbRows } from '../../common/db-rows';
 
 type Row = Record<string, unknown>;
 
@@ -55,8 +61,19 @@ export class DrizzleHrVacanciesRepository {
           funnel_stage: hrCandidateFunnels.funnelStage,
           is_active: hrCandidateFunnels.isActive,
           created_at: hrCandidateFunnels.createdAt,
+          source: hrCandidateFunnels.source,
+          screening_score: hrCandidateFunnels.screeningScore,
+          // Candidate details joined
+          candidate_name: sql<string>`COALESCE(${candidates.full_name}, NULLIF(TRIM(COALESCE(${candidates.first_name},'') || ' ' || COALESCE(${candidates.last_name},'')), ''), '')`,
+          candidate_phone: candidates.phone,
+          candidate_email: candidates.email,
+          candidate_source: candidates.source,
+          // Vacancy details joined
+          vacancy_title: vacancies.title,
         })
         .from(hrCandidateFunnels)
+        .leftJoin(candidates, eq(hrCandidateFunnels.candidateId, candidates.id))
+        .leftJoin(vacancies, eq(hrCandidateFunnels.vacancyId, vacancies.id))
         .where(
           vacancyId
             ? eq(hrCandidateFunnels.vacancyId, vacancyId)
@@ -87,13 +104,14 @@ export class DrizzleHrVacanciesRepository {
 
   async updatePipelineStage(id: number, stage: string, _updatedBy: number): Promise<Result<Row>> {
     try {
-      const rows = await db
-        .update(hrCandidateFunnels)
-        .set({ funnelStage: stage })
-        .where(eq(hrCandidateFunnels.id, id))
-        .returning();
-      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
-      return Ok((rows[0] ?? {}) as Row);
+      const r = await rawSql(sql`
+        UPDATE hr_candidate_funnels
+        SET funnel_stage = ${stage}, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING id, funnel_stage, candidate_id, vacancy_id, updated_at
+      `);
+      const row = dbRows(r)[0];
+      return Ok((row ?? {}) as Row);
     } catch (e) {
       return Err(String(e));
     }
@@ -279,19 +297,35 @@ export class DrizzleHrVacanciesRepository {
 
   async updateFunnelNotes(funnelId: number, notes: string): Promise<Result<Row>> {
     try {
-      const [row] = await db.update(hrCandidateFunnels)
-        .set({ notes, updatedAt: _time.now() }).where(eq(hrCandidateFunnels.id, funnelId)).returning();
+      const r = await rawSql(sql`
+        UPDATE hr_candidate_funnels
+        SET initial_screening_notes = ${notes}, updated_at = NOW()
+        WHERE id = ${funnelId}
+        RETURNING id, funnel_stage, initial_screening_notes, updated_at
+      `);
+      const row = dbRows(r)[0];
       return Ok((row ?? {}) as Row);
     } catch (e) {
       return Err(String(e));
     }
   }
 
-  async addCandidateToFunnel(vacancyId: number, candidateId: number, note: string, source: string): Promise<Result<Row>> {
+  async addCandidateToFunnel(vacancyId: number | null, candidateId: number, note: string, source: string): Promise<Result<Row>> {
     try {
-      const [row] = await db.insert(hrCandidateFunnels).values({
-        candidateId, vacancyId, funnelStage: 'applied', isActive: true, source, notes: note,
-      } as typeof hrCandidateFunnels.$inferInsert).returning();
+      // Normalize source to uppercase enum value; fall back to OTHER
+      const validSources = ['HH_UZ','OLX_UZ','TELEGRAM','INSTAGRAM','FACEBOOK','LINKEDIN','REFERRAL','PRINT','WEBSITE','OTHER'];
+      const safeSource = validSources.includes((source ?? '').toUpperCase())
+        ? source.toUpperCase()
+        : 'OTHER';
+      const r = await rawSql(sql`
+        INSERT INTO hr_candidate_funnels
+          (candidate_id, vacancy_id, funnel_stage, is_active, source, initial_screening_notes)
+        VALUES
+          (${candidateId}, ${vacancyId}, 'NEW', true, ${safeSource}, ${note || null})
+        ON CONFLICT DO NOTHING
+        RETURNING id, candidate_id, vacancy_id, funnel_stage, is_active, source, created_at
+      `);
+      const row = dbRows(r)[0];
       return Ok((row ?? {}) as Row);
     } catch (e) {
       return Err(String(e));

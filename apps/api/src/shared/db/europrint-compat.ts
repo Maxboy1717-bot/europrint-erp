@@ -1,3 +1,8 @@
+/**
+ * @module europrint-compat
+ * @description Source module. See exports for details.
+ */
+
 export * from './schema';
 export { db, pool } from './schema';
 
@@ -45,6 +50,9 @@ export {
 export {
   kanbanFlows, kanbanRobots, kanbanChecklists, kanbanChecklistItems,
   kanbanCardComments, kanbanCardWatchers,
+  kanbanNotifications, kanbanTemplates, kanbanTimeTracks,
+  kanbanTags, kanbanCardTags, kanbanResults, kanbanResultFiles,
+  kanbanObservers, kanbanCoExecutors, kanbanFiles,
 } from './schema-kanban';
 
 export {
@@ -62,4 +70,8 @@ export {
   entries, cashFlowTransactions, accountingPeriods, financeCategories,
   incomeExpenseTransactions, orderCostings, orderCostingLines,
   financialKPIs, dailyFinancialMetrics, inventoryCounts,
+  // AR/AP/Kassa stubs
+  cashTransactions, warehouseTransactions, customerPayments, invoicePayments,
+  // Financial reports snapshot tables
+  kassaTransactions, omborQoldiq, debitorlar, kreditorlar, balans, ishlabChiqarish,
 } from './schema-finance';

@@ -9,7 +9,7 @@
  * All tables: created_at + updated_at
  */
 
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -23,6 +23,7 @@ import {
   jsonb,
   index,
   unique,
+  check,
 } from "drizzle-orm/pg-core";
 import { customType } from "drizzle-orm/pg-core";
 import { employees } from "./employees";
@@ -80,6 +81,7 @@ export const hrTz2TerritoryLogs = pgTable(
   (t) => [
     index("hrtz2_territory_emp_ts_idx").on(t.employeeId, t.ts),
     index("hrtz2_territory_event_idx").on(t.eventType),
+    check("hrtz2_territory_event_chk", sql`${t.eventType} IN ('entry','exit')`),
   ],
 );
 
@@ -252,6 +254,7 @@ export const hrTz2InternalJobPostings = pgTable(
     index("hrtz2_ijp_status_idx").on(t.status),
     index("hrtz2_ijp_dept_idx").on(t.departmentId),
     index("hrtz2_ijp_deadline_idx").on(t.deadline),
+    check("hrtz2_ijp_status_chk", sql`${t.status} IN ('OPEN','CLOSED','DRAFT','CANCELLED')`),
   ],
 );
 
@@ -281,6 +284,7 @@ export const hrTz2InternalApplications = pgTable(
     index("hrtz2_iapp_employee_idx").on(t.employeeId),
     index("hrtz2_iapp_status_idx").on(t.status),
     unique("hrtz2_iapp_posting_emp_uniq").on(t.postingId, t.employeeId),
+    check("hrtz2_iapp_status_chk", sql`${t.status} IN ('PENDING','REVIEWING','APPROVED','REJECTED','WITHDRAWN')`),
   ],
 );
 
@@ -356,6 +360,7 @@ export const hrTz2ContractVersions = pgTable(
     ),
     index("hrtz2_contract_emp_idx").on(t.employeeId),
     index("hrtz2_contract_type_idx").on(t.contractType),
+    check("hrtz2_contract_type_chk", sql`${t.contractType} IS NULL OR ${t.contractType} IN ('indefinite','fixed_term','seasonal','part_time')`),
   ],
 );
 

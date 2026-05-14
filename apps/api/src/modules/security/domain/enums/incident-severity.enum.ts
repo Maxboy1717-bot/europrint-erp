@@ -1,3 +1,8 @@
+/**
+ * @module incident-severity.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum IncidentSeverity {
   LOW = 'low',
   MEDIUM = 'medium',

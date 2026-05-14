@@ -1,3 +1,8 @@
+/**
+ * @module prepress-assistant.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { safeDiv } from '@common/math/math-utils';
 import { AiRouterService } from '../../ai/application/services/ai-router.service';

@@ -1,3 +1,8 @@
+/**
+ * @module SmsForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -58,7 +63,7 @@ export function SmsForm({ entityType, entityId, phone }: SmsFormProps) {
         />
       </div>
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => sendSmsMutation.mutate(smsForm)}
         disabled={!smsForm.message || !smsForm.phone || sendSmsMutation.isPending}
         data-testid="button-send-sms"

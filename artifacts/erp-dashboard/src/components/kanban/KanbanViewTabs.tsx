@@ -1,4 +1,8 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+/**
+ * @module KanbanViewTabs
+ * @description React UI component.
+ */
+
 import { FolderKanban, LayoutList, CalendarDays, Target, Calendar, TrendingUp, Users } from "lucide-react";
 import { ViewMode, KanbanTranslations } from "@/components/kanban/types";
 
@@ -8,35 +12,62 @@ interface KanbanViewTabsProps {
   t: KanbanTranslations;
 }
 
+const TABS: { value: ViewMode; icon: React.ElementType; labelKey: keyof KanbanTranslations["views"] }[] = [
+  { value: "kanban",     icon: FolderKanban, labelKey: "kanban"     },
+  { value: "list",       icon: LayoutList,   labelKey: "list"       },
+  { value: "deadlines",  icon: CalendarDays, labelKey: "deadlines"  },
+  { value: "myPlan",     icon: Target,       labelKey: "myPlan"     },
+  { value: "calendar",   icon: Calendar,     labelKey: "calendar"   },
+  { value: "gantt",      icon: FolderKanban, labelKey: "gantt"      },
+  { value: "dashboard",  icon: TrendingUp,   labelKey: "dashboard"  },
+  { value: "allocation", icon: Users,        labelKey: "allocation" },
+];
+
 export function KanbanViewTabs({ viewMode, setViewMode, t }: KanbanViewTabsProps) {
   return (
-    <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-      <TabsList className="bg-blue-700/50 border-0 rounded-xl p-2 h-auto gap-2">
-        <TabsTrigger value="kanban" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <FolderKanban className="h-6 w-6" /> {t.views.kanban}
-        </TabsTrigger>
-        <TabsTrigger value="list" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <LayoutList className="h-6 w-6" /> {t.views.list}
-        </TabsTrigger>
-        <TabsTrigger value="deadlines" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <CalendarDays className="h-6 w-6" /> {t.views.deadlines}
-        </TabsTrigger>
-        <TabsTrigger value="myPlan" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <Target className="h-6 w-6" /> {t.views.myPlan}
-        </TabsTrigger>
-        <TabsTrigger value="calendar" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <Calendar className="h-6 w-6" /> {t.views.calendar}
-        </TabsTrigger>
-        <TabsTrigger value="gantt" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <FolderKanban className="h-6 w-6" /> {t.views.gantt}
-        </TabsTrigger>
-        <TabsTrigger value="dashboard" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <TrendingUp className="h-6 w-6" /> {t.views.dashboard}
-        </TabsTrigger>
-        <TabsTrigger value="allocation" className="gap-3 rounded-lg px-6 py-3.5 text-base font-semibold min-h-[52px] text-blue-100 data-[state=active]:bg-surface-container-lowest data-[state=active]:text-blue-600 data-[state=active]:shadow-md">
-          <Users className="h-6 w-6" /> {t.views.allocation}
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
+    <div
+      style={{
+        display:      "flex",
+        alignItems:   "center",
+        gap:          4,
+        background:   "#FFFFFF",
+        borderRadius: 14,
+        padding:      "4px 6px",
+        boxShadow:    "4px 4px 12px rgba(163,177,198,0.40), -3px -3px 8px rgba(255,255,255,0.80)",
+      }}
+    >
+      {TABS.map(({ value, icon: Icon, labelKey }) => {
+        const isActive = viewMode === value;
+        return (
+          <button
+            key={value}
+            onClick={() => setViewMode(value)}
+            style={{
+              display:      "flex",
+              alignItems:   "center",
+              gap:          5,
+              padding:      "6px 12px",
+              borderRadius: 10,
+              border:       "none",
+              cursor:       "pointer",
+              fontSize:     12,
+              fontWeight:   isActive ? 700 : 500,
+              transition:   "background 0.18s, box-shadow 0.18s, color 0.18s",
+              background:   isActive
+                ? "#5B9BD5"
+                : "transparent",
+              color:        isActive ? "#FFFFFF" : "#718096",
+              boxShadow:    isActive
+                ? "3px 3px 8px rgba(91,155,213,0.40), -1px -1px 4px rgba(255,255,255,0.60)"
+                : "none",
+              whiteSpace:   "nowrap",
+            }}
+          >
+            <Icon style={{ width: 14, height: 14, flexShrink: 0 }} />
+            {t.views[labelKey]}
+          </button>
+        );
+      })}
+    </div>
   );
 }

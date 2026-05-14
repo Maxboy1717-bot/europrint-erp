@@ -1,3 +1,8 @@
+/**
+ * @module HistoryTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +55,7 @@ export function HistoryTab({
           </div>
         ) : (
           <ScrollArea className="h-[500px] border rounded-md">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[100px]">{t.history.id}</TableHead>
@@ -65,7 +70,7 @@ export function HistoryTab({
               </TableHeader>
               <TableBody>
                 {(Array.isArray(requests) ? requests : []).map((req) => (
-                  <TableRow key={req.id}>
+                  <TableRow key={req.id} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-mono text-[10px] uppercase truncate max-w-[80px]">
                       {req.id.split("-")[0]}
                     </TableCell>
@@ -73,7 +78,7 @@ export function HistoryTab({
                     <TableCell>
                       {req.requiredQuantity} {req.unit}
                     </TableCell>
-                    <TableCell className="font-bold text-blue-600 dark:text-blue-400">
+                    <TableCell className="font-bold text-[var(--ep-blue)] dark:text-blue-400">
                       {req.totalReserved || 0} {req.unit}
                     </TableCell>
                     <TableCell>
@@ -105,7 +110,7 @@ export function HistoryTab({
                             disabled={confirmPending}
                             data-testid={`button-confirm-req-${req.id}`}
                           >
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-[var(--ep-green)]" />
                           </Button>
                         )}
                         {(req.status === "pending" || req.status === "reserved" || req.status === "partial") && (
@@ -117,7 +122,7 @@ export function HistoryTab({
                             disabled={cancelPending}
                             data-testid={`button-cancel-req-${req.id}`}
                           >
-                            <XCircle className="w-4 h-4 text-red-500" />
+                            <XCircle className="w-4 h-4 text-[var(--ep-red)]" />
                           </Button>
                         )}
                       </div>
@@ -133,7 +138,7 @@ export function HistoryTab({
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         )}
       </CardContent>

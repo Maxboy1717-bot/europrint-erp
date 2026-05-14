@@ -1,3 +1,8 @@
+/**
+ * @module ContractDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,21 +41,21 @@ export function ContractDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Mehnat shartnomasini qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Mehnat shartnomasini qo'shish</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="contractNumber">Shartnoma raqami</Label>
+          <div className="space-y-1">
+          <Label htmlFor="contractNumber">Shartnoma raqami</Label>
             <Input
               id="contractNumber"
               value={form.contractNumber}
               onChange={(e) => updateField("contractNumber", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Shartnoma turi</Label>
+          <div className="space-y-1">
+          <Label>Shartnoma turi</Label>
             <Select
               value={form.contractType}
               onValueChange={(val) => updateField("contractType", val)}
@@ -65,9 +70,9 @@ export function ContractDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Boshlanish sanasi</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="startDate">Boshlanish sanasi</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -75,8 +80,8 @@ export function ContractDialog({
                 onChange={(e) => updateField("startDate", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">Tugash sanasi</Label>
+            <div className="space-y-1">
+          <Label htmlFor="endDate">Tugash sanasi</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -85,8 +90,8 @@ export function ContractDialog({
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="salary">Maosh (UZS)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="salary">Maosh (UZS)</Label>
             <Input
               id="salary"
               type="number"
@@ -94,8 +99,8 @@ export function ContractDialog({
               onChange={(e) => updateField("salary", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="workSchedule">Ish grafigi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="workSchedule">Ish grafigi</Label>
             <Input
               id="workSchedule"
               value={form.workSchedule}

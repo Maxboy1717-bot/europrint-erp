@@ -1,8 +1,12 @@
+/**
+ * @module IntegrationManagement
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
 import {
   CheckCircle, XCircle, AlertTriangle, Zap, Shield,
   Database, MessageSquare, Brain, Camera, Lock, Server,
@@ -10,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { EPPageHeader } from "@/components/ep";
 
 const INTEGRATION_ICONS: Record<string, any> = {
   telegram: MessageSquare,
@@ -47,7 +52,7 @@ function IntegrationCard({ intg }: { intg: IntegrationItem }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className={`p-2 rounded-md ${isConnected ? "bg-green-500/10" : isWarning ? "bg-yellow-500/10" : "bg-red-500/10"}`}>
-              <Icon className={`w-5 h-5 ${isConnected ? "text-green-600 dark:text-green-400" : isWarning ? "text-yellow-600 dark:text-yellow-400" : "text-red-600"}`} />
+              <Icon className={`w-5 h-5 ${isConnected ? "text-[var(--ep-green)] dark:text-green-400" : isWarning ? "text-[var(--ep-yellow)] dark:text-yellow-400" : "text-[var(--ep-red)]"}`} />
             </div>
             <div className="min-w-0">
               <h3 className="font-semibold text-sm">{intg.name}</h3>
@@ -58,9 +63,9 @@ function IntegrationCard({ intg }: { intg: IntegrationItem }) {
             </div>
           </div>
           {isConnected
-            ? <Badge className="shrink-0 bg-green-500/10 text-green-700 dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Ulangan</Badge>
+            ? <Badge className="shrink-0 bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Ulangan</Badge>
             : isWarning
-              ? <Badge className="shrink-0 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"><AlertTriangle className="w-3 h-3 mr-1" />{intg.status === "in_memory" ? "Xotirada" : "Ogohlantirish"}</Badge>
+              ? <Badge className="shrink-0 bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400"><AlertTriangle className="w-3 h-3 mr-1" />{intg.status === "in_memory" ? "Xotirada" : "Ogohlantirish"}</Badge>
               : <Badge variant="destructive" className="shrink-0"><XCircle className="w-3 h-3 mr-1" />Ulanmagan</Badge>
           }
         </div>
@@ -83,10 +88,11 @@ export default function IntegrationManagement() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Integratsiyalar boshqaruvi</b></>}
         title="Integratsiyalar boshqaruvi"
-        description="Tashqi tizimlar va API ulanishlar holati"
+        subtitle="Tashqi tizimlar va API ulanishlar holati"
         actions={
           <Button variant="outline" size="default" onClick={handleRefresh} data-testid="button-refresh-integrations">
             <RefreshCw className="w-4 h-4 mr-2" />Yangilash
@@ -95,7 +101,7 @@ export default function IntegrationManagement() {
       />
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="text-muted-foreground text-sm mb-1">Jami integratsiyalar</div>
@@ -105,13 +111,13 @@ export default function IntegrationManagement() {
         <Card>
           <CardContent className="pt-4">
             <div className="text-muted-foreground text-sm mb-1">Ulangan</div>
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400">{connected}</div>
+            <div className="text-3xl font-bold text-[var(--ep-green)] dark:text-green-400">{connected}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="text-muted-foreground text-sm mb-1">Muammo bor</div>
-            <div className="text-3xl font-bold text-red-600">{total - connected}</div>
+            <div className="text-3xl font-bold text-[var(--ep-red)]">{total - connected}</div>
           </CardContent>
         </Card>
       </div>
@@ -119,7 +125,7 @@ export default function IntegrationManagement() {
       {/* Integration Cards */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array(9).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-32" />)}
+          {Array(9).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-32 rounded-lg" />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -43,6 +43,10 @@
   "inps": "INPS",
   "bankAccount": "Bank hisobi",
   "emergencyContact": "Favqulodda aloqa",
+  "emergencyContacts": "Favqulodda aloqalar",
+  "contactName": "Aloqa shaxsi ismi",
+  "contactPhone": "Aloqa telefoni",
+  "contactRelation": "Qarindoshlik darajasi",
   "schedule": "Ish jadvali",
   "shift": "Smena",
   "morningShift": "Ertalabki smena",
@@ -369,5 +373,16 @@
   "createdAt": "Yaratilgan",
   "rejectionReason": "Rad etish sababi",
   "btnApprove": "✅ Tasdiqlash",
-  "btnReject": "❌ Rad etish"
+  "btnReject": "❌ Rad etish",
+  "faceEnroll.title": "Sarlavha",
+  "faceEnroll.description": "Tavsif",
+  "faceEnroll.total": "Jami",
+  "faceEnroll.enrolled": "enrolled",
+  "faceEnroll.missing": "missing",
+  "faceEnroll.list": "list",
+  "faceEnroll.empty": "Bo'sh",
+  "faceEnroll.yes": "Ha",
+  "faceEnroll.no": "Yo'q",
+  "dashboard": "Boshqaruv paneli",
+  "hrPanel": "HR Panel"
 }

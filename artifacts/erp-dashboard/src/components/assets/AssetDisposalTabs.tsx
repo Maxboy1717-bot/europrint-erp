@@ -1,3 +1,8 @@
+/**
+ * @module AssetDisposalTabs
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +22,7 @@ interface DisposalTabProps {
 
 export function DisposalTab({ disposals, disposalsLoading }: DisposalTabProps) {
   const { t } = useTranslation('mro');
+  const { t: tCommon } = useTranslation('common');
 
   return (
     <TabsContent value="disposal" className="space-y-4 mt-4">
@@ -27,12 +33,12 @@ export function DisposalTab({ disposals, disposalsLoading }: DisposalTabProps) {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("cardDisposalIncome")}</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-green-500">{formatCurrency((Array.isArray(disposals) ? disposals : []).reduce((s, d) => s + Number(d.disposalValue || 0), 0))}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-[var(--ep-green)]">{formatCurrency((Array.isArray(disposals) ? disposals : []).reduce((s, d) => s + Number(d.disposalValue || 0), 0))}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("cardDisposalGainLoss")}</CardTitle></CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${(disposals ?? []).reduce((s, d) => s + Number(d.gainLoss || 0), 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+            <div className={`text-2xl font-bold ${(Array.isArray(disposals) ? disposals : []).reduce((s, d) => s + Number(d.gainLoss || 0), 0) >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
               {formatCurrency((Array.isArray(disposals) ? disposals : []).reduce((s, d) => s + Number(d.gainLoss || 0), 0))}
             </div>
           </CardContent>
@@ -45,9 +51,9 @@ export function DisposalTab({ disposals, disposalsLoading }: DisposalTabProps) {
         </CardHeader>
         <CardContent>
           {disposalsLoading ? (
-            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full" />)}</div>
+            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}</div>
           ) : disposals.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               <Trash2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>{t("noDisposalRecords")}</p>
             </div>
@@ -55,7 +61,7 @@ export function DisposalTab({ disposals, disposalsLoading }: DisposalTabProps) {
             <div className="border rounded-md overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
                     <TableHead>{t("colAssetId")}</TableHead>
                     <TableHead>{t("colMethod")}</TableHead>
                     <TableHead>{t("colDate")}</TableHead>
@@ -74,7 +80,7 @@ export function DisposalTab({ disposals, disposalsLoading }: DisposalTabProps) {
                       <TableCell className="text-right">{formatCurrency(Number(disposal.disposalValue || 0))}</TableCell>
                       <TableCell className="text-right">{formatCurrency(Number(disposal.bookValueAtDisposal || 0))}</TableCell>
                       <TableCell className="text-right">
-                        <span className={Number(disposal.gainLoss) >= 0 ? "text-green-500" : "text-red-500"}>
+                        <span className={Number(disposal.gainLoss) >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}>
                           {Number(disposal.gainLoss) >= 0 ? "+" : ""}{formatCurrency(Number(disposal.gainLoss || 0))}
                         </span>
                       </TableCell>
@@ -122,9 +128,9 @@ export function TransferTab({ transfers, transfersLoading, setTransferForm, empt
         </CardHeader>
         <CardContent>
           {transfersLoading ? (
-            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full" />)}</div>
+            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}</div>
           ) : transfers.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               <ArrowRightLeft className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>{t("noTransferRecords")}</p>
               <p className="text-sm mt-1">{t("transferHint")}</p>
@@ -133,7 +139,7 @@ export function TransferTab({ transfers, transfersLoading, setTransferForm, empt
             <div className="border rounded-md overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
                     <TableHead>{t("colAssetId")}</TableHead>
                     <TableHead>{t("colDate")}</TableHead>
                     <TableHead>{t("colFrom")}</TableHead>
@@ -193,14 +199,14 @@ export function InsuranceTab({ insuranceRecords, expiringInsurance, insuranceLoa
       {expiringInsurance.length > 0 && (
         <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-amber-700 dark:text-amber-400 flex items-center gap-2 text-base">
+            <CardTitle className="text-[var(--ep-yellow)] dark:text-amber-400 flex items-center gap-2 text-base">
               <Bell className="h-4 w-4" />Muddati yaqinlashayotgan sug'urtalar ({expiringInsurance.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {(Array.isArray(expiringInsurance) ? expiringInsurance : []).map((ins) => (
-                <Badge key={ins.id} variant="outline" className="border-amber-400 text-amber-700 dark:text-amber-400">
+                <Badge key={ins.id} variant="outline" className="border-amber-400 text-[var(--ep-yellow)] dark:text-amber-400">
                   #{ins.assetId} — {ins.policyNumber} ({formatDate(ins.endDate)})
                 </Badge>
               ))}
@@ -222,9 +228,9 @@ export function InsuranceTab({ insuranceRecords, expiringInsurance, insuranceLoa
         </CardHeader>
         <CardContent>
           {insuranceLoading ? (
-            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full" />)}</div>
+            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}</div>
           ) : insuranceRecords.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               <ShieldCheck className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>{t("noInsuranceRecords")}</p>
               <p className="text-sm mt-1">{t("insuranceHint")}</p>
@@ -233,7 +239,7 @@ export function InsuranceTab({ insuranceRecords, expiringInsurance, insuranceLoa
             <div className="border rounded-md overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
                     <TableHead>{t("colAssetId")}</TableHead>
                     <TableHead>{t("colPolicyNumber")}</TableHead>
                     <TableHead>{t("colInsurer")}</TableHead>

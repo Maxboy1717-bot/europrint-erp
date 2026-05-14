@@ -1,3 +1,8 @@
+/**
+ * @module AccountingPeriodsTab
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,42 +44,42 @@ export function AccountingPeriodsTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant" data-testid="text-accounting-periods-title">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground" data-testid="text-accounting-periods-title">
           Hisob Davrlari
         </h3>
       </div>
 
-      <Card className="bg-surface-container-lowest border-none rounded-xl">
+      <Card className="bg-card border-none rounded-xl">
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
-              <TableRow className="bg-surface-container hover:bg-surface-container border-none">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Kod</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Moliya yili</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Oy</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Boshlanish</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Tugash</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Holati</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right">Amallar</TableHead>
+              <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Kod</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Moliya yili</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Oy</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Boshlanish</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tugash</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holati</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-on-surface-variant">Yuklanmoqda...</TableCell>
+                  <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell>
                 </TableRow>
               ) : periods.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-on-surface-variant">Hisob davrlari topilmadi</TableCell>
+                  <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">Hisob davrlari topilmadi</TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(periods) ? periods : []).map((period) => (
-                  <TableRow key={period.id} data-testid={`row-accounting-period-${period.id}`} className="hover:bg-surface-container-low transition-colors border-none">
-                    <TableCell className="py-3 px-6 font-mono text-on-surface">{period.periodCode}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{period.fiscalYear}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{getMonthName(period.month)}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{period.startDate}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{period.endDate}</TableCell>
+                  <TableRow key={period.id} data-testid={`row-accounting-period-${period.id}`} className="hover:bg-muted/40 transition-colors border-none">
+                    <TableCell className="py-3 px-6 font-mono text-foreground">{period.periodCode}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{period.fiscalYear}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{getMonthName(period.month)}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{period.startDate}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{period.endDate}</TableCell>
                     <TableCell className="py-3 px-6">
                       {period.status === "closed" ? (
                         <Badge variant="secondary">
@@ -105,7 +110,7 @@ export function AccountingPeriodsTab() {
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

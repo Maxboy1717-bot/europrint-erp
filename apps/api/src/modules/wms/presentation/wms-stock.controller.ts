@@ -1,10 +1,16 @@
+/**
+ * @module wms-stock.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller, Get, Post, Delete, Patch, Body, Param, ParseIntPipe,
-  UseGuards, UseInterceptors, Query, Logger,
-InternalServerErrorException } from '@nestjs/common';
+  UseGuards, UseInterceptors, Query, Logger, NotFoundException,
+  BadRequestException } from '@nestjs/common';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -14,6 +20,7 @@ import { GetStockInventoryQuery } from '../application/queries/get-stock-invento
 import { FefoStockQuery } from '../application/queries/fefo-stock.handler';
 import { WmsCrudService } from '../application/wms-crud.service';
 import { PatchStockDto } from './dto/wms-crud.dto';
+import { ReserveMaterialCommand } from '../application/commands/reserve-material.handler';
 
 enum Role {
   WAREHOUSE_KEEPER = 'warehouse_keeper',
@@ -23,7 +30,7 @@ enum Role {
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('wms/stock')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class WmsStockController {
   private readonly logger = new Logger(WmsStockController.name);
@@ -34,19 +41,29 @@ export class WmsStockController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
+  @Post()
+  @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
+  async createStock() {
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+  }
+
   @Get()
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async listStock(@Query('page') page?: string, @Query('limit') limit?: string) {
     const result = await this.queryBus.execute(new GetStockInventoryQuery({ page: Number(page), limit: Number(limit) }));
     const items = result?.data?.items;
-    return { items: Array.isArray(items) ? items : [], total: Array.isArray(items) ? items.length : 0 };
+    const total = result?.data?.total ?? (Array.isArray(items) ? items.length : 0);
+    return { items: Array.isArray(items) ? items : [], total };
   }
 
   @Get(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
-  async getStock(@Param('id') id: number) {
-    this.logger.log('Getting stock');
-    return {};
+  async getStock(@Param('id', ParseIntPipe) id: number) {
+    this.logger.log(`Getting stock id=${id}`);
+    const result = await this.crudSvc.getStockById(id);
+    const row = result.ok ? result.data : null;
+    if (!row) throw new NotFoundException(`Stock id=${id} topilmadi`);
+    return { data: row };
   }
 
   @Get('fefo/:materialId/:warehouseId')
@@ -63,8 +80,19 @@ export class WmsStockController {
   @Post('reserve')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async reserveStock(@Body() dto: Record<string, unknown>) {
-    this.logger.log('Reserving stock');
-    return { data: null as null | undefined };
+    const materialId = Number(dto['materialId'] ?? dto['material_id']);
+    const warehouseId = Number(dto['warehouseId'] ?? dto['warehouse_id']);
+    const quantity    = Number(dto['quantity']);
+    const orderId     = Number(dto['orderId'] ?? dto['order_id'] ?? 0);
+
+    if (!materialId || !warehouseId || !quantity) {
+      throw new BadRequestException('materialId, warehouseId va quantity majburiy');
+    }
+
+    this.logger.log(`Reserving stock: materialId=${materialId}, warehouseId=${warehouseId}, qty=${quantity}`);
+    const command = new ReserveMaterialCommand(materialId, warehouseId, quantity, orderId);
+    const result  = await this.commandBus.execute(command);
+    return unwrapOrThrow(result);
   }
 
   @Patch(':id')

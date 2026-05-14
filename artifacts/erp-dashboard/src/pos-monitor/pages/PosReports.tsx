@@ -1,3 +1,8 @@
+/**
+ * @module PosReports
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { reportsApi, stockApi, glApi, syncApi, inventoryApi, movementsApi } from "../api/pos-monitor.api";
@@ -55,16 +60,16 @@ async function fetchReport(selected: ReportType, warehouseId: string, dateFrom: 
   switch (selected) {
     case "stock_balance":         return stockApi.getAll();
     case "movement_journal":      return reportsApi.getMovementStats();
-    case "abc_analysis":          return reportsApi.getTopMaterials();
+    case "abc_analysis":          return reportsApi.getAbcAnalysis(warehouseId || undefined);
     case "three_way_mismatch":    return reportsApi.getThreeWayMismatch();
     case "fifo_aging":            return reportsApi.getTopMaterials();
     case "low_stock":             return stockApi.getLowAlerts();
     case "expiry_alerts":         return stockApi.getExpiryAlerts(30);
     case "gl_journal":            return glApi.getJournal();
     case "gl_report":             return reportsApi.getAudit({ dateFrom, dateTo });
-    case "confirmation_audit":    return movementsApi.getAll({ limit: "100" }).catch(() => []);
+    case "confirmation_audit":    return movementsApi.getAll({ limit: 100 }).catch(() => []);
     case "qc_report":             return movementsApi.getAll({ status: "qc_pending" }).catch(() => []);
-    case "damage_report":         return movementsApi.getAll({ movementType: "DAMAGE" }).catch(() => []);
+    case "damage_report":         return movementsApi.getAll({ type: "DAMAGE" }).catch(() => []);
     case "inventory_variance":    return inventoryApi.getAll().catch(() => []);
     case "request_fulfillment":   return reportsApi.getLiabilities();
     case "employee_balance":      return reportsApi.getLiabilities();
@@ -95,7 +100,7 @@ export default function PosReports() {
       setData(result);
       if (selected === "stock_balance" && Array.isArray(result)) {
         const total = (result as { balance: number }[]).reduce((s, r) => s + (r.balance ?? 0), 0);
-        setKpiRows([{ label: "Jami qatorlar", value: (result as unknown[]).length, color: "var(--pos-accent)" }, { label: "Jami balans", value: total.toFixed(2), color: "var(--pos-success)" }]);
+        setKpiRows([{ label: "Jami qatorlar", value: result.length, color: "var(--pos-accent)" }, { label: "Jami balans", value: total.toFixed(2), color: "var(--pos-success)" }]);
       }
     } catch { /* noop */ } finally { setLoading(false); }
   }, [selected, dateFrom, dateTo, warehouseId]);
@@ -159,7 +164,50 @@ export default function PosReports() {
                     <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={() => window.print()}>📄 PDF</button>
                   </div>
                 </div>
-                {Array.isArray(data) && data.length > 0 ? (
+
+                {/* ABC Analysis — special visualisation */}
+                {selected === "abc_analysis" && Array.isArray(data) && data.length > 0 && (() => {
+                  type AbcRow = { material_name: string; abc_class: "A" | "B" | "C"; total_value: number; pct_of_total: number; cumulative_pct: number; qty_on_hand: number; unit_of_measure: string };
+                  const rows = data as AbcRow[];
+                  const classCounts = { A: 0, B: 0, C: 0 };
+                  const classValues = { A: 0, B: 0, C: 0 };
+                  rows.forEach(r => { classCounts[r.abc_class] = (classCounts[r.abc_class] ?? 0) + 1; classValues[r.abc_class] = (classValues[r.abc_class] ?? 0) + r.total_value; });
+                  const ABC_COLOR: Record<string, string> = { A: "var(--pos-success)", B: "var(--pos-warning)", C: "var(--pos-danger)" };
+                  return (
+                    <div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+                        {(["A","B","C"] as const).map(cls => (
+                          <div key={cls} className="pos-stat-card" style={{ borderLeft: `3px solid ${ABC_COLOR[cls]}` }}>
+                            <div className="pos-stat-value" style={{ color: ABC_COLOR[cls] }}>{classCounts[cls]} ta</div>
+                            <div className="pos-stat-label">Sinf {cls} — {classValues[cls].toLocaleString("uz-UZ", { maximumFractionDigits: 0 })} so'm</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ overflowX: "auto" }}>
+                        <table className="pos-table">
+                          <thead><tr><th>Sinf</th><th>{t('common.Material')}</th><th>Birlik</th><th className="pos-mono">Qoldiq</th><th className="pos-mono">Qiymat</th><th className="pos-mono">Ulushi %</th><th className="pos-mono">Yig'ma %</th></tr></thead>
+                          <tbody>
+                            {rows.slice(0, 200).map((r, i) => (
+                              <tr key={i} style={{ background: r.abc_class === "A" ? "rgba(0,255,148,0.04)" : r.abc_class === "B" ? "rgba(255,184,0,0.04)" : undefined }}>
+                                <td><span style={{ fontWeight: 700, color: ABC_COLOR[r.abc_class], fontSize: 13 }}>{r.abc_class}</span></td>
+                                <td style={{ fontSize: 12, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.material_name}</td>
+                                <td style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{r.unit_of_measure}</td>
+                                <td className="pos-mono">{Number(r.qty_on_hand).toFixed(2)}</td>
+                                <td className="pos-mono">{Number(r.total_value).toLocaleString("uz-UZ", { maximumFractionDigits: 0 })}</td>
+                                <td className="pos-mono">{Number(r.pct_of_total).toFixed(2)}%</td>
+                                <td className="pos-mono">{Number(r.cumulative_pct).toFixed(2)}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {rows.length > 200 && <div style={{ textAlign: "center", padding: 12, fontSize: 12, color: "var(--pos-text-muted)" }}>… yana {rows.length - 200} ta qator</div>}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Generic table for other reports */}
+                {selected !== "abc_analysis" && Array.isArray(data) && data.length > 0 ? (
                   <div style={{ overflowX: "auto" }}>
                     <table className="pos-table">
                       <thead><tr>{Object.keys((data as Record<string, unknown>[])[0] ?? {}).slice(0, 8).map(k => <th key={k}>{k}</th>)}</tr></thead>
@@ -169,11 +217,11 @@ export default function PosReports() {
                         ))}
                       </tbody>
                     </table>
-                    {(data as unknown[]).length > 100 && <div style={{ textAlign: "center", padding: 12, fontSize: 12, color: "var(--pos-text-muted)" }}>… yana {(data as unknown[]).length - 100} ta qator</div>}
+                    {Array.isArray(data) && data.length > 100 && <div style={{ textAlign: "center", padding: 12, fontSize: 12, color: "var(--pos-text-muted)" }}>… yana {data.length - 100} ta qator</div>}
                   </div>
-                ) : !Array.isArray(data) ? (
+                ) : selected !== "abc_analysis" && !Array.isArray(data) ? (
                   <pre style={{ fontSize: 11, color: "var(--pos-text-muted)", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{JSON.stringify(data, null, 2)}</pre>
-                ) : (
+                ) : selected !== "abc_analysis" && (
                   <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>{t("common.noData")}</div>
                 )}
               </>

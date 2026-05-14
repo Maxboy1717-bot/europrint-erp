@@ -1,3 +1,8 @@
+/**
+ * @module pos.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { PosGateway } from './pos.gateway';
 
@@ -19,6 +24,14 @@ import { GlController }             from './controllers/gl.controller';
 import { SyncController }           from './controllers/sync.controller';
 import { PosNotificationsController } from './controllers/pos-notifications.controller';
 import { PosAuthController } from './controllers/pos-auth.controller';
+import { InventoryPassportController }    from './controllers/inventory-passport.controller';
+import { PosInventoryPassportRepository } from './pos-inventory-passport.repository';
+import { PosInventoryPassportService }    from './pos-inventory-passport.service';
+import { PosFifoService }                 from './services/pos-fifo.service';
+import { PosLowStockJob }                 from './jobs/pos-low-stock.job';
+import { PosQuarantineCheckJob }          from './jobs/pos-quarantine-check.job';
+import { PosFifoRecalculateJob }          from './jobs/pos-fifo-recalculate.job';
+import { PosInactiveMaterialsJob }        from './jobs/pos-inactive-materials.job';
 
 // Retail POS
 import { CashRegisterService }      from './services/cash-register.service';
@@ -68,6 +81,8 @@ import { PosReportsRepository }   from './repositories/pos-reports.repository';
 // New v3 services
 import { StockLedgerService }       from './services/stock-ledger.service';
 import { GlPostingLogService }      from './services/gl-posting-log.service';
+import { PosGlAutoService }         from './services/pos-gl-auto.service';
+import { PosBalanceGuardService }   from './services/pos-balance-guard.service';
 import { PosSyncService }           from './services/pos-sync.service';
 import { PosNotificationsService }  from './services/pos-notifications.service';
 
@@ -101,6 +116,40 @@ import { PosEventHandler }         from './events/pos.events';
 import { PosEventRepository }      from './repositories/pos-event.repository';
 import { PosDepartmentGuard }      from './guards/pos-department.guard';
 
+// New workflow & balance services
+import { PosRequisitionWorkflowService } from './services/pos-requisition-workflow.service';
+import { PosEmployeeBalanceService }     from './services/pos-employee-balance.service';
+
+// WMS integration
+import { PosWmsSyncService }  from './services/pos-wms-sync.service';
+import { PosWmsQueryService } from './services/pos-wms-query.service';
+import { PosWmsController }   from './controllers/pos-wms.controller';
+
+// Warehouse features (xodimlar, auto-barcode, material 360, GL, KPI, GRN)
+import { WarehouseEmployeesService }    from './services/warehouse-employees.service';
+import { AutoBarcodeService }           from './services/auto-barcode.service';
+import { Material360Service }           from './services/material-360.service';
+import { AutoGlPostingService }         from './services/auto-gl-posting.service';
+import { WarehouseKpiService }          from './services/warehouse-kpi.service';
+import { GoodsReceiptService }          from './services/goods-receipt.service';
+import { QuarantineWorkflowService }    from './services/quarantine-workflow.service';
+import { ThreeWayMatchService }         from './services/three-way-match.service';
+import { SmsService }                   from './services/sms.service';
+import { EmailService }                 from './services/email.service';
+import { TelegramBotService }           from './services/telegram-bot.service';
+import { QueueService }                 from './services/queue.service';
+import { WarehouseFeaturesController }  from './controllers/warehouse-features.controller';
+
+// Sprint B: new repositories for warehouse feature services
+import { WarehouseEmployeesRepository }  from './repositories/warehouse-employees.repository';
+import { GoodsReceiptRepository }        from './repositories/goods-receipt.repository';
+import { AutoBarcodeRepository }         from './repositories/auto-barcode.repository';
+import { WarehouseKpiRepository }        from './repositories/warehouse-kpi.repository';
+import { QuarantineWorkflowRepository }  from './repositories/quarantine-workflow.repository';
+import { ThreeWayMatchRepository }       from './repositories/three-way-match.repository';
+import { AutoGlPostingRepository }       from './repositories/auto-gl-posting.repository';
+import { PosEmployeeBalanceRepository }  from './repositories/pos-employee-balance.repository';
+
 @Module({
   controllers: [
     PosStubController,
@@ -120,6 +169,9 @@ import { PosDepartmentGuard }      from './guards/pos-department.guard';
     SyncController,
     PosNotificationsController,
     PosAuthController,
+    InventoryPassportController,
+    PosWmsController,
+    WarehouseFeaturesController,
   ],
   providers: [
     { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },
@@ -182,11 +234,46 @@ import { PosDepartmentGuard }      from './guards/pos-department.guard';
     StockLedgerService,
     GlPostingLogRepository,
     GlPostingLogService,
+    PosGlAutoService,
+    PosBalanceGuardService,
     PosSyncRepository,
     PosSyncService,
     PosNotificationsRepository,
     PosNotificationsService,
     PosGateway,
+    PosInventoryPassportRepository,
+    PosInventoryPassportService,
+    PosFifoService,
+    PosLowStockJob,
+    PosQuarantineCheckJob,
+    PosFifoRecalculateJob,
+    PosRequisitionWorkflowService,
+    PosEmployeeBalanceService,
+    PosWmsSyncService,
+    PosWmsQueryService,
+    PosInactiveMaterialsJob,
+    // Warehouse features — repositories (Sprint B)
+    WarehouseEmployeesRepository,
+    GoodsReceiptRepository,
+    AutoBarcodeRepository,
+    WarehouseKpiRepository,
+    QuarantineWorkflowRepository,
+    ThreeWayMatchRepository,
+    AutoGlPostingRepository,
+    PosEmployeeBalanceRepository,
+    // Warehouse features — services
+    WarehouseEmployeesService,
+    AutoBarcodeService,
+    Material360Service,
+    AutoGlPostingService,
+    WarehouseKpiService,
+    GoodsReceiptService,
+    QuarantineWorkflowService,
+    ThreeWayMatchService,
+    SmsService,
+    EmailService,
+    TelegramBotService,
+    QueueService,
   ],
   exports: [
     POS_SVC_REPO,
@@ -210,6 +297,10 @@ import { PosDepartmentGuard }      from './guards/pos-department.guard';
     StockLedgerService,
     GlPostingLogService,
     PosNotificationsService,
+    PosInventoryPassportService,
+    PosFifoService,
+    PosRequisitionWorkflowService,
+    PosEmployeeBalanceService,
   ],
 })
 export class PosModule {}

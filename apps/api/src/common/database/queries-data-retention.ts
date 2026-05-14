@@ -1,3 +1,8 @@
+/**
+ * @module queries-data-retention
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import {
   pos_movements_legacy, pos_movements_archive,
@@ -18,7 +23,7 @@ export async function execArchivePosMovements(cutoff: Date): Promise<number> {
     if (toArchive.length === 0) return 0;
 
     await tx.insert(pos_movements_archive).values(
-      (toArchive ?? []).map(row => ({
+      (Array.isArray(toArchive) ? toArchive : []).map(row => ({
         id: row.id,
         movement_number: row.movement_number,
         movement_type_id: row.movement_type_id,
@@ -38,7 +43,7 @@ export async function execArchivePosMovements(cutoff: Date): Promise<number> {
       })),
     ).onConflictDoNothing();
 
-    const ids = (toArchive ?? []).map(r => r.id);
+    const ids = (Array.isArray(toArchive) ? toArchive : []).map(r => r.id);
     await tx.delete(pos_movements_legacy).where(inArray(pos_movements_legacy.id, ids));
 
     return toArchive.length;
@@ -59,7 +64,7 @@ export async function execArchiveEmployeeDocuments(cutoff: Date): Promise<number
     if (toArchive.length === 0) return 0;
 
     await tx.insert(hr_documents_archive).values(
-      (toArchive ?? []).map(row => ({
+      (Array.isArray(toArchive) ? toArchive : []).map(row => ({
         id: row.id,
         employee_id: row.employee_id,
         document_type: row.document_type,
@@ -75,7 +80,7 @@ export async function execArchiveEmployeeDocuments(cutoff: Date): Promise<number
       })),
     ).onConflictDoNothing();
 
-    const ids = (toArchive ?? []).map(r => r.id);
+    const ids = (Array.isArray(toArchive) ? toArchive : []).map(r => r.id);
     await tx.delete(hr_documents_legacy).where(inArray(hr_documents_legacy.id, ids));
 
     return toArchive.length;
@@ -96,7 +101,7 @@ export async function execArchiveManagementDocuments(cutoff: Date): Promise<numb
     if (toArchive.length === 0) return 0;
 
     await tx.insert(hr_documents_archive).values(
-      (toArchive ?? []).map(row => ({
+      (Array.isArray(toArchive) ? toArchive : []).map(row => ({
         id: row.id,
         employee_id: row.employee_id,
         document_type: row.document_type,
@@ -112,7 +117,7 @@ export async function execArchiveManagementDocuments(cutoff: Date): Promise<numb
       })),
     ).onConflictDoNothing();
 
-    const ids = (toArchive ?? []).map(r => r.id);
+    const ids = (Array.isArray(toArchive) ? toArchive : []).map(r => r.id);
     await tx.delete(hr_documents_legacy).where(inArray(hr_documents_legacy.id, ids));
 
     return toArchive.length;

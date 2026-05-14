@@ -1,3 +1,8 @@
+/**
+ * @module PollCreator
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from "react";
 import { X, Plus, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -71,7 +76,7 @@ export function PollCreator({ roomId, onClose, onCreated }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
+      <div className="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
           <div className="flex items-center gap-2">

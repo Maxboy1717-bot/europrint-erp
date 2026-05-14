@@ -1,3 +1,8 @@
+/**
+ * @module finance-payroll.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Query, Logger, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Roles } from '@common/decorators/roles.decorator';

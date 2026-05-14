@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 
 export const fmtMoney = (n: number | string | null | undefined) => {
@@ -66,7 +71,7 @@ export function KpiCard({ icon: Icon, label, value, sub, color = "text-primary",
   return (
     <div className="relative overflow-hidden rounded-xl border bg-card p-3.5 hover:shadow-sm transition-shadow">
       {gradient && (
-        <div className={`absolute -right-3 -top-3 w-14 h-14 rounded-full bg-gradient-to-br ${gradient} opacity-10`} />
+        <div className={`absolute -right-3 -top-3 w-14 h-14 rounded-full ${gradient} opacity-10`} />
       )}
       <div className="flex items-start gap-3">
         <div className={`w-9 h-9 rounded-lg bg-muted/80 flex items-center justify-center shrink-0 ${color}`}>

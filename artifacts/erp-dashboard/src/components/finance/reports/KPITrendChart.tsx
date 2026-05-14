@@ -1,3 +1,8 @@
+/**
+ * @module KPITrendChart
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Target } from "lucide-react";
@@ -21,7 +26,7 @@ export function KPITrendChart({ data, isLoading }: KPITrendChartProps) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full rounded-lg" />
         ) : (
           <div className="glass-chart">
             <ResponsiveContainer width="100%" height={300}>

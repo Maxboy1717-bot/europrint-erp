@@ -1,3 +1,8 @@
+/**
+ * @module recruitment.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 import { RECRUITMENT_LIST_LIMIT } from '@common/constants/app.constants';
 const _time = new TashkentTimeService();

@@ -1,6 +1,11 @@
+/**
+ * @module mm-mro
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -13,13 +18,13 @@ import { materialBarcodes } from "./mm-inventory";
 
 export const operatorMaterialBalance = pgTable("operator_material_balance", {
   id: serial("id").primaryKey(),
-  operatorId: varchar("operator_id").references(() => users.id).notNull(),
-  barcodeId: varchar("barcode_id").references(() => materialBarcodes.id).notNull(),
+  operatorId: varchar("operator_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
+  barcodeId: varchar("barcode_id").references(() => materialBarcodes.id, { onDelete: "cascade" }).notNull(),
   productionOrderId: varchar("production_order_id").notNull(),
   qtyDebt: numericMoney("qty_debt").notNull(),
   reason: varchar("reason", { length: 30 }).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("PENDING"),
-  supervisorId: varchar("supervisor_id").references(() => users.id),
+  supervisorId: varchar("supervisor_id").references(() => users.id, { onDelete: "set null" }),
   resolvedAt: timestamp("resolved_at"),
   resolutionNote: text("resolution_note"),
   deductionAmount: numericMoney("deduction_amount"),
@@ -45,9 +50,9 @@ export type InsertOperatorMaterialBalance = z.infer<typeof insertOperatorMateria
 export const vendorInvoices = pgTable("vendor_invoices", {
   id: serial("id").primaryKey(),
   invoiceNumber: varchar("invoice_number", { length: 50 }).notNull(),
-  vendorId: varchar("vendor_id").references(() => vendors.id).notNull(),
-  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id),
-  goodsReceiptId: varchar("goods_receipt_id").references(() => goodsReceipts.id),
+  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "cascade" }).notNull(),
+  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: "set null" }),
+  goodsReceiptId: varchar("goods_receipt_id").references(() => goodsReceipts.id, { onDelete: "set null" }),
   invoiceDate: varchar("invoice_date", { length: 20 }).notNull(),
   dueDate: varchar("due_date", { length: 20 }),
   totalAmount: numericMoney("total_amount").notNull(),
@@ -58,11 +63,11 @@ export const vendorInvoices = pgTable("vendor_invoices", {
   matchScore: numericMoney("match_score").default(0),
   priceVariance: numericMoney("price_variance").default(0),
   quantityVariance: numericMoney("quantity_variance").default(0),
-  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id),
-  approvedBy: varchar("approved_by").references(() => users.id),
+  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -105,9 +110,9 @@ export type InsertVendorInvoiceLine = z.infer<typeof insertVendorInvoiceLineSche
 
 export const threeWayMatchResults = pgTable("three_way_match_results", {
   id: serial("id").primaryKey(),
-  invoiceId: varchar("invoice_id").references(() => vendorInvoices.id).notNull(),
-  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id).notNull(),
-  goodsReceiptId: varchar("goods_receipt_id").references(() => goodsReceipts.id),
+  invoiceId: varchar("invoice_id").references(() => vendorInvoices.id, { onDelete: "cascade" }).notNull(),
+  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: "cascade" }).notNull(),
+  goodsReceiptId: varchar("goods_receipt_id").references(() => goodsReceipts.id, { onDelete: "set null" }),
   poTotalAmount: numericMoney("po_total_amount").notNull(),
   grTotalAmount: numericMoney("gr_total_amount"),
   invoiceTotalAmount: numericMoney("invoice_total_amount").notNull(),
@@ -116,7 +121,7 @@ export const threeWayMatchResults = pgTable("three_way_match_results", {
   overallStatus: varchar("overall_status", { length: 20 }).notNull().default("pending"),
   tolerancePercent: numericMoney("tolerance_percent").default(5),
   autoApproved: boolean("auto_approved").default(false),
-  matchedBy: varchar("matched_by").references(() => users.id),
+  matchedBy: varchar("matched_by").references(() => users.id, { onDelete: "set null" }),
   matchedAt: timestamp("matched_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -147,7 +152,7 @@ export const mroItems = pgTable("mro_items", {
   maxStock: numericMoney("max_stock"),
   currentStock: numericMoney("current_stock").notNull().default(0),
   unitCost: numericMoney("unit_cost").default(0),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -165,18 +170,18 @@ export type InsertMroItem = z.infer<typeof insertMroItemSchema>;
 export const mroRequests = pgTable("mro_requests", {
   id: serial("id").primaryKey(),
   requestNumber: varchar("request_number", { length: 30 }).notNull(),
-  itemId: varchar("item_id").references(() => mroItems.id).notNull(),
+  itemId: varchar("item_id").references(() => mroItems.id, { onDelete: "cascade" }).notNull(),
   requestedQuantity: numericMoney("requested_quantity").notNull(),
   approvedQuantity: numericMoney("approved_quantity"),
   issuedQuantity: numericMoney("issued_quantity"),
   purpose: text("purpose"),
   equipmentId: varchar("equipment_id"),
-  requestedBy: varchar("requested_by").references(() => users.id).notNull(),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   department: varchar("department", { length: 100 }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
-  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
-  issuedBy: varchar("issued_by").references(() => users.id),
+  issuedBy: varchar("issued_by").references(() => users.id, { onDelete: "set null" }),
   issuedAt: timestamp("issued_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -194,12 +199,12 @@ export type InsertMroRequest = z.infer<typeof insertMroRequestSchema>;
 
 export const mroConsumption = pgTable("mro_consumption", {
   id: serial("id").primaryKey(),
-  requestId: varchar("request_id").references(() => mroRequests.id),
-  itemId: varchar("item_id").references(() => mroItems.id).notNull(),
+  requestId: varchar("request_id").references(() => mroRequests.id, { onDelete: "set null" }),
+  itemId: varchar("item_id").references(() => mroItems.id, { onDelete: "cascade" }).notNull(),
   quantity: numericMoney("quantity").notNull(),
   unitCost: numericMoney("unit_cost").default(0),
   totalCost: numericMoney("total_cost").default(0),
-  consumedBy: varchar("consumed_by").references(() => users.id).notNull(),
+  consumedBy: varchar("consumed_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   department: varchar("department", { length: 100 }),
   equipmentId: varchar("equipment_id"),
   purpose: varchar("purpose", { length: 500 }),
@@ -226,5 +231,7 @@ export const mroBudgets = pgTable("mro_budgets", {
   currency: varchar("currency", { length: 5 }).notNull().default("UZS"),
   status: varchar("status", { length: 20 }).notNull().default("active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("mro_budgets_status_chk", sql`${t.status} IN ('active','exceeded','closed')`),
+]);
 

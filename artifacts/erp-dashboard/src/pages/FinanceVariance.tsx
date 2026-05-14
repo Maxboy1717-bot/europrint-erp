@@ -1,3 +1,8 @@
+/**
+ * @module FinanceVariance
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -6,13 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, CheckCircle, TrendingUp, Search } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
 } from "recharts";
+import { EPPageHeader } from "@/components/ep";
 
 interface VarianceResult {
   orderId: number;
@@ -53,7 +58,7 @@ function VarianceBar({ label, value, favorable }: { label: string; value: number
           }}
         />
       </div>
-      <div className={`w-32 text-right text-sm font-mono font-medium ${value < 0 ? "text-emerald-600" : value > 0 ? "text-red-600" : "text-muted-foreground"}`}>
+      <div className={`w-32 text-right text-sm font-mono font-medium ${value < 0 ? "text-[var(--ep-green)]" : value > 0 ? "text-[var(--ep-red)]" : "text-muted-foreground"}`}>
         {formatCurrency(value)}
       </div>
     </div>
@@ -74,7 +79,7 @@ export default function FinanceVariance() {
 
   const { data, isLoading, isError, error } = useQuery<VarianceResult>({
     queryKey: ["finance-variance", searchId],
-    queryFn: () => apiRequest(`/finance/variance/${searchId}`),
+    queryFn: () => apiRequest("GET", `/api/finance/variance/${searchId}`),
     enabled: searchId.length > 0,
     retry: false,
   });
@@ -91,7 +96,8 @@ export default function FinanceVariance() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <PageHeader
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t("variance.title")}</b></>}
         title={t("variance.title")}
         subtitle={t("variance.subtitle")}
       />
@@ -125,7 +131,7 @@ export default function FinanceVariance() {
       {isLoading && (
         <Card>
           <CardContent className="pt-6 space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-8 w-full rounded-lg" />)}
           </CardContent>
         </Card>
       )}
@@ -165,7 +171,7 @@ export default function FinanceVariance() {
             <Card className={data.totalVariance < 0 ? "border-emerald-400" : data.totalVariance > 0 ? "border-red-400" : ""}>
               <CardContent className="pt-5">
                 <div className="text-xs text-muted-foreground mb-1">{t("variance.totalVariance")}</div>
-                <div className={`font-bold text-lg ${data.totalVariance < 0 ? "text-emerald-600" : data.totalVariance > 0 ? "text-red-600" : ""}`}>
+                <div className={`font-bold text-lg ${data.totalVariance < 0 ? "text-[var(--ep-green)]" : data.totalVariance > 0 ? "text-[var(--ep-red)]" : ""}`}>
                   {formatCurrency(data.totalVariance)}
                 </div>
                 <div className="text-xs text-muted-foreground">{data.variancePct}%</div>
@@ -217,7 +223,7 @@ export default function FinanceVariance() {
           <Card>
             <CardHeader><CardTitle className="text-base">{t("variance.labeling")}</CardTitle></CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-5 gap-3 text-center">
                 {[
                   { label: "MPV", val: data.details.mpvLabel },
                   { label: "MQV", val: data.details.mqvLabel },

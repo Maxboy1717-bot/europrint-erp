@@ -1,0 +1,14 @@
+{
+  "newPlan": "Новый план",
+  "scheduledFor": "Запланировано на",
+  "title": "Заголовок",
+  "plans": "plans",
+  "activeCount": "active Count",
+  "variances": "variances",
+  "planNo": "Plan Нет",
+  "systemQty": "system Qty",
+  "actualQty": "actual Qty",
+  "difference": "difference",
+  "shortage": "shortage",
+  "surplus": "surplus"
+}

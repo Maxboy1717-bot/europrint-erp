@@ -1,11 +1,17 @@
+/**
+ * @module QCSupplierQualityTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Star, RefreshCw } from "lucide-react";
+import { Star, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 
+import { EPLoader } from "@/components/ep";
 interface SupplierRating {
   supplierId: string;
   supplierName: string;
@@ -32,13 +38,13 @@ export function QCSupplierQualityTab() {
       </CardHeader>
       <CardContent>
         {suppliersLoading ? (
-          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <div className="flex justify-center py-8"><EPLoader className="w-6 h-6" /></div>
         ) : !supplierRatings?.length ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-[13px] text-muted-foreground">
             Supplier ma'lumotlari yo'q. Material testlari qo'shilgandan keyin avtomatik hisoblanadi.
           </div>
         ) : (
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Yetkazuvchi</TableHead>
@@ -50,7 +56,7 @@ export function QCSupplierQualityTab() {
             </TableHeader>
             <TableBody>
               {(Array.isArray(supplierRatings) ? supplierRatings : []).map((s, i) => (
-                <TableRow key={s.supplierId} data-testid={`row-supplier-${i}`}>
+                <TableRow key={s.supplierId} data-testid={`row-supplier-${i}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{s.supplierName}</TableCell>
                   <TableCell>{s.deliveryCount}</TableCell>
                   <TableCell>{s.avgPassRate}%</TableCell>
@@ -63,7 +69,7 @@ export function QCSupplierQualityTab() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         )}
       </CardContent>
     </Card>

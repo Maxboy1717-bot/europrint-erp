@@ -1,3 +1,8 @@
+/**
+ * @module erp.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   ErpUpdateOrderSchema,

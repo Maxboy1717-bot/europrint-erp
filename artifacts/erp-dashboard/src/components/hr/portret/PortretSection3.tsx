@@ -1,3 +1,8 @@
+/**
+ * @module PortretSection3
+ * @description React UI component.
+ */
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +25,7 @@ export function PortretSection3({ portret, onChange, onToggleSocial }: PortretSe
     <div className="flex flex-col gap-4">
       <h4 className="font-semibold text-sm text-primary">III Bo'lim: Ish sharoitlari</h4>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs mb-1 block">Maosh (min)</Label>
           <Input type="number" value={portret.salary_min ?? 0} onChange={e => onChange("salary_min")(Number(e.target.value))} />
@@ -31,7 +36,7 @@ export function PortretSection3({ portret, onChange, onToggleSocial }: PortretSe
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs mb-1 block">Sinov muddati (oy)</Label>
           <Input type="number" value={portret.probation_months ?? 3} onChange={e => onChange("probation_months")(Number(e.target.value))} />

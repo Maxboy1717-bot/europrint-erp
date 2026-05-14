@@ -1,6 +1,11 @@
+/**
+ * @module hr-performance-ext
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, decimal, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, decimal, date, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, Position, admins, departments, positions, users } from "./core-schema";
@@ -11,9 +16,9 @@ import { candidates, vacancies } from "./hr-recruitment";
 
 export const faceRecognitionLogs = pgTable("face_recognition_logs", {
   id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id").references(() => cameras.id),
-  zoneId: varchar("zone_id").references(() => cameraZones.id),
-  employeeId: varchar("employee_id").references(() => users.id), // null if unknown
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "set null" }),
+  zoneId: varchar("zone_id").references(() => cameraZones.id, { onDelete: "set null" }),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "set null" }), // null if unknown
   isRecognized: boolean("is_recognized").default(false),
   confidence: numericMoney("confidence").default(0),
   faceImageUrl: text("face_image_url"), // Snapshot of detected face
@@ -22,7 +27,9 @@ export const faceRecognitionLogs = pgTable("face_recognition_logs", {
   flaggedAs: varchar("flagged_as", { length: 30 }), // correct, false_positive, false_negative
   flaggedBy: varchar("flagged_by").references(() => users.id, { onDelete: 'set null' }),
   flaggedAt: timestamp("flagged_at"),
-});
+}, (t) => [
+  check("face_recog_logs_flagged_chk", sql`${t.flaggedAs} IS NULL OR ${t.flaggedAs} IN ('correct','false_positive','false_negative')`),
+]);
 
 
 export type FaceRecognitionLog = typeof faceRecognitionLogs.$inferSelect;
@@ -75,8 +82,8 @@ export type InsertEmployeeDailyKpi = z.infer<typeof insertEmployeeDailyKpiSchema
 
 export const aiCvScreenings = pgTable("ai_cv_screenings", {
   id: serial("id").primaryKey(),
-  candidateId: varchar("candidate_id").notNull().references(() => candidates.id),
-  vacancyId: varchar("vacancy_id").references(() => vacancies.id),
+  candidateId: varchar("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
+  vacancyId: varchar("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   resumeText: text("resume_text"),
   ocrRawText: text("ocr_raw_text"),
   extractedData: jsonb("extracted_data"),
@@ -97,8 +104,8 @@ export const aiCvScreenings = pgTable("ai_cv_screenings", {
 });
 export const aiInterviewSessions = pgTable("ai_interview_sessions", {
   id: serial("id").primaryKey(),
-  candidateId: varchar("candidate_id").notNull().references(() => candidates.id),
-  vacancyId: varchar("vacancy_id").references(() => vacancies.id),
+  candidateId: varchar("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
+  vacancyId: varchar("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   interviewType: varchar("interview_type", { length: 20 }).notNull().default("text"),
   language: varchar("language", { length: 5 }).notNull().default("uz"),
   currentStage: integer("current_stage").notNull().default(1),
@@ -110,7 +117,11 @@ export const aiInterviewSessions = pgTable("ai_interview_sessions", {
   totalTokensUsed: integer("total_tokens_used").default(0),
   startedAt: timestamp("started_at").notNull().defaultNow(),
   completedAt: timestamp("completed_at"),
-});
+}, (t) => [
+  check("ai_interview_sessions_type_chk", sql`${t.interviewType} IN ('text','video','voice')`),
+  check("ai_interview_sessions_lang_chk", sql`${t.language} IN ('uz','ru','en')`),
+  check("ai_interview_sessions_status_chk", sql`${t.status} IN ('active','completed','cancelled','failed')`),
+]);
 
 
 export const aiInterviewMessages = pgTable("ai_interview_messages", {
@@ -121,14 +132,16 @@ export const aiInterviewMessages = pgTable("ai_interview_messages", {
   stage: integer("stage"),
   tokensUsed: integer("tokens_used"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("ai_interview_msgs_role_chk", sql`${t.role} IN ('user','assistant','system')`),
+]);
 // ============================================================================
 // FAZA 3B: YAGONA XODIM REYTING TIZIMI
 // ============================================================================
 
 export const employeeRatings = pgTable("employee_ratings", {
   id: serial("id").primaryKey(),
-  employeeId: varchar("employee_id").references(() => users.id).notNull(),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   periodYear: integer("period_year").notNull(),
   periodMonth: integer("period_month").notNull(),
   productivityScore: numericMoney("productivity_score").default(0),
@@ -164,7 +177,7 @@ export type InsertEmployeeRating = z.infer<typeof insertEmployeeRatingSchema>;
 
 export const performanceGoals = pgTable("performance_goals", {
   id: serial("id").primaryKey(),
-  employeeId: varchar("employee_id").references(() => users.id).notNull(),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   goalType: varchar("goal_type", { length: 30 }).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
@@ -174,9 +187,12 @@ export const performanceGoals = pgTable("performance_goals", {
   startDate: varchar("start_date", { length: 20 }).notNull(),
   endDate: varchar("end_date", { length: 20 }).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("active"),
-  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("performance_goals_type_chk", sql`${t.goalType} IN ('PRODUCTIVITY','QUALITY','ATTENDANCE','LEARNING','TEAMWORK')`),
+  check("performance_goals_status_chk", sql`${t.status} IN ('active','completed','missed','cancelled')`),
+]);
 
 
 export const insertPerformanceGoalSchema = createInsertSchema(performanceGoals, {
@@ -208,7 +224,10 @@ export const positionSkillRequirements = pgTable("position_skill_requirements", 
   requirementType: varchar("requirement_type", { length: 30 }).default("MUST_HAVE"),
   minScore: integer("min_score").default(3),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("pos_skill_req_category_chk", sql`${t.skillCategory} IN ('TECHNICAL','SAFETY','QUALITY','MANAGEMENT','LANGUAGE','SOFTWARE')`),
+  check("pos_skill_req_type_chk", sql`${t.requirementType} IS NULL OR ${t.requirementType} IN ('MUST_HAVE','NICE_TO_HAVE')`),
+]);
 
 
 export const insertPositionSkillRequirementSchema = createInsertSchema(positionSkillRequirements, {
@@ -222,7 +241,7 @@ export type InsertPositionSkillRequirement = z.infer<typeof insertPositionSkillR
 
 export const employeeSkills = pgTable("employee_skills", {
   id: serial("id").primaryKey(),
-  employeeId: varchar("employee_id").references(() => users.id).notNull(),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   skillName: varchar("skill_name", { length: 255 }).notNull(),
   skillCategory: varchar("skill_category", { length: 50 }).notNull(),
   currentLevel: integer("current_level").notNull().default(1),
@@ -241,7 +260,10 @@ export const employeeSkills = pgTable("employee_skills", {
   confirmedAt: timestamp("confirmed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("emp_skills_ext_category_chk", sql`${t.skillCategory} IN ('TECHNICAL','SAFETY','QUALITY','MANAGEMENT','LANGUAGE','SOFTWARE')`),
+  check("emp_skills_ext_status_chk", sql`${t.status} IN ('active','expired','pending_renewal','revoked')`),
+]);
 
 
 export const insertEmployeeSkillSchema = createInsertSchema(employeeSkills, {
@@ -268,7 +290,9 @@ export const shiftRequirements = pgTable("shift_requirements", {
   effectiveTo: varchar("effective_to", { length: 20 }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("shift_requirements_type_chk", sql`${t.shiftType} IN ('MORNING','AFTERNOON','NIGHT')`),
+]);
 
 
 export const insertShiftRequirementSchema = createInsertSchema(shiftRequirements, {
@@ -296,7 +320,9 @@ export const shiftHandovers = pgTable("shift_handovers", {
   signatureData: text("signature_data"),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("shift_handovers_status_chk", sql`${t.status} IN ('pending','acknowledged','completed')`),
+]);
 
 
 export const insertShiftHandoverSchema = createInsertSchema(shiftHandovers, {

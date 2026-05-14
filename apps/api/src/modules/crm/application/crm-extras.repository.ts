@@ -1,3 +1,8 @@
+/**
+ * @module crm-extras.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
@@ -187,7 +192,7 @@ export class CrmExtrasRepository {
         title:       (body.title as string) ?? 'Task',
         lead_id:     (body.lead_id as number) ?? undefined,
         deal_id:     (body.deal_id as number) ?? undefined,
-        assigned_to: (body.assigned_to as number) ?? undefined,
+        assigned_to: ((body.assignee_id ?? body.assigned_to) as number) ?? undefined,
         due_date:    body.due_date ? new Date(body.due_date as string) : undefined,
         status:      (body.status as string) ?? 'pending',
         priority:    (body.priority as string) ?? 'medium',

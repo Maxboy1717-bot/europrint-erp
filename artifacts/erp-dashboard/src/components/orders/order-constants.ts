@@ -1,3 +1,8 @@
+/**
+ * @module order-constants
+ * @description React UI component.
+ */
+
 export const PRODUCT_TYPES = [
   { value: "gofra", label: "Gofra", labelRu: "Гофра" },
   { value: "gladkiy", label: "Gladkiy", labelRu: "Гладкий" },

@@ -1,3 +1,8 @@
+/**
+ * @module get-requests.query
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Result, Ok as ok, Err as err, isErr, Err } from '@common/result';

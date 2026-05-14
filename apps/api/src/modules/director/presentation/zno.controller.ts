@@ -1,3 +1,8 @@
+/**
+ * @module zno.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Body, Controller, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';

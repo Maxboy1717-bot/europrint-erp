@@ -1,3 +1,8 @@
+/**
+ * @module use-mobile
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768

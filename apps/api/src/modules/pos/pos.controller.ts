@@ -1,3 +1,8 @@
+/**
+ * @module pos.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {Controller, Get, Post, Put, Delete, Param, Body,
   Query, ParseIntPipe, UseGuards, Logger, UseInterceptors , UsePipes,} from '@nestjs/common';

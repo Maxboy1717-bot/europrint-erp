@@ -1,5 +1,11 @@
+/**
+ * @module CRMRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
+const AiCrmPage = lazy(() => import("@/pages/AiCrmPage"));
 const CrmFunnelAnalytics = lazy(() => import("@/pages/CrmFunnelAnalytics"));
 const CrmRfmClusters    = lazy(() => import("@/pages/CrmRfmClusters"));
 const CrmCohortAnalysis = lazy(() => import("@/pages/CrmCohortAnalysis"));
@@ -36,6 +42,8 @@ const MarketingWebsiteCMS = lazy(() => import("@/pages/MarketingWebsiteCMS"));
 const MarketingExtended = lazy(() => import("@/pages/MarketingExtended"));
 
 export const SALES_ROUTES: [string, React.ComponentType][] = [
+  ['/ai/crm',                  AiCrmPage],
+  ['/ai-crm',                  AiCrmPage],
   ['/crm-workspace',           CRMWorkspace],
   ['/crm/funnel',              CrmFunnelAnalytics],
   ['/crm/rfm',                 CrmRfmClusters],

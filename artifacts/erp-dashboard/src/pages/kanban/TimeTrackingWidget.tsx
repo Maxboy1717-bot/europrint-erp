@@ -1,3 +1,8 @@
+/**
+ * @module TimeTrackingWidget
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -16,15 +21,16 @@ export function TimeTrackingWidget({
   t: typeof T.uz;
 }) {
   const [elapsed, setElapsed] = useState(0);
-  const isTracking = !!card.activeTimeTrack;
+  const activeTrack = card.activeTimeTrack ?? card.active_time_track ?? null;
+  const isTracking = !!activeTrack;
 
   useEffect(() => {
-    if (!isTracking || !card.activeTimeTrack) {
+    if (!isTracking || !activeTrack) {
       setElapsed(0);
       return;
     }
 
-    const startTime = new Date(card.activeTimeTrack.startedAt).getTime();
+    const startTime = new Date(activeTrack.startedAt ?? activeTrack.started_at).getTime();
     const updateElapsed = () => {
       setElapsed(Math.floor((Date.now() - startTime) / 1000));
     };
@@ -32,10 +38,10 @@ export function TimeTrackingWidget({
     updateElapsed();
     const interval = setInterval(updateElapsed, 1000);
     return () => clearInterval(interval);
-  }, [isTracking, card.activeTimeTrack]);
+  }, [isTracking, activeTrack]);
 
-  const totalMinutes = (card.totalTrackedTime || 0) + Math.floor(elapsed / 60);
-  const targetMinutes = card.targetTime || 300;
+  const totalMinutes = (card.totalTrackedTime ?? card.total_tracked_time ?? 0) + Math.floor(elapsed / 60);
+  const targetMinutes = card.targetTime ?? card.target_time ?? card.estimatedTime ?? card.estimated_time ?? 300;
 
   return (
     <div className="bg-muted/50 rounded-md p-3 space-y-2">
@@ -56,7 +62,7 @@ export function TimeTrackingWidget({
       </div>
 
       <div className="text-center">
-        <span className={`text-2xl font-mono ${isTracking ? "text-green-400" : ""}`}>
+        <span className={`text-2xl font-mono ${isTracking ? "text-[var(--ep-green)] font-semibold" : ""}`}>
           {formatTime(elapsed)}
         </span>
         <span className="text-muted-foreground text-sm"> / {formatTimeShort(targetMinutes)}</span>

@@ -1,3 +1,8 @@
+/**
+ * @module use-hr
+ * @description React custom hook.
+ */
+
 export { useEmployees, useEmployee, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, usePositions } from "./use-hr-employees";
 export { useDepartments, useCreateDepartment, useUpdateDepartment, useDeleteDepartment } from "./use-hr-departments";
 export { useAttendance, useAttendanceSummary, useCheckIn, useCheckOut, useAbcResults, useRunAbcAnalysis, useLateEmployees, useMonthlyAttendanceReport } from "./use-hr-attendance";

@@ -1,3 +1,8 @@
+/**
+ * @module ExtraTabs
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, UserX, Layers, TrendingUp, CheckCircle, BarChart2 } from "lucide-react";
 import { StatCard } from "./StatCard";
@@ -12,7 +17,7 @@ export function StatsTab({ node }: StatsTabProps) {
   
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         <StatCard
           icon={<Users className="h-4 w-4" />}
           label="To'g'ridan xodimlar"
@@ -58,7 +63,7 @@ export function StatsTab({ node }: StatsTabProps) {
               Qo'shimcha ma'lumot
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2 text-sm">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             {([
               { label: "Bo'lim turi", value: NODE_TYPE_LABELS[node.nodeType] || node.nodeType },
               { label: "Ota bo'lim", value: node.parentName || (node.parentId ? `#${node.parentId}` : "Ildiz (asosiy)") },
@@ -85,7 +90,7 @@ export function VacantTab({ node }: StatsTabProps) {
         <div className="flex items-center gap-3">
           {!isVacant ? (
             <>
-              <CheckCircle className="h-6 w-6 text-green-500" />
+              <CheckCircle className="h-6 w-6 text-[var(--ep-green)]" />
               <div>
                 <p className="font-medium">Rahbar tayinlangan</p>
                 <p className="text-sm text-muted-foreground">{node.headUserName}</p>
@@ -93,9 +98,9 @@ export function VacantTab({ node }: StatsTabProps) {
             </>
           ) : (
             <>
-              <UserX className="h-6 w-6 text-red-500" />
+              <UserX className="h-6 w-6 text-[var(--ep-red)]" />
               <div>
-                <p className="font-medium text-red-600">Rahbar vakant</p>
+                <p className="font-medium text-[var(--ep-red)]">Rahbar vakant</p>
                 <p className="text-sm text-muted-foreground">Bu bo'limga rahbar tayinlanmagan</p>
               </div>
             </>

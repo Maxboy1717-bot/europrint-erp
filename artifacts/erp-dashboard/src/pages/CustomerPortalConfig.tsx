@@ -1,16 +1,21 @@
+/**
+ * @module CustomerPortalConfig
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/hooks/use-toast";
 import {
   Globe, Link2, Copy, CheckCircle, Code2, Shield,
   Webhook, Phone, FileText, MessageSquare, Eye
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
 
 const BASE_URL = window.location.origin;
 
@@ -154,7 +159,7 @@ function CopyButton({ text }: { text: string }) {
 
   return (
     <Button variant="outline" size="default" onClick={handleCopy} data-testid="button-copy">
-      {copied ? <CheckCircle className="w-4 h-4 mr-1 text-green-500" /> : <Copy className="w-4 h-4 mr-1" />}
+      {copied ? <CheckCircle className="w-4 h-4 mr-1 text-[var(--ep-green)]" /> : <Copy className="w-4 h-4 mr-1" />}
       {copied ? "Nusxalandi" : "Nusxala"}
     </Button>
   );
@@ -164,10 +169,11 @@ export default function CustomerPortalConfig() {
   const [selectedEndpoint, setSelectedEndpoint] = useState(WEBHOOK_ENDPOINTS[0]);
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Mijozlar sayti integratsiyasi</b></>}
         title="Mijozlar sayti integratsiyasi"
-        description="Veb-sayt va tashqi tizimlarni ERP CRM moduliga ulash sozlamalari"
+        subtitle="Veb-sayt va tashqi tizimlarni ERP CRM moduliga ulash sozlamalari"
       />
 
       {/* Status */}
@@ -176,13 +182,13 @@ export default function CustomerPortalConfig() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Globe className="w-4 h-4" />Server manzili</div>
             <div className="font-mono text-sm truncate">{BASE_URL}</div>
-            <Badge className="mt-2 bg-green-500/10 text-green-700 dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Faol</Badge>
+            <Badge className="mt-2 bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Faol</Badge>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Shield className="w-4 h-4" />Webhook xavfsizlik</div>
-            <Badge variant="destructive" className="mt-1">CRM_WEBHOOK_SECRET kerak</Badge>
+            <EPStatusPill tone="danger" className="mt-1">CRM_WEBHOOK_SECRET kerak</EPStatusPill>
             <p className="text-xs text-muted-foreground mt-1.5">Replit Secrets orqali sozlang</p>
           </CardContent>
         </Card>
@@ -278,7 +284,7 @@ export default function CustomerPortalConfig() {
                 </div>
               </div>
               <div className="mt-4 p-3 rounded-md bg-yellow-500/10 border border-yellow-200 dark:border-yellow-800">
-                <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                <p className="text-xs text-[var(--ep-yellow)] dark:text-yellow-400">
                   <strong>Muhim:</strong> HMAC imzoni server tomonida hisoblang. JavaScript frontendda secret kalitni ochiq saqlash xavfli!
                 </p>
               </div>
@@ -292,8 +298,8 @@ export default function CustomerPortalConfig() {
               <CardTitle className="text-base">Xavfsizlik sozlamalari</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <Label>HMAC SHA-256 imzo kaliti</Label>
+              <div className="space-y-1">
+          <Label>HMAC SHA-256 imzo kaliti</Label>
                 <div className="flex gap-2">
                   <Input
                     type="password"
@@ -318,7 +324,7 @@ export default function CustomerPortalConfig() {
                   "JWT token orqali ham autentifikatsiya qilish mumkin",
                 ]).map((item, i) => (
                   <div key={`k-${i}`} className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-[var(--ep-green)] shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}

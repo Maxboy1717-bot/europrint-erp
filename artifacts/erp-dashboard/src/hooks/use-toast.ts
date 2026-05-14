@@ -1,3 +1,8 @@
+/**
+ * @module use-toast
+ * @description React custom hook.
+ */
+
 import * as React from "react"
 
 import type {
@@ -181,7 +186,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
 
   return {
     ...state,

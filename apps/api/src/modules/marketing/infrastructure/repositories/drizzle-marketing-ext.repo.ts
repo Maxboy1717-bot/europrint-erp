@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-marketing-ext.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -27,7 +32,7 @@ export class DrizzleMarketingExtRepository {
       const leads     = await db.select().from(marketingLeads).where(isNull(marketingLeads.deletedAt));
       return {
         totalCampaigns: campaigns.length,
-        activeCampaigns: (campaigns ?? []).filter((c) => c.status === 'active').length,
+        activeCampaigns: (Array.isArray(campaigns) ? campaigns : []).filter((c) => c.status === 'active').length,
         totalLeads: leads.length,
         conversionRate: 0,
       };
@@ -100,8 +105,8 @@ export class DrizzleMarketingExtRepository {
       const posts = await db.select().from(marketingContentPosts);
       return {
         totalPosts:     posts.length,
-        publishedPosts: (posts ?? []).filter((p) => p.status === 'published').length,
-        draftPosts:     (posts ?? []).filter((p) => p.status === 'draft').length,
+        publishedPosts: (Array.isArray(posts) ? posts : []).filter((p) => p.status === 'published').length,
+        draftPosts:     (Array.isArray(posts) ? posts : []).filter((p) => p.status === 'draft').length,
       };
     });
   }
@@ -197,7 +202,7 @@ export class DrizzleMarketingExtRepository {
   async getCampaignAnalytics(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
       const rows = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt)).limit(20);
-      return (rows ?? []).map((c) => ({ id: c.id, name: c.name, impressions: 0, clicks: 0, roi: 0 }));
+      return (Array.isArray(rows) ? rows : []).map((c) => ({ id: c.id, name: c.name, impressions: 0, clicks: 0, roi: 0 }));
     });
   }
 

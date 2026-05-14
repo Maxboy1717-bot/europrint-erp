@@ -1,3 +1,8 @@
+/**
+ * @module get-mrp-report.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { safeNum } from '@common/math';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';

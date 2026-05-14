@@ -1,12 +1,43 @@
 /**
- * route.service.ts — TZ-48: Dijkstra Eng Qisqa Yo'l
+ * @module route.service
+ * @description Shortest-path search over a weighted road / route graph,
+ *   implemented with **Dijkstra** + binary min-heap priority queue.
  *
- * Dijkstra algoritmi (priority queue — min-heap):
- *   dist[s] = 0, dist[v] = ∞  ∀v ≠ s
- *   O((V + E) log V) murakkablik
- *   prev[] massivi orqali yo'l rekonstruksiyasi
+ *   Used by delivery planning to find the lowest-cost path between two
+ *   stops where cost can be distance (km), drive time (minutes), or fuel
+ *   (UZS) — caller decides what `weight` means by how they build the graph.
  *
- * TAQIQLANGAN: BFS (og'irsiz graf uchun), Bellman-Ford (manfiy qirralar yo'q)
+ *   Complexity: O((V + E) log V) — fine for our city-scale graphs (~thousand
+ *   nodes, ~few thousand edges).
+ * @layer Domain Service (Logistics — pure compute, no DB)
+ *
+ * WHY DIJKSTRA, NOT BFS / BELLMAN-FORD / A*
+ *   - **BFS** assumes uniform edge weights — wrong for road graphs where
+ *     km and traffic vary per segment. Would return wrong "shortest" path.
+ *   - **Bellman-Ford** is only worth it when edges can be negative.
+ *     Road distance/time/cost is always positive, so Dijkstra's tighter
+ *     O((V+E) log V) beats Bellman's O(V·E).
+ *   - **A*** would be faster with a good heuristic (e.g. haversine to
+ *     destination), but requires admissible heuristic to stay correct.
+ *     We may upgrade to A* + haversine if route planning becomes a hot
+ *     path; for now Dijkstra is fast enough and simpler to debug.
+ *
+ * WHY BINARY HEAP (not Fibonacci or std array)
+ *   Binary heap: O(log V) per push/pop. Simple to implement, cache-friendly,
+ *   no dependencies. Fibonacci would be theoretically faster (O(1) decrease-
+ *   key) but in practice slower for small V due to constants. Std array
+ *   push + linear scan for min would be O(V) per op — too slow at our scale.
+ *
+ * WHY THE HEAP IS INLINED IN THIS FILE
+ *   Used in one place; isolating it lets us tune for the specific
+ *   `[dist, node]` tuple shape. If another module needs a min-heap, factor
+ *   it into `common/datastructures/min-heap.ts` then.
+ *
+ * WHY GRAPH IS A `Map<string, GraphEdge[]>` (not adjacency matrix)
+ *   Our road graph is sparse — most pairs of nodes have no direct edge.
+ *   Adjacency list is O(V + E) space; matrix would be O(V²) — wasteful
+ *   for 1000-node graphs. Map keyed by node id is convenient because node
+ *   ids are warehouse codes (strings), not contiguous integers.
  */
 
 import { Injectable } from '@nestjs/common';

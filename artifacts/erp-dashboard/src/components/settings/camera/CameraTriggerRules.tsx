@@ -1,3 +1,8 @@
+/**
+ * @module CameraTriggerRules
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,16 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { 
-  Zap, 
-  Camera, 
-  Trash2, 
-  ToggleLeft, 
-  ToggleRight, 
-  Plus, 
-  Save, 
-  Loader2 
-} from "lucide-react";
+import { Zap, Camera, Trash2, ToggleLeft, ToggleRight, Plus, Save } from "lucide-react";
 import { 
   TriggerRule, 
   CameraWithPrompt, 
@@ -27,6 +23,7 @@ import {
   SEVERITY_LABELS 
 } from "./types";
 
+import { EPLoader } from "@/components/ep";
 export function CameraTriggerRules() {
   const { toast } = useToast();
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
@@ -42,7 +39,7 @@ export function CameraTriggerRules() {
     triggerRules: TriggerRule[];
   }>({
     queryKey: ["/api/camera-ai/cameras", selectedCameraId, "trigger-rules"],
-    queryFn: () => fetch(`/api/camera-ai/cameras/${selectedCameraId}/trigger-rules`, { credentials: "include" }).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/camera-ai/cameras/${selectedCameraId}/trigger-rules`).then(r => r.json()),
     enabled: !!selectedCameraId,
   });
 
@@ -84,7 +81,7 @@ export function CameraTriggerRules() {
   };
 
   const updateRule = (id: string, changes: Partial<TriggerRule>) => {
-    setRules(prev => (prev ?? []).map(r => {
+    setRules(prev => (Array.isArray(prev) ? prev : []).map(r => {
       if (r.id !== id) return r;
       const updated = { ...r, ...changes };
       if (changes.detectionType) {
@@ -97,23 +94,23 @@ export function CameraTriggerRules() {
   };
 
   const deleteRule = (id: string) => {
-    setRules(prev => (prev ?? []).filter(r => r.id !== id));
+    setRules(prev => (Array.isArray(prev) ? prev : []).filter(r => r.id !== id));
     setIsDirty(true);
   };
 
   const toggleRule = (id: string) => {
-    setRules(prev => (prev ?? []).map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
+    setRules(prev => (Array.isArray(prev) ? prev : []).map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
     setIsDirty(true);
   };
 
-  if (camsLoading) return <div className="text-center py-8 text-muted-foreground">Yuklanmoqda...</div>;
+  if (camsLoading) return <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>;
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-orange-500" />
+            <Zap className="h-5 w-5 text-[var(--ep-primary)]" />
             Per-kamera Trigger Qoidalari (TZ-18)
           </CardTitle>
           <CardDescription>
@@ -123,13 +120,13 @@ export function CameraTriggerRules() {
         </CardHeader>
         <CardContent className="space-y-4">
           {cameras_list.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-[13px] text-muted-foreground">
               <Camera className="h-8 w-8 mx-auto mb-2 opacity-40" />
               <p>Kameralar topilmadi</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Kamera tanlang</Label>
+            <div className="space-y-1">
+          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Kamera tanlang</Label>
               <div className="flex flex-wrap gap-2">
                 {(Array.isArray(cameras_list) ? cameras_list : []).map(cam => (
                   <Button
@@ -151,7 +148,7 @@ export function CameraTriggerRules() {
             <div className="space-y-4 pt-2">
               {rulesLoading ? (
                 <div className="space-y-2">
-                  {([1, 2]).map((n) => <Skeleton key={n} className="h-20 w-full" />)}
+                  {([1, 2]).map((n) => <Skeleton key={n} className="h-20 w-full rounded-lg" />)}
                 </div>
               ) : (
                 <>
@@ -178,7 +175,7 @@ export function CameraTriggerRules() {
                                     data-testid={`button-toggle-rule-${rule.id}`}
                                   >
                                     {rule.enabled
-                                      ? <ToggleRight className="h-4 w-4 text-green-500" />
+                                      ? <ToggleRight className="h-4 w-4 text-[var(--ep-green)]" />
                                       : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
                                   </Button>
                                   <Button
@@ -187,7 +184,7 @@ export function CameraTriggerRules() {
                                     onClick={() => deleteRule(rule.id)}
                                     data-testid={`button-delete-rule-${rule.id}`}
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <Trash2 className="h-4 w-4 text-[var(--ep-red)]" />
                                   </Button>
                                 </div>
                               </div>
@@ -251,7 +248,7 @@ export function CameraTriggerRules() {
                     </Button>
                     {isDirty && (
                       <Button onClick={() => saveRulesMutation.mutate()} disabled={saveRulesMutation.isPending} data-testid="button-save-trigger-rules">
-                        {saveRulesMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                        {saveRulesMutation.isPending ? <EPLoader className="mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                         Saqlash
                       </Button>
                     )}

@@ -1,3 +1,8 @@
+/**
+ * @module logout.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, AppError, Err } from '@common/result';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';

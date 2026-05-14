@@ -1,3 +1,8 @@
+/**
+ * @module get-defects.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';

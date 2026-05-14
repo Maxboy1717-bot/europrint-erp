@@ -1,3 +1,8 @@
+/**
+ * @module Navbar
+ * @description Source module. See exports for details.
+ */
+
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, X, Phone, Mail, ChevronDown, Printer } from "lucide-react";

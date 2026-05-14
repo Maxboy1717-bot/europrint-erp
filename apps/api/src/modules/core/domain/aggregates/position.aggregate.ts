@@ -1,3 +1,8 @@
+/**
+ * @module position.aggregate
+ * @description Source module. See exports for details.
+ */
+
 export class Position {
   constructor(public readonly id: string,
     public readonly title: string,

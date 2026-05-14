@@ -1,0 +1,13 @@
+{
+  "title": "Sarlavha",
+  "getPdf": "PDF olish",
+  "totalItems": "Jami elementlar",
+  "totalValue": "Jami Value",
+  "expiringSoon": "expiring Soon",
+  "history": "history",
+  "issuedDate": "Issued Sana",
+  "returnDeadline": "return Deadline",
+  "returnItem": "return Item",
+  "returnQty": "return Qty",
+  "returnReason": "return Reason"
+}

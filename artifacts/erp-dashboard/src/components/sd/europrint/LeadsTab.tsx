@@ -1,3 +1,8 @@
+/**
+ * @module LeadsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -73,7 +78,7 @@ export function LeadsTab() {
             <Button data-testid="button-add-lead"><Plus className="w-4 h-4 mr-1" />Yangi leed</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Yangi leed</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi leed</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Kontakt ismi *</Label>
                 <Input data-testid="input-lead-name" value={form.contactName}
@@ -83,7 +88,7 @@ export function LeadsTab() {
                   onChange={e => setForm({ ...form, contactPhone: e.target.value })} /></div>
               <div><Label>Manba</Label>
                 <Select value={form.source} onValueChange={v => setForm({ ...form, source: v })}>
-                  <SelectTrigger data-testid="select-lead-source"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="select-lead-source" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(SOURCE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                   </SelectContent>
@@ -150,7 +155,7 @@ export function LeadsTab() {
                         )}
                         {(stage === "quoted" || stage === "negotiating") && (
                           <>
-                            <Button size="sm" className="text-xs h-6 px-2 bg-green-600 hover:bg-green-700"
+                            <Button size="sm" className="text-xs h-6 px-2 bg-green-600 hover:bg-[var(--ep-green)]/90"
                               data-testid={`button-lead-won-${lead.id}`}
                               onClick={() => statusMut.mutate({ id: lead.id, status: "won" })}>
                               Yutdi

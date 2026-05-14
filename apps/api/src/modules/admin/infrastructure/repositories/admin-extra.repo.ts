@@ -1,3 +1,8 @@
+/**
+ * @module admin-extra.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, safeCall } from '@common/result';
 import { db } from '@shared/db';
@@ -56,6 +61,68 @@ export class AdminExtraRepository {
       return tableName
         ? db.select().from(auditLogsTable).where(eq(auditLogsTable.tableName, tableName)).orderBy(desc(auditLogsTable.createdAt)).limit(20).offset(offset)
         : db.select().from(auditLogsTable).orderBy(desc(auditLogsTable.createdAt)).limit(20).offset(offset);
+    });
+  }
+
+  async findLogsFiltered(opts: {
+    action?: string;
+    tableName?: string;
+    userId?: string;
+    search?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<Result<{ rows: AuditLogRow[]; total: number }>> {
+    const { action, tableName, userId, search, from, to, page = 1, limit = 50 } = opts;
+    const safeLimit = Math.min(Number(limit) || 50, 200);
+    const offset = (Math.max(1, Number(page)) - 1) * safeLimit;
+
+    // Escape LIKE metacharacters so user input doesn't accidentally match everything
+    const esc = (s: string) => `%${s.replace(/[\\%_]/g, '\\$&')}%`;
+
+    return safeCall(async () => {
+      const whereParts    = sql`1=1`;
+      const actionPart    = action    ? sql` AND al.action     ILIKE ${esc(action)}`                                                                                              : sql``;
+      const tableNamePart = tableName ? sql` AND al.table_name ILIKE ${esc(tableName)}`                                                                                           : sql``;
+      const userIdPart    = userId    ? sql` AND al.user_id    = ${userId}`                                                                                                       : sql``;
+      const fromPart      = from      ? sql` AND al.created_at >= ${new Date(from)}`                                                                                              : sql``;
+      const toPart        = to        ? sql` AND al.created_at <= ${new Date(to + 'T23:59:59.999Z')}`                                                                             : sql``;
+      const searchPart    = search    ? sql` AND (al.table_name ILIKE ${esc(search)} OR al.record_id ILIKE ${esc(search)} OR al.user_id ILIKE ${esc(search)})`                   : sql``;
+
+      const [rows, countRows] = await Promise.all([
+        db.execute(sql`
+          SELECT al.id, al.table_name, al.record_id, al.action,
+                 al.old_values, al.new_values, al.changed_fields,
+                 al.reason, al.user_id, al.user_full_name, al.user_role,
+                 al.ip_address, al.created_at,
+                 TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) AS user_display_name,
+                 NULL::text AS user_display_role
+          FROM audit_logs al
+          LEFT JOIN users u ON u.id::text = al.user_id
+          WHERE ${whereParts}${actionPart}${tableNamePart}${userIdPart}${fromPart}${toPart}${searchPart}
+          ORDER BY al.created_at DESC
+          LIMIT ${safeLimit} OFFSET ${offset}
+        `),
+        db.execute(sql`
+          SELECT COUNT(*)::int AS total FROM audit_logs al
+          WHERE ${whereParts}${actionPart}${tableNamePart}${userIdPart}${fromPart}${toPart}${searchPart}
+        `),
+      ]);
+
+      return {
+        rows: (rows.rows ?? []) as unknown as AuditLogRow[],
+        total: Number((countRows.rows?.[0] as Record<string, unknown>)?.total ?? 0),
+      };
+    });
+  }
+
+  async getDistinctTables(): Promise<Result<string[]>> {
+    return safeCall(async () => {
+      const rows = await db.execute(sql.raw(
+        `SELECT DISTINCT table_name FROM audit_logs ORDER BY table_name`
+      ));
+      return (Array.isArray(rows.rows) ? rows.rows : []).map((r: Record<string, unknown>) => String(r.table_name ?? ''));
     });
   }
 

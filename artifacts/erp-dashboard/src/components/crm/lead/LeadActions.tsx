@@ -1,3 +1,8 @@
+/**
+ * @module LeadActions
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Zap, CheckCircle2, X, AlertTriangle } from "lucide-react";
@@ -22,7 +27,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white"
                 onClick={onConvert}
                 data-testid="button-convert-lead"
               >
@@ -32,7 +37,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
               <Button
                 size="sm"
                 variant="outline"
-                className="border-green-300 text-green-700"
+                className="border-green-300 text-[var(--ep-green)]"
                 onClick={() => onStageChange("WON")}
                 data-testid="button-won-lead"
               >
@@ -42,7 +47,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
               <Button
                 size="sm"
                 variant="outline"
-                className="border-red-300 text-red-600"
+                className="border-red-300 text-[var(--ep-red)]"
                 onClick={() => onStageChange("LOST")}
                 data-testid="button-lost-lead"
               >
@@ -57,8 +62,8 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
       {isConverted && (
         <Card className="border-green-300 bg-green-50">
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-green-700">
-              <CheckCircle2 className="h-5 w-5" />
+            <div className="flex items-center gap-2 text-[var(--ep-green)]">
+              <CheckCircle2 className="h-4 w-4" />
               <span className="font-semibold">Bu lid konvertatsiya qilingan!</span>
             </div>
           </CardContent>
@@ -68,7 +73,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
       {isLost && (
         <Card className="border-red-300 bg-red-50">
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-red-700">
+            <div className="flex items-center gap-2 text-[var(--ep-red)]">
               <AlertTriangle className="h-5 w-5" />
               <span className="font-semibold">Bu lid yo'qotilgan.</span>
             </div>
@@ -85,7 +90,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {Object.entries(STAGE_CONFIG).map(([stageId, config]) => (
               <Button
                 key={stageId}

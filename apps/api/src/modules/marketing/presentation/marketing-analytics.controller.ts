@@ -1,3 +1,8 @@
+/**
+ * @module marketing-analytics.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   AuditInterceptor } from '@common/interceptors/audit.interceptor';import {  Controller,
   Get,
@@ -12,7 +17,7 @@ import {
   UseInterceptors,
   Logger,
   HttpCode,
-  InternalServerErrorException, NotImplementedException, HttpStatus } from '@nestjs/common';
+  InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -183,104 +188,192 @@ export class MarketingAnalyticsController {
   }
 
   @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'director')
-  async aiGenerateContent(@Body() body: Record<string, unknown>) { return { generated: '', ...body }; }
+  async aiGenerateContent(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('nps/stats') @Roles('super_admin', 'marketing_manager', 'director')
-  async getNpsStats() { return { score: 0, responses: 0, promoters: 0, detractors: 0 }; }
+  async getNpsStats() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('nps/monthly') @Roles('super_admin', 'marketing_manager', 'director')
-  async getNpsMonthly() { return { data: [] }; }
+  async getNpsMonthly() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRiskAiSignal() { return { data: [], riskLevel: 'low' }; }
+  async getChurnRiskAiSignal() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('ai/hot-leads') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
-  async getAiHotLeads() { return { data: [], total: 0 }; }
+  async getAiHotLeads() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('leads/sources/summary') @Roles('super_admin', 'marketing_manager', 'director')
-  async getLeadsSourcesSummary() { return { data: [] }; }
+  async getLeadsSourcesSummary() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get('leads/loss-analysis') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager', 'manager')
+  async getLeadsLossAnalysis() {
+    try {
+      const rows = await this.leadsSvc.getLossAnalysis();
+      return rows;
+    } catch {
+      return { total: 0, breakdown: [] };
+    }
+  }
 
   @Get('leads/automation/overdue-leads') @Roles('super_admin', 'marketing_manager', 'director')
-  async getAutomationOverdueLeads() { return { data: [], total: 0 }; }
+  async getAutomationOverdueLeads() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('leads/:id/contacts') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
-  async getLeadContacts(@Param('id') id: string) { return { data: [], leadId: id }; }
+  async getLeadContacts(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('leads/:id/convert-to-crm') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
-  async convertLeadToCrm(@Param('id') id: string) { return { converted: true, leadId: id }; }
+  async convertLeadToCrm(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('inbox/stats') @Roles('super_admin', 'marketing_manager', 'director')
-  async getInboxStats() { return { total: 0, unread: 0, pending: 0 }; }
+  async getInboxStats() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'director')
-  async getInboxConversations() { return { data: [], total: 0 }; }
+  async getInboxConversations() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('inbox/conversations/:id/messages') @Roles('super_admin', 'marketing_manager', 'director')
-  async getConversationMessages(@Param('id') id: string) { return { data: [], conversationId: id }; }
+  async getConversationMessages(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('inbox/conversations/:id/reply') @Roles('super_admin', 'marketing_manager', 'director')
-  async replyToConversation(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { sent: true }; }
+  async replyToConversation(@Param('id') id: string, @Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('inbox/ai-reply/:id') @Roles('super_admin', 'marketing_manager', 'director')
-  async aiReplyToConversation(@Param('id') id: string) { return { suggestion: '' }; }
+  async aiReplyToConversation(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'director')
-  async updateConversationStatus(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
+  async updateConversationStatus(@Param('id') id: string, @Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'director')
-  async getAbTests() { return { data: [], total: 0 }; }
+  async getAbTests() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('competitors') @Roles('super_admin', 'marketing_manager', 'director')
-  async getCompetitors() { return { data: [], total: 0 }; }
+  async getCompetitors() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('churn-risk') @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRisk() { return { data: [], riskLevel: 'low' }; }
+  async getChurnRisk() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('budget') @Roles('super_admin', 'marketing_manager', 'director')
-  async getBudget(@Query('year') _year?: string) { return { data: [], total: 0, allocated: 0, spent: 0 }; }
+  async getBudget(@Query('year') _year?: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('calendar') @Roles('super_admin', 'marketing_manager', 'director')
-  async getCalendar(@Query('month') _month?: string, @Query('year') _year?: string) { return { data: [], events: [] }; }
+  async getCalendar(@Query('month') _month?: string, @Query('year') _year?: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('exhibitions') @Roles('super_admin', 'marketing_manager', 'director')
-  async getExhibitions() { return { data: [], total: 0 }; }
+  async getExhibitions() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('pr') @Roles('super_admin', 'marketing_manager', 'director')
-  async getPr() { return { data: [], total: 0 }; }
+  async getPr() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('settings') @Roles('super_admin', 'marketing_manager')
-  async getSettings() { return { data: {} }; }
+  async getSettings() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director')
-  async getExhibitionLeads(@Param('id') id: string) { return { data: [], exhibitionId: id }; }
+  async getExhibitionLeads(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'director')
-  async getExhibitionQr(@Param('id') id: string) { return { qrCode: null, exhibitionId: id }; }
+  async getExhibitionQr(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('settings/social-api') @Roles('super_admin', 'marketing_manager')
-  async getSocialApiSettings() { return { data: [] }; }
+  async getSocialApiSettings() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('settings/social-api') @Roles('super_admin', 'marketing_manager')
-  async createSocialApiSetting(@Body() body: Record<string, unknown>) { return { id: 0, ...body }; }
+  async createSocialApiSetting(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Delete('settings/social-api/:id') @Roles('super_admin', 'marketing_manager')
-  async deleteSocialApiSetting(@Param('id') id: string) { return { deleted: true, id }; }
+  async deleteSocialApiSetting(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('settings/setup-telegram-webhook') @Roles('super_admin', 'marketing_manager')
-  async setupTelegramWebhook(@Body() _body: Record<string, unknown>) { throw new NotImplementedException('Telegram webhook sozlash hali ishlab chiqilmoqda'); }
+  async setupTelegramWebhook(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('website/blog') @Roles('super_admin', 'marketing_manager', 'director')
-  async getBlogPosts() { return { data: [], total: 0 }; }
+  async getBlogPosts() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('website/blog/:id') @Roles('super_admin', 'marketing_manager', 'director')
-  async getBlogPostById(@Param('id') id: string) { return { id, title: null }; }
+  async getBlogPostById(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Patch('website/blog/:id') @Roles('super_admin', 'marketing_manager')
-  async updateBlogPost(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
+  async updateBlogPost(@Param('id') id: string, @Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('website/blog/:id/publish') @Roles('super_admin', 'marketing_manager')
-  async publishBlogPost(@Param('id') id: string) { return { id, published: true }; }
+  async publishBlogPost(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('website/blog/ai-generate') @Roles('super_admin', 'marketing_manager')
-  async aiGenerateBlogPost(@Body() body: Record<string, unknown>) { return { title: '', content: '' }; }
+  async aiGenerateBlogPost(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get() @Roles('super_admin', 'marketing_manager', 'director', 'manager')
+  async getMarketingOverview() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get('budget/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  async getBudgetById(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get('calendar/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  async getCalendarById(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get('nps') @Roles('super_admin', 'marketing_manager', 'director')
+  async getNps() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director')
+  async getAiAssistant() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  async getExhibitionById(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Get('pr/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  async getPrById(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('budget') @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.CREATED)
+  async createBudget(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('calendar') @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.CREATED)
+  async createCalendarEvent(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director')
+  @HttpCode(HttpStatus.OK)
+  async postChurnRiskAiSignal(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('exhibitions') @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.CREATED)
+  async createExhibition(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director')
+  @HttpCode(HttpStatus.CREATED)
+  async createExhibitionLead(@Param('id') id: string, @Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.OK)
+  async generateExhibitionQr(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Patch('leads/:id') @UseInterceptors(AuditInterceptor) @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  async patchLead(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return unwrapOrThrow(await this.leadsSvc.update(Number(id), body));
+  }
+
+  @Delete('leads/:id') @UseInterceptors(AuditInterceptor) @Roles('super_admin', 'marketing_manager', 'director')
+  async deleteLead(@Param('id') _id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('leads/:id/contacts') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @HttpCode(HttpStatus.CREATED)
+  async createLeadContact(@Param('id') id: string, @Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('pr') @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.CREATED)
+  async createPr(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('settings') @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.OK)
+  async saveSettings(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Patch('settings/social-api/:id') @Roles('super_admin', 'marketing_manager')
+  async patchSocialApiSetting(@Param('id') id: string, @Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('website/blog') @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.CREATED)
+  async createBlogPost(@Body() body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Delete('website/blog/:id') @Roles('super_admin', 'marketing_manager')
+  async deleteBlogPost(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Patch('website/blog/:id/publish') @Roles('super_admin', 'marketing_manager')
+  async patchPublishBlogPost(@Param('id') id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 }

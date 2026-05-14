@@ -1,3 +1,8 @@
+/**
+ * @module ai-usage-logs.table
+ * @description Source module. See exports for details.
+ */
+
 import { pgTable, text, varchar, integer, numeric, serial, timestamp, index } from 'drizzle-orm/pg-core';
 
 export const aiUsageLogsTable = pgTable(

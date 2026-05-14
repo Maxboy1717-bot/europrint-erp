@@ -1,3 +1,8 @@
+/**
+ * @module EmployeesForFacePage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
@@ -5,9 +10,9 @@ import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, UserCheck, UserX } from "lucide-react";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
 
 interface EmployeeFaceStatus {
   id: number;
@@ -26,10 +31,10 @@ export default function EmployeesForFacePage() {
   const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery<{ items: EmployeeFaceStatus[] }>({
-    queryKey: ["/api/hr/employees-for-face", search],
+    queryKey: ["/api/hr/employees/list/for-face", search],
     queryFn: () => apiRequest(
       "GET",
-      `/api/hr/employees-for-face${search ? `?search=${encodeURIComponent(search)}` : ""}`,
+      `/api/hr/employees/list/for-face${search ? `?search=${encodeURIComponent(search)}` : ""}`,
     ),
   });
 
@@ -38,10 +43,11 @@ export default function EmployeesForFacePage() {
   const missing = items.length - enrolled;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t('faceEnroll.title', 'Yuz tanish ro\'yxatidan o\'tish')}</b></>}
         title={t('faceEnroll.title', 'Yuz tanish ro\'yxatidan o\'tish')}
-        description={t('faceEnroll.description', 'Xodimlarning yuz embedding holati')}
+        subtitle={t('faceEnroll.description', 'Xodimlarning yuz embedding holati')}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -56,23 +62,23 @@ export default function EmployeesForFacePage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1">
-              <UserCheck className="h-4 w-4 text-emerald-600" />
+              <UserCheck className="h-4 w-4 text-[var(--ep-green)]" />
               {t('faceEnroll.enrolled', 'Ro\'yxatdan o\'tgan')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-emerald-600">{enrolled}</p>
+            <p className="text-3xl font-bold text-[var(--ep-green)]">{enrolled}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1">
-              <UserX className="h-4 w-4 text-rose-600" />
+              <UserX className="h-4 w-4 text-[var(--ep-red)]" />
               {t('faceEnroll.missing', 'Yo\'q')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-rose-600">{missing}</p>
+            <p className="text-3xl font-bold text-[var(--ep-red)]">{missing}</p>
           </CardContent>
         </Card>
       </div>
@@ -95,7 +101,7 @@ export default function EmployeesForFacePage() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-12" />)}
+              {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
             </div>
           ) : items.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
@@ -119,13 +125,13 @@ export default function EmployeesForFacePage() {
                       <Badge variant="outline" className="text-xs">RFID</Badge>
                     ) : null}
                     {emp.hasFace ? (
-                      <Badge className="bg-emerald-100 text-emerald-700">
+                      <Badge className="bg-emerald-100 text-[var(--ep-green)]">
                         {t('faceEnroll.yes', 'Bor')}
                       </Badge>
                     ) : (
-                      <Badge variant="destructive">
+                      <EPStatusPill tone="danger">
                         {t('faceEnroll.no', 'Yo\'q')}
-                      </Badge>
+                      </EPStatusPill>
                     )}
                   </div>
                 </div>

@@ -1,3 +1,8 @@
+/**
+ * @module assertions
+ * @description Source module. See exports for details.
+ */
+
 import { BadRequestException, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import type { ZodSchema, infer as ZodInfer } from 'zod';
 
@@ -11,7 +16,7 @@ export function assertRequired<T>(value: T | null | undefined | false | '', mess
 }
 
 export function assertAnyRequired(values: unknown[], message: string): void {
-  if (!(values ?? []).some(Boolean)) throw new BadRequestException(message);
+  if (!(Array.isArray(values) ? values : []).some(Boolean)) throw new BadRequestException(message);
 }
 
 export function assertPositiveNumber(value: unknown, message: string): number {

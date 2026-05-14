@@ -1,115 +1,228 @@
 /**
- * EuroPrint ERP — Mockup Design System (SmartHR style)
+ * EuroPrint ERP — "Linear Soft" Design System
  *
- * Source: europrint-mockup.html (4153 lines)
- *
- * Asosiy ranglar:
- *   --ep-primary: #FF902F (orange)
- *   --ep-dark:    #1B2850 (navy)
- *   --ep-pink:    #FF6F91
- *   --ep-purple:  #845EE6
- *   --ep-cyan:    #28C9E8
- *   --ep-green:   #00C087
- *   --ep-yellow:  #FFC107
- *   --ep-red:     #FF5252
- *   --ep-bg:      #F8F9FB
- *   --ep-border:  #EAEDF2
+ * Direction A: Minimal SaaS, warm off-white bg, subtle warm borders.
+ *   --ep-primary:  #FF902F  (warm orange brand)
+ *   --ep-bg:       #FAFAF9  (warm off-white page bg)
+ *   --ep-surface:  #FFFFFF  (card surface)
+ *   --ep-border:   #EBEAE6  (warm subtle border)
+ *   --ep-fg:       #15171A  (near-black warm text)
+ *   --ep-muted:    #6B6E72  (muted text)
+ *   Font: Inter
+ *   Radius: 8px (components), 10px (cards)
  */
 
 :root {
-  /* === Mockup brand colors (raw HEX) === */
-  --ep-primary: #FF902F;
-  --ep-primary-dark: #e57a1a;
-  --ep-primary-rgb: 255, 144, 47;
+  /* === Brand colors (raw HEX) === */
+  --ep-primary:       #FF902F;
+  --ep-primary-dark:  #F07F1B;
+  --ep-primary-rgb:   255, 144, 47;
+  --ep-primary-soft:  rgba(255, 144, 47, 0.10);
 
-  --ep-dark: #1B2850;
-  --ep-dark-rgb: 27, 40, 80;
+  --ep-dark:    #15171A;
+  --ep-muted:   #6B6E72;
+  --ep-subtle:  #9A9CA0;
 
-  --ep-pink: #FF6F91;
-  --ep-purple: #845EE6;
-  --ep-cyan: #28C9E8;
-  --ep-green: #00C087;
-  --ep-yellow: #FFC107;
-  --ep-red: #FF5252;
-  --ep-blue: #3B82F6;
+  --ep-bg:      #FAFAF9;
+  --ep-surface: #FFFFFF;
+  --ep-border:  #EBEAE6;
+  --ep-text:    #15171A;
 
-  --ep-bg: #F8F9FB;
-  --ep-border: #EAEDF2;
-  --ep-text: #2C3E50;
-  --ep-muted: #8A95A8;
+  /* Status */
+  --ep-green:   #2E8A5A;
+  --ep-yellow:  #B5891C;
+  --ep-red:     #C0432F;
+  --ep-blue:    #3563AC;
+  --ep-purple:  #7A4FB1;
+  --ep-cyan:    #1A8FAF;
+  --ep-pink:    #C45C7A;
 
-  /* === Tailwind/shadcn tokens — mockup ga moslashtirilgan === */
+  /* === Tailwind/shadcn tokens — EP Linear Soft === */
   /* Primary #FF902F → HSL(28°, 100%, 59%) */
-  --primary: 28 100% 59%;
-  --primary-dim: 28 100% 50%;
+  --primary:            28 100% 59%;
+  --primary-dim:        28 100% 50%;
   --primary-foreground: 0 0% 100%;
 
-  /* Background #F8F9FB → HSL(220°, 23%, 98%) */
-  --background: 220 23% 98%;
-  --foreground: 210 27% 24%;  /* #2C3E50 */
-  --border: 222 18% 93%;       /* #EAEDF2 */
+  /* Background #FAFAF9 → warm off-white */
+  --background:   60 6% 98%;     /* #FAFAF9 */
+  --foreground:   213 11% 9%;    /* #15171A */
+  --border:       45 9% 91%;     /* #EBEAE6 */
 
   /* Card: pure white */
-  --card: 0 0% 100%;
-  --card-foreground: 210 27% 24%;
+  --card:            0 0% 100%;
+  --card-foreground: 213 11% 9%;
 
-  /* Sidebar: white background (mockup uslubi) */
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 210 27% 24%;
-  --sidebar-border: 222 18% 93%;
-  --sidebar-primary: 28 100% 59%;
+  /* Sidebar: white (light sidebar — Linear Soft style) */
+  --sidebar:                    0 0% 100%;
+  --sidebar-foreground:         213 11% 9%;
+  --sidebar-border:             45 9% 91%;
+  --sidebar-primary:            28 100% 59%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 28 100% 96%;
-  --sidebar-accent-foreground: 28 100% 40%;
-  --sidebar-ring: 28 100% 59%;
+  --sidebar-accent:             28 100% 97%;
+  --sidebar-accent-foreground:  28 100% 40%;
+  --sidebar-ring:               28 100% 59%;
+
+  /* Surface tints */
+  --surface-container-lowest:  0 0% 100%;
+  --surface-container-low:     60 5% 97%;
+  --surface-container:         45 5% 95%;
+  --surface-container-high:    45 6% 92%;
+  --surface-container-highest: 45 7% 89%;
+
+  --on-surface:         213 11% 9%;
+  --on-surface-variant: 210 3% 43%;
+  --outline-variant:    45 6% 82%;
 
   /* Muted */
-  --muted: 220 18% 96%;
-  --muted-foreground: 218 14% 60%;  /* #8A95A8 */
+  --muted:            45 5% 96%;
+  --muted-foreground: 210 3% 43%;  /* #6B6E72 */
 
-  /* Accent #FF6F91 (pink) */
-  --accent: 346 100% 72%;
-  --accent-foreground: 0 0% 100%;
+  /* Secondary */
+  --secondary:            45 6% 93%;
+  --secondary-foreground: 213 11% 9%;
 
-  /* Status colors (mockup) */
-  --success: 158 100% 38%;     /* #00C087 */
-  --warning: 45 100% 51%;       /* #FFC107 */
-  --info: 188 78% 53%;          /* #28C9E8 */
-  --error: 0 100% 66%;          /* #FF5252 */
+  /* Accent: brand soft for hover states */
+  --accent:            28 100% 97%;
+  --accent-foreground: 28 100% 35%;
 
-  --destructive: 0 100% 66%;
+  /* Status */
+  --success:     151 50% 36%;   /* #2E8A5A */
+  --warning:     41 72% 40%;    /* #B5891C */
+  --info:        213 53% 44%;   /* #3563AC */
+  --error:       9 61% 47%;     /* #C0432F */
+
+  --destructive:            9 61% 47%;
   --destructive-foreground: 0 0% 100%;
 
-  /* Chart palette (mockup ranglari) */
-  --chart-1: 28 100% 59%;       /* Orange */
-  --chart-2: 158 100% 38%;      /* Green */
-  --chart-3: 252 75% 64%;       /* Purple */
-  --chart-4: 188 78% 53%;       /* Cyan */
-  --chart-5: 346 100% 72%;      /* Pink */
+  /* Input / ring */
+  --input: 45 9% 91%;
+  --ring:  28 100% 59%;
 
-  /* Typography (mockup: Inter, 13px base) */
-  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Popover */
+  --popover:            0 0% 100%;
+  --popover-foreground: 213 11% 9%;
 
-  /* Radius (mockup: 10px standart, 8px input) */
-  --radius: 0.625rem;  /* 10px */
+  /* Chart palette — EP c1–c5 */
+  --chart-1: 28 100% 59%;   /* brand orange */
+  --chart-2: 151 50% 36%;   /* green */
+  --chart-3: 213 53% 44%;   /* blue */
+  --chart-4: 270 45% 50%;   /* purple */
+  --chart-5: 41 72% 40%;    /* amber */
+
+  /* ERP Module Colors */
+  --module-sd:              213 53% 44%;
+  --module-sd-light:        213 53% 96%;
+  --module-sd-dark:         213 53% 34%;
+  --module-pp:              151 50% 36%;
+  --module-pp-light:        151 50% 95%;
+  --module-pp-dark:         151 50% 26%;
+  --module-hr:              270 45% 50%;
+  --module-hr-light:        270 45% 95%;
+  --module-hr-dark:         270 45% 38%;
+  --module-warehouse:       41 72% 40%;
+  --module-warehouse-light: 41 72% 94%;
+  --module-warehouse-dark:  41 72% 28%;
+  --module-fi:              187 60% 38%;
+  --module-fi-light:        187 60% 94%;
+  --module-fi-dark:         187 60% 26%;
+
+  /* Typography — Inter */
+  --font-sans: 'Inter', -apple-system, 'SF Pro Text', system-ui, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* Radius — EP: r2=6px for controls, r3=8px for cards */
+  --radius: 0.5rem;  /* 8px */
+
+  /* Shadows — Linear-style very soft */
+  --shadow-2xs: 0 1px 2px rgba(15,17,21,0.04);
+  --shadow-xs:  0 1px 3px rgba(15,17,21,0.06);
+  --shadow-sm:  0 2px 6px rgba(15,17,21,0.06), 0 1px 2px rgba(15,17,21,0.04);
+  --shadow:     0 4px 12px rgba(15,17,21,0.07), 0 2px 4px rgba(15,17,21,0.04);
+  --shadow-md:  0 8px 20px rgba(15,17,21,0.08), 0 3px 6px rgba(15,17,21,0.04);
+  --shadow-lg:  0 16px 32px rgba(15,17,21,0.09), 0 6px 12px rgba(15,17,21,0.04);
+  --shadow-xl:  0 24px 48px rgba(15,17,21,0.10);
+  --shadow-2xl: 0 32px 64px rgba(15,17,21,0.12);
 }
 
+/* ── Dark mode — EP_DARK tokens ── */
 .dark {
-  --ep-bg: #0E1320;
-  --ep-border: #1F2937;
-  --ep-text: #E5E7EB;
-  --ep-muted: #9CA3AF;
+  --ep-bg:      #0E0F11;
+  --ep-surface: #17191C;
+  --ep-border:  #26292E;
+  --ep-text:    #ECECEC;
+  --ep-muted:   #9A9DA1;
 
-  --background: 222 30% 9%;
-  --foreground: 220 13% 91%;
-  --border: 220 13% 18%;
-  --card: 222 25% 12%;
-  --card-foreground: 220 13% 91%;
-  --sidebar: 222 25% 12%;
-  --sidebar-foreground: 220 13% 91%;
-  --sidebar-border: 220 13% 18%;
-  --muted: 222 20% 16%;
-  --muted-foreground: 220 9% 60%;
+  --background:   217 12% 7%;    /* #0E0F11 */
+  --foreground:   0 0% 93%;      /* #ECECEC */
+  --border:       216 9% 17%;    /* #26292E */
+
+  --card:            213 10% 10%;
+  --card-foreground: 0 0% 93%;
+
+  --sidebar:                    213 9% 11%;  /* #17191C */
+  --sidebar-foreground:         0 0% 93%;
+  --sidebar-border:             216 9% 17%;
+  --sidebar-primary:            28 100% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent:             216 10% 16%;
+  --sidebar-accent-foreground:  0 0% 93%;
+  --sidebar-ring:               28 100% 60%;
+
+  --surface-container-lowest:  213 9% 8%;
+  --surface-container-low:     213 9% 10%;
+  --surface-container:         213 8% 12%;
+  --surface-container-high:    213 8% 15%;
+  --surface-container-highest: 213 7% 18%;
+
+  --on-surface:         0 0% 93%;
+  --on-surface-variant: 210 3% 61%;
+  --outline-variant:    216 8% 24%;
+
+  --muted:            216 9% 14%;
+  --muted-foreground: 210 3% 61%;
+
+  --secondary:            216 9% 16%;
+  --secondary-foreground: 0 0% 93%;
+
+  --accent:            216 10% 16%;
+  --accent-foreground: 0 0% 93%;
+
+  --input: 216 9% 17%;
+  --ring:  28 100% 60%;
+
+  --popover:            213 9% 10%;
+  --popover-foreground: 0 0% 93%;
+
+  --chart-1: 28 100% 62%;
+  --chart-2: 151 48% 44%;
+  --chart-3: 213 55% 56%;
+  --chart-4: 270 42% 62%;
+  --chart-5: 41 68% 52%;
+
+  --module-sd:              213 55% 56%;
+  --module-sd-light:        213 30% 18%;
+  --module-sd-dark:         213 55% 66%;
+  --module-pp:              151 48% 44%;
+  --module-pp-light:        151 30% 16%;
+  --module-pp-dark:         151 48% 54%;
+  --module-hr:              270 42% 62%;
+  --module-hr-light:        270 30% 18%;
+  --module-hr-dark:         270 42% 72%;
+  --module-warehouse:       41 68% 52%;
+  --module-warehouse-light: 41 30% 16%;
+  --module-warehouse-dark:  41 68% 62%;
+  --module-fi:              187 55% 48%;
+  --module-fi-light:        187 30% 16%;
+  --module-fi-dark:         187 55% 58%;
+
+  --shadow-2xs: 0 1px 2px rgba(0,0,0,0.40);
+  --shadow-xs:  0 1px 3px rgba(0,0,0,0.48);
+  --shadow-sm:  0 2px 6px rgba(0,0,0,0.44), 0 1px 2px rgba(0,0,0,0.32);
+  --shadow:     0 4px 12px rgba(0,0,0,0.48), 0 2px 4px rgba(0,0,0,0.28);
+  --shadow-md:  0 8px 20px rgba(0,0,0,0.52), 0 3px 6px rgba(0,0,0,0.28);
+  --shadow-lg:  0 16px 32px rgba(0,0,0,0.56), 0 6px 12px rgba(0,0,0,0.28);
+  --shadow-xl:  0 24px 48px rgba(0,0,0,0.60);
+  --shadow-2xl: 0 32px 64px rgba(0,0,0,0.65);
 }
 
 /* ============================================================================

@@ -1,3 +1,8 @@
+/**
+ * @module TransactionHistory
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -33,7 +38,7 @@ export function TransactionHistory({
     <>
     <Card>
       <CardContent className="p-0">
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>{t('transactions')} #</TableHead>
@@ -48,13 +53,13 @@ export function TransactionHistory({
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">
                   Tranzaksiyalar mavjud emas
                 </TableCell>
               </TableRow>
             ) : (
               (Array.isArray(transactions) ? transactions : []).map((tx) => (
-                <TableRow key={tx.id} data-testid={`row-transaction-${tx.id}`}>
+                <TableRow key={tx.id} data-testid={`row-transaction-${tx.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-mono text-xs">{tx.transactionNumber}</TableCell>
                   <TableCell className="text-xs">{formatDateTime(tx.createdAt)}</TableCell>
                   <TableCell className="text-sm">{tx.customerName || "-"}</TableCell>
@@ -96,7 +101,7 @@ export function TransactionHistory({
               ))
             )}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
     <ConfirmDialog

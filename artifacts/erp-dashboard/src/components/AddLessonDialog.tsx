@@ -1,3 +1,8 @@
+/**
+ * @module AddLessonDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -11,8 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { useTranslation } from '@/lib/i18n';
+import { EPLoader } from "@/components/ep";
 const lessonSchema = z.object({
   title: z.string().min(1, "Dars nomi majburiy"),
   titleRu: z.string().min(1, "Dars nomi (Rus) majburiy"),
@@ -32,7 +39,8 @@ interface AddLessonDialogProps {
   onClose?: () => void;
 }
 
-export function AddLessonDialog({ open, onOpenChange, moduleId, onClose }: AddLessonDialogProps) {
+export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLessonDialogProps) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -86,16 +94,7 @@ export function AddLessonDialog({ open, onOpenChange, moduleId, onClose }: AddLe
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataUpload,
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const data = await response.json();
+      const data = await apiRequest<{ filePath: string }>('POST', '/api/upload', formDataUpload);
       form.setValue("filePath", data.filePath);
       toast({
         title: "Yuklandi",
@@ -121,9 +120,9 @@ export function AddLessonDialog({ open, onOpenChange, moduleId, onClose }: AddLe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>Yangi dars qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Yangi dars qo'shish</DialogTitle>
           <DialogDescription>
             Modulga yangi dars qo'shish uchun ma'lumotlarni kiriting
           </DialogDescription>
@@ -131,7 +130,7 @@ export function AddLessonDialog({ open, onOpenChange, moduleId, onClose }: AddLe
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -140,13 +139,13 @@ export function AddLessonDialog({ open, onOpenChange, moduleId, onClose }: AddLe
                     <FormLabel>Dars turi <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-lesson-type">
+                        <SelectTrigger data-testid="select-lesson-type" className="h-9">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="text">Matn</SelectItem>
-                        <SelectItem value="video">Video</SelectItem>
+                        <SelectItem value="video">{t('video')}</SelectItem>
                         <SelectItem value="pdf">PDF</SelectItem>
                       </SelectContent>
                     </Select>
@@ -234,7 +233,7 @@ export function AddLessonDialog({ open, onOpenChange, moduleId, onClose }: AddLe
                     disabled={uploading}
                     data-testid="input-file-upload"
                   />
-                  {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {uploading && <EPLoader className="w-4 h-4" />}
                 </div>
                 {filePath && (
                   <p className="text-sm text-muted-foreground">
@@ -285,7 +284,7 @@ export function AddLessonDialog({ open, onOpenChange, moduleId, onClose }: AddLe
                 Bekor qilish
               </Button>
               <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-lesson">
-                {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
                 Saqlash
               </Button>
             </DialogFooter>

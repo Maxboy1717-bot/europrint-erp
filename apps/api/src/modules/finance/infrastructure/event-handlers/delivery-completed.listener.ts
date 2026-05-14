@@ -1,3 +1,8 @@
+/**
+ * @module delivery-completed.listener
+ * @description Source module. See exports for details.
+ */
+
 import { FINANCE_REPO } from '../../domain/repositories/i-finance.repo';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';

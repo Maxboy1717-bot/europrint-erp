@@ -1,3 +1,8 @@
+/**
+ * @module redis.config
+ * @description Configuration loader. Wraps env vars via @nestjs/config ConfigService.
+ */
+
 import { REDIS_DEFAULT_PORT, RETRY_DELAY_MS } from '@common/constants/app.constants';
 import { registerAs } from '@nestjs/config'
 

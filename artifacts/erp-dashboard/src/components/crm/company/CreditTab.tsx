@@ -1,3 +1,8 @@
+/**
+ * @module CreditTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { CreditCard, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -15,12 +20,14 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+import { useTranslation } from '@/lib/i18n';
 interface CreditTabProps {
   companyId: number;
   creditData: CreditLimit | null;
 }
 
-export function CreditTab({ companyId, creditData }: CreditTabProps) {
+export function CreditTab({companyId, creditData }: CreditTabProps) {
+  const { t } = useTranslation('common');
   const [showCreditDialog, setShowCreditDialog] = useState(false);
   const [newCreditLimit, setNewCreditLimit] = useState("");
   const [creditNotes, setCreditNotes] = useState("");
@@ -72,10 +79,10 @@ export function CreditTab({ companyId, creditData }: CreditTabProps) {
     <div className="mt-4 space-y-4">
       {pendingApproval && (
         <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] mt-0.5 shrink-0" />
           <div className="text-sm">
-            <div className="font-medium text-yellow-700">Tasdiqlash kutilmoqda</div>
-            <div className="text-yellow-600 text-xs mt-1">
+            <div className="font-medium text-[var(--ep-yellow)]">Tasdiqlash kutilmoqda</div>
+            <div className="text-[var(--ep-yellow)] text-xs mt-1">
               {formatAmount(pendingApproval.currentLimit)} → {formatAmount(pendingApproval.requestedLimit)} UZS (+{pendingApproval.increasePercent}%) — Director tasdiqlashi kerak
             </div>
           </div>
@@ -84,7 +91,7 @@ export function CreditTab({ companyId, creditData }: CreditTabProps) {
 
       {creditData ? (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="p-3 rounded-lg border">
               <div className="text-xs text-muted-foreground mb-1">Kredit limiti</div>
               <div className="font-semibold text-sm" data-testid="text-credit-limit">
@@ -93,13 +100,13 @@ export function CreditTab({ companyId, creditData }: CreditTabProps) {
             </div>
             <div className="p-3 rounded-lg border">
               <div className="text-xs text-muted-foreground mb-1">Mavjud kredit</div>
-              <div className="font-semibold text-sm text-green-700" data-testid="text-available-credit">
+              <div className="font-semibold text-sm text-[var(--ep-green)]" data-testid="text-available-credit">
                 {formatAmount(creditData.availableCredit)} UZS
               </div>
             </div>
             <div className="p-3 rounded-lg border">
               <div className="text-xs text-muted-foreground mb-1">Joriy qarz</div>
-              <div className={`font-semibold text-sm ${parseFloat(creditData.currentBalance) > 0 ? 'text-orange-600' : ''}`} data-testid="text-current-balance">
+              <div className={`font-semibold text-sm ${parseFloat(creditData.currentBalance) > 0 ? 'text-[var(--ep-primary)]' : ''}`} data-testid="text-current-balance">
                 {formatAmount(creditData.currentBalance)} UZS
               </div>
             </div>
@@ -111,7 +118,7 @@ export function CreditTab({ companyId, creditData }: CreditTabProps) {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Risk darajasi:</span>
+              <span className="text-sm text-muted-foreground">{t('riskDarajasi')}</span>
               <Badge className={RISK_COLORS[creditData.riskRating] || "bg-gray-100 text-gray-700"}>
                 {RISK_LABELS[creditData.riskRating] || creditData.riskRating}
               </Badge>
@@ -152,9 +159,9 @@ export function CreditTab({ companyId, creditData }: CreditTabProps) {
 
       {/* Credit Limit Dialog */}
       <Dialog open={showCreditDialog} onOpenChange={setShowCreditDialog}>
-        <DialogContent data-testid="dialog-credit-limit">
+        <DialogContent data-testid="dialog-credit-limit" className="p-6">
           <DialogHeader>
-            <DialogTitle>Kredit limitini o'zgartirish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Kredit limitini o'zgartirish</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {creditData && (
@@ -179,7 +186,7 @@ export function CreditTab({ companyId, creditData }: CreditTabProps) {
                   const increase = current > 0 ? (requested / current - 1) * 100 : 0;
                   if (increase > 20) {
                     return (
-                      <div className="flex items-start gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
+                      <div className="flex items-start gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-[var(--ep-yellow)]">
                         <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                         <span>+{increase.toFixed(0)}% oshirilmoqda — Director tasdiqlashi talab qilinadi</span>
                       </div>

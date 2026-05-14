@@ -1,3 +1,8 @@
+/**
+ * @module ProductCatalog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
@@ -73,7 +78,7 @@ export function ProductCatalog({
               className="mb-2"
               data-testid="input-product-search"
             />
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
               {(productSearch ? searchProducts.data || [] : products)
                 .filter((p) => p.isActive)
                 .slice(0, 20)

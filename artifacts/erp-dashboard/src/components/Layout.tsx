@@ -1,3 +1,8 @@
+/**
+ * @module Layout
+ * @description React UI component.
+ */
+
 import * as React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";

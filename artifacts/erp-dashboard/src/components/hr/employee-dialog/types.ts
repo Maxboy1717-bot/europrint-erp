@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { z } from "zod";
 import { UseFormReturn } from "react-hook-form";
 

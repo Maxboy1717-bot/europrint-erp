@@ -1,3 +1,8 @@
+/**
+ * @module warehouse.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { TelegramService } from '../telegram.service'

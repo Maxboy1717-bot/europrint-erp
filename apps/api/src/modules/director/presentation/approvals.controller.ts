@@ -1,3 +1,8 @@
+/**
+ * @module approvals.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   BadRequestException,
   Body,
@@ -68,7 +73,7 @@ export class ApprovalsController {
     );
     assertOk(result);
     return {
-      items: (result?.data?.items ?? []).map((item: ApprovalRequest) => this.mapToResponse(item)),
+      items: (Array.isArray(result?.data?.items) ? result?.data?.items : []).map((item: ApprovalRequest) => this.mapToResponse(item)),
       total: result.data.total,
     };
   }
@@ -87,7 +92,7 @@ export class ApprovalsController {
     );
     assertOk(result);
     return {
-      items: (result?.data?.items ?? []).map((item: ApprovalRequest) => this.mapToResponse(item)),
+      items: (Array.isArray(result?.data?.items) ? result?.data?.items : []).map((item: ApprovalRequest) => this.mapToResponse(item)),
       total: result.data.total,
     };
   }
@@ -121,7 +126,7 @@ export class ApprovalsController {
     );
     assertOk(result);
     return {
-      items: (result?.data?.items ?? []).map((item: ApprovalRequest) => this.mapToResponse(item)),
+      items: (Array.isArray(result?.data?.items) ? result?.data?.items : []).map((item: ApprovalRequest) => this.mapToResponse(item)),
       total: result.data.total,
     };
   }

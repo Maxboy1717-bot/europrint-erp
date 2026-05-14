@@ -1,3 +1,8 @@
+/**
+ * @module FinanceApproval
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslation } from "@/lib/i18n";
@@ -7,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, fetchWithAuth } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import { CheckCircle, XCircle, Clock, DollarSign, Eye, AlertTriangle, CreditCard, Receipt } from "lucide-react";
 
 interface PapkaOrderData {
@@ -25,6 +31,7 @@ interface PapkaOrderData {
 export default function FinanceApproval() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [selectedOrder, setSelectedOrder] = useState<PapkaOrderData | null>(null);
   const [approvalDialog, setApprovalDialog] = useState(false);
   const [rejectDialog, setRejectDialog] = useState(false);
@@ -32,17 +39,17 @@ export default function FinanceApproval() {
 
   const { data: orders = [], isLoading } = useQuery<PapkaOrderData[]>({
     queryKey: ["/api/papka-orders", "approved"],
+    enabled: isAuthenticated,
     queryFn: async () => {
-      const res = await fetch("/api/papka-orders?status=approved", { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch orders");
-      const d = await res.json();
-      return Array.isArray(d) ? d : (d.items ?? d.data ?? d.orders ?? []);
-    }
+      const d = await fetchWithAuth("/api/papka-orders?status=approved");
+      const arr = Array.isArray(d) ? d : ((d as Record<string, unknown>)?.items ?? (d as Record<string, unknown>)?.data ?? (d as Record<string, unknown>)?.orders ?? []);
+      return arr as PapkaOrderData[];
+    },
   });
 
   const approveMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      return apiRequest("POST", `/api/qc/approve/finance/${orderId}`, { comments });
+      return apiRequest("PATCH", `/api/qc/approve/finance/${orderId}`, { comments });
     },
     onSuccess: () => {
       toast({ title: "Muvaffaqiyat", description: "Moliya tasdiqladi - buyurtma AI rejalashtirishga yuborildi" });
@@ -58,7 +65,7 @@ export default function FinanceApproval() {
 
   const rejectMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      return apiRequest("POST", `/api/qc/reject/${orderId}`, { stage: "finance", rejectionReason: comments, comments });
+      return apiRequest("PATCH", `/api/qc/reject/${orderId}`, { stage: "finance", rejectionReason: comments, comments });
     },
     onSuccess: () => {
       toast({ title: "Rad etildi", description: "Buyurtma qaytarildi" });
@@ -77,7 +84,7 @@ export default function FinanceApproval() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center gap-3">
         <DollarSign className="h-8 w-8 text-primary" />
         <div>
@@ -96,7 +103,7 @@ export default function FinanceApproval() {
       {orders.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
+            <CheckCircle className="h-12 w-12 mx-auto text-[var(--ep-green)] mb-4" />
             <p className="text-lg font-medium">Tasdiqlash kutayotgan buyurtmalar yo'q</p>
             <p className="text-muted-foreground">Barcha buyurtmalar ko'rib chiqilgan</p>
           </CardContent>
@@ -107,7 +114,7 @@ export default function FinanceApproval() {
             <Card key={order.id} data-testid={`order-card-${order.id}`}>
               <CardHeader className="flex flex-row items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-lg">{order.papkaNo}</CardTitle>
+                  <CardTitle className="text-[14px] font-semibold">{order.papkaNo}</CardTitle>
                   <p className="text-sm text-muted-foreground">{order.mijozNomi}</p>
                 </div>
                 <div className="flex gap-2">
@@ -118,7 +125,7 @@ export default function FinanceApproval() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Mahsulot</p>
                     <p className="font-medium">{order.mahsulotNomi}</p>
@@ -139,7 +146,7 @@ export default function FinanceApproval() {
 
                 <div className="bg-muted/50 p-3 rounded-md mb-4">
                   <p className="text-sm font-medium mb-2">Moliyaviy ma'lumotlar:</p>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-muted-foreground" />
                       <div>
@@ -201,16 +208,16 @@ export default function FinanceApproval() {
       <Dialog open={approvalDialog} onOpenChange={setApprovalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Moliya Tasdiqlash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Moliya Tasdiqlash</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
             
             <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <CheckCircle className="h-4 w-4 text-[var(--ep-green)] mt-0.5" />
               <div>
                 <p className="font-medium text-green-800 dark:text-green-200">Oxirgi bosqich</p>
-                <p className="text-sm text-green-700 dark:text-green-300">
+                <p className="text-sm text-[var(--ep-green)] dark:text-green-300">
                   Tasdiqlangandan so'ng buyurtma AI rejalashtirishga yuboriladi.
                 </p>
               </div>
@@ -239,15 +246,15 @@ export default function FinanceApproval() {
       <Dialog open={rejectDialog} onOpenChange={setRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Moliya Rad etish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Moliya Rad etish</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
             
             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] mt-0.5" />
               <div>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                <p className="text-sm text-[var(--ep-yellow)] dark:text-yellow-300">
                   Rad etish sababini ko'rsating: qarzdorlik, kredit limiti oshgan yoki avans yo'q.
                 </p>
               </div>

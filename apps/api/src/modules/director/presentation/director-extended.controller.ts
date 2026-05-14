@@ -1,8 +1,14 @@
+/**
+ * @module director-extended.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Controller, Get, Post, Param, ParseIntPipe, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -14,7 +20,7 @@ import { DirectorStateService } from '../application/director-state.service';
 @ApiBearerAuth()
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('director')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class DirectorExtendedController {
   constructor(private readonly stateService: DirectorStateService) {}
@@ -24,6 +30,13 @@ export class DirectorExtendedController {
   @ApiOperation({ summary: 'Warehouse rental costs this month' })
   async getWmsRental() {
     return unwrapOrInternal(await this.stateService.getWmsRental());
+  }
+
+  @Get('company-state')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Current company state (latest week)' })
+  async getCurrentCompanyState() {
+    return unwrapOrInternal(await this.stateService.getCurrentCompanyState());
   }
 
   @Get('company-state/history')

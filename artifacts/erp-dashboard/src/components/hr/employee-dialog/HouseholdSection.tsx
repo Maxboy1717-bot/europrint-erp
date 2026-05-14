@@ -1,3 +1,8 @@
+/**
+ * @module HouseholdSection
+ * @description React UI component.
+ */
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -6,7 +11,7 @@ import { FormSectionProps } from "./types";
 export function HouseholdSection({ form }: FormSectionProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="housingType"
@@ -15,7 +20,7 @@ export function HouseholdSection({ form }: FormSectionProps) {
               <FormLabel>Uy turi</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-housing-type">
+                  <SelectTrigger data-testid="select-housing-type" className="h-9">
                     <SelectValue placeholder="Uy turini tanlang" />
                   </SelectTrigger>
                 </FormControl>
@@ -70,7 +75,7 @@ export function HouseholdSection({ form }: FormSectionProps) {
           </FormItem>
         )}
       />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="latitude"

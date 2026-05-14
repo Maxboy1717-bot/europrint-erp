@@ -1,6 +1,11 @@
+/**
+ * @module sd-billing
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -30,7 +35,7 @@ export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
 
 export const customerCreditLimits = pgTable("customer_credit_limits", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").references(() => crmCompanies.id).unique(),
+  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }).unique(),
   creditLimit: numericMoney("credit_limit").notNull(),
   temporaryCreditLimit: numericMoney("temporary_credit_limit"),
   temporaryLimitValidUntil: varchar("temporary_limit_valid_until", { length: 10 }),
@@ -42,9 +47,11 @@ export const customerCreditLimits = pgTable("customer_credit_limits", {
   blockReason: text("block_reason"),
   lastReviewDate: varchar("last_review_date", { length: 10 }),
   nextReviewDate: varchar("next_review_date", { length: 10 }),
-  updatedBy: varchar("updated_by").references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id, { onDelete: "set null" }),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("customer_credit_limits_risk_chk", sql`${t.riskRating} IS NULL OR ${t.riskRating} IN ('low','medium','high')`),
+]);
 
 
 export const insertCustomerCreditLimitSchema = createInsertSchema(customerCreditLimits, {
@@ -58,8 +65,8 @@ export type CustomerCreditLimit = typeof customerCreditLimits.$inferSelect;
 
 export const creditCheckLogs = pgTable("credit_check_logs", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").references(() => crmCompanies.id),
-  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id),
+  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }),
+  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
   orderAmount: numericMoney("order_amount").notNull(),
   currentBalance: numericMoney("current_balance"),
   creditLimit: numericMoney("credit_limit"),
@@ -77,7 +84,7 @@ export type CreditCheckLog = typeof creditCheckLogs.$inferSelect;
 export const salesTargets = pgTable("sales_targets", {
   id: serial("id").primaryKey(),
   targetType: varchar("target_type", { length: 20 }).notNull(),
-  userId: integer("user_id").references(() => users.id),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   teamId: varchar("team_id"),
   year: integer("year").notNull(),
   month: integer("month"),
@@ -90,10 +97,14 @@ export const salesTargets = pgTable("sales_targets", {
   actualOrderCount: integer("actual_order_count").default(0),
   actualNewCustomers: integer("actual_new_customers").default(0),
   revenueAchievement: numericMoney("revenue_achievement").default(0),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("sales_targets_type_chk", sql`${t.targetType} IN ('individual','team','company')`),
+  check("sales_targets_month_chk", sql`${t.month} IS NULL OR (${t.month} >= 1 AND ${t.month} <= 12)`),
+  check("sales_targets_quarter_chk", sql`${t.quarter} IS NULL OR (${t.quarter} >= 1 AND ${t.quarter} <= 4)`),
+]);
 
 
 export const insertSalesTargetSchema = createInsertSchema(salesTargets, {
@@ -109,7 +120,7 @@ export type SalesTarget = typeof salesTargets.$inferSelect;
 
 export const dailyTargetTracking = pgTable("daily_target_tracking", {
   id: serial("id").primaryKey(),
-  salesTargetId: varchar("sales_target_id").references(() => salesTargets.id),
+  salesTargetId: varchar("sales_target_id").references(() => salesTargets.id, { onDelete: "set null" }),
   date: varchar("date", { length: 10 }).notNull(),
   dailyRevenue: numericMoney("daily_revenue").default(0),
   dailyOrderCount: integer("daily_order_count").default(0),
@@ -140,9 +151,13 @@ export const commissionRules = pgTable("commission_rules", {
   isActive: boolean("is_active").default(true),
   validFrom: varchar("valid_from", { length: 10 }).notNull(),
   validTo: varchar("valid_to", { length: 10 }),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  check("commission_rules_basis_type_chk", sql`${t.basisType} IN ('revenue','profit','order_count','new_customers')`),
+  check("commission_rules_freq_chk", sql`${t.paymentFrequency} IS NULL OR ${t.paymentFrequency} IN ('monthly','quarterly','annually')`),
+  check("commission_rules_applicable_chk", sql`${t.applicableTo} IS NULL OR ${t.applicableTo} IN ('all','specific_users','specific_teams')`),
+]);
 
 
 export const insertCommissionRuleSchema = createInsertSchema(commissionRules, {
@@ -157,7 +172,7 @@ export type CommissionRule = typeof commissionRules.$inferSelect;
 
 export const commissionCalculations = pgTable("commission_calculations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   year: integer("year").notNull(),
   month: integer("month"),
   quarter: integer("quarter"),
@@ -168,11 +183,11 @@ export const commissionCalculations = pgTable("commission_calculations", {
   totalCommission: numericMoney("total_commission").notNull(),
   commissionDetails: jsonb("commission_details"),
   status: varchar("status", { length: 20 }).default("calculated"),
-  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   paidAt: timestamp("paid_at"),
   calculatedAt: timestamp("calculated_at").defaultNow(),
-  calculatedBy: varchar("calculated_by").references(() => users.id),
+  calculatedBy: varchar("calculated_by").references(() => users.id, { onDelete: "set null" }),
 });
 
 
@@ -181,12 +196,12 @@ export type CommissionCalculation = typeof commissionCalculations.$inferSelect;
 
 export const orderCommissions = pgTable("order_commissions", {
   id: serial("id").primaryKey(),
-  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   orderAmount: numericMoney("order_amount").notNull(),
   commissionRate: numericMoney("commission_rate").notNull(),
   commissionAmount: numericMoney("commission_amount").notNull(),
-  calculationId: varchar("calculation_id").references(() => commissionCalculations.id),
+  calculationId: varchar("calculation_id").references(() => commissionCalculations.id, { onDelete: "set null" }),
   calculatedAt: timestamp("calculated_at").defaultNow(),
 });
 
@@ -209,7 +224,7 @@ export const salesForecasts = pgTable("sales_forecasts", {
   actualRevenue: numericMoney("actual_revenue"),
   actualOrderCount: integer("actual_order_count"),
   accuracy: numericMoney("accuracy"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

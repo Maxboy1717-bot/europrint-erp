@@ -1,3 +1,8 @@
+/**
+ * @module InventoryStats
+ * @description React UI component.
+ */
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
@@ -22,7 +27,7 @@ export function InventoryStats({ stats, isLoading }: InventoryStatsProps) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16 rounded-lg" />
           ) : (
             <div className="text-2xl font-bold">{stats?.totalThisMonth || 0}</div>
           )}
@@ -31,11 +36,11 @@ export function InventoryStats({ stats, isLoading }: InventoryStatsProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{t.stats.completed}</CardTitle>
-          <CheckCircle className="h-4 w-4 text-green-500" />
+          <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16 rounded-lg" />
           ) : (
             <div className="text-2xl font-bold">{stats?.completed || 0}</div>
           )}
@@ -44,11 +49,11 @@ export function InventoryStats({ stats, isLoading }: InventoryStatsProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{t.stats.withVariances}</CardTitle>
-          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertCircle className="h-4 w-4 text-[var(--ep-red)]" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16 rounded-lg" />
           ) : (
             <div className="text-2xl font-bold">{stats?.withVariances || 0}</div>
           )}
@@ -57,11 +62,11 @@ export function InventoryStats({ stats, isLoading }: InventoryStatsProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{t.stats.totalVarianceValue}</CardTitle>
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)]" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24 rounded-lg" />
           ) : (
             <div className="text-2xl font-bold">{formatCurrency(stats?.totalVarianceValue || 0)}</div>
           )}

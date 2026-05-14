@@ -1,3 +1,8 @@
+/**
+ * @module result.type
+ * @description Source module. See exports for details.
+ */
+
 export interface Result<T> {
   ok: boolean;
   data?: T;

@@ -1,3 +1,8 @@
+/**
+ * @module BottleneckAnalysisPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -18,9 +23,9 @@ interface BottleneckRow {
 }
 
 const SEVERITY_CONFIG: Record<BottleneckRow["severity"], { label: string; className: string }> = {
-  critical: { label: "Kritik",   className: "bg-rose-600 text-white" },
-  high:     { label: "Yuqori",   className: "bg-orange-500 text-white" },
-  medium:   { label: "O'rta",    className: "bg-yellow-500 text-white" },
+  critical: { label: "Kritik",   className: "bg-[var(--ep-red)] text-white" },
+  high:     { label: "Yuqori",   className: "bg-[var(--ep-primary)] text-white" },
+  medium:   { label: "O'rta",    className: "bg-[var(--ep-yellow)] text-white" },
   low:      { label: "Past",     className: "bg-slate-400 text-white" },
 };
 
@@ -53,7 +58,7 @@ export default function BottleneckAnalysisPage() {
 
       <Section title={t('bottleneck.list', "Ish markazlari yuklanishi")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}</div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('bottleneck.empty', "Ma'lumot yo'q")}</p>
         ) : (
@@ -67,7 +72,7 @@ export default function BottleneckAnalysisPage() {
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
                   <Progress value={Math.min(100, b.utilization)} className="mb-2" />
-                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-muted-foreground mb-2">
                     <span>Yuklanish: <strong>{b.utilization}%</strong></span>
                     <span>Navbat: <strong>{b.queueDepth}</strong></span>
                     <span>Kutish: <strong>{b.averageWaitMinutes} daq</strong></span>

@@ -369,5 +369,20 @@
   "createdAt": "Создан",
   "rejectionReason": "Причина отклонения",
   "btnApprove": "✅ Подтвердить",
-  "btnReject": "❌ Отклонить"
+  "btnReject": "❌ Отклонить",
+  "emergencyContacts": "Экстренные контакты",
+  "contactName": "Связь shaxsi ismi",
+  "contactPhone": "Связь telefoni",
+  "contactRelation": "Qarindoshlik darajasi",
+  "faceEnroll.title": "Заголовок",
+  "faceEnroll.description": "Описание",
+  "faceEnroll.total": "Всего",
+  "faceEnroll.enrolled": "enrolled",
+  "faceEnroll.missing": "missing",
+  "faceEnroll.list": "list",
+  "faceEnroll.empty": "Пусто",
+  "faceEnroll.yes": "Да",
+  "faceEnroll.no": "Нет",
+  "dashboard": "Панель управления",
+  "hrPanel": "HR Panel"
 }

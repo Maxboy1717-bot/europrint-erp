@@ -1,14 +1,21 @@
+/**
+ * @module Technology
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Clock, CheckCircle, XCircle, BarChart3,
   FileText, Layers, ArrowRight, Cpu, Package,
   AlertTriangle, RefreshCw,
 } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
 interface DashboardStats {
   pendingCount: number;
@@ -62,7 +69,7 @@ function KpiCard({
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground font-medium truncate">{title}</p>
             {loading ? (
-              <Skeleton className="h-8 w-20 mt-1" />
+              <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
             ) : error ? (
               <p className="text-2xl font-bold mt-1 text-muted-foreground">—</p>
             ) : (
@@ -125,7 +132,7 @@ export default function Technology() {
   } = useQuery<TechOrder[]>({
     queryKey: ["/api/technology/orders", "pending_tech"],
     queryFn: async () => {
-      const res = await fetch("/api/technology/orders?status=pending_tech", { credentials: "include" });
+      const res = await apiRequest('GET', "/api/technology/orders?status=pending_tech");
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(body.error ?? `Server xatosi: ${res.status}`);
@@ -160,13 +167,13 @@ export default function Technology() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard
           title="Kutayotgan Buyurtmalar"
           value={stats?.pendingCount ?? 0}
           sub="Texnolog tasdig'ini kutmoqda"
           icon={Clock}
-          color="text-amber-600"
+          color="text-[var(--ep-yellow)]"
           loading={statsLoading}
           error={statsError}
         />
@@ -175,7 +182,7 @@ export default function Technology() {
           value={stats?.approvedToday ?? 0}
           sub="Bugungi ish kuni"
           icon={CheckCircle}
-          color="text-green-600"
+          color="text-[var(--ep-green)]"
           loading={statsLoading}
           error={statsError}
         />
@@ -184,7 +191,7 @@ export default function Technology() {
           value={stats?.rejectedToday ?? 0}
           sub="Qayta ishlashga qaytarildi"
           icon={XCircle}
-          color="text-red-600"
+          color="text-[var(--ep-red)]"
           loading={statsLoading}
           error={statsError}
         />
@@ -193,7 +200,7 @@ export default function Technology() {
           value={`${stats?.avgProcessingHours ?? 0}h`}
           sub="Bir buyurtma uchun"
           icon={BarChart3}
-          color="text-blue-600"
+          color="text-[var(--ep-blue)]"
           loading={statsLoading}
           error={statsError}
         />
@@ -215,10 +222,10 @@ export default function Technology() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-600" />
+                <Clock className="w-4 h-4 text-[var(--ep-yellow)]" />
                 Kutayotgan Buyurtmalar
                 {!ordersLoading && !ordersError && orderList.length > 0 && (
-                  <Badge variant="secondary" className="ml-auto">{orderList.length}</Badge>
+                  <EPStatusPill tone="neutral" className="ml-auto">{orderList.length}</EPStatusPill>
                 )}
               </CardTitle>
             </CardHeader>

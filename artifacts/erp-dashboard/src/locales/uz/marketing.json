@@ -1,5 +1,5 @@
 {
-  "dashboard": "Marketing Dashboard",
+  "dashboard": "Marketing paneli",
   "overview": "Umumiy ko'rinish",
   "leads": "Lidlar",
   "leadsTotal": "Jami lidlar",
@@ -49,7 +49,7 @@
   "achieved": "Erishilgan",
   "growth": "O'sish",
   "decline": "Pasayish",
-  "trend": "Trend",
+  "trend": "O'zgarish",
   "comparison": "Taqqoslash",
   "period": "Davr",
   "daily": "Kunlik",

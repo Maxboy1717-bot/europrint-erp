@@ -1,3 +1,8 @@
+/**
+ * @module get-defects.query
+ * @description Source module. See exports for details.
+ */
+
 import { DefectSeverity, DefectStatus } from '../../domain/aggregates/defect.aggregate';
 
 export class GetDefectsQuery {

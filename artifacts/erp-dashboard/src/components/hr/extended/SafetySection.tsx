@@ -1,3 +1,8 @@
+/**
+ * @module SafetySection
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +15,46 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, ShieldAlert, AlertTriangle, HardHat, BookOpen, MapPin, Trash2, CheckCircle2 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { SafetyIncident, PpeRecord, SafetyTraining, HazardZone, SafetySummary, DeptSafetySummary } from "./types";
+
+const SIncidentSchema = z.object({
+  userId:       z.string().optional(),
+  incidentType: z.enum(["injury", "near_miss", "violation"]),
+  severity:     z.enum(["minor", "major", "critical"]),
+  incidentDate: z.string().min(1, "Sana majburiy"),
+  description:  z.string().min(3, "Tavsif majburiy"),
+  location:     z.string().optional(),
+});
+const STrainingSchema = z.object({
+  userId:        z.string().optional(),
+  trainingName:  z.string().min(1, "Trening nomi majburiy"),
+  trainingType:  z.string().optional(),
+  scheduledDate: z.string().optional(),
+  completedDate: z.string().optional(),
+  expiryDate:    z.string().optional(),
+  trainer:       z.string().optional(),
+  status:        z.enum(["pending", "completed", "expired"]),
+});
+const SZoneSchema = z.object({
+  zoneName:    z.string().min(1, "Zona nomi majburiy"),
+  location:    z.string().min(1, "Joylashuv majburiy"),
+  hazardType:  z.string().optional(),
+  description: z.string().optional(),
+  riskLevel:   z.enum(["low", "medium", "high", "critical"]),
+});
+const SPpeSchema = z.object({
+  userId:     z.string().optional(),
+  ppeType:    z.enum(["helmet", "boots", "gloves"]),
+  status:     z.enum(["compliant", "non_compliant"]),
+  issuedDate: z.string().optional(),
+  expiryDate: z.string().optional(),
+});
+type SIncidentData  = z.infer<typeof SIncidentSchema>;
+type STrainingData  = z.infer<typeof STrainingSchema>;
+type SZoneData      = z.infer<typeof SZoneSchema>;
+type SPpeData       = z.infer<typeof SPpeSchema>;
 import { UseMutationResult } from "@tanstack/react-query";
 
 interface SafetySectionProps {
@@ -60,10 +104,22 @@ export function SafetySection({
   const [confirmDeleteIncidentId, setConfirmDeleteIncidentId] = useState<number | null>(null);
   const [confirmDeleteZoneId, setConfirmDeleteZoneId] = useState<number | null>(null);
 
-  const incidentForm = useForm({ defaultValues: { userId: "", incidentType: "injury", severity: "minor", description: "", incidentDate: "", location: "" } });
-  const trainingForm = useForm({ defaultValues: { userId: "", trainingName: "", trainingType: "safety", scheduledDate: "", completedDate: "", expiryDate: "", trainer: "", status: "pending" } });
-  const zoneForm = useForm({ defaultValues: { zoneName: "", location: "", hazardType: "", description: "", riskLevel: "medium" } });
-  const ppeForm = useForm({ defaultValues: { userId: "", ppeType: "helmet", status: "compliant", issuedDate: "", expiryDate: "" } });
+  const incidentForm = useForm<SIncidentData>({
+    resolver: zodResolver(SIncidentSchema),
+    defaultValues: { userId: "", incidentType: "injury", severity: "minor", description: "", incidentDate: "", location: "" },
+  });
+  const trainingForm = useForm<STrainingData>({
+    resolver: zodResolver(STrainingSchema),
+    defaultValues: { userId: "", trainingName: "", trainingType: "safety", scheduledDate: "", completedDate: "", expiryDate: "", trainer: "", status: "pending" },
+  });
+  const zoneForm = useForm<SZoneData>({
+    resolver: zodResolver(SZoneSchema),
+    defaultValues: { zoneName: "", location: "", hazardType: "", description: "", riskLevel: "medium" },
+  });
+  const ppeForm = useForm<SPpeData>({
+    resolver: zodResolver(SPpeSchema),
+    defaultValues: { userId: "", ppeType: "helmet", status: "compliant", issuedDate: "", expiryDate: "" },
+  });
 
   return (
     <div className="space-y-4">
@@ -77,12 +133,12 @@ export function SafetySection({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { l: "Bu oyda hodisalar", v: safetySummary?.incidentsThisMonth ?? "—", c: "text-red-600", icon: AlertTriangle },
-          { l: "PPE Compliance", v: safetySummary?.ppeCompliancePercent ? `${safetySummary.ppeCompliancePercent}%` : "—", c: "text-green-600", icon: HardHat },
-          { l: "Muddati o'tgan trening", v: safetySummary?.expiringTrainings ?? "—", c: "text-orange-600", icon: BookOpen },
-          { l: "Ochiq hodisalar", v: safetySummary?.openIncidents ?? "—", c: "text-blue-600", icon: ShieldAlert },
+          { l: "Bu oyda hodisalar", v: safetySummary?.incidentsThisMonth ?? "—", c: "text-[var(--ep-red)]", icon: AlertTriangle },
+          { l: "PPE Compliance", v: safetySummary?.ppeCompliancePercent ? `${safetySummary.ppeCompliancePercent}%` : "—", c: "text-[var(--ep-green)]", icon: HardHat },
+          { l: "Muddati o'tgan trening", v: safetySummary?.expiringTrainings ?? "—", c: "text-[var(--ep-primary)]", icon: BookOpen },
+          { l: "Ochiq hodisalar", v: safetySummary?.openIncidents ?? "—", c: "text-[var(--ep-blue)]", icon: ShieldAlert },
         ]).map(s => (
           <Card key={s.l}><CardContent className="pt-4 pb-3 flex items-start justify-between">
             <div>
@@ -98,7 +154,7 @@ export function SafetySection({
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Bo'limlar bo'yicha Xavfsizlik</CardTitle></CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
                 <TableHead>Bo'lim</TableHead><TableHead className="text-center">Jami hodisa</TableHead>
                 <TableHead className="text-center">Ochiq</TableHead><TableHead className="text-center">Kritik</TableHead>
@@ -107,18 +163,18 @@ export function SafetySection({
               </TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(deptSafetySummary) ? deptSafetySummary : []).map((d) => (
-                  <TableRow key={d.departmentId || d.departmentName}>
+                  <TableRow key={d.departmentId || d.departmentName} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{d.departmentName}</TableCell>
                     <TableCell className="text-center">{d.totalIncidents}</TableCell>
-                    <TableCell className="text-center">{d.openIncidents > 0 ? <Badge variant="outline" className="text-orange-600">{d.openIncidents}</Badge> : 0}</TableCell>
+                    <TableCell className="text-center">{d.openIncidents > 0 ? <Badge variant="outline" className="text-[var(--ep-primary)]">{d.openIncidents}</Badge> : 0}</TableCell>
                     <TableCell className="text-center">{d.criticalIncidents > 0 ? <Badge variant="destructive">{d.criticalIncidents}</Badge> : 0}</TableCell>
                     <TableCell className="text-center">{d.thisMonthIncidents}</TableCell>
-                    <TableCell className="text-center">{d.ppeCompliancePercent !== null ? <span className={d.ppeCompliancePercent >= 80 ? "text-green-600" : "text-red-600"}>{d.ppeCompliancePercent}%</span> : "—"}</TableCell>
+                    <TableCell className="text-center">{d.ppeCompliancePercent !== null ? <span className={d.ppeCompliancePercent >= 80 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}>{d.ppeCompliancePercent}%</span> : "—"}</TableCell>
                     <TableCell className="text-center">{d.expiringTrainings > 0 ? <Badge variant="secondary">{d.expiringTrainings}</Badge> : 0}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       )}
@@ -138,13 +194,13 @@ export function SafetySection({
 
       {safetySubTab === "incidents" && (
         <Card><CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
               <TableHead>Xodim</TableHead><TableHead>Tur</TableHead><TableHead>Og'irlik</TableHead><TableHead>Sana</TableHead><TableHead>Joylashuv</TableHead><TableHead>Holat</TableHead><TableHead></TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {incidentsLoading ? <TableRow><TableCell colSpan={7} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow> : (Array.isArray(safetyIncidents) ? safetyIncidents : []).map((inc) => (
-                <TableRow key={inc.id}>
+                <TableRow key={inc.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{inc.userName || inc.userId}</TableCell>
                   <TableCell><Badge variant="outline">{inc.incidentType}</Badge></TableCell>
                   <TableCell><Badge variant={inc.severity === "critical" ? "destructive" : "secondary"}>{inc.severity}</Badge></TableCell>
@@ -161,19 +217,19 @@ export function SafetySection({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent></Card>
       )}
 
       {safetySubTab === "ppe" && (
         <Card><CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
               <TableHead>Xodim</TableHead><TableHead>PPE Turi</TableHead><TableHead>Mavjudligi</TableHead><TableHead>Tekshirilgan</TableHead><TableHead>Muddat</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {ppeLoading ? <TableRow><TableCell colSpan={5} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow> : (Array.isArray(ppeRecords) ? ppeRecords : []).map((rec) => (
-                <TableRow key={rec.id}>
+                <TableRow key={rec.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{rec.userName || rec.userId}</TableCell>
                   <TableCell>{rec.ppeType}</TableCell>
                   <TableCell>{rec.status === "compliant" ? <Badge><CheckCircle2 className="h-3 w-3 mr-1" />Mos</Badge> : <Badge variant="destructive">Mos emas</Badge>}</TableCell>
@@ -182,19 +238,19 @@ export function SafetySection({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent></Card>
       )}
 
       {safetySubTab === "trainings" && (
         <Card><CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
               <TableHead>Xodim</TableHead><TableHead>Trening</TableHead><TableHead>Bajarildi</TableHead><TableHead>Muddat</TableHead><TableHead>Muallim</TableHead><TableHead>Holat</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {trainingsLoading ? <TableRow><TableCell colSpan={6} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow> : (Array.isArray(safetyTrainingsList) ? safetyTrainingsList : []).map((tr) => (
-                <TableRow key={tr.id}>
+                <TableRow key={tr.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{tr.userName || tr.userId}</TableCell>
                   <TableCell>{tr.trainingName}</TableCell>
                   <TableCell>{tr.completedDate || "—"}</TableCell>
@@ -204,19 +260,19 @@ export function SafetySection({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent></Card>
       )}
 
       {safetySubTab === "zones" && (
         <Card><CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
               <TableHead>Zona nomi</TableHead><TableHead>Joylashuv</TableHead><TableHead>Xavf turi</TableHead><TableHead>Xavf darajasi</TableHead><TableHead></TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {zonesLoading ? <TableRow><TableCell colSpan={5} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow> : (Array.isArray(hazardZonesList) ? hazardZonesList : []).map((zone) => (
-                <TableRow key={zone.id}>
+                <TableRow key={zone.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{zone.zoneName}</TableCell>
                   <TableCell>{zone.location}</TableCell>
                   <TableCell>{zone.hazardType || zone.description}</TableCell>
@@ -225,16 +281,16 @@ export function SafetySection({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent></Card>
       )}
 
       <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Xavfsizlik Hodisasini Qayd Etish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Xavfsizlik Hodisasini Qayd Etish</DialogTitle></DialogHeader>
           <form onSubmit={incidentForm.handleSubmit(d => createIncident.mutate(d as Record<string, unknown>))} className="space-y-4">
-            <div className="space-y-2"><Label>Xodim ID</Label><Input {...incidentForm.register("userId", { required: true })} /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2"><Label>Xodim ID</Label><Input {...incidentForm.register("userId")} /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2"><Label>Tur</Label><Controller control={incidentForm.control} name="incidentType" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="injury">Jarohat</SelectItem><SelectItem value="near_miss">Deyarli hodisa</SelectItem><SelectItem value="violation">Qoidabuzarlik</SelectItem></SelectContent></Select>
               )} /></div>
@@ -242,8 +298,16 @@ export function SafetySection({
                 <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="minor">Kichik</SelectItem><SelectItem value="major">Jiddiy</SelectItem><SelectItem value="critical">Kritik</SelectItem></SelectContent></Select>
               )} /></div>
             </div>
-            <div className="space-y-2"><Label>Sana</Label><Input type="date" {...incidentForm.register("incidentDate", { required: true })} /></div>
-            <div className="space-y-2"><Label>Tavsif</Label><Input {...incidentForm.register("description", { required: true })} /></div>
+            <div className="space-y-1">
+          <Label>Sana</Label>
+              <Input type="date" {...incidentForm.register("incidentDate")} />
+              {incidentForm.formState.errors.incidentDate && <p className="text-xs text-destructive">{incidentForm.formState.errors.incidentDate.message}</p>}
+            </div>
+            <div className="space-y-1">
+          <Label>Tavsif</Label>
+              <Input {...incidentForm.register("description")} />
+              {incidentForm.formState.errors.description && <p className="text-xs text-destructive">{incidentForm.formState.errors.description.message}</p>}
+            </div>
             <DialogFooter><Button variant="outline" type="button" onClick={() => setShowIncidentDialog(false)}>Bekor</Button><Button type="submit">Saqlash</Button></DialogFooter>
           </form>
         </DialogContent>
@@ -251,13 +315,13 @@ export function SafetySection({
 
       <Dialog open={showPpeDialog} onOpenChange={setShowPpeDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>PPE Yozuvini Qo'shish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">PPE Yozuvini Qo'shish</DialogTitle></DialogHeader>
           <form onSubmit={ppeForm.handleSubmit(d => createPpe.mutate(d as Record<string, unknown>))} className="space-y-4">
-            <div className="space-y-2"><Label>Xodim ID</Label><Input {...ppeForm.register("userId", { required: true })} /></div>
+            <div className="space-y-2"><Label>Xodim ID</Label><Input {...ppeForm.register("userId")} /></div>
             <div className="space-y-2"><Label>PPE Turi</Label><Controller control={ppeForm.control} name="ppeType" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="helmet">Kask</SelectItem><SelectItem value="boots">Botinka</SelectItem><SelectItem value="gloves">Qo'lqop</SelectItem></SelectContent></Select>
             )} /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2"><Label>Berilgan sana</Label><Input type="date" {...ppeForm.register("issuedDate")} /></div>
               <div className="space-y-2"><Label>Muddati</Label><Input type="date" {...ppeForm.register("expiryDate")} /></div>
             </div>

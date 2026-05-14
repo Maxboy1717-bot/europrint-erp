@@ -1,3 +1,8 @@
+/**
+ * @module QcCheckDialog
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,9 +48,9 @@ export function QcCheckDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {qcAction === "pass" ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-[var(--ep-green)]" />
             ) : (
-              <XCircle className="h-5 w-5 text-red-500" />
+              <XCircle className="h-5 w-5 text-[var(--ep-red)]" />
             )}
             {qcAction === "pass" ? t.pass : t.fail}
           </DialogTitle>
@@ -77,7 +82,7 @@ export function QcCheckDialog({
           <Button
             onClick={onConfirm}
             disabled={isPending}
-            className={qcAction === "pass" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
+            className={qcAction === "pass" ? "bg-green-600 hover:bg-[var(--ep-green)]/90" : "bg-red-600 hover:bg-[var(--ep-red)]/90"}
             data-testid="button-confirm-qc"
           >
             {qcAction === "pass" ? t.pass : t.fail}

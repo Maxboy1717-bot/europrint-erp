@@ -1,3 +1,8 @@
+/**
+ * @module sd-types
+ * @description React UI component.
+ */
+
 export interface SdContactItem {
   [key: string]: unknown;
   id: number;
@@ -7,6 +12,48 @@ export interface SdContactItem {
   email: string;
   telegram: string;
   isPrimary: boolean;
+  influenceLevel?: number;
+  isDecisionMaker?: boolean;
+  department?: string;
+  linkedinUrl?: string;
+  roleNote?: string;
+}
+
+export interface SdDecisionMaker {
+  id: number;
+  fullName: string;
+  position?: string;
+  influenceLevel: number;
+  department?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface SdNpsResponse {
+  id: string | number;
+  score: number;
+  comment: string | null;
+  category: string;
+  createdAt: string;
+}
+
+export interface SdNpsData {
+  score: number | null;
+  responses: number;
+  promoters: number;
+  detractors: number;
+  avgScore: number | null;
+  category: string;
+  recentResponses: SdNpsResponse[];
+}
+
+export interface SdInternalIntelligenceData {
+  relationshipQuality: string;
+  relationshipLabel: string;
+  totalNotes: number;
+  nextActions: { action: unknown; date: unknown; by: unknown }[];
+  lastInteraction: { type: string; date: unknown; by: unknown } | null;
+  keyInsights: (string | null)[];
 }
 
 export interface SdBasicData {
@@ -62,16 +109,25 @@ export interface SdFinanceData {
 
 export interface SdLtvData {
   [key: string]: unknown;
-  totalRevenueAllTime: number;
-  totalMarginEstimate: number;
-  marginRate: number;
-  averageMonthlyRevenue: number;
-  customerLifetimeMonths: number;
-  ltvValue: number;
-  vsAveragePercent: number;
-  acquisitionCostEstimate: number;
-  serviceMonthlyEstimate: number;
-  netProfit: number;
+  totalRevenueAllTime?: number;
+  lifetimeValue?: number;             // backend: ltv.lifetimeValue = totalRevenue
+  totalMarginEstimate?: number;
+  marginRate?: number;
+  averageMonthlyRevenue?: number;
+  avgMonthlyRevenue?: number;         // backend field name
+  customerLifetimeMonths?: number;
+  lifetimeMonths?: number;            // backend field name
+  ltvValue?: number;
+  ltvForecast?: number;               // backend: 24-month forecast
+  vsAveragePercent?: number;
+  acquisitionCostEstimate?: number;
+  serviceMonthlyEstimate?: number;
+  netProfit?: number;
+  totalOrders?: number;
+  avgOrderValue?: number;
+  firstOrderDate?: string;
+  lastOrderDate?: string;
+  daysSinceFirstOrder?: number;
 }
 
 export interface SdTrendItem {
@@ -126,10 +182,36 @@ export interface SdSegmentationScoreBreakdown {
 export interface SdSegmentationData {
   [key: string]: unknown;
   abcScore: number;
-  abcCategory: string;
+  abcCategory?: string;
+  segment?: string;       // backend sends "segment" field (alias for abcCategory)
   scoreBreakdown: SdSegmentationScoreBreakdown;
   recommendations: string[];
-  categoryLabel: string;
+  categoryLabel?: string;
+  rfm?: { recency: number; frequency: number; monetary: number };
+}
+
+export interface SdPredictiveData {
+  churnRisk: number;
+  churnLabel: string;
+  ltvForecast: number;
+  avgMonthlyRevenue: number;
+  nextBestAction: string | null;
+}
+
+export interface SdSentimentData {
+  score: number;
+  label: string;
+  analyzedInteractions: number;
+  totalInteractions: number;
+}
+
+export interface SdJourneyData {
+  stage: string;
+  stageLabel: string;
+  firstOrderDate?: string;
+  lastOrderDate?: string;
+  daysSinceFirstOrder?: number;
+  daysSinceLastOrder?: number;
 }
 
 export interface SdCommunicationItem {

@@ -1,3 +1,8 @@
+/**
+ * @module queries-remaining-b
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { castTo } from '@common/db-rows';
 import {
@@ -135,7 +140,7 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
     .select({ employee_id: hr_daily_reports.employee_id })
     .from(hr_daily_reports)
     .where(eq(hr_daily_reports.report_date, today));
-  const existingIds = new Set((existing ?? []).map(r => r.employee_id));
+  const existingIds = new Set((Array.isArray(existing) ? existing : []).map(r => r.employee_id));
 
   const activeEmps = await db
     .select({ id: hrEmployees.id, position_id: hrEmployees.position_id })
@@ -144,7 +149,7 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
 
   if (!activeEmps.length) return;
 
-  const positionIds = [...new Set((activeEmps ?? []).map(e => e.position_id).filter(Boolean))] as number[];
+  const positionIds = [...new Set((Array.isArray(activeEmps) ? activeEmps : []).map(e => e.position_id).filter(Boolean))] as number[];
   const operatorPosIds = positionIds.length
     ? (await db
         .select({ id: hrPositions.id })
@@ -156,7 +161,7 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
     ).map(p => p.id)
     : [];
 
-  const toInsert = (activeEmps ?? []).filter(e => {
+  const toInsert = (Array.isArray(activeEmps) ? activeEmps : []).filter(e => {
     if (existingIds.has(e.id)) return false;
     if (e.position_id && operatorPosIds.includes(e.position_id)) return false;
     return true;

@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import type { DragStartEvent, DragEndEvent, SensorDescriptor, PointerSensorOptions } from '@dnd-kit/core';
 import type { Dispatch, SetStateAction } from 'react';
 import { 

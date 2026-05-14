@@ -1,3 +1,8 @@
+/**
+ * @module sales-orders-fi.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
 import { ISalesOrdersFiRepository, SALES_ORDERS_FI_REPO } from './i-sales-orders-fi.repo';
 import { safeCall, Result, AppError } from '@common/result';

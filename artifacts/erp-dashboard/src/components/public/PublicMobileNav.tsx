@@ -1,3 +1,8 @@
+/**
+ * @module PublicMobileNav
+ * @description React UI component.
+ */
+
 import { Link, useLocation } from 'wouter';
 import { Home, Package, Briefcase, User, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';

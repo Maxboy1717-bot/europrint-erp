@@ -1,6 +1,11 @@
+/**
+ * @module sd-orders
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -16,22 +21,28 @@ export const salesInvoices = pgTable("sales_invoices", {
   invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
   invoiceDate: varchar("invoice_date", { length: 10 }).notNull(), // YYYY-MM-DD
   customerName: text("customer_name").notNull(),
-  customerId: integer("customer_id").references(() => crmCompanies.id),
-  orderId: varchar("order_id").references(() => orders.id),
+  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }),
+  orderId: varchar("order_id").references(() => orders.id, { onDelete: "set null" }),
   netValue: numericMoney("net_value").notNull().default(0), // Sof summa (QQS dan oldin)
   taxAmount: numericMoney("tax_amount").notNull().default(0), // QQS summasi
   totalAmount: numericMoney("total_amount").notNull(),
   paidAmount: numericMoney("paid_amount").notNull().default(0),
   paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("unpaid"), // unpaid, partial, paid
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, posted
-  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id), // Bog'liq GL hujjat
+  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }), // Bog'liq GL hujjat
   dueDate: varchar("due_date", { length: 10 }), // YYYY-MM-DD
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
+  check("sales_invoices_payment_status_chk", sql`${t.paymentStatus} IN ('unpaid','partial','paid')`),
+  check("sales_invoices_status_chk", sql`${t.status} IN ('draft','posted','cancelled')`),
+  check("sales_invoices_net_value_chk", sql`${t.netValue} >= 0`),
+  check("sales_invoices_tax_amount_chk", sql`${t.taxAmount} >= 0`),
+  check("sales_invoices_total_amount_chk", sql`${t.totalAmount} >= 0`),
+  check("sales_invoices_paid_amount_chk", sql`${t.paidAmount} >= 0`),
   index("idx_sales_invoices_customer_id").on(t.customerId),
   index("idx_sales_invoices_payment_status").on(t.paymentStatus),
   index("idx_sales_invoices_status").on(t.status),
@@ -165,6 +176,12 @@ export const salesOrders = pgTable("sales_orders", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
+  check("sales_orders_overall_status_chk", sql`${t.overallStatus} IN ('IN_PROCESS','COMPLETED','CANCELLED')`),
+  check("sales_orders_delivery_status_chk", sql`${t.deliveryStatus} IN ('NOT_DELIVERED','PARTIALLY','FULLY')`),
+  check("sales_orders_billing_status_chk", sql`${t.billingStatus} IN ('NOT_BILLED','PARTIALLY','FULLY')`),
+  check("sales_orders_net_value_chk", sql`${t.netValue} >= 0`),
+  check("sales_orders_tax_amount_chk", sql`${t.taxAmount} >= 0`),
+  check("sales_orders_total_value_chk", sql`${t.totalValue} >= 0`),
   index("idx_sales_orders_status").on(t.overallStatus),
   index("idx_sales_orders_customer_id").on(t.customerId),
   index("idx_sales_orders_master_status").on(t.masterStatus),

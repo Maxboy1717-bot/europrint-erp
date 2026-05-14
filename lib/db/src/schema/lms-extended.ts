@@ -1,4 +1,10 @@
-import { pgTable, serial, integer, varchar, text, timestamp, real, boolean, jsonb } from 'drizzle-orm/pg-core';
+/**
+ * @module lms-extended
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, varchar, text, timestamp, real, boolean, jsonb, check } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { courses } from './lms';
 import { users } from './users';
 
@@ -43,7 +49,9 @@ export const lmsLessons = pgTable('lms_lessons', {
   durationMin: integer('duration_min').default(0),
   orderIndex:  integer('order_index').notNull().default(0),
   createdAt:   timestamp('created_at').notNull().defaultNow(),
-});
+}, (t) => [
+  check("lms_lessons_content_type_chk", sql`${t.contentType} IN ('text','video','pdf','audio','quiz','assignment')`),
+]);
 
 export const lmsExamAttempts = pgTable('lms_exam_attempts', {
   id:          serial('id').primaryKey(),
@@ -54,7 +62,9 @@ export const lmsExamAttempts = pgTable('lms_exam_attempts', {
   score:       real('score'),
   status:      varchar('status', { length: 20 }).notNull().default('in_progress'),
   createdAt:   timestamp('created_at').notNull().defaultNow(),
-});
+}, (t) => [
+  check("lms_exam_attempts_status_chk", sql`${t.status} IN ('in_progress','completed','failed','cancelled')`),
+]);
 
 export const lmsExamAnswers = pgTable('lms_exam_answers', {
   id:             serial('id').primaryKey(),
@@ -74,4 +84,6 @@ export const lmsCertificates = pgTable('lms_certificates', {
   expiresAt: timestamp('expires_at'),
   status:    varchar('status', { length: 20 }).notNull().default('active'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+}, (t) => [
+  check("lms_certificates_status_chk", sql`${t.status} IN ('active','expired','revoked')`),
+]);

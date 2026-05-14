@@ -1,12 +1,44 @@
 /**
- * geo.service.ts — TZ-47: Haversine Masofa + Geofence
+ * @module geo.service
+ * @description Geographic distance + geofence primitives for logistics.
+ *   Implements the **Haversine formula** for great-circle distance between
+ *   two lat/lon points on a sphere:
  *
- * Haversine formula (sferik masofa):
- *   a = sin²(Δφ/2) + cosφ₁ × cosφ₂ × sin²(Δλ/2)
- *   c = 2 × atan2(√a, √(1−a))
- *   d = R × c  (R = 6371 km)
+ *     a = sin²(Δφ/2) + cos(φ₁) × cos(φ₂) × sin²(Δλ/2)
+ *     c = 2 × atan2(√a, √(1−a))
+ *     d = R × c           where R = 6371 km (mean Earth radius)
  *
- * TAQIQLANGAN: Euclidean masofa (shahar koordinatalarida noto'g'ri)
+ *   Plus circular and polygon geofence checks for delivery-zone validation
+ *   (e.g. "is this customer inside our Tashkent same-day-delivery area?").
+ * @layer Domain Service (Logistics)
+ *
+ * WHY HAVERSINE, NOT EUCLIDEAN
+ *   Latitude and longitude are angles on a sphere, not Cartesian coordinates.
+ *   Euclidean distance √((lat₂−lat₁)² + (lon₂−lon₁)²) returns a value in
+ *   "degrees", which is wrong AND non-linear: 1° of longitude is ~111 km at
+ *   the equator but only ~80 km at Tashkent's latitude (~41°N). For
+ *   delivery cost or ETA estimation that's a 30%+ error.
+ *
+ *   Haversine accounts for the cosine of latitude and returns km directly.
+ *   It's the industry standard for "near enough" distance under 1000 km;
+ *   beyond that, Vincenty's formula would be marginally more accurate but
+ *   isn't needed for in-country delivery.
+ *
+ * WHY R = 6371 km (mean radius)
+ *   Earth is an oblate spheroid (~6378 km equator, 6357 km poles). Mean
+ *   radius gives error ~0.5% — acceptable for routing. Using the precise
+ *   WGS-84 ellipsoid model would require Vincenty and isn't worth it.
+ *
+ * WHY VALIDATION ON COORDINATES
+ *   Customer-data quality is poor — sometimes lat/lon get swapped, or
+ *   imported as 0/0 (null island), or as raw GPS strings with no parsing.
+ *   We reject anything outside [-90..90] / [-180..180] explicitly so the
+ *   caller sees a VALIDATION error instead of a nonsense distance.
+ *
+ * WHY THIS LIVES IN LOGISTICS, NOT IN COMMON
+ *   Other modules (camera attendance, HR room presence) DON'T need
+ *   km-level accuracy — they're indoor proximity. Keeping this in logistics
+ *   prevents "let's just use geo.haversine here" creep into wrong contexts.
  */
 
 import { Injectable } from '@nestjs/common';

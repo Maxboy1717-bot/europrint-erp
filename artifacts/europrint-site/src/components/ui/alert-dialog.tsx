@@ -1,3 +1,8 @@
+/**
+ * @module alert-dialog
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 

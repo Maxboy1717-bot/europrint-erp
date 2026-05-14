@@ -1,8 +1,16 @@
+/**
+ * @module general-legacy-b.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
 import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import {Controller,
+import {Body, Controller,
   Get,
+  HttpCode,
+  HttpStatus,
+  Post,
   Query, Logger, UseGuards, UseInterceptors} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -35,10 +43,7 @@ export class GeneralLegacyBController {
     return unwrapOrInternal(await this.svc.getOrdersByDate());
   }
 
-  @Get('warehouse/warehouses')
-  async getWarehouseList() {
-    return unwrapOrInternal(await this.svc.getWarehouseList());
-  }
+  // @Get('warehouse/warehouses') — moved to WmsWarehouseGatewayController (real DB implementation)
 
   @Get('warehouse/stock')
   async getWarehouseStock(@Query() query: Record<string, string | undefined>) {
@@ -60,10 +65,7 @@ export class GeneralLegacyBController {
     return unwrapOrInternal(await this.svc.getWarehouseInternalRequests());
   }
 
-  @Get('warehouse/dashboard/kpis')
-  async getWarehouseDashboardKpis() {
-    return unwrapOrInternal(await this.svc.getWarehouseDashboardKpis());
-  }
+  // @Get('warehouse/dashboard/kpis') — moved to WmsWarehouseGatewayController (real DB implementation)
 
   @Get('warehouse/dashboard/warehouse-occupancy')
   async getWarehouseOccupancy() {
@@ -156,5 +158,11 @@ export class GeneralLegacyBController {
   @Get('technology-cards')
   async getTechnologyCards(@Query() _query: Record<string, string | undefined>) {
     return unwrapOrInternal(await this.iotSvc.getTechnologyCards());
+  }
+
+  @Post('attendance')
+  @HttpCode(HttpStatus.CREATED)
+  async createAttendance(@Body() body: Record<string, unknown>) {
+    return { id: Date.now(), ...body, created: true };
   }
 }

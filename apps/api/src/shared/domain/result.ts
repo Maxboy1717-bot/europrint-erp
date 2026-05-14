@@ -1,3 +1,8 @@
+/**
+ * @module result
+ * @description Source module. See exports for details.
+ */
+
 import { InternalServerErrorException } from '@nestjs/common';
 export class Result<T = void> {
   public readonly isSuccess: boolean;
@@ -21,7 +26,7 @@ export class Result<T = void> {
   }
 
   static combine(results: Result[]): Result {
-    const failed = (results ?? []).find((result) => !result.isSuccess);
+    const failed = (Array.isArray(results) ? results : []).find((result) => !result.isSuccess);
     if (failed) {
       return Result.fail(String(failed.error ?? 'Unknown error'));
     }

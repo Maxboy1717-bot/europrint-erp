@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-pp-routings.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { routings, routingOperations } from '@europrint/schemas';
@@ -44,5 +49,12 @@ export class DrizzlePpRoutingsRepository implements IPpRoutingsRepository {
       const result = await db.update(routings).set(dto as Partial<typeof routings.$inferInsert>).where(eq(routings.id, id)).returning();
       return Ok((result[0] as Record<string, unknown>));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
+  }
+
+  async softDelete(id: number): Promise<Result<void>> {
+    try {
+      await db.update(routings).set({ deletedAt: new Date() } as Partial<typeof routings.$inferInsert>).where(eq(routings.id, id));
+      return Ok(undefined);
+    } catch (e: unknown) { return Err((e as Error)?.message || "O'chirishda xatolik"); }
   }
 }

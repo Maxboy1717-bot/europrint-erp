@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-mm-goods.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import {
   queryGoodsReceipts, queryGoodsReceipt, execCreateGoodsReceipt, execInsertGoodsReceiptItem,

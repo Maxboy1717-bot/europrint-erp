@@ -1,3 +1,8 @@
+/**
+ * @module MarketingPR
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
@@ -13,13 +18,15 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, MessageSquare, Pencil, Trash2, Calendar } from "lucide-react";
 import type { PrActivity } from "@shared/schema";
-import { ErrorState } from "@/components/ui/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
 
+import { useTranslation } from '@/lib/i18n';
 const typeLabels: Record<string, string> = { press_release: "Press-reliz", interview: "Intervyu", article: "Maqola", event: "Tadbir", sponsorship: "Homiylik", partnership: "Hamkorlik", other: "Boshqa" };
 const statusLabels: Record<string, string> = { planned: "Rejalashtirilgan", in_progress: "Jarayonda", published: "Nashr etilgan", completed: "Tugallangan" };
 
 export default function MarketingPR() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -58,70 +65,71 @@ export default function MarketingPR() {
     else createMutation.mutate(payload);
   };
 
-  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24" />)}</div>;
+  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="p-6 space-y-6" data-testid="marketing-pr">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-pr">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-4xl font-light tracking-tight text-on-surface">
-          Marketing <span className="font-bold text-primary">PR & Media</span>
-        </h1>
+        <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing {t('prMedia')}</b></>}
+        title="Marketing {t('prMedia')}"
+      />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold" data-testid="button-create-pr">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-pr">
+              <Plus className="h-4 w-4" />
               Yangi PR
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg bg-surface-container-lowest border-none ">
-            <DialogHeader><DialogTitle className="text-on-surface font-bold">{editId ? "PR faoliyatni tahrirlash" : "Yangi PR Faoliyat"}</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-lg bg-card border-none p-6">
+            <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "PR faoliyatni tahrirlash" : "Yangi PR Faoliyat"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-on-surface-variant">Sarlavha *</Label><Input className="bg-surface border-outline-variant" data-testid="input-pr-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-on-surface-variant">Tavsif</Label><Textarea className="bg-surface border-outline-variant" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Turi *</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-surface border-outline-variant"><SelectValue /></SelectTrigger><SelectContent className="bg-surface-container-lowest border-outline-variant">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Holat</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-surface border-outline-variant"><SelectValue /></SelectTrigger><SelectContent className="bg-surface-container-lowest border-outline-variant">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">Sarlavha *</Label><Input className="bg-background border-border" data-testid="input-pr-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">Tavsif</Label><Textarea className="bg-background border-border" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Turi *</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Holat</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
               </div>
-              <div className="space-y-1.5"><Label className="text-on-surface-variant">Media / OAV</Label><Input className="bg-surface border-outline-variant" value={form.media} onChange={(e) => setForm({ ...form, media: e.target.value })} placeholder="Gazeta, TV, Online..." /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Sana</Label><Input className="bg-surface border-outline-variant" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Havola (URL)</Label><Input className="bg-surface border-outline-variant" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://..." /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t('mediaOav')}</Label><Input className="bg-background border-border" value={form.media} onChange={(e) => setForm({ ...form, media: e.target.value })} placeholder="Gazeta, TV, Online..." /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Sana</Label><Input className="bg-background border-border" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Havola (URL)</Label><Input className="bg-background border-border" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://..." /></div>
               </div>
-              <Button onClick={handleSubmit} disabled={!form.title || !form.type || createMutation.isPending || updateMutation.isPending} className="w-full bg-gradient-to-br from-primary to-primary-dim text-white font-bold h-11" data-testid="button-submit-pr">{editId ? "Saqlash" : "Yaratish"}</Button>
+              <Button onClick={handleSubmit} disabled={!form.title || !form.type || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-pr">{editId ? "Saqlash" : "Yaratish"}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
       {activities?.length === 0 ? (
-        <Card className="bg-surface-container-lowest border-none"><CardContent className="p-12 text-center text-on-surface-variant">Hozircha PR faoliyatlar yo'q</CardContent></Card>
+        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">Hozircha PR faoliyatlar yo'q</CardContent></Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {activities?.map((a) => (
-            <Card key={a.id} className="bg-surface-container-lowest border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden" data-testid={`card-pr-${a.id}`}>
+            <Card key={a.id} className="bg-card border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden" data-testid={`card-pr-${a.id}`}>
               <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 p-5">
                 <div className="min-w-0 flex-1">
-                  <CardTitle className="text-lg font-bold text-on-surface truncate">{a.title}</CardTitle>
-                  {a.media && <p className="text-sm text-on-surface-variant mt-1.5">{a.media}</p>}
+                  <CardTitle className="text-[14px] font-semibold font-bold text-foreground truncate">{a.title}</CardTitle>
+                  {a.media && <p className="text-sm text-muted-foreground mt-1.5">{a.media}</p>}
                 </div>
                 <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high no-default-hover-elevate" onClick={() => handleEdit(a)}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-on-surface-variant hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(a.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate" onClick={() => handleEdit(a)}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(a.id)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </CardHeader>
               <CardContent className="px-5 pb-5 pt-0">
-                {a.description && <p className="text-sm text-on-surface-variant mb-4 line-clamp-2 leading-relaxed">{a.description}</p>}
+                {a.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">{a.description}</p>}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline" className="border-outline-variant text-on-surface rounded-full px-2.5 py-0.5 text-[10px] font-bold no-default-hover-elevate">{typeLabels[a.type] || a.type}</Badge>
-                  <Badge className="bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-[10px] font-bold no-default-hover-elevate">{statusLabels[a.status || "planned"]}</Badge>
-                  {a.reach && <Badge variant="secondary" className="bg-surface-container text-on-surface-variant text-[10px] rounded-full px-2.5 py-0.5 font-bold no-default-hover-elevate">{a.reach} qamrov</Badge>}
+                  <Badge variant="outline" className="border-border text-foreground rounded-full px-2.5 py-0.5 text-[10px] font-bold no-default-hover-elevate">{typeLabels[a.type] || a.type}</Badge>
+                  <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-[10px] font-bold no-default-hover-elevate">{statusLabels[a.status || "planned"]}</Badge>
+                  {a.reach && <EPStatusPill tone="neutral" className="bg-muted/60 text-muted-foreground text-[10px] rounded-full px-2.5 py-0.5 font-bold no-default-hover-elevate">{a.reach} qamrov</EPStatusPill>}
                 </div>
                 {a.date && (
-                  <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
                     {new Date(a.date).toLocaleDateString("uz-UZ")}
                   </div>

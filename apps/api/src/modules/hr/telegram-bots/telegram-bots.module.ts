@@ -1,9 +1,15 @@
+/**
+ * @module telegram-bots.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { TelegramBotsService } from './telegram-bots.service';
 import { TelegramBotsRepository } from './telegram-bots.repository';
 import { TelegramBotsPipEventsService } from './telegram-bots-pip-events.service';
 import { TelegramBotsPipEventsRepository } from './telegram-bots-pip-events.repository';
 import { TelegramBotsCronService } from './telegram-bots-cron.service';
+import { TelegramBotsCronRecruitmentService } from './telegram-bots-cron-recruitment.service';
 import { TelegramBotsController } from './telegram-bots.controller';
 import { HrBotService } from './hr-bot.service';
 import { RecruitmentBotService } from './recruitment-bot.service';
@@ -36,11 +42,12 @@ import { DocumentWorkflowModule } from '../document-workflow/document-workflow.m
     TelegramBotsPipEventsRepository,
     TelegramBotsPipEventsService,
     TelegramBotsCronService,
+    TelegramBotsCronRecruitmentService,
     ManagerBotService,
     AttendanceBotService,
     LearningBotService,
     BoomerangEmbeddingService,
   ],
-  exports: [TelegramBotsService, NotificationBotService, ManagerBotService, AttendanceBotService, LearningBotService],
+  exports: [TelegramBotsService, NotificationBotService, ManagerBotService, AttendanceBotService, LearningBotService, TelegramBotsCronRecruitmentService],
 })
 export class TelegramBotsModule {}

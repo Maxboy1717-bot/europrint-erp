@@ -1,3 +1,8 @@
+/**
+ * @module FeedbackTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -117,7 +122,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: FeedbackFormValues }) => apiRequest("PATCH", `/api/adaptation/feedback/${id}`, { ...data, actionItems: null, conductedBy: null }),
+    mutationFn: async ({ id, data }: { id: string; data: FeedbackFormValues }) => apiRequest("PUT", `/api/adaptation/feedback/${id}`, { ...data, actionItems: null, conductedBy: null }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/adaptation/feedback"] });
       setIsDialogOpen(false);
@@ -172,18 +177,16 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                 Feedback qo'shish
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
               <DialogHeader>
-                <DialogTitle>
-                  {editingFeedback?.id ? "Feedbackni tahrirlash" : "Yangi feedback"}
-                </DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold"> {editingFeedback?.id ? "Feedbackni tahrirlash" : "Yangi feedback"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <Label>Xodim</Label>
                   <Controller control={form.control} name="newEmployeeId" render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-employee"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-employee" className="h-9"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
                       <SelectContent>
                         {(Array.isArray(employees) ? employees : []).map((emp: NewEmployeeResponse) => (
                           <SelectItem key={emp.id} value={emp.id}>{emp.employeeName}</SelectItem>
@@ -195,12 +198,12 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                     <p className="text-sm text-destructive mt-1">{form.formState.errors.newEmployeeId.message}</p>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Turi</Label>
                     <Controller control={form.control} name="feedbackType" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-feedback-type"><SelectValue /></SelectTrigger>
+                        <SelectTrigger data-testid="select-feedback-type" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="week1">1 hafta</SelectItem>
                           <SelectItem value="month1">1 oy</SelectItem>
@@ -214,7 +217,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                     <Label>Holat</Label>
                     <Controller control={form.control} name="status" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-status"><SelectValue /></SelectTrigger>
+                        <SelectTrigger data-testid="select-status" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="scheduled">Rejalashtirilgan</SelectItem>
                           <SelectItem value="completed">Yakunlangan</SelectItem>
@@ -224,7 +227,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                     )} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="scheduledDate">Rejalashtirilgan sana</Label>
                     <Input id="scheduledDate" type="date" {...form.register("scheduledDate")} data-testid="input-scheduled-date" />
@@ -237,7 +240,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                     <Input id="completedDate" type="date" {...form.register("completedDate")} data-testid="input-completed-date" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="rating">Ball (1-5)</Label>
                     <Input id="rating" type="number" min="1" max="5" {...form.register("rating", { valueAsNumber: true })} data-testid="input-rating" />
@@ -246,7 +249,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                     <Label>Qoniqish darajasi</Label>
                     <Controller control={form.control} name="satisfactionLevel" render={({ field }) => (
                       <Select value={field.value ?? "none"} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-satisfaction"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                        <SelectTrigger data-testid="select-satisfaction" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">-</SelectItem>
                           <SelectItem value="very_low">Juda past</SelectItem>
@@ -282,8 +285,8 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
+        <div className="ep-table-scroll"><Table>
+          <TableHeader className="sticky top-0 z-10 bg-card">
             <TableRow>
               <TableHead>Xodim</TableHead>
               <TableHead>Turi</TableHead>
@@ -300,7 +303,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
               </TableRow>
             )}
             {(Array.isArray(feedbacks) ? feedbacks : []).map((fb: FeedbackResponse) => (
-              <TableRow key={fb.id}>
+              <TableRow key={fb.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium">{fb.employeeName}</TableCell>
                 <TableCell>
                   <Badge variant="outline">
@@ -327,7 +330,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
   );

@@ -1,3 +1,8 @@
+/**
+ * @module field
+ * @description Source module. See exports for details.
+ */
+
 "use client"
 
 import { useMemo } from "react"

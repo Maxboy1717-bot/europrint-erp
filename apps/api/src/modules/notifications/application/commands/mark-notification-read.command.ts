@@ -1,3 +1,8 @@
+/**
+ * @module mark-notification-read.command
+ * @description Source module. See exports for details.
+ */
+
 export class MarkNotificationReadCommand {
   constructor(readonly notificationId: string) {}
 }

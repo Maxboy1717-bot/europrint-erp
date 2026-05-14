@@ -1,3 +1,8 @@
+/**
+ * @module reports.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, InternalServerErrorException, Inject } from '@nestjs/common';
 import { IFinanceReportsRepository, FINANCE_REPORTS_REPO } from './i-reports.repo';
 import { safeCall, Result, AppError } from '@common/result';

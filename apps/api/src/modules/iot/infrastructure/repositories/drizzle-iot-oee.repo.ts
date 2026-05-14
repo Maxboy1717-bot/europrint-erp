@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-iot-oee.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { sql, eq, and, gte, inArray, count } from 'drizzle-orm';
 import { db, camera_events, camera_safety_violations, camera_quality_defects , runQuery } from '@shared/db';

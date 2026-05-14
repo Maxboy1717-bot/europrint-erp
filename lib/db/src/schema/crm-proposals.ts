@@ -1,6 +1,11 @@
+/**
+ * @module crm-proposals
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -51,7 +56,9 @@ export const crmProposals = pgTable("crm_proposals", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("crm_proposals_status_chk", sql`${t.status} IN ('draft','calculated','sent','revised','approved','declined')`),
+]);
 
 
 export const insertCrmProposalSchema = createInsertSchema(crmProposals, {
@@ -82,7 +89,7 @@ export type InsertCrmProposal = z.infer<typeof insertCrmProposalSchema>;
 export const crmProposalProducts = pgTable("crm_proposal_products", {
   id: serial("id").primaryKey(),
   proposalId: integer("proposal_id").references(() => crmProposals.id, { onDelete: "cascade" }).notNull(),
-  productId: integer("product_id").references(() => crmProducts.id),
+  productId: integer("product_id").references(() => crmProducts.id, { onDelete: "set null" }),
   
   productName: text("product_name").notNull(),
   productDescription: text("product_description"),
@@ -94,9 +101,11 @@ export const crmProposalProducts = pgTable("crm_proposal_products", {
   discountType: varchar("discount_type", { length: 20 }).default("percent"), // percent, fixed
   taxRate: numericMoney("tax_rate").default(0),
   totalPrice: numericMoney("total_price").notNull().default(0),
-  
+
   sort: integer("sort").default(100),
-});
+}, (t) => [
+  check("crm_proposal_products_discount_type_chk", sql`${t.discountType} IS NULL OR ${t.discountType} IN ('percent','fixed')`),
+]);
 
 
 export const insertCrmProposalProductSchema = createInsertSchema(crmProposalProducts, {
@@ -159,7 +168,10 @@ export const crmInvoices = pgTable("crm_invoices", {
   // Metadata
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("crm_invoices_status_chk", sql`${t.status} IN ('draft','sent','paid','partial','overdue','cancelled')`),
+  check("crm_invoices_payment_method_chk", sql`${t.paymentMethod} IS NULL OR ${t.paymentMethod} IN ('bank_transfer','cash','card')`),
+]);
 
 
 export const insertCrmInvoiceSchema = createInsertSchema(crmInvoices, {
@@ -179,7 +191,7 @@ export type InsertCrmInvoice = z.infer<typeof insertCrmInvoiceSchema>;
 export const crmInvoiceProducts = pgTable("crm_invoice_products", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").references(() => crmInvoices.id, { onDelete: "cascade" }).notNull(),
-  productId: integer("product_id").references(() => crmProducts.id),
+  productId: integer("product_id").references(() => crmProducts.id, { onDelete: "set null" }),
   
   productName: text("product_name").notNull(),
   productDescription: text("product_description"),

@@ -1,3 +1,8 @@
+/**
+ * @module crm-contacts.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -10,6 +15,7 @@ import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CrmContactsService } from '../application/crm-contacts.service';
 import {
   CheckContactDuplicatesDtoSchema, CheckContactDuplicatesDto,
@@ -20,6 +26,7 @@ const CRM_WRITE_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manage
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
+@UseGuards(JwtAuthGuard)
 @Controller('crm')
 export class CrmContactsController {
   private readonly logger = new Logger(CrmContactsController.name);

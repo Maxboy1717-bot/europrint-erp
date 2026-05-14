@@ -1,6 +1,6 @@
 {
   "title": "Direktor paneli",
-  "dashboard": "Bosh dashboard",
+  "dashboard": "Bosh panel",
   "executiveSummary": "Ijroiya xulosasi",
   "companyHealth": "Kompaniya salomatligi",
   "strategicKPI": "Strategik KPI",
@@ -102,5 +102,6 @@
   "gsdRevenueTarget": "800 000 000 so'm",
   "executionDiaryEntry": "Kundalik yozuv qo'shish",
   "executionDiaryToday": "Bugungi holat",
-  "executionDiaryHistory": "O'tgan kunlar tarixi"
+  "executionDiaryHistory": "O'tgan kunlar tarixi",
+  "directorExtended": "Direktor kengaytirilgan"
 }

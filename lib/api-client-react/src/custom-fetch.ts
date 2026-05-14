@@ -1,3 +1,8 @@
+/**
+ * @module custom-fetch
+ * @description Source module. See exports for details.
+ */
+
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
 };

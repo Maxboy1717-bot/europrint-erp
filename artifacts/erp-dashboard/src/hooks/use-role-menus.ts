@@ -1,3 +1,8 @@
+/**
+ * @module use-role-menus
+ * @description React custom hook.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 
 interface AuthUser {

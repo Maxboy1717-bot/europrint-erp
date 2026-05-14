@@ -1,13 +1,20 @@
+/**
+ * @module lms-core.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
   Get,
-  NotImplementedException,
+  HttpException,
   Param,
   Post,
   UsePipes,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { unwrapOrInternal } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
@@ -22,6 +29,8 @@ import {
   CreateExamSchema, CreateExamDto,
   SubmitExamSchema, SubmitExamDto
 } from './dto/lms-core.dto';
+import { db } from '@shared/db';
+import { lms_support_tickets } from '@shared/db';
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('lms')
@@ -93,5 +102,25 @@ export class LmsCoreController {
   }
 
   @Post('progress/complete')
-  async completeCourse(@Body() _body: Record<string, unknown>) { throw new NotImplementedException('Kursni yakunlash hali ishlab chiqilmoqda'); }
+  async completeCourse(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Post('support/tickets')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async createSupportTicket(
+    @Body() body: { subject: string; message: string; priority?: string },
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    try {
+      const rows = await db.insert(lms_support_tickets).values({
+        subject: String(body.subject ?? ''),
+        message: String(body.message ?? ''),
+        priority: String(body.priority ?? 'medium'),
+        created_by: String(user?.id ?? 0),
+      }).returning();
+      return { ok: true, data: rows[0] };
+    } catch (_e) {
+      return { ok: false, error: 'Ticket yaratishda xatolik' };
+    }
+  }
 }

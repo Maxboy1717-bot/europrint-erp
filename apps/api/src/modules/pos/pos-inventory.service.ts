@@ -1,3 +1,8 @@
+/**
+ * @module pos-inventory.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { PosInventoryRepository } from './repositories/pos-inventory.repository';

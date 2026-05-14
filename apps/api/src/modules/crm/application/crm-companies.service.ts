@@ -1,3 +1,8 @@
+/**
+ * @module crm-companies.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { CrmCompaniesRepository } from './crm-companies.repository';
@@ -102,5 +107,13 @@ export class CrmCompaniesService {
 
   async deleteCompany(cid: number) {
     return this.repo.deleteCompany(cid);
+  }
+
+  async createCompanyContact(companyId: number, body: Record<string, unknown>) {
+    return this.repo.createCompanyContact(companyId, body);
+  }
+
+  async deleteCompanyContact(companyId: number, contactId: number): Promise<void> {
+    return this.repo.deleteCompanyContact(companyId, contactId);
   }
 }

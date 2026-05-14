@@ -1,3 +1,8 @@
+/**
+ * @module Pagination
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
@@ -40,7 +45,7 @@ export function Pagination({
               value={String(pageSize)}
               onValueChange={(value) => onPageSizeChange(Number(value))}
             >
-              <SelectTrigger className="h-8 w-16" data-testid="select-page-size">
+              <SelectTrigger className="h-9 w-16" data-testid="select-page-size">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

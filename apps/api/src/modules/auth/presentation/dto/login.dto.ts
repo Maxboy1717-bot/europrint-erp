@@ -1,3 +1,8 @@
+/**
+ * @module login.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { MAX_NAME_LENGTH } from '@common/constants/app.constants';
 import { z } from 'zod';
 

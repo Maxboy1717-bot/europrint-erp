@@ -1,3 +1,8 @@
+/**
+ * @module logger.util
+ * @description Source module. See exports for details.
+ */
+
 import pino, { Logger } from 'pino'
 
 let loggerInstance: Logger

@@ -1,9 +1,14 @@
+/**
+ * @module crm-ai.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
-import { crmLeads, crm_lead_stages, crm_activities, crmDeals } from '@shared/db';
+import { crmLeads, crm_activities, crmDeals } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
@@ -13,42 +18,35 @@ export class CrmAiRepository {
   async getLeadWithActivity(lid: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.select({
-        id:              crmLeads.id,
-        first_name:      crmLeads.first_name,
-        last_name:       crmLeads.last_name,
-        email:           crmLeads.email,
-        phone:           crmLeads.phone,
-        status:          crmLeads.status,
-        ai_score:        crmLeads.ai_score,
-        stage_name:      crm_lead_stages.name,
-        activity_count:  sql<number>`COUNT(${crm_activities.id})::int`,
+        id:               crmLeads.id,
+        contact_name:     crmLeads.contact_name,
+        contact_email:    crmLeads.contact_email,
+        contact_phone:    crmLeads.contact_phone,
+        status:           crmLeads.status,
+        ai_score:         sql<null>`NULL`,
+        stage_name:       sql<null>`NULL`,
+        activity_count:   sql<number>`COUNT(${crm_activities.id})::int`,
         last_activity_at: sql<Date>`MAX(${crm_activities.created_at})`,
       })
         .from(crmLeads)
-        .leftJoin(crm_lead_stages, eq(crm_lead_stages.id, crmLeads.stage_id))
         .leftJoin(crm_activities, eq(crm_activities.lead_id, crmLeads.id))
         .where(eq(crmLeads.id, lid))
-        .groupBy(crmLeads.id, crm_lead_stages.name);
+        .groupBy(crmLeads.id);
       return (rows[0] ?? null) as Row | null;
       }, 'DB_ERROR');
   }
 
-  async updateLeadScore(lid: number, score: number): Promise<void> {
-    await db.update(crmLeads).set({
-      ai_score:       String(score),
-      ai_analyzed_at: _time.now(),
-    }).where(eq(crmLeads.id, lid));
-  }
+  /** crm_leads has no ai_score column — no-op until column is added */
+  async updateLeadScore(_lid: number, _score: number): Promise<void> { /* no-op */ }
 
   async getLeadWithDeals(lid: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.select({
-        id:         crmLeads.id,
-        first_name: crmLeads.first_name,
-        last_name:  crmLeads.last_name,
-        status:     crmLeads.status,
-        activities: sql<number>`COUNT(DISTINCT ${crm_activities.id})::int`,
-        deals:      sql<number>`COUNT(DISTINCT ${crmDeals.id})::int`,
+        id:           crmLeads.id,
+        contact_name: crmLeads.contact_name,
+        status:       crmLeads.status,
+        activities:   sql<number>`COUNT(DISTINCT ${crm_activities.id})::int`,
+        deals:        sql<number>`COUNT(DISTINCT ${crmDeals.id})::int`,
       })
         .from(crmLeads)
         .leftJoin(crm_activities, eq(crm_activities.lead_id, crmLeads.id))
@@ -59,12 +57,8 @@ export class CrmAiRepository {
       }, 'DB_ERROR');
   }
 
-  async updateLeadScoreSimple(lid: number, score: number): Promise<void> {
-    await db.update(crmLeads).set({
-      ai_score:   String(score),
-      updated_at: _time.now(),
-    }).where(eq(crmLeads.id, lid));
-  }
+  /** crm_leads has no ai_score column — no-op until column is added */
+  async updateLeadScoreSimple(_lid: number, _score: number): Promise<void> { /* no-op */ }
 
   async getDealWithActivity(did: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
@@ -87,15 +81,15 @@ export class CrmAiRepository {
   async getLeadDashboard(mid: number | null): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.select({
-        total:      sql<number>`COUNT(*)::int`,
-        new_leads:  sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'new')::int`,
-        qualified:  sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'qualified')::int`,
-        converted:  sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'converted')::int`,
-        avg_score:  sql<number>`ROUND(AVG(${crmLeads.ai_score}))::int`,
+        total:     sql<number>`COUNT(*)::int`,
+        new_leads: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'new')::int`,
+        qualified: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'qualified')::int`,
+        converted: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'converted')::int`,
+        avg_score: sql<number>`NULL::numeric`,
       })
         .from(crmLeads)
         .where(sql`
-          (${mid ?? null}::int IS NULL OR ${crmLeads.assigned_to} = ${mid ?? null}) AND
+          (${mid ?? null}::int IS NULL OR ${crmLeads.manager_id} = ${mid ?? null}) AND
           ${crmLeads.created_at} >= NOW() - INTERVAL '30 days'
         `);
       return (rows[0] ?? {}) as Row;

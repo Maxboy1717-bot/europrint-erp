@@ -1,3 +1,8 @@
+/**
+ * @module org-export.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable , Logger} from '@nestjs/common';
@@ -65,7 +70,7 @@ export class OrgExportService {
       headerRow.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
       headerRow.height = 22;
   
-      (nodes ?? []).forEach((node) => {
+      (Array.isArray(nodes) ? nodes : []).forEach((node) => {
         const row = ws.addRow({
           id: node.id,
           name: '  '.repeat(Number(node.hierarchyLevel) || 0) + node.name,
@@ -196,7 +201,7 @@ export class OrgExportService {
       page.drawRectangle({ x: margin, y: y - rowH + 4, width: pageWidth - margin * 2, height: rowH, color: bg });
 
       let x = margin + 4;
-      (cols ?? []).forEach((col, i) => {
+      (Array.isArray(cols) ? cols : []).forEach((col, i) => {
         const val = String(rowData[i] || '');
         const truncated = val.length > 40 ? val.slice(0, 38) + '..' : val;
         drawText(truncated, x, y - 12, { bold: isHeader, size: isHeader ? 8 : 7.5 });
@@ -209,7 +214,7 @@ export class OrgExportService {
     };
 
     // Draw header row
-    drawRow((cols ?? []).map((c) => c.label), true);
+    drawRow((Array.isArray(cols) ? cols : []).map((c) => c.label), true);
 
     // Draw data rows
     const LEVEL_COLORS_RGB: Record<number, [number, number, number]> = {
@@ -220,7 +225,7 @@ export class OrgExportService {
       4: [0.86, 0.15, 0.15],
     };
 
-    (nodes ?? []).forEach((node) => {
+    (Array.isArray(nodes) ? nodes : []).forEach((node) => {
       const indent = '  '.repeat(Number(node.hierarchyLevel) || 0);
       const color = LEVEL_COLORS_RGB[Number(node.hierarchyLevel)] || [0.3, 0.3, 0.3];
       const nameText = indent + node.name;
@@ -239,7 +244,7 @@ export class OrgExportService {
 
       let x = margin + 4;
       const vals = [String(node.id), nameText, typeText, headText, empText, tskpText];
-      (cols ?? []).forEach((col, i) => {
+      (Array.isArray(cols) ? cols : []).forEach((col, i) => {
         const val = String(vals[i] || '');
         const truncated = val.length > 40 ? val.slice(0, 38) + '..' : val;
         const isName = i === 1;

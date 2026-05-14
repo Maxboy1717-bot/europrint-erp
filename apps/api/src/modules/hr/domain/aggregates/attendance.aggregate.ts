@@ -1,3 +1,8 @@
+/**
+ * @module attendance.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Logger } from '@nestjs/common';

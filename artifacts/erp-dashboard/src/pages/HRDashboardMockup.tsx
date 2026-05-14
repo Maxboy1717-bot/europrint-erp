@@ -14,6 +14,7 @@ import { KpiCardMockup } from "@/components/mockup/KpiCardMockup";
 import { StatusPill } from "@/components/mockup/StatusPill";
 import { toArray } from "@/lib/safe-array";
 
+import { useTranslation } from '@/lib/i18n';
 interface DashboardStats {
   totalEmployees: number;
   activeEmployees: number;
@@ -39,6 +40,7 @@ interface RecentHire {
 }
 
 export default function HRDashboardMockup() {
+  const { t } = useTranslation('common');
   const { data: statsRaw } = useQuery<DashboardStats>({
     queryKey: ["/api/hr/dashboard-stats"],
   });
@@ -51,18 +53,18 @@ export default function HRDashboardMockup() {
   const recentHires = toArray<RecentHire>(hiresRaw).slice(0, 5);
 
   return (
-    <div className="ep-content p-6 max-w-[1600px] mx-auto">
+    <div className="ep-content space-y-6">
       {/* Breadcrumb */}
       <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
-        <span>HR</span> / <span>Dashboard</span>
+        <span>HR</span> / <span>{t('dashboard3')}</span>
       </div>
-      <h1 className="text-xl font-semibold m-0 mb-4">HR Dashboard</h1>
+      <h1 className="text-xl font-semibold m-0 mb-4">{t('hrDashboard1')}</h1>
 
       {/* Welcome banner */}
       <WelcomeBanner tasksToday={stats.pendingLeaves ?? 0} />
 
       {/* KPI Grid (8 cards — mockup uslubida) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 mb-5">
         <KpiCardMockup
           icon={<Users className="h-5 w-5" />}
           iconColor="orange"

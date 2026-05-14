@@ -1,13 +1,12 @@
-import { ErrorState } from "@/components/ui/error-state";
+/**
+ * @module OrderCreationWizard
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Loader2,
-  ArrowRight
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Translation } from "@/components/orders/types";
 import { WizardHeader } from "@/components/orders/WizardHeader";
 import { WizardStepper } from "@/components/orders/WizardStepper";
@@ -18,6 +17,7 @@ import { DeliveryStep } from "@/components/orders/DeliveryStep";
 import { ReviewStep } from "@/components/orders/ReviewStep";
 import { useWizardState } from "@/components/orders/useWizardState";
 import { STEPS } from "@/components/orders/constants";
+import { EPErrorState, EPLoader } from "@/components/ep";
 
 export default function OrderCreationWizard() {
   const {
@@ -50,25 +50,25 @@ export default function OrderCreationWizard() {
 
   if (companiesError) {
     return (
-      <div className="container mx-auto p-6 bg-surface min-h-screen">
-        <ErrorState onRetry={refetchCompanies} />
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+        <EPErrorState onRetry={refetchCompanies} />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-8 bg-surface min-h-full">
+    <div className="space-y-8 min-h-full">
       <WizardHeader t={t} lang={lang} setLang={setLang} onSaveDraft={() => {}} />
 
       <div className="max-w-4xl mx-auto space-y-6">
-        <Card className="bg-surface-container-lowest border-none shadow-sm overflow-hidden">
-          <CardHeader className="pb-4 bg-surface-container-low/50">
+        <Card className="bg-card border-none shadow-sm overflow-hidden">
+          <CardHeader className="pb-4 bg-muted/40/50">
             <WizardStepper steps={STEPS} currentStep={currentStep} />
             <div className="mt-4">
-              <h2 className="text-xl font-bold text-on-surface">
+              <h2 className="text-xl font-bold text-foreground">
                 {t[`step${currentStep}` as keyof Translation]}
               </h2>
-              <p className="text-sm text-on-surface-variant">
+              <p className="text-sm text-muted-foreground">
                 {t[`step${currentStep}Desc` as keyof Translation]}
               </p>
             </div>
@@ -125,14 +125,14 @@ export default function OrderCreationWizard() {
 
           <Separator className="bg-outline-variant" />
           
-          <div className="flex justify-between p-8 bg-surface-container-low/30">
+          <div className="flex justify-between p-8 bg-muted/40/30">
             <Button
               variant="outline"
               onClick={handleBack}
               disabled={currentStep === 1}
-              className="rounded-lg border-outline-variant text-on-surface"
+              className="rounded-lg border-border text-foreground gap-2"
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
+              <ChevronLeft className="h-4 w-4" />
               {t.back}
             </Button>
             
@@ -146,11 +146,11 @@ export default function OrderCreationWizard() {
                 <Button
                   onClick={handleSubmit}
                   disabled={createOrderMutation.isPending}
-                  className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-8 shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="bg-primary text-white rounded-lg px-8 shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   {createOrderMutation.isPending ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <EPLoader className="mr-2" />
                       {t.creating}
                     </>
                   ) : (

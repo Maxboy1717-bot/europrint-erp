@@ -1,3 +1,8 @@
+/**
+ * @module schema-ext-c-1
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';

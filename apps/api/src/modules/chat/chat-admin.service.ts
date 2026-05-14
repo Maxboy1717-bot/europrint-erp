@@ -1,3 +1,8 @@
+/**
+ * @module chat-admin.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, AppErr, Result, isErr } from '@common/result';
 import { ChatAdminRepository } from './repositories/chat-admin.repository';

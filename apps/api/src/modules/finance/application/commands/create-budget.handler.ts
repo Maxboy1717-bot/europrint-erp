@@ -1,3 +1,8 @@
+/**
+ * @module create-budget.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -20,7 +25,7 @@ export class CreateBudgetHandler
   async execute(command: CreateBudgetCommand): Promise<Result<Budget>> {
       this.logger.log(`Creating budget: ${command.name}`);
 
-      const totalPlanned = (command.lines ?? []).reduce(
+      const totalPlanned = (Array.isArray(command.lines) ? command.lines : []).reduce(
         (sum, line) => sum + line.plannedAmount,
         0,
       );
@@ -45,7 +50,7 @@ export class CreateBudgetHandler
         _time.now(),
       );
 
-      const lines = (command?.lines ?? []).map((line) => ({
+      const lines = (Array.isArray(command?.lines) ? command?.lines : []).map((line) => ({
         id: createId(),
         budgetId: budgetId,
         category: line.category,

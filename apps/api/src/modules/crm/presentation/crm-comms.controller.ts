@@ -1,3 +1,8 @@
+/**
+ * @module crm-comms.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertRequired } from '@common/assertions';

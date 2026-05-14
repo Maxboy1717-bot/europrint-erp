@@ -1,3 +1,8 @@
+/**
+ * @module chat-room.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
@@ -58,10 +63,10 @@ export class ChatRoomService {
     return (result.ok ? result.data : []) as Record<string, unknown>[];
   }
 
-  async createGroupRoom(name: string, memberIds: number[], createdBy: number): Promise<Record<string, unknown>> {
-    this.logger.log(`chat room: yaratilmoqda`);
+  async createGroupRoom(name: string, memberIds: number[], createdBy: number, type: 'GROUP' | 'CHANNEL' = 'GROUP'): Promise<Record<string, unknown>> {
+    this.logger.log(`chat room: yaratilmoqda (${type})`);
     const createdByStr = String(createdBy);
-    const roomResult = await this.roomRepo.createGroupRoom(name, createdByStr);
+    const roomResult = await this.roomRepo.createGroupRoom(name, createdByStr, type);
     if (!roomResult.ok) throw new Error(roomResult.error.message);
     const room = roomResult.data as Record<string, unknown>;
     const roomId = String(room['id']);
@@ -93,6 +98,10 @@ export class ChatRoomService {
   async getAllEmployees(search?: string): Promise<Record<string, unknown>[]> {
     const result = await this.roomRepo.findAllEmployees(search);
     return (result.ok ? result.data : []) as Record<string, unknown>[];
+  }
+
+  async getTodayBirthdays(): Promise<Result<Record<string, unknown>[]>> {
+    return this.roomRepo.findTodayBirthdays();
   }
 
   async toggleMemberMute(roomId: string, userId: string, muted: boolean): Promise<void> {

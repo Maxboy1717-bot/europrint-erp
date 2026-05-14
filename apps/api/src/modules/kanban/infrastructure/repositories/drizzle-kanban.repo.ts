@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-kanban.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -19,7 +24,7 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
     return db
       .select()
       .from(kanban_tasks)
-      .where(sql`${kanban_tasks.id} = ${id}`)
+      .where(sql`${kanban_tasks.id} = ${id} AND ${kanban_tasks.deleted_at} IS NULL`)
       .execute()
       .then((rows) => {
         if (rows.length === 0) {
@@ -49,6 +54,7 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
         .from(kanban_tasks)
         .where(
           and(
+            sql`${kanban_tasks.deleted_at} IS NULL`,
             filters.status ? sql`${kanban_tasks.status} = ${filters.status}` : undefined,
             filters.assignedTo ? sql`${kanban_tasks.assigned_to} = ${filters.assignedTo}` : undefined))
         .orderBy(desc(kanban_tasks.created_at))
@@ -60,20 +66,21 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
           throw error;
         }),
       db
-        .select()
+        .select({ count: sql<number>`COUNT(*)::int` })
         .from(kanban_tasks)
         .where(
           and(
+            sql`${kanban_tasks.deleted_at} IS NULL`,
             filters.status ? sql`${kanban_tasks.status} = ${filters.status}` : undefined,
             filters.assignedTo ? sql`${kanban_tasks.assigned_to} = ${filters.assignedTo}` : undefined))
         .execute()
-        .then((rows) => rows.length)
+        .then((rows) => Number(rows[0]?.count ?? 0))
         .catch((error) => {
           this.logger.error('Error counting kanban tasks');
           throw error;
         }),
     ])
-      .then(([items, total]) => (Ok({ items: (items ?? []).map((row) => this.toDomain(row)), total })))
+      .then(([items, total]) => (Ok({ items: (Array.isArray(items) ? items : []).map((row) => this.toDomain(row)), total })))
       .catch((error) => {
         return Err((error as Error).message);
       });
@@ -86,7 +93,7 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
       .where(eq(kanban_tasks.assigned_to, assigneeId))
       .orderBy(desc(kanban_tasks.created_at))
       .execute()
-      .then((rows) => (Ok((rows ?? []).map((row) => this.toDomain(row)),)))
+      .then((rows) => (Ok((Array.isArray(rows) ? rows : []).map((row) => this.toDomain(row)),)))
       .catch((error) => {
         this.logger.error('Error finding kanban tasks by assignee');
         return Err((error as Error).message);
@@ -151,14 +158,15 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
 
   async delete(id: string): Promise<Result<void>> {
     return db
-      .delete(kanban_tasks)
-      .where(sql`${kanban_tasks.id} = ${id}`)
+      .update(kanban_tasks)
+      .set({ deleted_at: new Date() } as Partial<typeof kanban_tasks.$inferInsert>)
+      .where(sql`${kanban_tasks.id} = ${id} AND ${kanban_tasks.deleted_at} IS NULL`)
       .execute()
       .then(() => {
         return Ok(undefined);
       })
       .catch((error) => {
-        this.logger.error('Error deleting kanban task');
+        this.logger.error('Error soft-deleting kanban task');
         return Err((error as Error).message);
       });
   }

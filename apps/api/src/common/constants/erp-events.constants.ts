@@ -1,3 +1,8 @@
+/**
+ * @module erp-events.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 export const ERP_EVENTS = {
   // §10 - 20 ta majburiy trigger
   LEAD_ACCEPTED: 'crm.lead.accepted',

@@ -1,3 +1,8 @@
+/**
+ * @module kmeans.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeDiv, safeNum } from '@common/math/math-utils';
@@ -112,7 +117,7 @@ export class KMeansService {
       return Err({ code: 'BAD_REQUEST', message: `K-Means uchun kamida ${KMEANS_K} ta mijoz kerak` });
     }
 
-    const vecs = (points ?? []).map(p => [safeNum(p.rNorm), safeNum(p.fNorm), safeNum(p.mNorm)]);
+    const vecs = (Array.isArray(points) ? points : []).map(p => [safeNum(p.rNorm), safeNum(p.fNorm), safeNum(p.mNorm)]);
     let best = { labels: [] as number[], centroids: [] as number[][], inertia: Infinity };
 
     for (let init = 0; init < KMEANS_N_INIT; init++) {
@@ -123,7 +128,7 @@ export class KMeansService {
     const segLabels = assignLabels(best.centroids);
     const calculatedAt = new Date().toISOString();
 
-    const results: ClusterResult[] = (points ?? []).map((p, i) => ({
+    const results: ClusterResult[] = (Array.isArray(points) ? points : []).map((p, i) => ({
       customerId: p.customerId,
       clusterId: best.labels[i] ?? 0,
       rNorm: p.rNorm,

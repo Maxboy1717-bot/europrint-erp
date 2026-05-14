@@ -1,3 +1,8 @@
+/**
+ * @module FinanceTab
+ * @description React UI component.
+ */
+
 import { SdFinanceData } from "./sd-types";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -19,16 +24,16 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard icon={DollarSign} label="Jami daromad" value={fmtMoney(totalRevenue)}
-          color="text-emerald-600" gradient="from-emerald-500 to-teal-500" />
+          color="text-[var(--ep-green)]" gradient="" />
         <KpiCard icon={Wallet} label="To'langan" value={fmtMoney(totalPaid)}
-          color="text-sky-600" gradient="from-sky-500 to-blue-500" />
+          color="text-[var(--ep-blue)]" gradient="" />
         <KpiCard icon={AlertTriangle} label="Ochiq qarz" value={fmtMoney(totalDebt)}
-          color={Number(totalDebt) > 0 ? "text-rose-600" : "text-emerald-600"}
-          gradient="from-rose-500 to-pink-500" />
+          color={Number(totalDebt) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}
+          gradient="" />
         <KpiCard icon={TrendingUp} label="O'rtacha buyurtma" value={fmtMoney(avgOrderValue)}
-          gradient="from-violet-500 to-purple-500" />
+          gradient="" />
       </div>
 
       {/* Credit limit bar */}
@@ -61,7 +66,7 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
             <h3 className="text-sm font-semibold">Muddati o'tgan qarzlar taqsimoti</h3>
           </div>
           <div className="p-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {[
                 { label: "1-30 kun", val: finance.overdueBreakdown?.days1_30, cls: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200" },
                 { label: "31-60 kun", val: finance.overdueBreakdown?.days31_60, cls: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-200" },

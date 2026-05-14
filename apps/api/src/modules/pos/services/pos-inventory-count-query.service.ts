@@ -1,3 +1,8 @@
+/**
+ * @module pos-inventory-count-query.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
@@ -73,8 +78,8 @@ export class PosInventoryCountQueryService {
     const allLinesR = await this.repo.getVarianceLines(countId);
     const allLinesRaw = allLinesR.ok ? allLinesR.data as Record<string, unknown>[] : [];
     const allLines = Array.isArray(allLinesRaw) ? allLinesRaw : [];
-    const varianceLines = (allLines ?? []).filter(l => l['variance_calc'] !== 0);
-    const totalVarianceValue = (varianceLines ?? []).reduce((s, l) => s + Number(l['variance_value'] ?? 0), 0);
+    const varianceLines = (Array.isArray(allLines) ? allLines : []).filter(l => l['variance_calc'] !== 0);
+    const totalVarianceValue = (Array.isArray(varianceLines) ? varianceLines : []).reduce((s, l) => s + Number(l['variance_value'] ?? 0), 0);
 
     return {
       countId,

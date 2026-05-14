@@ -1,3 +1,8 @@
+/**
+ * @module database
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable } from '@nestjs/common';
 
 type WhereCondition = Record<string, unknown>;

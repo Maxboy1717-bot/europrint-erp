@@ -1,6 +1,11 @@
+/**
+ * @module marketing-content.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  Controller, Get, Post, Put, Delete, Param, Body, Query,
+  Controller, Get, Post, Put, Patch, Delete, Param, Body, Query,
   UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -116,5 +121,12 @@ export class MarketingContentController {
   @ApiOperation({ summary: "Ijtimoiy tarmoq akkaunti o'chirish" })
   async deleteSocialAccount(@Param('id') id: string) {
     return unwrapOrBadRequest(await this.svc.deleteSocialAccount(id));
+  }
+
+  @Patch('content/posts/:id')
+  @UseInterceptors(AuditInterceptor)
+  async patchContentPost(@Param('id') id: string, @Body() body: UpdateContentPostDto) {
+    const dto = UpdateContentPostDtoSchema.parse(body);
+    return unwrapOrBadRequest(await this.svc.updateContentPost(id, dto));
   }
 }

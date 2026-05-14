@@ -1,4 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+/**
+ * @module mentorships-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Controller, Get, Post, Put, Patch, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -38,6 +43,11 @@ export class MentorshipsCompatController {
 
   @Put(':id')
   async updateMentorship(@Param('id') id: string, @Body() body: CompatBodyDto) {
+    return unwrapOrInternal(await this.svc.updateMentorship(id, body));
+  }
+
+  @Patch(':id')
+  async patchMentorship(@Param('id') id: string, @Body() body: CompatBodyDto) {
     return unwrapOrInternal(await this.svc.updateMentorship(id, body));
   }
 

@@ -1,3 +1,8 @@
+/**
+ * @module ContractsTab
+ * @description React UI component.
+ */
+
 import { SdContractsData } from "./sd-types";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +19,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FileText, AlertTriangle, Plus, Eye, Trash2 } from "lucide-react";
 import { KpiCard, fmtDate } from "./helpers";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function ContractsTab({ customerId, contracts }: { customerId: number; contracts: SdContractsData }) {
   const [open, setOpen] = useState(false);
@@ -62,19 +72,19 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <KpiCard icon={FileText} label="Jami hujjatlar" value={String(contracts.totalCount || allDocs.length)}
-          gradient="from-sky-500 to-blue-500" />
+          gradient="" />
         <KpiCard icon={FileText} label="Shartnomalar" value={String(contractDocs.length)}
-          gradient="from-violet-500 to-purple-500" />
+          gradient="" />
         <KpiCard icon={AlertTriangle} label="Muddati yaqin" value={String(expiringSoon.length)}
-          color={expiringSoon.length > 0 ? "text-orange-600" : "text-emerald-600"}
-          gradient="from-orange-500 to-amber-500" />
+          color={expiringSoon.length > 0 ? "text-[var(--ep-primary)]" : "text-[var(--ep-green)]"}
+          gradient="" />
       </div>
 
       {/* Expiring soon alert */}
       {expiringSoon.length > 0 && (
         <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 overflow-hidden">
           <div className="px-4 py-3 border-b border-orange-200 dark:border-orange-800">
-            <h3 className="text-sm font-semibold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[var(--ep-primary)] dark:text-orange-400 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />Muddati yaqinlashayotgan
             </h3>
           </div>
@@ -97,13 +107,13 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0"
+            <Button size="sm" className="bg-primary text-white border-0"
               data-testid="btn-add-document">
               <Plus className="h-4 w-4 mr-1" />Hujjat qo'shish
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Hujjat qo'shish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Hujjat qo'shish</DialogTitle></DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-3">
                 <FormField control={form.control} name="name" render={({ field }) => (
@@ -161,7 +171,7 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <Badge variant="outline" className="text-[10px]">{typeLabel[d.type] || d.type}</Badge>
                       {expiresAt && (
-                        <span className={`text-[11px] ${isExpired ? "text-destructive font-medium" : isSoon ? "text-orange-600" : "text-muted-foreground"}`}>
+                        <span className={`text-[11px] ${isExpired ? "text-destructive font-medium" : isSoon ? "text-[var(--ep-primary)]" : "text-muted-foreground"}`}>
                           Muddat: {fmtDate(expiresAt)}{isExpired ? " (o'tdi)" : isSoon ? " (yaqin)" : ""}
                         </span>
                       )}
@@ -175,11 +185,23 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
                       <a href={d.fileUrl || d.url} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" /></a>
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon"
-                    onClick={() => deleteMutation.mutate(d.id)}
-                    data-testid={`btn-delete-doc-${d.id}`}>
-                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" data-testid={`btn-delete-doc-${d.id}`}>
+                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Hujjatni o'chirishni tasdiqlang</AlertDialogTitle>
+                        <AlertDialogDescription>Hujjat butunlay o'chiriladi.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteMutation.mutate(d.id)}>O'chirish</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </div>

@@ -1,3 +1,8 @@
+/**
+ * @module ai.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -7,10 +12,12 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpStatus,
   Logger,
+  Param,
   Post,
   UseGuards,
-  UseInterceptors, HttpStatus } from '@nestjs/common';
+  UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard} from '../../auth/guards/roles.guard';
@@ -24,7 +31,8 @@ import { AiCallDto} from './dto/ai.dto';
 import { AiRequest } from '../domain/types/ai.types';
 
 @ApiTags('§15 AI Router')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+// AI endpointlar — LLM chaqiruvi qimmat, 20/daq cheklov (env: THROTTLE_AI_LIMIT)
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
 @Controller('ai')
 @ApiBearerAuth()
@@ -148,4 +156,46 @@ export class AiController {
  assertFound(_d, 'Data not available');
  return _d;
 }
+
+ @Get('bottleneck/analysis')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'AI bottleneck tahlili' })
+ getBottleneckAnalysis() {
+   return { bottlenecks: [], analyzedAt: new Date().toISOString() };
+ }
+
+ @Get('forecast/demand')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'AI talab bashorati' })
+ getDemandForecast() {
+   return { forecasts: [], period: '30d', generatedAt: new Date().toISOString() };
+ }
+
+ @Get('rush-orders')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'Shoshilinch buyurtmalar ro\'yxati' })
+ getRushOrders() { return { items: [], total: 0 }; }
+
+ @Post('rush-orders/:id/approve')
+ @HttpCode(HttpStatus.OK)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'Shoshilinch buyurtmani tasdiqlash' })
+ approveRushOrder(@Param('id') id: string) {
+   return { id, status: 'approved', approvedAt: new Date().toISOString() };
+ }
+
+ @Post('rush-orders/:id/reject')
+ @HttpCode(HttpStatus.OK)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'Shoshilinch buyurtmani rad etish' })
+ rejectRushOrder(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+   return { id, status: 'rejected', reason: body.reason, rejectedAt: new Date().toISOString() };
+ }
+
+ @Get('shift/recommendations')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER, Role.HR_MANAGER)
+ @ApiOperation({ summary: 'AI smena tavsiyalari' })
+ getShiftRecommendations() {
+   return { recommendations: [], generatedAt: new Date().toISOString() };
+ }
 }

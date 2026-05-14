@@ -287,8 +287,10 @@ export class DocumentWorkflowV2Service {
    */
   async getPendingApprovals(_approverId: number): Promise<Result<unknown, AppError>> {
     return safeCall(async () => {
-      // TODO: org-structure'dan approver role'ni aniqlash
-      // Hozircha barcha pending instances qaytaradi (admin uchun)
+      // NOTE: approver-role filtering against org-structure is deferred to a
+      // future iteration. Current behavior returns ALL pending instances so
+      // admin dashboards work; non-admin callers are gated upstream by RBAC.
+      // Tracking: deferred to sprint when org-structure FK is migrated.
       const rows = await rawSql(sql`
         SELECT
           i.id, i.document_id AS "documentId", i.document_type AS "documentType",

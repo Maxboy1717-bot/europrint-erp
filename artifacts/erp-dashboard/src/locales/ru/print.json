@@ -56,8 +56,8 @@
   "error": "Ошибка",
   "utilizationLabel": "Утилизация листа",
   "unplacedHint": "Эти продукты больше листа — уменьшите размеры или выберите больший лист.",
-  "channelCyan": "Cyan (C)",
-  "channelMagenta": "Magenta (M)",
-  "channelYellow": "Yellow (Y)",
-  "channelBlack": "Key/Black (K)"
+  "channelCyan": "Голубой (C)",
+  "channelMagenta": "Пурпурный (M)",
+  "channelYellow": "Жёлтый (Y)",
+  "channelBlack": "Чёрный (K)"
 }

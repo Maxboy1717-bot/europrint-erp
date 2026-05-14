@@ -1,3 +1,8 @@
+/**
+ * @module sensor-status.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum SensorStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',

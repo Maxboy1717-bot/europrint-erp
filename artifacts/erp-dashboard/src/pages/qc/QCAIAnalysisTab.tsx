@@ -1,11 +1,18 @@
+/**
+ * @module QCAIAnalysisTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Brain, CheckCircle, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
+import { Brain, CheckCircle, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from '@/lib/queryClient';
+import { EPStatusPill, EPLoader } from "@/components/ep";
 
 interface QcMaterialTest {
   id: string;
@@ -33,7 +40,7 @@ function getRiskBadge(riskLevel: string | undefined) {
     case "low": return <Badge variant="success">Past</Badge>;
     case "medium": return <Badge variant="warning">O'rta</Badge>;
     case "high": return <Badge variant="error">Yuqori</Badge>;
-    default: return <Badge variant="secondary">{riskLevel || "—"}</Badge>;
+    default: return <EPStatusPill tone="neutral">{riskLevel || "—"}</EPStatusPill>;
   }
 }
 
@@ -43,7 +50,7 @@ export function QCAIAnalysisTab() {
   const { data: testsData, isLoading: testsLoading } = useQuery<QcMaterialTest[]>({
     queryKey: ["/api/qc/tests/recent"],
     queryFn: async () => {
-      const res = await fetch("/api/qc/tests/recent?limit=20", { credentials: "include" });
+      const res = await apiRequest('GET', "/api/qc/tests/recent?limit=20");
       if (!res.ok) return [];
       return res.json();
     }
@@ -66,10 +73,10 @@ export function QCAIAnalysisTab() {
         <CardContent>
           {testsLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
+              <EPLoader className="w-6 h-6" />
             </div>
           ) : (Array.isArray(tests) ? tests : []).filter(t => t.aiAnalysis).length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">{tCommon('noData')}</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">{tCommon('noData')}</div>
           ) : (
             <div className="space-y-4">
               {(Array.isArray(tests) ? tests : []).filter(t => t.aiAnalysis).map(test => (
@@ -86,15 +93,15 @@ export function QCAIAnalysisTab() {
 
                   <div className="flex gap-4 text-sm">
                     <div className="flex items-center gap-1">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <CheckCircle className="w-4 h-4 text-[var(--ep-green)]" />
                       <span>{test.passedCount} {tCommon('approved')}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                      <AlertTriangle className="w-4 h-4 text-[var(--ep-yellow)]" />
                       <span>{test.warningCount} {tCommon('warning')}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <XCircle className="w-4 h-4 text-red-500" />
+                      <XCircle className="w-4 h-4 text-[var(--ep-red)]" />
                       <span>{test.failedCount} {tCommon('rejected')}</span>
                     </div>
                   </div>
@@ -129,30 +136,30 @@ export function QCAIAnalysisTab() {
           <CardDescription>Umumiy sifat ko'rsatkichlari</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {(tests ?? []).reduce((sum, t) => sum + t.passedCount, 0)}
+              <div className="text-2xl font-bold text-[var(--ep-green)] dark:text-green-400">
+                {(Array.isArray(tests) ? tests : []).reduce((sum, t) => sum + t.passedCount, 0)}
               </div>
-              <div className="text-sm text-green-700 dark:text-green-300">{tCommon('approved')}</div>
+              <div className="text-sm text-[var(--ep-green)] dark:text-green-300">{tCommon('approved')}</div>
             </div>
             <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {(tests ?? []).reduce((sum, t) => sum + t.warningCount, 0)}
+              <div className="text-2xl font-bold text-[var(--ep-yellow)] dark:text-yellow-400">
+                {(Array.isArray(tests) ? tests : []).reduce((sum, t) => sum + t.warningCount, 0)}
               </div>
-              <div className="text-sm text-yellow-700 dark:text-yellow-300">{tCommon('warning')}</div>
+              <div className="text-sm text-[var(--ep-yellow)] dark:text-yellow-300">{tCommon('warning')}</div>
             </div>
             <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {(tests ?? []).reduce((sum, t) => sum + t.failedCount, 0)}
+              <div className="text-2xl font-bold text-[var(--ep-red)] dark:text-red-400">
+                {(Array.isArray(tests) ? tests : []).reduce((sum, t) => sum + t.failedCount, 0)}
               </div>
-              <div className="text-sm text-red-700 dark:text-red-300">{tCommon('rejected')}</div>
+              <div className="text-sm text-[var(--ep-red)] dark:text-red-300">{tCommon('rejected')}</div>
             </div>
             <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-2xl font-bold text-[var(--ep-blue)] dark:text-blue-400">
                 {tests.length}
               </div>
-              <div className="text-sm text-blue-700 dark:text-blue-300">{tCommon('total')}</div>
+              <div className="text-sm text-[var(--ep-blue)] dark:text-blue-300">{tCommon('total')}</div>
             </div>
           </div>
 

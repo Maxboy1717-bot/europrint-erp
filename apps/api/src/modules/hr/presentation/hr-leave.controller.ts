@@ -1,8 +1,13 @@
+/**
+ * @module hr-leave.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Body, Controller, Get, Inject, Param, Patch, Post, Query,
-  UseGuards, UseInterceptors, InternalServerErrorException,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Query,
+  UseGuards, UseInterceptors, InternalServerErrorException, NotFoundException,
 } from '@nestjs/common';
-import { assertOk, throwFromError, unwrapOrDefault, unwrapOrThrow } from '@common/http-result';
+import { assertOk, unwrapOrDefault, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -45,7 +50,6 @@ export class HrLeaveController {
       new GetLeavesQuery(validated.employeeId, validated.status, validated.leaveType, validated.page, validated.limit),
     );
     return unwrapOrDefault(result, { items: [], total: 0 });
-    return result.data;
   }
 
   @Get('stats')
@@ -53,7 +57,6 @@ export class HrLeaveController {
   async getLeaveStats() {
     const result = await this.hrRepo.getLeaveStats();
     return unwrapOrDefault(result, { byStatus: {}, byType: {}, currentlyOnLeave: 0 });
-    return result.data;
   }
 
   @Get('balance/:employeeId')
@@ -67,7 +70,10 @@ export class HrLeaveController {
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getLeaveById(@Param('id') id: string) {
     const result = await this.hrRepo.findLeaveById(id);
-    return (result.ok && result.data != null) ? result.data : { data: null };
+    if (!result.ok || result.data == null) {
+      throw new NotFoundException(`Ta'til so'rovi topilmadi: ${id}`);
+    }
+    return result.data;
   }
 
   @Post()
@@ -122,5 +128,18 @@ export class HrLeaveController {
   async cancelLeave(@Param('id') leaveId: string, @CurrentUser() user: AuthenticatedUser) {
     const userId = String(user.id);
     return unwrapOrThrow(await this.commandBus.execute(new CancelLeaveCommand(leaveId, userId)));
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async deleteLeave(@Param('id') id: string) {
+    const check = await this.hrRepo.findLeaveById(id);
+    if (!check.ok || check.data == null) {
+      throw new NotFoundException(`Ta'til so'rovi topilmadi: ${id}`);
+    }
+    const result = await this.hrRepo.updateLeave(id, { status: 'deleted', deleted_at: new Date().toISOString() });
+    if (!result.ok) throw new NotFoundException(`Ta'til so'rovini o'chirib bo'lmadi: ${id}`);
+    return { deleted: true, id };
   }
 }

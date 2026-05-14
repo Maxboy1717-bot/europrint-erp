@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 export const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   created:     { label: "Yaratildi",    variant: "secondary" },
   released:    { label: "Chiqarildi",   variant: "default" },
@@ -27,8 +32,8 @@ export const DOWNTIME_REASONS = [
 ];
 
 export const PRIORITY_COLORS: Record<number, string> = {
-  1: "text-red-600 font-bold",
-  2: "text-orange-500 font-semibold",
+  1: "text-[var(--ep-red)] font-bold",
+  2: "text-[var(--ep-primary)] font-semibold",
   3: "text-muted-foreground",
   4: "text-muted-foreground",
   5: "text-muted-foreground",
@@ -86,7 +91,7 @@ export function getWeekRange(offset = 0) {
 }
 
 export function oeeColor(v: number) {
-  if (v >= 85) return "text-green-600 font-bold";
-  if (v >= 65) return "text-yellow-600 font-semibold";
-  return "text-red-600 font-semibold";
+  if (v >= 85) return "text-[var(--ep-green)] font-bold";
+  if (v >= 65) return "text-[var(--ep-yellow)] font-semibold";
+  return "text-[var(--ep-red)] font-semibold";
 }

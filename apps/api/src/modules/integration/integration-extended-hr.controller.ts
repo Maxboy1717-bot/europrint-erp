@@ -1,3 +1,8 @@
+/**
+ * @module integration-extended-hr.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller, Get, Param, Query,
   UseGuards, UseInterceptors,

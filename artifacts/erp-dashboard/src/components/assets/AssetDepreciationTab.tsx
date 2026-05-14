@@ -1,3 +1,8 @@
+/**
+ * @module AssetDepreciationTab
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,9 +33,9 @@ export function DepreciationTab({ assets, assetsLoading, handleDepreciateClick }
         </CardHeader>
         <CardContent>
           {assetsLoading ? (
-            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full" />)}</div>
+            <div className="space-y-2">{([...Array(5)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}</div>
           ) : (Array.isArray(assets) ? assets : []).filter(a => a.status === "active").length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               <Activity className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>{t("noActiveAssets")}</p>
             </div>
@@ -38,7 +43,7 @@ export function DepreciationTab({ assets, assetsLoading, handleDepreciateClick }
             <div className="border rounded-md overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
                     <TableHead>{t("colCode")}</TableHead>
                     <TableHead>{t("colName")}</TableHead>
                     <TableHead>{t("colMethod")}</TableHead>
@@ -62,7 +67,7 @@ export function DepreciationTab({ assets, assetsLoading, handleDepreciateClick }
                         <TableCell className="text-center">{asset.usefulLife || "-"}</TableCell>
                         <TableCell className="text-right">{formatCurrency(asset.purchaseValue)}</TableCell>
                         <TableCell className="text-right font-medium">{formatCurrency(asset.currentValue)}</TableCell>
-                        <TableCell className="text-right text-red-500">{formatCurrency(asset.accumulatedDepreciation)}</TableCell>
+                        <TableCell className="text-right text-[var(--ep-red)]">{formatCurrency(asset.accumulatedDepreciation)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">

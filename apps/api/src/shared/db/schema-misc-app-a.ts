@@ -1,3 +1,8 @@
+/**
+ * @module schema-misc-app-a
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, integer, text, boolean, timestamp, varchar, date, serial, customType,
 } from 'drizzle-orm/pg-core';
@@ -15,15 +20,13 @@ export const appUsers = stub(pgTable('users', {
   id: integer('id').primaryKey(),
   username: varchar('username'),
   email: varchar('email'),
-  full_name: text('full_name'),
+  first_name: varchar('first_name'),
+  last_name: varchar('last_name'),
   profile_image_url: text('profile_image_url'),
-  employee_id: varchar('employee_id'),
   phone: varchar('phone'),
-  status: varchar('status'),
-  deleted_at: timestamp('deleted_at'),
-  role: varchar('role'),
+  is_active: boolean('is_active'),
   department_id: integer('department_id'),
-  manager_id: integer('manager_id'),
+  position_id: integer('position_id'),
 }));
 
 export const hrEmployees = stub(pgTable('employees', {

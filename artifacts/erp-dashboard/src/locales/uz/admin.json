@@ -1,6 +1,6 @@
 {
   "title": "Administrator paneli",
-  "dashboard": "Admin Dashboard",
+  "dashboard": "Admin paneli",
   "users": "Foydalanuvchilar",
   "user": "Foydalanuvchi",
   "newUser": "Yangi foydalanuvchi",
@@ -78,5 +78,16 @@
   "healthCheck": "Tizim tekshiruvi",
   "version": "Versiya",
   "build": "Build",
-  "uptime": "Ishlash vaqti"
+  "uptime": "Ishlash vaqti",
+  "validate.stirFailed": "STIR xato",
+  "validate.cardFailed": "Karta xato",
+  "validate.valid": "To'g'ri",
+  "validate.invalid": "Noto'g'ri",
+  "validate.title": "Sarlavha",
+  "validate.description": "Tavsif",
+  "validate.stir": "stir",
+  "validate.stirLabel": "Stir Yorliq",
+  "validate.check": "check",
+  "validate.card": "card",
+  "validate.cardLabel": "Card Yorliq"
 }

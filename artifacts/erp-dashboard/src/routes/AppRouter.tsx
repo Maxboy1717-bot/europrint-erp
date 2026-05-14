@@ -1,3 +1,8 @@
+/**
+ * @module AppRouter
+ * @description Frontend route definition.
+ */
+
 import { Suspense, lazy } from "react";
 import { Route, useLocation, Redirect } from "wouter";
 import { PageLoader } from "@/components/PageLoader";
@@ -105,7 +110,7 @@ export function AppRouter() {
       <ModuleGroup roles={SALES_ROLES}        routes={SALES_ROUTES}        />
       <ModuleGroup roles={PRODUCTION_ROLES}   routes={PRODUCTION_ROUTES}   />
       <ModuleGroup roles={DIRECTOR_ROLES}     routes={DIRECTOR_ROUTES}     />
-      <ModuleGroup roles={IOT_ROLES}          routes={MES_ROUTES}          />
+      <ModuleGroup roles={PRODUCTION_ROLES}   routes={MES_ROUTES}          />
       <ModuleGroup roles={QC_ROLES}           routes={QC_ROUTES}           />
       <ModuleGroup roles={DESIGN_ROLES}       routes={DESIGN_ROUTES}       />
       <ModuleGroup roles={MRO_ROLES}          routes={MRO_ROUTES}          />
@@ -169,7 +174,7 @@ export function AppRouter() {
 
       {/* ── Order Workflow (Sprint 4) ── */}
       <Route path="/order-workflow">
-        <RoleRoute roles={['SUPER_ADMIN', 'DIRECTOR', 'SALES_MANAGER', 'FINANCE', 'PRODUCTION_MANAGER']}>
+        <RoleRoute roles={[...DIRECTOR_ROLES, ...SALES_ROLES, ...PRODUCTION_ROLES, ...FINANCE_ROLES]}>
           <ErrorBoundary><Suspense fallback={<PageLoader />}><OrderWorkflowPage /></Suspense></ErrorBoundary>
         </RoleRoute>
       </Route>

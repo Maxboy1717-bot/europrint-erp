@@ -1,3 +1,8 @@
+/**
+ * @module translations
+ * @description React UI component.
+ */
+
 import { Translations } from "./types";
 
 export const translations: Record<"uz" | "ru", Translations> = {
@@ -178,18 +183,18 @@ export const translations: Record<"uz" | "ru", Translations> = {
 };
 
 export const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
-  reserved: "bg-blue-500/20 text-blue-700 dark:text-blue-400",
-  partial: "bg-orange-500/20 text-orange-700 dark:text-orange-400",
-  insufficient: "bg-red-500/20 text-red-700 dark:text-red-400",
+  pending: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400",
+  reserved: "bg-blue-500/20 text-[var(--ep-blue)] dark:text-blue-400",
+  partial: "bg-orange-500/20 text-[var(--ep-primary)] dark:text-orange-400",
+  insufficient: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
   cancelled: "bg-muted text-muted-foreground",
-  available: "bg-green-500/20 text-green-700 dark:text-green-400",
+  available: "bg-green-500/20 text-[var(--ep-green)] dark:text-green-400",
   depleted: "bg-muted text-muted-foreground",
-  expired: "bg-red-500/20 text-red-700 dark:text-red-400",
+  expired: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
 };
 
 export const GRADE_COLORS: Record<string, string> = {
-  A: "bg-green-500/20 text-green-700 dark:text-green-400",
-  B: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
-  C: "bg-red-500/20 text-red-700 dark:text-red-400",
+  A: "bg-green-500/20 text-[var(--ep-green)] dark:text-green-400",
+  B: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400",
+  C: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
 };

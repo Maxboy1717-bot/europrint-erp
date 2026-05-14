@@ -1,3 +1,8 @@
+/**
+ * @module finance-accounting.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { FinanceAccountingController } from '../src/modules/finance/presentation/finance-accounting.controller';
 import { FinancePayrollController } from '../src/modules/finance/presentation/finance-payroll.controller';

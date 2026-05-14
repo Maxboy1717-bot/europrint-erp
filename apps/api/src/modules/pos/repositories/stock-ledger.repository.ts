@@ -1,3 +1,8 @@
+/**
+ * @module stock-ledger.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db, eq, sql, desc, and, lte, isNotNull, inArray } from '@workspace/db';
@@ -12,7 +17,7 @@ type StockSummary = { materialCardId: number; warehouseId: string; balance: numb
 /** Deduplicate rows keeping the first occurrence (assumes DESC order by ts). */
 function dedupByKey<T>(rows: T[], keyFn: (r: T) => string): T[] {
   const seen = new Set<string>();
-  return (rows ?? []).filter(r => {
+  return (Array.isArray(rows) ? rows : []).filter(r => {
     const k = keyFn(r);
     if (seen.has(k)) return false;
     seen.add(k);
@@ -114,7 +119,7 @@ export class StockLedgerRepository {
         .orderBy(stockLedger.materialCardId, stockLedger.warehouseId, desc(stockLedger.ts));
 
       const distinct = dedupByKey(rows, r => `${r.materialCardId}:${r.warehouseId}`);
-      return Ok((distinct ?? []).map(r => ({
+      return Ok((Array.isArray(distinct) ? distinct : []).map(r => ({
         materialCardId: r.materialCardId,
         warehouseId:    r.warehouseId,
         balance:        Number(r.balanceAfter ?? 0),
@@ -148,7 +153,7 @@ export class StockLedgerRepository {
         .orderBy(stockLedger.materialCardId, stockLedger.warehouseId, desc(stockLedger.ts));
 
       const distinct = dedupByKey(rows, r => `${r.materialCardId}:${r.warehouseId}`);
-      return Ok((distinct ?? []).map(r => ({
+      return Ok((Array.isArray(distinct) ? distinct : []).map(r => ({
         materialCardId: r.materialCardId,
         warehouseId:    r.warehouseId,
         balance:        Number(r.balanceAfter ?? 0),

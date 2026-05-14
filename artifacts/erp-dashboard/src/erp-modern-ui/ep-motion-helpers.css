@@ -1,0 +1,506 @@
+/**
+ * EuroPrint ERP — Motion · Helpers · Module Tokens
+ *
+ * This file completes the "EP Linear Soft" design system that lives next to it.
+ * The neighbouring europrint-mockup-theme.css already defines the brand colours
+ * and maps them to shadcn HSL tokens. THIS file adds the missing pieces:
+ *
+ *   1. Module hue tokens (--mod-sd, --mod-pp, --mod-hr, --mod-warehouse, --mod-fi)
+ *   2. Status soft-tint helpers (--ep-green-soft, --ep-yellow-soft, …)
+ *   3. The full 4px spacing scale (--space-1 … --space-20)
+ *   4. The radius scale (--r-xs … --r-3xl, --r-pill)
+ *   5. The Linear-style shadow scale (--sh-2xs … --sh-2xl, --sh-primary)
+ *   6. Motion tokens — easings and durations
+ *   7. Global ep-* keyframes (ep-fade-up, ep-pulse, ep-shimmer, etc.)
+ *   8. Semantic typography helpers (.ep-h1, .ep-eyebrow, .ep-kpi-value, …)
+ *   9. Reusable utility classes (.ep-card, .ep-pill, .ep-icon-tile, …)
+ *
+ * Imported by src/index.css AFTER europrint-mockup-theme.css.
+ *
+ * Reference: ~/Downloads/EuroPrint Design System/colors_and_type.css
+ */
+
+:root {
+  /* ─── Module hues ──────────────────────────────────────────────────────── */
+  --mod-sd:              #3563AC;
+  --mod-sd-light:        #EAF0FA;
+  --mod-pp:              #2E8A5A;
+  --mod-pp-light:        #E6F4EC;
+  --mod-hr:              #7A4FB1;
+  --mod-hr-light:        #F1EBF7;
+  --mod-warehouse:       #B5891C;
+  --mod-warehouse-light: #F8F1DD;
+  --mod-fi:              #1A8FAF;
+  --mod-fi-light:        #DDEFF4;
+
+  /* ─── Status soft tints ────────────────────────────────────────────────── */
+  --ep-green-soft:  rgba(46, 138, 90, 0.12);
+  --ep-yellow-soft: rgba(181, 137, 28, 0.15);
+  --ep-red-soft:    rgba(192, 67, 47, 0.10);
+  --ep-blue-soft:   rgba(53, 99, 172, 0.10);
+  --ep-purple-soft: rgba(122, 79, 177, 0.10);
+  --ep-cyan-soft:   rgba(26, 143, 175, 0.10);
+  --ep-pink-soft:   rgba(196, 92, 122, 0.12);
+
+  /* ─── Spacing (4px base) ───────────────────────────────────────────────── */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  14px;   /* card inner */
+  --space-5:  16px;
+  --space-6:  20px;   /* page padding */
+  --space-7:  24px;   /* page padding lg */
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 56px;
+  --space-16: 80px;
+  --space-20: 96px;
+
+  /* ─── Radius (conservative, never pill except chips & avatars) ────────── */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   8px;     /* buttons, inputs */
+  --r-lg:   10px;    /* cards, modals — DEFAULT for cards */
+  --r-xl:   12px;
+  --r-2xl:  16px;
+  --r-3xl:  24px;
+  --r-pill: 9999px;
+
+  /* ─── Shadows (Linear-style, very soft) ────────────────────────────────── */
+  --sh-2xs: 0 1px 2px  rgba(15, 17, 21, .04);
+  --sh-xs:  0 1px 3px  rgba(15, 17, 21, .06);
+  --sh-sm:  0 2px 6px  rgba(15, 17, 21, .06), 0 1px 2px rgba(15, 17, 21, .04);
+  --sh-md:  0 4px 12px rgba(15, 17, 21, .07), 0 2px 4px rgba(15, 17, 21, .04);
+  --sh-lg:  0 8px 20px rgba(15, 17, 21, .08), 0 3px 6px rgba(15, 17, 21, .04);
+  --sh-xl:  0 16px 32px rgba(15, 17, 21, .09), 0 6px 12px rgba(15, 17, 21, .04);
+  --sh-2xl: 0 24px 48px rgba(15, 17, 21, .10);
+
+  /* Brand-tinted shadow for primary CTAs (sells the orange) */
+  --sh-primary: 0 4px 14px rgba(255, 144, 47, .30);
+
+  /* ─── Motion: easings ──────────────────────────────────────────────────── */
+  --ease-out-quart: cubic-bezier(.25, 1, .5, 1);     /* snappy out — hover transforms */
+  --ease-out-back:  cubic-bezier(.34, 1.56, .64, 1); /* subtle overshoot — icon scale/rotate */
+  --ease-in-out:    cubic-bezier(.65, 0, .35, 1);    /* balanced loops */
+  --ease-out-soft:  cubic-bezier(.2, .8, .2, 1);     /* gentle — bar growth */
+
+  /* ─── Motion: durations ────────────────────────────────────────────────── */
+  --d-fast:  .18s;
+  --d:       .28s;
+  --d-slow:  .48s;
+  --d-xslow: .9s;
+
+  /* ─── Layout ───────────────────────────────────────────────────────────── */
+  --topbar-h:            56px;
+  --topbar-h-lg:         60px;
+  --sidebar-w:           260px;
+  --sidebar-w-collapsed: 72px;
+  --site-nav-h:          64px;
+}
+
+/* Dark-mode shadow adjustments */
+.dark,
+[data-theme="dark"] {
+  --sh-2xs: 0 1px 2px  rgba(0, 0, 0, .40);
+  --sh-xs:  0 1px 3px  rgba(0, 0, 0, .48);
+  --sh-sm:  0 2px 6px  rgba(0, 0, 0, .44), 0 1px 2px rgba(0, 0, 0, .32);
+  --sh-md:  0 4px 12px rgba(0, 0, 0, .48), 0 2px 4px rgba(0, 0, 0, .28);
+  --sh-lg:  0 8px 20px rgba(0, 0, 0, .52), 0 3px 6px rgba(0, 0, 0, .28);
+  --sh-xl:  0 16px 32px rgba(0, 0, 0, .55), 0 6px 12px rgba(0, 0, 0, .28);
+}
+
+/* ============================================================================
+   KEYFRAMES — `ep-*` namespace, available system-wide
+   ============================================================================ */
+
+@keyframes ep-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes ep-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1;   }
+  50%      { transform: scale(1.25); opacity: .55; }
+}
+
+@keyframes ep-breathe {
+  0%, 100% { opacity: .55; transform: scale(1);    }
+  50%      { opacity: 1;   transform: scale(1.06); }
+}
+
+@keyframes ep-drift-a {
+  0%, 100% { transform: translate(0, 0)         scale(1);    }
+  50%      { transform: translate(30px, -40px)  scale(1.08); }
+}
+
+@keyframes ep-drift-b {
+  0%, 100% { transform: translate(0, 0)         scale(1);    }
+  50%      { transform: translate(-30px, 30px)  scale(0.92); }
+}
+
+@keyframes ep-shimmer {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(220%)  skewX(-18deg); }
+}
+
+@keyframes ep-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes ep-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ep-scale-in {
+  from { opacity: 0; transform: scale(.92); }
+  to   { opacity: 1; transform: scale(1);   }
+}
+
+@keyframes ep-rotate-slow {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ep-gradient-shift {
+  0%, 100% { background-position: 0% 50%;   }
+  50%      { background-position: 100% 50%; }
+}
+
+@keyframes ep-bar-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+/* Reduced-motion respect — required by design system */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ============================================================================
+   SEMANTIC TYPOGRAPHY HELPERS
+   ============================================================================ */
+
+.ep-display {
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.ep-h1 {
+  font-weight: 600;
+  font-size: 20px;      /* dashboard page title */
+  line-height: 1.3;
+  margin: 0;
+}
+
+.ep-h1-marketing {
+  font-weight: 700;
+  font-size: clamp(32px, 4.5vw, 48px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.ep-h2 {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.ep-h3 {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.ep-card-title {
+  font-weight: 600;
+  font-size: 14px;     /* card header */
+  margin: 0;
+}
+
+.ep-body {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ep-muted {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+
+.ep-eyebrow {           /* UPPERCASE section label, sidebar group, table header */
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.ep-caption {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+}
+
+.ep-label {             /* form labels */
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ep-kpi-value {         /* big stat numbers */
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ep-mono {
+  font-family: var(--font-mono, 'JetBrains Mono', 'SF Mono', ui-monospace, monospace);
+  font-size: 12px;
+}
+
+/* ============================================================================
+   REUSABLE UTILITY CLASSES
+   ============================================================================ */
+
+/* Canonical card — 10px radius, warm border, white bg, soft shadow on hover */
+.ep-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--r-lg);
+  padding: 18px;
+  transition: transform var(--d) var(--ease-out-quart),
+              box-shadow  var(--d) var(--ease-out-quart),
+              border-color var(--d) var(--ease-out-quart);
+}
+
+.ep-card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sh-md);
+  border-color: var(--ep-primary);
+}
+
+.ep-card-interactive:hover .ep-icon-tile {
+  transform: rotate(-6deg) scale(1.08);
+}
+
+/* 42px round icon tile used on KPI cards */
+.ep-icon-tile {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: transform var(--d) var(--ease-out-back);
+  flex-shrink: 0;
+}
+
+/* Status pill — colored dot + soft tint background + colored text */
+.ep-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.ep-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: currentColor;
+}
+
+.ep-pill--success { background: var(--ep-green-soft);  color: var(--ep-green);  }
+.ep-pill--warning { background: var(--ep-yellow-soft); color: var(--ep-yellow); }
+.ep-pill--danger  { background: var(--ep-red-soft);    color: var(--ep-red);    }
+.ep-pill--info    { background: var(--ep-blue-soft);   color: var(--ep-blue);   }
+.ep-pill--brand   { background: var(--ep-primary-soft); color: var(--ep-primary); }
+
+/* Live status dot — animated pulse */
+.ep-live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--ep-green);
+  animation: ep-pulse 1.5s var(--ease-in-out) infinite;
+}
+
+/* Primary CTA with shimmer sweep on hover */
+.ep-btn-primary-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.ep-btn-primary-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  width: 50%;
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+}
+
+.ep-btn-primary-shimmer:hover::after {
+  animation: ep-shimmer 1s var(--ease-out-quart) forwards;
+}
+
+/* Entrance helpers — apply animation-delay inline for stagger */
+.ep-fade-up   { animation: ep-fade-up   var(--d-slow) var(--ease-out-soft) backwards; }
+.ep-fade-in   { animation: ep-fade-in   var(--d)      var(--ease-out-quart) backwards; }
+.ep-scale-in  { animation: ep-scale-in  var(--d-slow) var(--ease-out-back) backwards; }
+
+/* Continuous loops */
+.ep-float    { animation: ep-float    6s var(--ease-in-out) infinite; }
+.ep-breathe  { animation: ep-breathe  2.4s var(--ease-in-out) infinite; }
+.ep-spin     { animation: ep-rotate-slow 1.6s linear infinite; }
+
+/* Gradient-shift accent — for one orange word inside marketing headlines */
+.ep-gradient-accent {
+  background: linear-gradient(
+    90deg,
+    var(--ep-primary) 0%,
+    #FFA85A 50%,
+    var(--ep-primary) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ep-gradient-shift 6s var(--ease-in-out) infinite;
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE — Tables, Dialogs, Containers
+   ============================================================================
+   The EuroPrint design system breakpoint is `lg: 1024px`. Below that:
+   - tables become horizontally scrollable inside their card frame
+   - dialogs full-screen on the smallest screens
+   - action toolbars wrap and collapse to vertical
+   ============================================================================ */
+
+/* Tables wrapped in EPCard scroll horizontally instead of overflowing the card */
+.ep-card > table,
+.ep-card > .table-wrapper > table {
+  width: 100%;
+}
+
+/* Wrapping all shadcn <Table> in an overflow container on mobile.
+   Apply this via a wrapper div: <div className="ep-table-scroll"><Table>...</Table></div> */
+.ep-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.ep-table-scroll table {
+  min-width: 100%;
+}
+
+@media (max-width: 640px) {
+  /* Tighter card padding on mobile */
+  .ep-card {
+    padding: 14px;
+  }
+  /* KPI icon tile shrinks slightly on mobile to leave room for value */
+  .ep-icon-tile {
+    width: 36px;
+    height: 36px;
+  }
+  /* KPI value font shrinks on phone to keep numbers from clipping */
+  .ep-kpi-value {
+    font-size: 22px;
+  }
+  /* Page title smaller on mobile */
+  .ep-h1 {
+    font-size: 18px;
+  }
+}
+
+/* Dialog: prevent edge-bleeding on small screens (shadcn handles most, but
+   we add a touch of margin) */
+@media (max-width: 480px) {
+  [data-radix-dialog-content],
+  [role="dialog"] {
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px;
+  }
+}
+
+/* Sticky-on-mobile primary action footer for forms (apply via className) */
+.ep-mobile-sticky-actions {
+  position: sticky;
+  bottom: 0;
+  background: hsl(var(--background));
+  border-top: 1px solid hsl(var(--border));
+  padding: 12px 0;
+  margin: 0 -16px -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  z-index: 10;
+}
+
+@media (min-width: 768px) {
+  .ep-mobile-sticky-actions {
+    position: static;
+    background: transparent;
+    border-top: 0;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+/* Touch-optimized hit targets (min 44×44 per WCAG) on mobile */
+@media (max-width: 640px) {
+  .ep-touch-target,
+  button.ep-touch-target,
+  a.ep-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Global: every shadcn <Table> sits inside a <div class="relative w-full overflow-auto">
+   already. We just need to make sure on mobile the parent containers don't
+   constrain it. Add minimum table width + horizontal scroll for narrow viewports. */
+@media (max-width: 768px) {
+  /* shadcn Table wrapper auto-overflows; ensure min-width so columns don't squish */
+  div[class*="overflow-auto"] > table {
+    min-width: 640px;
+  }
+}
+
+/* Compact dense tables on mobile */
+@media (max-width: 640px) {
+  th, td {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  /* Smaller font in cells */
+  td {
+    font-size: 12px;
+  }
+}

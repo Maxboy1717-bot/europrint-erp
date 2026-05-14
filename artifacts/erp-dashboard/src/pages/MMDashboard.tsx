@@ -1,8 +1,12 @@
+/**
+ * @module MMDashboard
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard, StatsCardSkeleton } from "@/components/ui/stats-card";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
 import { Progress } from "@/components/ui/progress";
 import {
   Package,
@@ -18,9 +22,10 @@ import {
   PackageX,
   Loader2,
 } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "wouter";
-import { ErrorState } from "@/components/ui/error-state";
+import {
+  EPPageHeader, EPErrorState, EPEmptyState, EPSkeletonKpiRow,
+} from "@/components/ep";
 
 interface Material {
   id: string;
@@ -71,28 +76,26 @@ export default function MMDashboard() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" data-testid="loading-spinner">
-        <PageHeader title="Materiallar" boldWord="Boshqaruvi" subtitle="Materiallar va zaxiralarni boshqaring" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {([1,2,3,4]).map(i => <div key={`k-${i}`} className="h-28 rounded-xl bg-surface-container-lowest animate-pulse" />)}
-        </div>
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="loading-spinner">
+        <EPPageHeader
+          breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
+          title="Materiallar boshqaruvi"
+          subtitle="Materiallar va zaxiralarni boshqaring"
+        />
+        <EPSkeletonKpiRow count={4} />
       </div>
     );
   }
 
-
-  if (isError) {
+  if (isError || error) {
     return (
-      <div className="flex-1 overflow-auto bg-surface p-6">
-        <ErrorState onRetry={refetch} />
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="error-state">
-        <AlertTriangle className="h-8 w-8 text-error" />
-        <p className="text-on-surface-variant">Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+      <div className="flex flex-col p-5 lg:p-6 gap-5">
+        <EPPageHeader
+          breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
+          title="Materiallar boshqaruvi"
+          subtitle="Materiallar va zaxiralarni boshqaring"
+        />
+        <EPErrorState onRetry={refetch} />
       </div>
     );
   }
@@ -153,24 +156,35 @@ export default function MMDashboard() {
 
   if (materials.length === 0 && vendors.length === 0 && purchaseOrders.length === 0) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Materiallar" boldWord="Boshqaruvi" subtitle="Materiallar va zaxiralarni boshqaring" data-testid="text-mm-dashboard-title" />
-        <div className="bg-surface-container-lowest rounded-xl p-6">
-          <EmptyState
-            icon={PackageX}
-            title="Materiallar topilmadi"
-            description="Hozircha hech qanday material mavjud emas. Ombor sahifasiga o'tib yangi materiallar qo'shing."
-          />
-        </div>
+      <div className="flex flex-col p-5 lg:p-6 gap-5">
+        <EPPageHeader
+          breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
+          title="Materiallar boshqaruvi"
+          subtitle="Materiallar va zaxiralarni boshqaring"
+          data-testid="text-mm-dashboard-title"
+        />
+        <EPEmptyState
+          icon={PackageX}
+          title="Hali material yo'q"
+          description="Birinchi materialni qo'shing — ombor sahifasiga o'ting va materiallar ro'yxatini boshlang."
+          action={
+            <Link href="/warehouse-management">
+              <Button className="ep-btn-primary-shimmer gap-1.5">
+                <Plus className="h-4 w-4" />
+                Yangi material qo'shish
+              </Button>
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Materiallar"
-        boldWord="Boshqaruvi"
+    <div className="flex flex-col p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
+        title="Materiallar boshqaruvi"
         subtitle="Materiallar va zaxiralarni boshqaring"
         data-testid="text-mm-dashboard-title"
       />
@@ -178,20 +192,20 @@ export default function MMDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {(Array.isArray(statCards) ? statCards : []).map((stat) => (
           <Link key={stat.title} href={stat.href}>
-            <div className="bg-surface-container-lowest rounded-lg p-5 hover-elevate transition-all" data-testid={`card-stat-${stat.title.toLowerCase().replace(/\s/g, "-")}`}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">{stat.title}</p>
-              <p className="text-4xl font-bold tracking-tight text-on-surface">{stat.value}</p>
-              <p className={`text-xs mt-2 font-medium ${stat.title === "Kam Zaxira" ? "text-error" : "text-primary"}`}>{stat.change}</p>
+            <div className="bg-card rounded-lg p-5 hover-elevate transition-all" data-testid={`card-stat-${stat.title.toLowerCase().replace(/\s/g, "-")}`}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{stat.title}</p>
+              <p className="text-4xl font-bold tracking-tight text-foreground">{stat.value}</p>
+              <p className={`text-xs mt-2 font-medium ${stat.title === "Kam Zaxira" ? "text-[var(--ep-red)]" : "text-primary"}`}>{stat.change}</p>
             </div>
           </Link>
         ))}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="bg-surface-container-lowest border-none rounded-xl">
+        <Card className="bg-card border-none rounded-xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
-              <ArrowDownRight className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <ArrowDownRight className="h-4 w-4 text-primary" />
               Oxirgi Kirimlar
             </CardTitle>
           </CardHeader>
@@ -200,11 +214,11 @@ export default function MMDashboard() {
               {(Array.isArray(recentInbound) ? recentInbound : []).map((tx: Transaction) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/40 transition-colors"
                 >
                   <div>
-                    <p className="text-sm font-medium text-on-surface">{tx.materialName || tx.notes}</p>
-                    <p className="text-[11px] text-on-surface-variant">
+                    <p className="text-sm font-medium text-foreground">{tx.materialName || tx.notes}</p>
+                    <p className="text-[11px] text-muted-foreground">
                       {new Date((tx.date || tx.createdAt)!).toLocaleDateString("uz-UZ")}
                     </p>
                   </div>
@@ -214,7 +228,7 @@ export default function MMDashboard() {
                 </div>
               ))}
               {recentInbound.length === 0 && (
-                <p className="text-center text-on-surface-variant py-4">
+                <p className="text-center text-muted-foreground py-4">
                   Kirimlar mavjud emas
                 </p>
               )}
@@ -222,10 +236,10 @@ export default function MMDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-container-lowest border-none rounded-xl">
+        <Card className="bg-card border-none rounded-xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
-              <ArrowUpRight className="h-5 w-5 text-error" />
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <ArrowUpRight className="h-5 w-5 text-[var(--ep-red)]" />
               Oxirgi Chiqimlar
             </CardTitle>
           </CardHeader>
@@ -234,21 +248,21 @@ export default function MMDashboard() {
               {(Array.isArray(recentOutbound) ? recentOutbound : []).map((tx: Transaction) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/40 transition-colors"
                 >
                   <div>
-                    <p className="text-sm font-medium text-on-surface">{tx.materialName || tx.notes}</p>
-                    <p className="text-[11px] text-on-surface-variant">
+                    <p className="text-sm font-medium text-foreground">{tx.materialName || tx.notes}</p>
+                    <p className="text-[11px] text-muted-foreground">
                       {new Date((tx.date || tx.createdAt)!).toLocaleDateString("uz-UZ")}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-error">-{tx.quantity} {tx.unit || "dona"}</p>
+                    <p className="text-sm font-bold text-[var(--ep-red)]">-{tx.quantity} {tx.unit || "dona"}</p>
                   </div>
                 </div>
               ))}
               {recentOutbound.length === 0 && (
-                <p className="text-center text-on-surface-variant py-4">
+                <p className="text-center text-muted-foreground py-4">
                   Chiqimlar mavjud emas
                 </p>
               )}
@@ -258,9 +272,9 @@ export default function MMDashboard() {
       </div>
 
       {lowStockMaterials > 0 && (
-        <Card className="bg-error-container/20 border-l-4 border-error rounded-none">
+        <Card className="bg-[var(--ep-red)]/10/20 border-l-4 border-error rounded-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-error text-sm font-bold">
+            <CardTitle className="flex items-center gap-2 text-[var(--ep-red)] text-sm font-bold">
               <AlertTriangle className="h-5 w-5" />
               Kam Zaxiradagi Materiallar ({lowStockMaterials})
             </CardTitle>
@@ -272,16 +286,16 @@ export default function MMDashboard() {
                 .map((m: Material) => (
                   <div
                     key={m.id}
-                    className="p-3 rounded-lg bg-surface-container-lowest shadow-sm"
+                    className="p-3 rounded-lg bg-card shadow-sm"
                   >
-                    <p className="text-sm font-medium text-on-surface">{m.name}</p>
+                    <p className="text-sm font-medium text-foreground">{m.name}</p>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-on-surface-variant">
+                      <span className="text-xs text-muted-foreground">
                         {m.quantity} / {m.minStock || 0}
                       </span>
                       <Progress
                         value={(m.quantity / (m.minStock || 1)) * 100}
-                        className="w-20 h-1.5 bg-surface-container"
+                        className="w-20 h-1.5 bg-muted/60"
                       />
                     </div>
                   </div>
@@ -291,9 +305,9 @@ export default function MMDashboard() {
         </Card>
       )}
 
-      <Card className="bg-surface-container-lowest border-none rounded-xl">
+      <Card className="bg-card border-none rounded-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <TrendingUp className="h-5 w-5 text-primary" />
             Tezkor Harakatlar
           </CardTitle>
@@ -304,12 +318,12 @@ export default function MMDashboard() {
               <Button
                 key={action.title}
                 variant="outline"
-                className="bg-surface-container text-on-surface rounded-lg px-4 py-2 text-sm font-medium hover:bg-surface-container-high border-none justify-start h-auto p-4"
+                className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none justify-start h-auto p-4"
                 asChild
                 data-testid={`button-quick-${action.title.toLowerCase().replace(/\s/g, "-")}`}
               >
                 <Link href={action.href}>
-                  <action.icon className="h-5 w-5 mr-3 text-primary" />
+                  <action.icon className="h-4 w-4 mr-3 text-primary" />
                   <span>{action.title}</span>
                 </Link>
               </Button>

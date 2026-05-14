@@ -1,3 +1,8 @@
+/**
+ * @module position-permissions.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RbacCacheService } from '@common/cache/rbac-cache.service';
@@ -69,8 +74,8 @@ export class PositionPermissionsService {
       const allPerms = permResult.data;
       const safePositions = Array.isArray(allPositions) ? allPositions : [];
       const safePerms = Array.isArray(allPerms) ? allPerms : [];
-      return (safePositions ?? []).map((pos) => {
-        const posPerms = (safePerms ?? []).filter((p) => p.positionId === pos.id);
+      return (Array.isArray(safePositions) ? safePositions : []).map((pos) => {
+        const posPerms = (Array.isArray(safePerms) ? safePerms : []).filter((p) => p.positionId === pos.id);
         const permissions: Record<string, string> = {};
         for (const p of posPerms) { permissions[String(p.moduleCode)] = String(p.accessLevel); }
         return { ...pos, permissions };
@@ -85,7 +90,7 @@ export class PositionPermissionsService {
       if (!existResult.ok) throw new Error(String(existResult.error));
       const existing = existResult.data;
       const safeExisting = Array.isArray(existing) ? existing : [];
-      const found = (safeExisting ?? []).find((p) => p.moduleCode === moduleCode);
+      const found = (Array.isArray(safeExisting) ? safeExisting : []).find((p) => p.moduleCode === moduleCode);
       let result;
       if (found) {
         const r = await this.repo.updatePermission(found.id, accessLevel);

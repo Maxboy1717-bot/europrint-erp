@@ -1,6 +1,11 @@
+/**
+ * @module hr-performance-core
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, Position, admins, departments, positions, users } from "./core-schema";
@@ -12,7 +17,7 @@ import { adaptationPrograms } from "./hr-personal";
 export const adaptationRecords = pgTable("adaptation_records", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  programId: varchar("program_id").references(() => adaptationPrograms.id),
+  programId: varchar("program_id").references(() => adaptationPrograms.id, { onDelete: "set null" }),
   mentorId: varchar("mentor_id").references(() => users.id, { onDelete: 'set null' }),
   startDate: varchar("start_date", { length: 10 }).notNull(),
   endDate: varchar("end_date", { length: 10 }),
@@ -21,11 +26,15 @@ export const adaptationRecords = pgTable("adaptation_records", {
   tasksCompleted: integer("tasks_completed").notNull().default(0),
   currentPhase: varchar("current_phase", { length: 50 }),
   notes: text("notes"),
-  createdBy: varchar("created_by").references(() => admins.id),
+  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("adaptation_records_v2_status_chk", sql`${t.status} IN ('active','completed','cancelled')`),
+  check("adaptation_records_v2_progress_chk", sql`${t.progress} >= 0 AND ${t.progress} <= 100`),
+  check("adaptation_records_v2_tasks_chk", sql`${t.tasksCompleted} >= 0`),
+]);
 
 export const newEmployees = adaptationRecords;
 
@@ -49,7 +58,7 @@ export const adaptationFeedback = pgTable("adaptation_feedback", {
   feedbackType: varchar("feedback_type", { length: 20 }).notNull(), // week1, month1, month3, final
   scheduledDate: varchar("scheduled_date", { length: 10 }).notNull(), // YYYY-MM-DD
   completedDate: varchar("completed_date", { length: 10 }), // YYYY-MM-DD
-  conductedBy: varchar("conducted_by").references(() => admins.id), // Kim o'tkazdi
+  conductedBy: varchar("conducted_by").references(() => admins.id, { onDelete: "set null" }), // Kim o'tkazdi
   rating: integer("rating"), // 1-5 ball
   satisfactionLevel: varchar("satisfaction_level", { length: 20 }), // very_low, low, medium, high, very_high
   strengths: text("strengths"), // Kuchli tomonlar
@@ -61,7 +70,12 @@ export const adaptationFeedback = pgTable("adaptation_feedback", {
   status: varchar("status", { length: 20 }).notNull().default("scheduled"), // scheduled, completed, cancelled
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("adaptation_feedback_type_chk", sql`${t.feedbackType} IN ('week1','month1','month3','final')`),
+  check("adaptation_feedback_status_chk", sql`${t.status} IN ('scheduled','completed','cancelled')`),
+  check("adaptation_feedback_rating_chk", sql`${t.rating} IS NULL OR (${t.rating} >= 1 AND ${t.rating} <= 5)`),
+  check("adaptation_feedback_sat_chk", sql`${t.satisfactionLevel} IS NULL OR ${t.satisfactionLevel} IN ('very_low','low','medium','high','very_high')`),
+]);
 
 
 export const insertAdaptationFeedbackSchema = createInsertSchema(adaptationFeedback, {
@@ -87,7 +101,7 @@ export type InsertAdaptationFeedback = z.infer<typeof insertAdaptationFeedbackSc
 export const employeeWorkCenters = pgTable("employee_work_centers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'set null' }),
-  workCenterId: varchar("work_center_id").notNull().references(() => workCenters.id),
+  workCenterId: varchar("work_center_id").notNull().references(() => workCenters.id, { onDelete: "cascade" }),
   isPrimary: boolean("is_primary").notNull().default(false), // Asosiy ish markazi
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -149,7 +163,11 @@ export const employeePerformanceMetrics = pgTable("employee_performance_metrics"
   overtimeMinutes: integer("overtime_minutes").notNull().default(0), // Ortiqcha ish vaqti
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("emp_perf_metrics_period_chk", sql`${t.periodType} IN ('daily','weekly','monthly')`),
+  check("emp_perf_metrics_work_min_chk", sql`${t.totalWorkMinutes} >= 0 AND ${t.plannedWorkMinutes} > 0`),
+  check("emp_perf_metrics_overtime_chk", sql`${t.overtimeMinutes} >= 0`),
+]);
 
 
 export const insertEmployeePerformanceMetricSchema = createInsertSchema(employeePerformanceMetrics, {

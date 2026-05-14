@@ -1,3 +1,8 @@
+/**
+ * @module approval.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { MAX_NOTES_LENGTH, MAX_SHORT_TEXT } from '@common/constants/app.constants';
 import { z } from 'zod';
 import { HitlDocumentType } from '../../domain/enums/hitl-document-type.enum';

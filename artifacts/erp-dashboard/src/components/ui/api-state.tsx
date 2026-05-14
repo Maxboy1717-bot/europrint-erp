@@ -1,3 +1,8 @@
+/**
+ * @module api-state
+ * @description React UI component.
+ */
+
 import { PageLoader } from "@/components/PageLoader";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/EmptyState";

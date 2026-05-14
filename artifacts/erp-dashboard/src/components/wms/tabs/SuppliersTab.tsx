@@ -1,3 +1,8 @@
+/**
+ * @module SuppliersTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney, fmtDate } from "@/components/wms/helpers";
 import type { SuppliersData } from "@/components/wms/wms-types";

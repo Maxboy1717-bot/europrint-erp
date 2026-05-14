@@ -1,3 +1,8 @@
+/**
+ * @module MicroLearningTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -31,15 +36,15 @@ export function MicroLearningTab() {
   });
 
   const viewMicro = useMutation({
-    mutationFn: (id: string) => apiRequest("PATCH", `/api/micro-modules/${id}/view`, {}),
+    mutationFn: (id: string) => apiRequest("POST", `/api/micro-modules/${id}/view`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/micro-modules"] }),
   });
 
   const stats = [
     { l: "Jami micro-modullar", v: microModules.length, c: "text-primary" },
-    { l: "Umumiy ko'rishlar", v: (Array.isArray(microModules) ? microModules : []).reduce((s: number, m: Record<string, unknown>) => s + Number(m.views ?? 0), 0), c: "text-blue-600" },
-    { l: "O'rtacha davomiylik", v: microModules.length > 0 ? `${Math.round((Array.isArray(microModules) ? microModules : []).reduce((s: number, m: Record<string, unknown>) => s + Number(m.duration_minutes ?? 3), 0) / microModules.length)} min` : "—", c: "text-green-600" },
-    { l: "Telegram yuborish", v: (Array.isArray(microModules) ? microModules : []).filter((m: Record<string, unknown>) => m.telegram_message).length + " ta", c: "text-purple-600" },
+    { l: "Umumiy ko'rishlar", v: (Array.isArray(microModules) ? microModules : []).reduce((s: number, m: Record<string, unknown>) => s + Number(m.views ?? 0), 0), c: "text-[var(--ep-blue)]" },
+    { l: "O'rtacha davomiylik", v: microModules.length > 0 ? `${Math.round((Array.isArray(microModules) ? microModules : []).reduce((s: number, m: Record<string, unknown>) => s + Number(m.duration_minutes ?? 3), 0) / microModules.length)} min` : "—", c: "text-[var(--ep-green)]" },
+    { l: "Telegram yuborish", v: (Array.isArray(microModules) ? microModules : []).filter((m: Record<string, unknown>) => m.telegram_message).length + " ta", c: "text-[var(--ep-purple)]" },
   ];
 
   return (
@@ -51,7 +56,7 @@ export function MicroLearningTab() {
           <Button size="sm" onClick={() => setShowMicroDialog(true)} data-testid="button-add-micro"><Plus className="h-4 w-4 mr-2" />Modul Qo'shish</Button>
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {(Array.isArray(stats) ? stats : []).map(s => (
           <Card key={s.l}><CardContent className="pt-4 pb-3">
             <div className={`text-2xl font-bold ${s.c}`}>{s.v}</div>
@@ -60,18 +65,18 @@ export function MicroLearningTab() {
         ))}
       </div>
       {microLoading ? (
-        <div className="grid grid-cols-2 gap-3">{([1,2,3,4]).map(i => <Card key={`k-${i}`}><CardContent className="pt-3 pb-3 h-16" /></Card>)}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{([1,2,3,4]).map(i => <Card key={`k-${i}`}><CardContent className="pt-3 pb-3 h-16" /></Card>)}</div>
       ) : microModules.length === 0 ? (
         <Card><CardContent className="py-10 text-center text-muted-foreground">
           <Zap className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>Hali micro-modullar yo'q. Yangi modul qo'shing.</p>
         </CardContent></Card>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(Array.isArray(microModules) ? microModules : []).map((m: Record<string, unknown>, i: number) => (
             <Card key={String(m.id ?? i)} data-testid={`card-micro-${String(m.id ?? i)}`}>
               <CardContent className="pt-3 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0"><Video className="h-5 w-5 text-primary" /></div>
+                  <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0"><Video className="h-4 w-4 text-primary" /></div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{String(m.title ?? "")}</div>
                     <div className="flex gap-2 mt-0.5 flex-wrap">
@@ -89,10 +94,10 @@ export function MicroLearningTab() {
       )}
       <Dialog open={showMicroDialog} onOpenChange={setShowMicroDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Yangi Micro-Modul</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Micro-Modul</DialogTitle></DialogHeader>
           <div className="space-y-3 py-1">
             <div><Label>Sarlavha</Label><Input data-testid="input-micro-title" value={microForm.title} onChange={e => setMicroForm(f => ({ ...f, title: e.target.value }))} placeholder="Modul nomi" /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Davomiyligi (min)</Label><Input data-testid="input-micro-duration" type="number" value={microForm.durationMinutes} onChange={e => setMicroForm(f => ({ ...f, durationMinutes: e.target.value }))} /></div>
               <div><Label>Kategoriya</Label><Input data-testid="input-micro-category" value={microForm.category} onChange={e => setMicroForm(f => ({ ...f, category: e.target.value }))} placeholder="Kategoriya" /></div>
             </div>

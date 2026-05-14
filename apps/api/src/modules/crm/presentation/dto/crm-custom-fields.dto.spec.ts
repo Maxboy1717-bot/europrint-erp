@@ -1,3 +1,8 @@
+/**
+ * @module crm-custom-fields.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import {
   CreateCustomFieldDtoSchema,
   ReorderCustomFieldsDtoSchema,

@@ -1,3 +1,8 @@
+/**
+ * @module i-user.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { UserAggregate } from '../aggregates/user.aggregate';
 
 export interface UserFilters {

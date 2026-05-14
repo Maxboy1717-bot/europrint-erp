@@ -1,6 +1,11 @@
+/**
+ * @module AIInsightsPanel
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,15 +28,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
   });
 
   const generateInsightMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch("/api/insights/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context, metrics }),
-      });
-      if (!res.ok) throw new Error("Failed to generate insights");
-      return res.json();
-    },
+    mutationFn: () => apiRequest('POST', '/api/insights/generate', { context, metrics }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/insights"] });
       toast({ title: "AI tahlil yaratildi" });
@@ -44,14 +41,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
   });
 
   const markAsReadMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/insights/${id}/read`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) throw new Error("Failed to mark as read");
-      return res.json();
-    },
+    mutationFn: (id: string) => apiRequest('PATCH', `/api/insights/${id}/read`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/insights"] });
     },
@@ -65,13 +55,13 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case "critical":
-        return <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />;
+        return <AlertTriangle className="h-5 w-5 text-[var(--ep-red)] dark:text-red-400" />;
       case "warning":
-        return <TrendingDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />;
+        return <TrendingDown className="h-5 w-5 text-[var(--ep-primary)] dark:text-orange-400" />;
       case "info":
-        return <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400" />;
+        return <Lightbulb className="h-5 w-5 text-[var(--ep-blue)] dark:text-blue-400" />;
       case "positive":
-        return <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />;
+        return <TrendingUp className="h-5 w-5 text-[var(--ep-green)] dark:text-green-400" />;
       default:
         return <Brain className="h-5 w-5 text-muted-foreground" />;
     }
@@ -95,13 +85,13 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "critical":
-        return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
+        return "bg-red-500/10 text-[var(--ep-red)] dark:text-red-400 border-red-500/20";
       case "warning":
-        return "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20";
+        return "bg-orange-500/10 text-[var(--ep-primary)] dark:text-orange-400 border-orange-500/20";
       case "info":
-        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+        return "bg-blue-500/10 text-[var(--ep-blue)] dark:text-blue-400 border-blue-500/20";
       case "positive":
-        return "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20";
+        return "bg-green-500/10 text-[var(--ep-green)] dark:text-green-400 border-green-500/20";
       default:
         return "bg-muted/50 text-muted-foreground border-border";
     }
@@ -137,7 +127,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {([1, 2, 3]).map((i) => (
-            <Skeleton key={`k-${i}`} className="h-24 w-full" />
+            <Skeleton key={`k-${i}`} className="h-24 w-full rounded-lg" />
           ))}
         </CardContent>
       </Card>

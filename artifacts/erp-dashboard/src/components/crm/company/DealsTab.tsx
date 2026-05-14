@@ -1,3 +1,8 @@
+/**
+ * @module DealsTab
+ * @description React UI component.
+ */
+
 import { DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,7 +28,7 @@ export function DealsTab({ deals }: DealsTabProps) {
           <p className="text-sm">Bitimlar yo'q</p>
         </div>
       ) : (
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nomi</TableHead>
@@ -33,7 +38,7 @@ export function DealsTab({ deals }: DealsTabProps) {
           </TableHeader>
           <TableBody>
             {(Array.isArray(deals) ? deals : []).map((deal) => (
-              <TableRow key={deal.id}>
+              <TableRow key={deal.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium text-sm">{deal.title}</TableCell>
                 <TableCell className="text-sm">
                   {deal.opportunity ? `${formatAmount(deal.opportunity)} UZS` : "—"}
@@ -44,7 +49,7 @@ export function DealsTab({ deals }: DealsTabProps) {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       )}
     </div>
   );

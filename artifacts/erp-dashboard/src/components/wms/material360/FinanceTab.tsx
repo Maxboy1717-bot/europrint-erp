@@ -1,3 +1,8 @@
+/**
+ * @module FinanceTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, ShoppingCart, Package, BarChart2 } from "lucide-react";
 import { KpiCard } from "./KpiCard";
@@ -6,7 +11,7 @@ import { fmtMoney, type FinanceInfo, type BasicInfo } from "./types";
 export function FinanceTab({ finance, basic }: { finance: FinanceInfo; basic: BasicInfo }) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard icon={DollarSign} label="Joriy o'rt. narx" value={fmtMoney(finance.currentAvgPrice, finance.currency)} sub={`/${basic.unitOfMeasure}`} />
         <KpiCard icon={ShoppingCart} label="Oxirgi xarid narxi" value={fmtMoney(finance.lastPurchasePrice, finance.currency)} sub={`/${basic.unitOfMeasure}`} />
         <KpiCard icon={Package} label="Ombor qiymati" value={fmtMoney(finance.currentStockValue, finance.currency)} color="text-primary" />

@@ -1,3 +1,8 @@
+/**
+ * @module status-machines.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 // §12 - 25 ob'ekt status mashinalari
 
 // Sales Order - 20+ holat
@@ -27,6 +32,7 @@ export const SO_TRANSITIONS: Record<string, string[]> = {
   fully_paid: ['closed'],
   closed: [],
   cancelled: [],
+  on_hold: ['confirmed', 'cancelled'],
 }
 
 // Lead - 10 holat

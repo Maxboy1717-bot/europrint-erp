@@ -1,3 +1,8 @@
+/**
+ * @module ai-automation-events.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 /**
@@ -9,17 +14,13 @@ const _time = new TashkentTimeService();
 
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
+import { SYSTEM_USER_ID } from '@common/constants/app.constants';
 import { OnEvent } from '@nestjs/event-emitter';
-import { hrCandidateFunnels } from '@europrint/schemas';
-import { db } from '@shared/db';
-import { eq } from 'drizzle-orm';
 
 import { HrAiService } from './hr-ai.service';
 import { CrmAiService } from './crm-ai.service';
 import { FinanceAiAnalysisService } from './finance-ai-analysis.service';
 import { AiAutomationRepository } from './ai-automation.repository';
-
-const SYSTEM_USER_ID = 1;
 
 @Injectable()
 export class AiAutomationEventsService {
@@ -50,15 +51,11 @@ export class AiAutomationEventsService {
       const screenR = await this.hrAi.screenCandidate(event.candidateId, event.userId);
       if (!screenR.ok) return;
       const result = screenR.data as { score: number; recommendation: string; aiNotes: string; productivityCategory: string };
-      await db
-        .update(hrCandidateFunnels)
-        .set({
-          screeningScore: String(result.score),
-          initialScreeningNotes: `[AI Real-time] ${result.recommendation} | ${result.aiNotes.substring(0, 150)}`,
-          productivityCategory: result.productivityCategory as string,
-          updatedAt: _time.now(),
-        })
-        .where(eq(hrCandidateFunnels.id, event.funnelId));
+      await this.automationRepo.updateCandidateFunnelScreening(event.funnelId, {
+        screeningScore:        String(result.score),
+        initialScreeningNotes: `[AI Real-time] ${result.recommendation} | ${result.aiNotes.substring(0, 150)}`,
+        productivityCategory:  result.productivityCategory as string,
+      });
       this.logger.debug(`[AI-EVENT] Nomzod #${event.candidateId} real-time skrining: ${result.score}/100`);
     } catch (err) {
       this.logger.warn(`[AI-EVENT] onCandidateAdded xatosi: ${(err as Error).message}`);

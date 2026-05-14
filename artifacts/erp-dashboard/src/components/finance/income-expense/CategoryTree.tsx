@@ -1,3 +1,8 @@
+/**
+ * @module CategoryTree
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { ChevronRight, ChevronDown, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +57,7 @@ export function CategoryTree({
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-5 w-5"
+                  className="h-4 w-4"
                   onClick={() => toggleExpand(category.id)}
                   data-testid={`toggle-category-${category.id}`}
                 >

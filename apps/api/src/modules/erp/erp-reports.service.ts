@@ -1,3 +1,8 @@
+/**
+ * @module erp-reports.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { ErpReportsRepository } from './erp-reports.repository';
@@ -61,4 +66,16 @@ export class ErpReportsService {
   async workCenterCapacity() {
     return this.repo.workCenterCapacity();
   }
+
+  async createDailyReport(body: Record<string, unknown>) { return this.repo.createDailyReport(body); }
+  async updateDailyReport(id: number, body: Record<string, unknown>) { return this.repo.updateDailyReport(id, body); }
+  async deleteDailyReport(id: number) { return this.repo.deleteDailyReport(id); }
+  async createProductionPlan(body: Record<string, unknown>) { return this.repo.createProductionPlan(body); }
+  async createProductionFact(body: Record<string, unknown>) { return this.repo.createProductionFact(body); }
+  async createDowntimeLog(body: Record<string, unknown>) { return this.repo.createDowntimeLog(body); }
+  async deleteDowntimeLog(id: number) { return this.repo.deleteDowntimeLog(id); }
+  async createShiftCalendar(body: Record<string, unknown>) { return this.repo.createShiftCalendar(body); }
+  async createEmployeeWorkCenter(body: Record<string, unknown>) { return this.repo.createEmployeeWorkCenter(body); }
+  async updateEmployeeWorkCenter(id: number, body: Record<string, unknown>) { return this.repo.updateEmployeeWorkCenter(id, body); }
+  async deleteEmployeeWorkCenter(id: number) { return this.repo.deleteEmployeeWorkCenter(id); }
 }

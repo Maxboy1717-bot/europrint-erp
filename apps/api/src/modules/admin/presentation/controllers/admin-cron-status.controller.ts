@@ -1,9 +1,15 @@
+/**
+ * @module admin-cron-status.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Controller, Get, Logger, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
 import { Roles } from '../../infrastructure/decorators/roles.decorator';
 import { AuditInterceptor } from '../../infrastructure/interceptors/audit.interceptor';
@@ -12,7 +18,7 @@ import { CronStatusService } from '@/cron/cron-status.service';
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('admin/cron-status')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @ApiBearerAuth()
 @ApiTags('Admin - Cron Status')

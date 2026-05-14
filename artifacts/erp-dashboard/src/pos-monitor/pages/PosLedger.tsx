@@ -1,3 +1,8 @@
+/**
+ * @module PosLedger
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
@@ -110,7 +115,7 @@ export default function PosLedger() {
           <table className="pos-table">
             <thead>
               <tr>
-                <th>Material</th>
+                <th>{t('common.Material')}</th>
                 <th>{t("common.qty")}</th>
                 <th>{t("ledger.issuedDate")}</th>
                 <th>{t("ledger.returnDeadline")}</th>
@@ -119,7 +124,7 @@ export default function PosLedger() {
               </tr>
             </thead>
             <tbody>
-              {(active ?? []).map(item => {
+              {(Array.isArray(active) ? active : []).map(item => {
                 const days = getDaysLeft(item.returnDeadline);
                 const daysColor = days === null ? "var(--pos-text-muted)" : days < 7 ? "var(--pos-danger)" : days < 14 ? "var(--pos-warning)" : "var(--pos-success)";
                 return (
@@ -146,9 +151,9 @@ export default function PosLedger() {
       {!loading && tab === "returned" && (
         <div className="pos-card" style={{ overflowX: "auto" }}>
           <table className="pos-table">
-            <thead><tr><th>Material</th><th>Miqdor</th><th>Qaytarilgan sana</th></tr></thead>
+            <thead><tr><th>{t('common.Material')}</th><th>Miqdor</th><th>Qaytarilgan sana</th></tr></thead>
             <tbody>
-              {(returned ?? []).map(item => (
+              {(Array.isArray(returned) ? returned : []).map(item => (
                 <tr key={item.id}>
                   <td>{item.materialName ?? `#${item.materialCardId}`}</td>
                   <td className="pos-mono">{item.qty}</td>
@@ -175,9 +180,9 @@ export default function PosLedger() {
             <table className="pos-table">
               <thead>
                 <tr>
-                  <th>Doc No</th>
+                  <th>{t('common.docNo')}</th>
                   <th>Tur</th>
-                  <th>Status</th>
+                  <th>{t('common.status1')}</th>
                   <th style={{ textAlign: "right" }}>Summa</th>
                   <th>Sana</th>
                 </tr>

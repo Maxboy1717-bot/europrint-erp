@@ -1,3 +1,8 @@
+/**
+ * @module schema-compat-1b
+ * @description Source module. See exports for details.
+ */
+
 import { date } from 'drizzle-orm/pg-core';
 import { pgTable, uuid, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
 

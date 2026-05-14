@@ -1,3 +1,8 @@
+/**
+ * @module PortretBlokB
+ * @description React UI component.
+ */
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +24,7 @@ export function PortretBlokB({ portret, onChange }: PortretBlokBProps) {
         <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <Label className="text-xs mb-1 block">6. Yosh (min)</Label>
           <Input type="number" min={18} max={70}

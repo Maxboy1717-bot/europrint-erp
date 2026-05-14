@@ -1,3 +1,8 @@
+/**
+ * @module defects.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { IDefectsRepository, DEFECTS_REPO } from './i-defects.repo';
 import { safeCall, Result, AppError } from '@common/result';

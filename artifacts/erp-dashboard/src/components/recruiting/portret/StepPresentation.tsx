@@ -1,3 +1,8 @@
+/**
+ * @module StepPresentation
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +38,7 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
             onChange={e => cp("kompaniya_taqdimoti")(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label className="text-xs mb-1 block">2. Ish tartibi va jarayonlar</Label>
             <Input
@@ -53,7 +58,7 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         </div>
 
         {/* 4–6: Guruh, Safar, Sinov muddati */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <Label className="text-xs mb-1 block">4. Guruhga javobgarlik</Label>
             <Input
@@ -87,10 +92,10 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         </div>
 
         {/* 7–10: Maoshlar va Martaba */}
-        <div className="grid grid-cols-2 gap-4 border p-3 rounded-lg bg-surface-container-low/50">
-          <div className="space-y-2">
-            <Label className="text-[11px] font-semibold text-primary">Sinov davri maoshi</Label>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-3 rounded-lg bg-muted/40/50">
+          <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-primary">Sinov davri maoshi</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input
                 placeholder="Min" size={1}
                 className="h-8 text-xs"
@@ -105,9 +110,9 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-[11px] font-semibold text-primary">Asosiy maosh va Martaba</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-primary">Asosiy maosh va Martaba</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input
                 placeholder="Asosiy maosh"
                 className="h-8 text-xs"
@@ -125,8 +130,8 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         </div>
 
         {/* 11–13: Ta'til, Rejim, Shartnoma */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <Label className="text-xs mb-1 block">11. Yillik ta'til</Label>
               <Input

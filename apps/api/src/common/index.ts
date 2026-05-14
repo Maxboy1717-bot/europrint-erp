@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 // Types
 export * from './types/result.type'
 export * from './types/user.types'
@@ -30,3 +35,4 @@ export * from './pipes/zod-validation.pipe'
 export * from './utils/logger.util'
 export * from './utils/result.util'
 export * from './utils/pagination.util'
+export * from './utils/drizzle-error.util'

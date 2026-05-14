@@ -1,3 +1,8 @@
+/**
+ * @module qc-reclamations.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Get, HttpStatus, Logger, Param, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';

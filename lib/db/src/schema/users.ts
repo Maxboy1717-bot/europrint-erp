@@ -1,3 +1,8 @@
+/**
+ * @module users
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { pgTable, serial, varchar, integer, boolean, timestamp, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -12,8 +17,8 @@ export const users = pgTable("users", {
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   middleName: varchar("middle_name", { length: 100 }),
-  positionId: integer("position_id").references(() => positions.id),
-  departmentId: integer("department_id").references(() => departments.id),
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   phone: varchar("phone", { length: 20 }),
   avatarUrl: text("avatar_url"),
   telegramChatId: varchar("telegram_chat_id", { length: 50 }),

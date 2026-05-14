@@ -1,5 +1,10 @@
+/**
+ * @module kanban-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -23,7 +28,9 @@ export const kanbanBoards = pgTable("kanban_boards", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("kanban_boards_type_chk", sql`${t.type} IN ('crm_deals','tasks','custom')`),
+]);
 
 
 export const insertKanbanBoardSchema = createInsertSchema(kanbanBoards, {
@@ -40,7 +47,7 @@ export type InsertKanbanBoard = z.infer<typeof insertKanbanBoardSchema>;
 // Kanban Columns (Ustunlar)
 export const kanbanColumns = pgTable("kanban_columns", {
   id: serial("id").primaryKey(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id).notNull(),
+  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(), // To Do, In Progress, Done
   sortOrder: integer("sort_order").notNull().default(0),
   color: varchar("color", { length: 20 }),
@@ -65,13 +72,13 @@ export type InsertKanbanColumn = z.infer<typeof insertKanbanColumnSchema>;
 // Kanban Cards (Kartalar)
 export const kanbanCards = pgTable("kanban_cards", {
   id: serial("id").primaryKey(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id).notNull(),
-  columnId: varchar("column_id").references(() => kanbanColumns.id).notNull(),
+  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "cascade" }).notNull(),
+  columnId: varchar("column_id").references(() => kanbanColumns.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   relatedType: varchar("related_type", { length: 20 }), // deal, order, task, none
   relatedId: varchar("related_id", { length: 100 }), // crm_deals.id yoki boshqa
-  ownerUserId: varchar("owner_user_id").references(() => users.id),
+  ownerUserId: varchar("owner_user_id").references(() => users.id, { onDelete: "set null" }),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"), // low, normal, high, urgent
   dueDate: varchar("due_date", { length: 10 }), // YYYY-MM-DD
   sortOrder: integer("sort_order").notNull().default(0),
@@ -91,7 +98,7 @@ export const kanbanCards = pgTable("kanban_cards", {
   telegramChatId: varchar("telegram_chat_id", { length: 100 }),
   // Qabul qilish/bajarish workflow
   acceptedAt: timestamp("accepted_at"),
-  acceptedById: varchar("accepted_by_id").references(() => users.id),
+  acceptedById: varchar("accepted_by_id").references(() => users.id, { onDelete: "set null" }),
   completedAt: timestamp("completed_at"),
   completionReport: text("completion_report"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -104,6 +111,10 @@ export const kanbanCards = pgTable("kanban_cards", {
   index("idx_kanban_cards_priority").on(t.priority),
   index("idx_kanban_cards_created_at").on(t.createdAt),
   index("idx_kanban_cards_deleted_at").on(t.deletedAt),
+  check("kanban_cards_related_type_chk", sql`${t.relatedType} IS NULL OR ${t.relatedType} IN ('deal','order','task','none')`),
+  check("kanban_cards_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("kanban_cards_recurrence_chk", sql`${t.recurrencePattern} IS NULL OR ${t.recurrencePattern} IN ('daily','weekly','monthly','yearly')`),
+  check("kanban_cards_source_chk", sql`${t.source} IN ('kanban','telegram','email')`),
 ]);
 
 
@@ -130,8 +141,8 @@ export type InsertKanbanCard = z.infer<typeof insertKanbanCardSchema>;
 // Kanban Comments (Kommentlar)
 export const kanbanComments = pgTable("kanban_comments", {
   id: serial("id").primaryKey(),
-  cardId: varchar("card_id").references(() => kanbanCards.id).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   comment: text("comment").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -157,7 +168,7 @@ export const taskSubtasks = pgTable("task_subtasks", {
   parentCardId: varchar("parent_card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
   title: text("title").notNull(),
   completed: boolean("completed").notNull().default(false),
-  assigneeId: varchar("assignee_id").references(() => users.id),
+  assigneeId: varchar("assignee_id").references(() => users.id, { onDelete: "set null" }),
   dueDate: varchar("due_date", { length: 10 }),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -262,7 +273,7 @@ export type InsertTaskCardTag = z.infer<typeof insertTaskCardTagSchema>;
 export const taskReminders = pgTable("task_reminders", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   reminderAt: timestamp("reminder_at").notNull(),
   sent: boolean("sent").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -282,7 +293,7 @@ export type InsertTaskReminder = z.infer<typeof insertTaskReminderSchema>;
 export const taskTimeEntries = pgTable("task_time_entries", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   startedAt: timestamp("started_at").notNull(),
   endedAt: timestamp("ended_at"),
   durationMinutes: integer("duration_minutes"),
@@ -307,10 +318,12 @@ export type InsertTaskTimeEntry = z.infer<typeof insertTaskTimeEntrySchema>;
 export const taskCollaborators = pgTable("task_collaborators", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   role: varchar("role", { length: 20 }).notNull(), // 'collaborator', 'observer'
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("task_collaborators_role_chk", sql`${t.role} IN ('collaborator','observer')`),
+]);
 
 
 export const insertTaskCollaboratorSchema = createInsertSchema(taskCollaborators, {
@@ -331,13 +344,15 @@ export const taskTemplates = pgTable("task_templates", {
   description: text("description"),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"),
   checklistItems: text("checklist_items").array(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id),
-  createdById: integer("created_by_id").references(() => users.id),
+  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "set null" }),
+  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("task_templates_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+]);
 
 
 export const insertTaskTemplateSchema = createInsertSchema(taskTemplates, {
@@ -361,7 +376,7 @@ export const taskFiles = pgTable("task_files", {
   fileUrl: text("file_url").notNull(),
   fileSize: integer("file_size"),
   mimeType: varchar("mime_type", { length: 100 }),
-  uploadedById: varchar("uploaded_by_id").references(() => users.id),
+  uploadedById: varchar("uploaded_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 });
@@ -388,11 +403,11 @@ export type InsertTaskFile = z.infer<typeof insertTaskFileSchema>;
 export const taskStatusHistory = pgTable("task_status_history", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
-  fromColumnId: varchar("from_column_id").references(() => kanbanColumns.id),
-  toColumnId: varchar("to_column_id").references(() => kanbanColumns.id),
+  fromColumnId: varchar("from_column_id").references(() => kanbanColumns.id, { onDelete: "set null" }),
+  toColumnId: varchar("to_column_id").references(() => kanbanColumns.id, { onDelete: "set null" }),
   fromStatus: varchar("from_status", { length: 50 }),
   toStatus: varchar("to_status", { length: 50 }),
-  changedById: varchar("changed_by_id").references(() => users.id),
+  changedById: varchar("changed_by_id").references(() => users.id, { onDelete: "set null" }),
   changedAt: timestamp("changed_at").notNull().defaultNow(),
 });
 
@@ -413,7 +428,7 @@ export const taskResults = pgTable("task_results", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
   description: text("description"),
-  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdById: integer("created_by_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -458,11 +473,13 @@ export type InsertTaskResultFile = z.infer<typeof insertTaskResultFileSchema>;
 export const taskChatMessages = pgTable("task_chat_messages", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   message: text("message").notNull(),
   messageType: varchar("message_type", { length: 20 }).notNull().default("user"), // user, system, activity
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("task_chat_messages_type_chk", sql`${t.messageType} IN ('user','system','activity')`),
+]);
 
 
 export const insertTaskChatMessageSchema = createInsertSchema(taskChatMessages, {
@@ -505,7 +522,7 @@ export type InsertTaskChatMessageFile = z.infer<typeof insertTaskChatMessageFile
 export const taskTimeTracks = pgTable("task_time_tracks", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   startedAt: timestamp("started_at").notNull(),
   endedAt: timestamp("ended_at"),
   durationMinutes: integer("duration_minutes"),
@@ -533,7 +550,7 @@ export const taskObservers = pgTable("task_observers", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
   userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  addedById: varchar("added_by_id").references(() => users.id),
+  addedById: varchar("added_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -551,7 +568,7 @@ export const taskCoExecutors = pgTable("task_co_executors", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
   userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  addedById: varchar("added_by_id").references(() => users.id),
+  addedById: varchar("added_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -572,13 +589,15 @@ export const taskProjects = pgTable("task_projects", {
   color: varchar("color", { length: 20 }).notNull().default("#3b82f6"),
   startDate: varchar("start_date", { length: 10 }),
   endDate: varchar("end_date", { length: 10 }),
-  ownerId: varchar("owner_id").references(() => users.id),
+  ownerId: varchar("owner_id").references(() => users.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("active"), // active, completed, archived
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("task_projects_status_chk", sql`${t.status} IN ('active','completed','archived')`),
+]);
 
 
 export const insertTaskProjectSchema = createInsertSchema(taskProjects, {
@@ -600,10 +619,12 @@ export type InsertTaskProject = z.infer<typeof insertTaskProjectSchema>;
 export const taskProjectMembers = pgTable("task_project_members", {
   id: serial("id").primaryKey(),
   projectId: varchar("project_id").references(() => taskProjects.id, { onDelete: 'cascade' }).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   role: varchar("role", { length: 20 }).notNull().default("member"), // owner, admin, member
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("task_project_members_role_chk", sql`${t.role} IN ('owner','admin','member')`),
+]);
 
 
 export const insertTaskProjectMemberSchema = createInsertSchema(taskProjectMembers, {
@@ -623,16 +644,19 @@ export const automationRobots = pgTable("automation_robots", {
   name: text("name").notNull(),
   description: text("description"),
   triggerType: varchar("trigger_type", { length: 50 }).notNull(), // on_create, on_move, on_complete, on_deadline
-  triggerColumnId: varchar("trigger_column_id").references(() => kanbanColumns.id),
+  triggerColumnId: varchar("trigger_column_id").references(() => kanbanColumns.id, { onDelete: "set null" }),
   actionType: varchar("action_type", { length: 50 }).notNull(), // move_to_column, send_notification, assign_user, add_tag
   actionConfig: text("action_config"), // JSON config
   isActive: boolean("is_active").notNull().default(true),
-  createdById: integer("created_by_id").references(() => users.id),
+  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("automation_robots_trigger_chk", sql`${t.triggerType} IN ('on_create','on_move','on_complete','on_deadline')`),
+  check("automation_robots_action_chk", sql`${t.actionType} IN ('move_to_column','send_notification','assign_user','add_tag')`),
+]);
 
 
 export const insertAutomationRobotSchema = createInsertSchema(automationRobots, {
@@ -653,13 +677,15 @@ export type InsertAutomationRobot = z.infer<typeof insertAutomationRobotSchema>;
 export const taskFlows = pgTable("task_flows", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id),
+  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "set null" }),
   assignmentType: varchar("assignment_type", { length: 20 }).notNull(), // 'round_robin', 'least_busy', 'random'
   userIds: text("user_ids").array(), // Array of user IDs in the flow
   lastAssignedIndex: integer("last_assigned_index").notNull().default(0), // For round-robin tracking
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("task_flows_assignment_type_chk", sql`${t.assignmentType} IN ('round_robin','least_busy','random')`),
+]);
 
 
 export const insertTaskFlowSchema = createInsertSchema(taskFlows, {
@@ -677,7 +703,7 @@ export type InsertTaskFlow = z.infer<typeof insertTaskFlowSchema>;
 // Vazifa bildirishnomalari - Foydalanuvchilarga vazifa bo'yicha xabarlar
 export const taskNotifications = pgTable("task_notifications", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }),
   type: varchar("type", { length: 50 }).notNull(), // task_assigned, deadline_reminder, comment_added, status_changed
   title: text("title").notNull(),
@@ -685,7 +711,9 @@ export const taskNotifications = pgTable("task_notifications", {
   isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("task_notifications_type_chk", sql`${t.type} IN ('task_assigned','deadline_reminder','comment_added','status_changed')`),
+]);
 
 
 export const insertTaskNotificationSchema = createInsertSchema(taskNotifications, {
@@ -703,15 +731,17 @@ export type InsertTaskNotification = z.infer<typeof insertTaskNotificationSchema
 // Ko'rinish sozlamalari - Foydalanuvchining shaxsiy filter va ko'rinish parametrlari
 export const taskViewPreferences = pgTable("task_view_preferences", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "set null" }),
   viewType: varchar("view_type", { length: 20 }).notNull().default("kanban"), // kanban, list, calendar, gantt, my_plan
   filters: text("filters"), // JSON filters
   sortBy: varchar("sort_by", { length: 50 }),
   sortOrder: varchar("sort_order", { length: 10 }).default("asc"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("task_view_prefs_view_type_chk", sql`${t.viewType} IN ('kanban','list','calendar','gantt','my_plan')`),
+]);
 
 
 export const insertTaskViewPreferenceSchema = createInsertSchema(taskViewPreferences, {

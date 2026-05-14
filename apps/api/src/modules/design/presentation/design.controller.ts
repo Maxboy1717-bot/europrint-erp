@@ -1,3 +1,8 @@
+/**
+ * @module design.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
@@ -142,4 +147,12 @@ export class DesignController {
  getOrderMessages(@Param('id') _id: string) {
    return { items: [], total: 0 };
  }
+
+ @Post('orders')
+ @Roles(Role.DIRECTOR, Role.SUPER_ADMIN, Role.SALES_MANAGER)
+ async createOrder(@Body() body: Record<string, unknown>) { return { id: Date.now(), ...body, created: true }; }
+
+ @Post('orders/:id/messages')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER, Role.SALES_MANAGER)
+ async createOrderMessage(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id: Date.now(), orderId: id, ...body, sent: true }; }
 }

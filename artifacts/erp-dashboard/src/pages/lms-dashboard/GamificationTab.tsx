@@ -1,3 +1,8 @@
+/**
+ * @module GamificationTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,10 +35,10 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
       <div className="lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Award className="w-5 h-5 text-yellow-500" />O'quv Reytingi (Leaderboard)</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Award className="w-5 h-5 text-[var(--ep-yellow)]" />O'quv Reytingi (Leaderboard)</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   {(["#", "Xodim", "XP Ball", "Kurslar", "Testlar", "Sertifikatlar", "Daraja"]).map(h => <TableHead key={h}>{h}</TableHead>)}
@@ -42,7 +47,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
               <TableBody>
                 {isLoading ? (
                   ([...Array(5)]).map((_, i) => (
-                    <TableRow key={`k-${i}`}>{([...Array(7)]).map((__, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}</TableRow>
+                    <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">{([...Array(7)]).map((__, j) => <TableCell key={j}><Skeleton className="h-4 w-full rounded-lg" /></TableCell>)}</TableRow>
                   ))
                 ) : leaderboard.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Ma'lumot mavjud emas</TableCell></TableRow>
@@ -51,9 +56,9 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
                   const score = Math.round(r.overallScore || 0);
                   const level = score >= 200 ? "Ekspert" : score >= 100 ? "Katta" : score >= 50 ? "O'rta" : "Yangi";
                   return (
-                    <TableRow key={r.userId} data-testid={`row-leaderboard-${rank}`}>
+                    <TableRow key={r.userId} data-testid={`row-leaderboard-${rank}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell>
-                        <span className={`font-bold text-lg ${rank === 1 ? "text-yellow-500" : rank === 2 ? "text-on-surface-variant" : rank === 3 ? "text-amber-700" : "text-muted-foreground"}`}>{rank}</span>
+                        <span className={`font-bold text-lg ${rank === 1 ? "text-[var(--ep-yellow)]" : rank === 2 ? "text-muted-foreground" : rank === 3 ? "text-[var(--ep-yellow)]" : "text-muted-foreground"}`}>{rank}</span>
                       </TableCell>
                       <TableCell className="font-medium">{r.fullName || "—"}</TableCell>
                       <TableCell><span className="font-mono font-bold text-primary">{score.toLocaleString()}</span></TableCell>
@@ -65,7 +70,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
                   );
                 })}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>

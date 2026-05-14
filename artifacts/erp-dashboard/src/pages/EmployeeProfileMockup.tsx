@@ -168,7 +168,7 @@ export default function EmployeeProfileMockup() {
             <span className="pill-btn">2026</span>
           </div>
           <div className="ep-card-body">
-            <div className="grid grid-cols-2 gap-3 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-center">
               <div>
                 <div className="text-xs text-[var(--ep-muted)]">Jami ta'til</div>
                 <h3 className="m-0 text-2xl font-bold">16</h3>

@@ -1,3 +1,8 @@
+/**
+ * @module get-budgets.query
+ * @description Source module. See exports for details.
+ */
+
 export class GetBudgetsQuery {
   constructor(public readonly fiscalYear?: number,
     public readonly status?: string,

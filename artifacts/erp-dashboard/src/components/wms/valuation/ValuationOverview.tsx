@@ -1,3 +1,8 @@
+/**
+ * @module ValuationOverview
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { 
@@ -23,9 +28,9 @@ export function ValuationOverview({
 }: ValuationOverviewProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white border-0">
+      <Card className="text-white border-0">
         <CardHeader className="flex flex-row items-center justify-between gap-1 pb-2">
-          <CardTitle className="text-sm font-medium text-indigo-100">Jami inventarizatsiyalar</CardTitle>
+          <CardTitle className="text-sm font-medium text-white/80">Jami inventarizatsiyalar</CardTitle>
           <ClipboardList className="h-5 w-5 text-indigo-200" />
         </CardHeader>
         <CardContent>
@@ -34,7 +39,7 @@ export function ValuationOverview({
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white border-0">
+      <Card className="bg-[var(--ep-yellow)] text-white border-0">
         <CardHeader className="flex flex-row items-center justify-between gap-1 pb-2">
           <CardTitle className="text-sm font-medium text-amber-100">Jarayonda</CardTitle>
           <RefreshCw className="h-5 w-5 text-amber-200" />
@@ -45,9 +50,9 @@ export function ValuationOverview({
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
+      <Card className="bg-[var(--ep-green)] text-white border-0">
         <CardHeader className="flex flex-row items-center justify-between gap-1 pb-2">
-          <CardTitle className="text-sm font-medium text-green-100">Yakunlangan</CardTitle>
+          <CardTitle className="text-sm font-medium text-white/80">Yakunlangan</CardTitle>
           <Check className="h-5 w-5 text-green-200" />
         </CardHeader>
         <CardContent>
@@ -56,7 +61,7 @@ export function ValuationOverview({
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0">
+      <Card className="bg-[var(--ep-red)] text-white border-0">
         <CardHeader className="flex flex-row items-center justify-between gap-1 pb-2">
           <CardTitle className="text-sm font-medium text-red-100">Jami farq</CardTitle>
           {totalVarianceValue >= 0 ? (

@@ -1,3 +1,8 @@
+/**
+ * @module MoveDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -38,10 +43,10 @@ export function MoveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MoveRight className="h-4 w-4 text-[#ff5d2e]" />
+            <MoveRight className="h-4 w-4 text-primary" />
             Ko'chirish — {node.name}
           </DialogTitle>
         </DialogHeader>
@@ -65,7 +70,7 @@ export function MoveDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Bekor</Button>
           <Button
-            className="bg-[#ff5d2e] hover:bg-[#e04e22]"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
           >

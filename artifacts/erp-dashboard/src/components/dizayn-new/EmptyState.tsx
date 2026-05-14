@@ -90,7 +90,7 @@ export function EmptyState({
       {/* Icon container */}
       <div
         className={cn(
-          "flex items-center justify-center rounded-2xl mb-4",
+          "flex items-center justify-center rounded-xl mb-4",
           sizes.iconBox,
           isError
             ? "bg-[hsl(var(--error))]/10"
@@ -156,7 +156,7 @@ export function TableSkeleton({
       {/* Toolbar skeleton */}
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
         <div className="flex items-center gap-3 flex-1">
-          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-32 rounded-lg" />
           <Skeleton className="h-8 w-48 rounded-lg" />
         </div>
         <Skeleton className="h-8 w-24 rounded-lg" />
@@ -166,10 +166,10 @@ export function TableSkeleton({
       <table className="w-full" aria-hidden="true">
         <thead>
           <tr className="border-b border-border bg-muted/40">
-            {hasCheckbox && <th className="w-10 px-4 py-3"><Skeleton className="w-4 h-4 rounded" /></th>}
+            {hasCheckbox && <th className="w-10 px-4 py-3"><Skeleton className="w-4 h-4 rounded rounded-lg" /></th>}
             {Array.from({ length: cols }).map((_, i) => (
               <th key={`k-${i}`} className="px-4 py-3">
-                <Skeleton className="h-3.5 w-20 rounded" />
+                <Skeleton className="h-3.5 w-20 rounded rounded-lg" />
               </th>
             ))}
             <th className="w-12 px-4 py-3" />
@@ -178,20 +178,20 @@ export function TableSkeleton({
         <tbody>
           {Array.from({ length: rows }).map((_, rowIdx) => (
             <tr key={rowIdx} className="border-b border-border last:border-0">
-              {hasCheckbox && <td className="px-4 py-3"><Skeleton className="w-4 h-4 rounded" /></td>}
+              {hasCheckbox && <td className="px-4 py-3"><Skeleton className="w-4 h-4 rounded rounded-lg" /></td>}
               {Array.from({ length: cols }).map((_, colIdx) => (
                 <td key={colIdx} className="px-4 py-3">
                   {colIdx === 0 ? (
                     <div className="flex items-center gap-2.5">
                       <Skeleton className="w-7 h-7 rounded-full flex-shrink-0" />
-                      <Skeleton className="h-4 w-28 rounded" />
+                      <Skeleton className="h-4 w-28 rounded rounded-lg" />
                     </div>
                   ) : (
                     <Skeleton className={cn("h-4 rounded", colIdx === cols - 1 ? "w-16" : "w-24")} />
                   )}
                 </td>
               ))}
-              <td className="px-4 py-3"><Skeleton className="w-6 h-6 rounded" /></td>
+              <td className="px-4 py-3"><Skeleton className="w-6 h-6 rounded rounded-lg" /></td>
             </tr>
           ))}
         </tbody>
@@ -223,13 +223,13 @@ export function CardSkeleton({ count = 1, className }: CardSkeletonProps) {
               <Skeleton className="w-10 h-10 rounded-lg" />
               <Skeleton className="w-16 h-5 rounded-lg" />
             </div>
-            <Skeleton className="h-8 w-24 mb-1 rounded" />
-            <Skeleton className="h-3 w-32 mb-4 rounded" />
-            <Skeleton className="h-10 w-full rounded mb-3" />
+            <Skeleton className="h-8 w-24 mb-1 rounded rounded-lg" />
+            <Skeleton className="h-3 w-32 mb-4 rounded rounded-lg" />
+            <Skeleton className="h-10 w-full rounded mb-3 rounded-lg" />
             <div className="space-y-1">
               <div className="flex justify-between">
-                <Skeleton className="h-3 w-20 rounded" />
-                <Skeleton className="h-3 w-8 rounded" />
+                <Skeleton className="h-3 w-20 rounded rounded-lg" />
+                <Skeleton className="h-3 w-8 rounded rounded-lg" />
               </div>
               <Skeleton className="h-1.5 w-full rounded-full" />
             </div>
@@ -257,8 +257,8 @@ export function PageSkeleton() {
     <div className="space-y-6 p-6" aria-busy="true" aria-label="Sahifa yuklanmoqda">
       {/* Page header */}
       <div className="space-y-2">
-        <Skeleton className="h-7 w-48 rounded" />
-        <Skeleton className="h-4 w-64 rounded" />
+        <Skeleton className="h-7 w-48 rounded rounded-lg" />
+        <Skeleton className="h-4 w-64 rounded rounded-lg" />
       </div>
 
       {/* Stats */}

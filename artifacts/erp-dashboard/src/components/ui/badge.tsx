@@ -1,39 +1,44 @@
+/**
+ * @module badge
+ * @description React UI component.
+ */
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "whitespace-nowrap inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "whitespace-nowrap inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "bg-primary-container text-on-primary-container",
+          "bg-primary/10 text-primary",
         secondary:
-          "bg-surface-container text-on-surface-variant",
+          "bg-muted text-muted-foreground border border-border",
         destructive:
-          "bg-red-100 text-red-800",
+          "bg-destructive/10 text-destructive",
         outline:
-          "border border-outline-variant/40 text-on-surface-variant",
+          "border border-border text-foreground",
         success:
-          "bg-green-100 text-green-800",
+          "bg-success/10 text-success",
         warning:
-          "bg-amber-100 text-amber-800",
+          "bg-warning/15 text-warning",
         info:
-          "bg-primary-container text-on-primary-container",
+          "bg-info/10 text-info",
         error:
-          "bg-red-100 text-red-800",
+          "bg-destructive/10 text-destructive",
         yangi:
-          "bg-surface-container text-on-surface-variant",
+          "bg-muted text-muted-foreground border border-border",
         tasdiqlangan:
-          "bg-primary-container text-on-primary-container",
+          "bg-primary/10 text-primary",
         ishlab_chiqarishda:
-          "bg-amber-100 text-amber-800",
+          "bg-warning/15 text-warning",
         tayyor:
-          "bg-green-100 text-green-800",
+          "bg-success/10 text-success",
         jonatildi:
-          "bg-primary-container text-on-primary-container",
+          "bg-info/10 text-info",
       },
     },
     defaultVariants: {

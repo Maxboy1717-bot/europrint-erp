@@ -1,3 +1,8 @@
+/**
+ * @module chat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
@@ -12,6 +17,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/user.types';
+import { VideoTokenService } from './video-token.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -75,6 +81,7 @@ export class ChatController {
     private readonly gateway: ChatGateway,
     private readonly pushService: PushService,
     private readonly uploadService: UploadService,
+    private readonly videoToken: VideoTokenService,
   ) {}
 
   @Get()
@@ -105,7 +112,7 @@ export class ChatController {
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(ChatCreateGroupSchema)) body: ChatCreateGroupDto,
   ) {
-    return unwrapOrInternal(await this.chatService.createGroupRoom(body.name, body.memberIds, user.id));
+    return unwrapOrInternal(await this.chatService.createGroupRoom(body.name, body.memberIds, user.id, body.type ?? 'GROUP'));
   }
 
   @Get('rooms/:roomId/messages')
@@ -154,6 +161,11 @@ export class ChatController {
   @Get('employees')
   async getEmployees(@Query('search') search?: string) {
     return unwrapOrInternal(await this.chatService.getAllEmployees(search));
+  }
+
+  @Get('birthdays/today')
+  async getTodayBirthdays() {
+    return unwrapOrInternal(await this.chatService.getTodayBirthdays());
   }
 
   @Get('unread')
@@ -341,13 +353,37 @@ export class ChatController {
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(CompleteUploadSchema)) dto: CompleteUploadDto,
   ): Promise<{ ok: true }> {
-    const result = await this.chatService.sendMessage(dto.roomId, user.id, dto.fileUrl, {
-      fileUrl:  dto.fileUrl,
-      fileName: dto.fileName ?? 'fayl',
-      fileType: dto.fileType ?? 'application/octet-stream',
-      replyToId: undefined,
-    });
-    if (!result.ok) throw new InternalServerErrorException('Xabar yuborilmadi');
+    // chatService.sendMessage returns a plain Record (not a Result wrapper),
+    // so we use try/catch — checking .ok would always be falsy.
+    let sentMessage: Record<string, unknown>;
+    try {
+      sentMessage = await this.chatService.sendMessage(dto.roomId, user.id, dto.fileUrl ?? '', {
+        fileUrl:  dto.fileUrl,
+        fileName: dto.fileName ?? 'fayl',
+        fileType: dto.fileType ?? 'application/octet-stream',
+        replyToId: undefined,
+      }) as Record<string, unknown>;
+    } catch (e: unknown) {
+      this.logger.error(`completeUpload xato: ${e instanceof Error ? e.message : String(e)}`);
+      throw new InternalServerErrorException(
+        e instanceof Error ? e.message : 'Xabar yuborilmadi',
+      );
+    }
+    // Broadcast to room so all connected clients see the file immediately
+    this.gateway.emitToRoom(dto.roomId, 'message:new', sentMessage);
     return { ok: true };
+  }
+
+  @Post('video/token')
+  @HttpCode(HttpStatus.OK)
+  async getVideoToken(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: { roomId: string },
+  ) {
+    const u = user as unknown as Record<string, unknown>;
+    return this.videoToken.generate(
+      { id: user.id, fullName: u['fullName'] as string, email: u['email'] as string },
+      body.roomId,
+    );
   }
 }

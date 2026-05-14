@@ -1,3 +1,8 @@
+/**
+ * @module crm-custom-fields.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { CrmCustomFieldsRepository } from './crm-custom-fields.repository';

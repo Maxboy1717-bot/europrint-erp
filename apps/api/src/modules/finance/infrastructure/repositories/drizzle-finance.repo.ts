@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-finance.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -41,7 +46,21 @@ export class FinanceRepository implements IFinanceRepo {
   async recordAdvance(advance: {
     employeeId: number; amount: number; status: string; approvedBy: number; remarks?: string; approvedAt: Date;
   }): Promise<void> {
-    this.logger.debug(`Advance recorded - Employee: ${advance.employeeId}, Amount: ${advance.amount}`);
+    try {
+      const now = new Date();
+      await runQuery(sql`
+        INSERT INTO payroll_advances
+          (employee_id, amount, status, approved_by, approved_at, request_date)
+        VALUES
+          (${advance.employeeId}, ${advance.amount}, ${advance.status},
+           ${String(advance.approvedBy)}, ${advance.approvedAt}, ${now})
+        ON CONFLICT DO NOTHING
+      `);
+      this.logger.debug(`Advance recorded - Employee: ${advance.employeeId}, Amount: ${advance.amount}`);
+    } catch (error: unknown) {
+      this.logger.error(`Error recording advance: ${(error as Error).message}`);
+      throw error;
+    }
   }
 
   async findInvoiceById(invoiceId: string): Promise<Result<Record<string, unknown> | null>> {
@@ -57,7 +76,19 @@ export class FinanceRepository implements IFinanceRepo {
   async recordPayment(payment: {
     paymentId: number; invoiceId: number; amount: number; status: string; recordedBy: number; recordedAt: Date;
   }): Promise<void> {
-    this.logger.debug(`Payment recorded - Payment ID: ${payment.paymentId}`);
+    try {
+      await runQuery(sql`
+        INSERT INTO fi_payments
+          (invoice_id, amount, status, recorded_by, payment_date)
+        VALUES
+          (${payment.invoiceId}, ${payment.amount}, ${payment.status},
+           ${payment.recordedBy}, ${payment.recordedAt})
+      `);
+      this.logger.debug(`Payment recorded - Payment ID: ${payment.paymentId}`);
+    } catch (error: unknown) {
+      this.logger.error(`Error recording payment: ${(error as Error).message}`);
+      throw error;
+    }
   }
 
   async getWarehouseRentalRate(warehouseId: number): Promise<number> {
@@ -73,13 +104,34 @@ export class FinanceRepository implements IFinanceRepo {
   async recordWarehouseRental(rental: {
     orderId: number; warehouseId: number; areaM2: number; dailyRate: number; startDate: Date; status: string; startedBy: number;
   }): Promise<number> {
-    this.logger.debug(`Warehouse rental recorded - Order: ${rental.orderId}`);
-    return 0;
+    try {
+      const r = await runQuery<{ id: number }>(sql`
+        INSERT INTO warehouse_rentals
+          (order_id, warehouse_id, area_m2, daily_rate, start_date, status, started_by)
+        VALUES
+          (${rental.orderId}, ${rental.warehouseId}, ${rental.areaM2},
+           ${rental.dailyRate}, ${rental.startDate}, ${rental.status}, ${rental.startedBy})
+        RETURNING id
+      `);
+      const generatedId = r.rows[0]?.id ?? 0;
+      this.logger.debug(`Warehouse rental recorded - Order: ${rental.orderId}, ID: ${generatedId}`);
+      return generatedId;
+    } catch (error: unknown) {
+      this.logger.error(`Error recording warehouse rental: ${(error as Error).message}`);
+      return 0;
+    }
   }
 
   async getAllUnpaidInvoices(): Promise<{ id: number; totalAmount: number; paidAmount: number; dueDate: Date }[]> {
     try {
-      const r = await runQuery<{ id: number; totalAmount: number; paidAmount: number; dueDate: Date }>(sql`SELECT * FROM fi_invoices WHERE status != 'paid'`);
+      const r = await runQuery<{ id: number; totalAmount: number; paidAmount: number; dueDate: Date }>(sql`
+        SELECT id,
+               total_amount AS "totalAmount",
+               paid_amount  AS "paidAmount",
+               due_date     AS "dueDate"
+        FROM fi_invoices
+        WHERE status != 'paid'
+      `);
       return r.rows as { id: number; totalAmount: number; paidAmount: number; dueDate: Date }[];
     } catch (error: unknown) {
       this.logger.error(`Error fetching unpaid invoices: ${(error as Error).message}`);
@@ -89,7 +141,14 @@ export class FinanceRepository implements IFinanceRepo {
 
   async getCashBalance(asOfDate: Date): Promise<number> {
     try {
-      const r = await runQuery<{ balance: string }>(sql`SELECT COALESCE(SUM(total_debit) - SUM(total_credit), 0) AS balance FROM gl_journal_entries WHERE entry_date <= ${asOfDate}`);
+      // Use customer_payments (cash receipts) minus approved disbursements as cash proxy,
+      // restricted to approved/completed transactions up to asOfDate.
+      const r = await runQuery<{ balance: string }>(sql`
+        SELECT COALESCE(SUM(amount), 0) AS balance
+        FROM customer_payments
+        WHERE payment_date <= ${asOfDate}
+          AND status = 'approved'
+      `);
       return parseFloat(r.rows[0]?.balance || '0');
     } catch (error: unknown) {
       this.logger.error(`Error fetching cash balance: ${(error as Error).message}`);
@@ -99,30 +158,100 @@ export class FinanceRepository implements IFinanceRepo {
 
   async getSalesReceipts(startDate: Date, endDate: Date): Promise<number> {
     try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_amount), 0) AS total FROM fi_invoices WHERE status = 'paid' AND updated_at BETWEEN ${startDate} AND ${endDate}`);
+      const r = await runQuery<{ total: string }>(sql`
+        SELECT COALESCE(SUM(total_amount), 0) AS total
+        FROM fi_invoices
+        WHERE status = 'paid'
+          AND payment_date BETWEEN ${startDate} AND ${endDate}
+      `);
       return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
+    } catch {
+      // Fallback to created_at if payment_date column does not exist
+      try {
+        const r2 = await runQuery<{ total: string }>(sql`
+          SELECT COALESCE(SUM(total_amount), 0) AS total
+          FROM fi_invoices
+          WHERE status = 'paid'
+            AND created_at BETWEEN ${startDate} AND ${endDate}
+        `);
+        return parseFloat(r2.rows[0]?.total || '0');
+      } catch { return 0; }
+    }
   }
 
   async getOtherReceipts(startDate: Date, endDate: Date): Promise<number> {
     try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_debit), 0) AS total FROM gl_journal_entries WHERE source_type != 'sales' AND entry_date BETWEEN ${startDate} AND ${endDate}`);
+      // Restrict to non-operating income sources only — sales receipts are counted separately via getSalesReceipts
+      const r = await runQuery<{ total: string }>(sql`
+        SELECT COALESCE(SUM(total_debit), 0) AS total
+        FROM gl_journal_entries
+        WHERE entry_date BETWEEN ${startDate} AND ${endDate}
+          AND source_type IN ('other_income', 'interest', 'misc', 'rental_income')
+      `);
       return parseFloat(r.rows[0]?.total || '0');
     } catch { return 0; }
   }
 
   async getExpenses(startDate: Date, endDate: Date): Promise<number> {
     try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_debit), 0) AS total FROM gl_journal_entries WHERE entry_date BETWEEN ${startDate} AND ${endDate}`);
+      // Filter to expense accounts only (account codes 6xx or 7xx, or account_type = 'expense')
+      const r = await runQuery<{ total: string }>(sql`
+        SELECT COALESCE(SUM(total_debit), 0) AS total
+        FROM gl_journal_entries
+        WHERE entry_date BETWEEN ${startDate} AND ${endDate}
+          AND (
+            account_type = 'expense'
+            OR account_code LIKE '6%'
+            OR account_code LIKE '7%'
+          )
+      `);
       return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
+    } catch {
+      // Fallback: filter by source_type if account columns don't exist
+      try {
+        const r2 = await runQuery<{ total: string }>(sql`
+          SELECT COALESCE(SUM(total_debit), 0) AS total
+          FROM gl_journal_entries
+          WHERE entry_date BETWEEN ${startDate} AND ${endDate}
+            AND source_type IN ('expense', 'payroll', 'procurement')
+        `);
+        return parseFloat(r2.rows[0]?.total || '0');
+      } catch { return 0; }
+    }
   }
 
-  async getPayrollDisbursements(_startDate: Date, _endDate: Date): Promise<number> { return 0; }
+  async getPayrollDisbursements(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      // Sum net_salary from payroll records paid within the date range
+      const r = await runQuery<{ total: string }>(sql`
+        SELECT COALESCE(SUM(net_salary), 0) AS total
+        FROM payroll
+        WHERE payment_date BETWEEN ${startDate} AND ${endDate}
+      `);
+      return parseFloat(r.rows[0]?.total || '0');
+    } catch {
+      // Fallback: approved advances within date range
+      try {
+        const r2 = await runQuery<{ total: string }>(sql`
+          SELECT COALESCE(SUM(amount), 0) AS total
+          FROM payroll_advances
+          WHERE status = 'approved'
+            AND approved_at BETWEEN ${startDate} AND ${endDate}
+        `);
+        return parseFloat(r2.rows[0]?.total || '0');
+      } catch { return 0; }
+    }
+  }
 
   async getOtherDisbursements(startDate: Date, endDate: Date): Promise<number> {
     try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_credit), 0) AS total FROM gl_journal_entries WHERE entry_date BETWEEN ${startDate} AND ${endDate}`);
+      // Exclude payroll and sales credit entries (those are counted separately)
+      const r = await runQuery<{ total: string }>(sql`
+        SELECT COALESCE(SUM(total_credit), 0) AS total
+        FROM gl_journal_entries
+        WHERE entry_date BETWEEN ${startDate} AND ${endDate}
+          AND source_type NOT IN ('payroll', 'sales')
+      `);
       return parseFloat(r.rows[0]?.total || '0');
     } catch { return 0; }
   }
