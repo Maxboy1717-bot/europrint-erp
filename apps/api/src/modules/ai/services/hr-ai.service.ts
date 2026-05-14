@@ -1,3 +1,8 @@
+/**
+ * @module hr-ai.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { AI_MAX_TOKENS_STANDARD, AI_MAX_TOKENS_MEDIUM } from '@common/constants/app.constants';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';

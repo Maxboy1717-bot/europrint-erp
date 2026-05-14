@@ -1,3 +1,8 @@
+/**
+ * @module CleaningSchedulePage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -19,10 +24,10 @@ interface CleaningTask {
 }
 
 const STATUS_CONFIG: Record<CleaningTask["status"], { label: string; className: string }> = {
-  pending:     { label: "Kutmoqda",     className: "bg-blue-100 text-blue-700" },
-  in_progress: { label: "Jarayonda",    className: "bg-yellow-100 text-yellow-700" },
-  done:        { label: "Bajarilgan",   className: "bg-emerald-100 text-emerald-700" },
-  overdue:     { label: "Kechikkan",    className: "bg-rose-100 text-rose-700" },
+  pending:     { label: "Kutmoqda",     className: "bg-blue-100 text-[var(--ep-blue)]" },
+  in_progress: { label: "Jarayonda",    className: "bg-yellow-100 text-[var(--ep-yellow)]" },
+  done:        { label: "Bajarilgan",   className: "bg-emerald-100 text-[var(--ep-green)]" },
+  overdue:     { label: "Kechikkan",    className: "bg-rose-100 text-[var(--ep-red)]" },
 };
 
 export default function CleaningSchedulePage() {
@@ -69,17 +74,17 @@ export default function CleaningSchedulePage() {
                 <div key={task.id} className="border rounded-md p-3">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-blue-600" />
+                      <Sparkles className="h-4 w-4 text-[var(--ep-blue)]" />
                       <span className="font-medium">{task.zoneName}</span>
                       <Badge variant="outline" className="text-xs">{task.taskType}</Badge>
                     </div>
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                    <span>Davomiyligi: <strong>{task.frequency}</strong></span>
-                    <span>Oxirgi: <strong>{task.lastDoneAt ?? '—'}</strong></span>
-                    <span>Keyingi: <strong>{task.nextDueAt}</strong></span>
-                    <span>Mas'ul: <strong>{task.assignedToName ?? '—'}</strong></span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                    <span>{t("davomiyligi1")}<strong>{task.frequency}</strong></span>
+                    <span>{t("oxirgi")}<strong>{task.lastDoneAt ?? '—'}</strong></span>
+                    <span>{t("keyingi")}<strong>{task.nextDueAt}</strong></span>
+                    <span>{t("masul1")}<strong>{task.assignedToName ?? '—'}</strong></span>
                   </div>
                 </div>
               );

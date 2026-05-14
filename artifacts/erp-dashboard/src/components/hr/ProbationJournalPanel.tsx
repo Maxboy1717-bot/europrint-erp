@@ -1,3 +1,8 @@
+/**
+ * @module ProbationJournalPanel
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, safeArray } from "@/lib/queryClient";
@@ -13,6 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 import {
   CalendarDays, Clock, SmilePlus, BookOpen, AlertTriangle,
   CheckCircle2, Plus, BarChart3,
@@ -80,6 +86,7 @@ export function ProbationJournalPanel({
   candidateName,
   probationMonths = 3,
 }: ProbationJournalPanelProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
@@ -111,7 +118,7 @@ export function ProbationJournalPanel({
   const daysLeft = calcDaysLeft(endDate);
   const progress = calcProgress(startDate, endDate);
 
-  const nextWeek = (entries.length > 0 ? Math.max(...(entries ?? []).map(e => e.week_number)) + 1 : 1);
+  const nextWeek = (entries.length > 0 ? Math.max(...(Array.isArray(entries) ? entries : []).map(e => e.week_number)) + 1 : 1);
 
   const addMutation = useMutation({
     mutationFn: () =>
@@ -162,7 +169,7 @@ export function ProbationJournalPanel({
   if (isLoading) {
     return (
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm text-muted-foreground">
-        Sinov davri ma'lumotlari yuklanmoqda…
+        {t("sinovDavriMalumotlariYuklanmoqda")}
       </div>
     );
   }
@@ -183,7 +190,7 @@ export function ProbationJournalPanel({
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-emerald-400" />
-          <span className="font-semibold text-sm text-on-surface">Sinov Davri Kuzatuvi</span>
+          <span className="font-semibold text-sm text-foreground">{t("sinovDavriKuzatuvi")}</span>
           <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 border text-[10px]">
             {probationMonths} oy
           </Badge>
@@ -197,17 +204,17 @@ export function ProbationJournalPanel({
             data-testid="button-edit-probation-dates"
           >
             <CalendarDays className="w-2.5 h-2.5 mr-1" />
-            Sanalarni o'zgartirish
+            {t("sanalarniOzgartirish")}
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+            className="h-6 text-[10px] px-2 border-emerald-500/40 text-emerald-400 hover:bg-[var(--ep-green)]/90/10"
             onClick={handleOpenAdd}
             data-testid="button-add-probation-entry"
           >
             <Plus className="w-2.5 h-2.5 mr-1" />
-            Haftalik yozuv
+            {t("haftalikYozuv")}
           </Button>
         </div>
       </div>
@@ -241,7 +248,7 @@ export function ProbationJournalPanel({
         </div>
       ) : (
         <div className="text-xs text-muted-foreground bg-muted/20 rounded-lg p-2 text-center">
-          Sinov davri sanalarini belgilang
+          {t("sinovDavriSanalariniBelgilang")}
         </div>
       )}
 
@@ -278,10 +285,10 @@ export function ProbationJournalPanel({
             return (
               <div
                 key={entry.id}
-                className="bg-surface-container rounded-lg p-3 border border-border/30 text-xs space-y-1.5"
+                className="bg-muted/60 rounded-lg p-3 border border-border/30 text-xs space-y-1.5"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-on-surface">
+                  <span className="font-semibold text-foreground">
                     {entry.week_number}-hafta
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -317,13 +324,13 @@ export function ProbationJournalPanel({
 
       {entries.length === 0 && (
         <div className="text-center text-xs text-muted-foreground py-3 bg-muted/10 rounded-lg">
-          Hali haftalik yozuv yo'q. Birinchi yozuvni qo'shing.
+          {t("haliHaftalikYozuvYoqBirinchi")}
         </div>
       )}
 
       {/* Add Entry Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-400" />
@@ -331,9 +338,9 @@ export function ProbationJournalPanel({
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Hafta raqami *</Label>
+                <Label className="text-xs mb-1 block">{t("haftaRaqami")}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -346,38 +353,38 @@ export function ProbationJournalPanel({
               <div>
                 <Label className="text-xs mb-1 block">Kayfiyat (1-5) *</Label>
                 <Select value={form.mood_score} onValueChange={v => setForm(f => ({ ...f, mood_score: v }))}>
-                  <SelectTrigger data-testid="select-probation-mood">
+                  <SelectTrigger data-testid="select-probation-mood" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 — 😞 Juda yomon</SelectItem>
-                    <SelectItem value="2">2 — 😐 Yomon</SelectItem>
-                    <SelectItem value="3">3 — 🙂 O'rtacha</SelectItem>
-                    <SelectItem value="4">4 — 😊 Yaxshi</SelectItem>
-                    <SelectItem value="5">5 — 🤩 A'lo</SelectItem>
+                    <SelectItem value="1">{t("k1JudaYomon")}</SelectItem>
+                    <SelectItem value="2">{t("k2Yomon")}</SelectItem>
+                    <SelectItem value="3">{t("k3Ortacha")}</SelectItem>
+                    <SelectItem value="4">{t("k4Yaxshi")}</SelectItem>
+                    <SelectItem value="5">{t("k5Alo")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div>
-              <Label className="text-xs mb-1 block">Vazifalar holati</Label>
+              <Label className="text-xs mb-1 block">{t("vazifalarHolati")}</Label>
               <Select value={form.tasks_status} onValueChange={v => setForm(f => ({ ...f, tasks_status: v }))}>
-                <SelectTrigger data-testid="select-probation-tasks">
+                <SelectTrigger data-testid="select-probation-tasks" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ok">Bajarildi</SelectItem>
-                  <SelectItem value="partial">Qisman bajarildi</SelectItem>
-                  <SelectItem value="not_done">Bajarilmadi</SelectItem>
+                  <SelectItem value="ok">{t("Bajarildi")}</SelectItem>
+                  <SelectItem value="partial">{t("qismanBajarildi")}</SelectItem>
+                  <SelectItem value="not_done">{t("bajarilmadi")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label className="text-xs mb-1 block">Umumiy izoh</Label>
+              <Label className="text-xs mb-1 block">{t("umumiyIzoh")}</Label>
               <Textarea
-                placeholder="Bu hafta xodim qanday ishladi..."
+                placeholder={t("buHaftaXodimQandayIshladi")}
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 rows={2}
@@ -386,7 +393,7 @@ export function ProbationJournalPanel({
             </div>
 
             <div>
-              <Label className="text-xs mb-1 block">Nastavnik izohi</Label>
+              <Label className="text-xs mb-1 block">{t("nastavnikIzohi")}</Label>
               <Textarea
                 placeholder="Nastavnik / mentor izohi..."
                 value={form.nastavnik_feedback}
@@ -399,7 +406,7 @@ export function ProbationJournalPanel({
             <div>
               <Label className="text-xs mb-1 block">Intizom hodisalari (ixtiyoriy)</Label>
               <Textarea
-                placeholder="Kechikish, sababsiz yo'qlik va boshqalar..."
+                placeholder={t("kechikishSababsizYoqlikVaBoshqalar")}
                 value={form.discipline_issues}
                 onChange={e => setForm(f => ({ ...f, discipline_issues: e.target.value }))}
                 rows={2}
@@ -408,7 +415,7 @@ export function ProbationJournalPanel({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setAddOpen(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => addMutation.mutate()}
               disabled={addMutation.isPending || !form.week_number}
@@ -424,16 +431,16 @@ export function ProbationJournalPanel({
 
       {/* Edit Dates Dialog */}
       <Dialog open={editingDates} onOpenChange={setEditingDates}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm">
               <CalendarDays className="w-4 h-4 text-emerald-400" />
-              Sinov Davri Sanalarini Belgilash
+              {t("sinovDavriSanalariniBelgilash")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label className="text-xs mb-1 block">Boshlanish sanasi</Label>
+              <Label className="text-xs mb-1 block">{t("startDate")}</Label>
               <Input
                 type="date"
                 value={dateForm.probation_start_date}
@@ -442,7 +449,7 @@ export function ProbationJournalPanel({
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block">Tugash sanasi</Label>
+              <Label className="text-xs mb-1 block">{t("endDate")}</Label>
               <Input
                 type="date"
                 value={dateForm.probation_end_date}
@@ -455,7 +462,7 @@ export function ProbationJournalPanel({
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingDates(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setEditingDates(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => saveDatesMutation.mutate()}
               disabled={saveDatesMutation.isPending}

@@ -1,3 +1,8 @@
+/**
+ * @module router.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { safeDiv } from '@common/math/math-utils';
 import { AiDecisionLogService } from '../common/ai-decision-log.service';

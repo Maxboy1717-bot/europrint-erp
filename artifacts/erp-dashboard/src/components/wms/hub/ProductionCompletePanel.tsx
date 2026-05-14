@@ -1,9 +1,16 @@
+/**
+ * @module ProductionCompletePanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Factory, Loader2 } from "lucide-react";
+import { Factory } from "lucide-react";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface ProductionCompleteProps {
   form: {
     consumptionId: string;
@@ -17,18 +24,19 @@ interface ProductionCompleteProps {
 }
 
 export function ProductionCompletePanel({ form, onChange, onComplete, isPending }: ProductionCompleteProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <Factory className="h-4 w-4" />
-          Ishlab chiqarish yakunlash
+          {t("ishlabChiqarishYakunlash")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label className="text-xs">Sarflash ID</Label>
+            <Label className="text-xs">{t("sarflashId")}</Label>
             <Input
               type="number"
               placeholder="ID"
@@ -48,7 +56,7 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Chiqindi (kg)</Label>
             <Input
@@ -78,14 +86,14 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
           data-testid="button-complete"
         >
           {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            <EPLoader className="mr-1" />
           ) : (
             <Factory className="h-4 w-4 mr-1" />
           )}
           Yakunlash (0.5 kg tolerans)
         </Button>
         <p className="text-xs text-muted-foreground">
-          Farq 0.5 kg dan oshsa avtomatik qarz yoziladi
+          {t("farq05KgDan")}
         </p>
       </CardContent>
     </Card>

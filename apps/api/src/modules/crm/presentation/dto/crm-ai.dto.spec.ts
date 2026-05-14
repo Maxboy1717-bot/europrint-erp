@@ -1,3 +1,8 @@
+/**
+ * @module crm-ai.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import {
   CrmAiContextDtoSchema,
   CrmAiSuggestActionDtoSchema,

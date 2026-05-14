@@ -1,26 +1,33 @@
+/**
+ * @module BasicTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Layers, Box, CheckCircle } from "lucide-react";
 import { fmtDate } from "@/components/wms/helpers";
 import { KpiCard } from "@/components/wms/tabs/KpiCard";
 import type { MaterialBasic } from "@/components/wms/wms-types";
 
+import { useTranslation } from '@/lib/i18n';
 interface BasicTabProps {
   basic: MaterialBasic;
 }
 
-export function BasicTab({ basic }: BasicTabProps) {
+export function BasicTab({basic }: BasicTabProps) {
+  const { t } = useTranslation('common');
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={Package} label="Material kodi" value={basic.kod || "—"} />
-        <KpiCard icon={Layers} label="Kategoriya" value={basic.category || "—"} />
-        <KpiCard icon={Box} label="O'lchov birligi" value={basic.unitOfMeasure || "—"} />
-        <KpiCard icon={CheckCircle} label="Holat" value={basic.isActive ? "Aktiv" : "Arxiv"} color={basic.isActive ? "text-green-600" : "text-muted-foreground"} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard icon={Package} label={t('materialKodi')} value={basic.kod || "—"} />
+        <KpiCard icon={Layers} label={t("category")} value={basic.category || "—"} />
+        <KpiCard icon={Box} label={t("olchovBirligi")} value={basic.unitOfMeasure || "—"} />
+        <KpiCard icon={CheckCircle} label={t("status28")} value={basic.isActive ? "Aktiv" : "Arxiv"} color={basic.isActive ? "text-[var(--ep-green)]" : "text-muted-foreground"} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Material haqida</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">{t("materialHaqida")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([
               { label: "Nomi (O'zbek)", value: basic.xomAshyo },
@@ -37,7 +44,7 @@ export function BasicTab({ basic }: BasicTabProps) {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Texnik ma'lumotlar</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">{t("texnikMalumotlar")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([
               { label: "Format A", value: basic.formatA ? `${basic.formatA} mm` : null },
@@ -53,7 +60,7 @@ export function BasicTab({ basic }: BasicTabProps) {
             ) : null)}
             {basic.description && (
               <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground mb-1">Tavsif</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("progress.description")}</p>
                 <p className="text-sm">{basic.description}</p>
               </div>
             )}

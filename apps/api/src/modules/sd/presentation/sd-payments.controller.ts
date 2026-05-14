@@ -1,3 +1,8 @@
+/**
+ * @module sd-payments.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   AuditInterceptor } from '@common/interceptors/audit.interceptor';import { safeInt } from '../../hr/common/db-rows';import {
 Body,
@@ -13,6 +18,7 @@ Body,
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdPaymentsService } from '../application/sd-payments.service';
@@ -22,7 +28,7 @@ const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'accounta
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(...SD_ROLES)
 @Controller('sd')
 export class SdPaymentsController {

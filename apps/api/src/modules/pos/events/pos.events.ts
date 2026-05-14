@@ -11,12 +11,17 @@ import { PosTelegramService }      from '../services/pos-telegram.service';
 import { LabelService }            from '../services/label.service';
 import { PosNotificationsService } from '../services/pos-notifications.service';
 import { PosEventRepository }      from '../repositories/pos-event.repository';
+import { AutoBarcodeService }      from '../services/auto-barcode.service';
+import { AutoGlPostingService }    from '../services/auto-gl-posting.service';
+import { QuarantineWorkflowService } from '../services/quarantine-workflow.service';
+import { ThreeWayMatchService }    from '../services/three-way-match.service';
 import { broadcastPosEvent }       from '../pos.gateway';
 
 export interface MovementCreatedEvent     { movementId: number; movementNumber: string; typeCode: string; createdById: number }
 export interface MovementStatusChangedEvent { movementId: number; movementNumber: string; oldStatus: string; newStatus: string; updatedById: number }
 export interface QcDecisionEvent         { movementId: number; decision: string; qcInspectorId: number }
 export interface RequestEvent            { requestId: number; requestNumber: string; departmentCode?: string; createdById?: number; approvedById?: number; rejectedById?: number; rejectionReason?: string }
+export interface HrEmployeeExitEvent     { userId: number; employeeCode?: string; departmentCode?: string; exitDate?: string }
 
 @Injectable()
 export class PosEventHandler {
@@ -27,6 +32,10 @@ export class PosEventHandler {
     private readonly labelService:    LabelService,
     private readonly notifications:   PosNotificationsService,
     private readonly eventRepo:       PosEventRepository,
+    private readonly autoBarcode:     AutoBarcodeService,
+    private readonly autoGl:          AutoGlPostingService,
+    private readonly quarantine:      QuarantineWorkflowService,
+    private readonly threeWay:        ThreeWayMatchService,
   ) {}
 
   private n(userId: number, type: string, title: string, body: string, entityId?: number): void {
@@ -38,10 +47,36 @@ export class PosEventHandler {
     this.logger.debug(`Event: pos.movement.created — ${payload.movementNumber}`);
     broadcastPosEvent('movement.created', { id: payload.movementId, movementNumber: payload.movementNumber, movementType: payload.typeCode, status: 'draft', createdAt: new Date().toISOString() });
     this.n(payload.createdById, 'MOVEMENT_CREATED', 'Harakat yaratildi', `${payload.movementNumber} yaratildi`, payload.movementId);
+
     if (payload.typeCode === 'EXTERNAL_IN') {
-      await this.telegramService.notifyQcRequired(payload.movementId, payload.movementNumber);
-      const qcUsers = await this.eventRepo.findByRoles(['qc_inspector']);
-      for (const u of qcUsers) { this.n(u.id, 'QC_PENDING', 'QC tekshiruvi kerak', `Harakat ${payload.movementNumber} QC kutmoqda`, payload.movementId); }
+      // Auto-karantin: EXTERNAL_IN avtomatik QC-HOLD omborga
+      try {
+        const qR = await this.quarantine.moveToQuarantine(payload.movementId);
+        if (qR.ok) {
+          this.logger.log(`[AutoQuarantine] ${payload.movementNumber} → karantin statusiga ko'chirildi`);
+        }
+      } catch (e) {
+        this.logger.warn(`[AutoQuarantine] xato (${payload.movementNumber}): ${String(e)}`);
+      }
+
+      // Auto-barkod: har qator material uchun CODE128 barkod yaratiladi
+      try {
+        const bcR = await this.autoBarcode.generateForMovement(payload.movementId);
+        if (bcR.ok) {
+          this.logger.log(`[AutoBarcode] ${payload.movementNumber}: ${bcR.data.created} ta barkod yaratildi`);
+        }
+      } catch (e) {
+        this.logger.warn(`[AutoBarcode] xato (${payload.movementNumber}): ${String(e)}`);
+      }
+
+      // QC bildirishnomalar
+      try { await this.telegramService.notifyQcRequired(payload.movementId, payload.movementNumber); } catch { /* noop */ }
+      try {
+        const qcUsers = await this.eventRepo.findByRoles(['qc_inspector']);
+        for (const u of qcUsers) {
+          this.n(u.id, 'QC_PENDING', 'QC tekshiruvi kerak', `Harakat ${payload.movementNumber} QC kutmoqda`, payload.movementId);
+        }
+      } catch { /* noop */ }
     }
   }
 
@@ -68,6 +103,49 @@ export class PosEventHandler {
     if (mv?.movementType === 'EXTERNAL_IN') {
       await execPosMovementMarkAiProcessing(payload.movementId);
       broadcastPosEvent('stock.alert', { type: 'movement_posted', movementId: payload.movementId, ts: new Date().toISOString() });
+      // MES integration — notify manufacturing that raw materials are approved/received
+      broadcastPosEvent('mes.material_received', {
+        movementId: payload.movementId,
+        movementNumber: payload.movementNumber,
+        ts: new Date().toISOString(),
+      });
+      this.logger.log(`[MES] Material qabul qilindi signali yuborildi: ${payload.movementNumber}`);
+    }
+
+    // AVTOMATIK GL POSTING — har tasdiqlangan harakat uchun
+    try {
+      const glR = await this.autoGl.postForMovement(payload.movementId);
+      if (glR.ok && glR.data.posted > 0) {
+        this.logger.log(`[AutoGL] ${payload.movementNumber}: ${glR.data.posted} ta GL yozuvi avtomatik yaratildi`);
+        broadcastPosEvent('gl.posted', {
+          movementId: payload.movementId,
+          movementNumber: payload.movementNumber,
+          entriesCount: glR.data.posted,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`[AutoGL] xato (${payload.movementNumber}): ${String(e)}`);
+    }
+
+    // AVTOMATIK 3-WAY MATCH — EXTERNAL_IN tasdiqlanganda
+    if (mv?.movementType === 'EXTERNAL_IN') {
+      try {
+        const tmR = await this.threeWay.autoMatchAll();
+        if (tmR.ok && tmR.data.processed > 0) {
+          this.logger.log(`[3WayMatch] ${tmR.data.processed} ta movement avtomatik solishtirildi`);
+        }
+      } catch (e) {
+        this.logger.warn(`[3WayMatch] xato: ${String(e)}`);
+      }
+    }
+    // MES: production material allocated (INTERNAL_ISSUE to department)
+    if (mv?.movementType === 'INTERNAL_ISSUE') {
+      broadcastPosEvent('mes.material_issued', {
+        movementId: payload.movementId,
+        movementNumber: payload.movementNumber,
+        ts: new Date().toISOString(),
+      });
+      this.logger.log(`[MES] Material berildi signali yuborildi: ${payload.movementNumber}`);
     }
   }
 
@@ -206,5 +284,42 @@ export class PosEventHandler {
   onGlRejected(payload: { movementId: number; movementNumber: string; userId: number }) {
     this.n(payload.userId, 'GL_REJECTED', 'GL posting rad etildi', `${payload.movementNumber} GL yozuvlari rad etildi`, payload.movementId);
     broadcastPosEvent('gl.update', { movementId: payload.movementId, status: 'rejected' });
+  }
+
+  /**
+   * HR moduli xodim ishdan chiqish eventini yuboradi.
+   * Bu yerda inventar tekshiruvi va mas'ul shaxslarga xabarnoma yuboriladi.
+   */
+  @OnEvent('hr.employee.exit')
+  async onHrEmployeeExit(payload: HrEmployeeExitEvent) {
+    this.logger.log(`[HR] Xodim chiqish: userId=${payload.userId}`);
+    try {
+      // Notify warehouse managers to reconcile the employee's inventory
+      const managers = await this.eventRepo.findByRoles(['warehouse_manager', 'pos_manager']);
+      for (const mgr of managers) {
+        this.n(
+          mgr.id,
+          'HR_EXIT_INVENTORY_CHECK',
+          'Xodim inventar tekshiruvi',
+          `Xodim #${payload.userId} ishdan chiqmoqda — inventarni tekshiring`,
+        );
+        if (mgr.telegramId) {
+          await this.telegramService.sendNotification(
+            BigInt(String(mgr.telegramId)),
+            `🚪 <b>Xodim chiqish — inventar tekshiruvi kerak</b>\n\nXodim ID: ${payload.userId}\nBo'lim: ${payload.departmentCode ?? '—'}\nChiqish sanasi: ${payload.exitDate ?? 'noma\'lum'}`,
+          );
+        }
+      }
+      // Notify the employee themselves (in-app)
+      this.n(
+        payload.userId,
+        'HR_EXIT_REMINDER',
+        'Inventarni qaytaring',
+        'Ishdan chiqishdan oldin barcha inventarni omborga qaytarish kerak',
+      );
+      broadcastPosEvent('hr.employee_exit', { userId: payload.userId, exitDate: payload.exitDate });
+    } catch (err: unknown) {
+      this.logger.error(`[HR] Exit event handler xatosi: ${(err as Error).message}`);
+    }
   }
 }

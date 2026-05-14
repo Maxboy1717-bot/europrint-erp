@@ -1,3 +1,8 @@
+/**
+ * @module schema-chat
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, text, boolean, timestamp, varchar, jsonb, integer,
 } from 'drizzle-orm/pg-core';

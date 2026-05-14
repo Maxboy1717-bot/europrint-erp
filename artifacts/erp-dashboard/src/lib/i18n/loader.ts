@@ -1,3 +1,8 @@
+/**
+ * @module loader
+ * @description Frontend utility / library module.
+ */
+
 import type { Language, TranslationModule, TranslationModuleName, AllTranslations } from './types';
 import { DEFAULT_LANGUAGE } from './constants';
 
@@ -33,6 +38,23 @@ import uzPos           from '../../locales/uz/pos.json';
 import uzAi            from '../../locales/uz/ai.json';
 import uzCoordination  from '../../locales/uz/coordination.json';
 import uzPrint         from '../../locales/uz/print.json';
+import uzBarcode       from '../../locales/uz/barcode.json';
+import uzCalc          from '../../locales/uz/calc.json';
+import uzContact       from '../../locales/uz/contact.json';
+import uzFooter        from '../../locales/uz/footer.json';
+import uzGlPosting     from '../../locales/uz/glPosting.json';
+import uzInventory     from '../../locales/uz/inventory.json';
+import uzLedger        from '../../locales/uz/ledger.json';
+import uzLowstock      from '../../locales/uz/lowstock.json';
+import uzMovements     from '../../locales/uz/movements.json';
+import uzMyInventory   from '../../locales/uz/myInventory.json';
+import uzNav           from '../../locales/uz/nav.json';
+import uzOffline       from '../../locales/uz/offline.json';
+import uzQcreview      from '../../locales/uz/qcreview.json';
+import uzQuarantine    from '../../locales/uz/quarantine.json';
+import uzReports       from '../../locales/uz/reports.json';
+import uzRequests      from '../../locales/uz/requests.json';
+import uzVariance      from '../../locales/uz/variance.json';
 
 // ─── RU tarjimalari ───────────────────────────────────────────────────────────
 import ruCommon        from '../../locales/ru/common.json';
@@ -66,6 +88,23 @@ import ruPos           from '../../locales/ru/pos.json';
 import ruAi            from '../../locales/ru/ai.json';
 import ruCoordination  from '../../locales/ru/coordination.json';
 import ruPrint         from '../../locales/ru/print.json';
+import ruBarcode       from '../../locales/ru/barcode.json';
+import ruCalc          from '../../locales/ru/calc.json';
+import ruContact       from '../../locales/ru/contact.json';
+import ruFooter        from '../../locales/ru/footer.json';
+import ruGlPosting     from '../../locales/ru/glPosting.json';
+import ruInventory     from '../../locales/ru/inventory.json';
+import ruLedger        from '../../locales/ru/ledger.json';
+import ruLowstock      from '../../locales/ru/lowstock.json';
+import ruMovements     from '../../locales/ru/movements.json';
+import ruMyInventory   from '../../locales/ru/myInventory.json';
+import ruNav           from '../../locales/ru/nav.json';
+import ruOffline       from '../../locales/ru/offline.json';
+import ruQcreview      from '../../locales/ru/qcreview.json';
+import ruQuarantine    from '../../locales/ru/quarantine.json';
+import ruReports       from '../../locales/ru/reports.json';
+import ruRequests      from '../../locales/ru/requests.json';
+import ruVariance      from '../../locales/ru/variance.json';
 
 // ─── To'liq tarjima ob'ekti ───────────────────────────────────────────────────
 export const ALL_TRANSLATIONS: AllTranslations = {
@@ -101,6 +140,23 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     ai:            uzAi            as TranslationModule,
     coordination:  uzCoordination  as TranslationModule,
     print:         uzPrint         as TranslationModule,
+    barcode:       uzBarcode       as TranslationModule,
+    calc:          uzCalc          as TranslationModule,
+    contact:       uzContact       as TranslationModule,
+    footer:        uzFooter        as TranslationModule,
+    glPosting:     uzGlPosting     as TranslationModule,
+    inventory:     uzInventory     as TranslationModule,
+    ledger:        uzLedger        as TranslationModule,
+    lowstock:      uzLowstock      as TranslationModule,
+    movements:     uzMovements     as TranslationModule,
+    myInventory:   uzMyInventory   as TranslationModule,
+    nav:           uzNav           as TranslationModule,
+    offline:       uzOffline       as TranslationModule,
+    qcreview:      uzQcreview      as TranslationModule,
+    quarantine:    uzQuarantine    as TranslationModule,
+    reports:       uzReports       as TranslationModule,
+    requests:      uzRequests      as TranslationModule,
+    variance:      uzVariance      as TranslationModule,
   },
   ru: {
     common:        ruCommon        as TranslationModule,
@@ -134,13 +190,45 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     ai:            ruAi            as TranslationModule,
     coordination:  ruCoordination  as TranslationModule,
     print:         ruPrint         as TranslationModule,
+    barcode:       ruBarcode       as TranslationModule,
+    calc:          ruCalc          as TranslationModule,
+    contact:       ruContact       as TranslationModule,
+    footer:        ruFooter        as TranslationModule,
+    glPosting:     ruGlPosting     as TranslationModule,
+    inventory:     ruInventory     as TranslationModule,
+    ledger:        ruLedger        as TranslationModule,
+    lowstock:      ruLowstock      as TranslationModule,
+    movements:     ruMovements     as TranslationModule,
+    myInventory:   ruMyInventory   as TranslationModule,
+    nav:           ruNav           as TranslationModule,
+    offline:       ruOffline       as TranslationModule,
+    qcreview:      ruQcreview      as TranslationModule,
+    quarantine:    ruQuarantine    as TranslationModule,
+    reports:       ruReports       as TranslationModule,
+    requests:      ruRequests      as TranslationModule,
+    variance:      ruVariance      as TranslationModule,
   },
 };
 
 // ─── In-memory cache ─────────────────────────────────────────────────────────
 type Cache = Partial<Record<Language, Partial<Record<TranslationModuleName, TranslationModule>>>>;
+// In-memory translation cache. Keyed by lang → module → flat key dictionary.
+// First access for a (lang, module) pair loads from ALL_TRANSLATIONS; subsequent
+// reads return the cached reference. There's no eviction — translation data is
+// tiny (~5k keys total) and never changes at runtime.
 const _cache: Cache = {};
 
+/**
+ * @description Lazy-load a translation module from the static bundle.
+ *   Falls back to `{}` if the module name is unknown — keeps `t('key')`
+ *   returning the literal key instead of crashing.
+ *
+ *   WHY caching despite the static bundle:
+ *     ALL_TRANSLATIONS is loaded once at module init, but JS engines
+ *     re-resolve object key lookups on every access. The cache locks the
+ *     module reference once so hot-path translations are a single map
+ *     lookup, not a chain through optional chaining.
+ */
 function getCachedModule(lang: Language, module: TranslationModuleName): TranslationModule {
   if (!_cache[lang]) _cache[lang] = {};
   if (!_cache[lang]![module]) {
@@ -150,8 +238,21 @@ function getCachedModule(lang: Language, module: TranslationModuleName): Transla
 }
 
 /**
- * Kalit bo'yicha tarjimani qaytaradi.
- * Yetishmasa: development da console.warn, production da raw key.
+ * @description Resolve a key to its translated string. Three-level fallback:
+ *     1. moduleData[key]           current language
+ *     2. fallback parameter         caller-provided default
+ *     3. defaultModule[key]         UZ (DEFAULT_LANGUAGE) version
+ *     4. literal `key`              last resort — shown verbatim to the user
+ *
+ *   In development, missing keys emit a `[i18n] Missing key` console
+ *   warning so the developer notices and adds the translation. In
+ *   production we silently fall through to the literal key — better than
+ *   crashing a page over a missing string.
+ *
+ *   The literal-key fallback is why our key naming convention matters:
+ *   keys should be human-readable enough that "shown verbatim" is at
+ *   least understandable (`t('common.save')` → "common.save" is OK as
+ *   a degraded fallback; `t('x42')` would be cryptic).
  */
 export function getTranslation(
   lang: Language,
@@ -168,6 +269,12 @@ export function getTranslation(
     fallback ??
     getCachedModule(DEFAULT_LANGUAGE, module)[key] ??
     key;
+
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(
+      `[i18n] Missing key '${key}' in ${lang}/${module} — falling back to: "${fallbackValue}"`,
+    );
+  }
 
   return fallbackValue;
 }
@@ -189,7 +296,7 @@ export function interpolate(
  * Development rejimida barcha tillar uchun kalit to'liqligini tekshiradi.
  */
 export function validateTranslationCompleteness(): void {
-  if (!import.meta.env.DEV) return;
+  if (process.env.NODE_ENV !== 'development') return;
 
   const base = ALL_TRANSLATIONS[DEFAULT_LANGUAGE];
 

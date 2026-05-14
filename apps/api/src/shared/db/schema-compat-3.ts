@@ -1,3 +1,8 @@
+/**
+ * @module schema-compat-3
+ * @description Source module. See exports for details.
+ */
+
 import { pgTable, uuid, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
 
 export const mroInventory = stub(pgTable('mro_inventory', {
@@ -180,16 +185,18 @@ export const marketingCampaigns = stub(pgTable('marketing_campaigns', {
 }));
 
 export const marketingLeads = stub(pgTable('marketing_leads', {
-  id: integer('id').primaryKey(),
-  campaignId: text('campaign_id'),
-  firstName: text('first_name'),
-  lastName: text('last_name'),
-  email: text('email'),
-  phone: text('phone'),
-  status: text('status').notNull().default('new'),
+  id:          integer('id').primaryKey(),
+  campaignId:  text('campaign_id'),
+  firstName:   text('first_name'),
+  lastName:    text('last_name'),
+  email:       text('email'),
+  phone:       text('phone'),
+  status:      text('status').notNull().default('new'),
+  lostReason:  text('lost_reason'),
   convertedAt: ts('converted_at'),
-  createdAt: ts('created_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
+  createdAt:   ts('created_at').defaultNow(),
+  updatedAt:   ts('updated_at').defaultNow(),
+  deletedAt:   ts('deleted_at'),
 }));
 
 export const productCategories = stub(pgTable('product_categories', {

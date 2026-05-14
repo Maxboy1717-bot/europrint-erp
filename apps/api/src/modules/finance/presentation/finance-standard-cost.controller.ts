@@ -1,3 +1,8 @@
+/**
+ * @module finance-standard-cost.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Param, Query, Body, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';

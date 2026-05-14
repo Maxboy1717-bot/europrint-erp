@@ -1,0 +1,9 @@
+{
+  "cameraUnsupported": "Kamera qo'llab-quvvatlanmaydi",
+  "scan": "Skanerlash",
+  "manualInput": "Qo'l bilan kiritish",
+  "scanCamera": "Skanerlash Kamera",
+  "scanHistory": "Skanerlash History",
+  "notFound": "not Found",
+  "notifyAdmin": "notify Admin"
+}

@@ -1,3 +1,8 @@
+/**
+ * @module roleConstants
+ * @description Frontend route definition.
+ */
+
 export const ALL_AUTHENTICATED = [
   'employee', 'hr', 'hr_manager', 'finance', 'finance_manager', 'cfo',
   'accountant', 'manager', 'director', 'warehouse', 'warehouse_manager',

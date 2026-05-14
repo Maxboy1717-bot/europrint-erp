@@ -1,3 +1,8 @@
+/**
+ * @module useEmployeeFiles
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -19,10 +24,7 @@ export function useEmployeeFiles(id: string | undefined) {
 
   const uploadFileMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await fetch(`/api/employees/${id}/files`, {
-        method: "POST",
-        body: data,
-      });
+      const response = await apiRequest('POST', `/api/employees/${id}/files`);
       if (!response.ok) throw new Error("Failed to upload file");
       return response.json();
     },

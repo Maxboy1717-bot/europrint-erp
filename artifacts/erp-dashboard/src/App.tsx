@@ -1,3 +1,8 @@
+/**
+ * @module App
+ * @description Source module. See exports for details.
+ */
+
 import { useState, useEffect, lazy, Suspense } from "react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { ChatSocketProvider } from "@/hooks/chat/ChatSocketProvider";
@@ -24,6 +29,7 @@ const AIInterviewPublicPage = lazy(() => import("@/pages/AIInterviewPublicPage")
 const HRCapitalPublicTest = lazy(() => import("@/pages/HRCapitalPublicTest"));
 const TelegramMiniApp = lazy(() => import("@/pages/mini-app/TelegramMiniApp"));
 const PosMonitorApp   = lazy(() => import("./pos-monitor/PosMonitorApp"));
+const ChatPageFull    = lazy(() => import("@/pages/chat/ChatPage"));
 
 function MainApp() {
   const [location, setLocation] = useLocation();
@@ -88,6 +94,18 @@ function MainApp() {
 
   if (location.startsWith("/pos-monitor")) {
     return <Suspense fallback={<PageLoader />}><PosMonitorApp /></Suspense>;
+  }
+
+  if (location === "/chat" || location.startsWith("/chat/")) {
+    return (
+      <PrivateRoute>
+        <ChatSocketProvider>
+          <Suspense fallback={<PageLoader />}>
+            <ChatPageFull />
+          </Suspense>
+        </ChatSocketProvider>
+      </PrivateRoute>
+    );
   }
 
   return (

@@ -1,3 +1,8 @@
+/**
+ * @module AssetTabsList
+ * @description React UI component.
+ */
+
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "@/lib/i18n";
 import { Building2, Wrench, Trash2, ArrowRightLeft, ShieldCheck, Activity } from "lucide-react";

@@ -1,3 +1,8 @@
+/**
+ * @module hr-v2-events
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 export const HrV2Events = {
@@ -66,6 +71,9 @@ export const HrV2Events = {
   ATTENDANCE_LATE: 'attendance.late',
   ADAPTATION_AT_RISK: 'adaptation.at_risk',
   ADAPTATION_COMPLETED: 'adaptation.completed',
+
+  EMPLOYEE_CREATED: 'employee.created',
+  CAMERA_VIOLATION_DETECTED: 'camera.violation.detected',
 } as const;
 
 export type HrV2EventName = typeof HrV2Events[keyof typeof HrV2Events];

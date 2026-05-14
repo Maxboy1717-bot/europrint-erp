@@ -1,3 +1,8 @@
+/**
+ * @module Faq
+ * @description Source module. See exports for details.
+ */
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp, MessageCircle, Package, Truck, Palette, CreditCard, RotateCcw, Image, Clock } from "lucide-react";
 import { Link } from "wouter";

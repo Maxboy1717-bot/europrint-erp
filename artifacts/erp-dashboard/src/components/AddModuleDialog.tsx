@@ -1,3 +1,8 @@
+/**
+ * @module AddModuleDialog
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,8 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 const moduleSchema = z.object({
   title: z.string().min(1, "Modul nomi majburiy"),
   titleRu: z.string().min(1, "Modul nomi (Rus) majburiy"),
@@ -27,6 +34,7 @@ interface AddModuleDialogProps {
 }
 
 export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const form = useForm<ModuleFormData>({
     resolver: zodResolver(moduleSchema),
@@ -71,11 +79,11 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Yangi modul qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiModulQoshish")}</DialogTitle>
           <DialogDescription>
-            Kursga yangi modul qo'shish uchun ma'lumotlarni kiriting
+            {t("kursgaYangiModulQoshishUchun")}
           </DialogDescription>
         </DialogHeader>
 
@@ -88,7 +96,7 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
                 <FormItem>
                   <FormLabel>Modul nomi (O'zbek) <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="1-modul: Asoslar" data-testid="input-module-title" />
+                    <Input {...field} placeholder={t("k1ModulAsoslar")} data-testid="input-module-title" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -116,7 +124,7 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
                 <FormItem>
                   <FormLabel>Tavsif (O'zbek)</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Modul haqida qisqacha ma'lumot..." rows={2} data-testid="input-module-description" />
+                    <Textarea {...field} placeholder={t("modulHaqidaQisqachaMalumot")} rows={2} data-testid="input-module-description" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,10 +152,10 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
                 onClick={() => onOpenChange(false)}
                 disabled={createMutation.isPending}
               >
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-module">
-                {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
                 Saqlash
               </Button>
             </DialogFooter>

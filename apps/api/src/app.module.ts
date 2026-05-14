@@ -1,3 +1,8 @@
+/**
+ * @module app.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module, Logger } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -56,11 +61,14 @@ import { AiModule } from './modules/ai/ai.module';
 import { AiAgentsModule } from './modules/ai-agents/ai-agents.module';
 import { BotGatewayModule } from './modules/bot-gateway/bot-gateway.module';
 import { DirectorModule } from './modules/director/director.module';
+import { CommunicationCenterModule } from './modules/communication-center/communication-center.module';
+import { AgentsModule } from './modules/agents/agents.module';
 import { PosModule } from './modules/pos/pos.module';
 import { PosV2Module } from './modules/pos-v2/pos-v2.module';
 import { CoreModule } from './modules/core/core.module';
 import { OrgStructureModule } from './modules/org-structure/org-structure.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 // Ecommerce & Website (Express dan ko'chirildi — NestJS native)
 import { EcommerceModule } from './modules/ecommerce/ecommerce.module';
@@ -112,21 +120,22 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     }),
 
     // ── Throttler: §6 Rate Limiting ──────────────────────────────────────────
-    // Two named profiles: 'default' (100/min) for general routes,
-    // 'auth' (5/min) for /auth/* — enforced globally by FastifyThrottlerGuard
+    // To'rt nomli profil — FastifyThrottlerGuard global enforcement orqali:
+    //   default  — umumiy endpointlar     (100/daq)
+    //   auth     — /auth/* (brute-force)  (5/daq)
+    //   ai       — LLM (qimmat operatsiya)(20/daq) — Claude/OpenAI cost cheklash
+    //   report   — og'ir hisobotlar       (10/daq)
+    //   export   — PDF/Excel eksport      (5/daq)
     ThrottlerModule.forRoot([
-      { name: 'default', ttl: 60_000, limit: 100 },
-      { name: 'auth',    ttl: 60_000, limit: 5 },
+      { name: 'default', ttl: 60_000, limit: parseInt(process.env.THROTTLE_DEFAULT_LIMIT ?? '100', 10) },
+      { name: 'auth',    ttl: 60_000, limit: parseInt(process.env.THROTTLE_AUTH_LIMIT ?? '5', 10) },
+      { name: 'ai',      ttl: 60_000, limit: parseInt(process.env.THROTTLE_AI_LIMIT ?? '20', 10) },
+      { name: 'report',  ttl: 60_000, limit: parseInt(process.env.THROTTLE_REPORT_LIMIT ?? '10', 10) },
+      { name: 'export',  ttl: 60_000, limit: parseInt(process.env.THROTTLE_EXPORT_LIMIT ?? '5', 10) },
     ]),
 
     // ── Event-Driven (§10 — 20 trigger) ─────────────────────────────────────
-    EventEmitterModule.forRoot({
-      wildcard: false,
-      delimiter: '.',
-      maxListeners: 50,
-      verboseMemoryLeak: true,
-      ignoreErrors: false,
-    }),
+    EventEmitterModule.forRoot(),
 
     // ── Cron jobs (§22) ──────────────────────────────────────────────────────
     ScheduleModule.forRoot(),
@@ -172,11 +181,14 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     AiAgentsModule,
     BotGatewayModule,
     DirectorModule,
+    CommunicationCenterModule,
+    AgentsModule,
     PosModule,
     PosV2Module,
     CoreModule,
     OrgStructureModule,
     ChatModule,
+    StorageModule,
 
     // ── Ecommerce & Website (NestJS native — Express dan ko'chirildi) ──────────
     EcommerceModule,

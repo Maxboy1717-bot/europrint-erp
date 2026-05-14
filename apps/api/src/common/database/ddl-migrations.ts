@@ -1,3 +1,8 @@
+/**
+ * @module ddl-migrations
+ * @description Source module. See exports for details.
+ */
+
 import { ddlRun } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
@@ -111,6 +116,35 @@ export async function ensureChatTables(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_chat_reactions_message_id ON chat_reactions(message_id);
     CREATE INDEX IF NOT EXISTS idx_chat_poll_votes_poll_id ON chat_poll_votes(poll_id);
   `);
+
+  // Ensure all columns that the Drizzle schema expects actually exist (idempotent ALTERs)
+  const columnMigrations = [
+    // chat_rooms extras
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS description TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS avatar_url TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_text TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMPTZ`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS is_read_only BOOLEAN DEFAULT FALSE`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS context_type TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS context_id TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS member_count INTEGER DEFAULT 0`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_id TEXT`,
+    // chat_members extras
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS unread_count INTEGER DEFAULT 0`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS is_muted BOOLEAN DEFAULT FALSE`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS muted_until TIMESTAMPTZ`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMPTZ`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS last_read_message_id TEXT`,
+    // chat_messages extras
+    `ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS text TEXT`,
+    `ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS mentioned_user_ids JSONB DEFAULT '[]'::jsonb`,
+    `ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS client_msg_id TEXT`,
+  ];
+  for (const m of columnMigrations) {
+    try { await ddlRun(sql.raw(m)); } catch { /* already exists */ }
+  }
 }
 
 export async function runChatMigrations(migrations: string[]): Promise<void> {

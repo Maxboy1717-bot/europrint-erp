@@ -1,3 +1,8 @@
+/**
+ * @module current-user.decorator
+ * @description Custom NestJS decorator. Metadata attachment for guards/interceptors.
+ */
+
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 import { AuthenticatedUser } from '../types/user.types'
 

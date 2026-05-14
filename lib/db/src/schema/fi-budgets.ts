@@ -1,6 +1,11 @@
+/**
+ * @module fi-budgets
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
@@ -33,8 +38,8 @@ export type InsertBudget = z.infer<typeof insertBudgetSchema>;
 export const budgetLines = pgTable("budget_lines", {
   id: serial("id").primaryKey(),
   budgetId: varchar("budget_id").notNull().references(() => budgets.id, { onDelete: "cascade" }),
-  accountId: varchar("account_id").references(() => accounts.id),
-  costCenterId: varchar("cost_center_id").references(() => costCenters.id),
+  accountId: varchar("account_id").references(() => accounts.id, { onDelete: "set null" }),
+  costCenterId: varchar("cost_center_id").references(() => costCenters.id, { onDelete: "set null" }),
   plannedAmount: numericMoney("planned_amount").notNull().default(0),
   actualAmount: numericMoney("actual_amount").notNull().default(0),
   varianceAmount: numericMoney("variance_amount"), // actual - planned
@@ -64,8 +69,8 @@ export const orderCostings = pgTable("order_costings", {
   id: serial("id").primaryKey(),
   orderId: text("order_id"),
   orderType: text("order_type"),
-  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id),
-  productionOrderId: varchar("production_order_id").references(() => productionOrders.id),
+  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
+  productionOrderId: varchar("production_order_id").references(() => productionOrders.id, { onDelete: "set null" }),
   materialCost: numericMoney("material_cost").notNull().default(0),
   laborCost: numericMoney("labor_cost").notNull().default(0),
   overheadCost: numericMoney("overhead_cost").notNull().default(0),
@@ -78,13 +83,14 @@ export const orderCostings = pgTable("order_costings", {
   marginPercent: numericMoney("margin_percent"),
   currency: text("currency").default("UZS"),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
-  calculatedBy: varchar("calculated_by").references(() => users.id),
+  calculatedBy: varchar("calculated_by").references(() => users.id, { onDelete: "set null" }),
   calculatedAt: timestamp("calculated_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_order_costings_sales_order_id").on(t.salesOrderId),
   index("idx_order_costings_production_order_id").on(t.productionOrderId),
   index("idx_order_costings_status").on(t.status),
+  check("order_costings_status_chk", sql`${t.status} IN ('draft','calculated','approved')`),
 ]);
 
 
@@ -119,6 +125,7 @@ export const orderCostingLines = pgTable("order_costing_lines", {
 }, (t) => [
   index("idx_order_costing_lines_order_costing_id").on(t.orderCostingId),
   index("idx_order_costing_lines_cost_type").on(t.costType),
+  check("order_costing_lines_cost_type_chk", sql`${t.costType} IN ('material','labor','overhead','energy','waste')`),
 ]);
 
 
@@ -151,6 +158,7 @@ export const arAgingBuckets = pgTable("ar_aging_buckets", {
 }, (t) => [
   index("idx_ar_aging_buckets_customer_id").on(t.customerId),
   index("idx_ar_aging_buckets_customer_type").on(t.customerType),
+  check("ar_aging_customer_type_chk", sql`${t.customerType} IS NULL OR ${t.customerType} IN ('company','contact')`),
 ]);
 
 
@@ -173,7 +181,7 @@ export type InsertArAgingBucket = z.infer<typeof insertArAgingBucketSchema>;
 // AP Aging Buckets (Kreditor qarzdorlik yosh kategoriyalari)
 export const apAgingBuckets = pgTable("ap_aging_buckets", {
   id: serial("id").primaryKey(),
-  vendorId: varchar("vendor_id").references(() => vendors.id),
+  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
   current: numericMoney("current").notNull().default(0), // 0-30 days
   days31to60: numericMoney("days_31_to_60").notNull().default(0),
   days61to90: numericMoney("days_61_to_90").notNull().default(0),
@@ -227,6 +235,7 @@ export const financialKPIs = pgTable("financial_kpis", {
 }, (t) => [
   index("idx_financial_kpis_kpi_date").on(t.kpiDate),
   index("idx_financial_kpis_kpi_period").on(t.kpiPeriod),
+  check("financial_kpis_period_chk", sql`${t.kpiPeriod} IN ('daily','weekly','monthly')`),
 ]);
 
 

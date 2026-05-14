@@ -1,3 +1,8 @@
+/**
+ * @module finance-ap.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';

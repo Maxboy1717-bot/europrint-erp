@@ -1,3 +1,8 @@
+/**
+ * @module sales-copilot.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { safeDiv } from '@common/math/math-utils';
@@ -24,6 +29,7 @@ import {
   HITL_CREDIT_HARD,
   HITL_CREDIT_SOFT,
 } from '../common/ai-agents.constants';
+import { CONFIDENCE_MEDIUM } from '../../../common/constants/business.constants';
 
 const PEAK_MONTHS   = [10, 11, 12, 1];
 const LOW_MONTHS    = [6, 7, 8];
@@ -154,7 +160,7 @@ Qaysi variantni tavsiya qilasiz? Faqat JSON: {"choice":"low"|"medium"|"high","co
     const aiRes = await this.ai.call({ prompt, provider: 'gemini', taskType: 'crm.next_best_action', userId: 0 });
 
     let choice: PriceVariant['label'] = 'medium';
-    let confidence = 0.75;
+    let confidence = CONFIDENCE_MEDIUM;
     let explanation = 'O\'rtacha narx tavsiyasi';
 
     if (!isErr(aiRes) && aiRes.data.text) {

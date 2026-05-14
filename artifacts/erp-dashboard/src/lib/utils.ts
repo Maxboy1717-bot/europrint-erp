@@ -1,6 +1,13 @@
-import { safeStorage } from '@/lib/safeStorage';
+/**
+ * @module utils
+ * @description Frontend utility / library module.
+ */
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { getAuthHeaders } from './queryClient';
+
+export { getAuthHeaders };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -15,11 +22,6 @@ export function nanoid(length = 12): string {
     result += chars[array[i] % chars.length];
   }
   return result;
-}
-
-function getAuthHeaders(): Record<string, string> {
-  const token = safeStorage.getItem("erp_auth_token") || safeStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export interface FetchResult {

@@ -1,3 +1,8 @@
+/**
+ * @module ensemble-forecast.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeDiv, safeAvg } from '@common/math/math-utils';
@@ -5,13 +10,12 @@ import { Ok, Err, Result, AppError } from '@common/result';
 import { ForecastService } from './forecast.service';
 import { HoltWintersService } from './holt-winters.service';
 import { CrostonService } from './croston.service';
+import { CI_LOWER, CI_UPPER, ENSEMBLE_EMA_ALPHA, FORECAST_HOLDOUT_FRACTION } from '../../../common/constants/business.constants';
 
 const EPSILON = 1e-10;
 const BOOTSTRAP_SAMPLES = 200;
 const CI_LOW_10 = 0.10;
 const CI_HIGH_90 = 0.90;
-const CI_LOW_025 = 0.025;
-const CI_HIGH_975 = 0.975;
 
 export interface EnsembleResult {
   predicted: number[];
@@ -48,7 +52,7 @@ function mapeOf(actual: number[], predicted: number[]): number {
   return safeDiv(sum, actual.length) * 100;
 }
 
-const A_BOOT = 0.3;
+const A_BOOT = ENSEMBLE_EMA_ALPHA;
 
 /**
  * Bootstrap CI using residual resampling on in-sample EMA fitted values:
@@ -75,10 +79,10 @@ function bootstrapForecast(
     ema = A_BOOT * (series[i] ?? 0) + (1 - A_BOOT) * ema;
   }
 
-  const residuals = (series ?? []).map((v, i) => v - (fitted[i] ?? 0));
+  const residuals = (Array.isArray(series) ? series : []).map((v, i) => v - (fitted[i] ?? 0));
 
   for (let b = 0; b < BOOTSTRAP_SAMPLES; b++) {
-    const bootstrapSeries = (fitted ?? []).map((f) => {
+    const bootstrapSeries = (Array.isArray(fitted) ? fitted : []).map((f) => {
       const r = residuals[Math.floor(Math.random() * residuals.length)] ?? 0;
       return f + r;
     });
@@ -109,10 +113,10 @@ export class EnsembleForecastService {
       return Err({ code: 'VALIDATION', message: 'horizon musbat bo\'lishi kerak' });
     }
 
-    const safe = (series ?? []).map(safeNum);
+    const safe = (Array.isArray(series) ? series : []).map(safeNum);
     const avg  = safeAvg(safe);
 
-    const holdLen = Math.max(1, Math.min(Math.floor(safe.length * 0.2), horizon));
+    const holdLen = Math.max(1, Math.min(Math.floor(safe.length * FORECAST_HOLDOUT_FRACTION), horizon));
     const train   = safe.slice(0, safe.length - holdLen);
     const holdOut = safe.slice(safe.length - holdLen);
     const trainAvg = safeAvg(train);
@@ -156,7 +160,7 @@ export class EnsembleForecastService {
 
     const bootstraps = bootstrapForecast(safe, horizon, (s) => {
       const n = s.length;
-      const A_EMA = 0.3;
+      const A_EMA = ENSEMBLE_EMA_ALPHA;
       let emaVal = s[0] ?? 0;
       for (let i = 1; i < n; i++) emaVal = A_EMA * (s[i] ?? 0) + (1 - A_EMA) * emaVal;
 
@@ -185,16 +189,16 @@ export class EnsembleForecastService {
     });
 
     const ci80Lower = Array.from({ length: horizon }, (_, i) =>
-      quantile((bootstraps ?? []).map(b => b[i] ?? 0), CI_LOW_10),
+      quantile((Array.isArray(bootstraps) ? bootstraps : []).map(b => b[i] ?? 0), CI_LOW_10),
     );
     const ci80Upper = Array.from({ length: horizon }, (_, i) =>
-      quantile((bootstraps ?? []).map(b => b[i] ?? 0), CI_HIGH_90),
+      quantile((Array.isArray(bootstraps) ? bootstraps : []).map(b => b[i] ?? 0), CI_HIGH_90),
     );
     const ci95Lower = Array.from({ length: horizon }, (_, i) =>
-      quantile((bootstraps ?? []).map(b => b[i] ?? 0), CI_LOW_025),
+      quantile((Array.isArray(bootstraps) ? bootstraps : []).map(b => b[i] ?? 0), CI_LOWER),
     );
     const ci95Upper = Array.from({ length: horizon }, (_, i) =>
-      quantile((bootstraps ?? []).map(b => b[i] ?? 0), CI_HIGH_975),
+      quantile((Array.isArray(bootstraps) ? bootstraps : []).map(b => b[i] ?? 0), CI_UPPER),
     );
 
     const avgForecast  = safeAvg(predicted);

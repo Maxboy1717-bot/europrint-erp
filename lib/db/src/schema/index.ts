@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 export * from "./core-schema";
 export * from "./crm-schema";
 export * from "./design-schema";
@@ -52,4 +57,18 @@ export * from "./kaizen-schema";
 export * from "./orders-registry-schema";
 export * from "./hr-tz2-schema";
 export * from "./order-workflow-schema";
-export * from "./hr-architecture-additions";
+export {
+  // Selectively re-export from hr-architecture-additions to avoid duplicate symbols
+  // (aiCvScreenings, jobTemplates, questionnaireQuestions, questionnaireTemplates
+  //  are defined elsewhere — they're the authoritative copies).
+} from "./hr-architecture-additions";
+export * from "./pos-retail";
+export {
+  // Re-export ONLY symbols unique to admin-assets; AssetDisposal/AssetTransfer
+  // etc. are the authoritative copies in pp/pp-enhanced.
+  assetItems, insertAssetItemSchema, assetMaintenance,
+} from "./admin-assets";
+export type { AssetItem, InsertAssetItem, AssetMaintenance } from "./admin-assets";
+export * from "./fi-financial-reports";
+export * from "./communication-center";
+export * from "./sd-customer-relations";

@@ -1,3 +1,8 @@
+/**
+ * @module ThemeToggle
+ * @description React UI component.
+ */
+
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -30,9 +35,9 @@ export function ThemeToggle() {
       className="rounded-md"
     >
       {theme === "light" ? (
-        <Moon className="h-5 w-5" />
+        <Moon className="h-4 w-4" />
       ) : (
-        <Sun className="h-5 w-5" />
+        <Sun className="h-4 w-4" />
       )}
     </Button>
   );

@@ -1,3 +1,8 @@
+/**
+ * @module ExpiryTab
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Package, TrendingUp, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/format";
 import { ExpiryData, ExpiryItem, TranslationType, STATUS_COLORS } from "./types";
+import { apiRequest } from '@/lib/queryClient';
 
 interface ExpiryTabProps {
   t: TranslationType;
@@ -36,9 +42,7 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
     queryKey: ["/api/warehouse/reports/expiry", daysAhead],
     queryFn: async () => {
       const params = new URLSearchParams({ daysAhead });
-      const res = await fetch(`/api/warehouse/reports/expiry?${params}`, {
-        credentials: "include",
-      });
+      const res = await apiRequest('GET', `/api/warehouse/reports/expiry?${params}`);
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },
@@ -47,10 +51,10 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
   if (isLoadingExpiry) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24" />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}
         </div>
-        <Skeleton className="h-64" />
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     );
   }
@@ -61,7 +65,7 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
         <div className="flex items-center gap-2">
           <Label>{t.expiry.daysAhead}</Label>
           <Select value={daysAhead} onValueChange={setDaysAhead}>
-            <SelectTrigger className="w-32" data-testid="select-days-ahead">
+            <SelectTrigger className="w-32 h-9" data-testid="select-days-ahead">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -76,7 +80,7 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -129,7 +133,7 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t.expiry.material}</TableHead>
@@ -143,7 +147,7 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
               </TableHeader>
               <TableBody>
                 {expiryData?.data?.map((item: ExpiryItem, idx: number) => (
-                  <TableRow key={`${item.materialId}-${idx}`} data-testid={`row-expiry-${item.materialId}`}>
+                  <TableRow key={`${item.materialId}-${idx}`} data-testid={`row-expiry-${item.materialId}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.batchNumber}</TableCell>
                     <TableCell>{item.expiryDate ? format(new Date(item.expiryDate), 'dd.MM.yyyy') : '-'}</TableCell>
@@ -167,7 +171,7 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         </CardContent>
       </Card>

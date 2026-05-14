@@ -1,3 +1,8 @@
+/**
+ * @module kpi-card
+ * @description React UI component.
+ */
+
 import type { ComponentType } from "react";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -20,11 +25,11 @@ interface KpiCardProps {
 }
 
 const badgeColors = {
-  red: "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400",
-  blue: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
-  green: "bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400",
-  yellow: "bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400",
-  slate: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+  red: "bg-red-50 text-[var(--ep-red)] dark:bg-red-950 dark:text-red-400",
+  blue: "bg-blue-50 text-[var(--ep-blue)] dark:bg-blue-950 dark:text-blue-400",
+  green: "bg-green-50 text-[var(--ep-green)] dark:bg-green-950 dark:text-green-400",
+  yellow: "bg-yellow-50 text-[var(--ep-yellow)] dark:bg-yellow-950 dark:text-yellow-400",
+  slate: "bg-muted text-muted-foreground",
 };
 
 export function KpiCard({
@@ -33,7 +38,7 @@ export function KpiCard({
   change,
   trend = "neutral",
   icon: Icon,
-  iconColor = "text-blue-600",
+  iconColor = "text-[var(--ep-blue)]",
   iconBg = "bg-blue-50 dark:bg-blue-950",
   badge,
   badgeColor = "slate",
@@ -44,17 +49,17 @@ export function KpiCard({
 }: KpiCardProps) {
   if (loading) {
     return (
-      <div className={cn("rounded-2xl bg-surface-container-lowest dark:bg-slate-900 shadow-sm p-6", className)}>
-        <Skeleton className="h-3 w-24 mb-4" />
-        <Skeleton className="h-10 w-32 mb-3" />
-        <Skeleton className="h-3 w-16" />
+      <div className={cn("rounded-xl bg-card dark:bg-slate-900 shadow-sm p-6", className)}>
+        <Skeleton className="h-3 w-24 mb-4 rounded-lg" />
+        <Skeleton className="h-10 w-32 mb-3 rounded-lg" />
+        <Skeleton className="h-3 w-16 rounded-lg" />
       </div>
     );
   }
 
   const trendColor =
-    trend === "up" ? "text-emerald-600 dark:text-emerald-400" :
-    trend === "down" ? "text-red-500 dark:text-red-400" :
+    trend === "up" ? "text-[var(--ep-green)] dark:text-emerald-400" :
+    trend === "down" ? "text-[var(--ep-red)] dark:text-red-400" :
     "text-slate-400";
 
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
@@ -62,7 +67,7 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-surface-container-lowest dark:bg-slate-900 p-6 cursor-default",
+        "rounded-xl bg-card dark:bg-slate-900 p-6 cursor-default",
         "shadow-[0_2px_12px_rgba(15,23,42,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.25)]",
         "hover:shadow-[0_4px_20px_rgba(15,23,42,0.1)] dark:hover:shadow-[0_4px_20px_rgba(0,0,0,0.4)]",
         "transition-shadow duration-200",
@@ -83,7 +88,7 @@ export function KpiCard({
       </div>
 
       {/* Value */}
-      <p className="text-4xl font-extrabold text-slate-900 dark:text-slate-50 leading-none mb-3 tracking-tight">
+      <p className="text-4xl font-extrabold text-foreground leading-none mb-3 tracking-tight">
         {value}
       </p>
 

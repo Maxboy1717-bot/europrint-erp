@@ -1,3 +1,8 @@
+/**
+ * @module WelcomeEventsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,6 +41,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit } from "lucide-react";
 import type { WelcomeEvent } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 interface UserItem {
   id: string;
@@ -62,6 +68,7 @@ const welcomeEventFormSchema = z.object({
 type WelcomeEventFormValues = z.infer<typeof welcomeEventFormSchema>;
 
 export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<WelcomeEvent | null>(null);
@@ -131,24 +138,22 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Welcome Day tadbirlari</CardTitle>
-            <CardDescription>Yangi xodimlarni qabul qilish tadbirlari</CardDescription>
+            <CardTitle>{t("welcomeDayTadbirlari")}</CardTitle>
+            <CardDescription>{t("yangiXodimlarniQabulQilishTadbirlari")}</CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingEvent(null); form.reset(); } }}>
             <DialogTrigger asChild>
               <Button onClick={() => { setEditingEvent(null); form.reset(); }} data-testid="button-add-event">
                 <Plus className="w-4 h-4 mr-2" />
-                Tadbir qo'shish
+                {t("tadbirQoshish")}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl p-6">
               <DialogHeader>
-                <DialogTitle>
-                  {editingEvent?.id ? "Tadbirni tahrirlash" : "Yangi tadbir"}
-                </DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold"> {editingEvent?.id ? "Tadbirni tahrirlash" : "Yangi tadbir"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="title">Nomi (UZ)</Label>
                     <Input id="title" {...form.register("title")} data-testid="input-title" />
@@ -160,7 +165,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
                     {form.formState.errors.titleRu && <p className="text-sm text-destructive mt-1">{form.formState.errors.titleRu.message}</p>}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="description">Tavsif (UZ)</Label>
                     <Textarea id="description" {...form.register("description")} rows={3} data-testid="input-description" />
@@ -170,37 +175,37 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
                     <Textarea id="descriptionRu" {...form.register("descriptionRu")} rows={3} data-testid="input-description-ru" />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="eventDate">Sana</Label>
+                    <Label htmlFor="eventDate">{t("date")}</Label>
                     <Input id="eventDate" type="date" {...form.register("eventDate")} data-testid="input-event-date" />
                     {form.formState.errors.eventDate && <p className="text-sm text-destructive mt-1">{form.formState.errors.eventDate.message}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="eventTime">Vaqt</Label>
+                    <Label htmlFor="eventTime">{t("time")}</Label>
                     <Input id="eventTime" type="time" {...form.register("eventTime")} data-testid="input-event-time" />
                   </div>
                   <div>
-                    <Label>Holat</Label>
+                    <Label>{t("status28")}</Label>
                     <Controller control={form.control} name="status" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-status"><SelectValue /></SelectTrigger>
+                        <SelectTrigger data-testid="select-status" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="planned">Rejalashtirilgan</SelectItem>
-                          <SelectItem value="in_progress">Ketmoqda</SelectItem>
-                          <SelectItem value="completed">Yakunlangan</SelectItem>
-                          <SelectItem value="cancelled">Bekor qilingan</SelectItem>
+                          <SelectItem value="planned">{t("rejalashtirilgan")}</SelectItem>
+                          <SelectItem value="in_progress">{t("ketmoqda")}</SelectItem>
+                          <SelectItem value="completed">{t("yakunlangan")}</SelectItem>
+                          <SelectItem value="cancelled">{t("cancelledDesc")}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="location">Joylashuv</Label>
-                  <Input id="location" {...form.register("location")} placeholder="Masalan: Konferensiya zali, 3-qavat" data-testid="input-location" />
+                  <Label htmlFor="location">{t("location")}</Label>
+                  <Input id="location" {...form.register("location")} placeholder={t("masalanKonferensiyaZali3Qavat")} data-testid="input-location" />
                 </div>
                 <div>
-                  <Label htmlFor="notes">Izohlar</Label>
+                  <Label htmlFor="notes">{t("notes")}</Label>
                   <Textarea id="notes" {...form.register("notes")} rows={4} data-testid="input-notes" />
                 </div>
                 <DialogFooter>
@@ -214,25 +219,25 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tadbir nomi</TableHead>
-              <TableHead>Sana</TableHead>
-              <TableHead>Vaqt</TableHead>
-              <TableHead>Joylashuv</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>Amallar</TableHead>
+              <TableHead>{t("tadbirNomi")}</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("time")}</TableHead>
+              <TableHead>{t("location")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("Amallar")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {events.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">Tadbirlar yo'q</TableCell>
+                <TableCell colSpan={6} className="text-center text-muted-foreground">{t("tadbirlarYoq")}</TableCell>
               </TableRow>
             )}
             {(Array.isArray(events) ? events : []).map((event: WelcomeEvent) => (
-              <TableRow key={event.id}>
+              <TableRow key={event.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium">{event.title}</TableCell>
                 <TableCell>{event.eventDate}</TableCell>
                 <TableCell>{event.eventTime || "-"}</TableCell>
@@ -255,7 +260,7 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
   );

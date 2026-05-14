@@ -1,3 +1,8 @@
+/**
+ * @module MoveDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -10,6 +15,7 @@ import { MoveRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { NodeDetail } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MoveDialogProps {
   node: NodeDetail;
@@ -21,6 +27,7 @@ interface MoveDialogProps {
 export function MoveDialog({
   node, open, onClose, onSuccess,
 }: MoveDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [newParentId, setNewParentId] = useState(node.parentId ? String(node.parentId) : "");
 
@@ -38,10 +45,10 @@ export function MoveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MoveRight className="h-4 w-4 text-[#ff5d2e]" />
+            <MoveRight className="h-4 w-4 text-primary" />
             Ko'chirish — {node.name}
           </DialogTitle>
         </DialogHeader>
@@ -50,22 +57,22 @@ export function MoveDialog({
             Bu bo'limni boshqa ota-nodega o'tkazing. Hozirgi ota: #{node.parentId ?? "—"}
           </p>
           <div>
-            <Label>Yangi ota node ID</Label>
+            <Label>{t("yangiOtaNodeId")}</Label>
             <Input
               type="number"
               value={newParentId}
               onChange={(e) => setNewParentId(e.target.value)}
-              placeholder="Bo'sh qoldirsa — ildiz darajaga"
+              placeholder={t("boshQoldirsaIldizDarajaga")}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Ildiz darajaga ko'chirish uchun bo'sh qoldiring
+              {t("ildizDarajagaKochirishUchunBosh")}
             </p>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
-            className="bg-[#ff5d2e] hover:bg-[#e04e22]"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
           >

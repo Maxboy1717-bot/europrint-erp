@@ -1,11 +1,19 @@
+/**
+ * @module PinnedMessages
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { ChatAvatar } from "./ChatAvatar";
-import { Pin, PinOff, Loader2 } from "lucide-react";
+import { Pin, PinOff } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from '@/lib/queryClient';
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface PinnedMessage {
   id: string;
   roomId: string;
@@ -23,15 +31,14 @@ interface Props {
 }
 
 export function PinnedMessages({ roomId, canPin }: Props) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
 
   const { data: pinned = [], isLoading } = useQuery<PinnedMessage[]>({
     queryKey: ["chat-room-pinned-messages", roomId],
     queryFn: async () => {
-      const res = await fetch(`/api/chat/rooms/${roomId}/pinned-messages`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('GET', `/api/chat/rooms/${roomId}/pinned-messages`);
       if (!res.ok) throw new Error("Failed to load pinned messages");
       return res.json();
     },
@@ -41,10 +48,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
 
   const unpinMutation = useMutation({
     mutationFn: async (messageId: string) => {
-      const res = await fetch(`/api/chat/messages/${messageId}/pin`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('DELETE', `/api/chat/messages/${messageId}/pin`);
       if (!res.ok) throw new Error("Failed to unpin");
       return res.json();
     },
@@ -62,7 +66,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/40 flex-shrink-0">
         <Pin className="w-3.5 h-3.5 text-muted-foreground" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Pinlangan xabarlar
+          {t("pinlanganXabarlar")}
         </span>
         <span className="ml-auto text-xs text-muted-foreground">{pinned.length}</span>
       </div>
@@ -70,12 +74,12 @@ export function PinnedMessages({ roomId, canPin }: Props) {
       <div className="flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex items-center justify-center h-24">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <EPLoader tone="muted" className="w-5 h-5" />
           </div>
         ) : pinned.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-24 gap-2 text-muted-foreground">
             <Pin className="w-8 h-8 opacity-30" />
-            <p className="text-xs">Pinlangan xabarlar yo'q</p>
+            <p className="text-xs">{t("pinlanganXabarlarYoq")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -103,7 +107,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
                     className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-muted-foreground hover:text-red-500"
                     onClick={() => unpinMutation.mutate(msg.id)}
                     disabled={unpinMutation.isPending}
-                    title="Pin olib tashlash"
+                    title={t("pinOlibTashlash")}
                   >
                     <PinOff className="w-3 h-3" />
                   </Button>

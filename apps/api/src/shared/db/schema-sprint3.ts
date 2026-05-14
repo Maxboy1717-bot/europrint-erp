@@ -1,3 +1,8 @@
+/**
+ * @module schema-sprint3
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable,
   text,

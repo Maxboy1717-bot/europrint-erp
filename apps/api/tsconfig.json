@@ -36,7 +36,9 @@
       "@auth/decorators/*": ["src/modules/auth/infrastructure/decorators/*"],
       "@auth/guards/*": ["src/modules/auth/infrastructure/guards/*"],
       "@auth/types/*": ["src/modules/auth/types/*"],
-      "@workspace/math-utils": ["../../lib/math-utils/src/index.ts"]
+      "@workspace/math-utils": ["../../lib/math-utils/src/index.ts"],
+      "@workspace/db": ["../../lib/db/src/index.ts"],
+      "@workspace/db/*": ["../../lib/db/src/*"]
     },
     "incremental": true,
     "allowJs": true,
@@ -48,7 +50,8 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "strict": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "preserveSymlinks": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]

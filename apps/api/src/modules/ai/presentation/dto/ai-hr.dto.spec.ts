@@ -1,3 +1,8 @@
+/**
+ * @module ai-hr.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   AiHrClassifyProductivityDtoSchema,

@@ -1,3 +1,8 @@
+/**
+ * @module update-order-status.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Result, Ok, Err } from '@common/result';
 import { Inject, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';

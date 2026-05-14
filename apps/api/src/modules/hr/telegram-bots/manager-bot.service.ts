@@ -1,3 +1,8 @@
+/**
+ * @module manager-bot.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentWorkflowService } from '../document-workflow/document-workflow.service';
@@ -5,6 +10,7 @@ import { Result, AppError, safeCall } from '@common/result';
 import { errMsg } from '../hr-v2-error';
 import { TelegramBotsRepository } from './telegram-bots.repository';
 import type { Telegraf, Context } from 'telegraf';
+import { message } from 'telegraf/filters';
 
 type CtxWithChat = Context & { chat?: { id?: number } };
 type CtxWithMsg = CtxWithChat & { message?: { text?: string } };
@@ -39,7 +45,7 @@ export class ManagerBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[manager-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('Manager Bot token not configured (TELEGRAM_MANAGER_BOT_TOKEN missing) — skipping');
         return;
@@ -348,7 +354,7 @@ export class ManagerBotService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       try {
         const chatId = (ctx as CtxWithChat).chat?.id;
         const text = ((ctx as CtxWithMsg).message?.text ?? '').trim();

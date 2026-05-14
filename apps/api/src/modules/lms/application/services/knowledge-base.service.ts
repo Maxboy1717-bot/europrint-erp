@@ -1,3 +1,8 @@
+/**
+ * @module knowledge-base.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { z } from 'zod';

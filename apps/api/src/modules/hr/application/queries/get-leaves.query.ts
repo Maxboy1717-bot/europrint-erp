@@ -1,3 +1,8 @@
+/**
+ * @module get-leaves.query
+ * @description Source module. See exports for details.
+ */
+
 export class GetLeavesQuery {
   constructor(public readonly employeeId?: string,
     public readonly status?: string,

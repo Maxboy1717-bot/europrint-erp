@@ -1,14 +1,37 @@
 /**
- * general-tax.service.ts — TZ-D02: Umumiy Soliq Hisoblash
+ * @module general-tax.service
+ * @description Per-company configurable tax calculator (VAT, sales tax, or
+ *   any percentage-based tax line). Rates live in `tax_rate_config` with
+ *   effective-from/to dates so the calculator returns the correct rate for
+ *   any historical or forward-dated transaction.
  *
- * Hardcoded 0.87/0.12/0.01 → tax_rate_config jadvalidan yuklanadi.
- * INCLUSIVE: tax = total × rate/(1+rate),  base = total − tax
- * EXCLUSIVE: tax = base × rate,            total = base + tax
+ *   Two modes:
+ *     INCLUSIVE — price already includes tax (typical for UZ retail prices)
+ *         tax  = total × rate / (1 + rate)
+ *         base = total − tax
  *
- * Sana asosida effective rate (effectiveFrom/To) — BETWEEN filter
- * Har kompaniya o'zi sozlaydi (companyId parametri)
+ *     EXCLUSIVE — price quoted before tax (typical for B2B contracts)
+ *         tax   = base × rate
+ *         total = base + tax
+ * @layer Service (FI / tax)
  *
- * TAQIQLANGAN: hardcoded stavkalar (0.12, 0.01, vs.)
+ * WHY RATES ARE DB-DRIVEN, NEVER HARDCODED
+ *   Uzbek tax law changed three times between 2020-2024 (12% → 15% → 12%
+ *   for general VAT, then the simplified-tax regime for SMEs). Hardcoding
+ *   would force a code deploy + retroactive recalculation every change.
+ *   With `tax_rate_config`:
+ *     - Each rate row carries `effectiveFrom` and `effectiveTo`
+ *     - Historical recalculations match what was billed at the time
+ *     - New rates can be queued ahead of effective date
+ *
+ *   Companies on simplified taxation (1% turnover tax) and companies on the
+ *   general regime (12% VAT) live in the same table — `companyId` selects.
+ *
+ * WHY INCLUSIVE/EXCLUSIVE BOTH SUPPORTED
+ *   Retail quotes are inclusive ("999,000 UZS *all-in*"). B2B contracts are
+ *   exclusive ("999,000 UZS + 12% VAT"). The same invoice template needs both
+ *   modes depending on counterparty, so the math is centralised here rather
+ *   than per-caller.
  */
 
 import { Injectable, Logger } from '@nestjs/common';

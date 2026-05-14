@@ -1,3 +1,8 @@
+/**
+ * @module inventory.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { IWmsInventoryRepository, WMS_INVENTORY_REPO } from './i-wms-inventory.repo';
 import { safeCall, Result, AppError } from '@common/result';

@@ -1,20 +1,27 @@
+/**
+ * @module StorageTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import { KpiCard } from "./KpiCard";
 import { fmtQty, fmtDate, type StorageInfo, type BasicInfo } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function StorageTab({ storage, basic }: { storage: StorageInfo; basic: BasicInfo }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={AlertTriangle} label="30 kun ichida tugaydi" value={String(storage.count30Days || 0)} color={storage.count30Days && storage.count30Days > 0 ? "text-destructive" : "text-green-600"} />
-        <KpiCard icon={Clock} label="60 kun ichida tugaydi" value={String(storage.count60Days || 0)} color={storage.count60Days && storage.count60Days > 0 ? "text-yellow-600" : "text-green-600"} />
-        <KpiCard icon={CheckCircle} label="FIFO muvofiqlik" value={storage.fifoCompliance ? "Ha" : "Yo'q"} color={storage.fifoCompliance ? "text-green-600" : "text-destructive"} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <KpiCard icon={AlertTriangle} label="30 kun ichida tugaydi" value={String(storage.count30Days || 0)} color={storage.count30Days && storage.count30Days > 0 ? "text-destructive" : "text-[var(--ep-green)]"} />
+        <KpiCard icon={Clock} label="60 kun ichida tugaydi" value={String(storage.count60Days || 0)} color={storage.count60Days && storage.count60Days > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
+        <KpiCard icon={CheckCircle} label="FIFO muvofiqlik" value={storage.fifoCompliance ? "Ha" : "Yo'q"} color={storage.fifoCompliance ? "text-[var(--ep-green)]" : "text-destructive"} />
       </div>
       {(storage.expiringBatches || []).length > 0 ? (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Muddati yaqin partiyalar</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("muddatiYaqinPartiyalar")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50">
@@ -40,8 +47,8 @@ export function StorageTab({ storage, basic }: { storage: StorageInfo; basic: Ba
         </Card>
       ) : (
         <Card><CardContent className="py-8 text-center">
-          <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Muddati yaqin partiyalar yo'q</p>
+          <CheckCircle className="h-8 w-8 text-[var(--ep-green)] mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">{t("muddatiYaqinPartiyalarYoq")}</p>
         </CardContent></Card>
       )}
     </div>

@@ -1,8 +1,46 @@
+/**
+ * @module employee-kpi.handler
+ * @description Computes a single employee's KPI rating for an arbitrary date
+ *   range. Aggregates production feedback (`quantity`, `defectRate`, `oee`)
+ *   from `hr_feedback` rows and rolls them up to:
+ *     - achievement (% of target quantity met)
+ *     - quality      (100% − average defect %)
+ *     - OEE          (Overall Equipment Effectiveness)
+ *
+ *   `overallScore` is a weighted sum of the three using `KPI_WEIGHTS` from
+ *   `business.constants` (current weights: 0.5 achievement, 0.3 quality,
+ *   0.2 OEE — codified to match the bonus formula in collective agreement).
+ *   The rating bucket ("excellent", "good", "satisfactory", "needs_improvement")
+ *   is decided by `KpiService.calculateKpi` based on the overall score.
+ * @layer CQRS Query Handler (HR)
+ *
+ * WHY TARGET QUANTITY IS A HARDCODED 5_000
+ *   This handler's caller (the HR dashboard) does not pass an employee-specific
+ *   target — we use 5,000 units/month as a workshop-wide baseline that matches
+ *   the average shop-floor norm. Per-employee targets, when needed (high-volume
+ *   lines), are computed by a separate `KpiTargetService` and override this
+ *   default. If you change this constant, ensure the dashboard tooltip stays
+ *   in sync.
+ *
+ * WHY WE RETURN Err WHEN NO FEEDBACK ROWS
+ *   Showing "0%" for an employee who simply had no recorded production this
+ *   period (vacation, training, transfer) is more misleading than showing a
+ *   "no data" message. The handler bails to Err early so the UI can show
+ *   the right empty-state.
+ *
+ * WHY THE TREND IS COMPUTED FROM RAW ROWS, NOT THE AGGREGATE
+ *   `getKpiTrend` needs per-period datapoints to compute the slope.
+ *   Re-projecting each `f` row gives it the raw series, while the main KPI
+ *   uses the aggregated averages. Both views are kept consistent because
+ *   they ultimately use the same `KpiService.calculateKpi` formula.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { HrRepository } from '../../infrastructure/repositories/drizzle-hr.repo';
 import { KpiService } from '../../domain/services/kpi.service';
 import { Result, Ok, Err } from '@common/result';
+import { KPI_WEIGHTS } from '@common/constants/business.constants';
 
 const TARGET_KPI_QUANTITY = 5_000;
 
@@ -91,7 +129,7 @@ export class EmployeeKpiHandler implements IQueryHandler<EmployeeKpiQuery> {
           achievement,
           quality,
           oee: avgOee,
-          overallScore: achievement * 0.5 + quality * 0.3 + avgOee * 0.2,
+          overallScore: achievement * KPI_WEIGHTS.attendance + quality * KPI_WEIGHTS.performance + avgOee * KPI_WEIGHTS.tasks,
           rating: kpi.rating,
         },
         trend,

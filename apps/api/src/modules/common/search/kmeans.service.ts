@@ -32,13 +32,13 @@ export class KMeansService {
     for (const p of safePoints) {
       for (let d = 0; d < dim; d++) sum[d] += p[d];
     }
-    return (sum ?? []).map(s => s / (safePoints.length || 1));
+    return (Array.isArray(sum) ? sum : []).map(s => s / (safePoints.length || 1));
   }
 
   private assign(points: readonly Point[], centroids: Point[]): number[] {
     const safePoints = Array.isArray(points) ? points : [];
-    return (safePoints ?? []).map(p =>
-      (centroids ?? []).reduce(
+    return (Array.isArray(safePoints) ? safePoints : []).map(p =>
+      (Array.isArray(centroids) ? centroids : []).reduce(
         (bestK, c, k) =>
           this.euclideanSq(p, c) < this.euclideanSq(p, centroids[bestK]) ? k : bestK,
         0,
@@ -53,10 +53,10 @@ export class KMeansService {
     centroids.push([...safePoints[firstIdx]]);
 
     for (let c = 1; c < k; c++) {
-      const dists = (safePoints ?? []).map(p =>
+      const dists = (Array.isArray(safePoints) ? safePoints : []).map(p =>
         Math.min(...(Array.isArray(centroids) ? centroids : []).map(center => this.euclideanSq(p, center))),
       );
-      const total = (dists ?? []).reduce((s, d) => s + d, 0);
+      const total = (Array.isArray(dists) ? dists : []).reduce((s, d) => s + d, 0);
       let rand = rng() * total;
       let chosen = 0;
       for (let i = 0; i < dists.length; i++) {
@@ -77,18 +77,18 @@ export class KMeansService {
 
     for (let i = 0; i < n; i++) {
       const myCluster = assignments[i];
-      const sameCluster = (safePoints ?? []).filter((_, idx) => assignments[idx] === myCluster && idx !== i);
+      const sameCluster = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === myCluster && idx !== i);
 
       const a = sameCluster.length
-        ? (sameCluster ?? []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / sameCluster.length
+        ? (Array.isArray(sameCluster) ? sameCluster : []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / sameCluster.length
         : 0;
 
       let b = Infinity;
       for (let c = 0; c < k; c++) {
         if (c === myCluster) continue;
-        const clusterPts = (safePoints ?? []).filter((_, idx) => assignments[idx] === c);
+        const clusterPts = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === c);
         if (!clusterPts.length) continue;
-        const avgDist = (clusterPts ?? []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / clusterPts.length;
+        const avgDist = (Array.isArray(clusterPts) ? clusterPts : []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / clusterPts.length;
         if (avgDist < b) b = avgDist;
       }
 
@@ -122,7 +122,7 @@ export class KMeansService {
     }
 
     const dim = points[0].length;
-    if (!(points ?? []).every(p => p.length === dim)) {
+    if (!(Array.isArray(points) ? points : []).every(p => p.length === dim)) {
       return Err({ code: 'VALIDATION', message: 'Barcha nuqtalar bir xil o\'lchamda bo\'lishi kerak' });
     }
 

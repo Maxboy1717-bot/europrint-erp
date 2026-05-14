@@ -1,3 +1,8 @@
+/**
+ * @module safeStorage
+ * @description Frontend utility / library module.
+ */
+
 // localStorage xatolaridan himoya: QuotaExceededError va SSR muhitlarini boshqaradi
 export const safeStorage = {
   getItem(key: string): string | null {

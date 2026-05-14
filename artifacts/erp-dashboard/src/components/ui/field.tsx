@@ -1,3 +1,8 @@
+/**
+ * @module field
+ * @description React UI component.
+ */
+
 "use client"
 
 import { useMemo } from "react"
@@ -6,8 +11,10 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { useTranslation } from '@/lib/i18n';
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
+  const { t } = useTranslation("common");
   return (
     <fieldset
       data-slot="field-set"

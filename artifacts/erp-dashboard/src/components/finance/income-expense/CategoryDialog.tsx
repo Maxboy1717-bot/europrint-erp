@@ -1,3 +1,8 @@
+/**
+ * @module CategoryDialog
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,15 +52,13 @@ export function CategoryDialog({
   categories,
 }: CategoryDialogProps) {
   const { t } = useTranslation("finance");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tCommon } = useTranslation('common');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>
-            {editingCategory ? tCommon("edit") : tCommon("create")}
-          </DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold"> {editingCategory ? tCommon("edit") : tCommon("create")}</DialogTitle>
           <DialogHeader>
             <DialogDescription>{t("category")}</DialogDescription>
           </DialogHeader>
@@ -70,7 +73,7 @@ export function CategoryDialog({
                   <FormLabel>{tCommon("type")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-category-type">
+                      <SelectTrigger data-testid="select-category-type" className="h-9">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -84,7 +87,7 @@ export function CategoryDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="code"
@@ -108,7 +111,7 @@ export function CategoryDialog({
                 name="sortOrder"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tartib</FormLabel>
+                    <FormLabel>{t("tartib")}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -130,7 +133,7 @@ export function CategoryDialog({
                   <FormLabel>{tCommon("name")} (UZ)</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Kategoriya nomi"
+                      placeholder={t("kategoriyaNomi")}
                       {...field}
                       data-testid="input-category-name"
                     />
@@ -163,18 +166,18 @@ export function CategoryDialog({
               name="parentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ota kategoriya</FormLabel>
+                  <FormLabel>{t("otaKategoriya")}</FormLabel>
                   <Select
                     onValueChange={(val) => field.onChange(val === "none" ? null : val)}
                     value={field.value || "none"}
                   >
                     <FormControl>
-                      <SelectTrigger data-testid="select-parent-category">
+                      <SelectTrigger data-testid="select-parent-category" className="h-9">
                         <SelectValue placeholder="Tanlang (ixtiyoriy)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">Asosiy kategoriya</SelectItem>
+                      <SelectItem value="none">{t("asosiyKategoriya")}</SelectItem>
                       {(Array.isArray(categories) ? categories : []).filter(
                           (c) =>
                             c.categoryType === form.watch("categoryType") &&
@@ -197,7 +200,7 @@ export function CategoryDialog({
               name="color"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Rang</FormLabel>
+                  <FormLabel>{t("rang")}</FormLabel>
                   <FormControl>
                     <div className="flex gap-2">
                       <Input

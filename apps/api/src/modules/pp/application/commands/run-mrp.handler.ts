@@ -1,3 +1,47 @@
+/**
+ * @module run-mrp.handler
+ * @description Material Requirements Planning (MRP) runner. Takes a Master
+ *   Production Schedule (MPS) and explodes it through the Bill of Materials
+ *   to produce planned purchase/production orders for every component.
+ *
+ *   Inputs:
+ *     - MPS rows: which finished products need to be ready in which period
+ *     - BOM edges: parent→child component relationships with quantity per
+ *     - Material policies: lot-sizing method (L4L / EOQ / POQ / Wagner-Whitin),
+ *       lead time, safety stock per material
+ *     - Current on-hand and scheduled-receipts per material per period
+ *
+ *   Output: a flat list of `PlannedOrder` entries. Each one carries:
+ *     - quantity to procure / produce
+ *     - the period the demand falls in
+ *     - the period to **release** the order so it arrives on time (period - leadTime)
+ * @layer CQRS Command Handler (PP)
+ *
+ * WHY THIS LIVES IN A SINGLE HANDLER, NOT A SERVICE
+ *   MRP is a transactional, idempotent compute over a snapshot of demand.
+ *   Treating it as a Command (handle once, persist result) matches the
+ *   user-visible workflow ("run MRP for week 42"). The result is written
+ *   atomically by the calling queue processor — no partial states.
+ *
+ * WHY FOUR LOT-SIZING METHODS
+ *   - L4L (Lot-for-lot)    Simplest. Order exactly what's needed each period.
+ *                          Zero holding cost but max setup cost. Good for
+ *                          cheap-to-order / expensive-to-hold materials.
+ *   - EOQ (Economic OQ)    Order a fixed quantity computed from the
+ *                          √(2DK/h) formula. Stable but ignores demand lumps.
+ *                          Good for steady-demand commodity items.
+ *   - POQ (Period OQ)      Fixed-period coverage (e.g. always 4 weeks).
+ *                          Reduces order count, accepts some over-stock.
+ *   - Wagner-Whitin        Optimal dynamic-program solution. Minimises
+ *                          (setup + holding) over the planning horizon for
+ *                          a given demand stream. Worth the O(n²) when items
+ *                          have lumpy demand and significant setup cost.
+ *
+ *   Materials with seasonal demand benefit most from W-W; commodities stay
+ *   on EOQ; consumables (glue, ink) typically L4L. The lot-sizing method is
+ *   stored per material and chosen by the planner, not auto-detected.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum } from '@common/math/math-utils';
@@ -40,17 +84,23 @@ function makeMrpErr(msg: string): AppError {
 }
 
 /**
- * Wagner-Whitin lot sizing — standart DP O(n²)
+ * @description Wagner-Whitin optimal lot sizing — classical O(n²) DP.
  *
- * Holding cost for ordering in period t to cover through period k:
- *   HC(t,k) = h × Σ_{i=t+1}^{k} (i - t) × r[i]
- *   (r[t] used immediately = 0 holding; r[t+1] held 1 period; etc.)
+ *   Given net requirements `r[0..n-1]`, setup cost K, and holding cost h:
  *
- * DP:
- *   f[n] = 0
- *   f[t] = min_{k=t}^{n-1} { K + HC(t,k) + f[k+1] }
+ *   Holding cost for one order placed in period t covering up to period k:
+ *     HC(t,k) = h × Σ_{i=t+1}^{k} (i - t) × r[i]
+ *     (r[t] consumed immediately = 0 holding; r[t+1] held 1 period; …)
  *
- * Lot sizes: reconstruct from split[] array
+ *   Bellman recurrence (cost to satisfy demand from period t onward):
+ *     f[n] = 0
+ *     f[t] = min_{k=t}^{n-1} { K + HC(t,k) + f[k+1] }
+ *
+ *   `split[]` stores the optimal cover-end for each starting period — used
+ *   in a single backward pass to materialise the per-period lot sizes.
+ *
+ *   Returns lot quantities indexed by period. Periods with 0 mean "no order
+ *   placed in this period — demand is covered by a prior order".
  */
 function wagnerWhitin(
   netRequirements: number[],
@@ -146,7 +196,7 @@ export class RunMrpHandler {
     // Ba'zi standartlarda SS = qo'shimcha talab sifatida qo'shiladi (GR+SS-OH-SR).
     // Domain egasi bilan kelishuv asosida bu formula tanlanadi.
 
-    const policyMap = new Map((policies ?? []).map((p) => [p.materialId, p]));
+    const policyMap = new Map((Array.isArray(policies) ? policies : []).map((p) => [p.materialId, p]));
     const grossByMaterial = new Map<string, number[]>();
 
     for (const mps of mpsRows) {

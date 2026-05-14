@@ -1,3 +1,8 @@
+/**
+ * @module useReservationMutations
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -20,10 +25,7 @@ export function useReservationMutations({
 
   const optimizeMutation = useMutation({
     mutationFn: async (params: { materialType: string; quantity: number }) => {
-      const res = await fetch(
-        `/api/ai-reservation/optimize?materialType=${encodeURIComponent(params.materialType)}&quantity=${params.quantity}`,
-        { credentials: "include" }
-      );
+      const res = await apiRequest('GET', `/api/ai-reservation/optimize?materialType=${encodeURIComponent(params.materialType)}&quantity=${params.quantity}`);
       if (!res.ok) throw new Error("Optimization failed");
       return res.json();
     },

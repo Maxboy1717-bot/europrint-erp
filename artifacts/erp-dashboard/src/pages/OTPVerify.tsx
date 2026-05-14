@@ -1,3 +1,8 @@
+/**
+ * @module OTPVerify
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -7,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, RefreshCw } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 const OTP_LENGTH = 6;
 
@@ -17,6 +23,7 @@ interface ResendOtpResponse {
 }
 
 export default function OTPVerify() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
@@ -75,7 +82,7 @@ export default function OTPVerify() {
     if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
-    if ((newOtp ?? []).every((d) => d !== "")) {
+    if ((Array.isArray(newOtp) ? newOtp : []).every((d) => d !== "")) {
       verifyMutation.mutate(newOtp.join(""));
     }
   }
@@ -108,14 +115,14 @@ export default function OTPVerify() {
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
             <Shield className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-xl">OTP Tasdiqlash</CardTitle>
+          <CardTitle className="text-[14px] font-semibold">{t("otpTasdiqlash")}</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Telegramga yuborilgan {OTP_LENGTH} raqamli kodni kiriting
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
           {isLoading ? (
-            <p className="text-center text-sm text-muted-foreground">Kod yuborilmoqda...</p>
+            <p className="text-center text-sm text-muted-foreground">{t("kodYuborilmoqda")}</p>
           ) : (
             <div className="flex gap-2 justify-center" onPaste={handlePaste}>
               {(Array.isArray(otp) ? otp : []).map((digit, i) => (
@@ -143,14 +150,14 @@ export default function OTPVerify() {
                 </span>
               </p>
             ) : (
-              <p className="text-sm text-destructive">Kod muddati o'tdi</p>
+              <p className="text-sm text-destructive">{t("kodMuddatiOtdi")}</p>
             )}
           </div>
 
           <Button
             onClick={() => verifyMutation.mutate(otp.join(""))}
             className="w-full"
-            disabled={(otp ?? []).some((d) => !d) || verifyMutation.isPending || timeLeft === 0 || !sessionId}
+            disabled={(Array.isArray(otp) ? otp : []).some((d) => !d) || verifyMutation.isPending || timeLeft === 0 || !sessionId}
             data-testid="button-verify-otp"
           >
             {verifyMutation.isPending ? "Tekshirilmoqda..." : "Tasdiqlash"}
@@ -164,7 +171,7 @@ export default function OTPVerify() {
               disabled={timeLeft > 0 || resendMutation.isPending}
             >
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Qayta yuborish
+              {t("qaytaYuborish")}
             </Button>
           </div>
         </CardContent>

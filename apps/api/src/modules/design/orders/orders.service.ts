@@ -1,3 +1,8 @@
+/**
+ * @module orders.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
 import { IDesignOrdersSvcRepository, DESIGN_ORDERS_SVC_REPO } from './i-design-orders-svc.repo';
 import { safeCall, Result, AppError } from '@common/result';

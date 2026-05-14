@@ -1,3 +1,8 @@
+/**
+ * @module sprint4-migration.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -22,14 +27,17 @@ export class Sprint4MigrationService implements OnApplicationBootstrap {
   }
 
   private async ensureOrderWorkflowColumns(): Promise<void> {
-    await ddlRun(sql`
-      ALTER TABLE ow_orders
-        ADD COLUMN IF NOT EXISTS tech_card_confirmed_at    TIMESTAMPTZ,
-        ADD COLUMN IF NOT EXISTS customer_signature_url    TEXT
-    `).catch((e: Error) =>
-      this.logger.error(`ow_orders column migration failed: ${e.message}`),
-    );
-
-    this.logger.log('Sprint-4 ow_orders columns ensured');
+    try {
+      await ddlRun(sql`
+        ALTER TABLE ow_orders
+          ADD COLUMN IF NOT EXISTS tech_card_confirmed_at    TIMESTAMPTZ,
+          ADD COLUMN IF NOT EXISTS customer_signature_url    TEXT
+      `).catch((e: Error) =>
+        this.logger.error(`ow_orders column migration failed: ${e.message}`),
+      );
+      this.logger.log('Sprint-4 ow_orders columns ensured');
+    } catch (e) {
+      throw new Error(`sprint4Migration.ensureOrderWorkflowColumns: ${String(e)}`);
+    }
   }
 }

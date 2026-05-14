@@ -1,3 +1,8 @@
+/**
+ * @module SectionHeader
+ * @description React UI component.
+ */
+
 import { ComponentType } from "react";
 
 export function SectionHeader({ id, icon: Icon, title, description }: {

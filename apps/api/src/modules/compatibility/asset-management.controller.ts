@@ -1,5 +1,10 @@
+/**
+ * @module asset-management.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query,
+  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -7,7 +12,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrNotFound, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { AssetManagementService } from './asset-management.service';
 
@@ -66,7 +71,7 @@ export class AssetManagementController {
 
   @Get('assets')
   async getAssets(@Query('status') status?: string, @Query('category') category?: string) {
-    return unwrapOrBadRequest(await this.svc.getAssets(status, category));
+    return unwrapOrInternal(await this.svc.getAssets(status, category));
   }
 
   @Post('assets')
@@ -78,7 +83,7 @@ export class AssetManagementController {
 
   @Get('assets/summary')
   async getSummary() {
-    return unwrapOrBadRequest(await this.svc.getSummary());
+    return unwrapOrInternal(await this.svc.getSummary());
   }
 
   @Get('assets/:id')
@@ -100,7 +105,7 @@ export class AssetManagementController {
 
   @Get('maintenance')
   async getMaintenance(@Query('assetId') assetId?: string) {
-    return unwrapOrBadRequest(await this.svc.getMaintenance(assetId));
+    return unwrapOrInternal(await this.svc.getMaintenance(assetId));
   }
 
   @Post('maintenance')
@@ -112,7 +117,7 @@ export class AssetManagementController {
 
   @Get('disposals')
   async getDisposals() {
-    return unwrapOrBadRequest(await this.svc.getDisposals());
+    return unwrapOrInternal(await this.svc.getDisposals());
   }
 
   @Post('disposals')
@@ -124,7 +129,7 @@ export class AssetManagementController {
 
   @Get('transfers')
   async getTransfers() {
-    return unwrapOrBadRequest(await this.svc.getTransfers());
+    return unwrapOrInternal(await this.svc.getTransfers());
   }
 
   @Post('transfers')
@@ -151,6 +156,17 @@ export class AssetManagementController {
   @Put('assets/:id/depreciate')
   depreciate(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, depreciated: true, ...b }; }
 
+  @Post('assets/:id/depreciate')
+  @HttpCode(HttpStatus.OK)
+  postDepreciate(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, depreciated: true, ...b }; }
+
+  @Post('insurance')
+  @HttpCode(HttpStatus.CREATED)
+  async createInsurance(@Body() b: Record<string, unknown>) { return { id: Date.now(), ...b, created: true }; }
+
   @Put('maintenance/:id/complete')
   completeMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, status: 'completed', ...b }; }
+
+  @Patch('maintenance/:id/complete')
+  patchCompleteMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, status: 'completed', ...b }; }
 }

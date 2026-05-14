@@ -1,3 +1,8 @@
+/**
+ * @module crm-ai.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { safeCall, Result, AppError, Err } from '@common/result';
 import { CrmAiRepository } from './crm-ai.repository';

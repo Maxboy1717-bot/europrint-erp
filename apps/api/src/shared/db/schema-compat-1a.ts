@@ -1,5 +1,10 @@
+/**
+ * @module schema-compat-1a
+ * @description Source module. See exports for details.
+ */
+
 import { date } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, varchar, createId, ts, stub } from './schema-compat-helpers';
 
 export const users = stub(pgTable('users', {
   id: integer('id').primaryKey(),
@@ -22,24 +27,19 @@ export const users = stub(pgTable('users', {
 }));
 
 export const crmLeads = stub(pgTable('crm_leads', {
-  id:          integer('id').primaryKey(),
-  company_id:  integer('company_id'),
-  first_name:  text('first_name'),
-  last_name:   text('last_name'),
-  email:       text('email'),
-  phone:       text('phone'),
-  status:      text('status').default('new'),
-  stage_id:    integer('stage_id'),
-  source:      text('source'),
-  assigned_to: integer('assigned_to'),
-  notes:       text('notes'),
-  ai_score:        decimal('ai_score', { precision: 5, scale: 2 }),
-  ai_analyzed_at:  ts('ai_analyzed_at'),
-  metadata:        text('metadata'),
-  created_by:      integer('created_by'),
-  created_at:      ts('created_at').defaultNow(),
-  updated_at:  ts('updated_at').defaultNow(),
-  deleted_at:  ts('deleted_at'),
+  id:                 integer('id').primaryKey(),
+  customer_id:        integer('customer_id'),
+  manager_id:         integer('manager_id'),
+  status:             varchar('status', { length: 50 }).default('new'),
+  status_description: varchar('status_description', { length: 200 }),
+  source:             varchar('source', { length: 50 }),
+  contact_name:       varchar('contact_name', { length: 200 }),
+  contact_phone:      varchar('contact_phone', { length: 50 }),
+  contact_email:      varchar('contact_email', { length: 200 }),
+  notes:              text('notes'),
+  deleted_at:         ts('deleted_at'),
+  created_at:         ts('created_at').defaultNow(),
+  updated_at:         ts('updated_at').defaultNow(),
 }));
 
 export const crmDeals = stub(pgTable('crm_deals', {

@@ -1,3 +1,8 @@
+/**
+ * @module wms-extended.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
@@ -134,7 +139,7 @@ export class WmsExtendedRepository {
   ): Promise<Result<{ inserted: number }>> {
     if (!items.length) return Ok({ inserted: 0 });
     try {
-      const valuesChunks = (items ?? []).map((i) =>
+      const valuesChunks = (Array.isArray(items) ? items : []).map((i) =>
         sql`(${i.material_id}, ${i.warehouse_id}, 'low_stock', 'high', ${'Low stock: ' + i.material_name}, false, NOW())`
       );
       const valuesSql = sql.join(valuesChunks, sql`, `);

@@ -1,3 +1,8 @@
+/**
+ * @module ContractsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,12 +24,12 @@ interface ContractsTabProps {
 
 export function ContractsTab({ contracts, employeeMap, loading }: ContractsTabProps) {
   const { t } = useTranslation('hr');
-  const { t: tCommon } = useTranslation('common');
   const { t: tFinance } = useTranslation('finance');
+  const { t: tCommon } = useTranslation('common');
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <Card>
       <CardHeader>
         <CardTitle>{tFinance('contracts')}</CardTitle>
@@ -34,17 +39,17 @@ export function ContractsTab({ contracts, employeeMap, loading }: ContractsTabPr
         {loading ? (
           <div className="space-y-2">
             {([...Array(5)]).map((_, i) => (
-              <Skeleton key={`k-${i}`} className="h-12 w-full" />
+              <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
             ))}
           </div>
         ) : contracts.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-[13px] text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>{tCommon('noData')}</p>
           </div>
         ) : (
           <ScrollArea className="h-[400px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('employee')}</TableHead>
@@ -56,7 +61,7 @@ export function ContractsTab({ contracts, employeeMap, loading }: ContractsTabPr
               </TableHeader>
               <TableBody>
                 {(Array.isArray(contracts) ? contracts : []).map((contract) => (
-                  <TableRow key={contract.id} data-testid={`row-contract-${contract.id}`}>
+                  <TableRow key={contract.id} data-testid={`row-contract-${contract.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">
                       {employeeMap[contract.employeeId]?.fullName || contract.employeeId}
                     </TableCell>
@@ -81,7 +86,7 @@ export function ContractsTab({ contracts, employeeMap, loading }: ContractsTabPr
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         )}
       </CardContent>

@@ -1,3 +1,8 @@
+/**
+ * @module use-toast
+ * @description React custom hook.
+ */
+
 import * as React from "react"
 
 import type {
@@ -131,10 +136,12 @@ const listeners: Array<(state: State) => void> = []
 let memoryState: State = { toasts: [] }
 
 function dispatch(action: Action) {
-  memoryState = reducer(memoryState, action)
-  (listeners ?? []).forEach((listener) => {
-    listener(memoryState)
-  })
+  memoryState = reducer(memoryState, action);
+  // Eslatma: yuqoridagi semicolon majburiy — JavaScript ASI bug'i (reducer(...)(listeners) deb o'qib, "reducer is not a function" beradi)
+  const safeListeners = Array.isArray(listeners) ? listeners : [];
+  safeListeners.forEach((listener) => {
+    listener(memoryState);
+  });
 }
 
 type Toast = Omit<ToasterToast, "id">
@@ -179,7 +186,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
 
   return {
     ...state,

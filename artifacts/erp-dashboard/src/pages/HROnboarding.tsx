@@ -1,3 +1,8 @@
+/**
+ * @module HROnboarding
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +18,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { UserPlus, CheckCircle2, Plus, Users, Clock, TrendingUp, FolderOpen, FileText, Video, ClipboardList, Map, Eye } from "lucide-react";
 import { OnboardingRoadmapDialog } from "@/components/hr/OnboardingRoadmapDialog";
 
+import { useTranslation } from '@/lib/i18n';
+import { EPStatusPill } from "@/components/ep";
 interface ChecklistItem {
   id: string;
   userId: number;
@@ -48,6 +55,7 @@ interface FolderItem {
 }
 
 function EmployeeFolderItems({ employee }: { employee: Employee }) {
+  const { t } = useTranslation("common");
   const { data: folderItems = [], isLoading } = useQuery<FolderItem[]>({
     queryKey: [`/api/org-structure/employees/${employee.id}/folder`],
     enabled: !!employee.id,
@@ -64,13 +72,13 @@ function EmployeeFolderItems({ employee }: { employee: Employee }) {
   return (
     <div className="border rounded-md p-3">
       <div className="flex items-center gap-2 mb-2">
-        <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
+        <FolderOpen className="h-4 w-4 text-primary" />
         <span className="font-medium text-sm">{empName}</span>
         <span className="text-xs text-muted-foreground">— {employee.positionName || employee.position || "Lavozim ko'rsatilmagan"}</span>
-        {isLoading && <span className="text-xs text-muted-foreground">Yuklanmoqda...</span>}
+        {isLoading && <span className="text-xs text-muted-foreground">{t("Yuklanmoqda...")}</span>}
       </div>
       {!isLoading && folderItems.length === 0 ? (
-        <p className="text-xs text-muted-foreground pl-6">Papka bo'sh — lavozim uchun material qo'shilmagan</p>
+        <p className="text-xs text-muted-foreground pl-6">{t("papkaBoshLavozimUchunMaterial")}</p>
       ) : (
         <div className="flex flex-wrap gap-2 pl-6">
           {(folderItems as FolderItem[]).map((item) => {
@@ -119,6 +127,7 @@ interface OnboardingRoadmap {
 }
 
 export default function HROnboarding() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
@@ -177,21 +186,21 @@ export default function HROnboarding() {
     <div className="flex flex-col h-full">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <UserPlus className="h-5 w-5 text-indigo-600" />
-          <h1 className="font-semibold text-base">HR — Onboarding</h1>
+          <UserPlus className="h-5 w-5 text-[var(--ep-blue)]" />
+          <h1 className="font-semibold text-base">{t("hrOnboarding")}</h1>
         </div>
         <Button size="sm" onClick={() => setShowDialog(true)} data-testid="button-add-onboarding">
-          <Plus className="h-3.5 w-3.5 mr-1.5" />Onboarding Boshlash
+          <Plus className="h-3.5 w-3.5 mr-1.5" />{t("onboardingBoshlash")}
         </Button>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {([
-            { label: "Faol onboarding", value: newEmployees.length, color: "text-blue-600", icon: UserPlus },
-            { label: "Checklists", value: onboardingChecklists.length, color: "text-green-600", icon: CheckCircle2 },
-            { label: "O'rtacha muddat", value: "30 kun", color: "text-orange-600", icon: Clock },
+            { label: "Faol onboarding", value: newEmployees.length, color: "text-[var(--ep-blue)]", icon: UserPlus },
+            { label: "Checklists", value: onboardingChecklists.length, color: "text-[var(--ep-green)]", icon: CheckCircle2 },
+            { label: "O'rtacha muddat", value: "30 kun", color: "text-[var(--ep-primary)]", icon: Clock },
             { label: "Yangi xodimlar (90 kun)", value: newEmployees.length, color: "text-primary", icon: Users },
           ]).map((s) => (
             <Card key={s.label}>
@@ -212,36 +221,36 @@ export default function HROnboarding() {
             <CardTitle className="text-base">Yangi Xodimlar (Onboarding Jarayonida)</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
+            <div className="ep-table-scroll"><Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead>Lavozim</TableHead>
-                  <TableHead>Ishga kirish sanasi</TableHead>
-                  <TableHead>Bo'lim</TableHead>
-                  <TableHead>Holati</TableHead>
+                  <TableHead>{t("xodim1")}</TableHead>
+                  <TableHead>{t("lavozim1")}</TableHead>
+                  <TableHead>{t("ishgaKirishSanasi")}</TableHead>
+                  <TableHead>{t("bolim1")}</TableHead>
+                  <TableHead>{t("holati")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {newEmployees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      So'nggi 90 kunda yangi xodim yo'q
+                    <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
+                      {t("songgi90KundaYangiXodim")}
                     </TableCell>
                   </TableRow>
                 ) : (Array.isArray(newEmployees) ? newEmployees : []).slice(0, 20).map((emp) => (
-                  <TableRow key={emp.id} data-testid={`row-onboarding-${emp.id}`}>
+                  <TableRow key={emp.id} data-testid={`row-onboarding-${emp.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">
                       {emp.fullName || `${emp.firstName || ""} ${emp.lastName || ""}`.trim() || emp.name || `#${emp.id}`}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{emp.positionName || emp.position || "—"}</TableCell>
                     <TableCell>{emp.hireDate ? new Date(emp.hireDate).toLocaleDateString("uz-UZ") : "—"}</TableCell>
                     <TableCell>{emp.departmentName || emp.department || "—"}</TableCell>
-                    <TableCell><Badge variant="secondary">Onboarding</Badge></TableCell>
+                    <TableCell><EPStatusPill tone="neutral">{t("onboarding")}</EPStatusPill></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
 
@@ -249,17 +258,17 @@ export default function HROnboarding() {
         <Card data-testid="section-lavozim-papkasi">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
-              Lavozim Papkasi — Onboarding Materiallari
+              <FolderOpen className="h-4 w-4 text-primary" />
+              {t("lavozimPapkasiOnboardingMateriallari")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Yangi xodimlarga tayinlangan lavozim papkasidagi hujjatlar, videolar va testlar avtomatik ko'rsatiladi.
+              {t("yangiXodimlargaTayinlanganLavozimPapkasidagi")}
             </p>
             {newEmployees.length === 0 ? (
               <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-                So'nggi 90 kunda yangi xodim yo'q — yangi xodim onboarding jarayoniga qo'shilganda, lavozim papkasi materiallari shu yerda ko'rsatiladi.
+                {t("songgi90KundaYangiXodim1")}
               </div>
             ) : (
               <div className="space-y-3">
@@ -275,31 +284,31 @@ export default function HROnboarding() {
         <Card data-testid="section-onboarding-roadmaps">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Map className="h-4 w-4 text-emerald-500" />
+              <Map className="h-4 w-4 text-[var(--ep-green)]" />
               Yo'l Xaritalari (Material №58)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {roadmaps.length === 0 ? (
               <div className="px-6 pb-6 pt-2 text-sm text-muted-foreground text-center py-8">
-                Hozircha yo'l xaritasi yaratilmagan. Rekrutment Kanbanida HIRED bosqichidagi nomzod kartasidan yaratish mumkin.
+                {t("hozirchaYolXaritasiYaratilmaganRekrutment")}
               </div>
             ) : (
-              <Table>
-                <TableHeader>
+              <div className="ep-table-scroll"><Table>
+                <TableHeader className="sticky top-0 z-10 bg-card">
                   <TableRow>
-                    <TableHead>Nomzod</TableHead>
-                    <TableHead>Lavozim</TableHead>
-                    <TableHead>Bo'linma</TableHead>
-                    <TableHead>Nastavnik</TableHead>
-                    <TableHead>Kirish sanasi</TableHead>
-                    <TableHead>Sinov muddati</TableHead>
+                    <TableHead>{t("nomzod")}</TableHead>
+                    <TableHead>{t("lavozim1")}</TableHead>
+                    <TableHead>{t("bolinma")}</TableHead>
+                    <TableHead>{t("nastavnik")}</TableHead>
+                    <TableHead>{t("kirishSanasi2")}</TableHead>
+                    <TableHead>{t("sinovMuddati")}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {(Array.isArray(roadmaps) ? roadmaps : []).map((rm) => (
-                    <TableRow key={rm.id} data-testid={`row-roadmap-${rm.id}`}>
+                    <TableRow key={rm.id} data-testid={`row-roadmap-${rm.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-medium">{rm.candidate_name || `#${rm.employee_id || rm.id}`}</TableCell>
                       <TableCell className="text-muted-foreground">{rm.roadmap_data?.lavozim_nomi || rm.vacancy_title || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{rm.roadmap_data?.bolim || "—"}</TableCell>
@@ -309,14 +318,14 @@ export default function HROnboarding() {
                       </TableCell>
                       <TableCell>
                         {rm.roadmap_data?.sinov_muddat_oy ? (
-                          <Badge variant="secondary">{rm.roadmap_data.sinov_muddat_oy} oy</Badge>
+                          <EPStatusPill tone="neutral">{rm.roadmap_data.sinov_muddat_oy} oy</EPStatusPill>
                         ) : "—"}
                       </TableCell>
                       <TableCell>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-7 text-xs gap-1 text-emerald-500"
+                          className="h-7 text-xs gap-1 text-[var(--ep-green)]"
                           onClick={() => setViewRoadmapEntry({
                             id: rm.pipeline_entry_id ?? 0,
                             name: rm.candidate_name || `#${rm.id}`,
@@ -325,13 +334,13 @@ export default function HROnboarding() {
                           data-testid={`button-view-roadmap-${rm.id}`}
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          Ko'rish
+                          {t("view")}
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -342,30 +351,30 @@ export default function HROnboarding() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
-                Onboarding Checklist Holati
+                {t("onboardingChecklistHolati")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
+              <div className="ep-table-scroll"><Table>
+                <TableHeader className="sticky top-0 z-10 bg-card">
                   <TableRow>
-                    <TableHead>Xodim</TableHead>
-                    <TableHead>Bajarilish</TableHead>
-                    <TableHead>Progress</TableHead>
+                    <TableHead>{t("xodim1")}</TableHead>
+                    <TableHead>{t("progress5")}</TableHead>
+                    <TableHead>{t('progress3')}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {checkLoading ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">Yuklanmoqda...</TableCell>
+                      <TableCell colSpan={4} className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell>
                     </TableRow>
                   ) : (Array.isArray(onboardingChecklists) ? onboardingChecklists : []).map((item) => {
                     const completed = item.completedItems ?? 0;
                     const total = item.totalItems ?? 12;
                     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
                     return (
-                      <TableRow key={item.id} data-testid={`row-onboarding-checklist-${item.id}`}>
+                      <TableRow key={item.id} data-testid={`row-onboarding-checklist-${item.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium">{item.fullName || `Xodim #${item.userId}`}</TableCell>
                         <TableCell className="text-sm">{completed}/{total} modda</TableCell>
                         <TableCell className="w-48">
@@ -391,7 +400,7 @@ export default function HROnboarding() {
                     );
                   })}
                 </TableBody>
-              </Table>
+              </Table></div>
             </CardContent>
           </Card>
         )}
@@ -399,36 +408,36 @@ export default function HROnboarding() {
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Yangi Onboarding Boshlash</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiOnboardingBoshlash")}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Xodim ID</Label>
+              <Label>{t("xodimId")}</Label>
               <Input
                 value={form.userId}
                 onChange={(e) => setForm((f) => ({ ...f, userId: e.target.value }))}
-                placeholder="Xodim ID raqami"
+                placeholder={t("xodimIdRaqami1")}
                 type="number"
               />
             </div>
             <div>
-              <Label>Xodim ismi</Label>
+              <Label>{t("xodimIsmi")}</Label>
               <Input
                 value={form.fullName}
                 onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-                placeholder="To'liq ismi"
+                placeholder={t("toliqIsmi")}
               />
             </div>
             <div>
-              <Label>Lavozimi</Label>
+              <Label>{t("lavozimi")}</Label>
               <Input
                 value={form.positionName}
                 onChange={(e) => setForm((f) => ({ ...f, positionName: e.target.value }))}
-                placeholder="Lavozim nomi"
+                placeholder={t("lavozimNomi1")}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => createChecklist.mutate(form)}
               disabled={!form.userId || !form.fullName || createChecklist.isPending}

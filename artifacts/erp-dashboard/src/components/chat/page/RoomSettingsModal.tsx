@@ -1,3 +1,8 @@
+/**
+ * @module RoomSettingsModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +20,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Bell, BellOff, Archive, ChevronDown } from "lucide-react";
 import { ChatRoom, useChatStore } from "@/store/chatStore";
+import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 const EMOJI_PRESETS = ["💬", "📢", "🚀", "🎯", "💡", "🔥", "⚡", "🌟", "📋", "🏢", "👥", "🎨", "📊", "🔧", "🌐"];
 
@@ -24,6 +31,7 @@ interface Props {
 }
 
 export function RoomSettingsModal({ room, onClose }: Props) {
+  const { t } = useTranslation("common");
   const [name, setName] = useState(room.name || room.displayName || "");
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [description, setDescription] = useState(room.description || "");
@@ -34,11 +42,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const updateMutation = useMutation({
     mutationFn: async (data: { name?: string; description?: string; avatarEmoji?: string }) => {
-      const res = await fetch(`/api/chat/rooms/${room.id}`, {
-        method: "PATCH",
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, data);
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Server error" }));
         throw new Error(err.error || "Failed to update room");
@@ -63,11 +67,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const muteMutation = useMutation({
     mutationFn: async (duration: string) => {
-      const res = await fetch(`/api/chat/rooms/${room.id}/mute`, {
-        method: "POST",
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ duration }),
-      });
+      const res = await apiRequest('POST', `/api/chat/rooms/${room.id}/mute`, { duration });
       if (!res.ok) throw new Error("Failed to mute");
       return res.json();
     },
@@ -79,11 +79,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/chat/rooms/${room.id}`, {
-        method: "PATCH",
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ isArchived: true }),
-      });
+      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, { isArchived: true });
       if (!res.ok) throw new Error("Failed to archive");
       return res.json();
     },
@@ -99,9 +95,9 @@ export function RoomSettingsModal({ room, onClose }: Props) {
   return (
     <>
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Xona sozlamalari</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("xonaSozlamalari")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -116,7 +112,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
                     onClick={() => setAvatarEmoji(emoji)}
                     className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition-all
                       ${avatarEmoji === emoji
-                        ? "bg-primary/20 ring-2 ring-primary scale-110"
+                        ? "bg-primary/10 ring-2 ring-primary scale-110"
                         : "hover:bg-muted"
                       }`}
                   >
@@ -125,7 +121,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
                 ))}
                 {avatarEmoji && !EMOJI_PRESETS.includes(avatarEmoji) && (
                   <button
-                    className="w-9 h-9 rounded-xl text-lg flex items-center justify-center bg-primary/20 ring-2 ring-primary"
+                    className="w-9 h-9 rounded-xl text-lg flex items-center justify-center bg-primary/10 ring-2 ring-primary"
                   >
                     {avatarEmoji}
                   </button>
@@ -145,12 +141,12 @@ export function RoomSettingsModal({ room, onClose }: Props) {
           {/* Room name */}
           {canEdit && room.type !== "direct" && (
             <div>
-              <Label htmlFor="room-name" className="text-xs mb-1.5 block">Xona nomi</Label>
+              <Label htmlFor="room-name" className="text-xs mb-1.5 block">{t("xonaNomi")}</Label>
               <Input
                 id="room-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Xona nomi..."
+                placeholder={t("xonaNomi1")}
                 className="h-9"
               />
             </div>
@@ -159,12 +155,12 @@ export function RoomSettingsModal({ room, onClose }: Props) {
           {/* Description */}
           {canEdit && room.type !== "direct" && (
             <div>
-              <Label htmlFor="room-desc" className="text-xs mb-1.5 block">Tavsif</Label>
+              <Label htmlFor="room-desc" className="text-xs mb-1.5 block">{t("progress.description")}</Label>
               <Textarea
                 id="room-desc"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Qisqacha tavsif..."
+                placeholder={t("qisqachaTavsif")}
                 className="resize-none text-sm"
                 rows={2}
               />
@@ -173,7 +169,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
           {/* Mute options */}
           <div>
-            <Label className="text-xs mb-1.5 block">Bildirishnomalar</Label>
+            <Label className="text-xs mb-1.5 block">{t("notifications")}</Label>
             <div className="flex gap-2">
               {room.isMuted ? (
                 <Button
@@ -184,14 +180,14 @@ export function RoomSettingsModal({ room, onClose }: Props) {
                   disabled={muteMutation.isPending}
                 >
                   <Bell className="w-4 h-4" />
-                  Yoqish
+                  {t("yoqish")}
                 </Button>
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2 text-sm">
                       <BellOff className="w-4 h-4" />
-                      Jimlatish
+                      {t("jimlatish")}
                       <ChevronDown className="w-3 h-3" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -199,7 +195,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
                     <DropdownMenuItem onClick={() => muteMutation.mutate("1h")}>1 soat</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => muteMutation.mutate("8h")}>8 soat</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => muteMutation.mutate("24h")}>1 kun</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => muteMutation.mutate("forever")}>Doimiy</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => muteMutation.mutate("forever")}>{t("doimiy")}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -212,12 +208,12 @@ export function RoomSettingsModal({ room, onClose }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-2 text-sm text-orange-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                className="gap-2 text-sm text-[var(--ep-primary)] hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 onClick={() => setConfirmArchive(true)}
                 disabled={archiveMutation.isPending}
               >
                 <Archive className="w-4 h-4" />
-                Xonani arxivlash
+                {t("xonaniArxivlash")}
               </Button>
             </div>
           )}
@@ -225,7 +221,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           {canEdit && room.type !== "direct" && (
             <Button
@@ -247,8 +243,8 @@ export function RoomSettingsModal({ room, onClose }: Props) {
     <ConfirmDialog
       open={confirmArchive}
       onOpenChange={(open) => { if (!open) setConfirmArchive(false); }}
-      title="Xonani arxivlash"
-      description="Xonani arxivlashni tasdiqlaysizmi? Sidebar dan yashiriladi."
+      title={t("xonaniArxivlash")}
+      description={t("xonaniArxivlashniTasdiqlaysizmiSidebarDan")}
       confirmText="Arxivlash"
       cancelText="Bekor qilish"
       variant="destructive"

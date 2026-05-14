@@ -1,8 +1,14 @@
+/**
+ * @module production-shift-reports.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import {
 Controller,
   Get,
   Post,
+  Put,
   Patch,
   Param,
   Body,
@@ -73,6 +79,14 @@ export class ProductionShiftReportsController {
   @Post(':id/close')
   @UsePipes(new ZodValidationPipe(ProductionCloseShiftReportSchema))
   async close(@Param('id') id: string, @Body() body: ProductionCloseShiftReportDto) {
+    const r = await this.svc.closeShiftReport(safeInt(id, 0), body);
+    assertFound(r, 'Shift report not found or already closed');
+    return r;
+  }
+
+  @Put(':id/close')
+  @UsePipes(new ZodValidationPipe(ProductionCloseShiftReportSchema))
+  async putClose(@Param('id') id: string, @Body() body: ProductionCloseShiftReportDto) {
     const r = await this.svc.closeShiftReport(safeInt(id, 0), body);
     assertFound(r, 'Shift report not found or already closed');
     return r;

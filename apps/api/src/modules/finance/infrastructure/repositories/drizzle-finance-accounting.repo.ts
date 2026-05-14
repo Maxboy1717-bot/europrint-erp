@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-finance-accounting.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { sql, SQL } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
@@ -140,7 +145,7 @@ export class DrizzleFinanceAccountingRepo {
 
   async getExpenseReports(statusParam: string | null, limit: number, offset: number): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, u.full_name AS employee_name
+      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, (u.first_name || ' ' || u.last_name) AS employee_name
       FROM expense_reports er LEFT JOIN users u ON u.id = er.employee_id
       WHERE (${statusParam}::text IS NULL OR er.status = ${statusParam})
       ORDER BY er.created_at DESC LIMIT ${limit} OFFSET ${offset}
@@ -150,7 +155,7 @@ export class DrizzleFinanceAccountingRepo {
 
   async getExpenseReportById(id: string): Promise<Row | null> {
     const rows = await runQuery<Row>(sql`
-      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, u.full_name AS employee_name
+      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, (u.first_name || ' ' || u.last_name) AS employee_name
       FROM expense_reports er LEFT JOIN users u ON u.id = er.employee_id
       WHERE er.id = ${id} LIMIT 1
     `);

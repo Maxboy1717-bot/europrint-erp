@@ -1,3 +1,8 @@
+/**
+ * @module ai.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -32,6 +37,7 @@ import { DirectorAiStrategyService } from './services/director-ai-strategy.servi
 import { MarketingAiService }        from './services/marketing-ai.service';
 import { AiAutomationService }       from './services/ai-automation.service';
 import { AiAutomationRepository }   from './services/ai-automation.repository';
+import { AiDataRepository }         from './services/ai-data.repository';
 import { AiAutomationDailyService }  from './services/ai-automation-daily.service';
 import { AiAutomationEventsService } from './services/ai-automation-events.service';
 import { AiHrController }            from './presentation/ai-hr.controller';
@@ -80,6 +86,7 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     DirectorAiStrategyService,
     MarketingAiService,
     AiAutomationRepository,
+    AiDataRepository,
     AiAutomationService,
     AiAutomationDailyService,
     AiAutomationEventsService,

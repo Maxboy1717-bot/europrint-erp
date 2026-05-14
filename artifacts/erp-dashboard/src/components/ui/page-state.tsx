@@ -1,3 +1,8 @@
+/**
+ * @module page-state
+ * @description React UI component.
+ */
+
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Inbox } from "lucide-react";

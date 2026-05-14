@@ -1,3 +1,8 @@
+/**
+ * @module ValidatePage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -7,9 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
 import { CheckCircle2, XCircle, Hash, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { EPPageHeader } from "@/components/ep";
 
 interface ValidationResult {
   valid: boolean;
@@ -47,7 +52,7 @@ export default function ValidatePage() {
   const renderResult = (result: ValidationResult | null) => {
     if (!result) return null;
     const Icon = result.valid ? CheckCircle2 : XCircle;
-    const bg = result.valid ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700";
+    const bg = result.valid ? "bg-emerald-50 text-[var(--ep-green)]" : "bg-rose-50 text-[var(--ep-red)]";
     return (
       <div className={`mt-3 p-3 rounded-md flex items-start gap-2 ${bg}`}>
         <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
@@ -62,17 +67,18 @@ export default function ValidatePage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <PageHeader
-        title={t('validate.title', "Hujjat Validatsiyasi")}
-        description={t('validate.description', 'STIR (INN) va karta raqami (Luhn algoritmi) tekshiruvi')}
+    <div className="space-y-6">
+      <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('validate.title', "Hujjat Validatsiyasi")}</b></>}
+        title={t('validate.title', 'Hujjat validatsiyasi')}
+        subtitle={t('validate.description', 'STIR (INN) va karta raqami (Luhn algoritmi) tekshiruvi')}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Hash className="h-5 w-5 text-blue-600" />
+              <Hash className="h-5 w-5 text-[var(--ep-blue)]" />
               {t('validate.stir', 'STIR (INN) tekshiruvi')}
             </CardTitle>
           </CardHeader>
@@ -101,7 +107,7 @@ export default function ValidatePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-purple-600" />
+              <CreditCard className="h-4 w-4 text-[var(--ep-purple)]" />
               {t('validate.card', 'Karta raqami (Luhn)')}
             </CardTitle>
           </CardHeader>

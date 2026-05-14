@@ -1,3 +1,8 @@
+/**
+ * @module ai-automation.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {Controller, Post, Get, UseGuards, HttpCode, HttpStatus, Logger, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
@@ -9,7 +14,7 @@ import { unwrapOrInternal } from '@common/http-result';
 
 @ApiTags('AI — Automation')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
 @Controller('ai/automation')
 export class AiAutomationController {

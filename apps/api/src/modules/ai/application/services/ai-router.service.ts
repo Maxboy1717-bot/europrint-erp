@@ -1,3 +1,8 @@
+/**
+ * @module ai-router.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Err, isErr, Ok, safeCall } from '@common/result';
@@ -125,7 +130,7 @@ export class AiRouterService {
       return Ok({
         today: { spent: todaySpentValue, remaining: DAILY_BUDGET_USD - todaySpentValue, budget: DAILY_BUDGET_USD, requestCount: Object.values(providerStats).reduce((sum, p) => sum + p.requestCount, 0) },
         byProvider: providerStats,
-        topTaskTypes: (topTasks ?? []).map((row) => ({ taskType: row.taskType as AiTaskType, spent: parseFloat(row.spent), count: row.count })),
+        topTaskTypes: (Array.isArray(topTasks) ? topTasks : []).map((row) => ({ taskType: row.taskType as AiTaskType, spent: parseFloat(row.spent), count: row.count })),
       });
     } catch (e) {
       this.logger.warn(`getUsageStats: fallback due to error: ${e}`);

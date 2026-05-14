@@ -1,3 +1,8 @@
+/**
+ * @module schema-ext-c-1
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
@@ -270,13 +275,14 @@ export const employee_benefits = pgTable('employee_benefits', {
 });
 
 export const employee_contracts = pgTable('employee_contracts', {
-  id:           serial('id').primaryKey(),
-  employee_id:  integer('employee_id'),
-  contract_type: text('contract_type'),
-  start_date:   date('start_date'),
-  end_date:     date('end_date'),
-  salary:       numeric('salary', { precision: 15, scale: 2 }),
-  status:       text('status').default('active'),
-  created_at:   timestamp('created_at').defaultNow(),
-  updated_at:   timestamp('updated_at').defaultNow(),
+  id:              serial('id').primaryKey(),
+  employee_id:     integer('employee_id'),
+  contract_number: text('contract_number'),
+  contract_type:   text('contract_type'),
+  start_date:      date('start_date'),
+  end_date:        date('end_date'),
+  salary:          numeric('salary', { precision: 15, scale: 2 }),
+  status:          text('status').default('active'),
+  created_at:      timestamp('created_at').defaultNow(),
+  updated_at:      timestamp('updated_at').defaultNow(),
 });

@@ -1,3 +1,8 @@
+/**
+ * @module reception.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -34,6 +39,22 @@ class CheckOutDto extends createZodDto(CheckOutSchema) {}
 export class ReceptionController {
   private readonly logger = new Logger(ReceptionController.name);
   constructor(private readonly svc: ReceptionService) {}
+
+  /**
+   * GET /api/hr-v2/reception — root endpoint, frontend dashboard ko'rinishi.
+   * Active visitors + stats birgalikda qaytaradi.
+   */
+  @Get()
+  async getRoot() {
+    const [active, stats] = await Promise.all([
+      this.svc.getActiveVisitors(),
+      this.svc.getStats(),
+    ]);
+    return {
+      active: active.ok ? active.data : [],
+      stats: stats.ok ? stats.data : {},
+    };
+  }
 
   @Get('active')
   async getActive() {

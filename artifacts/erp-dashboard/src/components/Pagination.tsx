@@ -1,6 +1,12 @@
+/**
+ * @module Pagination
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface PaginationProps {
   currentPage: number;
@@ -21,6 +27,7 @@ export function Pagination({
   onPageSizeChange,
   pageSizeOptions = [10, 20, 50, 100],
 }: PaginationProps) {
+  const { t } = useTranslation("common");
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
@@ -35,12 +42,12 @@ export function Pagination({
         </span>
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span>Ko'rsatish:</span>
+            <span>{t("korsatish")}</span>
             <Select
               value={String(pageSize)}
               onValueChange={(value) => onPageSizeChange(Number(value))}
             >
-              <SelectTrigger className="h-8 w-16" data-testid="select-page-size">
+              <SelectTrigger className="h-9 w-16" data-testid="select-page-size">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

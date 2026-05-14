@@ -1,3 +1,8 @@
+/**
+ * @module GenerateScannerContent
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,10 +88,10 @@ export function GenerateScannerContent({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t.entityType}</Label>
+              <div className="space-y-1">
+          <Label>{t.entityType}</Label>
                 <Select value={generateType} onValueChange={(v) => { onGenerateTypeChange(v); onGenerateEntityIdChange(""); }}>
-                  <SelectTrigger data-testid="select-entity-type">
+                  <SelectTrigger data-testid="select-entity-type" className="h-9">
                     <SelectValue placeholder={t.entityType} />
                   </SelectTrigger>
                   <SelectContent>
@@ -99,10 +104,10 @@ export function GenerateScannerContent({
               </div>
 
               {generateType && (
-                <div className="space-y-2">
-                  <Label>{t.selectEntity}</Label>
+                <div className="space-y-1">
+          <Label>{t.selectEntity}</Label>
                   <Select value={generateEntityId} onValueChange={onGenerateEntityIdChange}>
-                    <SelectTrigger data-testid="select-entity-id">
+                    <SelectTrigger data-testid="select-entity-id" className="h-9">
                       <SelectValue placeholder={t.selectEntity} />
                     </SelectTrigger>
                     <SelectContent>
@@ -117,10 +122,10 @@ export function GenerateScannerContent({
               <Button
                 onClick={onGenerateBarcode}
                 disabled={!generateType || !generateEntityId || isGenerating}
-                className="w-full"
+                className="w-full gap-2"
                 data-testid="button-generate-barcode"
               >
-                <QrCode className="h-4 w-4 mr-2" />
+                <QrCode className="h-4 w-4" />
                 {t.generate_btn}
               </Button>
             </CardContent>
@@ -157,17 +162,17 @@ export function GenerateScannerContent({
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-1"
+                      className="flex-1 gap-2"
                       onClick={onPrintToast}
                       data-testid="button-print-barcode"
                     >
-                      <Printer className="h-4 w-4 mr-2" />
+                      <Printer className="h-4 w-4" />
                       {t.print}
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-[13px] text-muted-foreground">
                   <QrCode className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>{lang === "uz" ? "Shtrix-kod yaratish uchun tanlang" : "Выберите для создания штрих-кода"}</p>
                 </div>
@@ -182,13 +187,13 @@ export function GenerateScannerContent({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ScanLine className="h-5 w-5" />
+                <ScanLine className="h-4 w-4" />
                 {t.scanner}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t.scanInput}</Label>
+              <div className="space-y-1">
+          <Label>{t.scanInput}</Label>
                 <Input
                   value={scanInput}
                   onChange={(e) => onScanInputChange(e.target.value)}
@@ -199,10 +204,10 @@ export function GenerateScannerContent({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>{t.actionType}</Label>
+              <div className="space-y-1">
+          <Label>{t.actionType}</Label>
                 <Select value={scanAction} onValueChange={onScanActionChange}>
-                  <SelectTrigger data-testid="select-scan-action">
+                  <SelectTrigger data-testid="select-scan-action" className="h-9">
                     <SelectValue placeholder={t.actionType} />
                   </SelectTrigger>
                   <SelectContent>
@@ -217,10 +222,10 @@ export function GenerateScannerContent({
               <Button
                 onClick={onScan}
                 disabled={!scanInput || isScanning}
-                className="w-full"
+                className="w-full gap-2"
                 data-testid="button-scan"
               >
-                <ScanLine className="h-4 w-4 mr-2" />
+                <ScanLine className="h-4 w-4" />
                 {t.scan}
               </Button>
             </CardContent>
@@ -300,7 +305,7 @@ export function GenerateScannerContent({
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-[13px] text-muted-foreground">
                   <ScanLine className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>{lang === "uz" ? "Shtrix-kodni skanerlang" : "Отсканируйте штрих-код"}</p>
                 </div>

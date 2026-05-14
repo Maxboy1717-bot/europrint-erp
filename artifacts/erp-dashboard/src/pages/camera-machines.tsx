@@ -1,3 +1,8 @@
+/**
+ * @module camera-machines
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { safeArray } from "@/lib/queryClient";
@@ -23,8 +28,8 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface MachineStatus {
   id: string;
   code: string;
@@ -51,7 +56,7 @@ const statusLabels: Record<string, { uz: string; ru: string; color: string; icon
   stopped: { uz: "To'xtagan", ru: "Остановлен", color: "bg-red-100 text-red-800", icon: Square },
   maintenance: { uz: "Ta'mirlash", ru: "Обслуживание", color: "bg-blue-100 text-blue-800", icon: Wrench },
   breakdown: { uz: "Buzilgan", ru: "Поломка", color: "bg-red-200 text-red-900", icon: AlertTriangle },
-  unknown: { uz: "Noma'lum", ru: "Неизвестно", color: "bg-surface-container-low text-on-surface", icon: Activity }
+  unknown: { uz: "Noma'lum", ru: "Неизвестно", color: "bg-muted/40 text-foreground", icon: Activity }
 };
 
 const stopReasonLabels: Record<string, { uz: string; ru: string }> = {
@@ -65,6 +70,7 @@ const stopReasonLabels: Record<string, { uz: string; ru: string }> = {
 const COLORS = ['#22c55e', '#eab308', '#ef4444', '#3b82f6', '#dc2626'];
 
 export default function CameraMachines() {
+  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
   const { data: machines, isLoading: machinesLoading, isError, refetch} = useQuery<MachineStatus[]>({
@@ -113,38 +119,39 @@ export default function CameraMachines() {
 
   if (machinesLoading || logsLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-10 w-64" />
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+        <Skeleton className="h-10 w-64 rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {([...Array(4)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-32" />)}
+          {([...Array(4)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-32 rounded-lg" />)}
         </div>
       </div>
     );
   }
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="p-6 space-y-6 bg-surface min-h-screen">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Link href="/camera-dashboard">
-              <Button variant="ghost" size="sm" className="rounded-lg text-on-surface-variant hover:bg-surface-container-low" data-testid="button-back">
+              <Button variant="ghost" size="sm" className="rounded-lg text-muted-foreground hover:bg-muted/40" data-testid="button-back">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 {t.back}
               </Button>
             </Link>
           </div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            Mashina <span className="font-bold text-primary">Holati</span>
-          </h1>
-          <p className="text-on-surface-variant">{t.subtitle}</p>
+          <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("mashinaHolati")}</b></>}
+        title={t("mashinaHolati")}
+        subtitle={t.subtitle}
+      />
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-outline-variant overflow-hidden">
+          <div className="flex rounded-lg border border-border overflow-hidden">
             <Button 
               variant={language === "uz" ? "default" : "ghost"} 
               size="sm"
@@ -166,57 +173,57 @@ export default function CameraMachines() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-surface-container-lowest border-none rounded-lg p-5" data-testid="card-total-machines">
+        <Card className="bg-card border-none rounded-lg p-5" data-testid="card-total-machines">
           <div className="flex flex-row items-center justify-between gap-2 mb-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t.totalMachines}</span>
-            <Factory className="h-5 w-5 text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.totalMachines}</span>
+            <Factory className="h-4 w-4 text-primary" />
           </div>
-          <div className="text-4xl font-bold tracking-tight text-on-surface" data-testid="text-total-machines">{totalMachines}</div>
+          <div className="text-4xl font-bold tracking-tight text-foreground" data-testid="text-total-machines">{totalMachines}</div>
         </Card>
 
-        <Card className="bg-surface-container-lowest border-none rounded-lg p-5" data-testid="card-running">
+        <Card className="bg-card border-none rounded-lg p-5" data-testid="card-running">
           <div className="flex flex-row items-center justify-between gap-2 mb-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t.running}</span>
-            <Play className="h-5 w-5 text-green-500" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.running}</span>
+            <Play className="h-5 w-5 text-[var(--ep-green)]" />
           </div>
-          <div className="text-4xl font-bold tracking-tight text-green-600" data-testid="text-running-count">{runningCount}</div>
-          <Progress value={totalMachines > 0 ? (runningCount / totalMachines) * 100 : 0} className="mt-4 h-1.5 bg-surface-container" />
+          <div className="text-4xl font-bold tracking-tight text-[var(--ep-green)]" data-testid="text-running-count">{runningCount}</div>
+          <Progress value={totalMachines > 0 ? (runningCount / totalMachines) * 100 : 0} className="mt-4 h-1.5 bg-muted/60" />
         </Card>
 
-        <Card className="bg-surface-container-lowest border-none rounded-lg p-5" data-testid="card-idle">
+        <Card className="bg-card border-none rounded-lg p-5" data-testid="card-idle">
           <div className="flex flex-row items-center justify-between gap-2 mb-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t.idle}</span>
-            <Pause className="h-5 w-5 text-yellow-500" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.idle}</span>
+            <Pause className="h-5 w-5 text-[var(--ep-yellow)]" />
           </div>
-          <div className="text-4xl font-bold tracking-tight text-yellow-600" data-testid="text-idle-count">{idleCount}</div>
-          <Progress value={totalMachines > 0 ? (idleCount / totalMachines) * 100 : 0} className="mt-4 h-1.5 bg-surface-container" />
+          <div className="text-4xl font-bold tracking-tight text-[var(--ep-yellow)]" data-testid="text-idle-count">{idleCount}</div>
+          <Progress value={totalMachines > 0 ? (idleCount / totalMachines) * 100 : 0} className="mt-4 h-1.5 bg-muted/60" />
         </Card>
 
-        <Card className="bg-surface-container-lowest border-none rounded-lg p-5" data-testid="card-stopped">
+        <Card className="bg-card border-none rounded-lg p-5" data-testid="card-stopped">
           <div className="flex flex-row items-center justify-between gap-2 mb-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t.stopped}</span>
-            <Square className="h-5 w-5 text-red-500" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.stopped}</span>
+            <Square className="h-5 w-5 text-[var(--ep-red)]" />
           </div>
-          <div className="text-4xl font-bold tracking-tight text-red-600" data-testid="text-stopped-count">{stoppedCount}</div>
-          <Progress value={totalMachines > 0 ? (stoppedCount / totalMachines) * 100 : 0} className="mt-4 h-1.5 bg-surface-container" />
+          <div className="text-4xl font-bold tracking-tight text-[var(--ep-red)]" data-testid="text-stopped-count">{stoppedCount}</div>
+          <Progress value={totalMachines > 0 ? (stoppedCount / totalMachines) * 100 : 0} className="mt-4 h-1.5 bg-muted/60" />
         </Card>
 
-        <Card className="bg-surface-container-lowest border-none rounded-lg p-5" data-testid="card-oee">
+        <Card className="bg-card border-none rounded-lg p-5" data-testid="card-oee">
           <div className="flex flex-row items-center justify-between gap-2 mb-4">
-            <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{t.oee}</span>
-            <Zap className="h-5 w-5 text-blue-500" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.oee}</span>
+            <Zap className="h-5 w-5 text-[var(--ep-blue)]" />
           </div>
           <div className={`text-4xl font-bold tracking-tight ${
-            oeeValue >= 80 ? "text-green-600" : oeeValue >= 60 ? "text-yellow-600" : "text-red-600"
+            oeeValue >= 80 ? "text-[var(--ep-green)]" : oeeValue >= 60 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"
           }`} data-testid="text-oee-value">{oeeValue}%</div>
-          <Progress value={oeeValue} className="mt-4 h-1.5 bg-surface-container" />
+          <Progress value={oeeValue} className="mt-4 h-1.5 bg-muted/60" />
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none" data-testid="card-status-pie">
-          <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-            <CardTitle className="text-lg font-bold text-on-surface">{t.machineStatus}</CardTitle>
+        <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none" data-testid="card-status-pie">
+          <CardHeader className="bg-muted/40/50 py-4 px-6">
+            <CardTitle className="text-[14px] font-semibold font-bold text-foreground">{t.machineStatus}</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             {pieData.length > 0 ? (
@@ -240,28 +247,28 @@ export default function CameraMachines() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-on-surface-variant">
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                 {t.noMachines}
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none" data-testid="card-machines-grid">
-          <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-            <CardTitle className="text-lg font-bold text-on-surface">{t.machineStatus}</CardTitle>
+        <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none" data-testid="card-machines-grid">
+          <CardHeader className="bg-muted/40/50 py-4 px-6">
+            <CardTitle className="text-[14px] font-semibold font-bold text-foreground">{t.machineStatus}</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <ScrollArea className="h-[300px]">
               {safeMachines.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(Array.isArray(safeMachines) ? safeMachines : []).map((machine) => {
                     const statusInfo = statusLabels[machine.currentStatus] || statusLabels.unknown;
                     const IconComponent = statusInfo.icon;
                     return (
                       <div
                         key={machine.id}
-                        className={`p-4 rounded-lg bg-surface border hover:bg-surface-container-low transition-colors group ${
+                        className={`p-4 rounded-lg bg-background border hover:bg-muted/40 transition-colors group ${
                           machine.currentStatus === "running" ? "border-green-200" :
                           machine.currentStatus === "idle" ? "border-yellow-200" :
                           "border-red-200"
@@ -271,21 +278,21 @@ export default function CameraMachines() {
                         <div className="flex items-center justify-between gap-2 mb-2">
                           <div className="flex items-center gap-2">
                             <div className={`p-1.5 rounded-lg ${
-                              machine.currentStatus === "running" ? "bg-green-100 text-green-600" :
-                              machine.currentStatus === "idle" ? "bg-yellow-100 text-yellow-600" :
-                              "bg-red-100 text-red-600"
+                              machine.currentStatus === "running" ? "bg-green-100 text-[var(--ep-green)]" :
+                              machine.currentStatus === "idle" ? "bg-yellow-100 text-[var(--ep-yellow)]" :
+                              "bg-red-100 text-[var(--ep-red)]"
                             }`}>
                               <IconComponent className="h-4 w-4" />
                             </div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{machine.code}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{machine.code}</span>
                           </div>
                           <Badge className={`${statusInfo.color} border-none rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider`}>
                             {language === "uz" ? statusInfo.uz : statusInfo.ru}
                           </Badge>
                         </div>
-                        <p className="text-sm font-bold text-on-surface truncate mb-1">{machine.name}</p>
+                        <p className="text-sm font-bold text-foreground truncate mb-1">{machine.name}</p>
                         {machine.stopReason && (
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-red-500">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--ep-red)]">
                             {stopReasonLabels[machine.stopReason]?.[language] || machine.stopReason}
                           </p>
                         )}
@@ -294,7 +301,7 @@ export default function CameraMachines() {
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-on-surface-variant py-10">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-10">
                   <Factory className="h-12 w-12 mb-4 opacity-10" />
                   <p className="font-bold uppercase tracking-widest text-sm">{t.noMachines}</p>
                 </div>
@@ -304,23 +311,23 @@ export default function CameraMachines() {
         </Card>
       </div>
 
-      <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none" data-testid="card-status-history">
-        <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-          <CardTitle className="text-lg font-bold flex items-center gap-2 text-on-surface">
+      <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none" data-testid="card-status-history">
+        <CardHeader className="bg-muted/40/50 py-4 px-6">
+          <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
             <Clock className="h-5 w-5 text-primary" />
             {t.statusHistory}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <ScrollArea className="h-[400px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.machine}</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.status}</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.duration}</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.reason}</TableHead>
-                  <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.lastUpdate}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.machine}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.status}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.duration}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.reason}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.lastUpdate}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -328,22 +335,22 @@ export default function CameraMachines() {
                   safeLogs.slice(0, 20).map((log) => {
                     const statusInfo = statusLabels[log.status] || statusLabels.unknown;
                     return (
-                      <TableRow key={log.id} className="hover:bg-surface-container-low transition-colors border-none" data-testid={`row-log-${log.id}`}>
-                        <TableCell className="py-4 px-6 font-bold text-on-surface">{log.workCenterId.slice(0, 8)}...</TableCell>
+                      <TableRow key={log.id} className="hover:bg-muted/40 transition-colors border-none" data-testid={`row-log-${log.id}`}>
+                        <TableCell className="py-4 px-6 font-bold text-foreground">{log.workCenterId.slice(0, 8)}...</TableCell>
                         <TableCell className="py-4 px-6">
                           <Badge className={`${statusInfo.color} border-none rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider`}>
                             {language === "uz" ? statusInfo.uz : statusInfo.ru}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-4 px-6 text-sm font-medium text-on-surface-variant">
+                        <TableCell className="py-4 px-6 text-sm font-medium text-muted-foreground">
                           {log.durationMinutes ? `${log.durationMinutes} ${t.minutes}` : "—"}
                         </TableCell>
                         <TableCell className="py-4 px-6">
                           {log.stopReason ? (
-                            <span className="text-sm font-medium text-red-500">{stopReasonLabels[log.stopReason]?.[language] || log.stopReason}</span>
+                            <span className="text-sm font-medium text-[var(--ep-red)]">{stopReasonLabels[log.stopReason]?.[language] || log.stopReason}</span>
                           ) : "—"}
                         </TableCell>
-                        <TableCell className="py-4 px-6 text-sm font-medium text-on-surface-variant">
+                        <TableCell className="py-4 px-6 text-sm font-medium text-muted-foreground">
                           {new Date(log.createdAt).toLocaleString(language === "uz" ? "uz-UZ" : "ru-RU")}
                         </TableCell>
                       </TableRow>
@@ -351,14 +358,14 @@ export default function CameraMachines() {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-20 text-on-surface-variant">
+                    <TableCell colSpan={5} className="text-center py-20 text-[13px] text-muted-foreground">
                       <Clock className="h-16 w-16 mx-auto mb-4 opacity-10" />
                       <p className="font-bold uppercase tracking-widest text-sm">{language === "uz" ? "Tarix topilmadi" : "История не найдена"}</p>
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         </CardContent>
       </Card>

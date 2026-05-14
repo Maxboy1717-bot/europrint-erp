@@ -1,3 +1,8 @@
+/**
+ * @module StepExperience
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PortretData } from "./types";
 import { WORKER_TYPE_META } from "@/lib/workerType";
 import type { WorkerType } from "@/lib/workerType";
+import { useTranslation } from '@/lib/i18n';
 
 interface StepExperienceProps {
   portret: PortretData;
@@ -13,28 +19,29 @@ interface StepExperienceProps {
 }
 
 export function StepExperience({ portret, onChange }: StepExperienceProps) {
+  const { t } = useTranslation("common");
   const p = onChange;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">Blok E: Tajriba va bilim</h3>
+        <h3 className="font-semibold text-sm text-primary">{t("blokETajribaVaBilim")}</h3>
         <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">14. Qanday turdagi odam zarar yetkazishi mumkin?</Label>
+        <Label className="text-xs mb-1 block">{t("k14QandayTurdagiOdamZarar")}</Label>
         <Textarea
-          placeholder="Masalan: tartibsiz, mas'uliyatsiz, agressiv, o'rganishni xohlamaydigan..."
+          placeholder={t("masalanTartibsizMasuliyatsizAgressivOrganishni")}
           rows={2}
           value={portret.danger_candidate ?? ""}
           onChange={e => p("danger_candidate")(e.target.value)}
         />
       </div>
 
-      <div className="flex flex-col gap-3 p-3 bg-surface-container-low rounded-lg border border-border/40">
+      <div className="flex flex-col gap-3 p-3 bg-muted/40 rounded-lg border border-border/40">
         <div className="flex items-center justify-between">
-          <Label className="text-xs">15. Oldingi ish tajribasi majburiymi?</Label>
+          <Label className="text-xs">{t("k15OldingiIshTajribasiMajburiymi")}</Label>
           <div className="flex gap-1">
             <Button
               variant={portret.experience_required ? "default" : "outline"}
@@ -45,15 +52,15 @@ export function StepExperience({ portret, onChange }: StepExperienceProps) {
               variant={!portret.experience_required ? "default" : "outline"}
               size="sm" className="h-7 text-xs"
               onClick={() => p("experience_required")(false)}
-            >Yo'q</Button>
+            >{t("no")}</Button>
           </div>
         </div>
 
         {portret.experience_required && (
           <div className="animate-in fade-in slide-in-from-top-1 duration-200">
-            <Label className="text-[11px] mb-1 block">Qaysi sohada va necha yil?</Label>
+            <Label className="text-[11px] mb-1 block">{t("qaysiSohadaVaNechaYil")}</Label>
             <Input
-              placeholder="Masalan: FMCG savdo sohasida kamida 2 yil"
+              placeholder={t("masalanFmcgSavdoSohasidaKamida")}
               value={portret.experience_field ?? ""}
               onChange={e => p("experience_field")(e.target.value)}
               className="h-8 text-sm"
@@ -63,18 +70,18 @@ export function StepExperience({ portret, onChange }: StepExperienceProps) {
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">16. Hozir kandidat qayerda ishlayotgan bo'lishi mumkin?</Label>
+        <Label className="text-xs mb-1 block">{t("k16HozirKandidatQayerdaIshlayotgan")}</Label>
         <Input
-          placeholder="Masalan: raqobatchi kompaniyalarda, bank sohasida, frilansda..."
+          placeholder={t("masalanRaqobatchiKompaniyalardaBankSohasida")}
           value={portret.current_employment ?? ""}
           onChange={e => p("current_employment")(e.target.value)}
         />
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">17. Ma'lum sohada tajriba kerakmi?</Label>
+        <Label className="text-xs mb-1 block">{t("k17MalumSohadaTajribaKerakmi")}</Label>
         <Input
-          placeholder="Masalan: Qurilish, Tibbiyot, IT..."
+          placeholder={t("masalanQurilishTibbiyotIt")}
           value={portret.industry_experience ?? ""}
           onChange={e => p("industry_experience")(e.target.value)}
         />

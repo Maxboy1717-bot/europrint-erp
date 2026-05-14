@@ -1,10 +1,18 @@
+/**
+ * @module mro.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Logger,
+  NotFoundException,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -22,6 +30,9 @@ import { AssignMaintenanceCommand} from '../application/commands/assign-maintena
 import { CompleteMaintenanceCommand} from '../application/commands/complete-maintenance.handler';
 import { GetMaintenanceOrdersQuery} from '../application/queries/get-maintenance-orders.query';
 import { StopMachineDto, AssignMaintenanceDto, CompleteMaintenanceDto} from './dto/mro.dto';
+import { IMaintenanceRepo, MAINTENANCE_REPO } from '../domain/repositories/i-maintenance.repo';
+import { MaintenanceService } from '../maintenance/maintenance.service';
+import { unwrapOrInternal } from '@common/http-result';
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -39,7 +50,10 @@ export class MroController {
 
  constructor(
  private readonly commandBus: CommandBus,
- private readonly queryBus: QueryBus) {}
+ private readonly queryBus: QueryBus,
+ @Inject(MAINTENANCE_REPO) private readonly maintenanceRepo: IMaintenanceRepo,
+ private readonly maintenanceSvc: MaintenanceService,
+ ) {}
 
  @Get()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
@@ -66,11 +80,9 @@ export class MroController {
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
  async getById(@Param('id') id: string) {
- this.logger.log('Get maintenance order');
- return {
- statusCode: HttpStatus.OK,
- data: { id},
-};
+   const result = await this.maintenanceRepo.findById(id);
+   if (!result.ok || !result.data) throw new NotFoundException(`Ta'mirlash buyurtmasi #${id} topilmadi`);
+   return { statusCode: HttpStatus.OK, data: result.data };
 }
 
  @Post('/stop-machine')
@@ -114,4 +126,62 @@ export class MroController {
 
  return result.data;
 }
+
+ @Get('spare-parts')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE, Role.TECHNICIAN)
+ async getSpareParts(@Query('search') search?: string) {
+   return unwrapOrInternal(await this.maintenanceSvc.findSpareParts(search));
+ }
+
+ @Get('canteen/stats')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getCanteenStats() {
+   return unwrapOrInternal(await this.maintenanceSvc.getCanteenStats());
+ }
+
+ @Get('cleaning/schedules')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getCleaningSchedules() {
+   return unwrapOrInternal(await this.maintenanceSvc.findCleaningSchedules());
+ }
+
+ @Get('facilities')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getFacilities() {
+   return unwrapOrInternal(await this.maintenanceSvc.findFacilities());
+ }
+
+ @Get('pm/schedules')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getPmSchedules() {
+   return unwrapOrInternal(await this.maintenanceSvc.findPmSchedules());
+ }
+
+ @Get('utility/readings')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getUtilityReadings() {
+   return unwrapOrInternal(await this.maintenanceSvc.findUtilityReadings());
+ }
+
+ @Get('equipment')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE, Role.TECHNICIAN)
+ async getEquipment(@Query() query: Record<string, unknown>) {
+   return unwrapOrInternal(await this.maintenanceSvc.findEquipment(query));
+ }
+
+ @Post('equipment')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async createEquipment(@Body() body: Record<string, unknown>) {
+   return unwrapOrInternal(await this.maintenanceSvc.createEquipment(body));
+ }
+
+ @Patch('equipment/:id/status')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async updateEquipmentStatus(
+   @Param('id', ParseIntPipe) id: number,
+   @Body() body: Record<string, unknown>,
+ ) {
+   const status = String(body.status ?? 'active');
+   return unwrapOrInternal(await this.maintenanceSvc.updateEquipmentStatus(id, status));
+ }
 }

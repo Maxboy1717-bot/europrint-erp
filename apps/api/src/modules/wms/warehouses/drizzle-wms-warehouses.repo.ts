@@ -1,7 +1,12 @@
+/**
+ * @module drizzle-wms-warehouses.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { warehouses, warehouseZones } from '@europrint/schemas';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, SQL } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IWmsWarehousesRepository } from './i-wms-warehouses.repo';
 
@@ -9,11 +14,16 @@ import { MAX_EXPORT_LIMIT } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
 @Injectable()
 export class DrizzleWmsWarehousesRepository implements IWmsWarehousesRepository {
-  async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
+  async findAll(limit: number, offset: number, activeOnly = false): Promise<Result<{ data: Row[]; count: number }>> {
     try {
+      const where: SQL | undefined = activeOnly ? eq(warehouses.isActive, true) : undefined;
       const [data, countResult] = await Promise.all([
-        db.select().from(warehouses).limit(limit).offset(offset),
-        db.select({ count: count() }).from(warehouses).limit(1).offset(0),
+        where
+          ? db.select().from(warehouses).where(where).limit(limit).offset(offset)
+          : db.select().from(warehouses).limit(limit).offset(offset),
+        where
+          ? db.select({ count: count() }).from(warehouses).where(where)
+          : db.select({ count: count() }).from(warehouses),
       ]);
       return Ok({ data, count: Number(countResult[0]?.count || 0) });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Omborlar topilmadi'); }

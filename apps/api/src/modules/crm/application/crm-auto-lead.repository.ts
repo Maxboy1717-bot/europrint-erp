@@ -1,3 +1,8 @@
+/**
+ * @module crm-auto-lead.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -37,7 +42,7 @@ export class CrmAutoLeadRepository {
         pipeline_value: sql<number>`COALESCE(SUM(${crmDeals.expected_amount}) FILTER (WHERE ${crmDeals.status} = 'open'), 0)::numeric`,
       })
         .from(employees)
-        .leftJoin(crmLeads, sql`${crmLeads.assigned_to}::text = ${employees.id}::text`)
+        .leftJoin(crmLeads, sql`${crmLeads.manager_id}::text = ${employees.id}::text`)
         .leftJoin(crmDeals, sql`${crmDeals.assigned_to}::text = ${employees.id}::text`)
         .where(sql`employees.role = 'sales_manager' AND employees.is_active = true`)
         .groupBy(employees.id, employees.full_name)
@@ -61,32 +66,29 @@ export class CrmAutoLeadRepository {
 
   async ingestCallLead(phone: unknown, first_name: unknown, last_name: unknown, notes: unknown, source_meta: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
+      const contactName = [(first_name as string) ?? 'Unknown', last_name as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
-        phone:      phone as string,
-        first_name: (first_name as string) ?? 'Unknown',
-        last_name:  (last_name as string) ?? undefined,
-        source:     'call',
-        notes:      (notes as string) ?? JSON.stringify(source_meta ?? {}),
-        status:     'new',
+        contact_phone: (phone as string) || null,
+        contact_name:  contactName,
+        source:        'call',
+        notes:         (notes as string) ?? JSON.stringify(source_meta ?? {}),
+        status:        'new',
       };
-      const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).onConflictDoUpdate({
-        target: [crmLeads.phone],
-        set: { updated_at: _time.now() },
-      }).returning();
+      const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
   }
 
   async ingestFormLead(email: unknown, phone: unknown, first_name: unknown, last_name: unknown, form_name: unknown, notes: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
+      const contactName = [(first_name as string) ?? 'Unknown', last_name as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
-        email:      (email as string) ?? undefined,
-        phone:      (phone as string) ?? undefined,
-        first_name: (first_name as string) ?? 'Unknown',
-        last_name:  (last_name as string) ?? undefined,
-        source:     (form_name as string) ?? 'web_form',
-        notes:      (notes as string) ?? undefined,
-        status:     'new',
+        contact_email: (email as string) || null,
+        contact_phone: (phone as string) || null,
+        contact_name:  contactName,
+        source:        (form_name as string) ?? 'web_form',
+        notes:         (notes as string) || null,
+        status:        'new',
       };
       const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
@@ -95,12 +97,12 @@ export class CrmAutoLeadRepository {
 
   async ingestTelegramLead(first_name: unknown, last_name: unknown, username: unknown, message: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
+      const contactName = [(first_name as string) ?? 'Telegram User', (last_name ?? username) as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
-        first_name: (first_name as string) ?? 'Telegram User',
-        last_name:  ((last_name ?? username) as string) ?? undefined,
-        source:     'telegram',
-        notes:      (message as string) ?? undefined,
-        status:     'new',
+        contact_name: contactName,
+        source:       'telegram',
+        notes:        (message as string) || null,
+        status:       'new',
       };
       const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
@@ -109,17 +111,40 @@ export class CrmAutoLeadRepository {
 
   async ingestWebsiteLead(email: unknown, phone: unknown, first_name: unknown, last_name: unknown, page_url: unknown, message: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
+      const contactName = [(first_name as string) ?? 'Website Visitor', last_name as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
-        email:      (email as string) ?? undefined,
-        phone:      (phone as string) ?? undefined,
-        first_name: (first_name as string) ?? 'Website Visitor',
-        last_name:  (last_name as string) ?? undefined,
-        source:     'website',
-        notes:      ((message ?? page_url) as string) ?? undefined,
-        status:     'new',
+        contact_email: (email as string) || null,
+        contact_phone: (phone as string) || null,
+        contact_name:  contactName,
+        source:        'website',
+        notes:         ((message ?? page_url) as string) || null,
+        status:        'new',
       };
       const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
+  }
+
+  async getChurnRisk(entityType: string, eid: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      if (entityType === 'lead') {
+        const rows = await db.select({
+          id:         crmLeads.id,
+          status:     crmLeads.status,
+          updated_at: crmLeads.updated_at,
+          created_at: crmLeads.created_at,
+          source:     crmLeads.source,
+        }).from(crmLeads).where(eq(crmLeads.id, eid)).limit(1);
+        return (rows[0] ?? null) as Row | null;
+      } else {
+        const rows = await db.select({
+          id:         crmDeals.id,
+          status:     crmDeals.status,
+          updated_at: crmDeals.updated_at,
+          created_at: crmDeals.created_at,
+        }).from(crmDeals).where(eq(crmDeals.id, eid)).limit(1);
+        return (rows[0] ?? null) as Row | null;
+      }
+    }, 'DB_ERROR');
   }
 }

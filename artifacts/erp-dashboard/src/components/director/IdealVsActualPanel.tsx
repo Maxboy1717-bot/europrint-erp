@@ -1,3 +1,8 @@
+/**
+ * @module IdealVsActualPanel
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,15 +11,18 @@ import { Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAuthHeaders } from "@/lib/queryClient";
 import type { IdealVsActual } from "./types";
+import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 const FE_PROFIT_TARGET = 100_000_000;
 const FE_REVENUE_TARGET = 800_000_000;
 
 export function IdealVsActualPanel() {
+  const { t } = useTranslation("common");
   const { data, isLoading } = useQuery<IdealVsActual>({
     queryKey: ["/api/director/ideal-vs-actual"],
     queryFn: async () => {
-      const res = await fetch("/api/director/ideal-vs-actual", { headers: getAuthHeaders() });
+      const res = await apiRequest('GET', "/api/director/ideal-vs-actual");
       if (!res.ok) throw new Error("ideal-vs-actual failed");
       return res.json() as Promise<IdealVsActual>;
     },
@@ -45,8 +53,8 @@ export function IdealVsActualPanel() {
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-primary" />
-          <CardTitle className="text-base font-semibold">Ideal vs Haqiqat</CardTitle>
-          <Badge variant="secondary" className="text-[10px]">Haftalik</Badge>
+          <CardTitle className="text-base font-semibold">{t("idealVsHaqiqat")}</CardTitle>
+          <Badge variant="secondary" className="text-[10px]">{t("weekly")}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -65,7 +73,7 @@ export function IdealVsActualPanel() {
                     <span className="text-xs text-muted-foreground">{item.actual} / {item.target} so'm</span>
                     <span className={cn(
                       "text-xs font-bold px-1.5 py-0.5 rounded",
-                      item.deviation >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                      item.deviation >= 0 ? "bg-emerald-50 text-[var(--ep-green)]" : "bg-red-50 text-[var(--ep-red)]"
                     )}>
                       {item.deviation >= 0 ? "+" : ""}{item.deviation}%
                     </span>
@@ -85,7 +93,7 @@ export function IdealVsActualPanel() {
             {data && (
               <div className="pt-2 border-t">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Buyurtmalar bajarilishi</span>
+                  <span>{t("buyurtmalarBajarilishi")}</span>
                   <span className="font-semibold text-foreground">
                     {data.orders.completed}/{data.orders.total} ({data.orders.completion_pct}%)
                   </span>

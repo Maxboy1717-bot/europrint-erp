@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>EuroPrint ERP — Admin Panel</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --pr:#FF902F;--pr-light:#fff3e8;
+  --sb-bg:#1b2850;--sb-txt:#a8b4c8;--sb-hover:rgba(255,144,47,.13);
+  --bg:#f5f7fa;--card:#fff;--border:#e9ecef;
+  --txt:#1a1f36;--muted:#6b7280;--input:#f3f4f6;
+  --nav:#fff;--sw:260px;--nh:65px;--r:12px;
+  --sh:0 2px 16px rgba(0,0,0,.07);--tr:.2s ease;
+}
+[data-theme=dark]{
+  --bg:#0f1117;--card:#1e2433;--border:#2a3147;
+  --txt:#e8ecf0;--muted:#8a94a6;--nav:#1e2433;--input:#252d42;--sb-bg:#161b2e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);display:flex;transition:background var(--tr),color var(--tr)}
+a{text-decoration:none;color:inherit}
+ul{list-style:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#c5ccd8;border-radius:4px}
+
+/* SIDEBAR */
+#sb{width:var(--sw);min-height:100vh;background:var(--sb-bg);position:fixed;top:0;left:0;bottom:0;z-index:1050;display:flex;flex-direction:column;transition:width var(--tr),transform var(--tr);overflow:hidden}
+#sb.col{width:72px}
+#sb.mhide{transform:translateX(-100%)}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.07);min-height:var(--nh);white-space:nowrap;overflow:hidden}
+.sb-logo{width:38px;height:38px;background:var(--pr);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0}
+.sb-name{font-weight:700;font-size:19px;color:#fff}.sb-name span{color:var(--pr)}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sb-sec{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(168,180,200,.45);padding:12px 22px 5px;white-space:nowrap;overflow:hidden}
+#sb.col .sb-sec{opacity:0}
+.ni{display:flex;align-items:center;gap:11px;padding:8px 20px;cursor:pointer;color:var(--sb-txt);font-size:13.5px;font-weight:500;border-radius:8px;margin:1px 8px;transition:background var(--tr),color var(--tr);white-space:nowrap;overflow:hidden}
+.ni:hover,.ni.act{background:var(--sb-hover);color:var(--pr)}
+.ni .ic{width:20px;text-align:center;font-size:15px;flex-shrink:0}
+.ni .bdg{margin-left:auto;font-size:10px;font-weight:600;background:var(--pr);color:#fff;border-radius:10px;padding:1px 7px}
+.ni .arr{margin-left:auto;font-size:11px;transition:transform .2s}
+.ni.open .arr{transform:rotate(90deg)}
+.sub{max-height:0;overflow:hidden;transition:max-height .3s}
+.sub.open{max-height:400px}
+.sub .ni{padding-left:50px;font-size:13px;font-weight:400}
+#sb.col .sub{display:none}
+.sb-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-usr{display:flex;align-items:center;gap:10px;cursor:pointer}
+.sb-usr img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.sb-uname{font-size:13px;font-weight:600;color:#fff;white-space:nowrap}
+.sb-urole{font-size:11px;color:var(--sb-txt)}
+
+/* MAIN */
+#mw{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left var(--tr)}
+#mw.col{margin-left:72px}
+
+/* NAVBAR */
+.tnav{height:var(--nh);background:var(--nav);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px;position:sticky;top:0;z-index:900;box-shadow:0 1px 8px rgba(0,0,0,.04);transition:background var(--tr)}
+.ntog{background:none;border:none;cursor:pointer;width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:var(--txt);font-size:18px}
+.ntog:hover{background:var(--input)}
+.nsrch{flex:1;max-width:340px;display:flex;align-items:center;gap:8px;background:var(--input);border-radius:10px;padding:0 14px;height:38px}
+.nsrch input{border:none;background:none;outline:none;font-size:13.5px;color:var(--txt);width:100%}
+.nsrch input::placeholder{color:var(--muted)}
+.nright{margin-left:auto;display:flex;align-items:center;gap:6px}
+.nibtn{position:relative;width:38px;height:38px;border-radius:10px;border:none;background:var(--input);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt);font-size:16px;transition:background .2s}
+.nibtn:hover{background:var(--pr-light);color:var(--pr)}
+.bdot{position:absolute;top:5px;right:5px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--nav)}
+.nava{width:38px;height:38px;border-radius:50%;object-fit:cover;cursor:pointer;border:2px solid var(--pr)}
+.ndrop{position:relative}
+.ndmenu{display:none;position:absolute;right:0;top:calc(100% + 10px);background:var(--card);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.14);padding:8px 0;min-width:220px;border:1px solid var(--border);z-index:9999}
+.ndrop:hover .ndmenu,.ndrop.open .ndmenu{display:block}
+.ndmenu a{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13.5px;color:var(--txt);transition:background .15s}
+.ndmenu a:hover{background:var(--pr-light);color:var(--pr)}
+.ndmenu .dv{border-top:1px solid var(--border);margin:4px 0}
+
+/* PAGES */
+.pc{padding:24px;flex:1}
+.pg{display:none}.pg.act{display:block}
+.phead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.ptitle{font-size:22px;font-weight:700}
+.pbc{font-size:13px;color:var(--muted);margin-top:3px}
+.pbc span{color:var(--pr)}
+
+/* STAT CARDS */
+.sc{background:var(--card);border-radius:var(--r);padding:20px 22px;display:flex;align-items:center;gap:16px;box-shadow:var(--sh);border:1px solid var(--border);transition:transform .2s,box-shadow .2s;height:100%}
+.sc:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
+.sci{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0}
+.scl{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:4px}
+.scv{font-size:26px;font-weight:700;line-height:1}
+.scc{font-size:12px;font-weight:500;margin-top:4px;display:flex;align-items:center;gap:3px}
+.up{color:#22c55e}.dn{color:#ef4444}
+
+/* CARD */
+.cc{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);overflow:hidden}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.ct{font-size:15px;font-weight:600}
+.cb{padding:18px 20px}
+.cabt{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--muted);transition:all .2s}
+.cabt:hover{background:var(--pr);color:#fff;border-color:var(--pr)}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:10px 14px;font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);background:var(--input);white-space:nowrap}
+.tbl td{padding:11px 14px;font-size:13.5px;border-bottom:1px solid var(--border);color:var(--txt)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover{background:var(--input)}
+
+/* BADGES */
+.b{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:600}
+.bg{background:#dcfce7;color:#16a34a}.by{background:#fef9c3;color:#ca8a04}.br{background:#fee2e2;color:#dc2626}.bb{background:#dbeafe;color:#1d4ed8}.bp{background:#ede9fe;color:#6d28d9}.bt{background:#ccfbf1;color:#0f766e}
+[data-theme=dark] .bg{background:rgba(34,197,94,.15);color:#4ade80}
+[data-theme=dark] .by{background:rgba(245,158,11,.15);color:#fcd34d}
+[data-theme=dark] .br{background:rgba(239,68,68,.15);color:#f87171}
+[data-theme=dark] .bb{background:rgba(59,130,246,.15);color:#60a5fa}
+[data-theme=dark] .bp{background:rgba(139,92,246,.15);color:#a78bfa}
+
+/* ACTIONS */
+.ab{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;background:var(--input);color:var(--muted);transition:all .2s}
+.ab:hover{background:var(--pr);color:#fff}
+.ab.d:hover{background:#ef4444;color:#fff}
+
+/* GRADIENT ICONS */
+.ib{background:linear-gradient(135deg,#3b82f6,#06b6d4)}
+.ig{background:linear-gradient(135deg,#22c55e,#10b981)}
+.io{background:linear-gradient(135deg,#f59e0b,#FF902F)}
+.ip{background:linear-gradient(135deg,#8b5cf6,#6366f1)}
+.ik{background:linear-gradient(135deg,#ec4899,#f43f5e)}
+.it{background:linear-gradient(135deg,#14b8a6,#06b6d4)}
+.ir{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.iy{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
+
+/* PROGRESS */
+.pgbar{height:8px;border-radius:4px;background:var(--input);overflow:hidden}
+.pgfill{height:100%;border-radius:4px}
+
+/* TIMELINE */
+.tli{display:flex;gap:14px;padding-bottom:18px;position:relative}
+.tli::before{content:'';position:absolute;left:17px;top:36px;bottom:0;width:2px;background:var(--border)}
+.tli:last-child::before{display:none}
+.tld{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0}
+
+/* TABS */
+.tab-btns{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px}
+.tab-btn{background:none;border:none;cursor:pointer;padding:10px 18px;font-size:13.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn.act{color:var(--pr);border-bottom-color:var(--pr)}
+.tab-pane{display:none}.tab-pane.act{display:block}
+
+/* CHART TABS */
+.ctabs{display:flex;gap:6px}
+.ctab{font-size:12px;padding:4px 12px;border-radius:20px;border:none;cursor:pointer;background:var(--input);color:var(--muted);transition:all .2s}
+.ctab.act{background:var(--pr);color:#fff}
+
+/* FORM */
+.flabel{font-size:13px;font-weight:500;margin-bottom:5px;color:var(--txt)}
+.finput{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--txt);font-size:13.5px;outline:none;transition:border .2s}
+.finput:focus{border-color:var(--pr)}
+.fselect{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--txt);font-size:13.5px;outline:none}
+
+/* TOGGLE SWITCH */
+.sw-wrap{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.sw-wrap:last-child{border-bottom:none}
+.sw-info .sw-title{font-size:13.5px;font-weight:500}
+.sw-info .sw-sub{font-size:12px;color:var(--muted)}
+.sw{position:relative;width:44px;height:24px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.3s}
+.sw-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.sw-slider{background:var(--pr)}
+input:checked+.sw-slider:before{transform:translateX(20px)}
+
+/* OVERLAY */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1040}
+.ov.show{display:block}
+
+/* NOTIF PANEL */
+.nitem{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .15s}
+.nitem:hover{background:var(--input)}
+.nitem:last-child{border-bottom:none}
+.nico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0}
+
+/* RESPONSIVE */
+@media(max-width:991px){
+  #sb{transform:translateX(-100%)}
+  #sb.mopen{transform:translateX(0)}
+  #mw{margin-left:0!important}
+}
+@media(max-width:575px){.pc{padding:14px}.nsrch{display:none}}
+
+/* AVATAR */
+.ava{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.ava-lg{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--pr)}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-day-hd{font-size:11px;font-weight:600;color:var(--muted);padding:6px 0}
+.cal-day{height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:500;cursor:pointer;transition:background .2s}
+.cal-day.present{background:#dcfce7;color:#16a34a}
+.cal-day.absent{background:#fee2e2;color:#dc2626}
+.cal-day.leave{background:#fef9c3;color:#ca8a04}
+.cal-day.rest{background:var(--input);color:var(--muted)}
+.cal-day.today{border:2px solid var(--pr)}
+
+/* PROFILE DETAIL */
+.prof-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);padding:24px;text-align:center}
+.prof-info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.prof-info-row:last-child{border-bottom:none}
+.prof-key{color:var(--muted);font-weight:500}
+.prof-val{font-weight:600;text-align:right}
+
+/* KPI BOX */
+.kbox{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);padding:18px 20px;text-align:center}
+.kbox-val{font-size:28px;font-weight:700}
+.kbox-lbl{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* QUICK LINK */
+.ql{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;border-radius:12px;cursor:pointer;transition:background .2s;text-align:center}
+.ql:hover{background:var(--input)}
+.qli{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff}
+.qll{font-size:12px;font-weight:500;color:var(--muted)}
+
+/* PAYROLL ROW */
+.prow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.prow:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+<div class="ov" id="ov" onclick="closeMobile()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sb">
+  <div class="sb-brand">
+    <div class="sb-logo"><i class="fas fa-industry"></i></div>
+    <div class="sb-name">Euro<span>Print</span></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Asosiy</div>
+    <ul>
+      <li><div class="ni act" onclick="showPage('dashboard',this)"><i class="fas fa-th-large ic"></i><span>Bosh sahifa</span></div></li>
+      <li><div class="ni" onclick="showPage('hr-dash',this)"><i class="fas fa-user-tie ic"></i><span>HR Dashboard</span></div></li>
+      <li><div class="ni" onclick="showPage('cfo-dash',this)"><i class="fas fa-chart-line ic"></i><span>CFO Dashboard</span></div></li>
+    </ul>
+    <div class="sb-sec">Xodimlar</div>
+    <ul>
+      <li>
+        <div class="ni" onclick="toggleSub(this)"><i class="fas fa-users ic"></i><span>Xodimlar</span><i class="fas fa-chevron-right arr ms-auto"></i></div>
+        <ul class="sub">
+          <li><div class="ni" onclick="showPage('emp-list',this)"><i class="fas fa-list ic"></i><span>Ro'yxat</span></div></li>
+          <li><div class="ni" onclick="showPage('emp-detail',this)"><i class="fas fa-id-card ic"></i><span>Batafsil</span></div></li>
+          <li><div class="ni" onclick="showPage('org',this)"><i class="fas fa-sitemap ic"></i><span>Org struktura</span></div></li>
+        </ul>
+      </li>
+      <li><div class="ni" onclick="showPage('dept',this)"><i class="fas fa-building ic"></i><span>Bo'limlar</span></div></li>
+    </ul>
+    <div class="sb-sec">Davomat</div>
+    <ul>
+      <li><div class="ni" onclick="showPage('attend',this)"><i class="fas fa-clock ic"></i><span>Davomat</span><span class="bdg">12</span></div></li>
+      <li><div class="ni" onclick="showPage('leave',this)"><i class="fas fa-umbrella-beach ic"></i><span>Ta'tillar</span></div></li>
+      <li><div class="ni" onclick="showPage('holiday',this)"><i class="fas fa-calendar-day ic"></i><span>Bayramlar</span></div></li>
+    </ul>
+    <div class="sb-sec">Maosh</div>
+    <ul>
+      <li>
+        <div class="ni" onclick="toggleSub(this)"><i class="fas fa-money-check-alt ic"></i><span>Maosh</span><i class="fas fa-chevron-right arr ms-auto"></i></div>
+        <ul class="sub">
+          <li><div class="ni" onclick="showPage('payroll',this)"><i class="fas fa-list ic"></i><span>Maosh ro'yxati</span></div></li>
+          <li><div class="ni" onclick="showPage('payslip',this)"><i class="fas fa-file-invoice-dollar ic"></i><span>Maoshlik slip</span></div></li>
+        </ul>
+      </li>
+    </ul>
+    <div class="sb-sec">Ishlab chiqarish</div>
+    <ul>
+      <li><div class="ni" onclick="showPage('mes',this)"><i class="fas fa-industry ic"></i><span>MES Panel</span></div></li>
+      <li><div class="ni" onclick="showPage('warehouse',this)"><i class="fas fa-warehouse ic"></i><span>Ombor</span></div></li>
+    </ul>
+    <div class="sb-sec">Moliya & CRM</div>
+    <ul>
+      <li><div class="ni" onclick="showPage('finance',this)"><i class="fas fa-calculator ic"></i><span>Moliya</span></div></li>
+      <li><div class="ni" onclick="showPage('crm',this)"><i class="fas fa-handshake ic"></i><span>CRM</span></div></li>
+    </ul>
+    <div class="sb-sec">Boshqalar</div>
+    <ul>
+      <li><div class="ni" onclick="showPage('print',this)"><i class="fas fa-print ic"></i><span>Chop etish</span></div></li>
+      <li><div class="ni" onclick="showPage('tickets',this)"><i class="fas fa-ticket-alt ic"></i><span>Tiketlar</span><span class="bdg">5</span></div></li>
+      <li><div class="ni" onclick="showPage('settings',this)"><i class="fas fa-cog ic"></i><span>Sozlamalar</span></div></li>
+    </ul>
+  </nav>
+  <div class="sb-foot">
+    <div class="sb-usr">
+      <img src="https://ui-avatars.com/api/?name=Admin+User&background=FF902F&color=fff&size=40" alt="">
+      <div style="white-space:nowrap;overflow:hidden">
+        <div class="sb-uname">Admin User</div>
+        <div class="sb-urole">Super Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN WRAPPER -->
+<div id="mw">
+  <!-- NAVBAR -->
+  <header class="tnav">
+    <button class="ntog" onclick="toggleSB()"><i class="fas fa-bars"></i></button>
+    <div class="nsrch"><i class="fas fa-search" style="color:var(--muted)"></i><input type="text" placeholder="Qidirish..."/></div>
+    <div class="nright">
+      <div class="ndrop">
+        <button class="nibtn"><i class="fas fa-bell"></i><span class="bdot"></span></button>
+        <div class="ndmenu" style="width:320px;right:0">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><strong style="font-size:14px">Bildirishnomalar</strong><span style="font-size:12px;color:var(--pr);cursor:pointer">Barchasini o'qi</span></div>
+          <div class="nitem"><div class="nico ib"><i class="fas fa-user-plus"></i></div><div><div style="font-size:13px;font-weight:600">Yangi xodim</div><div style="font-size:12px;color:var(--muted)">Alisher Karimov qo'shildi</div><div style="font-size:11px;color:var(--muted)">5 daqiqa oldin</div></div></div>
+          <div class="nitem"><div class="nico io"><i class="fas fa-clock"></i></div><div><div style="font-size:13px;font-weight:600">Ta'til arizasi</div><div style="font-size:12px;color:var(--muted)">Dilnoza Yusupova — 3 kun</div><div style="font-size:11px;color:var(--muted)">20 daqiqa oldin</div></div></div>
+          <div class="nitem"><div class="nico ig"><i class="fas fa-dollar-sign"></i></div><div><div style="font-size:13px;font-weight:600">Maosh to'landi</div><div style="font-size:12px;color:var(--muted)">Aprel 2026 maoshi amalga oshdi</div><div style="font-size:11px;color:var(--muted)">1 soat oldin</div></div></div>
+          <div style="padding:10px 16px;text-align:center;border-top:1px solid var(--border)"><a style="font-size:13px;color:var(--pr);cursor:pointer">Barchasini ko'rish</a></div>
+        </div>
+      </div>
+      <button class="nibtn" onclick="toggleTheme()"><i id="thi" class="fas fa-moon"></i></button>
+      <div class="ndrop">
+        <img class="nava" src="https://ui-avatars.com/api/?name=Admin+User&background=FF902F&color=fff&size=40" alt="">
+        <div class="ndmenu">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);text-align:center">
+            <img src="https://ui-avatars.com/api/?name=Admin+User&background=FF902F&color=fff&size=60" style="width:50px;height:50px;border-radius:50%;margin-bottom:6px" alt="">
+            <div style="font-size:14px;font-weight:600">Admin User</div>
+            <div style="font-size:12px;color:var(--muted)">admin@europrint.uz</div>
+          </div>
+          <a href="#"><i class="fas fa-user me-2"></i>Profilim</a>
+          <a href="#"><i class="fas fa-cog me-2"></i>Sozlamalar</a>
+          <div class="dv"></div>
+          <a href="#" style="color:#ef4444"><i class="fas fa-sign-out-alt me-2"></i>Chiqish</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <main class="pc">
+<!-- ==================== PAGE: DASHBOARD ==================== -->
+<div class="pg act" id="pg-dashboard">
+  <div class="phead">
+    <div><div class="ptitle">Bosh sahifa</div><div class="pbc"><i class="fas fa-home me-1"></i>Asosiy / <span>Dashboard</span></div></div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm" style="background:var(--input);color:var(--txt);border:1px solid var(--border);border-radius:8px;font-size:13px"><i class="fas fa-calendar me-1"></i>May 2026</button>
+      <button class="btn btn-sm" style="background:var(--pr);color:#fff;border:none;border-radius:8px;font-size:13px"><i class="fas fa-download me-1"></i>Eksport</button>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci ib"><i class="fas fa-users"></i></div><div><div class="scl">Jami xodimlar</div><div class="scv">1,240</div><div class="scc up"><i class="fas fa-arrow-up"></i>3.2% bu oy</div></div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci ig"><i class="fas fa-user-check"></i></div><div><div class="scl">Bugun keldi</div><div class="scv">1,086</div><div class="scc up"><i class="fas fa-arrow-up"></i>87.6% davomat</div></div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci io"><i class="fas fa-user-clock"></i></div><div><div class="scl">Ta'tilda</div><div class="scv">62</div><div class="scc dn"><i class="fas fa-arrow-down"></i>5.1% o'tgan oydan</div></div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci ip"><i class="fas fa-dollar-sign"></i></div><div><div class="scl">Oylik maosh</div><div class="scv">$89,400</div><div class="scc up"><i class="fas fa-arrow-up"></i>2.8% bu oy</div></div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci ik"><i class="fas fa-briefcase"></i></div><div><div class="scl">Ochiq lavozimlar</div><div class="scv">28</div><div class="scc up"><i class="fas fa-arrow-up"></i>6 ta yangi</div></div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci it"><i class="fas fa-user-graduate"></i></div><div><div class="scl">Yangi xodimlar</div><div class="scv">18</div><div class="scc up"><i class="fas fa-arrow-up"></i>Bu oy</div></div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci ir"><i class="fas fa-user-minus"></i></div><div><div class="scl">Ishdan ketdi</div><div class="scv">5</div><div class="scc dn"><i class="fas fa-arrow-down"></i>2 ta kam</div></div></div></div>
+    <div class="col-xl-3 col-md-6"><div class="sc"><div class="sci iy"><i class="fas fa-ticket-alt"></i></div><div><div class="scl">Ochiq tiketlar</div><div class="scv">34</div><div class="scc dn"><i class="fas fa-arrow-down"></i>12 ta hal qilindi</div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-8">
+      <div class="cc h-100">
+        <div class="ch"><div class="ct">Xodimlar o'sishi</div><div class="ctabs"><button class="ctab act" onclick="swChart(this,'m')">Oylik</button><button class="ctab" onclick="swChart(this,'q')">Choraklik</button><button class="ctab" onclick="swChart(this,'y')">Yillik</button></div></div>
+        <div class="cb"><canvas id="growC" height="110"></canvas></div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc h-100">
+        <div class="ch"><div class="ct">Bo'limlar</div><button class="cabt">Ko'rish</button></div>
+        <div class="cb"><canvas id="deptC" height="180"></canvas><div id="deptLeg" class="mt-3"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-4">
+      <div class="cc h-100">
+        <div class="ch"><div class="ct">Bugungi davomat</div></div>
+        <div class="cb">
+          <canvas id="attC" height="200"></canvas>
+          <div class="d-flex justify-content-around mt-3">
+            <div class="text-center"><div style="font-size:22px;font-weight:700;color:#22c55e">1086</div><div style="font-size:12px;color:var(--muted)">Keldi</div></div>
+            <div class="text-center"><div style="font-size:22px;font-weight:700;color:#f59e0b">62</div><div style="font-size:12px;color:var(--muted)">Ta'tilda</div></div>
+            <div class="text-center"><div style="font-size:22px;font-weight:700;color:#ef4444">92</div><div style="font-size:12px;color:var(--muted)">Kelmadi</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc h-100">
+        <div class="ch"><div class="ct">Maosh xulosasi</div><span class="b bb">May 2026</span></div>
+        <div class="cb">
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#3b82f6;font-size:8px"></i>Yalpi maosh</span><span style="font-weight:600">$105,200</span></div>
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#22c55e;font-size:8px"></i>Sof maosh</span><span style="font-weight:600">$89,450</span></div>
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#f59e0b;font-size:8px"></i>Ushlab qolish</span><span style="font-weight:600">$15,750</span></div>
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#8b5cf6;font-size:8px"></i>Soliq</span><span style="font-weight:600">$8,320</span></div>
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#ec4899;font-size:8px"></i>Ortiqcha ish</span><span style="font-weight:600">$3,240</span></div>
+          <div style="background:var(--pr-light);margin:12px -20px -18px;padding:12px 20px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:700;color:var(--pr)">Holat</span>
+            <span class="b bg">To'landi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc h-100">
+        <div class="ch"><div class="ct">Tezkor havolalar</div></div>
+        <div class="cb">
+          <div class="row g-2">
+            <div class="col-4"><div class="ql"><div class="qli ib"><i class="fas fa-user-plus"></i></div><div class="qll">Xodim qo'sh</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli ig"><i class="fas fa-file-invoice-dollar"></i></div><div class="qll">Maosh slip</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli io"><i class="fas fa-calendar-check"></i></div><div class="qll">Davomat</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli ip"><i class="fas fa-umbrella-beach"></i></div><div class="qll">Ta'til</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli ik"><i class="fas fa-briefcase"></i></div><div class="qll">Vakansiya</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli it"><i class="fas fa-chart-bar"></i></div><div class="qll">Hisobot</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli ir"><i class="fas fa-ticket-alt"></i></div><div class="qll">Tiketlar</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli iy"><i class="fas fa-industry"></i></div><div class="qll">MES</div></div></div>
+            <div class="col-4"><div class="ql"><div class="qli" style="background:linear-gradient(135deg,#6b7280,#374151)"><i class="fas fa-cog"></i></div><div class="qll">Sozlamalar</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-8">
+      <div class="cc">
+        <div class="ch">
+          <div class="ct">So'nggi xodimlar</div>
+          <div class="d-flex gap-2">
+            <div style="position:relative"><input type="text" placeholder="Qidirish..." style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:6px 12px 6px 30px;font-size:13px;color:var(--txt);outline:none;width:160px"><i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px"></i></div>
+            <button class="cabt" onclick="showPage('emp-list',null)">+ Barchasi</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Xodim</th><th>ID</th><th>Bo'lim</th><th>Lavozim</th><th>Holat</th><th>Amal</th></tr></thead>
+            <tbody id="dashEmpTbl"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc h-100">
+        <div class="ch"><div class="ct">So'nggi faoliyat</div></div>
+        <div class="cb">
+          <div class="tli"><div class="tld ib"><i class="fas fa-user-plus"></i></div><div><div style="font-size:13.5px;font-weight:600">Yangi xodim qo'shildi</div><div style="font-size:12px;color:var(--muted)">Alisher Karimov – Dasturchi</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Bugun, 09:30</div></div></div>
+          <div class="tli"><div class="tld io"><i class="fas fa-file-alt"></i></div><div><div style="font-size:13.5px;font-weight:600">Ta'til tasdiqlandi</div><div style="font-size:12px;color:var(--muted)">Dilnoza Yusupova – 3 kun</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Bugun, 08:45</div></div></div>
+          <div class="tli"><div class="tld ig"><i class="fas fa-dollar-sign"></i></div><div><div style="font-size:13.5px;font-weight:600">Maosh to'landi</div><div style="font-size:12px;color:var(--muted)">Aprel 2026 – $89,450</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Kecha, 18:00</div></div></div>
+          <div class="tli"><div class="tld ip"><i class="fas fa-briefcase"></i></div><div><div style="font-size:13.5px;font-weight:600">Yangi vakansiya</div><div style="font-size:12px;color:var(--muted)">UI/UX Dizayner – Masofadan</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Kecha, 15:20</div></div></div>
+          <div class="tli"><div class="tld it"><i class="fas fa-industry"></i></div><div><div style="font-size:13.5px;font-weight:600">Ishlab chiqarish buyurtmasi</div><div style="font-size:12px;color:var(--muted)">WO-2026-0441 bajarildi</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Apr 29, 14:00</div></div></div>
+          <div class="tli"><div class="tld ir"><i class="fas fa-user-minus"></i></div><div><div style="font-size:13.5px;font-weight:600">Ishdan bo'shashtirish</div><div style="font-size:12px;color:var(--muted)">Mansur Azimov – Oxirgi kun May 10</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Apr 28, 11:00</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ==================== PAGE: EMPLOYEE LIST ==================== -->
+<div class="pg" id="pg-emp-list">
+  <div class="phead">
+    <div><div class="ptitle">Xodimlar ro'yxati</div><div class="pbc">Asosiy / <span>Xodimlar</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-2"></i>Xodim qo'shish</button>
+  </div>
+  <div class="cc mb-3">
+    <div class="cb" style="padding:14px 20px">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-3"><div style="position:relative"><input type="text" placeholder="Ism yoki ID bo'yicha qidirish..." class="finput" style="padding-left:34px" oninput="filterEmp(this.value)"><i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px"></i></div></div>
+        <div class="col-md-2"><select class="fselect"><option>Barcha bo'limlar</option><option>Dasturlash</option><option>Dizayn</option><option>HR</option><option>Moliya</option><option>Marketing</option><option>Ombor</option></select></div>
+        <div class="col-md-2"><select class="fselect"><option>Barcha holat</option><option>Faol</option><option>Ta'tilda</option><option>Nofaol</option></select></div>
+        <div class="col-md-2"><select class="fselect"><option>Saralash: Ism</option><option>Saralash: ID</option><option>Saralash: Sana</option></select></div>
+        <div class="col-md-3 text-end"><button class="cabt"><i class="fas fa-filter me-1"></i>Filter</button> <button class="cabt"><i class="fas fa-download me-1"></i>Eksport</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="cc">
+    <div style="overflow-x:auto">
+      <table class="tbl" id="empFullTbl">
+        <thead><tr><th>#</th><th>Xodim</th><th>ID</th><th>Bo'lim</th><th>Lavozim</th><th>Email</th><th>Telefon</th><th>Qo'shilgan</th><th>Holat</th><th>Amal</th></tr></thead>
+        <tbody id="empFullBody"></tbody>
+      </table>
+    </div>
+    <div class="cb d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div style="font-size:13px;color:var(--muted)">1–15 dan 1,240 xodim ko'rsatilmoqda</div>
+      <div class="d-flex gap-1">
+        <button class="ab"><i class="fas fa-chevron-left"></i></button>
+        <button class="ab" style="background:var(--pr);color:#fff">1</button>
+        <button class="ab">2</button><button class="ab">3</button><button class="ab">...</button><button class="ab">83</button>
+        <button class="ab"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: EMPLOYEE DETAIL ==================== -->
+<div class="pg" id="pg-emp-detail">
+  <div class="phead">
+    <div><div class="ptitle">Xodim batafsil</div><div class="pbc">Xodimlar / <span>Alisher Karimov</span></div></div>
+    <div class="d-flex gap-2">
+      <button class="cabt"><i class="fas fa-pen me-1"></i>Tahrirlash</button>
+      <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-print me-1"></i>Chop etish</button>
+    </div>
+  </div>
+  <div class="row g-3">
+    <div class="col-xl-3">
+      <div class="prof-card">
+        <img class="ava-lg mb-3" src="https://ui-avatars.com/api/?name=Alisher+Karimov&background=3b82f6&color=fff&size=80" alt="">
+        <div style="font-size:17px;font-weight:700">Alisher Karimov</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Katta dasturchi</div>
+        <span class="b bg mb-3 d-inline-block">Faol</span>
+        <div style="border-top:1px solid var(--border);padding-top:14px;text-align:left">
+          <div class="prof-info-row"><span class="prof-key"><i class="fas fa-envelope me-2"></i>Email</span><span class="prof-val" style="font-size:12px">a.karimov@ep.uz</span></div>
+          <div class="prof-info-row"><span class="prof-key"><i class="fas fa-phone me-2"></i>Telefon</span><span class="prof-val">+998 91 234 56 78</span></div>
+          <div class="prof-info-row"><span class="prof-key"><i class="fas fa-map-marker-alt me-2"></i>Manzil</span><span class="prof-val" style="font-size:12px">Toshkent, Uzbekistan</span></div>
+          <div class="prof-info-row"><span class="prof-key"><i class="fas fa-calendar me-2"></i>Qo'shilgan</span><span class="prof-val">12.01.2024</span></div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <button class="ab" style="width:36px;height:36px;background:var(--ib,#3b82f6);color:#fff;border-radius:8px"><i class="fab fa-linkedin-in"></i></button>
+          <button class="ab" style="width:36px;height:36px;background:#333;color:#fff;border-radius:8px"><i class="fab fa-github"></i></button>
+          <button class="ab" style="width:36px;height:36px;background:#25D366;color:#fff;border-radius:8px"><i class="fab fa-whatsapp"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-9">
+      <div class="cc">
+        <div class="cb" style="padding-bottom:0">
+          <div class="tab-btns">
+            <button class="tab-btn act" onclick="showTab(this,'t-personal')">Shaxsiy</button>
+            <button class="tab-btn" onclick="showTab(this,'t-work')">Ish ma'lumoti</button>
+            <button class="tab-btn" onclick="showTab(this,'t-attend')">Davomat</button>
+            <button class="tab-btn" onclick="showTab(this,'t-leave')">Ta'til</button>
+            <button class="tab-btn" onclick="showTab(this,'t-docs')">Hujjatlar</button>
+            <button class="tab-btn" onclick="showTab(this,'t-bank')">Bank</button>
+          </div>
+        </div>
+        <div class="cb">
+          <div class="tab-pane act" id="t-personal">
+            <div class="row g-3">
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">To'liq ism</span><span class="prof-val">Alisher Karimov</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Xodim ID</span><span class="prof-val" style="color:var(--pr)">EMP001</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Tug'ilgan kun</span><span class="prof-val">15.06.1992</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Jinsi</span><span class="prof-val">Erkak</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Millat</span><span class="prof-val">O'zbek</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Qon guruhi</span><span class="prof-val">B(III) +</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Nikoh holati</span><span class="prof-val">Uylangan</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Bolalar</span><span class="prof-val">2 ta</span></div></div>
+              <div class="col-12"><div class="prof-info-row"><span class="prof-key">Doimiy manzil</span><span class="prof-val">Toshkent sh., Yunusobod tumani, 14-mavze, 22-uy</span></div></div>
+            </div>
+          </div>
+          <div class="tab-pane" id="t-work">
+            <div class="row g-3">
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Bo'lim</span><span class="prof-val">Dasturlash</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Lavozim</span><span class="prof-val">Katta dasturchi</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Ish boshlanishi</span><span class="prof-val">12.01.2024</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Menejeri</span><span class="prof-val">Bobur Rahimov</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Ish joyi</span><span class="prof-val">Ofis – Toshkent</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Xodim turi</span><span class="prof-val">To'liq vaqt</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Smena</span><span class="prof-val">09:00 – 18:00</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Shartnoma turi</span><span class="prof-val">Muddatli (2 yil)</span></div></div>
+            </div>
+          </div>
+          <div class="tab-pane" id="t-attend">
+            <div class="row g-2 mb-3">
+              <div class="col-3"><div class="kbox"><div class="kbox-val" style="color:#22c55e">22</div><div class="kbox-lbl">Keldi</div></div></div>
+              <div class="col-3"><div class="kbox"><div class="kbox-val" style="color:#ef4444">1</div><div class="kbox-lbl">Kelmadi</div></div></div>
+              <div class="col-3"><div class="kbox"><div class="kbox-val" style="color:#f59e0b">2</div><div class="kbox-lbl">Yarim kun</div></div></div>
+              <div class="col-3"><div class="kbox"><div class="kbox-val" style="color:#3b82f6">5</div><div class="kbox-lbl">Dam oldi</div></div></div>
+            </div>
+            <div class="cal-grid" id="empCalGrid"></div>
+          </div>
+          <div class="tab-pane" id="t-leave">
+            <div class="row g-2 mb-3">
+              <div class="col-3"><div class="kbox"><div class="kbox-val">21</div><div class="kbox-lbl">Berilgan</div></div></div>
+              <div class="col-3"><div class="kbox"><div class="kbox-val" style="color:#ef4444">8</div><div class="kbox-lbl">Ishlatilgan</div></div></div>
+              <div class="col-3"><div class="kbox"><div class="kbox-val" style="color:#f59e0b">2</div><div class="kbox-lbl">Kutilmoqda</div></div></div>
+              <div class="col-3"><div class="kbox"><div class="kbox-val" style="color:#22c55e">11</div><div class="kbox-lbl">Qolgan</div></div></div>
+            </div>
+            <table class="tbl"><thead><tr><th>Tur</th><th>Boshlanish</th><th>Tugash</th><th>Kunlar</th><th>Holat</th></tr></thead>
+            <tbody><tr><td>Yillik ta'til</td><td>10.03.2026</td><td>14.03.2026</td><td>5</td><td><span class="b bg">Tasdiqlandi</span></td></tr>
+            <tr><td>Kasal ta'til</td><td>22.01.2026</td><td>24.01.2026</td><td>3</td><td><span class="b bg">Tasdiqlandi</span></td></tr>
+            <tr><td>Shaxsiy</td><td>05.05.2026</td><td>05.05.2026</td><td>1</td><td><span class="b by">Kutilmoqda</span></td></tr></tbody></table>
+          </div>
+          <div class="tab-pane" id="t-docs">
+            <table class="tbl"><thead><tr><th>Hujjat nomi</th><th>Tur</th><th>Yuklangan sana</th><th>Hajm</th><th>Amal</th></tr></thead>
+            <tbody>
+              <tr><td><i class="fas fa-file-pdf me-2" style="color:#ef4444"></i>Passport nusxasi</td><td>Shaxsiy</td><td>12.01.2024</td><td>1.2 MB</td><td><button class="ab"><i class="fas fa-download"></i></button></td></tr>
+              <tr><td><i class="fas fa-file-pdf me-2" style="color:#ef4444"></i>Diplom</td><td>Ta'lim</td><td>12.01.2024</td><td>2.4 MB</td><td><button class="ab"><i class="fas fa-download"></i></button></td></tr>
+              <tr><td><i class="fas fa-file-word me-2" style="color:#3b82f6"></i>Mehnat shartnomasi</td><td>Shartnoma</td><td>12.01.2024</td><td>0.8 MB</td><td><button class="ab"><i class="fas fa-download"></i></button></td></tr>
+            </tbody></table>
+          </div>
+          <div class="tab-pane" id="t-bank">
+            <div class="row g-3">
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Bank nomi</span><span class="prof-val">Kapitalbank</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Hisob raqami</span><span class="prof-val">**** **** **** 4521</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">Karta raqami</span><span class="prof-val">**** **** **** 7890</span></div></div>
+              <div class="col-md-6"><div class="prof-info-row"><span class="prof-key">IBAN</span><span class="prof-val">UZ12 0000 1234 5678</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ==================== PAGE: ATTENDANCE ==================== -->
+<div class="pg" id="pg-attend">
+  <div class="phead">
+    <div><div class="ptitle">Davomat</div><div class="pbc">Asosiy / <span>Davomat</span></div></div>
+    <div class="d-flex gap-2">
+      <select class="fselect" style="width:auto;font-size:13px"><option>May 2026</option><option>Aprel 2026</option><option>Mart 2026</option></select>
+      <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-download me-1"></i>Hisobot</button>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-calendar-alt"></i></div><div><div class="scl">Ish kunlari</div><div class="scv">22</div><div class="scc up">May 2026</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-user-check"></i></div><div><div class="scl">O'rtacha keldi</div><div class="scv">1,086</div><div class="scc up"><i class="fas fa-arrow-up"></i>87.6%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-user-times"></i></div><div><div class="scl">O'rtacha kelmadi</div><div class="scv">92</div><div class="scc dn"><i class="fas fa-arrow-down"></i>7.4%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-clock"></i></div><div><div class="scl">O'rtacha kechikish</div><div class="scv">8.4 min</div><div class="scc dn"><i class="fas fa-arrow-down"></i>2 min kamaydi</div></div></div></div>
+  </div>
+  <div class="row g-3">
+    <div class="col-xl-8">
+      <div class="cc">
+        <div class="ch"><div class="ct">Davomat jadvali</div>
+          <div class="d-flex gap-2">
+            <div style="position:relative"><input type="text" placeholder="Xodim qidirish..." class="finput" style="padding-left:30px;width:180px;font-size:13px"><i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px"></i></div>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Xodim</th><th>Sana</th><th>Kirish</th><th>Chiqish</th><th>Ish soati</th><th>Kechikish</th><th>Holat</th></tr></thead>
+            <tbody>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Alisher+K&background=3b82f6&color=fff&size=34" alt=""><span>Alisher Karimov</span></div></td><td>01.05.2026</td><td>08:58</td><td>18:02</td><td>9:04</td><td>—</td><td><span class="b bg">Keldi</span></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Dilnoza+Y&background=22c55e&color=fff&size=34" alt=""><span>Dilnoza Yusupova</span></div></td><td>01.05.2026</td><td>09:12</td><td>18:05</td><td>8:53</td><td>12 min</td><td><span class="b by">Kechikdi</span></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Bobur+R&background=f59e0b&color=fff&size=34" alt=""><span>Bobur Rahimov</span></div></td><td>01.05.2026</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="b by">Ta'tilda</span></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Shahlo+T&background=8b5cf6&color=fff&size=34" alt=""><span>Shahlo Toshmatova</span></div></td><td>01.05.2026</td><td>09:00</td><td>18:00</td><td>9:00</td><td>—</td><td><span class="b bg">Keldi</span></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Jasur+M&background=ec4899&color=fff&size=34" alt=""><span>Jasur Mirzayev</span></div></td><td>01.05.2026</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="b br">Kelmadi</span></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Feruza+N&background=14b8a6&color=fff&size=34" alt=""><span>Feruza Nazarova</span></div></td><td>01.05.2026</td><td>08:45</td><td>17:50</td><td>9:05</td><td>—</td><td><span class="b bg">Keldi</span></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Otabek+E&background=ef4444&color=fff&size=34" alt=""><span>Otabek Ergashev</span></div></td><td>01.05.2026</td><td>09:30</td><td>18:00</td><td>8:30</td><td>30 min</td><td><span class="b by">Kechikdi</span></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Sanjar+T&background=FF902F&color=fff&size=34" alt=""><span>Sanjar Tursunov</span></div></td><td>01.05.2026</td><td>09:01</td><td>18:00</td><td>8:59</td><td>1 min</td><td><span class="b bg">Keldi</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc mb-3">
+        <div class="ch"><div class="ct">Oylik kalendar</div></div>
+        <div class="cb">
+          <div class="cal-grid mb-2">
+            <div class="cal-day-hd">Du</div><div class="cal-day-hd">Se</div><div class="cal-day-hd">Ch</div><div class="cal-day-hd">Pa</div><div class="cal-day-hd">Ju</div><div class="cal-day-hd">Sh</div><div class="cal-day-hd">Ya</div>
+          </div>
+          <div class="cal-grid" id="mainCal"></div>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <div style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:#dcfce7;border-radius:4px;display:inline-block"></span>Keldi</div>
+            <div style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:#fee2e2;border-radius:4px;display:inline-block"></span>Kelmadi</div>
+            <div style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:#fef9c3;border-radius:4px;display:inline-block"></span>Ta'til</div>
+            <div style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:var(--input);border-radius:4px;display:inline-block"></span>Dam olish</div>
+          </div>
+        </div>
+      </div>
+      <div class="cc">
+        <div class="ch"><div class="ct">Davomat statistikasi</div></div>
+        <div class="cb"><canvas id="attMonthC" height="200"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: LEAVE ==================== -->
+<div class="pg" id="pg-leave">
+  <div class="phead">
+    <div><div class="ptitle">Ta'til boshqaruvi</div><div class="pbc">Asosiy / <span>Ta'tillar</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-2"></i>Ta'til arizasi</button>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-calendar-check"></i></div><div><div class="scl">Jami berilgan</div><div class="scv">21 kun</div><div class="scc" style="color:var(--muted)">Yillik me'yor</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-calendar-minus"></i></div><div><div class="scl">Ishlatilgan</div><div class="scv">8 kun</div><div class="scc dn">38% ishlatildi</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-hourglass-half"></i></div><div><div class="scl">Kutilmoqda</div><div class="scv">3 ariza</div><div class="scc" style="color:var(--muted)">Ko'rib chiqilmoqda</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-calendar-plus"></i></div><div><div class="scl">Qolgan</div><div class="scv">10 kun</div><div class="scc up">Mavjud</div></div></div></div>
+  </div>
+  <div class="row g-3">
+    <div class="col-xl-8">
+      <div class="cc">
+        <div class="ch"><div class="ct">Ta'til arizalari</div>
+          <div class="d-flex gap-2">
+            <select class="fselect" style="width:auto;font-size:13px"><option>Barcha holat</option><option>Kutilmoqda</option><option>Tasdiqlandi</option><option>Rad etildi</option></select>
+            <button class="cabt">Filtr</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Xodim</th><th>Ta'til turi</th><th>Boshlanish</th><th>Tugash</th><th>Kunlar</th><th>Sabab</th><th>Holat</th><th>Amal</th></tr></thead>
+            <tbody>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Dilnoza+Y&background=22c55e&color=fff&size=34" alt=""><span>Dilnoza Yusupova</span></div></td><td>Yillik</td><td>10.05.2026</td><td>14.05.2026</td><td>5</td><td>Oilaviy</td><td><span class="b by">Kutilmoqda</span></td><td><button class="ab" style="background:#dcfce7;color:#16a34a" title="Tasdiqlash"><i class="fas fa-check"></i></button> <button class="ab d" title="Rad etish"><i class="fas fa-times"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Alisher+K&background=3b82f6&color=fff&size=34" alt=""><span>Alisher Karimov</span></div></td><td>Kasal ta'til</td><td>05.05.2026</td><td>05.05.2026</td><td>1</td><td>Kasallik</td><td><span class="b by">Kutilmoqda</span></td><td><button class="ab" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check"></i></button> <button class="ab d"><i class="fas fa-times"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Bobur+R&background=f59e0b&color=fff&size=34" alt=""><span>Bobur Rahimov</span></div></td><td>Yillik</td><td>28.04.2026</td><td>02.05.2026</td><td>5</td><td>Sayohat</td><td><span class="b bg">Tasdiqlandi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Jasur+M&background=ec4899&color=fff&size=34" alt=""><span>Jasur Mirzayev</span></div></td><td>Shaxsiy</td><td>15.04.2026</td><td>16.04.2026</td><td>2</td><td>Shaxsiy</td><td><span class="b br">Rad etildi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Feruza+N&background=14b8a6&color=fff&size=34" alt=""><span>Feruza Nazarova</span></div></td><td>Yillik</td><td>20.03.2026</td><td>24.03.2026</td><td>5</td><td>Dam olish</td><td><span class="b bg">Tasdiqlandi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Nodira+A&background=8b5cf6&color=fff&size=34" alt=""><span>Nodira Abdullayeva</span></div></td><td>Homiladorlik</td><td>01.06.2026</td><td>01.09.2026</td><td>90</td><td>Homiladorlik</td><td><span class="b by">Kutilmoqda</span></td><td><button class="ab" style="background:#dcfce7;color:#16a34a"><i class="fas fa-check"></i></button> <button class="ab d"><i class="fas fa-times"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc">
+        <div class="ch"><div class="ct">Ta'til turi statistikasi</div></div>
+        <div class="cb">
+          <div id="leaveStats"></div>
+          <canvas id="leaveC" height="200" class="mt-3"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ==================== PAGE: PAYROLL ==================== -->
+<div class="pg" id="pg-payroll">
+  <div class="phead">
+    <div><div class="ptitle">Maosh boshqaruvi</div><div class="pbc">Asosiy / <span>Maosh</span></div></div>
+    <div class="d-flex gap-2">
+      <select class="fselect" style="width:auto;font-size:13px"><option>May 2026</option><option>Aprel 2026</option><option>Mart 2026</option></select>
+      <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-play me-1"></i>Maosh hisoblash</button>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-money-bill-wave"></i></div><div><div class="scl">Yalpi maosh</div><div class="scv">$105,200</div><div class="scc up"><i class="fas fa-arrow-up"></i>3.1%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-wallet"></i></div><div><div class="scl">Sof maosh</div><div class="scv">$89,450</div><div class="scc up"><i class="fas fa-arrow-up"></i>2.8%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-minus-circle"></i></div><div><div class="scl">Ushlab qolish</div><div class="scv">$15,750</div><div class="scc" style="color:var(--muted)">15% dan</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-check-circle"></i></div><div><div class="scl">To'langan</div><div class="scv">$89,450</div><div class="scc bg">To'landi</div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-8">
+      <div class="cc">
+        <div class="ch"><div class="ct">Xodimlar maoshi</div>
+          <div class="d-flex gap-2"><div style="position:relative"><input type="text" placeholder="Qidirish..." class="finput" style="padding-left:30px;width:160px;font-size:13px"><i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px"></i></div></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Xodim</th><th>Bo'lim</th><th>Asosiy maosh</th><th>Mukofot</th><th>Ushlab qolish</th><th>Sof maosh</th><th>Holat</th><th>Amal</th></tr></thead>
+            <tbody>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Alisher+K&background=3b82f6&color=fff&size=34" alt=""><span style="font-weight:600">Alisher Karimov</span></div></td><td>Dasturlash</td><td>$2,800</td><td>$400</td><td>$480</td><td style="font-weight:600;color:#22c55e">$2,720</td><td><span class="b bg">To'landi</span></td><td><button class="ab"><i class="fas fa-file-invoice-dollar"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Dilnoza+Y&background=22c55e&color=fff&size=34" alt=""><span style="font-weight:600">Dilnoza Yusupova</span></div></td><td>Dizayn</td><td>$2,200</td><td>$300</td><td>$375</td><td style="font-weight:600;color:#22c55e">$2,125</td><td><span class="b bg">To'landi</span></td><td><button class="ab"><i class="fas fa-file-invoice-dollar"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Bobur+R&background=f59e0b&color=fff&size=34" alt=""><span style="font-weight:600">Bobur Rahimov</span></div></td><td>HR</td><td>$2,500</td><td>$200</td><td>$405</td><td style="font-weight:600;color:#22c55e">$2,295</td><td><span class="b bg">To'landi</span></td><td><button class="ab"><i class="fas fa-file-invoice-dollar"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Shahlo+T&background=8b5cf6&color=fff&size=34" alt=""><span style="font-weight:600">Shahlo Toshmatova</span></div></td><td>Moliya</td><td>$2,400</td><td>$150</td><td>$382</td><td style="font-weight:600;color:#22c55e">$2,168</td><td><span class="b by">Kutilmoqda</span></td><td><button class="ab"><i class="fas fa-file-invoice-dollar"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Jasur+M&background=ec4899&color=fff&size=34" alt=""><span style="font-weight:600">Jasur Mirzayev</span></div></td><td>Marketing</td><td>$2,100</td><td>$350</td><td>$367</td><td style="font-weight:600;color:#22c55e">$2,083</td><td><span class="b bg">To'landi</span></td><td><button class="ab"><i class="fas fa-file-invoice-dollar"></i></button></td></tr>
+              <tr><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Sanjar+T&background=FF902F&color=fff&size=34" alt=""><span style="font-weight:600">Sanjar Tursunov</span></div></td><td>IT</td><td>$3,200</td><td>$500</td><td>$540</td><td style="font-weight:600;color:#22c55e">$3,160</td><td><span class="b bg">To'landi</span></td><td><button class="ab"><i class="fas fa-file-invoice-dollar"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc mb-3"><div class="ch"><div class="ct">Oylik maosh trendi</div></div><div class="cb"><canvas id="payrollC" height="200"></canvas></div></div>
+      <div class="cc"><div class="ch"><div class="ct">Maosh tarkibi</div></div><div class="cb"><canvas id="payrollDC" height="180"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: PAYSLIP ==================== -->
+<div class="pg" id="pg-payslip">
+  <div class="phead">
+    <div><div class="ptitle">Maoshlik slip</div><div class="pbc">Maosh / <span>Slip</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-print me-1"></i>Chop etish</button>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-xl-8">
+      <div class="cc">
+        <div style="padding:30px;border-bottom:2px solid var(--pr)">
+          <div class="d-flex justify-content-between align-items-start">
+            <div><div style="font-size:22px;font-weight:700;color:var(--pr)">EuroPrint ERP</div><div style="font-size:13px;color:var(--muted)">Toshkent sh., Yunusobod tumani<br>Tel: +998 71 200 00 01</div></div>
+            <div style="text-align:right"><div style="font-size:18px;font-weight:700">MAOSHLIK SLIP</div><div style="font-size:13px;color:var(--muted)">Aprel 2026</div></div>
+          </div>
+        </div>
+        <div class="cb">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div style="background:var(--input);border-radius:10px;padding:16px">
+                <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Xodim ma'lumoti</div>
+                <div class="prof-info-row"><span class="prof-key">Ism</span><span class="prof-val">Alisher Karimov</span></div>
+                <div class="prof-info-row"><span class="prof-key">ID</span><span class="prof-val" style="color:var(--pr)">EMP001</span></div>
+                <div class="prof-info-row"><span class="prof-key">Bo'lim</span><span class="prof-val">Dasturlash</span></div>
+                <div class="prof-info-row"><span class="prof-key">Lavozim</span><span class="prof-val">Katta dasturchi</span></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div style="background:var(--input);border-radius:10px;padding:16px">
+                <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px">To'lov ma'lumoti</div>
+                <div class="prof-info-row"><span class="prof-key">Davr</span><span class="prof-val">Aprel 2026</span></div>
+                <div class="prof-info-row"><span class="prof-key">To'lov sanasi</span><span class="prof-val">30.04.2026</span></div>
+                <div class="prof-info-row"><span class="prof-key">Bank</span><span class="prof-val">Kapitalbank</span></div>
+                <div class="prof-info-row"><span class="prof-key">Hisob</span><span class="prof-val">**** 4521</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div style="font-size:13px;font-weight:700;color:#22c55e;margin-bottom:10px;padding:8px 14px;background:#dcfce7;border-radius:8px">✅ DAROMADLAR</div>
+              <div class="prof-info-row"><span class="prof-key">Asosiy maosh</span><span class="prof-val">$2,800.00</span></div>
+              <div class="prof-info-row"><span class="prof-key">Mukofot</span><span class="prof-val">$400.00</span></div>
+              <div class="prof-info-row"><span class="prof-key">Ortiqcha ish</span><span class="prof-val">$120.00</span></div>
+              <div class="prof-info-row"><span class="prof-key">Transport nafaqasi</span><span class="prof-val">$50.00</span></div>
+              <div class="prof-info-row" style="font-weight:700"><span style="color:#22c55e">JAMI DAROMAD</span><span style="color:#22c55e">$3,370.00</span></div>
+            </div>
+            <div class="col-md-6">
+              <div style="font-size:13px;font-weight:700;color:#ef4444;margin-bottom:10px;padding:8px 14px;background:#fee2e2;border-radius:8px">❌ USHLAB QOLINGAN</div>
+              <div class="prof-info-row"><span class="prof-key">Daromad solig'i</span><span class="prof-val">$280.00</span></div>
+              <div class="prof-info-row"><span class="prof-key">Ijtimoiy sug'urta</span><span class="prof-val">$140.00</span></div>
+              <div class="prof-info-row"><span class="prof-key">Pensiya fondi</span><span class="prof-val">$56.00</span></div>
+              <div class="prof-info-row"><span class="prof-key">Boshqa</span><span class="prof-val">$4.00</span></div>
+              <div class="prof-info-row" style="font-weight:700"><span style="color:#ef4444">JAMI USHLAB QOLINDI</span><span style="color:#ef4444">$480.00</span></div>
+            </div>
+          </div>
+          <div style="background:linear-gradient(135deg,var(--pr),#f59e0b);border-radius:12px;padding:20px;text-align:center;color:#fff">
+            <div style="font-size:14px;font-weight:500;margin-bottom:4px">SOF MAOSH (TO'LANGAN)</div>
+            <div style="font-size:36px;font-weight:700">$2,890.00</div>
+            <div style="font-size:12px;opacity:.85">Ikki ming sakkiz yuz to'qson AQSH dollari</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ==================== PAGE: MES ==================== -->
+<div class="pg" id="pg-mes">
+  <div class="phead">
+    <div><div class="ptitle">MES — Ishlab chiqarish</div><div class="pbc">Asosiy / <span>MES Panel</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-1"></i>Yangi buyurtma</button>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-cogs"></i></div><div><div class="scl">Faol buyurtmalar</div><div class="scv">24</div><div class="scc up">Ishda</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-check-circle"></i></div><div><div class="scl">Bajarildi (oy)</div><div class="scv">156</div><div class="scc up"><i class="fas fa-arrow-up"></i>18%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-pause-circle"></i></div><div><div class="scl">Kutilmoqda</div><div class="scv">8</div><div class="scc dn">Rejalashtirilgan</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ip"><i class="fas fa-tachometer-alt"></i></div><div><div class="scl">Samaradorlik (OEE)</div><div class="scv">87.3%</div><div class="scc up"><i class="fas fa-arrow-up"></i>2.1%</div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-8">
+      <div class="cc">
+        <div class="ch"><div class="ct">Ish buyurtmalari</div><button class="cabt">Barchasi</button></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Buyurtma #</th><th>Mahsulot</th><th>Miqdor</th><th>Boshlandi</th><th>Muddat</th><th>Progress</th><th>Holat</th><th>Amal</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--pr);font-weight:600">WO-2026-0441</td><td>Offset qog'oz A4</td><td>5,000 ta</td><td>28.04.2026</td><td>02.05.2026</td><td><div style="min-width:100px"><div class="pgbar"><div class="pgfill" style="width:92%;background:#22c55e"></div></div><small>92%</small></div></td><td><span class="b bg">Yakunlanmoqda</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">WO-2026-0440</td><td>Reklama banneri</td><td>200 m²</td><td>27.04.2026</td><td>05.05.2026</td><td><div style="min-width:100px"><div class="pgbar"><div class="pgfill" style="width:65%;background:#3b82f6"></div></div><small>65%</small></div></td><td><span class="b bb">Ishda</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">WO-2026-0439</td><td>Vizit kartochka</td><td>10,000 ta</td><td>25.04.2026</td><td>30.04.2026</td><td><div style="min-width:100px"><div class="pgbar"><div class="pgfill" style="width:100%;background:#22c55e"></div></div><small>100%</small></div></td><td><span class="b bg">Bajarildi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">WO-2026-0438</td><td>Kitob chop etish</td><td>500 nusxa</td><td>29.04.2026</td><td>10.05.2026</td><td><div style="min-width:100px"><div class="pgbar"><div class="pgfill" style="width:30%;background:#8b5cf6"></div></div><small>30%</small></div></td><td><span class="b bb">Ishda</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">WO-2026-0437</td><td>Reklama buklet</td><td>2,000 ta</td><td>—</td><td>08.05.2026</td><td><div style="min-width:100px"><div class="pgbar"><div class="pgfill" style="width:0%;background:#f59e0b"></div></div><small>0%</small></div></td><td><span class="b by">Kutilmoqda</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">WO-2026-0436</td><td>Qadoqlash qutisi</td><td>1,000 ta</td><td>22.04.2026</td><td>28.04.2026</td><td><div style="min-width:100px"><div class="pgbar"><div class="pgfill" style="width:100%;background:#ef4444"></div></div><small>Kechikdi</small></div></td><td><span class="b br">Kechikdi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc mb-3"><div class="ch"><div class="ct">Mashina yuklanishi</div></div><div class="cb"><canvas id="mesC" height="220"></canvas></div></div>
+      <div class="cc">
+        <div class="ch"><div class="ct">Bugungi holat</div></div>
+        <div class="cb">
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#22c55e;font-size:8px"></i>Faol mashinalar</span><span style="font-weight:600">12 / 15</span></div>
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#f59e0b;font-size:8px"></i>Texnik xizmat</span><span style="font-weight:600">2 ta</span></div>
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#ef4444;font-size:8px"></i>Buzilgan</span><span style="font-weight:600">1 ta</span></div>
+          <div class="prow"><span style="font-size:13px;color:var(--muted)"><i class="fas fa-circle me-2" style="color:#3b82f6;font-size:8px"></i>Chop etilgan betlar</span><span style="font-weight:600">45,670</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: WAREHOUSE ==================== -->
+<div class="pg" id="pg-warehouse">
+  <div class="phead">
+    <div><div class="ptitle">Ombor boshqaruvi</div><div class="pbc">Asosiy / <span>Ombor</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-1"></i>Kirim qo'shish</button>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-boxes"></i></div><div><div class="scl">Jami materiallar</div><div class="scv">2,450</div><div class="scc up">Faol</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-exclamation-triangle"></i></div><div><div class="scl">Kam qolgan</div><div class="scv">34</div><div class="scc dn">Tez buyurtma kerak</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-ban"></i></div><div><div class="scl">Zaxirada yo'q</div><div class="scv">12</div><div class="scc dn">Kritik</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-exchange-alt"></i></div><div><div class="scl">Bugungi harakat</div><div class="scv">89</div><div class="scc up">Kirdi/Chiqdi</div></div></div></div>
+  </div>
+  <div class="cc mb-3">
+    <div class="cb" style="padding:14px 20px">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-3"><div style="position:relative"><input type="text" placeholder="Material nomi yoki kodi..." class="finput" style="padding-left:34px"><i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px"></i></div></div>
+        <div class="col-md-2"><select class="fselect"><option>Barcha kategoriyalar</option><option>Siyoh</option><option>Qog'oz</option><option>Plastik</option><option>Metall</option></select></div>
+        <div class="col-md-2"><select class="fselect"><option>Barcha holat</option><option>Yetarli</option><option>Kam</option><option>Tugaydi</option></select></div>
+        <div class="col-md-2"><button class="cabt"><i class="fas fa-barcode me-1"></i>Barkod skan</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="cc">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Kod</th><th>Nomi</th><th>Kategoriya</th><th>Miqdor</th><th>Birlik</th><th>Min zaxira</th><th>Joylashuv</th><th>Narx</th><th>Holat</th><th>Amal</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--pr);font-weight:600">MAT-001</td><td>Offset siyoh (qora)</td><td>Siyoh</td><td>450</td><td>kg</td><td>100</td><td>A-01-03</td><td>$24.50/kg</td><td><span class="b bg">Yetarli</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-pen"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">MAT-002</td><td>A4 qog'oz 80gr</td><td>Qog'oz</td><td>85</td><td>quti</td><td>200</td><td>B-02-01</td><td>$8.20/quti</td><td><span class="b by">Kam</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-pen"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">MAT-003</td><td>Reklama plyonkasi</td><td>Plastik</td><td>12</td><td>rulon</td><td>50</td><td>C-03-02</td><td>$45.00/rulon</td><td><span class="b br">Kritik</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-pen"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">MAT-004</td><td>UV lak</td><td>Kimyo</td><td>320</td><td>litr</td><td>100</td><td>D-01-04</td><td>$12.80/litr</td><td><span class="b bg">Yetarli</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-pen"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">MAT-005</td><td>Kraton qog'oz 300gr</td><td>Qog'oz</td><td>0</td><td>rulon</td><td>20</td><td>B-04-01</td><td>$32.00/rulon</td><td><span class="b br">Tugadi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-shopping-cart"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">MAT-006</td><td>CMYK siyoh to'plami</td><td>Siyoh</td><td>180</td><td>kg</td><td>80</td><td>A-02-01</td><td>$38.00/kg</td><td><span class="b bg">Yetarli</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-pen"></i></button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- ==================== PAGE: FINANCE ==================== -->
+<div class="pg" id="pg-finance">
+  <div class="phead">
+    <div><div class="ptitle">Moliya / CFO Dashboard</div><div class="pbc">Asosiy / <span>Moliya</span></div></div>
+    <div class="d-flex gap-2">
+      <select class="fselect" style="width:auto;font-size:13px"><option>2026 yil</option><option>2025 yil</option></select>
+      <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-file-pdf me-1"></i>Hisobot</button>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-arrow-trend-up"></i></div><div><div class="scl">Jami daromad</div><div class="scv">$1.24M</div><div class="scc up"><i class="fas fa-arrow-up"></i>12% o'sdi</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-arrow-trend-down"></i></div><div><div class="scl">Jami xarajat</div><div class="scv">$0.89M</div><div class="scc dn"><i class="fas fa-arrow-up"></i>8% oshdi</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-coins"></i></div><div><div class="scl">Sof foyda</div><div class="scv">$350K</div><div class="scc up"><i class="fas fa-arrow-up"></i>18%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ip"><i class="fas fa-percentage"></i></div><div><div class="scl">ROI</div><div class="scv">28.4%</div><div class="scc up"><i class="fas fa-arrow-up"></i>3.2%</div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-8">
+      <div class="cc"><div class="ch"><div class="ct">Daromad vs Xarajat (oylik)</div></div><div class="cb"><canvas id="finC" height="120"></canvas></div></div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc"><div class="ch"><div class="ct">Xarajat tarkibi</div></div><div class="cb"><canvas id="finDC" height="200"></canvas><div id="finLeg" class="mt-2"></div></div></div>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-6">
+      <div class="cc"><div class="ch"><div class="ct">13 haftalik kassa oqimi</div></div><div class="cb"><canvas id="cashC" height="180"></canvas></div></div>
+    </div>
+    <div class="col-xl-6">
+      <div class="cc">
+        <div class="ch"><div class="ct">Moliyaviy ko'rsatkichlar</div><span class="b bb">2026</span></div>
+        <div class="cb">
+          <div class="row g-2">
+            <div class="col-6"><div class="kbox"><div class="kbox-val" style="color:#22c55e">2.4</div><div class="kbox-lbl">Joriy likvidlik</div></div></div>
+            <div class="col-6"><div class="kbox"><div class="kbox-val" style="color:#3b82f6">1.8</div><div class="kbox-lbl">Tez nisbat</div></div></div>
+            <div class="col-6"><div class="kbox"><div class="kbox-val" style="color:#8b5cf6">3.2</div><div class="kbox-lbl">Altman Z-score</div></div></div>
+            <div class="col-6"><div class="kbox"><div class="kbox-val" style="color:#f59e0b">45 kun</div><div class="kbox-lbl">Debitor muddati</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: CRM ==================== -->
+<div class="pg" id="pg-crm">
+  <div class="phead">
+    <div><div class="ptitle">CRM — Mijozlar boshqaruvi</div><div class="pbc">Asosiy / <span>CRM</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-1"></i>Yangi lid</button>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-funnel-dollar"></i></div><div><div class="scl">Jami lidlar</div><div class="scv">342</div><div class="scc up"><i class="fas fa-arrow-up"></i>12%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-handshake"></i></div><div><div class="scl">Yutildi</div><div class="scv">89</div><div class="scc up">26% konversiya</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-clock"></i></div><div><div class="scl">Faol</div><div class="scv">128</div><div class="scc" style="color:var(--muted)">Ko'rib chiqilmoqda</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-times-circle"></i></div><div><div class="scl">Yo'qotildi</div><div class="scv">45</div><div class="scc dn">-5% o'tgan oydan</div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-7">
+      <div class="cc">
+        <div class="ch"><div class="ct">Lidlar ro'yxati</div><button class="cabt">Barchasi</button></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Mijoz</th><th>Manba</th><th>Qiymat</th><th>Menejeri</th><th>Bosqich</th><th>Holat</th><th>Sana</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:600">Toshkent Poligraf MChJ</td><td>Web</td><td>$12,400</td><td>Jasur M.</td><td>Taklif</td><td><span class="b bb">Faol</span></td><td>28.04.2026</td></tr>
+              <tr><td style="font-weight:600">Alpha Group</td><td>Tavsiya</td><td>$8,200</td><td>Feruza N.</td><td>Muzokara</td><td><span class="b bg">Yutildi</span></td><td>25.04.2026</td></tr>
+              <tr><td style="font-weight:600">Samarqand Savdo</td><td>Reklama</td><td>$3,500</td><td>Nodira A.</td><td>Muloqot</td><td><span class="b by">Kutilmoqda</span></td><td>22.04.2026</td></tr>
+              <tr><td style="font-weight:600">Beta Teks LLC</td><td>Email</td><td>$6,800</td><td>Jasur M.</td><td>Taklif</td><td><span class="b bb">Faol</span></td><td>20.04.2026</td></tr>
+              <tr><td style="font-weight:600">Navoiy Kimyo</td><td>Web</td><td>$2,100</td><td>Feruza N.</td><td>Muloqot</td><td><span class="b br">Yo'qotildi</span></td><td>15.04.2026</td></tr>
+              <tr><td style="font-weight:600">GoldPrint Studio</td><td>Tavsiya</td><td>$18,500</td><td>Alisher K.</td><td>Shartnoma</td><td><span class="b bg">Yutildi</span></td><td>10.04.2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-5">
+      <div class="cc mb-3"><div class="ch"><div class="ct">Savdo hunisi</div></div><div class="cb"><canvas id="crmFunC" height="220"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: PRINT ==================== -->
+<div class="pg" id="pg-print">
+  <div class="phead">
+    <div><div class="ptitle">Chop etish boshqaruvi</div><div class="pbc">Asosiy / <span>Chop etish</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-1"></i>Yangi ish buyurtmasi</button>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-print"></i></div><div><div class="scl">Faol ish buyurtmalari</div><div class="scv">18</div><div class="scc up">Ishda</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-check"></i></div><div><div class="scl">Bugun bajarildi</div><div class="scv">7</div><div class="scc up"><i class="fas fa-arrow-up"></i>3 ta ko'p</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-exclamation"></i></div><div><div class="scl">Muammo</div><div class="scv">2</div><div class="scc dn">Diqqat kerak</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ip"><i class="fas fa-file-alt"></i></div><div><div class="scl">Jami betlar (oy)</div><div class="scv">45,670</div><div class="scc up"><i class="fas fa-arrow-up"></i>8%</div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-8">
+      <div class="cc">
+        <div class="ch"><div class="ct">Chop etish ish jadvali</div></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Buyurtma #</th><th>Mijoz</th><th>Tur</th><th>Miqdor</th><th>Ranglar</th><th>Muddat</th><th>Mashina</th><th>Holat</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--pr);font-weight:600">PO-2026-188</td><td>Alpha Group</td><td>Ofset bosma</td><td>5,000 bet</td><td>CMYK</td><td>02.05.2026</td><td>Heidelberg SM74</td><td><span class="b bb">Ishda</span></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">PO-2026-187</td><td>Samarqand Savdo</td><td>Katta format</td><td>200 m²</td><td>RGB</td><td>04.05.2026</td><td>Roland VG-540</td><td><span class="b bb">Ishda</span></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">PO-2026-186</td><td>Beta Teks LLC</td><td>Vizit karta</td><td>10,000 ta</td><td>CMYK+UV</td><td>30.04.2026</td><td>Konica Minolta</td><td><span class="b bg">Bajarildi</span></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">PO-2026-185</td><td>GoldPrint Studio</td><td>Kitob</td><td>500 nusxa</td><td>CMYK</td><td>10.05.2026</td><td>Heidelberg SM52</td><td><span class="b by">Kutilmoqda</span></td></tr>
+              <tr><td style="color:var(--pr);font-weight:600">PO-2026-184</td><td>Navoiy Kimyo</td><td>Stiker</td><td>20,000 ta</td><td>Monoton</td><td>05.05.2026</td><td>Epson SureColor</td><td><span class="b br">Muammo</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="cc">
+        <div class="ch"><div class="ct">Siyoh qoplama kalkulyator</div></div>
+        <div class="cb">
+          <div style="border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px" onmouseover="this.style.borderColor='var(--pr)'" onmouseout="this.style.borderColor='var(--border)'">
+            <i class="fas fa-cloud-upload-alt" style="font-size:28px;color:var(--muted)"></i>
+            <div style="font-size:13px;color:var(--muted);margin-top:8px">PDF/AI faylni bu yerga tashlang</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">yoki bosing</div>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px">Hisoblash natijasi:</div>
+          <div style="margin-bottom:8px"><div class="d-flex justify-content-between mb-1" style="font-size:12px"><span>Cyan (C)</span><span>34.2%</span></div><div class="pgbar"><div class="pgfill" style="width:34%;background:#06b6d4"></div></div></div>
+          <div style="margin-bottom:8px"><div class="d-flex justify-content-between mb-1" style="font-size:12px"><span>Magenta (M)</span><span>28.7%</span></div><div class="pgbar"><div class="pgfill" style="width:29%;background:#ec4899"></div></div></div>
+          <div style="margin-bottom:8px"><div class="d-flex justify-content-between mb-1" style="font-size:12px"><span>Yellow (Y)</span><span>41.5%</span></div><div class="pgbar"><div class="pgfill" style="width:42%;background:#f59e0b"></div></div></div>
+          <div style="margin-bottom:8px"><div class="d-flex justify-content-between mb-1" style="font-size:12px"><span>Black (K)</span><span>52.3%</span></div><div class="pgbar"><div class="pgfill" style="width:52%;background:#374151"></div></div></div>
+          <div style="margin-top:12px;padding:10px;background:var(--pr-light);border-radius:8px;text-align:center">
+            <div style="font-size:12px;color:var(--muted)">Umumiy qoplama</div>
+            <div style="font-size:20px;font-weight:700;color:var(--pr)">39.2%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ==================== PAGE: TICKETS ==================== -->
+<div class="pg" id="pg-tickets">
+  <div class="phead">
+    <div><div class="ptitle">Tiketlar</div><div class="pbc">Asosiy / <span>Tiketlar</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-1"></i>Tiket yaratish</button>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-ticket-alt"></i></div><div><div class="scl">Ochiq tiketlar</div><div class="scv">34</div><div class="scc dn">Hal qilinmagan</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-check-double"></i></div><div><div class="scl">Hal qilindi</div><div class="scv">156</div><div class="scc up"><i class="fas fa-arrow-up"></i>Bu oy</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-fire"></i></div><div><div class="scl">Yuqori ustuvorlik</div><div class="scv">8</div><div class="scc dn">Tez javob kerak</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-clock"></i></div><div><div class="scl">O'rtacha javob</div><div class="scv">2.4 soat</div><div class="scc up"><i class="fas fa-arrow-down"></i>Yaxshilandi</div></div></div></div>
+  </div>
+  <div class="cc mb-3">
+    <div class="cb" style="padding:14px 20px">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-3"><div style="position:relative"><input type="text" placeholder="Tiket qidirish..." class="finput" style="padding-left:30px"><i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px"></i></div></div>
+        <div class="col-md-2"><select class="fselect"><option>Barcha holat</option><option>Ochiq</option><option>Jarayonda</option><option>Hal qilindi</option></select></div>
+        <div class="col-md-2"><select class="fselect"><option>Barcha ustuvorlik</option><option>Yuqori</option><option>O'rta</option><option>Past</option></select></div>
+        <div class="col-md-2"><select class="fselect"><option>Barcha kategoriya</option><option>Texnik</option><option>HR</option><option>Moliya</option></select></div>
+      </div>
+    </div>
+  </div>
+  <div class="cc">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Tiket #</th><th>Mavzu</th><th>Yuboruvchi</th><th>Kategoriya</th><th>Ustuvorlik</th><th>Yaratildi</th><th>Holat</th><th>Amal</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--pr);font-weight:600">#TKT-1045</td><td>Printer tarmoqqa ulanmayapti</td><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Sanjar+T&background=FF902F&color=fff&size=34" alt=""><span>Sanjar Tursunov</span></div></td><td>Texnik</td><td><span class="b br">Yuqori</span></td><td>01.05.2026</td><td><span class="b by">Jarayonda</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-reply"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">#TKT-1044</td><td>Maoshimda xatolik bor</td><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Alisher+K&background=3b82f6&color=fff&size=34" alt=""><span>Alisher Karimov</span></div></td><td>Moliya</td><td><span class="b br">Yuqori</span></td><td>30.04.2026</td><td><span class="b br">Ochiq</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-reply"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">#TKT-1043</td><td>Ta'til arizam ko'rinmayapti</td><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Dilnoza+Y&background=22c55e&color=fff&size=34" alt=""><span>Dilnoza Yusupova</span></div></td><td>HR</td><td><span class="b by">O'rta</span></td><td>29.04.2026</td><td><span class="b bg">Hal qilindi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">#TKT-1042</td><td>Internet uzilib qolmoqda</td><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Jasur+M&background=ec4899&color=fff&size=34" alt=""><span>Jasur Mirzayev</span></div></td><td>Texnik</td><td><span class="b bg">Past</span></td><td>28.04.2026</td><td><span class="b bg">Hal qilindi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">#TKT-1041</td><td>Siyoh tugab qoldi (A4 printer)</td><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Otabek+E&background=ef4444&color=fff&size=34" alt=""><span>Otabek Ergashev</span></div></td><td>Texnik</td><td><span class="b br">Yuqori</span></td><td>27.04.2026</td><td><span class="b by">Jarayonda</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-reply"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">#TKT-1040</td><td>Yangi xodim uchun kompyuter kerak</td><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Bobur+R&background=f59e0b&color=fff&size=34" alt=""><span>Bobur Rahimov</span></div></td><td>HR</td><td><span class="b by">O'rta</span></td><td>26.04.2026</td><td><span class="b br">Ochiq</span></td><td><button class="ab"><i class="fas fa-eye"></i></button> <button class="ab"><i class="fas fa-reply"></i></button></td></tr>
+          <tr><td style="color:var(--pr);font-weight:600">#TKT-1039</td><td>1C dasturida xatolik</td><td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=Shahlo+T&background=8b5cf6&color=fff&size=34" alt=""><span>Shahlo Toshmatova</span></div></td><td>Texnik</td><td><span class="b bg">Past</span></td><td>25.04.2026</td><td><span class="b bg">Hal qilindi</span></td><td><button class="ab"><i class="fas fa-eye"></i></button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cb d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div style="font-size:13px;color:var(--muted)">1–7 dan 190 tiket</div>
+      <div class="d-flex gap-1">
+        <button class="ab"><i class="fas fa-chevron-left"></i></button>
+        <button class="ab" style="background:var(--pr);color:#fff">1</button>
+        <button class="ab">2</button><button class="ab">3</button>
+        <button class="ab"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: SETTINGS ==================== -->
+<div class="pg" id="pg-settings">
+  <div class="phead">
+    <div><div class="ptitle">Sozlamalar</div><div class="pbc">Asosiy / <span>Sozlamalar</span></div></div>
+    <button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-save me-1"></i>Saqlash</button>
+  </div>
+  <div class="row g-3">
+    <div class="col-xl-3">
+      <div class="cc">
+        <div class="cb" style="padding:8px">
+          <div id="setTabBtns">
+            <div class="ni act" onclick="showSetTab('s-company',this)"><i class="fas fa-building ic"></i><span>Kompaniya</span></div>
+            <div class="ni" onclick="showSetTab('s-security',this)"><i class="fas fa-shield-alt ic"></i><span>Xavfsizlik</span></div>
+            <div class="ni" onclick="showSetTab('s-notif',this)"><i class="fas fa-bell ic"></i><span>Bildirishnomalar</span></div>
+            <div class="ni" onclick="showSetTab('s-api',this)"><i class="fas fa-plug ic"></i><span>Integratsiya</span></div>
+            <div class="ni" onclick="showSetTab('s-system',this)"><i class="fas fa-server ic"></i><span>Tizim</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-9">
+      <div class="cc">
+        <div class="cb">
+          <!-- Company -->
+          <div id="s-company">
+            <div style="font-size:16px;font-weight:600;margin-bottom:18px">Kompaniya ma'lumotlari</div>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="flabel">Kompaniya nomi</label><input class="finput" value="EuroPrint ERP MChJ"/></div>
+              <div class="col-md-6"><label class="flabel">Qisqa nomi</label><input class="finput" value="EuroPrint"/></div>
+              <div class="col-md-6"><label class="flabel">Email</label><input class="finput" value="info@europrint.uz"/></div>
+              <div class="col-md-6"><label class="flabel">Telefon</label><input class="finput" value="+998 71 200 00 01"/></div>
+              <div class="col-12"><label class="flabel">Manzil</label><input class="finput" value="Toshkent sh., Yunusobod tumani, Amir Temur ko'chasi, 42-uy"/></div>
+              <div class="col-md-6"><label class="flabel">Vaqt mintaqasi</label><select class="fselect"><option>Asia/Tashkent (UTC+5)</option><option>Europe/Moscow (UTC+3)</option></select></div>
+              <div class="col-md-6"><label class="flabel">Valyuta</label><select class="fselect"><option>USD ($)</option><option>UZS (so'm)</option><option>EUR (€)</option></select></div>
+              <div class="col-md-6"><label class="flabel">Til</label><select class="fselect"><option>O'zbek tili</option><option>Русский</option><option>English</option></select></div>
+              <div class="col-md-6"><label class="flabel">Sana formati</label><select class="fselect"><option>DD.MM.YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+              <div class="col-12">
+                <label class="flabel">Logotip</label>
+                <div style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer">
+                  <i class="fas fa-cloud-upload-alt" style="font-size:24px;color:var(--muted)"></i>
+                  <div style="font-size:13px;color:var(--muted);margin-top:6px">Logotip yuklash (PNG, SVG, max 2MB)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Security -->
+          <div id="s-security" style="display:none">
+            <div style="font-size:16px;font-weight:600;margin-bottom:18px">Xavfsizlik sozlamalari</div>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="flabel">Joriy parol</label><input class="finput" type="password" placeholder="••••••••"/></div>
+              <div class="col-md-6"><label class="flabel">Yangi parol</label><input class="finput" type="password" placeholder="••••••••"/></div>
+              <div class="col-md-6"><label class="flabel">Parolni tasdiqlang</label><input class="finput" type="password" placeholder="••••••••"/></div>
+              <div class="col-md-6"><label class="flabel">Sessiya muddati</label><select class="fselect"><option>8 soat</option><option>24 soat</option><option>7 kun</option></select></div>
+              <div class="col-12">
+                <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Ikki faktorli autentifikatsiya (2FA)</div><div class="sw-sub">Google Authenticator yoki SMS orqali</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+                <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Sessiya jurnal</div><div class="sw-sub">Barcha kirish vaqtlarini saqlash</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+                <div class="sw-wrap"><div class="sw-info"><div class="sw-title">IP cheklash</div><div class="sw-sub">Faqat ruxsat berilgan IP manzillardan kirish</div></div><label class="sw"><input type="checkbox"><span class="sw-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+          <!-- Notifications -->
+          <div id="s-notif" style="display:none">
+            <div style="font-size:16px;font-weight:600;margin-bottom:18px">Bildirishnoma sozlamalari</div>
+            <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Yangi xodim qo'shildi</div><div class="sw-sub">Email va SMS orqali xabar</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+            <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Ta'til arizasi keldi</div><div class="sw-sub">Menejerga bildirishnoma</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+            <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Maosh to'landi</div><div class="sw-sub">Xodimga email yuborilsin</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+            <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Omborda kam qoldi</div><div class="sw-sub">Telegram orqali ogohlantirish</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+            <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Ishlab chiqarish kechikdi</div><div class="sw-sub">MES menejeriga bildirishnoma</div></div><label class="sw"><input type="checkbox"><span class="sw-slider"></span></label></div>
+            <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Yangi tiket yaratildi</div><div class="sw-sub">IT bo'limiga xabar</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+            <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Kunlik hisobot</div><div class="sw-sub">Har kuni 18:00 da email</div></div><label class="sw"><input type="checkbox"><span class="sw-slider"></span></label></div>
+          </div>
+          <!-- API -->
+          <div id="s-api" style="display:none">
+            <div style="font-size:16px;font-weight:600;margin-bottom:18px">Integratsiya & API</div>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="flabel">API kaliti</label>
+                <div class="d-flex gap-2">
+                  <input class="finput" value="ep_live_sk_xxxxxxxxxxxxxxxxxxxx" readonly style="font-family:monospace;font-size:13px"/>
+                  <button class="cabt" style="white-space:nowrap"><i class="fas fa-copy me-1"></i>Nusxa</button>
+                  <button class="cabt" style="white-space:nowrap"><i class="fas fa-redo me-1"></i>Yangilash</button>
+                </div>
+              </div>
+              <div class="col-12"><label class="flabel">Webhook URL</label><input class="finput" placeholder="https://sizning-domeningiz.uz/webhook"/></div>
+              <div class="col-12">
+                <div style="font-size:14px;font-weight:600;margin-bottom:12px">Ulangan xizmatlar</div>
+                <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Telegram Bot</div><div class="sw-sub">@europrint_bot orqali bildirishnomalar</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+                <div class="sw-wrap"><div class="sw-info"><div class="sw-title">1C Buxgalteriya</div><div class="sw-sub">Moliyaviy ma'lumotlar sinxronizatsiyasi</div></div><label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label></div>
+                <div class="sw-wrap"><div class="sw-info"><div class="sw-title">Google Calendar</div><div class="sw-sub">Tadbirlar va yig'ilishlar</div></div><label class="sw"><input type="checkbox"><span class="sw-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+          <!-- System -->
+          <div id="s-system" style="display:none">
+            <div style="font-size:16px;font-weight:600;margin-bottom:18px">Tizim</div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div style="background:var(--input);border-radius:10px;padding:16px">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:10px">Tizim ma'lumoti</div>
+                  <div class="prof-info-row"><span class="prof-key">Versiya</span><span class="prof-val">EuroPrint ERP v2.0.0</span></div>
+                  <div class="prof-info-row"><span class="prof-key">Backend</span><span class="prof-val">NestJS + Fastify</span></div>
+                  <div class="prof-info-row"><span class="prof-key">Database</span><span class="prof-val">PostgreSQL 15</span></div>
+                  <div class="prof-info-row"><span class="prof-key">Oxirgi yangilanish</span><span class="prof-val">01.05.2026</span></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div style="background:var(--input);border-radius:10px;padding:16px">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:10px">Disk holati</div>
+                  <div style="margin-bottom:8px"><div class="d-flex justify-content-between mb-1" style="font-size:12px"><span>Ma'lumotlar bazasi</span><span>12.4 GB / 50 GB</span></div><div class="pgbar"><div class="pgfill" style="width:25%;background:#3b82f6"></div></div></div>
+                  <div style="margin-bottom:8px"><div class="d-flex justify-content-between mb-1" style="font-size:12px"><span>Fayllar</span><span>34.2 GB / 100 GB</span></div><div class="pgbar"><div class="pgfill" style="width:34%;background:#22c55e"></div></div></div>
+                  <div><div class="d-flex justify-content-between mb-1" style="font-size:12px"><span>Loglar</span><span>2.1 GB / 10 GB</span></div><div class="pgbar"><div class="pgfill" style="width:21%;background:#f59e0b"></div></div></div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="d-flex gap-2 flex-wrap">
+                  <button style="background:var(--ib,#3b82f6);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer"><i class="fas fa-database me-1"></i>Zaxira nusxa</button>
+                  <button style="background:var(--io,#f59e0b);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer"><i class="fas fa-broom me-1"></i>Cache tozalash</button>
+                  <button style="background:var(--ig,#22c55e);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer"><i class="fas fa-file-alt me-1"></i>Loglarni ko'rish</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: HR DASH ==================== -->
+<div class="pg" id="pg-hr-dash">
+  <div class="phead"><div><div class="ptitle">HR Dashboard</div><div class="pbc">Asosiy / <span>HR</span></div></div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-users"></i></div><div><div class="scl">Jami xodimlar</div><div class="scv">1,240</div><div class="scc up"><i class="fas fa-arrow-up"></i>18 bu oy</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-user-plus"></i></div><div><div class="scl">Yangi qabul qilindi</div><div class="scv">18</div><div class="scc up">Bu oy</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ir"><i class="fas fa-user-minus"></i></div><div><div class="scl">Ishdan ketdi</div><div class="scv">5</div><div class="scc dn">Bu oy</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-percentage"></i></div><div><div class="scl">Xodim aylanmasi</div><div class="scv">3.8%</div><div class="scc dn"><i class="fas fa-arrow-down"></i>Yaxshi ko'rsatkich</div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-6"><div class="cc"><div class="ch"><div class="ct">Ishga qabul huni</div></div><div class="cb"><canvas id="hrRecruitC" height="200"></canvas></div></div></div>
+    <div class="col-xl-6">
+      <div class="cc">
+        <div class="ch"><div class="ct">Bo'lim xodim soni</div></div>
+        <div class="cb" id="hrDeptProgress"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: CFO DASH ==================== -->
+<div class="pg" id="pg-cfo-dash">
+  <div class="phead"><div><div class="ptitle">CFO Dashboard</div><div class="pbc">Asosiy / <span>CFO</span></div></div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sc"><div class="sci ig"><i class="fas fa-chart-line"></i></div><div><div class="scl">Yillik daromad</div><div class="scv">$1.24M</div><div class="scc up"><i class="fas fa-arrow-up"></i>12%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ib"><i class="fas fa-coins"></i></div><div><div class="scl">Sof foyda</div><div class="scv">$350K</div><div class="scc up"><i class="fas fa-arrow-up"></i>18%</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci io"><i class="fas fa-file-invoice-dollar"></i></div><div><div class="scl">Debitor qarz</div><div class="scv">$124K</div><div class="scc dn">45 kunlik</div></div></div></div>
+    <div class="col-md-3"><div class="sc"><div class="sci ip"><i class="fas fa-hand-holding-usd"></i></div><div><div class="scl">Kredit qarz</div><div class="scv">$89K</div><div class="scc up">Nazorat ostida</div></div></div></div>
+  </div>
+  <div class="row g-3">
+    <div class="col-xl-8"><div class="cc"><div class="ch"><div class="ct">Daromad va Xarajat (oylik)</div></div><div class="cb"><canvas id="cfoC" height="140"></canvas></div></div></div>
+    <div class="col-xl-4"><div class="cc"><div class="ch"><div class="ct">Xarajat tarkibi</div></div><div class="cb"><canvas id="cfoDC" height="220"></canvas></div></div></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: DEPARTMENTS ==================== -->
+<div class="pg" id="pg-dept">
+  <div class="phead"><div><div class="ptitle">Bo'limlar</div><div class="pbc">Xodimlar / <span>Bo'limlar</span></div></div><button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-1"></i>Bo'lim qo'shish</button></div>
+  <div class="row g-3">
+    <div class="col-md-4"><div class="cc"><div style="background:linear-gradient(135deg,#3b82f6,#06b6d4);padding:20px;color:#fff"><div style="font-size:18px;font-weight:700">Dasturlash</div><div style="font-size:13px;opacity:.8">IT bo'limi</div></div><div class="cb"><div class="prof-info-row"><span class="prof-key">Xodimlar</span><span class="prof-val">320</span></div><div class="prof-info-row"><span class="prof-key">Rahbar</span><span class="prof-val">Alisher Karimov</span></div><div class="prof-info-row"><span class="prof-key">Ochiq lavozim</span><span class="prof-val">5</span></div><button class="cabt" style="width:100%;margin-top:10px">Ko'rish</button></div></div></div>
+    <div class="col-md-4"><div class="cc"><div style="background:linear-gradient(135deg,#22c55e,#10b981);padding:20px;color:#fff"><div style="font-size:18px;font-weight:700">Dizayn</div><div style="font-size:13px;opacity:.8">Ijodiy bo'lim</div></div><div class="cb"><div class="prof-info-row"><span class="prof-key">Xodimlar</span><span class="prof-val">85</span></div><div class="prof-info-row"><span class="prof-key">Rahbar</span><span class="prof-val">Dilnoza Yusupova</span></div><div class="prof-info-row"><span class="prof-key">Ochiq lavozim</span><span class="prof-val">2</span></div><button class="cabt" style="width:100%;margin-top:10px">Ko'rish</button></div></div></div>
+    <div class="col-md-4"><div class="cc"><div style="background:linear-gradient(135deg,#f59e0b,#FF902F);padding:20px;color:#fff"><div style="font-size:18px;font-weight:700">HR</div><div style="font-size:13px;opacity:.8">Kadrlar bo'limi</div></div><div class="cb"><div class="prof-info-row"><span class="prof-key">Xodimlar</span><span class="prof-val">60</span></div><div class="prof-info-row"><span class="prof-key">Rahbar</span><span class="prof-val">Bobur Rahimov</span></div><div class="prof-info-row"><span class="prof-key">Ochiq lavozim</span><span class="prof-val">1</span></div><button class="cabt" style="width:100%;margin-top:10px">Ko'rish</button></div></div></div>
+    <div class="col-md-4"><div class="cc"><div style="background:linear-gradient(135deg,#8b5cf6,#6366f1);padding:20px;color:#fff"><div style="font-size:18px;font-weight:700">Moliya</div><div style="font-size:13px;opacity:.8">Buxgalteriya</div></div><div class="cb"><div class="prof-info-row"><span class="prof-key">Xodimlar</span><span class="prof-val">75</span></div><div class="prof-info-row"><span class="prof-key">Rahbar</span><span class="prof-val">Shahlo Toshmatova</span></div><div class="prof-info-row"><span class="prof-key">Ochiq lavozim</span><span class="prof-val">0</span></div><button class="cabt" style="width:100%;margin-top:10px">Ko'rish</button></div></div></div>
+    <div class="col-md-4"><div class="cc"><div style="background:linear-gradient(135deg,#ec4899,#f43f5e);padding:20px;color:#fff"><div style="font-size:18px;font-weight:700">Marketing</div><div style="font-size:13px;opacity:.8">Reklama bo'limi</div></div><div class="cb"><div class="prof-info-row"><span class="prof-key">Xodimlar</span><span class="prof-val">90</span></div><div class="prof-info-row"><span class="prof-key">Rahbar</span><span class="prof-val">Jasur Mirzayev</span></div><div class="prof-info-row"><span class="prof-key">Ochiq lavozim</span><span class="prof-val">3</span></div><button class="cabt" style="width:100%;margin-top:10px">Ko'rish</button></div></div></div>
+    <div class="col-md-4"><div class="cc"><div style="background:linear-gradient(135deg,#14b8a6,#06b6d4);padding:20px;color:#fff"><div style="font-size:18px;font-weight:700">Ishlab chiqarish</div><div style="font-size:13px;opacity:.8">MES bo'limi</div></div><div class="cb"><div class="prof-info-row"><span class="prof-key">Xodimlar</span><span class="prof-val">310</span></div><div class="prof-info-row"><span class="prof-key">Rahbar</span><span class="prof-val">Otabek Ergashev</span></div><div class="prof-info-row"><span class="prof-key">Ochiq lavozim</span><span class="prof-val">8</span></div><button class="cabt" style="width:100%;margin-top:10px">Ko'rish</button></div></div></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: ORG STRUCTURE ==================== -->
+<div class="pg" id="pg-org">
+  <div class="phead"><div><div class="ptitle">Org struktura</div><div class="pbc">Xodimlar / <span>Tashkilot sxemasi</span></div></div></div>
+  <div class="cc">
+    <div class="cb" style="text-align:center;overflow-x:auto">
+      <div style="display:inline-block;min-width:700px;padding:20px">
+        <div style="display:flex;justify-content:center;margin-bottom:30px">
+          <div style="background:linear-gradient(135deg,var(--pr),#f59e0b);color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 4px 12px rgba(255,144,47,.3)">Admin User<br><span style="font-size:11px;font-weight:400;opacity:.85">Bosh direktor</span></div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap">
+          <div style="text-align:center">
+            <div style="width:2px;height:30px;background:var(--border);margin:0 auto"></div>
+            <div style="background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px">Alisher Karimov<br><span style="font-size:11px;font-weight:400">IT Rahbari</span></div>
+          </div>
+          <div style="text-align:center">
+            <div style="width:2px;height:30px;background:var(--border);margin:0 auto"></div>
+            <div style="background:linear-gradient(135deg,#22c55e,#10b981);color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px">Bobur Rahimov<br><span style="font-size:11px;font-weight:400">HR Rahbari</span></div>
+          </div>
+          <div style="text-align:center">
+            <div style="width:2px;height:30px;background:var(--border);margin:0 auto"></div>
+            <div style="background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px">Shahlo Toshmatova<br><span style="font-size:11px;font-weight:400">CFO</span></div>
+          </div>
+          <div style="text-align:center">
+            <div style="width:2px;height:30px;background:var(--border);margin:0 auto"></div>
+            <div style="background:linear-gradient(135deg,#14b8a6,#06b6d4);color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px">Otabek Ergashev<br><span style="font-size:11px;font-weight:400">MES Rahbari</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE: HOLIDAYS ==================== -->
+<div class="pg" id="pg-holiday">
+  <div class="phead"><div><div class="ptitle">Bayramlar va dam olish kunlari</div><div class="pbc">Davomat / <span>Bayramlar</span></div></div><button style="background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer"><i class="fas fa-plus me-1"></i>Qo'shish</button></div>
+  <div class="cc">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Bayram nomi</th><th>Sana</th><th>Kun</th><th>Tur</th><th>Holat</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Yangi yil</td><td>01.01.2026</td><td>Payshanba</td><td><span class="b bb">Davlat</span></td><td><span class="b bg">O'tdi</span></td></tr>
+          <tr><td>2</td><td>Vatan himoyachilari kuni</td><td>14.01.2026</td><td>Chorshanba</td><td><span class="b bb">Davlat</span></td><td><span class="b bg">O'tdi</span></td></tr>
+          <tr><td>3</td><td>Xotin-qizlar kuni</td><td>08.03.2026</td><td>Yakshanba</td><td><span class="b bb">Davlat</span></td><td><span class="b bg">O'tdi</span></td></tr>
+          <tr><td>4</td><td>Navro'z bayrami</td><td>21.03.2026</td><td>Shanba</td><td><span class="b bb">Davlat</span></td><td><span class="b bg">O'tdi</span></td></tr>
+          <tr><td>5</td><td>Mehnat va xalq bayrami</td><td>01.05.2026</td><td>Juma</td><td><span class="b bb">Davlat</span></td><td><span class="b by">Bugun</span></td></tr>
+          <tr><td>6</td><td>Xotira va qadrlash kuni</td><td>09.05.2026</td><td>Shanba</td><td><span class="b bb">Davlat</span></td><td><span class="b bp">Kelayotgan</span></td></tr>
+          <tr><td>7</td><td>Mustaqillik kuni</td><td>01.09.2026</td><td>Seshamba</td><td><span class="b bb">Davlat</span></td><td><span class="b bp">Kelayotgan</span></td></tr>
+          <tr><td>8</td><td>O'qituvchilar kuni</td><td>01.10.2026</td><td>Payshanba</td><td><span class="b bt">Kasb</span></td><td><span class="b bp">Kelayotgan</span></td></tr>
+          <tr><td>9</td><td>Konstitutsiya kuni</td><td>08.12.2026</td><td>Seshamba</td><td><span class="b bb">Davlat</span></td><td><span class="b bp">Kelayotgan</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ===== THEME =====
+function toggleTheme(){
+  const h=document.documentElement,i=document.getElementById('thi');
+  h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';
+  i.className=h.dataset.theme==='dark'?'fas fa-sun':'fas fa-moon';
+}
+
+// ===== SIDEBAR =====
+function toggleSB(){
+  const sb=document.getElementById('sb'),mw=document.getElementById('mw'),ov=document.getElementById('ov');
+  if(window.innerWidth<=991){sb.classList.toggle('mopen');ov.classList.toggle('show');}
+  else{sb.classList.toggle('col');mw.classList.toggle('col');}
+}
+function closeMobile(){document.getElementById('sb').classList.remove('mopen');document.getElementById('ov').classList.remove('show');}
+function toggleSub(el){
+  const s=el.nextElementSibling;if(!s)return;
+  el.classList.toggle('open');s.classList.toggle('open');
+}
+
+// ===== PAGES =====
+function showPage(id,el){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('act'));
+  const pg=document.getElementById('pg-'+id);
+  if(pg)pg.classList.add('act');
+  if(el){
+    document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+    el.classList.add('act');
+  }
+  window.scrollTo(0,0);
+  renderPageCharts(id);
+}
+
+// ===== TABS =====
+function showTab(btn,id){
+  const parent=btn.closest('.cb');
+  parent.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('act'));
+  parent.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('act'));
+  btn.classList.add('act');
+  const pane=document.getElementById(id);
+  if(pane)pane.classList.add('act');
+}
+function showSetTab(id,el){
+  ['s-company','s-security','s-notif','s-api','s-system'].forEach(s=>{
+    const el=document.getElementById(s);if(el)el.style.display='none';
+  });
+  const t=document.getElementById(id);if(t)t.style.display='block';
+  document.querySelectorAll('#setTabBtns .ni').forEach(n=>n.classList.remove('act'));
+  el.classList.add('act');
+}
+
+// ===== EMPLOYEE DATA =====
+const EMPS=[
+  {id:'EMP001',name:'Alisher Karimov',   dept:'Dasturlash', role:'Katta dasturchi',    email:'a.karimov@ep.uz',   phone:'+998912345678',join:'12.01.2024',st:'Faol',   col:'3b82f6'},
+  {id:'EMP002',name:'Dilnoza Yusupova',  dept:'Dizayn',     role:'UI/UX Dizayner',     email:'d.yusupova@ep.uz',  phone:'+998913456789',join:'03.03.2024',st:'Faol',   col:'22c55e'},
+  {id:'EMP003',name:'Bobur Rahimov',     dept:'HR',         role:'HR Menejeri',        email:'b.rahimov@ep.uz',   phone:'+998914567890',join:'20.08.2023',st:'Faol',   col:'f59e0b'},
+  {id:'EMP004',name:'Shahlo Toshmatova', dept:'Moliya',     role:'Buxgalter',          email:'s.toshmatova@ep.uz',phone:'+998915678901',join:'05.11.2023',st:"Ta'tilda",col:'8b5cf6'},
+  {id:'EMP005',name:'Jasur Mirzayev',    dept:'Marketing',  role:'Marketing rahbari',  email:'j.mirzayev@ep.uz',  phone:'+998916789012',join:'17.02.2024',st:'Faol',   col:'ec4899'},
+  {id:'EMP006',name:'Feruza Nazarova',   dept:'Savdo',      role:'Savdo menejeri',     email:'f.nazarova@ep.uz',  phone:'+998917890123',join:'09.09.2023',st:'Faol',   col:'14b8a6'},
+  {id:'EMP007',name:'Otabek Ergashev',   dept:'Ishlab ch.', role:'Texnolog',           email:'o.ergashev@ep.uz',  phone:'+998918901234',join:'22.04.2024',st:'Faol',   col:'ef4444'},
+  {id:'EMP008',name:'Malika Hamidova',   dept:'Ombor',      role:'Omborchi',           email:'m.hamidova@ep.uz',  phone:'+998919012345',join:'11.01.2025',st:'Nofaol', col:'FF902F'},
+  {id:'EMP009',name:'Sanjar Tursunov',   dept:'IT',         role:'Tizim admini',       email:'s.tursunov@ep.uz',  phone:'+998910123456',join:'15.06.2023',st:'Faol',   col:'FF902F'},
+  {id:'EMP010',name:'Nodira Abdullayeva',dept:'CRM',        role:'Mijozlar xizmati',   email:'n.abdullayeva@ep.uz',phone:'+998911234567',join:'02.09.2024',st:'Faol',  col:'8b5cf6'},
+  {id:'EMP011',name:'Ulugbek Sotvoldiyev',dept:'Dasturlash',role:'Backend dasturchi',  email:'u.sotvoldiyev@ep.uz',phone:'+998912345670',join:'18.11.2024',st:'Faol',  col:'3b82f6'},
+  {id:'EMP012',name:'Zulfiya Qodirov',   dept:'Moliya',     role:'Moliyaviy tahlilchi',email:'z.qodirov@ep.uz',   phone:'+998913456780',join:'07.12.2023',st:'Faol',   col:'22c55e'},
+  {id:'EMP013',name:'Bekzod Haydarov',   dept:'Ishlab ch.', role:'Sifat nazoratchi',   email:'b.haydarov@ep.uz',  phone:'+998914567801',join:'25.03.2024',st:"Ta'tilda",col:'f59e0b'},
+  {id:'EMP014',name:'Mohira Sobirov',    dept:'HR',         role:'Ishga qabul',        email:'m.sobirov@ep.uz',   phone:'+998915678012',join:'14.07.2024',st:'Faol',   col:'ec4899'},
+  {id:'EMP015',name:'Ibrohim Normatov',  dept:'Logistika',  role:'Logistika rahbari',  email:'i.normatov@ep.uz',  phone:'+998916789023',join:'30.10.2023',st:'Faol',   col:'14b8a6'},
+];
+function stBadge(s){
+  if(s==='Faol')return`<span class="b bg">${s}</span>`;
+  if(s==="Ta'tilda")return`<span class="b by">${s}</span>`;
+  return`<span class="b br">${s}</span>`;
+}
+function renderEmpTable(data,tbodyId){
+  const tb=document.getElementById(tbodyId);if(!tb)return;
+  tb.innerHTML=data.map((e,i)=>`<tr>
+    <td>${i+1}</td>
+    <td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=${encodeURIComponent(e.name)}&background=${e.col}&color=fff&size=34" alt=""><span style="font-weight:600">${e.name}</span></div></td>
+    <td style="color:var(--pr);font-weight:600">${e.id}</td>
+    <td>${e.dept}</td>
+    <td style="color:var(--muted)">${e.role}</td>
+    <td style="font-size:12px">${e.email}</td>
+    <td>${e.phone}</td>
+    <td style="color:var(--muted)">${e.join}</td>
+    <td>${stBadge(e.st)}</td>
+    <td><button class="ab" onclick="showPage('emp-detail',null)" title="Ko'rish"><i class="fas fa-eye"></i></button> <button class="ab" title="Tahrirlash"><i class="fas fa-pen"></i></button> <button class="ab d" title="O'chirish"><i class="fas fa-trash"></i></button></td>
+  </tr>`).join('');
+}
+function renderDashEmp(){
+  const tb=document.getElementById('dashEmpTbl');if(!tb)return;
+  tb.innerHTML=EMPS.slice(0,6).map(e=>`<tr>
+    <td><div class="d-flex align-items-center gap-2"><img class="ava" src="https://ui-avatars.com/api/?name=${encodeURIComponent(e.name)}&background=${e.col}&color=fff&size=34" alt=""><span style="font-weight:600">${e.name}</span></div></td>
+    <td style="color:var(--pr);font-weight:600">${e.id}</td>
+    <td>${e.dept}</td>
+    <td style="color:var(--muted)">${e.role}</td>
+    <td>${stBadge(e.st)}</td>
+    <td><button class="ab" onclick="showPage('emp-detail',null)"><i class="fas fa-eye"></i></button></td>
+  </tr>`).join('');
+}
+function filterEmp(q){
+  const f=EMPS.filter(e=>e.name.toLowerCase().includes(q.toLowerCase())||e.dept.toLowerCase().includes(q.toLowerCase())||e.id.toLowerCase().includes(q.toLowerCase()));
+  renderEmpTable(f,'empFullBody');
+}
+
+// ===== CALENDAR =====
+function buildCal(containerId){
+  const c=document.getElementById(containerId);if(!c)return;
+  const types=['present','present','present','absent','leave','rest','present','present','present','present','rest','rest','present','present','leave','present','present','present','absent','present','rest','rest','present','present','present','present','present','rest','rest','present','present'];
+  c.innerHTML=types.map((t,i)=>`<div class="cal-day ${t}${i===0?' today':''}">${i+1}</div>`).join('');
+}
+function buildEmpCal(){
+  const days=['Du','Se','Ch','Pa','Ju','Sh','Ya'];
+  const g=document.getElementById('empCalGrid');if(!g)return;
+  g.innerHTML=days.map(d=>`<div class="cal-day-hd">${d}</div>`).join('')+
+    ['present','present','rest','rest','present','present','present','absent','present','present','rest','rest','present','present','present','leave','present','present','rest','rest','present','present','present','present','present','rest','rest','present','present','present'].map((t,i)=>`<div class="cal-day ${t}">${i+1}</div>`).join('');
+}
+
+// ===== CHARTS =====
+Chart.defaults.font.family="'Inter',sans-serif";
+const charts={};
+function mkChart(id,cfg){
+  if(charts[id]){charts[id].destroy();}
+  const el=document.getElementById(id);
+  if(!el)return;
+  charts[id]=new Chart(el.getContext('2d'),cfg);
+}
+const MONTHS=['Yan','Feb','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
+const TT={backgroundColor:'#1b2850',padding:10,cornerRadius:8};
+
+function initDashCharts(){
+  // Growth
+  const ctx=document.getElementById('growC');
+  if(!ctx)return;
+  const g=ctx.getContext('2d');
+  const gb=g.createLinearGradient(0,0,0,220);gb.addColorStop(0,'rgba(59,130,246,.25)');gb.addColorStop(1,'rgba(59,130,246,0)');
+  const gr=g.createLinearGradient(0,0,0,220);gr.addColorStop(0,'rgba(239,68,68,.2)');gr.addColorStop(1,'rgba(239,68,68,0)');
+  mkChart('growC',{type:'line',data:{labels:MONTHS,datasets:[
+    {label:'Yangi qabul',data:[42,55,38,61,73,49,58,67,44,71,82,18],borderColor:'#3b82f6',backgroundColor:gb,tension:.4,fill:true,pointRadius:4,borderWidth:2.5,pointBackgroundColor:'#3b82f6'},
+    {label:'Ishdan ketdi',data:[8,12,6,14,9,11,7,13,5,10,8,5],borderColor:'#ef4444',backgroundColor:gr,tension:.4,fill:true,pointRadius:4,borderWidth:2.5,pointBackgroundColor:'#ef4444'}
+  ]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:16,font:{size:12}}},tooltip:TT},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});
+  // Dept doughnut
+  const dc=['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#ef4444','#FF902F'];
+  const dl=['Dasturlash','Dizayn','HR','Moliya','Marketing','Savdo','Ishlab ch.','Boshqa'];
+  const dv=[320,85,60,75,90,110,310,190];
+  mkChart('deptC',{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:dc,borderWidth:0,hoverOffset:8}]},options:{responsive:true,cutout:'68%',plugins:{legend:{display:false},tooltip:TT}}});
+  const leg=document.getElementById('deptLeg');
+  if(leg)leg.innerHTML=dl.slice(0,6).map((l,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="display:flex;align-items:center;gap:7px;font-size:12.5px"><span style="width:10px;height:10px;border-radius:50%;background:${dc[i]};display:inline-block"></span>${l}</div><span style="font-size:12.5px;font-weight:600">${dv[i]}</span></div>`).join('');
+  // Attendance
+  mkChart('attC',{type:'doughnut',data:{labels:['Keldi','Ta\'tilda','Kelmadi'],datasets:[{data:[1086,62,92],backgroundColor:['#22c55e','#f59e0b','#ef4444'],borderWidth:0,hoverOffset:6}]},options:{responsive:true,cutout:'72%',plugins:{legend:{display:false},tooltip:TT}}});
+}
+
+const mData={labels:MONTHS,hired:[42,55,38,61,73,49,58,67,44,71,82,18],resigned:[8,12,6,14,9,11,7,13,5,10,8,5]};
+const qData={labels:['Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'],hired:[135,183,169,218,156],resigned:[26,34,25,31,20]};
+const yData={labels:['2022','2023','2024','2025','2026'],hired:[480,620,810,876,410],resigned:[95,112,145,98,25]};
+const dsets={m:mData,q:qData,y:yData};
+function swChart(btn,k){
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('act'));btn.classList.add('act');
+  const d=dsets[k],c=charts['growC'];if(!c)return;
+  c.data.labels=d.labels;c.data.datasets[0].data=d.hired;c.data.datasets[1].data=d.resigned;c.update();
+}
+
+function renderPageCharts(id){
+  if(id==='payroll'){
+    mkChart('payrollC',{type:'line',data:{labels:MONTHS,datasets:[{label:'Oylik maosh ($)',data:[82000,85000,83000,88000,86000,91000,89000,92000,94000,91000,95000,89450],borderColor:'#FF902F',backgroundColor:'rgba(255,144,47,.1)',tension:.4,fill:true,pointRadius:3,borderWidth:2.5}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false}},y:{beginAtZero:false,ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}});
+    mkChart('payrollDC',{type:'doughnut',data:{labels:['Asosiy','Mukofot','Ortiqcha ish','Nafaqa'],datasets:[{data:[89450,8400,3240,4110],backgroundColor:['#3b82f6','#22c55e','#f59e0b','#8b5cf6'],borderWidth:0}]},options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{usePointStyle:true,font:{size:11}}},tooltip:TT}}});
+  }
+  if(id==='attend'){
+    buildCal('mainCal');
+    mkChart('attMonthC',{type:'bar',data:{labels:MONTHS.slice(0,5),datasets:[{label:'Keldi %',data:[88,85,91,87,88],backgroundColor:'#22c55e',borderRadius:8},{label:'Kelmadi %',data:[7,10,5,8,7],backgroundColor:'#ef4444',borderRadius:8}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},tooltip:TT},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+  }
+  if(id==='leave'){
+    const ls=document.getElementById('leaveStats');
+    if(ls){const items=[['Yillik','156 kun','#3b82f6',78],['Kasal','42 kun','#22c55e',21],['Shaxsiy','18 kun','#f59e0b',9],['Homiladorlik','90 kun','#ec4899',45]];
+    ls.innerHTML=items.map(([l,v,c,p])=>`<div style="margin-bottom:10px"><div class="d-flex justify-content-between mb-1" style="font-size:12.5px"><span>${l}</span><span style="font-weight:600">${v}</span></div><div class="pgbar"><div class="pgfill" style="width:${p}%;background:${c}"></div></div></div>`).join('');}
+    mkChart('leaveC',{type:'doughnut',data:{labels:['Yillik','Kasal','Shaxsiy','Homiladorlik'],datasets:[{data:[156,42,18,90],backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ec4899'],borderWidth:0,hoverOffset:6}]},options:{responsive:true,cutout:'60%',plugins:{legend:{position:'bottom',labels:{usePointStyle:true,font:{size:11}}},tooltip:TT}}});
+  }
+  if(id==='mes'){
+    mkChart('mesC',{type:'bar',data:{labels:['Heidelberg SM74','Roland VG-540','Konica Minolta','Heidelberg SM52','Epson SureColor'],datasets:[{label:'Yuklanish %',data:[92,78,65,45,30],backgroundColor:['#22c55e','#3b82f6','#f59e0b','#8b5cf6','#ef4444'],borderRadius:8}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:TT},scales:{x:{max:100,ticks:{callback:v=>v+'%'},grid:{display:false}},y:{grid:{display:false}}}}});
+  }
+  if(id==='finance'||id==='cfo-dash'){
+    const fkey=id==='finance'?'finC':'cfoC';
+    mkChart(fkey,{type:'bar',data:{labels:MONTHS,datasets:[{label:'Daromad',data:[95,108,102,118,124,113,119,128,122,131,138,104],backgroundColor:'rgba(34,197,94,.8)',borderRadius:6},{label:'Xarajat',data:[72,81,78,89,92,84,88,95,89,97,101,79],backgroundColor:'rgba(239,68,68,.7)',borderRadius:6}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{usePointStyle:true,font:{size:12}}},tooltip:TT},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>'$'+(v).toFixed(0)+'K'}}}}});
+    const fdkey=id==='finance'?'finDC':'cfoDC';
+    const fleg=id==='finance'?'finLeg':null;
+    mkChart(fdkey,{type:'doughnut',data:{labels:['Maosh','Material','Ustunxarajat','Soliq','Reklama'],datasets:[{data:[42,28,15,10,5],backgroundColor:['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ec4899'],borderWidth:0,hoverOffset:6}]},options:{responsive:true,cutout:'62%',plugins:{legend:{position:'bottom',labels:{usePointStyle:true,font:{size:11}}},tooltip:TT}}});
+    if(fleg){const fl=document.getElementById(fleg);if(fl)fl.innerHTML=['Maosh 42%','Material 28%','Ustunxarajat 15%','Soliq 10%','Reklama 5%'].map((l,i)=>`<div style="font-size:11.5px;color:var(--muted);margin-top:2px">${l}</div>`).join('');}
+    mkChart('cashC',{type:'line',data:{labels:Array.from({length:13},(_, i)=>`Haf ${i+1}`),datasets:[{label:'Kassa oqimi ($K)',data:[120,145,132,168,155,178,162,195,148,172,185,168,190],borderColor:'#14b8a6',backgroundColor:'rgba(20,184,166,.1)',tension:.4,fill:true,pointRadius:3,borderWidth:2.5}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false}},y:{beginAtZero:false,ticks:{callback:v=>'$'+v+'K'}}}}});
+  }
+  if(id==='crm'){
+    mkChart('crmFunC',{type:'bar',data:{labels:['Ariza','Saralash','Intervyu','Taklif','Qabul'],datasets:[{label:'Nomzodlar',data:[342,198,112,68,28],backgroundColor:['#3b82f6','#8b5cf6','#f59e0b','#22c55e','#FF902F'],borderRadius:8}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{color:'rgba(0,0,0,.05)'}},y:{grid:{display:false}}}}});
+  }
+  if(id==='hr-dash'){
+    mkChart('hrRecruitC',{type:'bar',data:{labels:['Ariza','Saralash','Intervyu','Taklif','Qabul'],datasets:[{label:'Bu oy',data:[145,89,52,31,18],backgroundColor:['#3b82f6','#8b5cf6','#f59e0b','#22c55e','#FF902F'],borderRadius:8}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false}},y:{beginAtZero:true}}}});
+    const hp=document.getElementById('hrDeptProgress');
+    if(hp)hp.innerHTML=[['Dasturlash',320,82,'#3b82f6'],['Ishlab ch.',310,79,'#14b8a6'],['Savdo',110,56,'#22c55e'],['Marketing',90,46,'#ec4899'],['Moliya',75,38,'#8b5cf6'],['HR',60,31,'#f59e0b']].map(([d,c,p,col])=>`<div style="margin-bottom:14px"><div class="d-flex justify-content-between mb-1" style="font-size:13px"><span style="font-weight:500">${d}</span><span style="color:var(--muted)">${c} xodim</span></div><div class="pgbar"><div class="pgfill" style="width:${p}%;background:${col}"></div></div></div>`).join('');
+  }
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',()=>{
+  renderDashEmp();
+  renderEmpTable(EMPS,'empFullBody');
+  buildEmpCal();
+  initDashCharts();
+});
+</script>
+</body>
+</html>

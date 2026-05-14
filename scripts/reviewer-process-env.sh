@@ -6,6 +6,9 @@ PASS=0; FAIL=0
 ALLOWED_FILES=(
   "apps/api/src/main.ts"
   "apps/api/src/config"
+  # WebSocket / decorator-time CORS callbacks run BEFORE DI is bootstrapped,
+  # so ConfigService is unavailable. process.env is the only correct option.
+  "apps/api/src/modules/pos/pos.gateway.ts"
 )
 
 # Tekshiriladigan modules
@@ -32,7 +35,9 @@ while IFS= read -r match; do
     FAIL=$((FAIL + 1))
   fi
 done < <(grep -rn "process\.env\." apps/api/src/modules/ \
-  --include="*.ts" 2>/dev/null | grep -v "spec\|test")
+  --include="*.ts" 2>/dev/null \
+  | grep -v "spec\|test" \
+  | grep -vE ':[[:space:]]*\*|:[[:space:]]*//|:[[:space:]]*\* ')   # skip block-/line-comments
 
 if [ "$FAIL" -eq 0 ]; then
   echo "  ✓ Barcha env qiymatlar ConfigService orqali"; PASS=$((PASS + 1))

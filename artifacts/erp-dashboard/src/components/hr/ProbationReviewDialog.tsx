@@ -1,3 +1,8 @@
+/**
+ * @module ProbationReviewDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -15,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardCheck, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 const SCORE_CRITERIA = [
   { key: "task_quality",    label: "Vazifalarni bajarish sifati" },
@@ -28,9 +34,9 @@ const SCORE_CRITERIA = [
 type ScoreKey = typeof SCORE_CRITERIA[number]["key"];
 
 const DECISIONS = [
-  { value: "continue",      label: "Davom ettirish",   icon: CheckCircle,   color: "text-green-600", border: "border-green-400", bg: "bg-green-50" },
-  { value: "extended_trial",label: "Qo'shimcha sinov", icon: AlertTriangle,  color: "text-amber-600", border: "border-amber-400", bg: "bg-amber-50" },
-  { value: "terminate",     label: "Tugatish",          icon: XCircle,        color: "text-red-600",   border: "border-red-400",   bg: "bg-red-50" },
+  { value: "continue",      label: "Davom ettirish",   icon: CheckCircle,   color: "text-[var(--ep-green)]", border: "border-green-400", bg: "bg-green-50" },
+  { value: "extended_trial",label: "Qo'shimcha sinov", icon: AlertTriangle,  color: "text-[var(--ep-yellow)]", border: "border-amber-400", bg: "bg-amber-50" },
+  { value: "terminate",     label: "Tugatish",          icon: XCircle,        color: "text-[var(--ep-red)]",   border: "border-red-400",   bg: "bg-red-50" },
 ] as const;
 
 export interface ProbationReview {
@@ -90,9 +96,9 @@ function ScoreRow({
   onChange: (v: number) => void;
 }) {
   const color =
-    value >= 8 ? "text-green-600 bg-green-50" :
-    value >= 5 ? "text-amber-600 bg-amber-50" :
-    "text-red-600 bg-red-50";
+    value >= 8 ? "text-[var(--ep-green)] bg-green-50" :
+    value >= 5 ? "text-[var(--ep-yellow)] bg-amber-50" :
+    "text-[var(--ep-red)] bg-red-50";
 
   return (
     <div className="flex items-center gap-3">
@@ -120,6 +126,7 @@ export function ProbationReviewDialog({
   candidateName,
   existingReview,
 }: Props) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -181,15 +188,15 @@ export function ProbationReviewDialog({
 
   const typeLabel = reviewType === "30" ? "30-Kun" : "90-Kun";
   const avgColor =
-    avgScore >= 8 ? "text-green-600 bg-green-50 border-green-200" :
-    avgScore >= 5 ? "text-amber-600 bg-amber-50 border-amber-200" :
-    "text-red-600 bg-red-50 border-red-200";
+    avgScore >= 8 ? "text-[var(--ep-green)] bg-green-50 border-green-200" :
+    avgScore >= 5 ? "text-[var(--ep-yellow)] bg-amber-50 border-amber-200" :
+    "text-[var(--ep-red)] bg-red-50 border-red-200";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         {/* Header */}
-        <div className="bg-[#1a1a2e] text-white px-6 pt-5 pb-4">
+        <div className="from-primary to-amber-500 text-white px-6 pt-5 pb-4">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <ClipboardCheck className="w-5 h-5 text-orange-400" />
@@ -202,24 +209,24 @@ export function ProbationReviewDialog({
         <div className="px-6 py-4 space-y-5">
           {/* Kirish ma'lumotlari */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Kirish ma'lumotlari</p>
-            <div className="grid grid-cols-2 gap-3">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("kirishMalumotlari")}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Xodim ismi</Label>
+                <Label className="text-xs mb-1 block">{t("xodimIsmi")}</Label>
                 <Input
                   value={employeeName}
                   onChange={e => setEmployeeName(e.target.value)}
                   className="text-sm h-8"
-                  placeholder="To'liq ism"
+                  placeholder={t("toliqIsm")}
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Lavozim</Label>
+                <Label className="text-xs mb-1 block">{t("lavozim1")}</Label>
                 <Input
                   value={positionName}
                   onChange={e => setPositionName(e.target.value)}
                   className="text-sm h-8"
-                  placeholder="Lavozim nomi"
+                  placeholder={t("lavozimNomi1")}
                 />
               </div>
               <div>
@@ -228,11 +235,11 @@ export function ProbationReviewDialog({
                   value={mentorName}
                   onChange={e => setMentorName(e.target.value)}
                   className="text-sm h-8"
-                  placeholder="Mentor ismi"
+                  placeholder={t("mentorIsmi")}
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Baholash sanasi</Label>
+                <Label className="text-xs mb-1 block">{t("baholashSanasi")}</Label>
                 <Input
                   type="date"
                   value={reviewDate}
@@ -265,33 +272,33 @@ export function ProbationReviewDialog({
 
           {/* Kuzatuvlar */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Kuzatuvlar</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("kuzatuvlar")}</p>
             <div>
-              <Label className="text-xs mb-1 block text-green-700">✓ Kuchli tomonlar</Label>
+              <Label className="text-xs mb-1 block text-[var(--ep-green)]">{t("kuchliTomonlar")}</Label>
               <Textarea
                 value={observations.strengths}
                 onChange={e => setObservations(prev => ({ ...prev, strengths: e.target.value }))}
                 rows={2}
                 className="text-sm resize-none"
-                placeholder="Xodimning kuchli tomonlari..."
+                placeholder={t("xodimningKuchliTomonlari")}
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block text-amber-700">↗ Rivojlanish sohalari</Label>
+              <Label className="text-xs mb-1 block text-[var(--ep-yellow)]">{t("rivojlanishSohalari")}</Label>
               <Textarea
                 value={observations.improvements}
                 onChange={e => setObservations(prev => ({ ...prev, improvements: e.target.value }))}
                 rows={2}
                 className="text-sm resize-none"
-                placeholder="Rivojlantirish kerak bo'lgan sohalar..."
+                placeholder={t("rivojlantirishKerakBolganSohalar")}
               />
             </div>
           </div>
 
           {/* Qaror */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Qaror</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("qaror")}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {(Array.isArray(DECISIONS) ? DECISIONS : []).map(d => {
                 const Icon = d.icon;
                 const isSelected = decision === d.value;
@@ -322,17 +329,17 @@ export function ProbationReviewDialog({
               value={reviewerName}
               onChange={e => setReviewerName(e.target.value)}
               className="text-sm h-8"
-              placeholder="HR Menejer to'liq ismi..."
+              placeholder={t("hrMenejerToliqIsmi")}
             />
           </div>
         </div>
 
         <DialogFooter className="px-6 pb-5 pt-2 border-t gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || !decision}
-            className="bg-[#1a1a2e] hover:bg-[#2a2a4e] text-white gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             data-testid="button-save-probation-review"
           >
             <ClipboardCheck className="w-4 h-4" />

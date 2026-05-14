@@ -1,3 +1,8 @@
+/**
+ * @module get-work-centers.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';

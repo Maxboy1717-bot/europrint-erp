@@ -1,3 +1,8 @@
+/**
+ * @module DeadlineColumn
+ * @description React page component. Route-level UI.
+ */
+
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
@@ -41,7 +46,7 @@ export function DeadlineColumn({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className={`font-semibold text-sm ${config.headerText}`}>{columnNames[columnKey]}</h3>
-            <span className={`text-xs px-2 py-0.5 rounded-full bg-surface-container-lowest/20 ${config.headerText}`}>
+            <span className={`text-xs px-2 py-0.5 rounded-full bg-card/20 ${config.headerText}`}>
               {cards.length}
             </span>
           </div>
@@ -49,7 +54,7 @@ export function DeadlineColumn({
             <Button 
               size="icon" 
               variant="ghost" 
-              className={`h-6 w-6 ${config.headerText} hover:bg-surface-container-lowest/20`}
+              className={`h-6 w-6 ${config.headerText} hover:bg-card/20`}
               onClick={(e) => { e.stopPropagation(); onAddCard(); }}
               data-testid={`button-add-card-${columnKey}`}
             >
@@ -59,7 +64,7 @@ export function DeadlineColumn({
         </div>
       </div>
       <div className="p-3">
-        <SortableContext items={(Array.isArray(cards) ? cards : []).map(c => c.id!)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={(Array.isArray(cards) ? cards : []).map(c => c.id ?? "")} strategy={verticalListSortingStrategy}>
           <div className="space-y-2 min-h-[100px]">
             {(Array.isArray(cards) ? cards : []).map((card) => (
               <SortableTaskCard key={card.id} card={card} onClick={() => onCardClick(card)} t={t} />

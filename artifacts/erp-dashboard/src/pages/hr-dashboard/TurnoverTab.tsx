@@ -1,3 +1,8 @@
+/**
+ * @module TurnoverTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart as PieChartIcon, Activity, RefreshCw } from "lucide-react";
 import {
@@ -6,6 +11,7 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface TurnoverTabProps {
   resignationReasons: { reason: string; count: number; color: string }[];
@@ -14,15 +20,16 @@ interface TurnoverTabProps {
 }
 
 export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignations }: TurnoverTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
-            <PieChartIcon className="h-4 w-4 text-blue-500" />
-            Ketish Sabablari
+            <PieChartIcon className="h-4 w-4 text-[var(--ep-blue)]" />
+            {t("ketishSabablari")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -47,11 +54,11 @@ export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignation
               <div key={idx} className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-                  <span className="text-sm text-on-surface-variant">{item.reason}</span>
+                  <span className="text-sm text-muted-foreground">{item.reason}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold">{item.count}</span>
-                  <span className="text-xs text-on-surface-variant w-10 text-right">
+                  <span className="text-xs text-muted-foreground w-10 text-right">
                     {((item.count / (totalResignations || 1)) * 100).toFixed(1)}%
                   </span>
                 </div>
@@ -64,8 +71,8 @@ export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignation
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
-            <Activity className="h-4 w-4 text-purple-500" />
-            Oylik Trend
+            <Activity className="h-4 w-4 text-[var(--ep-purple)]" />
+            {t("oylikTrend")}
           </CardTitle>
         </CardHeader>
         <CardContent>

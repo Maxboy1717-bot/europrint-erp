@@ -1,3 +1,8 @@
+/**
+ * @module EditDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -12,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface EditDialogProps {
   node: NodeDetail;
@@ -23,6 +29,7 @@ interface EditDialogProps {
 export function EditDialog({
   node, open, onClose, onSuccess,
 }: EditDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState({
     name: node.name,
@@ -46,11 +53,11 @@ export function EditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>Bo'limni tahrirlash — {node.name}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Bo'limni tahrirlash — {node.name}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 py-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
           <div>
             <Label>Nomi (UZ)</Label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
@@ -60,7 +67,7 @@ export function EditDialog({
             <Input value={form.nameRu} onChange={(e) => setForm((f) => ({ ...f, nameRu: e.target.value }))} />
           </div>
           <div>
-            <Label>Turi</Label>
+            <Label>{t("type")}</Label>
             <Select value={form.nodeType} onValueChange={(v) => setForm((f) => ({ ...f, nodeType: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -71,7 +78,7 @@ export function EditDialog({
             </Select>
           </div>
           <div>
-            <Label>Rang</Label>
+            <Label>{t("rang")}</Label>
             <div className="flex items-center gap-2">
               <input type="color" value={form.color}
                 onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
@@ -92,13 +99,13 @@ export function EditDialog({
               placeholder="ЦКП (RU)..." />
           </div>
           <div className="col-span-2">
-            <Label>Tavsif</Label>
+            <Label>{t("progress.description")}</Label>
             <Input value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button onClick={() => mutation.mutate()} disabled={!form.name || mutation.isPending}>
             {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

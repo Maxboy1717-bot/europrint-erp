@@ -1,3 +1,8 @@
+/**
+ * @module WarehouseReports
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,8 +10,6 @@ import { Package, TrendingUp, PieChartIcon, Clock, Calendar } from "lucide-react
 import { exportToCSV } from "@/lib/export-utils";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-
 import { translations, Lang, StockBalanceData, TurnoverData, AbcData } from "@/components/wms/reports/types";
 import { ReportsHeader } from "@/components/wms/reports/ReportsHeader";
 import { StockBalanceTab } from "@/components/wms/reports/StockBalanceTab";
@@ -14,8 +17,11 @@ import { TurnoverTab } from "@/components/wms/reports/TurnoverTab";
 import { AbcAnalysisTab } from "@/components/wms/reports/AbcAnalysisTab";
 import { AgingTab } from "@/components/wms/reports/AgingTab";
 import { ExpiryTab } from "@/components/wms/reports/ExpiryTab";
+import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseReports() {
+  const { t } = useTranslation("common");
   const [lang, setLang] = useState<Lang>("uz");
   const t = translations[lang];
 
@@ -76,21 +82,21 @@ export default function WarehouseReports() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={() => refetchStock()} />;
+    return <EPErrorState onRetry={() => refetchStock()} />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between gap-2">
         <ReportsHeader t={t} lang={lang} setLang={setLang} onExport={handleExport} />
         <Button variant="outline" size="sm" onClick={() => refetchStock()} className="shrink-0">
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5 mb-6">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-6">
           <TabsTrigger value="stockBalance" className="gap-2" data-testid="tab-stock-balance">
             <Package className="w-4 h-4" />
             <span className="hidden sm:inline">{t.tabs.stockBalance}</span>

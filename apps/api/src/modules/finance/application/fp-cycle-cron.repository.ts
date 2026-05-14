@@ -1,14 +1,19 @@
+/**
+ * @module fp-cycle-cron.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 
 interface EmployeeRow { id: number; [key: string]: unknown; }
 interface ZvsStatsRow { pending: string; approved: string; approved_total: string; [key: string]: unknown; }
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -19,7 +24,7 @@ export class FpCycleCronRepository {
   async getEmployeeIdsByRoles(roles: string[]): Promise<Result<number[]>> {
     return safeCall(async () => {
       const rows = castTo<EmployeeRow[]>(await exec(sql`SELECT id FROM employees WHERE role = ANY(${roles}::text[]) AND status = 'active' LIMIT 100`));
-      return (rows ?? []).map((r) => r.id).filter(Boolean);
+      return (Array.isArray(rows) ? rows : []).map((r) => r.id).filter(Boolean);
     }, 'DB_ERROR');
   }
 

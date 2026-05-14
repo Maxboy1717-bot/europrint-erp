@@ -1,7 +1,12 @@
+/**
+ * @module pos-request-ext.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 
 import { Injectable } from '@nestjs/common';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 import { posMaterialRequests, db, sql, desc, eq, and, gte, lte } from '@workspace/db';
-import type { SQL } from '@workspace/db';
 import { safeCall, Result } from '@common/result';
 
 interface RequestFilter {
@@ -10,7 +15,7 @@ interface RequestFilter {
 }
 
 type Row = Record<string, unknown>;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
 
 @Injectable()
 export class PosRequestExtRepository {

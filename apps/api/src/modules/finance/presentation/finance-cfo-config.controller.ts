@@ -1,12 +1,9 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Param,
-  Body,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+/**
+ * @module finance-cfo-config.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -26,6 +23,13 @@ const UpdateCfoConfigDto = z.object({
 @UseInterceptors(AuditInterceptor)
 export class FinanceCfoConfigController {
   constructor(private readonly cfoConfig: CfoConfigService) {}
+
+  /** POST /api/finance/cfo-config — not yet implemented */
+  @Post()
+  @RequirePermission('finance.cfo-config:FULL')
+  async create() {
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+  }
 
   /** GET /api/finance/cfo-config — returns all CFO config entries */
   @Get()

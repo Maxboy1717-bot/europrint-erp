@@ -1,3 +1,8 @@
+/**
+ * @module context-menu
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"

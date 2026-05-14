@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-pos-v2-request.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
@@ -69,7 +74,7 @@ export class DrizzlePosV2RequestRepo {
       if (filter.toWarehouseId) conditions.push(eq(transferRequests.toWarehouseId, filter.toWarehouseId));
       const requests = await db.select().from(transferRequests).where(conditions.length > 0 ? and(...conditions) : undefined).orderBy(desc(transferRequests.createdAt)).limit(limit).offset(offset);
       const countResult = await db.select({ count: sql<number>`count(*)` }).from(transferRequests).where(conditions.length > 0 ? and(...conditions) : undefined);
-      return ok({ data: (requests ?? []).map((r) => this.mapToTransferRequest(r as Record<string, unknown>)), total: countResult[0]?.count || 0, page, limit });
+      return ok({ data: (Array.isArray(requests) ? requests : []).map((r) => this.mapToTransferRequest(r as Record<string, unknown>)), total: countResult[0]?.count || 0, page, limit });
     } catch (error: unknown) {
       this.logger.error('Failed to find requests:', error);
       return err({ message: 'Database error', code: 'DB_ERROR' });

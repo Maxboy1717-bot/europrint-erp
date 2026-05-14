@@ -1,3 +1,8 @@
+/**
+ * @module bot.helpers
+ * @description Source module. See exports for details.
+ */
+
 import { Logger } from '@nestjs/common';
 import { runQuery } from '@shared/db';
 import { sql as drizzleSql, SQL } from 'drizzle-orm';
@@ -22,11 +27,60 @@ export interface BotMessage {
   role?:       string;
 }
 
+/**
+ * SQL query result wrapper. Either `ok` with `rows`, or `error` with the
+ * underlying message so the bot can show a user-friendly DB-error reply
+ * instead of silently returning [].
+ */
+export type SqlOk<T> = { ok: true; rows: T[] };
+export type SqlErr   = { ok: false; error: string };
+export type SqlResult<T> = SqlOk<T> | SqlErr;
+
+/**
+ * Execute a query and return a Result-pattern wrapper.
+ * Use this for any command where the user must distinguish between
+ * "no data" (rows: []) and "DB error" (ok: false).
+ */
+export async function execSqlResult<T extends Row = Row>(
+  q: SQL,
+  context?: string,
+): Promise<SqlResult<T>> {
+  try {
+    const r = await runQuery<T>(q);
+    return { ok: true, rows: r.rows as T[] };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    helperLogger.error({ msg: 'execSql failed', context, err: message });
+    return { ok: false, error: message };
+  }
+}
+
+/**
+ * Legacy helper — returns rows[] or empty fallback. Kept for backwards
+ * compatibility. DEPRECATED: prefer execSqlResult() so bots can show
+ * "DB error" replies instead of silently rendering "no data".
+ *
+ * Callers that pass a hardcoded fallback like [{ cnt: '0' }] mask DB
+ * failures from the user. Migrate to execSqlResult().
+ */
 export async function execSql<T extends Row = Row>(q: SQL, fallback?: T[]): Promise<T[]> {
   return runQuery<T>(q).then((r) => r.rows as T[]).catch((err: unknown) => {
     helperLogger.error({ msg: 'execSql failed', err });
     return fallback ?? [];
   });
+}
+
+/**
+ * Reply used when a SQL query failed. Renders a consistent "DB error" message
+ * to the user (Uzbek) so they don't mistake it for "no data".
+ */
+export function dbErrorReply(detail?: string): BotReply {
+  const tail = detail ? `\n<code>${detail.slice(0, 120)}</code>` : '';
+  return {
+    text: `❌ <b>Maʼlumotlar bazasi xatosi</b>. Birozdan keyin qayta urinib koʻring.${tail}`,
+    parse: 'HTML',
+    success: false,
+  };
 }
 
 export function helpReply(text: string): BotReply {

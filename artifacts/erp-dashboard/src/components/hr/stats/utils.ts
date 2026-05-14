@@ -1,3 +1,8 @@
+/**
+ * @module utils
+ * @description React UI component.
+ */
+
 import { Employee, Assignment, Attempt, Certificate, Progress, AttendanceRecord, DisciplineRecord } from "./types";
 
 export function useEmployeeData(id: string | undefined, assignments: Assignment[], attempts: Attempt[], certificates: Certificate[], progress: Progress[], allAttendance: AttendanceRecord[], allDisciplineRecords: DisciplineRecord[]) {

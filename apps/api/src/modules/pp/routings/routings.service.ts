@@ -1,3 +1,8 @@
+/**
+ * @module routings.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
 import { IPpRoutingsRepository, PP_ROUTINGS_REPO } from './i-pp-routings.repo';
 import { safeCall, Result, AppError } from '@common/result';
@@ -42,6 +47,15 @@ export class RoutingsService {
     const result = await this.ppRoutingsRepo.update(id, dto);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
+    });}
+
+  async remove(id: number){
+    return safeCall(async () => {
+    await this.findOne(id);
+    const result = await this.ppRoutingsRepo.softDelete(id);
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    return { message: "O'chirildi" };
+
     });}
 }

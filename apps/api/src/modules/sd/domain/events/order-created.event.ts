@@ -1,3 +1,8 @@
+/**
+ * @module order-created.event
+ * @description Domain event payload. Emitted via @nestjs/event-emitter or CQRS event bus.
+ */
+
 import { DomainEvent } from '@shared/domain/domain-event.base';
 
 export class OrderCreatedEvent extends DomainEvent {

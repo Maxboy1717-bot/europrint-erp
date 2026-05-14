@@ -1,3 +1,8 @@
+/**
+ * @module CameraAIModernHub
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -21,7 +26,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ErrorState } from "@/components/ui/error-state";
+import { EPErrorState } from "@/components/ep";
 import { cn } from "@/lib/utils";
 import {
   fetchCamerasFull,
@@ -34,6 +39,7 @@ import type { CameraAiRow } from "../types";
 import { CameraMissionEditor } from "../components/CameraMissionEditor";
 import { CameraAnalysisWorkbench } from "../components/CameraAnalysisWorkbench";
 import "../camera-ai-visual.css";
+import { useTranslation } from '@/lib/i18n';
 
 const severityClass: Record<string, string> = {
   low: "border-l-blue-500 bg-blue-500/5",
@@ -43,6 +49,7 @@ const severityClass: Record<string, string> = {
 };
 
 export default function CameraAIModernHub() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
   const [lang, setLang] = useState<"uz" | "ru">("uz");
@@ -123,7 +130,7 @@ export default function CameraAIModernHub() {
   if (statsQ.isError || camerasQ.isError) {
     return (
       <div className="cai-module p-4">
-        <ErrorState onRetry={refetchAll} />
+        <EPErrorState onRetry={refetchAll} />
       </div>
     );
   }
@@ -145,14 +152,14 @@ export default function CameraAIModernHub() {
               </span>
               <span className="cai-pill opacity-90">
                 <Cpu className="h-3 w-3" />
-                Gemini Vision
+                {t("geminiVision")}
               </span>
             </div>
             <h1 className="cai-hero-title">
               {lang === "uz" ? (
                 <>
-                  Vizual <span className="text-cyan-300">xavfsizlik</span> va{" "}
-                  <span className="text-violet-300">ishlab chiqarish</span> AI
+                  {t("vizual")}<span className="text-cyan-300">xavfsizlik</span> va{" "}
+                  <span className="text-violet-300">{t("ishlabChiqarish")}</span> AI
                 </>
               ) : (
                 <>
@@ -174,7 +181,7 @@ export default function CameraAIModernHub() {
                 onClick={() => setLang("uz")}
                 className={cn(
                   "px-4 py-2 text-xs font-bold transition-colors",
-                  lang === "uz" ? "bg-cyan-500 text-white" : "text-slate-200 hover:bg-white/10",
+                  lang === "uz" ? "bg-[var(--ep-cyan)] text-white" : "text-slate-200 hover:bg-white/10",
                 )}
               >
                 O‘ZB
@@ -184,7 +191,7 @@ export default function CameraAIModernHub() {
                 onClick={() => setLang("ru")}
                 className={cn(
                   "px-4 py-2 text-xs font-bold transition-colors",
-                  lang === "ru" ? "bg-cyan-500 text-white" : "text-slate-200 hover:bg-white/10",
+                  lang === "ru" ? "bg-[var(--ep-cyan)] text-white" : "text-slate-200 hover:bg-white/10",
                 )}
               >
                 RU
@@ -212,15 +219,15 @@ export default function CameraAIModernHub() {
       {loading ? (
         <div className="cai-stat-bento">
           {([1, 2, 3, 4]).map((i) => (
-            <Skeleton key={`k-${i}`} className="h-28 rounded-2xl" />
+            <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />
           ))}
         </div>
       ) : (
         <div className="cai-stat-bento">
           <div className="cai-stat-card">
             <div className="flex items-start justify-between gap-2">
-              <Camera className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-              <Sparkles className="h-4 w-4 text-violet-500 opacity-60" />
+              <Camera className="h-4 w-4 text-[var(--ep-cyan)] dark:text-cyan-400" />
+              <Sparkles className="h-4 w-4 text-[var(--ep-purple)] opacity-60" />
             </div>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mt-3">
               {lang === "uz" ? "Jami kameralar" : "Всего камер"}
@@ -229,7 +236,7 @@ export default function CameraAIModernHub() {
             <p className="text-xs text-muted-foreground">{lang === "uz" ? "Ro‘yxat" : "В списке"}</p>
           </div>
           <div className="cai-stat-card">
-            <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <Activity className="h-5 w-5 text-[var(--ep-green)] dark:text-emerald-400" />
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mt-3">
               {lang === "uz" ? "Faol" : "Активны"}
             </p>
@@ -237,7 +244,7 @@ export default function CameraAIModernHub() {
             <p className="text-xs text-muted-foreground">{lang === "uz" ? "Real vaqt" : "Онлайн"}</p>
           </div>
           <div className="cai-stat-card cai-stat--alert">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <AlertTriangle className="h-5 w-5 text-[var(--ep-yellow)]" />
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mt-3">
               {lang === "uz" ? "Ochiq alertlar" : "Открытые алерты"}
             </p>
@@ -245,7 +252,7 @@ export default function CameraAIModernHub() {
             <p className="text-xs text-muted-foreground">{lang === "uz" ? "Hal qilinmagan" : "Не решены"}</p>
           </div>
           <div className="cai-stat-card">
-            <Shield className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+            <Shield className="h-5 w-5 text-[var(--ep-purple)] dark:text-violet-400" />
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mt-3">
               {lang === "uz" ? "Xavfsizlik yozuvi" : "Нарушения ТБ"}
             </p>
@@ -277,7 +284,7 @@ export default function CameraAIModernHub() {
               <div className="cai-panel-head flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-                    <Video className="h-5 w-5 text-cyan-600" />
+                    <Video className="h-5 w-5 text-[var(--ep-cyan)]" />
                     {lang === "uz" ? "Kamera va topshiriqlar" : "Камеры и задачи"}
                   </h2>
                   <p className="text-sm text-muted-foreground mt-0.5">
@@ -293,10 +300,10 @@ export default function CameraAIModernHub() {
               </div>
               <div className="p-4 space-y-3">
                 {camerasQ.isLoading ? (
-                  <Skeleton className="h-40 w-full rounded-xl" />
+                  <Skeleton className="h-40 w-full rounded-lg" />
                 ) : filtered.length === 0 ? (
                   <div className="text-center py-16 px-4 rounded-xl border border-dashed border-cyan-500/25 bg-cyan-500/5">
-                    <Camera className="h-12 w-12 mx-auto text-cyan-600/50 mb-3" />
+                    <Camera className="h-12 w-12 mx-auto text-[var(--ep-cyan)]/50 mb-3" />
                     <p className="font-medium text-foreground">
                       {lang === "uz" ? "Kamera topilmadi" : "Камеры не найдены"}
                     </p>
@@ -339,7 +346,7 @@ export default function CameraAIModernHub() {
                           )}
                           <div className="flex flex-wrap gap-1.5 mt-2.5">
                             {cats.length === 0 ? (
-                              <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                              <span className="text-xs text-[var(--ep-yellow)] dark:text-amber-400 font-medium">
                                 {lang === "uz" ? "⚠ Topshiriq yo‘q — AI ishlamaydi" : "⚠ Нет задач"}
                               </span>
                             ) : (
@@ -391,7 +398,7 @@ export default function CameraAIModernHub() {
               <div className="cai-panel">
                 <div className="cai-panel-head">
                   <h3 className="text-sm font-bold flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)]" />
                     {lang === "uz" ? "So‘nggi ogohlantirishlar" : "Алерты"}
                   </h3>
                 </div>
@@ -455,7 +462,7 @@ function QuickLink({ to, label }: { to: string; label: string }) {
     <Link href={to}>
       <span className="cai-link-row">
         {label}
-        <ChevronRight className="h-4 w-4 text-cyan-600 shrink-0" />
+        <ChevronRight className="h-4 w-4 text-[var(--ep-cyan)] shrink-0" />
       </span>
     </Link>
   );

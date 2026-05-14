@@ -1,3 +1,8 @@
+/**
+ * @module MonthlyTrendChart
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
@@ -5,6 +10,7 @@ import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Le
 import { formatCurrency } from "@/lib/format";
 import { formatShortCurrency } from "./helpers";
 import { MonthlySummary } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MonthlyTrendChartProps {
   data: MonthlySummary | undefined;
@@ -12,17 +18,18 @@ interface MonthlyTrendChartProps {
 }
 
 export function MonthlyTrendChart({ data, isLoading }: MonthlyTrendChartProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-monthly-trend">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
-          Daromad va xarajatlar dinamikasi
+          {t("daromadVaXarajatlarDinamikasi")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full rounded-lg" />
         ) : (
           <div className="glass-chart">
             <ResponsiveContainer width="100%" height={300}>

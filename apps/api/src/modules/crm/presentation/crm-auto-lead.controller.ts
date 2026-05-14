@@ -1,3 +1,8 @@
+/**
+ * @module crm-auto-lead.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired, assertAnyRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
@@ -47,16 +52,7 @@ export class CrmAutoLeadController {
   @Post('churn-rescue/:entityType/:id')
   @UsePipes(new ZodValidationPipe(ChurnRescueDtoSchema))
   async churnRescue(@Param('entityType') entityType: string, @Param('id') id: string, @Body() _body: ChurnRescueDto) {
-    return {
-      entity_type: entityType,
-      entity_id: safeInt(id, 0),
-      risk_level: 'medium',
-      rescue_actions: [
-        { action: 'personal_call', priority: 1 },
-        { action: 'discount_offer', priority: 2 },
-        { action: 'executive_outreach', priority: 3 },
-      ],
-    };
+    return unwrapOrThrow(await this.svc.churnRescue(entityType, safeInt(id, 0)));
   }
 
   @Get('auto-lead/sources')

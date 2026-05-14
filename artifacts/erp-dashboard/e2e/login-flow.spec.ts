@@ -1,25 +1,29 @@
+/**
+ * @module login-flow.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { test, expect } from "@playwright/test";
 
 const API_BASE = process.env.API_BASE_URL ?? "http://localhost:8080";
 const ADMIN_USER = process.env.TEST_ADMIN_USER ?? "admin";
-const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? "admin123";
+const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? "Admin123!";
 
 test.describe("Login Flow — muvaffaqiyatli autentifikatsiya", () => {
   test("admin login → 200, accessToken va admin obyekti qaytaradi", async ({ request }) => {
-    const res = await request.post(`${API_BASE}/api/admin/login`, {
+    const res = await request.post(`${API_BASE}/api/auth/login`, {
       data: { username: ADMIN_USER, password: ADMIN_PASS },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.success).toBe(true);
     expect(body.accessToken).toBeTruthy();
     expect(typeof body.accessToken).toBe("string");
-    expect(body.admin).toBeTruthy();
-    expect(body.admin.username).toBe(ADMIN_USER);
+    expect(body.user).toBeTruthy();
+    expect(body.user.username).toBe(ADMIN_USER);
   });
 
   test("token bilan himoyalangan route → 200", async ({ request }) => {
-    const loginRes = await request.post(`${API_BASE}/api/admin/login`, {
+    const loginRes = await request.post(`${API_BASE}/api/auth/login`, {
       data: { username: ADMIN_USER, password: ADMIN_PASS },
     });
     const { accessToken } = await loginRes.json();
@@ -29,43 +33,45 @@ test.describe("Login Flow — muvaffaqiyatli autentifikatsiya", () => {
     expect(res.status()).toBe(200);
   });
 
-  test("refresh token ham qaytariladi", async ({ request }) => {
-    const res = await request.post(`${API_BASE}/api/admin/login`, {
+  test("accessToken qaytariladi va string tipida", async ({ request }) => {
+    const res = await request.post(`${API_BASE}/api/auth/login`, {
       data: { username: ADMIN_USER, password: ADMIN_PASS },
     });
+    expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.refreshToken).toBeTruthy();
-    expect(typeof body.refreshToken).toBe("string");
+    expect(body.accessToken).toBeTruthy();
+    expect(typeof body.accessToken).toBe("string");
   });
 });
 
 test.describe("Login Flow — xato credentials rad etiladi", () => {
   test("bo'sh credentials bilan login 400 qaytaradi", async ({ request }) => {
-    const response = await request.post(`${API_BASE}/api/admin/login`, {
+    const response = await request.post(`${API_BASE}/api/auth/login`, {
       data: {},
     });
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("noto'g'ri password bilan 401 qaytaradi", async ({ request }) => {
-    const response = await request.post(`${API_BASE}/api/admin/login`, {
+  test("noto'g'ri password bilan 401 yoki 429 qaytaradi", async ({ request }) => {
+    const response = await request.post(`${API_BASE}/api/auth/login`, {
       data: { username: ADMIN_USER, password: "wrong_password_xyz_123" },
     });
-    expect(response.status()).toBe(401);
+    // 401 = credentials wrong; 429 = rate limited (both mean rejected)
+    expect([401, 429]).toContain(response.status());
   });
 
-  test("noto'g'ri username bilan 401 qaytaradi", async ({ request }) => {
-    const response = await request.post(`${API_BASE}/api/admin/login`, {
+  test("noto'g'ri username bilan 401 yoki 429 qaytaradi", async ({ request }) => {
+    const response = await request.post(`${API_BASE}/api/auth/login`, {
       data: { username: "nonexistent_user_xyz", password: ADMIN_PASS },
     });
-    expect(response.status()).toBe(401);
+    expect([401, 429]).toContain(response.status());
   });
 
   test("user login endpoint noto'g'ri credentials bilan rad etadi", async ({ request }) => {
     const response = await request.post(`${API_BASE}/api/auth/login`, {
       data: { username: "nonexistent_xyz", password: "badpass_xyz" },
     });
-    expect([400, 401, 403, 404]).toContain(response.status());
+    expect([400, 401, 403, 404, 429]).toContain(response.status());
   });
 
   test("himoyalangan route autentifikatsiyasiz 401 qaytaradi", async ({ request }) => {

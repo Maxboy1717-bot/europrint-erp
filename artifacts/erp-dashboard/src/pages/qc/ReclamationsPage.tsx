@@ -1,3 +1,8 @@
+/**
+ * @module ReclamationsPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -5,6 +10,7 @@ import { DedicatedPageShell, KpiCard, Section } from "@/components/DedicatedPage
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
 interface Reclamation {
   id: number;
@@ -20,17 +26,17 @@ interface Reclamation {
 }
 
 const STATUS_CONFIG: Record<Reclamation["status"], { label: string; className: string }> = {
-  new:         { label: "Yangi",        className: "bg-blue-100 text-blue-700" },
-  in_progress: { label: "Jarayonda",    className: "bg-yellow-100 text-yellow-700" },
-  resolved:    { label: "Hal qilingan", className: "bg-emerald-100 text-emerald-700" },
-  rejected:    { label: "Rad etilgan",  className: "bg-rose-100 text-rose-700" },
+  new:         { label: "Yangi",        className: "bg-blue-100 text-[var(--ep-blue)]" },
+  in_progress: { label: "Jarayonda",    className: "bg-yellow-100 text-[var(--ep-yellow)]" },
+  resolved:    { label: "Hal qilingan", className: "bg-emerald-100 text-[var(--ep-green)]" },
+  rejected:    { label: "Rad etilgan",  className: "bg-rose-100 text-[var(--ep-red)]" },
 };
 
 const PRIORITY_CONFIG: Record<Reclamation["priority"], string> = {
   low:      "bg-slate-100 text-slate-700",
-  medium:   "bg-blue-100 text-blue-700",
-  high:     "bg-orange-100 text-orange-700",
-  critical: "bg-rose-600 text-white",
+  medium:   "bg-blue-100 text-[var(--ep-blue)]",
+  high:     "bg-orange-100 text-[var(--ep-primary)]",
+  critical: "bg-[var(--ep-red)] text-white",
 };
 
 const SLA_RESOLUTION_DAYS = 7;
@@ -65,7 +71,7 @@ export default function ReclamationsPage() {
 
       <Section title={t('reclamations.list', "Reklamatsiyalar ro'yxati")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}</div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('reclamations.empty', "Reklamatsiya yo'q")}</p>
         ) : (
@@ -84,13 +90,13 @@ export default function ReclamationsPage() {
                     <div className="flex gap-1">
                       <Badge className={pCfg}>{r.priority}</Badge>
                       <Badge className={sCfg.className}>{sCfg.label}</Badge>
-                      {overdue ? <Badge variant="destructive">SLA</Badge> : null}
+                      {overdue ? <EPStatusPill tone="danger">SLA</EPStatusPill> : null}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
-                    <span>Mahsulot: <strong>{r.productName ?? '—'}</strong></span>
-                    <span>Kategoriya: <strong>{r.category}</strong></span>
-                    <span>Qabul: <strong>{new Date(r.receivedAt).toLocaleDateString()}</strong></span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
+                    <span>{t("mahsulot")}<strong>{r.productName ?? '—'}</strong></span>
+                    <span>{t("kategoriya1")}<strong>{r.category}</strong></span>
+                    <span>{t("qabul")}<strong>{new Date(r.receivedAt).toLocaleDateString()}</strong></span>
                   </div>
                 </div>
               );

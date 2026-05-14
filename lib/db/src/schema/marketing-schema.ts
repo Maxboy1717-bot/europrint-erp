@@ -1,5 +1,11 @@
+/**
+ * @module marketing-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, numeric, unique, date } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, numeric, unique, date, check, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { goals } from "./core-schema";
@@ -24,7 +30,12 @@ export const marketingCampaigns = pgTable("marketing_campaigns", {
   updatedAt: timestamp("updated_at").defaultNow(),
   createdBy: varchar("created_by", { length: 36 }),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("marketing_campaigns_status_chk", sql`${t.status} IN ('draft','active','paused','completed')`),
+  check("marketing_campaigns_type_chk", sql`${t.type} IS NULL OR ${t.type} IN ('digital','print','social','email','event')`),
+  check("marketing_campaigns_budget_chk", sql`${t.budget} IS NULL OR ${t.budget} >= 0`),
+  check("marketing_campaigns_spent_chk", sql`${t.spentAmount} IS NULL OR ${t.spentAmount} >= 0`),
+]);
 
 
 export const insertMarketingCampaignSchema = createInsertSchema(marketingCampaigns, {
@@ -52,7 +63,7 @@ export const marketingContent = pgTable("marketing_content", {
   type: varchar("type", { length: 50 }).default("post"), // post, story, article, banner, video
   platform: varchar("platform", { length: 100 }), // telegram, instagram, facebook, website
   status: varchar("status", { length: 50 }).default("draft"), // draft, scheduled, published, archived
-  campaignId: varchar("campaign_id", { length: 36 }).references(() => marketingCampaigns.id),
+  campaignId: varchar("campaign_id", { length: 36 }).references(() => marketingCampaigns.id, { onDelete: "set null" }),
   scheduledAt: timestamp("scheduled_at"),
   publishedAt: timestamp("published_at"),
   imageUrl: text("image_url"),
@@ -61,7 +72,10 @@ export const marketingContent = pgTable("marketing_content", {
   updatedAt: timestamp("updated_at").defaultNow(),
   createdBy: varchar("created_by", { length: 36 }),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("marketing_content_status_chk", sql`${t.status} IN ('draft','scheduled','published','archived')`),
+  check("marketing_content_type_chk", sql`${t.type} IS NULL OR ${t.type} IN ('post','story','article','banner','video')`),
+]);
 
 
 export const insertMarketingContentSchema = createInsertSchema(marketingContent, {
@@ -79,7 +93,7 @@ export type InsertMarketingContent = z.infer<typeof insertMarketingContentSchema
 export const marketingAds = pgTable("marketing_ads", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
-  campaignId: varchar("campaign_id", { length: 36 }).references(() => marketingCampaigns.id),
+  campaignId: varchar("campaign_id", { length: 36 }).references(() => marketingCampaigns.id, { onDelete: "set null" }),
   platform: varchar("platform", { length: 100 }).notNull(), // facebook, instagram, google, telegram
   type: varchar("type", { length: 50 }).default("image"), // image, video, carousel, text
   status: varchar("status", { length: 50 }).default("draft"), // draft, active, paused, completed
@@ -96,7 +110,14 @@ export const marketingAds = pgTable("marketing_ads", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("marketing_ads_status_chk", sql`${t.status} IN ('draft','active','paused','completed')`),
+  check("marketing_ads_budget_chk", sql`${t.budget} IS NULL OR ${t.budget} >= 0`),
+  check("marketing_ads_spent_chk", sql`${t.spentAmount} IS NULL OR ${t.spentAmount} >= 0`),
+  check("marketing_ads_impressions_chk", sql`${t.impressions} IS NULL OR ${t.impressions} >= 0`),
+  check("marketing_ads_clicks_chk", sql`${t.clicks} IS NULL OR ${t.clicks} >= 0`),
+  check("marketing_ads_conversions_chk", sql`${t.conversions} IS NULL OR ${t.conversions} >= 0`),
+]);
 
 
 export const insertMarketingAdSchema = createInsertSchema(marketingAds, {
@@ -133,7 +154,10 @@ export const marketingLeads = pgTable("marketing_leads", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("marketing_leads_status_chk", sql`${t.status} IN ('new','qualified','contacted','converted','lost')`),
+  check("marketing_leads_score_chk", sql`${t.score} IS NULL OR ${t.score} >= 0`),
+]);
 
 
 export const insertMarketingLeadSchema = createInsertSchema(marketingLeads, {
@@ -162,7 +186,9 @@ export const contentCalendar = pgTable("content_calendar", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("content_calendar_status_chk", sql`${t.status} IN ('planned','in_progress','published','cancelled')`),
+]);
 
 
 export const insertContentCalendarSchema = createInsertSchema(contentCalendar, {
@@ -201,7 +227,12 @@ export const exhibitions = pgTable("exhibitions", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("exhibitions_status_chk", sql`${t.status} IN ('planned','ongoing','completed','cancelled')`),
+  check("exhibitions_budget_chk", sql`${t.budget} IS NULL OR ${t.budget} >= 0`),
+  check("exhibitions_spent_chk", sql`${t.spentAmount} IS NULL OR ${t.spentAmount} >= 0`),
+  check("exhibitions_deal_value_chk", sql`${t.dealValue} IS NULL OR ${t.dealValue} >= 0`),
+]);
 
 
 export const insertExhibitionSchema = createInsertSchema(exhibitions, {
@@ -266,7 +297,11 @@ export const prActivities = pgTable("pr_activities", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("pr_activities_status_chk", sql`${t.status} IN ('planned','in_progress','published','cancelled')`),
+  check("pr_activities_sentiment_chk", sql`${t.sentiment} IS NULL OR ${t.sentiment} IN ('positive','neutral','negative')`),
+  check("pr_activities_reach_chk", sql`${t.reach} IS NULL OR ${t.reach} >= 0`),
+]);
 
 
 export const insertPrActivitySchema = createInsertSchema(prActivities, {
@@ -293,7 +328,11 @@ export const marketingBudgetItems = pgTable("marketing_budget_items", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("marketing_budget_items_month_chk", sql`${t.month} IS NULL OR (${t.month} >= 1 AND ${t.month} <= 12)`),
+  check("marketing_budget_items_planned_chk", sql`${t.plannedAmount} IS NULL OR ${t.plannedAmount} >= 0`),
+  check("marketing_budget_items_actual_chk", sql`${t.actualAmount} IS NULL OR ${t.actualAmount} >= 0`),
+]);
 
 
 export const insertMarketingBudgetItemSchema = createInsertSchema(marketingBudgetItems, {
@@ -332,7 +371,11 @@ export const socialConversations = pgTable("social_conversations", {
   tags: jsonb("tags").default([]),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("social_conversations_status_chk", sql`${t.status} IN ('open','closed','pending')`),
+  check("social_conversations_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("social_conversations_unread_chk", sql`${t.unreadCount} IS NULL OR ${t.unreadCount} >= 0`),
+]);
 
 
 export const insertSocialConversationSchema = createInsertSchema(socialConversations, {
@@ -360,7 +403,9 @@ export const socialMessages = pgTable("social_messages", {
   sentAt: timestamp("sent_at").defaultNow(),
   deliveredAt: timestamp("delivered_at"),
   readAt: timestamp("read_at"),
-});
+}, (t) => [
+  check("social_messages_direction_chk", sql`${t.direction} IN ('incoming','outgoing')`),
+]);
 
 
 export const insertSocialMessageSchema = createInsertSchema(socialMessages, {
@@ -420,7 +465,9 @@ export const contentPosts = pgTable("content_posts", {
   engagementStats: jsonb("engagement_stats").default({}),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("content_posts_status_chk", sql`${t.status} IN ('draft','scheduled','published','archived')`),
+]);
 
 
 export const insertContentPostSchema = createInsertSchema(contentPosts, {
@@ -476,7 +523,11 @@ export const marketingBudgetLines = pgTable("marketing_budget_lines", {
   description: varchar("description", { length: 500 }),
   approvedBy: varchar("approved_by", { length: 36 }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  check("marketing_budget_lines_month_chk", sql`${t.month} IS NULL OR (${t.month} >= 1 AND ${t.month} <= 12)`),
+  check("marketing_budget_lines_planned_chk", sql`${t.plannedAmount} IS NULL OR ${t.plannedAmount} >= 0`),
+  check("marketing_budget_lines_actual_chk", sql`${t.actualAmount} IS NULL OR ${t.actualAmount} >= 0`),
+]);
 
 
 export const insertMarketingBudgetLineSchema = createInsertSchema(marketingBudgetLines, {
@@ -522,7 +573,9 @@ export const npsResponses = pgTable("nps_responses", {
   score: integer("score").notNull(), // 1-10
   comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  check("nps_responses_score_chk", sql`${t.score} >= 1 AND ${t.score} <= 10`),
+]);
 
 export const insertNpsResponseSchema = createInsertSchema(npsResponses, {
   score: z.number().int().min(1).max(10),
@@ -554,7 +607,10 @@ export const marketingAbTests = pgTable("marketing_ab_tests", {
   createdBy: varchar("created_by", { length: 36 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  check("marketing_ab_tests_status_chk", sql`${t.status} IN ('running','paused','completed')`),
+  check("marketing_ab_tests_winner_chk", sql`${t.winner} IS NULL OR ${t.winner} IN ('A','B')`),
+]);
 
 export const insertMarketingAbTestSchema = createInsertSchema(marketingAbTests, {
   name: z.string().min(2),
@@ -577,7 +633,10 @@ export const marketingLeadContacts = pgTable("marketing_lead_contacts", {
   contactedAt: timestamp("contacted_at").defaultNow(),
   nextFollowUp: timestamp("next_follow_up"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  check("marketing_lead_contacts_type_chk", sql`${t.type} IN ('call','meeting','email','whatsapp','telegram')`),
+  check("marketing_lead_contacts_outcome_chk", sql`${t.outcome} IS NULL OR ${t.outcome} IN ('interested','not_interested','callback','no_answer','converted')`),
+]);
 
 export const insertMarketingLeadContactSchema = createInsertSchema(marketingLeadContacts, {
   type: z.enum(["call", "meeting", "email", "whatsapp", "telegram"]),

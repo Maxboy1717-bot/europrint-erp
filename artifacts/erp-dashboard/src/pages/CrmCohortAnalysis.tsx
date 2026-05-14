@@ -1,11 +1,16 @@
+/**
+ * @module CrmCohortAnalysis
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, TrendingDown, Info } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
+import { Users, TrendingDown, Info } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { apiRequest } from "@/lib/queryClient";
+import { EPErrorState, EPLoader } from "@/components/ep";
 
 type CohortMode = "count" | "revenue";
 
@@ -22,7 +27,7 @@ interface CohortMatrix {
 }
 
 function retentionColor(pct: number): string {
-  if (pct >= 80) return "bg-emerald-600 text-white";
+  if (pct >= 80) return "bg-[var(--ep-green)] text-white";
   if (pct >= 60) return "bg-emerald-400 text-white";
   if (pct >= 40) return "bg-yellow-400 text-gray-900";
   if (pct >= 20) return "bg-orange-400 text-white";
@@ -44,7 +49,7 @@ function CohortHeatmap({ data, t }: { data: CohortMatrix; t: (k: string) => stri
       <table className="text-xs border-separate border-spacing-0.5 min-w-max">
         <thead>
           <tr>
-            <th className="text-left px-2 py-1 text-muted-foreground font-medium">Cohort</th>
+            <th className="text-left px-2 py-1 text-muted-foreground font-medium">{t("cohort")}</th>
             <th className="px-2 py-1 text-muted-foreground font-medium">
               {data.mode === "revenue" ? t('baseRevenue') : t('cohortSize')}
             </th>
@@ -115,8 +120,8 @@ export default function CrmCohortAnalysis() {
     retry: 1,
   });
 
-  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
-  if (isError)   return <ErrorState onRetry={refetch} />;
+  if (isLoading) return <div className="flex items-center justify-center h-64"><EPLoader className="w-8 h-8 text-[var(--ep-blue)]" /></div>;
+  if (isError)   return <EPErrorState onRetry={refetch} />;
 
   const rowsWithM1  = data?.rows?.filter(r => r.retentionByPeriod[1] !== undefined) ?? [];
   const avgRetention = rowsWithM1.length
@@ -126,7 +131,7 @@ export default function CrmCohortAnalysis() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <Users className="w-7 h-7 text-blue-600" />
+        <Users className="w-7 h-7 text-[var(--ep-blue)]" />
         <div>
           <h1 className="text-2xl font-bold">{t('cohortAnalysis')}</h1>
           <p className="text-muted-foreground text-sm">{t('cohortDesc')}</p>
@@ -138,13 +143,13 @@ export default function CrmCohortAnalysis() {
         <div className="flex rounded-md border overflow-hidden">
           <button
             onClick={() => setMode("count")}
-            className={`px-4 py-1.5 text-sm font-medium transition-colors ${mode === "count" ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+            className={`px-4 py-1.5 text-sm font-medium transition-colors ${mode === "count" ? "bg-[var(--ep-blue)] text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
           >
             {t('countRetention')}
           </button>
           <button
             onClick={() => setMode("revenue")}
-            className={`px-4 py-1.5 text-sm font-medium transition-colors ${mode === "revenue" ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+            className={`px-4 py-1.5 text-sm font-medium transition-colors ${mode === "revenue" ? "bg-[var(--ep-blue)] text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
           >
             {t('revenueRetention')}
           </button>

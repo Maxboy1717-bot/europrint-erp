@@ -1,3 +1,8 @@
+/**
+ * @module form
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"

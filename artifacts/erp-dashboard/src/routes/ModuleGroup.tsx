@@ -1,3 +1,8 @@
+/**
+ * @module ModuleGroup
+ * @description Frontend route definition.
+ */
+
 import { Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { PageLoader } from "@/components/PageLoader";

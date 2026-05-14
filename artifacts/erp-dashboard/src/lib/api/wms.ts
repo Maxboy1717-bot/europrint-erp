@@ -1,3 +1,8 @@
+/**
+ * @module wms
+ * @description Frontend utility / library module.
+ */
+
 import { apiRequest } from "@/lib/queryClient";
 
 export const wmsApi = {
@@ -30,9 +35,9 @@ export const wmsApi = {
     apiRequest("PATCH", `/api/wms/warehouses/${id}/toggle-active`),
 
   createWarehouseCompat: (data: Record<string, unknown>) =>
-    apiRequest("POST", "/api/warehouses", data),
+    apiRequest("POST", "/api/warehouse/warehouses", data),
   updateWarehouseCompat: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("PATCH", `/api/warehouses/${id}`, data),
+    apiRequest("PATCH", `/api/warehouse/warehouses/${id}`, data),
   notifyVacancies: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/warehouses/notify-vacancies", data),
 

@@ -1,3 +1,8 @@
+/**
+ * @module ProductionRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
 const ERPProduction = lazy(() => import("@/pages/ERPProduction"));

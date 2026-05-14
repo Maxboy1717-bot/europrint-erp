@@ -1,3 +1,8 @@
+/**
+ * @module website-lead-events.payload
+ * @description Source module. See exports for details.
+ */
+
 import { z } from 'zod';
 import { LEAD_SUB_SOURCE } from '@common/constants/lead-sources.constants';
 

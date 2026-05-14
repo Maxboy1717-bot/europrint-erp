@@ -1,3 +1,8 @@
+/**
+ * @module pos-socket
+ * @description Source module. See exports for details.
+ */
+
 import { io, Socket } from "socket.io-client";
 
 let socket: Socket | null = null;

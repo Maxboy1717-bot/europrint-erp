@@ -1,3 +1,8 @@
+/**
+ * @module MessageBubble
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from "react";
 import {
   Check, CheckCheck, Pencil, Trash2, Paperclip,
@@ -13,6 +18,9 @@ import { MessageReactions, EmojiPicker } from "./MessageReactions";
 import { MessagePoll } from "./MessagePoll";
 import { ImageLightbox } from "./ImageLightbox";
 import { CreateTaskModal } from "./CreateTaskModal";
+import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
+import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   msg: ChatMessage;
@@ -35,6 +43,7 @@ export function MessageBubble({
   msg, isMe, showAvatar, showName, isRead, canPin,
   onEdit, onDelete, onReply, onReact, onThread, onForward, onPin, onScrollTo,
 }: Props) {
+  const { t } = useTranslation("common");
   const [hover, setHover] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -43,10 +52,7 @@ export function MessageBubble({
 
   const handleStar = useCallback(async () => {
     try {
-      const res = await fetch(`/api/chat/messages/${msg.id}/star`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`);
       if (res.ok) {
         const data = await res.json() as { starred: boolean };
         setIsStarred(data.starred);
@@ -63,11 +69,11 @@ export function MessageBubble({
 
   if (msg.isDeleted) {
     return (
-      <div className={cn("flex gap-2 mb-1", isMe ? "flex-row-reverse" : "flex-row")}>
-        <div className={cn("w-8 flex-shrink-0", isMe && "hidden")} />
+      <div className={cn("flex gap-2 mb-1 px-1", isMe ? "flex-row-reverse" : "flex-row")}>
+        <div className={cn("w-[34px] flex-shrink-0", isMe && "hidden")} />
         <div className={cn("flex flex-col", isMe && "items-end")}>
-          <span className="text-xs italic text-muted-foreground/60 px-3 py-1.5 bg-muted/30 rounded-2xl border border-border/30">
-            Xabar o'chirildi
+          <span className="text-[13px] italic text-[var(--tg-text-secondary)]/60 px-3 py-1.5 bg-[var(--tg-action-bar-bg)]/50 rounded-lg">
+            {t("xabarOchirildi")}
           </span>
         </div>
       </div>
@@ -78,6 +84,10 @@ export function MessageBubble({
   const isImage = msg.messageType === "image";
   const isFile = msg.messageType === "file";
   const isPoll = msg.messageType === "poll";
+  // Detect voice message: explicit type, audio mime, or voice- filename
+  const isVoice = msg.messageType === "voice"
+    || (!!msg.fileType && msg.fileType.startsWith("audio/"))
+    || (!!msg.fileName && msg.fileName.startsWith("voice-"));
 
   return (
     <>
@@ -90,29 +100,23 @@ export function MessageBubble({
       )}
 
       <div
-        className={cn("flex gap-2 mb-0.5 group relative", isMe ? "flex-row-reverse" : "flex-row")}
+        className={cn("flex gap-1.5 mb-[2px] group relative px-1", isMe ? "flex-row-reverse" : "flex-row")}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => { setHover(false); setShowEmojiPicker(false); }}
       >
         {/* Avatar */}
-        <div className="w-8 flex-shrink-0 flex items-end">
+        <div className="w-[34px] flex-shrink-0 flex items-end">
           {showAvatar && !isMe ? (
-            <ChatAvatar name={msg.senderName || "?"} url={msg.senderAvatar} size={30} />
+            <ChatAvatar name={msg.senderName || "?"} url={msg.senderAvatar} size={34} />
           ) : null}
         </div>
 
-        <div className={cn("max-w-[72%] flex flex-col", isMe && "items-end")}>
-          {showName && !isMe && (
-            <span className="text-[11px] text-muted-foreground ml-1 mb-0.5 font-medium">
-              {msg.senderName}
-            </span>
-          )}
-
+        <div className={cn("max-w-[70%] flex flex-col", isMe && "items-end")}>
           {/* Pinned badge */}
           {msg.isPinned && (
-            <div className="flex items-center gap-0.5 mb-0.5 px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full w-fit">
-              <Pin className="w-2.5 h-2.5 text-amber-600" />
-              <span className="text-[9px] text-amber-600">Pinlangan</span>
+            <div className="flex items-center gap-1 mb-0.5 px-2 py-0.5 bg-[var(--tg-action-bar-bg)]/80 rounded-full w-fit shadow-sm">
+              <Pin className="w-3 h-3 text-[var(--tg-sidebar-active)] rotate-45" />
+              <span className="text-[10px] text-[var(--tg-sidebar-active)] font-medium">{t("pinlangan")}</span>
             </div>
           )}
 
@@ -121,31 +125,30 @@ export function MessageBubble({
             {hover && !msg.isDeleted && (
               <div className={cn(
                 "flex gap-0.5 mb-1 opacity-0 group-hover:opacity-100 transition-opacity z-10",
-                isMe ? "order-first mr-1" : "order-last ml-1"
+                "bg-[var(--tg-action-bar-bg)] rounded-lg shadow-md border border-[var(--tg-border)] p-0.5",
+                isMe ? "order-first mr-0.5" : "order-last ml-0.5"
               )}>
-                {/* Task button — for text messages */}
                 {msg.messageType === "text" && (
                   <button
                     onClick={() => setTaskModalOpen(true)}
-                    className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                    title="Task yaratish"
+                    className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
+                    title={t("taskYaratish")}
                   >
-                    <CheckSquare className="w-3.5 h-3.5" />
+                    <CheckSquare className="w-[15px] h-[15px]" />
                   </button>
                 )}
 
-                {/* Emoji reaction */}
                 {onReact && (
                   <div className="relative">
                     <button
                       onClick={() => setShowEmojiPicker((p) => !p)}
-                      className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-                      title="Reaksiya"
+                      className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
+                      title={t("reaksiya")}
                     >
-                      <Smile className="w-3.5 h-3.5" />
+                      <Smile className="w-[15px] h-[15px]" />
                     </button>
                     {showEmojiPicker && (
-                      <div className={cn("absolute", isMe ? "right-0" : "left-0")}>
+                      <div className={cn("absolute bottom-full mb-1", isMe ? "right-0" : "left-0")}>
                         <EmojiPicker
                           messageId={msg.id}
                           onReact={handleReact}
@@ -156,107 +159,107 @@ export function MessageBubble({
                   </div>
                 )}
 
-                {/* Reply */}
                 {onReply && (
                   <button
                     onClick={() => onReply(msg)}
-                    className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Javob berish"
+                    className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
+                    title={t("javob")}
                   >
-                    <CornerUpRight className="w-3.5 h-3.5" />
+                    <CornerUpRight className="w-[15px] h-[15px]" />
                   </button>
                 )}
 
-                {/* Thread */}
                 {onThread && (
                   <button
                     onClick={() => onThread(msg)}
-                    className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Thread ochish"
+                    className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
+                    title={t("thread")}
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
+                    <MessageSquare className="w-[15px] h-[15px]" />
                   </button>
                 )}
 
-                {/* Forward */}
                 {onForward && (
                   <button
                     onClick={() => onForward(msg)}
-                    className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Yuborish"
+                    className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
+                    title={t("submitBtn")}
                   >
-                    <CornerDownRight className="w-3.5 h-3.5" />
+                    <CornerDownRight className="w-[15px] h-[15px]" />
                   </button>
                 )}
 
-                {/* Pin (owner/admin only) */}
                 {canPin && onPin && (
                   <button
                     onClick={() => onPin(msg)}
                     className={cn(
-                      "p-1 rounded hover:bg-muted/80 transition-colors",
-                      msg.isPinned ? "text-amber-500" : "text-muted-foreground hover:text-foreground"
+                      "p-1.5 rounded-md hover:bg-[var(--tg-hover)] transition-colors",
+                      msg.isPinned ? "text-[var(--tg-sidebar-active)]" : "text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)]"
                     )}
-                    title={msg.isPinned ? "Pinni olib tashlash" : "Pin qilish"}
+                    title={msg.isPinned ? "Pinni olib tashlash" : "Pin"}
                   >
-                    <Pin className="w-3.5 h-3.5" />
+                    <Pin className="w-[15px] h-[15px]" />
                   </button>
                 )}
 
-                {/* Edit (own messages) */}
                 {isMe && onEdit && msg.messageType === "text" && (
                   <button
                     onClick={() => onEdit(msg)}
-                    className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Tahrirlash"
+                    className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
+                    title={t("edit")}
                   >
-                    <Pencil className="w-3 h-3" />
+                    <Pencil className="w-[14px] h-[14px]" />
                   </button>
                 )}
 
-                {/* Star / Bookmark */}
                 <button
                   onClick={handleStar}
                   className={cn(
-                    "p-1 rounded hover:bg-muted/80 transition-colors",
-                    isStarred ? "text-yellow-500" : "text-muted-foreground hover:text-foreground"
+                    "p-1.5 rounded-md hover:bg-[var(--tg-hover)] transition-colors",
+                    isStarred ? "text-[var(--ep-yellow)]" : "text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)]"
                   )}
-                  title={isStarred ? "Yulduzchani olib tashlash" : "Yulduzcha qo'shish"}
+                  title={isStarred ? "Yulduzchani olib tashlash" : "Yulduzcha"}
                 >
-                  <Star className={cn("w-3.5 h-3.5", isStarred && "fill-yellow-500")} />
+                  <Star className={cn("w-[15px] h-[15px]", isStarred && "fill-yellow-500")} />
                 </button>
 
-                {/* Delete (own messages) */}
                 {isMe && onDelete && (
                   <button
                     onClick={() => onDelete(msg)}
-                    className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                    title="O'chirish"
+                    className="p-1.5 rounded-md hover:bg-red-50 text-[var(--tg-text-secondary)] hover:text-red-500 transition-colors"
+                    title={t("delete")}
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-[14px] h-[14px]" />
                   </button>
                 )}
               </div>
             )}
 
-            {/* Bubble */}
+            {/* ── Telegram Bubble ── */}
             <div
               className={cn(
-                "px-3 py-2 rounded-2xl text-sm leading-relaxed break-words",
+                "px-[10px] pt-[7px] pb-[6px] text-[14.5px] leading-[1.4] break-words relative",
                 isMe
-                  ? "bg-primary text-primary-foreground rounded-tr-sm shadow-sm"
-                  : "bg-card border border-border/60 text-foreground rounded-tl-sm shadow-sm",
+                  ? "bg-[var(--tg-bubble-out)] text-[var(--tg-text-primary)] rounded-[18px] rounded-tr-[5px] shadow-[0_1px_2px_rgba(0,0,0,0.12),0_1px_0_rgba(0,0,0,0.04)]"
+                  : "bg-[var(--tg-bubble-in)] text-[var(--tg-text-primary)] rounded-[18px] rounded-tl-[5px] shadow-[0_1px_2px_rgba(0,0,0,0.1),0_1px_0_rgba(0,0,0,0.04)]",
                 "max-w-full"
               )}
             >
+              {/* Sender name */}
+              {showName && !isMe && (
+                <p className="text-[13px] font-semibold text-[var(--tg-sidebar-active)] mb-[2px]">
+                  {msg.senderName}
+                </p>
+              )}
+
               {/* Forward banner */}
               {msg.forwardFrom && (
                 <div className={cn(
-                  "flex items-center gap-1 mb-1 text-[10px] opacity-70 pb-1 border-b",
-                  isMe ? "border-primary-foreground/20" : "border-border/40"
+                  "flex items-center gap-1 mb-1 text-[11px] pb-1 border-b",
+                  isMe ? "text-[var(--tg-time-out-color)] border-[var(--tg-bubble-out-darker)]" : "text-[var(--tg-text-secondary)] border-[var(--tg-border)]"
                 )}>
                   <CornerDownRight className="w-3 h-3 flex-shrink-0" />
-                  <span>Yuborildi: <strong>{msg.forwardFrom.senderName}</strong></span>
+                  <span>{t("yuborildi")}<strong>{msg.forwardFrom.senderName}</strong></span>
                 </div>
               )}
 
@@ -265,20 +268,19 @@ export function MessageBubble({
                 <button
                   onClick={() => msg.replyToId && onScrollTo?.(msg.replyToId)}
                   className={cn(
-                    "flex flex-col gap-0 mb-1.5 pl-2 border-l-2 text-left w-full",
-                    isMe ? "border-primary-foreground/50" : "border-primary/50"
+                    "flex flex-col gap-0 mb-[6px] pl-2 border-l-2 text-left w-full rounded-r-md py-1",
+                    isMe
+                      ? "border-[#4fae4e] bg-[var(--tg-bubble-out-darker)]/40"
+                      : "border-[var(--tg-sidebar-active)] bg-[var(--tg-sidebar-active)]/5"
                   )}
                 >
                   <span className={cn(
-                    "text-[10px] font-semibold",
-                    isMe ? "text-primary-foreground/70" : "text-primary"
+                    "text-[12px] font-semibold",
+                    isMe ? "text-[#4fae4e]" : "text-[var(--tg-sidebar-active)]"
                   )}>
                     {msg.replyToMessage.senderName}
                   </span>
-                  <span className={cn(
-                    "text-[10px] truncate",
-                    isMe ? "text-primary-foreground/60" : "text-muted-foreground"
-                  )}>
+                  <span className="text-[12px] text-[var(--tg-text-secondary)] truncate">
                     {msg.replyToMessage.content || "[media]"}
                   </span>
                 </button>
@@ -289,75 +291,92 @@ export function MessageBubble({
                 <MessagePoll messageId={msg.id} poll={msg.poll} isMe={isMe} />
               ) : (
                 <>
-                  {/* Text content */}
-                  {msg.content && !isImage && !isFile && (
-                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  {/* Text content with inline time */}
+                  {msg.content && !isImage && !isFile && !isVoice && (
+                    <p className="whitespace-pre-wrap break-words">
+                      {msg.content}
+                      {/* Invisible spacer for time */}
+                      <span className={cn(
+                        "inline-block w-[70px] h-0",
+                        isMe && "w-[90px]"
+                      )} />
+                    </p>
                   )}
 
                   {/* Image */}
                   {isImage && msg.fileUrl && (
                     <button
-                      className="block w-full"
-                      onClick={() => setLightboxSrc(msg.fileUrl!)}
+                      className="block w-full -mx-[9px] -mt-[6px] -mb-[5px]"
+                      onClick={() => setLightboxSrc(msg.fileUrl ?? '')}
                     >
                       <img
                         src={msg.fileUrl}
                         alt={msg.fileName || "Rasm"}
-                        className="max-w-full max-h-64 rounded-xl object-cover hover:opacity-95 transition-opacity"
+                        className="max-w-full max-h-[320px] rounded-[18px] object-cover hover:opacity-95 transition-opacity"
                         loading="lazy"
                       />
-                      {msg.fileName && (
-                        <p className={cn("text-[10px] mt-1 text-left",
-                          isMe ? "text-primary-foreground/60" : "text-muted-foreground"
-                        )}>{msg.fileName}</p>
-                      )}
                     </button>
                   )}
 
-                  {/* File */}
-                  {isFile && msg.fileUrl && (
+                  {/* Voice message — inline player */}
+                  {isVoice && msg.fileUrl && (
+                    <VoiceMessagePlayer src={msg.fileUrl} isMe={isMe} />
+                  )}
+
+                  {/* File (non-voice) */}
+                  {isFile && !isVoice && msg.fileUrl && (
                     <a
                       href={msg.fileUrl}
                       target="_blank"
                       rel="noreferrer"
                       className={cn(
                         "flex items-center gap-2 p-2 rounded-xl transition-colors",
-                        isMe ? "bg-primary-foreground/10 hover:bg-primary-foreground/20"
-                             : "bg-muted/50 hover:bg-muted border border-border/40"
+                        isMe
+                          ? "bg-[var(--tg-bubble-out-darker)]/30 hover:bg-[var(--tg-bubble-out-darker)]/50"
+                          : "bg-[var(--tg-bubble-reply-bg)] hover:bg-black/[0.06]"
                       )}
                     >
                       <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
-                        isMe ? "bg-primary-foreground/20" : "bg-primary/10"
+                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                        isMe ? "bg-[#4fae4e]" : "bg-[var(--tg-sidebar-active)]"
                       )}>
-                        <Paperclip className={cn("w-4 h-4", isMe ? "text-primary-foreground" : "text-primary")} />
+                        <Paperclip className="w-5 h-5 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium truncate">{msg.fileName || "Fayl"}</p>
+                        <p className="text-[14px] font-medium truncate">{msg.fileName || "Fayl"}</p>
                         {msg.fileSize && (
-                          <p className={cn("text-[10px]",
-                            isMe ? "text-primary-foreground/60" : "text-muted-foreground"
-                          )}>
+                          <p className="text-[12px] text-[var(--tg-text-secondary)]">
                             {(msg.fileSize / 1024).toFixed(0)} KB
                           </p>
                         )}
                       </div>
-                      <Download className={cn("w-3.5 h-3.5 flex-shrink-0",
-                        isMe ? "text-primary-foreground/60" : "text-muted-foreground"
-                      )} />
+                      <Download className="w-5 h-5 text-[var(--tg-text-secondary)] flex-shrink-0" />
                     </a>
                   )}
                 </>
               )}
 
-              {msg.isEdited && (
-                <span className={cn(
-                  "text-[10px] block mt-0.5",
-                  isMe ? "text-primary-foreground/60" : "text-muted-foreground/60"
-                )}>
-                  (tahrirlangan)
-                </span>
-              )}
+              {/* ── Time + read status (inside bubble, bottom-right) ── */}
+              <span className={cn(
+                "float-right relative -mb-[3px] ml-2 flex items-center gap-0.5",
+                "text-[11px] leading-none",
+                isImage ? "absolute bottom-2 right-2 bg-black/40 px-1.5 py-0.5 rounded text-white" : "",
+                !isImage && isMe && "text-[var(--tg-time-out-color)]",
+                !isImage && !isMe && "text-[var(--tg-time-color)]"
+              )}>
+                {msg.isEdited && (
+                  <span className="mr-0.5">tahr.</span>
+                )}
+                {formatMsgTime(msg.createdAt)}
+                {isMe && (
+                  <span className="ml-0.5 flex-shrink-0">
+                    {isRead
+                      ? <CheckCheck className="w-[14px] h-[14px] text-[#4fae4e]" />
+                      : <Check className="w-[14px] h-[14px]" />
+                    }
+                  </span>
+                )}
+              </span>
             </div>
           </div>
 
@@ -376,27 +395,12 @@ export function MessageBubble({
           {(msg.threadCount ?? 0) > 0 && (
             <button
               onClick={() => onThread?.(msg)}
-              className="flex items-center gap-1 mt-0.5 px-2 py-0.5 text-[10px] text-primary hover:underline"
+              className="flex items-center gap-1 mt-0.5 px-2 py-0.5 text-[12px] text-[var(--tg-sidebar-active)] hover:underline"
             >
-              <MessageSquare className="w-2.5 h-2.5" />
-              {msg.threadCount} thread javob
+              <MessageSquare className="w-3 h-3" />
+              {msg.threadCount} javob
             </button>
           )}
-
-          {/* Time + read status */}
-          <div className={cn("flex items-center gap-1 mt-0.5 px-1", isMe ? "flex-row-reverse" : "flex-row")}>
-            <span className="text-[10px] text-muted-foreground">
-              {formatMsgTime(msg.createdAt)}
-            </span>
-            {isMe && (
-              <span className="text-[10px] text-muted-foreground/70 flex-shrink-0" title={isRead ? "O'qildi" : "Yuborildi"}>
-                {isRead
-                  ? <CheckCheck className="w-3 h-3 text-blue-400" />
-                  : <Check className="w-3 h-3" />
-                }
-              </span>
-            )}
-          </div>
         </div>
       </div>
 

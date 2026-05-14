@@ -1,0 +1,12 @@
+{
+  "returnModal": "Возврат",
+  "givenQty": "Выданное количество",
+  "returnButton": "Вернуть",
+  "title": "Заголовок",
+  "totalValue": "Общая стоимость",
+  "returnedQty": "Возвращённое количество",
+  "balance": "Баланс",
+  "noItems": "Нет элементов",
+  "hrWarning": "Предупреждение HR",
+  "checklist": "Чек-лист"
+}

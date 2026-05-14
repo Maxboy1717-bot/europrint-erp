@@ -1,3 +1,8 @@
+/**
+ * @module OrgNodePortretTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -19,6 +24,7 @@ import { PortretBlokD } from "@/components/hr/portret/PortretBlokD";
 import { PortretBlokE } from "@/components/hr/portret/PortretBlokE";
 import { PortretSection3 } from "@/components/hr/portret/PortretSection3";
 import { PortretSection4 } from "@/components/hr/portret/PortretSection4";
+import { useTranslation } from '@/lib/i18n';
 
 const STEPS: PortretStep[] = [
   { id: "A",   icon: Settings,      title: "Blok A",    full: "Lavozim tahlili"       },
@@ -49,6 +55,7 @@ const DEFAULT_TOOL_REQS: ToolTestReqs = {
 };
 
 export function OrgNodePortretTab({ nodeId, nodeName }: { nodeId: number; nodeName: string }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
@@ -125,12 +132,12 @@ export function OrgNodePortretTab({ nodeId, nodeName }: { nodeId: number; nodeNa
     <div className="flex flex-col gap-4 max-w-2xl">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h3 className="font-semibold text-sm flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" /> Xodim Portreti <Badge variant="outline" className="text-[9px]">{pct}% to'ldirilgan</Badge></h3>
+          <h3 className="font-semibold text-sm flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" /> {t("xodimPortreti")}<Badge variant="outline" className="text-[9px]">{pct}% to'ldirilgan</Badge></h3>
           {data?.portret?.updated_at && <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5"><Clock className="h-2.5 w-2.5" /> Oxirgi saqlash: {new Date(data.portret.updated_at).toLocaleString("uz-UZ")} {data.portret.creator_name && ` · ${data.portret.creator_name}`}</p>}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}><Save className="h-3.5 w-3.5 mr-1.5" /> {saveMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}</Button>
-          <Button size="sm" onClick={() => setHrDialogOpen(true)} className="bg-primary text-on-primary"><Send className="h-3.5 w-3.5 mr-1.5" /> HR ga so'rov</Button>
+          <Button size="sm" onClick={() => setHrDialogOpen(true)} className="bg-primary text-primary-foreground"><Send className="h-3.5 w-3.5 mr-1.5" /> {t("hrGaSorov")}</Button>
         </div>
       </div>
 
@@ -140,7 +147,7 @@ export function OrgNodePortretTab({ nodeId, nodeName }: { nodeId: number; nodeNa
         {(Array.isArray(STEPS) ? STEPS : []).map((s, i) => {
           const Icon = s.icon;
           return (
-            <button key={s.id} onClick={() => setStep(i)} className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 px-0.5 rounded-lg text-xs transition-all border ${step === i ? "bg-primary text-on-primary border-primary" : "bg-surface-container-low border-border/40 text-on-surface-variant hover:border-primary/40"}`}>
+            <button key={s.id} onClick={() => setStep(i)} className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 px-0.5 rounded-lg text-xs transition-all border ${step === i ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border/40 text-muted-foreground hover:border-primary/40"}`}>
               <Icon className="w-3 h-3" /><span className="font-medium leading-tight">{s.title}</span><span className="text-[8px] opacity-60 leading-tight text-center hidden sm:block">{s.full}</span>
             </button>
           );
@@ -156,9 +163,9 @@ export function OrgNodePortretTab({ nodeId, nodeName }: { nodeId: number; nodeNa
       {step === 6 && <PortretSection4 portret={portret} onChange={cp} />}
 
       <div className="flex items-center justify-between border-t pt-3">
-        <Button variant="outline" size="sm" disabled={step === 0} onClick={() => setStep(s => s - 1)}><ChevronLeft className="w-3.5 h-3.5 mr-1" /> Orqaga</Button>
+        <Button variant="outline" size="sm" disabled={step === 0} onClick={() => setStep(s => s - 1)}><ChevronLeft className="w-3.5 h-3.5 mr-1" /> {t("back")}</Button>
         <Button variant="outline" size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}><Save className="w-3.5 h-3.5 mr-1" /> {saveMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}</Button>
-        {step < STEPS.length - 1 ? <Button size="sm" onClick={() => setStep(s => s + 1)}>Keyingi <ChevronRight className="w-3.5 h-3.5 ml-1" /></Button> : <Button size="sm" onClick={() => saveMutation.mutate()} className="bg-green-600 hover:bg-green-700 text-white"><Save className="w-3.5 h-3.5 mr-1" /> Saqlash</Button>}
+        {step < STEPS.length - 1 ? <Button size="sm" onClick={() => setStep(s => s + 1)}>{t("nextBtn")}<ChevronRight className="w-3.5 h-3.5 ml-1" /></Button> : <Button size="sm" onClick={() => saveMutation.mutate()} className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white"><Save className="w-3.5 h-3.5 mr-1" /> {t("Saqlash")}</Button>}
       </div>
 
       <HRRequestsHistory requests={reqData?.requests ?? []} />

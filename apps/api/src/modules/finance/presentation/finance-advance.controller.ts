@@ -1,3 +1,8 @@
+/**
+ * @module finance-advance.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Post, Get, Body, Query, UseGuards, UseInterceptors, Logger, UsePipes } from '@nestjs/common';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';

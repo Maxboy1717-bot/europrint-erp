@@ -1,12 +1,74 @@
+/**
+ * @module pp-crp.service
+ * @description Capacity Requirements Planning. Takes the planned-orders
+ *   from MRP and loads them against each work-center's available capacity
+ *   over a rolling 4-week horizon, returning per-center utilization %.
+ *
+ *   For each work center over the horizon:
+ *     requiredHours  = Σ (operation time × planned qty) for ops routed here
+ *     availableHours = workingDays × hoursPerDay × machines × efficiency
+ *     utilization%   = requiredHours / availableHours × 100
+ *
+ *   Classification:
+ *     ≥ 100%  Overloaded     — schedule will slip without action
+ *     ≥  85%  Bottleneck     — at risk; watch closely
+ *     <  85%  Normal
+ *
+ *   The "bottleneck" tier is computed AFTER overload — meaning bottleneck
+ *   refers to centers near capacity (85-100%), not yet over. The single
+ *   highest-utilisation center is also flagged as THE bottleneck of the
+ *   period (drum of the system, in TOC terms).
+ * @layer Application Service (PP — answers "can we make the plan?")
+ *
+ * WHY 4-WEEK HORIZON
+ *   Matches our planning cycle. MRP's 12-period default is monthly buckets;
+ *   CRP zooms in to the immediate 4 weeks where capacity action is still
+ *   possible (overtime, subcontracting, schedule shifts). Beyond 4 weeks
+ *   the planner has time to rebalance via the MRP run itself.
+ *
+ * WHY 5 WORKING DAYS / WEEK (not 7)
+ *   Our shop runs Mon-Fri at full capacity, Sat half-shift, Sun off. The
+ *   simple 5-day model under-states real availability slightly — useful
+ *   because it makes the planner conservative (Saturday is reserved as
+ *   overflow). If a center is "100% utilized" on M-F, Saturday becomes
+ *   the safety valve.
+ *
+ * WHY 85% WARNING THRESHOLD
+ *   Industry convention (TOC, Goldratt). Above 85% utilization, queue
+ *   times grow non-linearly because of variability — that's where small
+ *   disturbances become big slips. 85-100% is "running hot, watch it";
+ *   100%+ is "definitely will slip".
+ *
+ * WHY EFFICIENCY FACTOR IS BAKED INTO availableHours
+ *   Sometimes called OEE-adjustment. A machine with 90% Availability ×
+ *   95% Performance × 99% Quality = 84.6% OEE → 84.6% of nominal hours
+ *   are actually productive. CRP uses the OEE-adjusted hours as
+ *   "available" so the utilization % matches reality.
+ *
+ *   `efficiency_rate` column stores this composite OEE factor; updated
+ *   nightly from MES feedback.
+ *
+ * WHY THIS IS READ-ONLY (no schedule writes)
+ *   CRP is diagnostic: it *reports* overload. The planner decides whether
+ *   to add overtime, sub-contract, or push out the schedule. Auto-action
+ *   would be too aggressive given the cost of unnecessary overtime.
+ *   When the AI planner agent matures, it MAY propose actions — those
+ *   still need human approval.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum, safeDiv } from '@common/math/math-utils';
 
+/** Above this utilization, the work center cannot finish the plan on time. */
 const CRP_OVERLOAD_THRESHOLD = 100;
+/** Above this, queue times grow non-linearly — bottleneck watch zone. */
 const CRP_WARNING_THRESHOLD = 85;
+/** Match the planner's action horizon — beyond 4 weeks rebalancing handles it. */
 const CRP_HORIZON_WEEKS = 4;
+/** Mon-Fri primary capacity; Sat reserved as overflow (see top-of-file). */
 const CRP_WORKING_DAYS_PER_WEEK = 5;
 const CRP_HORIZON_DAYS = CRP_HORIZON_WEEKS * CRP_WORKING_DAYS_PER_WEEK;
 
@@ -79,7 +141,7 @@ export class PpCrpService {
         AND planned_quantity > 0
         AND (planned_start_date IS NULL
              OR (planned_start_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                 AND planned_start_date::date <= CURRENT_DATE + ${sql.raw(String(CRP_HORIZON_DAYS))}))
+                 AND planned_start_date::date <= CURRENT_DATE + (INTERVAL '1 day' * ${CRP_HORIZON_DAYS})))
       ORDER BY planned_start_date
       LIMIT 200
     `);
@@ -91,7 +153,7 @@ export class PpCrpService {
     ops: Record<string, unknown>[],
     planned: Record<string, unknown>[],
   ): CrpRow[] {
-    return (workCenters ?? []).map((wc) => {
+    return (Array.isArray(workCenters) ? workCenters : []).map((wc) => {
       const wcId = String(wc['id']);
       const machines = safeNum(wc['machine_count'], 1);
       const hoursPerDay = safeNum(wc['hours_per_day'], 8);
@@ -103,7 +165,7 @@ export class PpCrpService {
 
       let requiredMins = 0;
       for (const po of planned) {
-        const routingOps = (ops ?? []).filter(
+        const routingOps = (Array.isArray(ops) ? ops : []).filter(
           (op) => String(op['work_center_id']) === wcId &&
                   String(op['product_id']) === String(po['product_id']),
         );

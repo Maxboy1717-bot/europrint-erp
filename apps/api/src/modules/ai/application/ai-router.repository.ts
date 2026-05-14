@@ -1,3 +1,8 @@
+/**
+ * @module ai-router.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { aiUsageLogsTable } from '../infrastructure/db/ai-usage-logs.table';

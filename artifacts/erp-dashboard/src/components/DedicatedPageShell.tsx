@@ -1,6 +1,12 @@
+/**
+ * @module DedicatedPageShell
+ * @description React UI component.
+ */
+
 import { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
+import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface DedicatedPageShellProps {
   title: string;
@@ -19,9 +25,15 @@ export function DedicatedPageShell({
   actions,
   children,
 }: DedicatedPageShellProps) {
+  const { t } = useTranslation("common");
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <PageHeader title={title} description={description} actions={actions} />
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{title}</b></>}
+        title={title}
+        subtitle={description}
+        actions={actions}
+      />
       {children}
     </div>
   );
@@ -37,10 +49,10 @@ interface KpiCardProps {
 }
 
 const VARIANT_COLORS: Record<NonNullable<KpiCardProps["variant"]>, string> = {
-  default: "text-blue-600",
-  warning: "text-yellow-600",
-  success: "text-emerald-600",
-  danger: "text-rose-600",
+  default: "text-[var(--ep-blue)]",
+  warning: "text-[var(--ep-yellow)]",
+  success: "text-[var(--ep-green)]",
+  danger: "text-[var(--ep-red)]",
 };
 
 export function KpiCard({ label, value, trend, trendValue, icon, variant = "default" }: KpiCardProps) {

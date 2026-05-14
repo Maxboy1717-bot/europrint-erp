@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 import { 
   Package, 
   ScrollText, 
@@ -24,17 +29,17 @@ export const warehouseIcons: Record<string, typeof Package> = {
 };
 
 export const warehouseColors: Record<string, string> = {
-  "RM-MAIN":   "from-blue-500 to-blue-600",
-  "RM-ROLLS":  "from-indigo-500 to-indigo-600",
-  "FG-MAIN":   "from-emerald-500 to-emerald-600",
-  "WIP-MAIN":  "from-cyan-500 to-cyan-600",
-  "SCRAP-MAIN":"from-red-500 to-red-600",
-  "SCRAP":     "from-red-400 to-red-500",
-  "QC-HOLD":   "from-orange-500 to-orange-600",
-  "TOOL-MAIN": "from-yellow-500 to-yellow-600",
-  "MRO-MAIN":  "from-amber-500 to-amber-600",
-  "MRO-STORE": "from-purple-500 to-purple-600",
-  "AUX-MAIN":  "from-purple-400 to-purple-500",
+  "RM-MAIN":   "",
+  "RM-ROLLS":  "",
+  "FG-MAIN":   "",
+  "WIP-MAIN":  "",
+  "SCRAP-MAIN":"",
+  "SCRAP":     "",
+  "QC-HOLD":   "",
+  "TOOL-MAIN": "",
+  "MRO-MAIN":  "",
+  "MRO-STORE": "",
+  "AUX-MAIN":  "",
 };
 
 export function alertBadgeVariant(level: string) {
@@ -82,6 +87,6 @@ export function statusBadgeClass(status: string) {
     case "PICKED": case "in_progress": return "bg-indigo-100 text-indigo-800 border-indigo-200";
     case "CONSUMED": case "completed": return "bg-emerald-100 text-emerald-800 border-emerald-200";
     case "SCRAPPED": return "bg-red-100 text-red-800 border-red-200";
-    default: return "bg-surface-container text-on-surface-variant border-outline-variant";
+    default: return "bg-muted/60 text-muted-foreground border-border";
   }
 }

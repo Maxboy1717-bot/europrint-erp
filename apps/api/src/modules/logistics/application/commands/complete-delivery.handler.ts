@@ -1,3 +1,8 @@
+/**
+ * @module complete-delivery.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok } from '@common/result';

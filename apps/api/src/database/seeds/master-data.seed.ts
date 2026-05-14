@@ -26,6 +26,59 @@ interface SeedStats {
   flags: { inserted: number; updated: number };
 }
 
+/**
+ * Master Data Qoida 1: code UNIQUE biznes kalit (ARCHITECTURE.md §39).
+ *
+ * Schema da `.unique()` belgilangan, lekin drizzle-kit migration generate
+ * qilganda chiqarilmagan. ON CONFLICT (code) DO UPDATE ishlash uchun zarur.
+ *
+ * Idempotent: agar constraint mavjud bo'lsa o'tkazib yuboradi.
+ * Pre-check: duplicate'lar bo'lsa aniq xato xabar beradi (admin tozalashi kerak).
+ */
+async function ensureUniqueConstraints(client: PoolClient): Promise<void> {
+  const tables: ReadonlyArray<{ name: string; constraintName: string }> = [
+    { name: 'departments', constraintName: 'departments_code_unique' },
+    { name: 'positions', constraintName: 'positions_code_unique' },
+  ];
+
+  for (const t of tables) {
+    // 1. Duplicate code'larni tekshirish (UNIQUE qo'shishdan oldin xavfsizlik)
+    const dupRes = await client.query<{ code: string; cnt: string }>(
+      `SELECT code, COUNT(*)::text AS cnt FROM ${t.name}
+        WHERE code IS NOT NULL
+        GROUP BY code
+       HAVING COUNT(*) > 1`,
+    );
+    const dupRows = Array.isArray(dupRes.rows) ? dupRes.rows : [];
+    if (dupRows.length > 0) {
+      const samples = dupRows.slice(0, 5).map((r) => `${r.code} (${r.cnt}x)`).join(', ');
+      throw new Error(
+        `${t.name}.code da ${dupRows.length} ta duplicate topildi: ${samples}` +
+          `${dupRows.length > 5 ? ' va boshqa...' : ''}. ` +
+          `UNIQUE constraint qo'shishdan oldin duplicate'larni qo'lda tozalang.`,
+      );
+    }
+
+    // 2. Constraint mavjudligini tekshirish va yo'q bo'lsa qo'shish
+    const existsRes = await client.query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM information_schema.table_constraints
+         WHERE table_schema = 'public'
+           AND table_name = $1
+           AND constraint_name = $2
+       ) AS exists`,
+      [t.name, t.constraintName],
+    );
+
+    if (!existsRes.rows[0]?.exists) {
+      await client.query(
+        `ALTER TABLE ${t.name} ADD CONSTRAINT ${t.constraintName} UNIQUE (code)`,
+      );
+      log(`  ✅ ${t.constraintName} qo'shildi`);
+    }
+  }
+}
+
 async function seedDepartments(client: PoolClient, rows: ReadonlyArray<DepartmentSeed>) {
   let inserted = 0;
   let updated = 0;
@@ -160,6 +213,9 @@ export async function runMasterDataSeed(): Promise<SeedStats> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    log("UNIQUE constraint'larni tekshirish (departments.code, positions.code)...");
+    await ensureUniqueConstraints(client);
 
     log(`Departments (${DEPARTMENTS_SEED.length}) seedlanmoqda...`);
     stats.departments = await seedDepartments(client, DEPARTMENTS_SEED);

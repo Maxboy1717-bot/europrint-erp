@@ -1,5 +1,28 @@
+/**
+ * @module PosAdminSections
+ * @description React UI component.
+ */
+
 import { glApi } from "../api/pos-monitor.api";
 import { apiRequest } from "@/lib/queryClient";
+
+import { useTranslation } from '@/lib/i18n';
+/**
+ * Universal safe array helper — backend turli format yuborsa ham
+ * ([] | {items:[]} | {data:[]} | undefined | null) → har doim T[].
+ * TypeError himoyasi.
+ */
+function safeArr<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.items)) return obj.items as T[];
+    if (Array.isArray(obj.data)) return obj.data as T[];
+    if (Array.isArray(obj.results)) return obj.results as T[];
+    if (Array.isArray(obj.rows)) return obj.rows as T[];
+  }
+  return [];
+}
 
 export interface Warehouse  { id: number; name: string; code?: string; isActive?: boolean; warehouseType?: string; }
 export interface Category   { id: number; name: string; code?: string; description?: string; }
@@ -11,33 +34,16 @@ export interface AuditEntry { id: number; action: string; resource?: string; use
 export interface SyncStatus { total: number; pending: number; synced: number; conflict: number; }
 
 export function SectionHeader({ title, onRefresh }: { title: string; onRefresh: () => void }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-      <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div>
-      <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={onRefresh}>🔄 Yangilash</button>
-    </div>
-  );
-}
-
-export function LoadingOrError({ loading, error }: { loading: boolean; error: string }) {
-  if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>;
-  if (error)   return <div style={{ textAlign: "center", padding: 16, color: "var(--pos-danger)", fontSize: 13 }}>{error}</div>;
-  return null;
-}
-
-export function WarehousesSection({ data, loading, error, onRefresh, onToggle }: {
-  data: Warehouse[] | null; loading: boolean; error: string;
-  onRefresh: () => void; onToggle: (id: number, active: boolean) => void;
-}) {
+  const { t } = useTranslation("common"); return ( <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}> <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div> <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={onRefresh}>{t("yangilash")}</button> </div> ); } export function LoadingOrError({ loading, error }: { loading: boolean; error: string }) { if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda1")}</div>; if (error) return <div style={{ textAlign: "center", padding: 16, color: "var(--pos-danger)", fontSize: 13 }}>{error}</div>; return null; } export function WarehousesSection({ data, loading, error, onRefresh, onToggle }: { data: Warehouse[] | null; loading: boolean; error: string; onRefresh: () => void; onToggle: (id: number, active: boolean) => void; }) {
   return (
     <div className="pos-card">
-      <SectionHeader title="Omborlar" onRefresh={onRefresh} />
+      <SectionHeader title={t("omborlar")} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>Kod</th><th>Nomi</th><th>Turi</th><th>Holat</th><th>Amal</th></tr></thead>
+          <thead><tr><th>{t("code")}</th><th>{t("name")}</th><th>{t("type")}</th><th>{t("status28")}</th><th>{t("amal")}</th></tr></thead>
           <tbody>
-            {(data ?? []).map(w => (
+            {safeArr<Warehouse>(data).map(w => (
               <tr key={w.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>{w.code ?? `#${w.id}`}</td>
                 <td style={{ fontWeight: 500 }}>{w.name}</td>
@@ -49,21 +55,22 @@ export function WarehousesSection({ data, loading, error, onRefresh, onToggle }:
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Omborlar topilmadi</div>}
+      {!loading && !error && safeArr<Warehouse>(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>{t("omborlarTopilmadi")}</div>}
     </div>
   );
 }
 
 export function CategoriesSection({ data, loading, error, onRefresh }: { data: Category[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
-      <SectionHeader title="Kategoriyalar" onRefresh={onRefresh} />
+      <SectionHeader title={t("kategoriyalar")} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>ID</th><th>Nomi</th><th>Kod</th><th>Tavsif</th></tr></thead>
+          <thead><tr><th>ID</th><th>{t("name")}</th><th>{t("code")}</th><th>{t("progress.description")}</th></tr></thead>
           <tbody>
-            {(data ?? []).map(c => (
+            {safeArr(data).map(c => (
               <tr key={c.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{c.id}</td>
                 <td style={{ fontWeight: 500 }}>{c.name}</td>
@@ -74,21 +81,22 @@ export function CategoriesSection({ data, loading, error, onRefresh }: { data: C
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Kategoriyalar topilmadi</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>{t("kategoriyalarTopilmadi")}</div>}
     </div>
   );
 }
 
 export function UnitsSection({ data, loading, error, onRefresh }: { data: Unit[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
-      <SectionHeader title="O'lchov birliklari" onRefresh={onRefresh} />
+      <SectionHeader title={t("olchovBirliklari1")} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>ID</th><th>Nomi</th><th>Belgi</th><th>Turi</th></tr></thead>
+          <thead><tr><th>ID</th><th>{t("name")}</th><th>{t("belgi")}</th><th>{t("type")}</th></tr></thead>
           <tbody>
-            {(data ?? []).map(u => (
+            {safeArr(data).map(u => (
               <tr key={u.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{u.id}</td>
                 <td style={{ fontWeight: 500 }}>{u.name}</td>
@@ -99,21 +107,22 @@ export function UnitsSection({ data, loading, error, onRefresh }: { data: Unit[]
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>O'lchov birliklari topilmadi</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>{t("olchovBirliklariTopilmadi")}</div>}
     </div>
   );
 }
 
 export function SuppliersSection({ data, loading, error, onRefresh }: { data: Supplier[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
-      <SectionHeader title="Yetkazuvchilar" onRefresh={onRefresh} />
+      <SectionHeader title={t("yetkazuvchilar")} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>ID</th><th>Yetkazuvchi</th><th>Buyurtmalar</th><th>O'rtacha yetkazish</th><th>Reyting</th></tr></thead>
+          <thead><tr><th>ID</th><th>{t("yetkazuvchi")}</th><th>{t("buyurtmalar")}</th><th>{t("ortachaYetkazish")}</th><th>{t("reyting")}</th></tr></thead>
           <tbody>
-            {(data ?? []).map((s, i) => (
+            {safeArr(data).map((s, i) => (
               <tr key={`${s.id}-${i}`}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{s.id}</td>
                 <td style={{ fontWeight: 500 }}>{s.supplierName ?? "—"}</td>
@@ -125,15 +134,16 @@ export function SuppliersSection({ data, loading, error, onRefresh }: { data: Su
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Yetkazuvchilar topilmadi</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>{t("yetkazuvchilarTopilmadi")}</div>}
     </div>
   );
 }
 
 export function TerminalsSection({ data, loading, error, onRefresh }: { data: SyncStatus | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
-      <SectionHeader title="Terminallar" onRefresh={onRefresh} />
+      <SectionHeader title={t("terminallar")} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && data && (
         <div>
@@ -151,7 +161,7 @@ export function TerminalsSection({ data, loading, error, onRefresh }: { data: Sy
             ))}
           </div>
           <div style={{ fontSize: 13, color: "var(--pos-text-muted)", textAlign: "center" }}>
-            Terminal holati real vaqt sinxronizatsiya navbati orqali kuzatiladi.
+            {t("terminalHolatiRealVaqtSinxronizatsiya")}
           </div>
         </div>
       )}
@@ -160,15 +170,16 @@ export function TerminalsSection({ data, loading, error, onRefresh }: { data: Sy
 }
 
 export function PrintersSection({ data, loading, error, onRefresh }: { data: Printer[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
-      <SectionHeader title="Printerlar" onRefresh={onRefresh} />
+      <SectionHeader title={t("printerlar")} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>Nomi</th><th>IP manzil</th><th>Port</th><th>Standart</th><th>Holat</th></tr></thead>
+          <thead><tr><th>{t("name")}</th><th>IP manzil</th><th>{t("port")}</th><th>{t("standart")}</th><th>{t("status28")}</th></tr></thead>
           <tbody>
-            {(data ?? []).map(p => (
+            {safeArr(data).map(p => (
               <tr key={p.id}>
                 <td style={{ fontWeight: 500 }}>{p.name}</td>
                 <td className="pos-mono">{p.ipAddress ?? "—"}</td>
@@ -180,7 +191,7 @@ export function PrintersSection({ data, loading, error, onRefresh }: { data: Pri
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Printerlar sozlanmagan</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>{t("printerlarSozlanmagan")}</div>}
     </div>
   );
 }
@@ -189,15 +200,16 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
   data: GlLog[] | null; loading: boolean; error: string;
   onRefresh: () => void; onApprove: (id: number) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
-      <SectionHeader title="GL Mapping — Kutayotgan postinglar" onRefresh={onRefresh} />
+      <SectionHeader title={t("glMappingKutayotganPostinglar")} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>Harakat</th><th>Bosqich</th><th>Yozuvlar</th><th>Status</th><th>Amal</th></tr></thead>
+          <thead><tr><th>{t("harakat")}</th><th>{t("milestone1")}</th><th>{t("yozuvlar")}</th><th>{"Holat"}</th><th>{t("amal")}</th></tr></thead>
           <tbody>
-            {(data ?? []).map(g => (
+            {safeArr(data).map(g => (
               <tr key={g.id}>
                 <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{g.movementId}</td>
                 <td style={{ fontSize: 12 }}>{g.stageName}</td>
@@ -207,27 +219,28 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
                   ))}
                 </td>
                 <td><span className="pos-badge pos-badge-yellow" style={{ fontSize: 10 }}>{g.status}</span></td>
-                <td><button className="pos-btn pos-btn-success" style={{ fontSize: 11, padding: "3px 8px" }} onClick={() => onApprove(g.id)}>✅ Post</button></td>
+                <td><button className="pos-btn pos-btn-success" style={{ fontSize: 11, padding: "3px 8px" }} onClick={() => onApprove(g.id)}>{t("post")}</button></td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>Kutayotgan GL postinglar yo'q</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>{t("kutayotganGlPostinglarYoq")}</div>}
     </div>
   );
 }
 
 export function AuditLogSection({ data, loading, error, onRefresh }: { data: AuditEntry[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
-      <SectionHeader title="Audit log" onRefresh={onRefresh} />
+      <SectionHeader title={"Audit log"} onRefresh={onRefresh} />
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>Vaqt</th><th>Amal</th><th>Resurs</th><th>IP</th></tr></thead>
+          <thead><tr><th>{t("time")}</th><th>{t("amal")}</th><th>{t("resurs")}</th><th>IP</th></tr></thead>
           <tbody>
-            {(data ?? []).map(a => (
+            {safeArr(data).map(a => (
               <tr key={a.id}>
                 <td style={{ fontSize: 11, color: "var(--pos-text-muted)", whiteSpace: "nowrap" }}>{a.createdAt ? new Date(a.createdAt).toLocaleString("uz-UZ") : "—"}</td>
                 <td><span className="pos-badge pos-badge-gray" style={{ fontSize: 10 }}>{a.action}</span></td>
@@ -238,7 +251,7 @@ export function AuditLogSection({ data, loading, error, onRefresh }: { data: Aud
           </tbody>
         </table>
       )}
-      {!loading && !error && (data ?? []).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>Audit yozuvlari mavjud emas.</div>}
+      {!loading && !error && safeArr(data).length === 0 && <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)" }}>{t("auditYozuvlariMavjudEmas")}</div>}
     </div>
   );
 }

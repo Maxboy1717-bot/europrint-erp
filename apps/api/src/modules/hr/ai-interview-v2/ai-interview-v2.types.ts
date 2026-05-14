@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 export interface InterviewQuestion {
   id: string | number;
   question: string;

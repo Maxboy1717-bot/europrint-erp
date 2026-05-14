@@ -1,3 +1,8 @@
+/**
+ * @module get-materials.query
+ * @description Source module. See exports for details.
+ */
+
 export class GetMaterialsQuery {
   constructor(public readonly category?: string,
     public readonly isActive?: boolean,

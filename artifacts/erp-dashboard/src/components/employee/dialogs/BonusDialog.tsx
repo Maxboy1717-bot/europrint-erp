@@ -1,9 +1,15 @@
+/**
+ * @module BonusDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from '@/lib/i18n';
 
 interface BonusForm {
   paymentDate: string;
@@ -29,19 +35,20 @@ export function BonusDialog({
   onSave,
   isPending
 }: BonusDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof BonusForm, value: string) => {
     onChange({ ...form, [field]: value });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Mukofot (Bonus) tayinlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Mukofot (Bonus) tayinlash</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="paymentDate">To'lov sanasi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="paymentDate">{t("tolovSanasi")}</Label>
             <Input
               id="paymentDate"
               type="date"
@@ -49,8 +56,8 @@ export function BonusDialog({
               onChange={(e) => updateField("paymentDate", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount">Summa (UZS)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="amount">Summa (UZS)</Label>
             <Input
               id="amount"
               type="number"
@@ -58,26 +65,26 @@ export function BonusDialog({
               onChange={(e) => updateField("amount", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Mukofot turi</Label>
+          <div className="space-y-1">
+          <Label>{t("mukofotTuri")}</Label>
             <Select
               value={form.bonusType}
               onValueChange={(val) => updateField("bonusType", val)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Tanlang" />
+                <SelectValue placeholder={t("tanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="performance">Natijadorlik uchun</SelectItem>
-                <SelectItem value="holiday">Bayram munosabati bilan</SelectItem>
-                <SelectItem value="project">Loyiha muvaffaqiyati</SelectItem>
-                <SelectItem value="referral">Tavsiya uchun</SelectItem>
-                <SelectItem value="other">Boshqa</SelectItem>
+                <SelectItem value="performance">{t("natijadorlikUchun")}</SelectItem>
+                <SelectItem value="holiday">{t("bayramMunosabatiBilan")}</SelectItem>
+                <SelectItem value="project">{t("loyihaMuvaffaqiyati")}</SelectItem>
+                <SelectItem value="referral">{t("tavsiyaUchun")}</SelectItem>
+                <SelectItem value="other">{t("boshqa")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Tavsif</Label>
+          <div className="space-y-1">
+          <Label htmlFor="description">{t("progress.description")}</Label>
             <Textarea
               id="description"
               value={form.description}
@@ -86,7 +93,7 @@ export function BonusDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

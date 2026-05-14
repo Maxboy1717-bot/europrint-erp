@@ -1,3 +1,8 @@
+/**
+ * @module errorLogger
+ * @description Frontend utility / library module.
+ */
+
 const MAX_QUEUE = 20;
 const errorQueue: Array<{
   message: string;

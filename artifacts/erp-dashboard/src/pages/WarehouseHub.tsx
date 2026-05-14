@@ -1,3 +1,8 @@
+/**
+ * @module WarehouseHub
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
@@ -5,17 +10,10 @@ import WarehouseDashboard from "@/pages/WarehouseDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, 
-  ScanBarcode, 
-  Loader2, 
-  Boxes, 
-  ArrowRightLeft, 
-  Eye 
-} from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Search, ScanBarcode, Boxes, ArrowRightLeft, Eye } from "lucide-react";
+import { apiRequest, queryClient, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ErrorState } from "@/components/ui/error-state";
+import { useWarehousePosSync } from "@/hooks/useWarehousePosSync";
 
 import { 
   WarehouseItem, 
@@ -38,8 +36,11 @@ import { ExitControlPanel } from "@/components/wms/hub/ExitControlPanel";
 import { OperatorDebtsPanel } from "@/components/wms/hub/OperatorDebtsPanel";
 import { RecentMovementsPanel } from "@/components/wms/hub/RecentMovementsPanel";
 import { ScanResultDialog } from "@/components/wms/hub/ScanResultDialog";
+import { EPErrorState, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseHub() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const params = useParams<{ code?: string }>();
   const [, navigate] = useLocation();
@@ -67,9 +68,13 @@ export default function WarehouseHub() {
     returnQty: "",
   });
 
-  const { data: warehouses, isLoading: whLoading, isError, refetch } = useQuery<WarehouseItem[]>({
+  const { data: warehouses = [], isLoading: whLoading, isError, refetch } = useQuery<WarehouseItem[]>({
     queryKey: ["/api/warehouse/warehouses"],
+    select: selectArray<WarehouseItem>,
   });
+
+  // POS Monitor bilan real-time sinxronizatsiya
+  const { syncToPos, isSyncing } = useWarehousePosSync(selectedWarehouse?.id);
 
   useEffect(() => {
     if (params.code && warehouses) {
@@ -88,8 +93,9 @@ export default function WarehouseHub() {
     }
   }, [params.code, warehouses]);
 
-  const { data: materials } = useQuery<MaterialCardItem[]>({
+  const { data: materials = [] } = useQuery<MaterialCardItem[]>({
     queryKey: ["/api/material-cards"],
+    select: selectArray<MaterialCardItem>,
   });
 
   const { data: warehouseStockData, isLoading: stockLoading } = useQuery<WarehouseStockData>({
@@ -97,24 +103,28 @@ export default function WarehouseHub() {
     enabled: !!selectedWarehouse,
   });
 
-  const { data: barcodes } = useQuery<BarcodeItem[]>({
+  const { data: barcodes = [] } = useQuery<BarcodeItem[]>({
     queryKey: ["/api/barcode-warehouse/barcodes"],
     enabled: !!selectedWarehouse,
+    select: selectArray<BarcodeItem>,
   });
 
-  const { data: pickingTasks } = useQuery<PickingTask[]>({
+  const { data: pickingTasks = [] } = useQuery<PickingTask[]>({
     queryKey: ["/api/barcode-warehouse/picking-tasks"],
     enabled: !!selectedWarehouse,
+    select: selectArray<PickingTask>,
   });
 
-  const { data: exitLogs } = useQuery<ExitLog[]>({
+  const { data: exitLogs = [] } = useQuery<ExitLog[]>({
     queryKey: ["/api/barcode-warehouse/exit-logs"],
     enabled: !!selectedWarehouse && activeTab === "nazorat",
+    select: selectArray<ExitLog>,
   });
 
-  const { data: operatorDebts } = useQuery<OperatorDebt[]>({
+  const { data: operatorDebts = [] } = useQuery<OperatorDebt[]>({
     queryKey: ["/api/barcode-warehouse/operator-balance"],
     enabled: !!selectedWarehouse && activeTab === "nazorat",
+    select: selectArray<OperatorDebt>,
   });
 
   const { data: dashboardData } = useQuery<{ recentMovements: RecentMovement[] }>({
@@ -169,7 +179,7 @@ export default function WarehouseHub() {
   const handleScan = async () => {
     if (!scanInput.trim()) return;
     try {
-      const res = await fetch(`/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`, { credentials: "include" });
+      const res = await apiRequest('GET', `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`);
       if (res.ok) {
         setScanResult(await res.json());
         setScanDialogOpen(true);
@@ -182,41 +192,56 @@ export default function WarehouseHub() {
     setScanInput("");
   };
 
-  const filteredBarcodes = barcodes?.filter(b => !selectedWarehouse || b.warehouseId === selectedWarehouse.id || !b.warehouseId) || [];
-  const availableCount = warehouseStockData?.totalItems || (Array.isArray(filteredBarcodes) ? filteredBarcodes : []).filter(b => b.status === "AVAILABLE").length;
-  const qcHoldCount = (Array.isArray(filteredBarcodes) ? filteredBarcodes : []).filter(b => b.status === "QC_HOLD").length;
-  const pendingPickingCount = pickingTasks?.filter(t => t.status === "pending").length || 0;
-  const debtCount = operatorDebts?.filter(d => d.status === "open").length || 0;
+  const filteredBarcodes = barcodes.filter(b => !selectedWarehouse || b.warehouseId === selectedWarehouse.id || !b.warehouseId);
+  const availableCount = warehouseStockData?.totalItems ?? filteredBarcodes.filter(b => b.status === "AVAILABLE").length;
+  const qcHoldCount = filteredBarcodes.filter(b => b.status === "QC_HOLD").length;
+  const pendingPickingCount = pickingTasks.filter(t => t.status === "pending").length;
+  const debtCount = operatorDebts.filter(d => d.status === "open").length;
 
-  if (whLoading) return <div className="flex items-center justify-center h-screen bg-surface"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
-  if (isError) return <div className="h-screen bg-surface"><ErrorState onRetry={refetch} /></div>;
+  if (whLoading) return <div className="flex items-center justify-center h-screen bg-background"><EPLoader size={40} /></div>;
+  if (isError) return <div className="h-screen bg-background"><EPErrorState onRetry={refetch} /></div>;
   if (!selectedWarehouse) return <WarehouseDashboard />;
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6 font-inter">
+    <div className="space-y-6 font-inter">
       <WarehouseHeader warehouse={selectedWarehouse} onBack={() => { setSelectedWarehouse(null); navigate("/warehouse/hub"); }} />
       
       <div className="flex items-center gap-4 mb-8">
         <div className="relative flex-1">
-          <ScanBarcode className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-on-surface-variant" />
+          <ScanBarcode className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
-            placeholder="Barcode skanerlang yoki qo'lda kiriting..."
+            placeholder={t("barcodeSkanerlangYokiQoldaKiriting")}
             value={scanInput}
             onChange={(e) => setScanInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleScan()}
-            className="pl-12 h-14 rounded-2xl border-outline-variant bg-surface-container-lowest text-lg font-medium shadow-sm focus:ring-primary/20"
+            className="pl-12 h-14 rounded-xl border-border bg-card text-lg font-medium shadow-sm focus:ring-primary/20"
           />
         </div>
-        <Button onClick={handleScan} className="h-14 w-14 rounded-2xl bg-primary text-white hover:scale-105 transition-transform"><Search className="h-6 w-6" /></Button>
+        <Button onClick={handleScan} className="h-14 w-14 rounded-xl bg-primary text-white hover:scale-105 transition-transform"><Search className="h-6 w-6" /></Button>
+        <Button
+          onClick={() => selectedWarehouse && syncToPos(selectedWarehouse.id)}
+          disabled={isSyncing || !selectedWarehouse}
+          variant="outline"
+          className="h-14 px-4 rounded-xl border-border text-sm font-semibold"
+          title={t("posMonitorTerminallarigaStokMalumotini")}
+          data-testid="button-sync-pos"
+        >
+          {isSyncing ? (
+            <EPLoader size={20} />
+          ) : (
+            <ArrowRightLeft className="h-4 w-4 mr-1" />
+          )}
+          {isSyncing ? "Yuborilmoqda..." : "POS Sync"}
+        </Button>
       </div>
 
       <WarehouseStatsPanel availableCount={availableCount} qcHoldCount={qcHoldCount} pendingPickingCount={pendingPickingCount} debtCount={debtCount} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-surface-container p-1 rounded-2xl border border-outline-variant h-auto w-full grid grid-cols-3">
-          <TabsTrigger value="zaxira" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Boxes className="h-4 w-4 mr-2" />Zaxira</TabsTrigger>
-          <TabsTrigger value="jarayon" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><ArrowRightLeft className="h-4 w-4 mr-2" />Jarayon</TabsTrigger>
-          <TabsTrigger value="nazorat" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Eye className="h-4 w-4 mr-2" />Nazorat</TabsTrigger>
+        <TabsList className="bg-muted/60 p-1 rounded-xl border border-border h-auto w-full grid grid-cols-1 md:grid-cols-3">
+          <TabsTrigger value="zaxira" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Boxes className="h-4 w-4 mr-2" />{t("zaxira1")}</TabsTrigger>
+          <TabsTrigger value="jarayon" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><ArrowRightLeft className="h-4 w-4 mr-2" />{t("jarayon")}</TabsTrigger>
+          <TabsTrigger value="nazorat" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Eye className="h-4 w-4 mr-2" />{t("nazorat")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="zaxira" className="space-y-4 focus-visible:outline-none">

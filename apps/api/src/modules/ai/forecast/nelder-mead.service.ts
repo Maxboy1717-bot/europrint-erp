@@ -1,3 +1,8 @@
+/**
+ * @module nelder-mead.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeNum, clamp } from '@common/math/math-utils';
 
@@ -15,7 +20,7 @@ export interface NelderMeadBounds {
 }
 
 function euclid(a: number[], b: number[]): number {
-  return Math.sqrt((a ?? []).reduce((s, v, i) => s + (v - (b[i] ?? 0)) ** 2, 0));
+  return Math.sqrt((Array.isArray(a) ? a : []).reduce((s, v, i) => s + (v - (b[i] ?? 0)) ** 2, 0));
 }
 
 function centroid(points: number[][], exclude: number): number[] {
@@ -27,11 +32,11 @@ function centroid(points: number[][], exclude: number): number[] {
     for (let j = 0; j < n; j++) result[j] += points[i][j] ?? 0;
     count++;
   }
-  return (result ?? []).map(v => safeNum(v) / Math.max(count, 1));
+  return (Array.isArray(result) ? result : []).map(v => safeNum(v) / Math.max(count, 1));
 }
 
 function applyBounds(point: number[], bounds: NelderMeadBounds[]): number[] {
-  return (point ?? []).map((v, i) => clamp(safeNum(v), bounds[i]?.min ?? 0, bounds[i]?.max ?? 1));
+  return (Array.isArray(point) ? point : []).map((v, i) => clamp(safeNum(v), bounds[i]?.min ?? 0, bounds[i]?.max ?? 1));
 }
 
 /** Nelder-Mead simplex algorithm — gradient-free parameter optimisation. */
@@ -51,7 +56,7 @@ export class NelderMeadService {
       points.push(applyBounds(p, bounds));
     }
 
-    let values = (points ?? []).map(fn);
+    let values = (Array.isArray(points) ? points : []).map(fn);
     let iters = 0;
 
     while (iters < MAX_ITER) {
@@ -59,8 +64,8 @@ export class NelderMeadService {
         .map((v, i) => ({ v, i }))
         .sort((a, b) => a.v - b.v);
 
-      const sorted = (order ?? []).map(o => points[o.i] as number[]);
-      const sortedVals = (order ?? []).map(o => values[o.i] as number);
+      const sorted = (Array.isArray(order) ? order : []).map(o => points[o.i] as number[]);
+      const sortedVals = (Array.isArray(order) ? order : []).map(o => values[o.i] as number);
 
       for (let i = 0; i <= n; i++) {
         points[i] = sorted[i] as number[];
@@ -69,7 +74,7 @@ export class NelderMeadService {
 
       const xBar = centroid(points, n);
       const xR = applyBounds(
-        (xBar ?? []).map((v, i) => v + RHO * (v - (points[n]?.[i] ?? 0))),
+        (Array.isArray(xBar) ? xBar : []).map((v, i) => v + RHO * (v - (points[n]?.[i] ?? 0))),
         bounds,
       );
       const fR = fn(xR);
@@ -79,7 +84,7 @@ export class NelderMeadService {
         values[n] = fR;
       } else if (fR < (values[0] ?? Infinity)) {
         const xE = applyBounds(
-          (xBar ?? []).map((v, i) => v + CHI * ((xR[i] ?? 0) - v)),
+          (Array.isArray(xBar) ? xBar : []).map((v, i) => v + CHI * ((xR[i] ?? 0) - v)),
           bounds,
         );
         const fE = fn(xE);
@@ -87,7 +92,7 @@ export class NelderMeadService {
         values[n] = fE < fR ? fE : fR;
       } else {
         const xC = applyBounds(
-          (xBar ?? []).map((v, i) => v + GAMMA * ((points[n]?.[i] ?? 0) - v)),
+          (Array.isArray(xBar) ? xBar : []).map((v, i) => v + GAMMA * ((points[n]?.[i] ?? 0) - v)),
           bounds,
         );
         const fC = fn(xC);
@@ -107,13 +112,13 @@ export class NelderMeadService {
 
       const c = centroid(points, -1);
       const spread = Math.sqrt(
-        (points ?? []).reduce((s, p) => s + euclid(p, c) ** 2, 0) / n,
+        (Array.isArray(points) ? points : []).reduce((s, p) => s + euclid(p, c) ** 2, 0) / n,
       );
       if (spread < CONVERGENCE_TOL) break;
       iters++;
     }
 
-    const best = (values ?? []).reduce(
+    const best = (Array.isArray(values) ? values : []).reduce(
       (b, v, i) => (v < b.v ? { v, i } : b),
       { v: Infinity, i: 0 },
     );

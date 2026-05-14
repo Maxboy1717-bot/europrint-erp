@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-hr.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { HrBaseRepository } from './drizzle-hr-base.repo';
@@ -58,7 +63,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         base_salary:         String(payrollRecord.baseSalary ?? payrollRecord.gross ?? 0),
         salary_earned:       String(payrollRecord.netSalary ?? payrollRecord.net ?? 0),
         total_bonuses:       String(payrollRecord.bonus ?? 0),
-        other_bonuses:       String(payrollRecord.otherDeductions ?? 0),
+        other_bonuses:       String(payrollRecord.otherBonuses ?? payrollRecord.other_bonuses ?? 0),
       }).returning();
       return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};
     } catch (error: unknown) {
@@ -70,7 +75,11 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   async updatePayroll(id: string, data: HrRow): Promise<Result<HrRow>> {
     try {
       const rows = await db.update(salary_history).set({
-        salary_earned: sql`COALESCE(${(data.netSalary ?? null)}, ${salary_history.salary_earned})`,
+        base_salary:   data.baseSalary    != null ? String(data.baseSalary)    : undefined,
+        salary_earned: data.netSalary     != null ? String(data.netSalary)     : undefined,
+        total_bonuses: data.totalBonuses  != null ? String(data.totalBonuses)  : (data.bonus != null ? String(data.bonus) : undefined),
+        other_bonuses: data.otherBonuses  != null ? String(data.otherBonuses)  : (data.other_bonuses != null ? String(data.other_bonuses) : undefined),
+        salary_period_end: data.paymentDate != null ? String(data.paymentDate) : undefined,
         updated_at:    _time.now(),
       }).where(eq(salary_history.id, parseInt(id, 10))).returning();
       return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};
@@ -82,6 +91,12 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
 
   async getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; totalINPS: number; totalJSHD: number; employeeCount: number }>> {
     try {
+      const inpsRate = await runQuery<{ value: string }>(sql`SELECT value FROM settings WHERE key = 'inps_rate' LIMIT 1`)
+        .then(r => parseFloat(r.rows[0]?.value ?? '0.08'))
+        .catch(() => 0.08);
+      const jshdRate = await runQuery<{ value: string }>(sql`SELECT value FROM settings WHERE key = 'jshd_rate' LIMIT 1`)
+        .then(r => parseFloat(r.rows[0]?.value ?? '0.12'))
+        .catch(() => 0.12);
       const rows = await db.select({
         totalGross:     sql<string>`COALESCE(SUM(${salary_history.base_salary}::numeric), 0)`,
         totalNet:       sql<string>`COALESCE(SUM(${salary_history.salary_earned}::numeric), 0)`,
@@ -91,7 +106,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         .where(sql`TO_CHAR(${salary_history.salary_period_start}::date, 'YYYY-MM') = ${period}`);
       const row = rows[0] ?? {};
       const gross = Number(row.totalGross ?? 0);
-      return { ok: true, data: { totalGross: gross, totalNet: Number(row.totalNet ?? 0), totalINPS: gross * 0.08, totalJSHD: gross * 0.12, employeeCount: Number(row.employeeCount ?? 0) } };
+      return { ok: true, data: { totalGross: gross, totalNet: Number(row.totalNet ?? 0), totalINPS: gross * inpsRate, totalJSHD: gross * jshdRate, employeeCount: Number(row.employeeCount ?? 0) } };
     } catch (error: unknown) {
       this.logger.error(`getPayrollSummary: ${(error as Error).message}`);
       return Err((error as Error).message);
@@ -101,6 +116,11 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   async findPayrollRuns(period?: string): Promise<Result<{ data: HrRow[]; total: number }>> {
     try {
       const pat = period ? `%${period}%` : null;
+      const countResult = await runQuery<{ c: string }>(sql`
+        SELECT COUNT(*)::text AS c FROM payroll_periods_hr
+        WHERE ${pat}::text IS NULL OR period_name ILIKE ${pat}
+      `);
+      const total = Number(countResult.rows[0]?.c ?? '0');
       const rows = await db.select({
         id:                   payroll_periods_hr.id,
         period_name:          payroll_periods_hr.period_name,
@@ -116,7 +136,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         .where(sql`${pat}::text IS NULL OR ${payroll_periods_hr.period_name} ILIKE ${pat}`)
         .orderBy(sql`${payroll_periods_hr.period_start_date} DESC`)
         .limit(50);
-      return Ok({ data: castTo<HrRow[]>(rows), total: rows.length });
+      return Ok({ data: castTo<HrRow[]>(rows), total });
     } catch (error: unknown) {
       this.logger.error(`findPayrollRuns: ${(error as Error).message}`);
       return Err((error as Error).message);

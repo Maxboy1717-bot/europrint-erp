@@ -1,3 +1,8 @@
+/**
+ * @module GanttView
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +14,8 @@ import {
 } from "date-fns";
 import type { KanbanColumn } from "@shared/schema";
 import { type CardWithOwner, type T, PRIORITY_CONFIG } from "./kanban-types";
+import { getProp } from "./kanban-utils";
+import { useTranslation } from '@/lib/i18n';
 
 export function GanttView({
   cards,
@@ -21,6 +28,7 @@ export function GanttView({
   onCardClick: (card: CardWithOwner) => void;
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const [startDate, setStartDate] = useState(() => {
     const today = startOfDay(new Date());
     return addDays(today, -7);
@@ -32,12 +40,16 @@ export function GanttView({
   
   const tasksWithDates = useMemo(() => {
     return cards
-      .filter((card) => card.dueDate)
+      .filter((card) => {
+        // Backend snake_case fallback (due_date) yoki camelCase (dueDate)
+        return card.dueDate ?? getProp<string>(card, 'dueDate', 'due_date');
+      })
       .map((card) => {
-        const dueDate = startOfDay(new Date(card.dueDate!));
+        const dueDateStr = (card.dueDate ?? getProp<string>(card, 'dueDate', 'due_date')) as string;
+        const dueDate = startOfDay(new Date(dueDateStr));
         const duration = card.estimatedTime ? Math.ceil(card.estimatedTime / (8 * 60)) : 1;
         const taskStart = addDays(dueDate, -duration + 1);
-        return { ...card, taskStart, taskEnd: dueDate, duration };
+        return { ...card, dueDate: dueDateStr, taskStart, taskEnd: dueDate, duration };
       })
       .sort((a, b) => new Date(a.taskStart).getTime() - new Date(b.taskStart).getTime());
   }, [cards]);
@@ -56,33 +68,33 @@ export function GanttView({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Oldingi hafta" onClick={() => setStartDate(addDays(startDate, -7))} data-testid="button-gantt-prev">
+              <Button variant="outline" size="icon" aria-label={t("oldingiHafta")} onClick={() => setStartDate(addDays(startDate, -7))} data-testid="button-gantt-prev">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Oldingi hafta</TooltipContent>
+            <TooltipContent>{t("oldingiHafta")}</TooltipContent>
           </Tooltip>
           <span className="text-sm font-medium min-w-[200px] text-center">
             {format(startDate, "dd MMM")} - {format(addDays(startDate, daysToShow - 1), "dd MMM yyyy")}
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Keyingi hafta" onClick={() => setStartDate(addDays(startDate, 7))} data-testid="button-gantt-next">
+              <Button variant="outline" size="icon" aria-label={t("keyingiHafta")} onClick={() => setStartDate(addDays(startDate, 7))} data-testid="button-gantt-next">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Keyingi hafta</TooltipContent>
+            <TooltipContent>{t("keyingiHafta")}</TooltipContent>
           </Tooltip>
         </div>
         <Button variant="outline" size="sm" onClick={() => setStartDate(addDays(new Date(), -7))} data-testid="button-gantt-today">
-          Bugun
+          {t("today")}
         </Button>
       </div>
 
       <ScrollArea className="flex-1 border rounded-lg">
         <div className="min-w-max">
           <div className="flex border-b bg-muted sticky top-0 z-10">
-            <div className="w-64 p-2 border-r font-medium text-sm flex-shrink-0">Vazifa</div>
+            <div className="w-64 p-2 border-r font-medium text-sm flex-shrink-0">{t("vazifa")}</div>
             <div className="flex">
               {(Array.isArray(days) ? days : []).map((day) => {
                 const isWeekend = getDay(day) === 0 || getDay(day) === 6;
@@ -90,7 +102,7 @@ export function GanttView({
                 return (
                   <div
                     key={day.toISOString()}
-                    className={`text-center text-xs p-1 border-r ${isWeekend ? "bg-muted/50" : ""} ${isTodayDate ? "bg-primary/20" : ""}`}
+                    className={`text-center text-xs p-1 border-r ${isWeekend ? "bg-muted/50" : ""} ${isTodayDate ? "bg-primary/10" : ""}`}
                     style={{ width: dayWidth }}
                   >
                     <div className="font-medium">{format(day, "dd")}</div>
@@ -104,7 +116,10 @@ export function GanttView({
           {(Array.isArray(tasksWithDates) ? tasksWithDates : []).map((task) => {
             const { left, width, visible } = getTaskPosition(task);
             const priorityConfig = PRIORITY_CONFIG[task.priority as keyof typeof PRIORITY_CONFIG] || PRIORITY_CONFIG.normal;
-            const column = (Array.isArray(columns) ? columns : []).find((c) => c.id === task.columnId);
+            // columnId camelCase yoki column_id snake_case (backend castTo() konvertatsiya qilmaydi)
+            const rawTask = task as unknown as Record<string, unknown>;
+            const taskColId = task.columnId ?? rawTask.column_id;
+            const column = (Array.isArray(columns) ? columns : []).find((c) => String(c.id) === String(taskColId ?? ""));
             
             if (!visible) return null;
             
@@ -117,7 +132,7 @@ export function GanttView({
                     <Avatar className="h-5 w-5 ml-auto flex-shrink-0">
                       <AvatarImage src={task.owner.profileImageUrl || undefined} />
                       <AvatarFallback className="text-[8px]">
-                        {task.owner.fullName.split(" ").map((n) => n[0]).join("").substring(0, 2)}
+                        {String((task.owner as unknown as Record<string,unknown>).fullName ?? (task.owner as unknown as Record<string,unknown>).full_name ?? "?").split(" ").map(n => n[0] ?? "").join("").substring(0, 2).toUpperCase() || "?"}
                       </AvatarFallback>
                     </Avatar>
                   )}

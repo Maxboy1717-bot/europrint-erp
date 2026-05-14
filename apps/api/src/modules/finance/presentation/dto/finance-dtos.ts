@@ -1,3 +1,8 @@
+/**
+ * @module finance-dtos
+ * @description Source module. See exports for details.
+ */
+
 import { z } from 'zod';
 import { FISCAL_YEAR_MIN, FISCAL_YEAR_MAX } from '@common/constants/app.constants';
 

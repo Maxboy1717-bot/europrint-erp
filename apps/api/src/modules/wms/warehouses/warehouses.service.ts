@@ -1,3 +1,8 @@
+/**
+ * @module warehouses.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { IWmsWarehousesRepository, WMS_WAREHOUSES_REPO } from './i-wms-warehouses.repo';
 import { safeCall, Result, AppError } from '@common/result';
@@ -14,7 +19,8 @@ export class WarehousesService {
     const page = Number((query.page as number | undefined) ?? 1);
     const limit = Math.min(MAX_PAGE_LIMIT, Math.max(1, Number((query.limit as number | undefined) ?? 10)));
     const offset = (page - 1) * limit;
-    const result = await this.wmsWarehousesRepo.findAll(limit, offset);
+    const activeOnly = query.isActive === 'true' || query.isActive === true;
+    const result = await this.wmsWarehousesRepo.findAll(limit, offset, activeOnly);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     const { data, count: total } = result.data;
     return { data, pagination: { total, page, limit } };

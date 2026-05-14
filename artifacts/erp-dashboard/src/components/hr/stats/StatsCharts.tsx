@@ -1,7 +1,13 @@
+/**
+ * @module StatsCharts
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { TrendingUp, Users } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Attempt } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StatsChartsProps {
   employeeAttempts: Attempt[];
@@ -10,6 +16,7 @@ interface StatsChartsProps {
 }
 
 export function StatsCharts({ employeeAttempts, attendanceChartData, COLORS }: StatsChartsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Test Scores Trend */}
@@ -18,9 +25,9 @@ export function StatsCharts({ employeeAttempts, attendanceChartData, COLORS }: S
           <CardHeader>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              <CardTitle>Test natijalari tendensiyasi</CardTitle>
+              <CardTitle>{t("testNatijalariTendensiyasi")}</CardTitle>
             </div>
-            <CardDescription>Vaqt bo'yicha test ballari o'zgarishi</CardDescription>
+            <CardDescription>{t("vaqtBoyichaTestBallariOzgarishi")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -49,9 +56,9 @@ export function StatsCharts({ employeeAttempts, attendanceChartData, COLORS }: S
         <CardHeader>
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            <CardTitle>Davomat taqsimoti</CardTitle>
+            <CardTitle>{t("davomatTaqsimoti")}</CardTitle>
           </div>
-          <CardDescription>Kelgan, kelmagan va kechikkan kunlar</CardDescription>
+          <CardDescription>{t("kelganKelmaganVaKechikkanKunlar")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">

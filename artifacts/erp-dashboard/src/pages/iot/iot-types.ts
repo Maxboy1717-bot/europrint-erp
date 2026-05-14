@@ -1,3 +1,8 @@
+/**
+ * @module iot-types
+ * @description React page component. Route-level UI.
+ */
+
 export interface ProductionOrder {
   id: string;
   orderNumber: string;

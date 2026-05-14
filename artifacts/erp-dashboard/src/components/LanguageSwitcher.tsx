@@ -1,3 +1,8 @@
+/**
+ * @module LanguageSwitcher
+ * @description React UI component.
+ */
+
 import { useLanguageSetter } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -17,7 +22,7 @@ const languages: { code: Language; label: string; shortCode: string }[] = [
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguageSetter();
 
-  const currentLanguage = (languages ?? []).find((l) => l.code === language) || languages[0];
+  const currentLanguage = (Array.isArray(languages) ? languages : []).find((l) => l.code === language) || languages[0];
 
   return (
     <DropdownMenu>

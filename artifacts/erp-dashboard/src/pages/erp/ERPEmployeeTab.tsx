@@ -1,3 +1,8 @@
+/**
+ * @module ERPEmployeeTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -18,6 +23,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { EmployeeWorkCenter, InsertEmployeeWorkCenter, WorkCenter } from "@shared/schema";
 import { insertEmployeeWorkCenterSchema } from "@shared/schema";
+import { EPStatusPill } from "@/components/ep";
 
 type EmployeeWorkCenterWithJoins = EmployeeWorkCenter & {
   employeeId?: string;
@@ -113,7 +119,7 @@ export function ERPEmployeeTab() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('employeeId')}</TableHead>
@@ -126,19 +132,19 @@ export function ERPEmployeeTab() {
               </TableHeader>
               <TableBody>
                 {([1, 2, 3, 4, 5]).map((i) => (
-                  <TableRow key={`k-${i}`}>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><div className="space-y-1"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-16" /></div></TableCell>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell><Skeleton className="h-4 w-20 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28 rounded-lg" /></TableCell>
+                    <TableCell><div className="space-y-1"><Skeleton className="h-4 w-24 rounded-lg" /><Skeleton className="h-3 w-16 rounded-lg" /></div></TableCell>
                     <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20 rounded-lg" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('employeeId')}</TableHead>
@@ -151,7 +157,7 @@ export function ERPEmployeeTab() {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(assignments) ? assignments : []).map((assignment) => (
-                  <TableRow key={assignment.id} data-testid={`row-assignment-${assignment.id}`}>
+                  <TableRow key={assignment.id} data-testid={`row-assignment-${assignment.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{assignment.employeeId || "—"}</TableCell>
                     <TableCell>{assignment.employeeName || "—"}</TableCell>
                     <TableCell>
@@ -162,7 +168,7 @@ export function ERPEmployeeTab() {
                     </TableCell>
                     <TableCell>
                       {assignment.isPrimary ? (
-                        <Badge variant="default">{t('primary')}</Badge>
+                        <EPStatusPill tone="success">{t('primary')}</EPStatusPill>
                       ) : (
                         <Badge variant="outline">{t('additional')}</Badge>
                       )}
@@ -181,15 +187,15 @@ export function ERPEmployeeTab() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
-            <DialogTitle>{editingAssignment ? t('editAssignment') : t('newAssignment')}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{editingAssignment ? t('editAssignment') : t('newAssignment')}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit((data) => save.mutate({ data, id: editingAssignment?.id }))} className="space-y-4">
@@ -198,7 +204,7 @@ export function ERPEmployeeTab() {
                   <FormLabel>{t('employee')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-assignment-employee">
+                      <SelectTrigger data-testid="select-assignment-employee" className="h-9">
                         <SelectValue placeholder={t('selectEmployee')} />
                       </SelectTrigger>
                     </FormControl>
@@ -218,7 +224,7 @@ export function ERPEmployeeTab() {
                   <FormLabel>{t('workCenter')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-assignment-work-center">
+                      <SelectTrigger data-testid="select-assignment-work-center" className="h-9">
                         <SelectValue placeholder={t('selectWorkCenter')} />
                       </SelectTrigger>
                     </FormControl>
@@ -258,8 +264,8 @@ export function ERPEmployeeTab() {
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-        title="Tayinlashni o'chirish"
-        description="Ushbu xodim tayinlashini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("tayinlashniOchirish")}
+        description={t("ushbuXodimTayinlashiniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

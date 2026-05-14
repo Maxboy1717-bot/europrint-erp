@@ -1,3 +1,8 @@
+/**
+ * @module KanbanColumn
+ * @description React UI component.
+ */
+
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -8,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DealCard } from "./DealCard";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface Deal {
   id: number;
@@ -37,6 +43,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
+  const { t } = useTranslation("common");
   const { setNodeRef, isOver } = useDroppable({
     id: stage.stageId,
     data: {
@@ -44,7 +51,16 @@ export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
     },
   });
 
-  const totalValue = (Array.isArray(deals) ? deals : []).reduce((sum, deal) => sum + Number(deal.opportunity), 0);
+  const currencyTotals: Record<string, number> = {};
+  (Array.isArray(deals) ? deals : []).forEach(deal => {
+    const cur = deal.currencyId ?? 'UZS';
+    const amt = Number(deal.opportunity || 0);
+    if (!isNaN(amt)) currencyTotals[cur] = (currencyTotals[cur] ?? 0) + amt;
+  });
+  const totalDisplay = Object.entries(currencyTotals)
+    .filter(([, v]) => v > 0)
+    .map(([c, v]) => `${v.toLocaleString()} ${c}`)
+    .join(' | ');
 
   return (
     <Card
@@ -70,9 +86,9 @@ export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
             {deals.length}
           </Badge>
         </div>
-        {totalValue > 0 && (
+        {totalDisplay && (
           <p className="text-xs text-muted-foreground mt-1">
-            {totalValue.toLocaleString()} UZS
+            {totalDisplay}
           </p>
         )}
       </CardHeader>
@@ -93,7 +109,7 @@ export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
 
           {deals.length === 0 && (
             <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-              Bo'sh
+              {t("bosh")}
             </div>
           )}
         </ScrollArea>

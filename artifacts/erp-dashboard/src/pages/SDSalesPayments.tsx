@@ -1,4 +1,12 @@
+/**
+ * @module SDSalesPayments
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Plus, CheckCircle } from "lucide-react";
 import { fmt, PAYMENT_STATUS_COLORS } from "@/lib/sd-helpers";
+import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface SalesPayment {
   id: string;
@@ -50,30 +60,41 @@ type PaymentFormBody = {
   notes: string;
 };
 
+const PaymentSchema = z.object({
+  orderId: z.string().min(1),
+  customerId: z.string().optional(),
+  amount: z.number().positive(),
+  type: z.string().min(1),
+  dueDate: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 export default function SDSalesPayments() {
+  const { t } = useTranslation("common");
   const [view, setView] = useState<"all" | "overdue" | "debitors">("all");
   const [isNew, setIsNew] = useState(false);
   const [form, setForm] = useState({ orderId: "", customerId: "", amount: "", type: "advance", dueDate: "", notes: "" });
+  useForm({ resolver: zodResolver(PaymentSchema), defaultValues: { orderId: "", amount: 0, type: "advance" } });
   const { toast } = useToast();
   const qc = useQueryClient();
 
   const { data: payments = [], isLoading } = useQuery<(SalesPayment | DebitEntry)[]>({
     queryKey: ["/api/sd/payments", view],
     queryFn: () => {
-      if (view === "debitors") return apiRequest("GET", "/api/sd/payments/debitors").then(r => r.json());
+      if (view === "debitors") return apiRequest("GET", "/api/sd/payments/debitors");
       const p = new URLSearchParams({ limit: "50" });
       if (view === "overdue") p.append("status", "overdue");
-      return apiRequest("GET", `/api/sd/payments?${p}`).then(r => r.json());
+      return apiRequest("GET", `/api/sd/payments?${p}`);
     },
   });
 
   const { data: orders } = useQuery<OrdersResponse>({
     queryKey: ["/api/sd/orders"],
-    queryFn: () => apiRequest("GET", "/api/sd/orders?limit=100").then(r => r.json()),
+    queryFn: () => apiRequest("GET", "/api/sd/orders?limit=100"),
   });
 
   const createMut = useMutation({
-    mutationFn: (body: PaymentFormBody) => apiRequest("POST", "/api/sd/payments", body).then(r => r.json()),
+    mutationFn: (body: PaymentFormBody) => apiRequest("POST", "/api/sd/payments", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/payments"] });
       setIsNew(false);
@@ -84,7 +105,7 @@ export default function SDSalesPayments() {
   });
 
   const markPaidMut = useMutation({
-    mutationFn: (id: string) => apiRequest("PUT", `/api/sd/payments/${id}/mark-paid`, {}).then(r => r.json()),
+    mutationFn: (id: string) => apiRequest("PATCH", `/api/sd/payments/${id}/mark-paid`, {}),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/payments"] }); toast({ title: "To'landi deb belgilandi" }); },
   });
 
@@ -94,21 +115,22 @@ export default function SDSalesPayments() {
   });
 
   return (
-    <div className="p-6 max-w-screen-xl mx-auto bg-surface min-h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center gap-3 pb-6 mb-6">
         <div className="p-2 bg-primary/10 rounded-lg">
           <CreditCard className="w-6 h-6 text-primary" />
         </div>
         <div className="flex-1">
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            To'lovlar <span className="font-bold text-primary">Nazorati</span>
-          </h1>
-          <p className="text-on-surface-variant">Avans, qoldiq, debitorlik va aging hisobot</p>
+          <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("tolovlarNazorati")}</b></>}
+        title={t("tolovlarNazorati")}
+        subtitle={t("avansQoldiqDebitorlikVaAging")}
+      />
         </div>
-        <div className="flex gap-1 border border-outline-variant rounded-lg p-0.5 bg-surface-container-lowest">
+        <div className="flex gap-1 border border-border rounded-lg p-0.5 bg-card">
           {(["all", "overdue", "debitors"] as const).map(v => (
             <button key={v}
-              className={`text-xs px-3 py-1 rounded-md transition-colors ${view === v ? "bg-primary text-white font-medium" : "text-on-surface-variant hover:bg-surface-container-high"}`}
+              className={`text-xs px-3 py-1 rounded-md transition-colors ${view === v ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-muted"}`}
               onClick={() => setView(v)}>
               {v === "all" ? "Barchasi" : v === "overdue" ? "Muddati o'tganlar" : "Debitorlar"}
             </button>
@@ -116,16 +138,16 @@ export default function SDSalesPayments() {
         </div>
         <Dialog open={isNew} onOpenChange={setIsNew}>
           <DialogTrigger asChild>
-            <Button data-testid="button-add-payment" className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold">
-              <Plus className="w-4 h-4 mr-1" />To'lov kiritish
+            <Button data-testid="button-add-payment" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold">
+              <Plus className="w-4 h-4 mr-1" />{t("tolovKiritish")}
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Yangi to'lov</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiTolov")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Buyurtma</Label>
+              <div><Label>{t("Buyurtma")}</Label>
                 <Select value={form.orderId} onValueChange={v => setForm({ ...form, orderId: v })}>
-                  <SelectTrigger data-testid="select-payment-order"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-payment-order" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                   <SelectContent>
                     {orders?.data?.map((o) => (
                       <SelectItem key={o.id} value={o.id}>{o.orderNumber} — {fmt(o.totalAmount)} so'm</SelectItem>
@@ -133,22 +155,22 @@ export default function SDSalesPayments() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>To'lov turi</Label>
+              <div><Label>{t("tolovTuri")}</Label>
                 <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
-                  <SelectTrigger data-testid="select-payment-type"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="select-payment-type" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="advance">Avans</SelectItem>
-                    <SelectItem value="balance">Qoldiq</SelectItem>
-                    <SelectItem value="partial">Qisman</SelectItem>
+                    <SelectItem value="advance">{t("avans")}</SelectItem>
+                    <SelectItem value="balance">{t("qoldiq")}</SelectItem>
+                    <SelectItem value="partial">{t("qisman")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div><Label>Summa (so'm) *</Label>
                 <Input data-testid="input-payment-amount" type="number" value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-              <div><Label>To'lov muddati</Label>
+              <div><Label>{t("tolovMuddati")}</Label>
                 <Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
-              <div><Label>Izoh</Label>
+              <div><Label>{t("Izoh")}</Label>
                 <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
               <Button data-testid="button-save-payment" className="w-full"
                 onClick={() => createMut.mutate({ ...form, amount: parseFloat(form.amount) || 0 })}
@@ -161,7 +183,7 @@ export default function SDSalesPayments() {
       </div>
 
       <div className="space-y-2">
-        {isLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+        {isLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
 
         {view === "debitors" ? (
           (payments as DebitEntry[]).map((d, i) => (
@@ -174,7 +196,7 @@ export default function SDSalesPayments() {
                   <div><span className="text-muted-foreground">61-90:</span> <strong>{fmt(d["61-90"])} so'm</strong></div>
                   <div><span className="text-muted-foreground">90+:</span> <strong>{fmt(d["90+"])} so'm</strong></div>
                 </div>
-                <div className="font-bold text-red-600">{fmt(d.total)} so'm</div>
+                <div className="font-bold text-[var(--ep-red)]">{fmt(d.total)} so'm</div>
               </CardContent>
             </Card>
           ))
@@ -188,7 +210,7 @@ export default function SDSalesPayments() {
                   </div>
                   {p.dueDate && <div className="text-xs text-muted-foreground">Muddat: {p.dueDate}</div>}
                   {p.overdueDays > 0 && (
-                    <div className="text-xs text-red-600 font-medium">{p.overdueDays} kun kechikdi</div>
+                    <div className="text-xs text-[var(--ep-red)] font-medium">{p.overdueDays} kun kechikdi</div>
                   )}
                 </div>
                 <div className="font-bold text-lg">{fmt(p.amount)} so'm</div>
@@ -198,13 +220,13 @@ export default function SDSalesPayments() {
                 {p.status === "pending" && p.type !== "advance" && (
                   <Button size="sm" variant="outline" data-testid={`button-advance-payment-${p.id}`}
                     onClick={() => advancePaymentMut.mutate(p.orderId)} disabled={advancePaymentMut.isPending}>
-                    Avans
+                    {t("avans")}
                   </Button>
                 )}
                 {p.status === "pending" && (
                   <Button size="sm" data-testid={`button-mark-paid-${p.id}`}
                     onClick={() => markPaidMut.mutate(p.id)} disabled={markPaidMut.isPending}>
-                    <CheckCircle className="w-3 h-3 mr-1" />To'landi
+                    <CheckCircle className="w-3 h-3 mr-1" />{t("tolandi1")}
                   </Button>
                 )}
               </CardContent>

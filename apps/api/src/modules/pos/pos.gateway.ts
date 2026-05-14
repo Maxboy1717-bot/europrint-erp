@@ -1,3 +1,8 @@
+/**
+ * @module pos.gateway
+ * @description NestJS WebSocket gateway. Socket.IO handlers.
+ */
+
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -13,6 +18,21 @@ let _posServer: Server | null = null;
 /** Emit an event to all clients connected to the /pos namespace. */
 export function broadcastPosEvent(event: string, data: unknown): void {
   _posServer?.emit(event, data);
+}
+
+/** Emit to a specific user's room. */
+export function broadcastToUser(userId: number, event: string, data: unknown): void {
+  _posServer?.to(`user:${userId}`).emit(event, data);
+}
+
+/** Emit to all clients in a department room. */
+export function broadcastToDept(deptCode: string, event: string, data: unknown): void {
+  _posServer?.to(`dept:${deptCode}`).emit(event, data);
+}
+
+/** Emit to all clients watching a specific warehouse. */
+export function broadcastToWarehouse(warehouseId: string | number, event: string, data: unknown): void {
+  _posServer?.to(`wh:${warehouseId}`).emit(event, data);
 }
 
 const POS_ALLOWED_ROLES = new Set([
@@ -69,7 +89,7 @@ export class PosGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     try {
-      const payload = this.jwtService.verify<{ role?: string; sub?: number }>(token);
+      const payload = this.jwtService.verify<{ role?: string; sub?: number; dept?: string; warehouseId?: string | number }>(token);
       const role = (payload.role ?? '').toLowerCase();
       const hasPosRole = POS_ALLOWED_ROLES.has(role) || role.startsWith('pos');
       if (!hasPosRole) {
@@ -77,7 +97,13 @@ export class PosGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.disconnect(true);
         return;
       }
-      this.logger.debug(`[PosGateway] Client authenticated (role=${role}): ${client.id}`);
+
+      // Join targeted rooms so we can send scoped notifications
+      if (payload.sub) void client.join(`user:${payload.sub}`);
+      if (payload.dept) void client.join(`dept:${payload.dept}`);
+      if (payload.warehouseId) void client.join(`wh:${payload.warehouseId}`);
+
+      this.logger.debug(`[PosGateway] Client authenticated (role=${role}, userId=${payload.sub}): ${client.id}`);
     } catch {
       this.logger.warn(`[PosGateway] Rejected invalid token: ${client.id}`);
       client.disconnect(true);

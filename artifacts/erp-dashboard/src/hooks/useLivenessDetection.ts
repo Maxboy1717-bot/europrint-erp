@@ -1,3 +1,8 @@
+/**
+ * @module useLivenessDetection
+ * @description React custom hook.
+ */
+
 import { useState, useRef, useCallback } from 'react';
 import { loadFaceApi } from '@/lib/faceApiLoader';
 

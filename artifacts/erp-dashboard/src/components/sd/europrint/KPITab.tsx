@@ -1,14 +1,21 @@
+/**
+ * @module KPITab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from '@/lib/i18n';
 import { 
   SdTeamKpi, SdFunnelStage,
   fmt, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS 
 } from "./types";
 
 export function KPITab() {
+  const { t } = useTranslation("common");
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -30,13 +37,13 @@ export function KPITab() {
     <div className="space-y-6">
       <div className="flex gap-3 flex-wrap">
         <Select value={String(month)} onValueChange={v => setMonth(+v)}>
-          <SelectTrigger className="w-40" data-testid="select-kpi-month"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40 h-9" data-testid="select-kpi-month"><SelectValue /></SelectTrigger>
           <SelectContent>
             {(Array.isArray(MONTHS) ? MONTHS : []).map((m, i) => <SelectItem key={`k-${i}`} value={String(i + 1)}>{m}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={String(year)} onValueChange={v => setYear(+v)}>
-          <SelectTrigger className="w-32" data-testid="select-kpi-year"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-32 h-9" data-testid="select-kpi-year"><SelectValue /></SelectTrigger>
           <SelectContent>
             {([2024, 2025, 2026, 2027]).map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
           </SelectContent>
@@ -45,9 +52,9 @@ export function KPITab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Menejerlar reytingi</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("menejerlarReytingi")}</CardTitle></CardHeader>
           <CardContent className="p-4 pt-0 space-y-3">
-            {teamLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+            {teamLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
             {[...team]
               .sort((a: SdTeamKpi, b: SdTeamKpi) => (Number(b.totalSales) || 0) - (Number(a.totalSales) || 0))
               .map((m: SdTeamKpi, i: number) => (
@@ -64,22 +71,22 @@ export function KPITab() {
                 </div>
               ))}
             {!teamLoading && team.length === 0 && (
-              <div className="text-sm text-muted-foreground text-center py-4">Ushbu oyda buyurtmalar yo'q</div>
+              <div className="text-sm text-muted-foreground text-center py-4">{t("ushbuOydaBuyurtmalarYoq")}</div>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Leed funnel tahlili</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("leedFunnelTahlili")}</CardTitle></CardHeader>
           <CardContent className="p-4 pt-0 space-y-3">
-            {funnelLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+            {funnelLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
             {(Array.isArray(funnel) ? funnel : []).map((f: SdFunnelStage) => (
               <div key={f.status} data-testid={`card-funnel-${f.status}`} className="flex items-center gap-3 text-sm">
                 <span className={`text-xs px-2 py-0.5 rounded-md min-w-28 text-center font-medium ${LEAD_STATUS_COLORS[f.status] || ""}`}>
                   {LEAD_STATUS_LABELS[f.status] || f.status}
                 </span>
                 <div className="flex-1 bg-muted rounded-full h-2">
-                  <div className="bg-primary/70 h-2 rounded-full"
+                  <div className="bg-primary/10 h-2 rounded-full"
                     style={{ width: `${Math.min(100, Math.round((Number(f.count) / 20) * 100))}%` }} />
                 </div>
                 <span className="font-bold min-w-8 text-right">{f.count}</span>

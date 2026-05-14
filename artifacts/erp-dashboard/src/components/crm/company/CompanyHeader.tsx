@@ -1,8 +1,14 @@
+/**
+ * @module CompanyHeader
+ * @description React UI component.
+ */
+
 import { SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, Pencil } from "lucide-react";
 import { Company } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CompanyHeaderProps {
   company: Company;
@@ -11,6 +17,7 @@ interface CompanyHeaderProps {
 }
 
 export function CompanyHeader({ company, isEditMode, onEditClick }: CompanyHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <SheetHeader>
       <div className="flex items-start justify-between">
@@ -28,7 +35,7 @@ export function CompanyHeader({ company, isEditMode, onEditClick }: CompanyHeade
                 <Badge variant="outline">STIR: {company.stir}</Badge>
               )}
               {company.customerCategory && (
-                <Badge className={company.customerCategory === 'A' ? 'bg-green-100 text-green-700' : company.customerCategory === 'B' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}>
+                <Badge className={company.customerCategory === 'A' ? 'bg-green-100 text-[var(--ep-green)]' : company.customerCategory === 'B' ? 'bg-blue-100 text-[var(--ep-blue)]' : 'bg-gray-100 text-gray-700'}>
                   {company.customerCategory} kategoriya
                 </Badge>
               )}
@@ -46,7 +53,7 @@ export function CompanyHeader({ company, isEditMode, onEditClick }: CompanyHeade
             data-testid="button-edit"
           >
             <Pencil className="h-4 w-4 mr-2" />
-            Tahrirlash
+            {t("edit")}
           </Button>
         )}
       </div>

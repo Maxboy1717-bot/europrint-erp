@@ -1,3 +1,8 @@
+/**
+ * @module insights.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Patch, Param, Body,
@@ -16,7 +21,7 @@ import { GenerateInsightDto, InsightItem } from './dto/ai-insights.dto';
 
 @ApiTags('§15 AI Insights')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('insights')
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.HR_MANAGER, Role.FINANCE_MANAGER)

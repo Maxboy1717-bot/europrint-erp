@@ -1,3 +1,8 @@
+/**
+ * @module task-status.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum TaskStatus {
   BACKLOG = 'backlog',
   TODO = 'todo', // #339 kanban status enum qiymati

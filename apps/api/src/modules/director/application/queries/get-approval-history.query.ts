@@ -1,3 +1,8 @@
+/**
+ * @module get-approval-history.query
+ * @description Source module. See exports for details.
+ */
+
 import { HitlDocumentType, ApprovalStatus } from '../../domain/enums/hitl-document-type.enum';
 
 export class GetApprovalHistoryQuery {

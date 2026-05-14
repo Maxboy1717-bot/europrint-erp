@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-ai-reservation.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -65,7 +70,7 @@ export class DrizzleAiReservationRepo {
         .from(aiReservationRequests)
         .orderBy(desc(aiReservationRequests.createdAt))
         .limit(50);
-      return (rows ?? []).map((r) => this.toRequest(r));
+      return (Array.isArray(rows) ? rows : []).map((r) => this.toRequest(r));
     });
     if (!result.ok) return Ok([]);
     return result;
@@ -115,7 +120,7 @@ export class DrizzleAiReservationRepo {
         .from(aiReservationBatches)
         .orderBy(desc(aiReservationBatches.createdAt))
         .limit(50);
-      return (rows ?? []).map((r) => this.toBatch(r));
+      return (Array.isArray(rows) ? rows : []).map((r) => this.toBatch(r));
     });
     if (!result.ok) return Ok([]);
     return result;

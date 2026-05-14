@@ -1,3 +1,8 @@
+/**
+ * @module not-found
+ * @description Source module. See exports for details.
+ */
+
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 

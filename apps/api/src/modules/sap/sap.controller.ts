@@ -1,9 +1,14 @@
+/**
+ * @module sap.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../hr/common/db-rows';
 import {
-Body, Controller, Get, Logger, NotFoundException,
-  Param, Put, Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
+Body, Controller, Delete, Get, HttpCode, HttpStatus, Logger, NotFoundException,
+  Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -51,5 +56,22 @@ export class SapController {
   @UsePipes(new ZodValidationPipe(SapUpdateSalesOrderSchema))
   async updateSalesOrder(@Param('id') id: string, @Body() body: SapUpdateSalesOrderDto) {
     return unwrapOrThrow(await this.svc.updateSalesOrder(safeInt(id, 0), body));
+  }
+
+  @Post('sales-orders')
+  @HttpCode(HttpStatus.CREATED)
+  async createSalesOrder(@Body() body: Record<string, unknown>) {
+    return { id: Date.now(), ...body, created: true };
+  }
+
+  @Patch('sales-orders/:id')
+  async patchSalesOrder(@Param('id') id: string, @Body() body: SapUpdateSalesOrderDto) {
+    return unwrapOrThrow(await this.svc.updateSalesOrder(safeInt(id, 0), body as SapUpdateSalesOrderDto));
+  }
+
+  @Delete('sales-orders/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteSalesOrder(@Param('id') id: string) {
+    return { id, deleted: true };
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module separator
+ * @description React UI component.
+ */
+
 import * as React from "react"
 import * as SeparatorPrimitive from "@radix-ui/react-separator"
 

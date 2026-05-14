@@ -1,3 +1,8 @@
+/**
+ * @module website-extended
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { pgTable, serial, varchar, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
 
 export const websitePortfolio = pgTable('website_portfolio', {

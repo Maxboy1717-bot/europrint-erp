@@ -1,16 +1,9 @@
-import {
-Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Patch,
-  Query,
-  UseGuards,
-  UseInterceptors,
-  Logger,
-  InternalServerErrorException, NotImplementedException, UsePipes,
-} from '@nestjs/common';
+/**
+ * @module warehouse-rental.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, HttpException, HttpStatus, InternalServerErrorException, Logger, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
@@ -98,5 +91,29 @@ export class WarehouseRentalController {
   }
 
   @Post('recalculate')
-  async recalculate(@Body() _body: Record<string, unknown>) { throw new NotImplementedException('Qayta hisoblash hali ishlab chiqilmoqda'); }
+  async recalculate(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+
+  @Patch('records/:id/close')
+  @Roles(...WR_WRITE)
+  async patchCloseRecord(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.closeRecord(safeInt(id, 0), user?.id ?? null));
+  }
+
+  @Patch('records/:id/mark-paid')
+  @UsePipes(new ZodValidationPipe(WmsMarkRentalPaidSchema))
+  @Roles(...WR_WRITE)
+  async patchMarkPaid(
+    @Param('id') id: string,
+    @Body() body: WmsMarkRentalPaidDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return unwrapOrThrow(await this.svc.markPaid(safeInt(id, 0), user?.id ?? null, body.notes ? String(body.notes) : undefined));
+  }
+
+  @Put('settings')
+  @UsePipes(new ZodValidationPipe(WmsUpdateRentalSettingsSchema))
+  @Roles(...WR_WRITE)
+  async putSettings(@Body() body: WmsUpdateRentalSettingsDto) {
+    return unwrapOrThrow(await this.svc.updateSettings(body));
+  }
 }

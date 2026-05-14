@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-sd-deliveries.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { deliveries } from '@shared/db';
@@ -25,8 +30,16 @@ export class DrizzleSdDeliveriesRepository implements ISdDeliveriesRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || `Yetkazish #${id} topilmadi`); }
   }
 
-  async findItemsByDeliveryId(_deliveryId: number): Promise<Result<object[]>> {
-    return Ok([]);
+  async findItemsByDeliveryId(deliveryId: number): Promise<Result<object[]>> {
+    try {
+      const result = await db.execute(sql`
+        SELECT di.*
+        FROM delivery_items di
+        WHERE di.delivery_id = ${deliveryId}
+        ORDER BY di.id ASC
+      `);
+      return Ok((result.rows ?? []) as object[]);
+    } catch (e: unknown) { return Err((e as Error)?.message || `Yetkazish #${deliveryId} bandlari topilmadi`); }
   }
 
   async create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {

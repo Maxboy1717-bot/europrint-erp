@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-pos-v2-report.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { safeNum } from '@common/math';
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
@@ -128,7 +133,7 @@ export class DrizzlePosV2ReportRepo {
       const conditions = [];
       if (warehouseId) conditions.push(sql`warehouse_id = ${warehouseId}`);
       const lowStockItems = await db.select().from(stock_items).where(conditions.length > 0 ? and(...conditions, sql`cast(quantity as numeric) <= coalesce(min_quantity, 0)`) : sql`cast(${stock_items.quantity} as numeric) <= 10`);
-      return ok((lowStockItems ?? []).map((item: Record<string, unknown>) => ({ stockItemId: String(item.id ?? ''), name: String(item.name ?? ''), sku: String(item.sku ?? ''), currentQty: safeNum(item['quantity'] ?? '0'), minQty: 0, location: item.warehouseLocation != null ? String(item.warehouseLocation) : null })));
+      return ok((Array.isArray(lowStockItems) ? lowStockItems : []).map((item: Record<string, unknown>) => ({ stockItemId: String(item.id ?? ''), name: String(item.name ?? ''), sku: String(item.sku ?? ''), currentQty: safeNum(item['quantity'] ?? '0'), minQty: 0, location: item.warehouseLocation != null ? String(item.warehouseLocation) : null })));
     } catch (error: unknown) {
       this.logger.error('Failed to get low stock report:', error);
       return err({ message: 'Database error', code: 'DB_ERROR' });

@@ -1,6 +1,11 @@
+/**
+ * @module crm-contacts
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -60,6 +65,8 @@ export const crmLeads = pgTable("crm_leads", {
   deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
 }, (t) => [
+  check("crm_leads_status_id_chk", sql`${t.statusId} IN ('NEW','IN_PROCESS','CONVERTED','JUNK')`),
+  check("crm_leads_source_score_chk", sql`${t.sourceScore} IS NULL OR (${t.sourceScore} >= 1 AND ${t.sourceScore} <= 100)`),
   index("idx_crm_leads_status_id").on(t.statusId),
   index("idx_crm_leads_assigned_by_id").on(t.assignedById),
   index("idx_crm_leads_source_id").on(t.sourceId),
@@ -266,6 +273,12 @@ export const crmCompanies = pgTable("crm_companies", {
   index("idx_crm_companies_assigned_by_id").on(t.assignedById),
   index("idx_crm_companies_deleted_at").on(t.deletedAt),
   index("idx_crm_companies_is_blocked").on(t.isBlocked),
+  check("crm_companies_type_chk", sql`${t.customerType} IS NULL OR ${t.customerType} IN ('legal','individual')`),
+  check("crm_companies_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('active','inactive','blacklist')`),
+  check("crm_companies_size_chk", sql`${t.companySize} IS NULL OR ${t.companySize} IN ('small','medium','large')`),
+  check("crm_companies_category_chk", sql`${t.customerCategory} IS NULL OR ${t.customerCategory} IN ('A','B','C','D')`),
+  check("crm_companies_source_chk", sql`${t.source} IS NULL OR ${t.source} IN ('ads','referral','website','exhibition','other')`),
+  check("crm_companies_segment_chk", sql`${t.segment} IS NULL OR ${t.segment} IN ('vip','regular','new','potential')`),
 ]);
 
 // Mijoz kontaktlari

@@ -1,9 +1,16 @@
+/**
+ * @module IoTLoginPanel
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Languages } from "lucide-react";
 import { IotLang } from "./iot-types";
+import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface IoTLoginPanelProps {
   lang: IotLang;
@@ -16,46 +23,48 @@ interface IoTLoginPanelProps {
 }
 
 export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, workerPassword, setWorkerPassword, handleLogin }: IoTLoginPanelProps) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-6 font-inter" data-testid="iot-tablet-login">
-      <Card className="w-full max-w-md bg-surface-container-lowest border-outline-variant shadow-none rounded-xl overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 font-inter" data-testid="iot-tablet-login">
+      <Card className="w-full max-w-md bg-card border-border shadow-none rounded-xl overflow-hidden">
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4 h-20 w-20 rounded-full bg-primary-container flex items-center justify-center">
+          <div className="mx-auto mb-4 h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
             <User className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            Operator <span className="font-bold text-primary">Kirishi</span>
-          </h1>
-          <p className="text-on-surface-variant text-sm mt-2">{t("Tabel raqami va parol bilan kiring", "Войдите с табельным номером и паролем")}</p>
+          <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("operatorKirishi")}</b></>}
+        title={t("operatorKirishi")}
+        subtitle={t("Tabel raqami va parol bilan kiring", "Войдите с табельным номером и паролем")}
+      />
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant uppercase tracking-wider text-xs font-semibold">{t("Tabel raqami", "Табельный номер")}</Label>
+          <div className="space-y-1">
+          <Label className="text-muted-foreground uppercase tracking-wider text-xs font-semibold">{t("Tabel raqami", "Табельный номер")}</Label>
             <Input
               type="text"
               inputMode="numeric"
               placeholder={t("Masalan: 001", "Например: 001")}
               value={tabelNumber}
               onChange={e => setTabelNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              className="text-center text-2xl h-14 bg-surface border-outline-variant text-on-surface focus-visible:ring-primary"
+              className="text-center text-2xl h-14 bg-background border-border text-foreground focus-visible:ring-primary"
               data-testid="input-tabel-number"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant uppercase tracking-wider text-xs font-semibold">{t("Parol", "Пароль")}</Label>
+          <div className="space-y-1">
+          <Label className="text-muted-foreground uppercase tracking-wider text-xs font-semibold">{t("Parol", "Пароль")}</Label>
             <Input
               type="password"
               placeholder="••••"
               value={workerPassword}
               onChange={e => setWorkerPassword(e.target.value)}
-              className="text-center text-2xl h-14 bg-surface border-outline-variant text-on-surface focus-visible:ring-primary"
+              className="text-center text-2xl h-14 bg-background border-border text-foreground focus-visible:ring-primary"
               data-testid="input-worker-password"
             />
           </div>
           <Button
-            className="w-full h-14 text-xl font-bold bg-gradient-to-br from-primary to-primary-dim text-white rounded-xl shadow-none hover:opacity-90 transition-opacity"
+            className="w-full h-14 text-xl font-bold bg-primary text-white rounded-xl shadow-none hover:opacity-90 transition-opacity"
             onClick={handleLogin}
             disabled={tabelNumber.length < 3 || workerPassword.length < 4}
             data-testid="button-login"
@@ -68,13 +77,13 @@ export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, work
               size="sm" 
               onClick={() => setLang(lang === "uz" ? "ru" : "uz")} 
               data-testid="button-lang-login"
-              className="text-on-surface-variant hover:bg-surface-container-high"
+              className="text-muted-foreground hover:bg-muted"
             >
               <Languages className="h-4 w-4 mr-2" />
               {lang === "uz" ? "Русский" : "O'zbekcha"}
             </Button>
           </div>
-          <p className="text-xs text-center text-on-surface-variant">
+          <p className="text-xs text-center text-muted-foreground">
             {t("Tabel raqami va PIN kodingizni kiriting", "Введите табельный номер и PIN-код")}
           </p>
         </CardContent>

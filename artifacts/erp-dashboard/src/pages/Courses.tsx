@@ -1,3 +1,8 @@
+/**
+ * @module Courses
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -6,7 +11,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/Pagination";
-import { Plus, Filter, Loader2, AlertCircle, Package } from "lucide-react";
+import { Plus, Filter, AlertCircle, Package } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,10 +23,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { AddCourseDialog } from "@/components/AddCourseDialog";
 import { useTranslation } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ErrorState } from "@/components/ui/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 interface CourseForEdit {
   id: string;
@@ -42,6 +48,7 @@ export default function Courses() {
   const { t } = useTranslation('lms');
   const { t: tCommon } = useTranslation('common');
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -77,9 +84,10 @@ export default function Courses() {
         ...(search && { search }),
         ...(filter !== "all" && { filter }),
       });
-      const response = await fetch(`/api/courses?${params}`, { credentials: "include" });
+      const response = await apiRequest('GET', `/api/courses?${params}`);
       return response.json();
     },
+    enabled: !!isAuthenticated,
   });
 
   const courses = coursesResponse?.data || [];
@@ -87,6 +95,7 @@ export default function Courses() {
 
   const { data: departments = [] } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ["/api/departments"],
+    enabled: !!isAuthenticated,
   });
 
   const deleteMutation = useMutation({
@@ -127,14 +136,14 @@ export default function Courses() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64" data-testid="loading-spinner">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <EPLoader size={32} tone="muted" />
       </div>
     );
   }
 
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
   if (error) {
     return (
@@ -146,38 +155,37 @@ export default function Courses() {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            Kurslar <span className="font-bold text-primary">Katalogi</span>
-          </h1>
-          <p className="text-on-surface-variant mt-2 font-medium">
-            {t('courseContent')}
-          </p>
+          <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("kurslarKatalogi")}</b></>}
+        title={t("kurslarKatalogi")}
+        subtitle={t('courseContent')}
+      />
         </div>
         <Button 
           onClick={() => setShowAddDialog(true)} 
           data-testid="button-add-course"
-          className="bg-gradient-to-br from-primary to-primary-dim text-white shadow-sm"
+          className="bg-primary text-white shadow-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
           {t('addCourse')}
         </Button>
       </div>
 
-      <div className="flex items-center gap-4 flex-wrap bg-surface-container-low p-4 rounded-xl mb-8">
+      <div className="flex items-center gap-4 flex-wrap bg-muted/40 p-4 rounded-xl mb-8">
         <SearchBar 
           placeholder={`${t('courses')} ${tCommon('search').toLowerCase()}...`}
           value={search}
           onChange={setSearch}
         />
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-48 bg-surface-container-lowest border-outline-variant" data-testid="select-filter">
+          <SelectTrigger className="w-48 bg-card border-border h-9" data-testid="select-filter">
             <Filter className="w-4 h-4 mr-2 text-primary" />
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-surface-container-lowest border-outline-variant">
+          <SelectContent className="bg-card border-border">
             <SelectItem value="all">{tCommon('all')} {t('courses').toLowerCase()}</SelectItem>
             <SelectItem value="required">{t('mandatory')}</SelectItem>
             <SelectItem value="optional">{t('optional')}</SelectItem>
@@ -191,24 +199,24 @@ export default function Courses() {
             <Card key={`k-${i}`}>
               <CardHeader className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-6 w-48 rounded-lg" />
                   <Skeleton className="h-6 w-16 rounded-full" />
                 </div>
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-full rounded-lg" />
+                <Skeleton className="h-4 w-3/4 rounded-lg" />
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20 rounded-lg" />
+                  <Skeleton className="h-4 w-24 rounded-lg" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-2 flex-1 rounded-full" />
-                  <Skeleton className="h-4 w-10" />
+                  <Skeleton className="h-4 w-10 rounded-lg" />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Skeleton className="h-9 w-24" />
-                  <Skeleton className="h-9 w-20" />
+                  <Skeleton className="h-9 w-24 rounded-lg" />
+                  <Skeleton className="h-9 w-20 rounded-lg" />
                 </div>
               </CardContent>
             </Card>
@@ -225,7 +233,7 @@ export default function Courses() {
                   const courseToEdit = (Array.isArray(courses) ? courses : []).find(c => c.id === course.id);
                   if (courseToEdit) {
                     try {
-                      const response = await fetch(`/api/courses/${course.id}`, { credentials: "include" });
+                      const response = await apiRequest('GET', `/api/courses/${course.id}`);
                       const fullCourse = await response.json();
                       setEditingCourse({
                         id: fullCourse.id,
@@ -300,8 +308,8 @@ export default function Courses() {
       <ConfirmDialog
         open={!!deleteCourseId}
         onOpenChange={(v) => { if (!v) setDeleteCourseId(null); }}
-        title="Kursni o'chirish"
-        description="Ushbu kursni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("kursniOchirish")}
+        description={t("ushbuKursniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteCourseId) { deleteMutation.mutate(deleteCourseId); setDeleteCourseId(null); } }}

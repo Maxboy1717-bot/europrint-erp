@@ -1,3 +1,8 @@
+/**
+ * @module get-warehouses.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { db, warehouses } from '@shared/db';

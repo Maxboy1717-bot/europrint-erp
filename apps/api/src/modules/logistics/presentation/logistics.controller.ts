@@ -1,3 +1,8 @@
+/**
+ * @module logistics.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
@@ -5,7 +10,9 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Logger,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -24,6 +31,7 @@ import { DispatchDeliveryCommand} from '../application/commands/dispatch-deliver
 import { AssignDriverCommand} from '../application/commands/assign-driver.command';
 import { GetDeliveriesQuery} from '../application/queries/get-deliveries.query';
 import { DispatchDeliveryDto, AssignDriverDto, CompleteDeliveryDto} from './dto/logistics.dto';
+import { IDeliveryRepo, DELIVERY_REPO } from '../domain/repositories/i-delivery.repo';
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -42,7 +50,9 @@ export class LogisticsController {
  constructor(
  private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus,
- private readonly eventEmitter: EventEmitter2) {}
+ private readonly eventEmitter: EventEmitter2,
+ @Inject(DELIVERY_REPO) private readonly deliveryRepo: IDeliveryRepo,
+ ) {}
 
  @Get()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_MANAGER)
@@ -67,11 +77,9 @@ export class LogisticsController {
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_MANAGER)
  async getById(@Param('id') id: string) {
- this.logger.log('Get delivery');
- return {
- statusCode: HttpStatus.OK,
- data: { id},
-};
+   const result = await this.deliveryRepo.findById(id);
+   if (!result.ok || !result.data) throw new NotFoundException(`Yetkazib berish #${id} topilmadi`);
+   return { statusCode: HttpStatus.OK, data: result.data };
 }
 
  @Post()

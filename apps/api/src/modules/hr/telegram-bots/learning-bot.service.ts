@@ -1,3 +1,8 @@
+/**
+ * @module learning-bot.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -6,6 +11,7 @@ import { errMsg } from '../hr-v2-error';
 import { TelegramBotsRepository } from './telegram-bots.repository';
 import { NotificationBotService } from './notification-bot.service';
 import type { Telegraf, Context } from 'telegraf';
+import { message } from 'telegraf/filters';
 
 type CtxWithChat = Context & { chat?: { id?: number } };
 type CtxWithMsg = CtxWithChat & { message?: { text?: string } };
@@ -31,7 +37,7 @@ export class LearningBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[learning-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('Learning Bot token not configured (TELEGRAM_LEARNING_BOT_TOKEN missing) — skipping');
         return;
@@ -161,7 +167,7 @@ export class LearningBotService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       try {
         const chatId = (ctx as CtxWithChat).chat?.id;
         const text = ((ctx as CtxWithMsg).message?.text ?? '').trim();

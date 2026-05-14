@@ -1,3 +1,8 @@
+/**
+ * @module production-facts.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { safeCall, Result, AppError, Ok } from '@common/result';
 import { ProductionFactsRepository } from './production-facts.repository';

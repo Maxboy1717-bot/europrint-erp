@@ -1,3 +1,8 @@
+/**
+ * @module hitl-document-type.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum HitlDocumentType {
   PURCHASE_ORDER = 'purchase_order', // PO > 50 mln UZS
   PAYMENT = 'payment', // To'lov > 100 mln UZS

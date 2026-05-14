@@ -1,3 +1,8 @@
+/**
+ * @module submit-inspection.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';

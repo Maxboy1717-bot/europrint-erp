@@ -1,3 +1,8 @@
+/**
+ * @module pp-orders.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger , InternalServerErrorException } from '@nestjs/common';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -8,6 +13,8 @@ import { AuditInterceptor} from 'src/common/interceptors/audit.interceptor';
 import { CreateProductionOrderCommand} from '../application/commands/create-production-order.handler';
 import { ReleaseProductionOrderCommand} from '../application/commands/release-production-order.handler';
 import { ProductionPlanQuery} from '../application/queries/production-plan.handler';
+import { GetProductionOrdersQuery } from '../application/queries/get-production-orders.query';
+import { GetProductionOrderByIdQuery } from '../application/queries/get-production-order-by-id.query';
 import { z } from 'zod';
 
 enum Role {
@@ -43,16 +50,34 @@ export class PpOrdersController {
 
  @Get()
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
- async getAll(){
+ async getAll(
+   @Query('status') status?: string,
+   @Query('salesOrderId') salesOrderId?: string,
+   @Query('from') from?: string,
+   @Query('to') to?: string,
+   @Query('page') page?: string,
+   @Query('limit') limit?: string,
+ ) {
   this.logger.log('Getting all production orders');
-  return [];
+  const query = new GetProductionOrdersQuery({
+    status,
+    salesOrderId,
+    from: from ? new Date(from) : undefined,
+    to: to ? new Date(to) : undefined,
+    page: page ? Number(page) : undefined,
+    limit: limit ? Number(limit) : undefined,
+  });
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
 }
 
  @Get(':id')
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
- async getById(@Param('id') id: number){
-  this.logger.log('Getting production order');
-  return {};
+ async getById(@Param('id') id: number) {
+  this.logger.log(`Getting production order id=${id}`);
+  const query = new GetProductionOrderByIdQuery(Number(id));
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
 }
 
  @Post()

@@ -1,3 +1,8 @@
+/**
+ * @module schema-compat-zod
+ * @description Source module. See exports for details.
+ */
+
 import z from 'zod';
 
 export const insertCustomerOrderSchema = z.object({

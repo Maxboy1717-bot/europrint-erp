@@ -1,3 +1,8 @@
+/**
+ * @module sonner
+ * @description Source module. See exports for details.
+ */
+
 "use client"
 
 import { useTheme } from "next-themes"

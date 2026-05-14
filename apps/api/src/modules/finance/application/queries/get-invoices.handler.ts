@@ -1,3 +1,8 @@
+/**
+ * @module get-invoices.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger, InternalServerErrorException } from '@nestjs/common';
 import { PaginatedResult } from '@common/types/result.type';

@@ -1,14 +1,21 @@
+/**
+ * @module ExitControlPanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Camera } from "lucide-react";
 import { ExitLog } from "./types";
 import { alertBadgeVariant, alertLabel } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 interface ExitControlProps {
   logs: ExitLog[];
 }
 
 export function ExitControlPanel({ logs }: ExitControlProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -22,11 +29,11 @@ export function ExitControlPanel({ logs }: ExitControlProps) {
           <Badge variant="default">RUXSAT</Badge>
           <Badge variant="secondary">OGOHLANTIRISH</Badge>
           <Badge variant="destructive">BLOKLASH</Badge>
-          <Badge variant="destructive" className="bg-black text-white dark:bg-surface-container-lowest dark:text-on-surface">XAVFLI</Badge>
+          <Badge variant="destructive" className="bg-black text-white dark:bg-card dark:text-foreground">XAVFLI</Badge>
         </div>
         {!logs || logs.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Chiqish jurnali bo'sh
+            {t("chiqishJurnaliBosh")}
           </p>
         ) : (
           <div className="space-y-2">

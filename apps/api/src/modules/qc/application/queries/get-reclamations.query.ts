@@ -1,3 +1,8 @@
+/**
+ * @module get-reclamations.query
+ * @description Source module. See exports for details.
+ */
+
 import { DefectSeverity } from '../../domain/aggregates/defect.aggregate';
 import { ReclamationStatus } from '../../domain/aggregates/reclamation.aggregate';
 

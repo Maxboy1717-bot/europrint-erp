@@ -1,3 +1,8 @@
+/**
+ * @module pp.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -20,6 +25,7 @@ import { UpdateWorkCenterHandler } from './application/commands/update-work-cent
 import { ProductionPlanHandler } from './application/queries/production-plan.handler';
 import { MachineLoadHandler } from './application/queries/machine-load.handler';
 import { GetProductionOrdersHandler } from './application/queries/get-production-orders.handler';
+import { GetProductionOrderByIdHandler } from './application/queries/get-production-order-by-id.handler';
 import { GetBomsHandler } from './application/queries/get-boms.handler';
 import { GetRoutingsHandler } from './application/queries/get-routings.handler';
 import { GetMrpReportHandler } from './application/queries/get-mrp-report.handler';
@@ -65,6 +71,7 @@ const handlers = [
   ProductionPlanHandler,
   MachineLoadHandler,
   GetProductionOrdersHandler,
+  GetProductionOrderByIdHandler,
   GetBomsHandler,
   GetRoutingsHandler,
   GetMrpReportHandler,

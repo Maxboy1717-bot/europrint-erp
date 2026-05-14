@@ -1,3 +1,8 @@
+/**
+ * @module AnalyticsRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
 const ForecastAnalytics = lazy(() => import("@/pages/ForecastAnalytics"));
@@ -21,6 +26,7 @@ export const ANALYTICS_ROUTES: [string, React.ComponentType][] = [
   ['/ai/forecast',                    ForecastAnalytics],
   ['/lms-dashboard',                  LMSDashboard],
   ['/courses',                        Courses],
+  ['/lessons',                        Courses],
   ['/courses/:id',                    CourseDetail],
   ['/courses/:id/lessons',            LessonPlayer],
   ['/courses/:id/lessons/:lessonId',  LessonPlayer],

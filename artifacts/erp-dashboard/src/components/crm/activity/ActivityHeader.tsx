@@ -1,3 +1,8 @@
+/**
+ * @module ActivityHeader
+ * @description React UI component.
+ */
+
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, MessageSquare, ListTodo, Mail, Smartphone, Calendar as CalendarIcon, Filter, ChevronDown } from "lucide-react";
 import { 
@@ -8,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { WhatsappIcon } from "./utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface ActivityHeaderProps {
   activeTab: string;
@@ -21,6 +27,7 @@ export function ActivityHeader({
   timelineFilter,
   setTimelineFilter,
 }: ActivityHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="border-b px-2 py-2 flex items-center justify-between bg-muted/30">
       <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0">
@@ -30,7 +37,7 @@ export function ActivityHeader({
           data-testid="tab-activity"
         >
           <Plus className="h-3 w-3 mr-1" />
-          Ish
+          {t("ish")}
         </TabsTrigger>
         <TabsTrigger
           value="comment"
@@ -38,7 +45,7 @@ export function ActivityHeader({
           data-testid="tab-comment"
         >
           <MessageSquare className="h-3 w-3 mr-1" />
-          Sharh
+          {t("comment")}
         </TabsTrigger>
         <TabsTrigger
           value="task"
@@ -46,7 +53,7 @@ export function ActivityHeader({
           data-testid="tab-task"
         >
           <ListTodo className="h-3 w-3 mr-1" />
-          Vazifa
+          {t("vazifa")}
         </TabsTrigger>
         <TabsTrigger
           value="whatsapp"
@@ -54,7 +61,7 @@ export function ActivityHeader({
           data-testid="tab-whatsapp"
         >
           <WhatsappIcon className="h-3 w-3 mr-1" />
-          WhatsApp
+          {t("whatsapp")}
         </TabsTrigger>
         <TabsTrigger
           value="sms"
@@ -70,7 +77,7 @@ export function ActivityHeader({
           data-testid="tab-email"
         >
           <Mail className="h-3 w-3 mr-1" />
-          Xat
+          {t("xat")}
         </TabsTrigger>
         <TabsTrigger
           value="slots"
@@ -78,7 +85,7 @@ export function ActivityHeader({
           data-testid="tab-slots"
         >
           <CalendarIcon className="h-3 w-3 mr-1" />
-          Slotlar
+          {t("slotlar")}
         </TabsTrigger>
       </TabsList>
 
@@ -90,24 +97,24 @@ export function ActivityHeader({
             <ChevronDown className="h-3 w-3 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuContent align="end" className="w-full sm:w-[160px]">
           <DropdownMenuItem 
             className="text-xs" 
             onClick={() => setTimelineFilter("all")}
           >
-            Barcha faoliyatlar
+            {t("barchaFaoliyatlar")}
           </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-xs" 
             onClick={() => setTimelineFilter("pending")}
           >
-            Kutilayotganlar
+            {t("kutilayotganlar")}
           </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-xs" 
             onClick={() => setTimelineFilter("completed")}
           >
-            Bajarilganlar
+            {t("bajarilganlar")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

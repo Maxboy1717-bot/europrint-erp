@@ -1,3 +1,8 @@
+/**
+ * @module crm-companies.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -153,5 +158,20 @@ export class CrmCompaniesController {
     const r = _rUpdateLeadStage.data as Record<string, unknown>;
     assertFound(r, 'Lead stage not found');
     return r;
+  }
+
+  @Post('companies/:id/contacts')
+  @UseGuards(RolesGuard)
+  @Roles(...CRM_WRITE_ROLES)
+  async createCompanyContact(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return unwrapOrThrow(await this.svc.createCompanyContact(safeInt(id, 0), body));
+  }
+
+  @Delete('companies/:id/contacts/:contactId')
+  @UseGuards(RolesGuard)
+  @Roles(...CRM_WRITE_ROLES)
+  async deleteCompanyContact(@Param('id') id: string, @Param('contactId') contactId: string) {
+    await this.svc.deleteCompanyContact(safeInt(id, 0), safeInt(contactId, 0));
+    return { deleted: true };
   }
 }

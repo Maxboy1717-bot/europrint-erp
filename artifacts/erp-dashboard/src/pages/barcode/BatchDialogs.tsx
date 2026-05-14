@@ -1,3 +1,8 @@
+/**
+ * @module BatchDialogs
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,26 +69,26 @@ export function BatchFormDialog({
 }: BatchFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>{editingBatch ? t.editBatch : t.createBatch}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{editingBatch ? t.editBatch : t.createBatch}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-4">
-          <div className="space-y-2">
-            <Label>{t.batchNumber} *</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+          <div className="space-y-1">
+          <Label>{t.batchNumber} *</Label>
             <Input
               value={batchForm.batchNumber}
               onChange={(e) => onFormChange({ ...batchForm, batchNumber: e.target.value })}
               data-testid="input-batch-number"
             />
           </div>
-          <div className="space-y-2">
-            <Label>{t.material}</Label>
+          <div className="space-y-1">
+          <Label>{t.material}</Label>
             <Select
               value={batchForm.materialCardId}
               onValueChange={(v) => onFormChange({ ...batchForm, materialCardId: v })}
             >
-              <SelectTrigger data-testid="select-batch-material">
+              <SelectTrigger data-testid="select-batch-material" className="h-9">
                 <SelectValue placeholder={t.selectMaterial} />
               </SelectTrigger>
               <SelectContent>
@@ -93,13 +98,13 @@ export function BatchFormDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>{t.warehouse}</Label>
+          <div className="space-y-1">
+          <Label>{t.warehouse}</Label>
             <Select
               value={batchForm.warehouseId}
               onValueChange={(v) => onFormChange({ ...batchForm, warehouseId: v })}
             >
-              <SelectTrigger data-testid="select-batch-warehouse">
+              <SelectTrigger data-testid="select-batch-warehouse" className="h-9">
                 <SelectValue placeholder={t.selectWarehouse} />
               </SelectTrigger>
               <SelectContent>
@@ -109,8 +114,8 @@ export function BatchFormDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>{t.quantity} *</Label>
+          <div className="space-y-1">
+          <Label>{t.quantity} *</Label>
             <Input
               type="number"
               value={batchForm.quantity}
@@ -118,8 +123,8 @@ export function BatchFormDialog({
               data-testid="input-batch-quantity"
             />
           </div>
-          <div className="space-y-2">
-            <Label>{t.remaining}</Label>
+          <div className="space-y-1">
+          <Label>{t.remaining}</Label>
             <Input
               type="number"
               value={batchForm.remainingQuantity}
@@ -127,8 +132,8 @@ export function BatchFormDialog({
               data-testid="input-batch-remaining"
             />
           </div>
-          <div className="space-y-2">
-            <Label>{t.unitCost}</Label>
+          <div className="space-y-1">
+          <Label>{t.unitCost}</Label>
             <Input
               type="number"
               value={batchForm.unitCost}
@@ -136,8 +141,8 @@ export function BatchFormDialog({
               data-testid="input-batch-unit-cost"
             />
           </div>
-          <div className="space-y-2">
-            <Label>{t.productionDate}</Label>
+          <div className="space-y-1">
+          <Label>{t.productionDate}</Label>
             <Input
               type="date"
               value={batchForm.productionDate}
@@ -145,8 +150,8 @@ export function BatchFormDialog({
               data-testid="input-batch-production-date"
             />
           </div>
-          <div className="space-y-2">
-            <Label>{t.expiryDate}</Label>
+          <div className="space-y-1">
+          <Label>{t.expiryDate}</Label>
             <Input
               type="date"
               value={batchForm.expiryDate}
@@ -154,21 +159,21 @@ export function BatchFormDialog({
               data-testid="input-batch-expiry-date"
             />
           </div>
-          <div className="space-y-2">
-            <Label>{t.supplierBatch}</Label>
+          <div className="space-y-1">
+          <Label>{t.supplierBatch}</Label>
             <Input
               value={batchForm.supplierBatchNumber}
               onChange={(e) => onFormChange({ ...batchForm, supplierBatchNumber: e.target.value })}
               data-testid="input-batch-supplier"
             />
           </div>
-          <div className="space-y-2">
-            <Label>{t.qcStatus}</Label>
+          <div className="space-y-1">
+          <Label>{t.qcStatus}</Label>
             <Select
               value={batchForm.qcStatus}
               onValueChange={(v) => onFormChange({ ...batchForm, qcStatus: v })}
             >
-              <SelectTrigger data-testid="select-batch-qc-status">
+              <SelectTrigger data-testid="select-batch-qc-status" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -178,13 +183,13 @@ export function BatchFormDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>{t.status}</Label>
+          <div className="space-y-1">
+          <Label>{t.status}</Label>
             <Select
               value={batchForm.status}
               onValueChange={(v) => onFormChange({ ...batchForm, status: v })}
             >
-              <SelectTrigger data-testid="select-batch-status">
+              <SelectTrigger data-testid="select-batch-status" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -226,10 +231,10 @@ export function BatchViewDialog({ batch, onClose, t, lang }: BatchViewDialogProp
   if (!batch) return null;
   return (
     <Dialog open={!!batch} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Barcode className="h-5 w-5" />
+            <Barcode className="h-4 w-4" />
             {t.batchDetails}
           </DialogTitle>
         </DialogHeader>
@@ -310,9 +315,9 @@ export function PrintPreviewDialog({ open, onOpenChange, printData, onPrint, onC
   const labels = printData.labels[lang];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>{t.printPreview}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t.printPreview}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="p-6 border-2 border-dashed rounded-lg text-center">
@@ -328,7 +333,7 @@ export function PrintPreviewDialog({ open, onOpenChange, printData, onPrint, onC
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             <div className="text-muted-foreground">{labels.material}:</div>
             <div>{printData.materialName}</div>
             <div className="text-muted-foreground">{labels.code}:</div>

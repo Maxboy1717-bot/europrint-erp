@@ -1,3 +1,8 @@
+/**
+ * @module list-leads.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err, Ok, Result, isErr } from '@common/result';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';

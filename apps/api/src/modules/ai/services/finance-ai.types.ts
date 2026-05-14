@@ -1,3 +1,8 @@
+/**
+ * @module finance-ai.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 export interface AnomalyResult {
   hasAnomalies: boolean;
   anomalies: Array<{ description: string; severity: 'HIGH' | 'MEDIUM' | 'LOW'; amount?: number }>;

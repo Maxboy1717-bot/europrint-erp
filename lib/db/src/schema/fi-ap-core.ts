@@ -1,6 +1,11 @@
+/**
+ * @module fi-ap-core
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
@@ -24,8 +29,8 @@ export const invoicePayments = pgTable("invoice_payments", {
   id: serial("id").primaryKey(),
   paymentNumber: varchar("payment_number", { length: 50 }).notNull().unique(),
   paymentDate: varchar("payment_date", { length: 10 }).notNull(), // YYYY-MM-DD
-  vendorId: varchar("vendor_id").references(() => vendors.id),
-  purchaseInvoiceId: varchar("purchase_invoice_id").references(() => purchaseInvoices.id),
+  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
+  purchaseInvoiceId: varchar("purchase_invoice_id").references(() => purchaseInvoices.id, { onDelete: "set null" }),
   paymentMethod: varchar("payment_method", { length: 30 }).notNull(), // bank_transfer, cash, check, letter_of_credit
   bankAccount: varchar("bank_account", { length: 50 }),
   amount: numericMoney("amount").notNull(),
@@ -35,9 +40,12 @@ export const invoicePayments = pgTable("invoice_payments", {
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, completed, cancelled, reversed
   clearedAt: timestamp("cleared_at"),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("invoice_payments_status_chk", sql`${t.status} IN ('pending','completed','cancelled','reversed')`),
+  check("invoice_payments_payment_method_chk", sql`${t.paymentMethod} IN ('bank_transfer','cash','check','letter_of_credit')`),
+  check("invoice_payments_amount_chk", sql`${t.amount} > 0`),
   index("idx_invoice_payments_vendor_id").on(t.vendorId),
   index("idx_invoice_payments_status").on(t.status),
   index("idx_invoice_payments_created_at").on(t.createdAt),
@@ -66,7 +74,7 @@ export const customerPayments = pgTable("customer_payments", {
   paymentNumber: varchar("payment_number", { length: 50 }).notNull().unique(),
   paymentDate: varchar("payment_date", { length: 10 }).notNull(),
   customerId: varchar("customer_id"), // CRM company ID (optional link)
-  salesInvoiceId: varchar("sales_invoice_id").references(() => salesInvoices.id),
+  salesInvoiceId: varchar("sales_invoice_id").references(() => salesInvoices.id, { onDelete: "set null" }),
   paymentMethod: varchar("payment_method", { length: 30 }).notNull(), // bank_transfer, cash, check, credit_card
   bankAccount: varchar("bank_account", { length: 50 }),
   amount: numericMoney("amount").notNull(),
@@ -76,9 +84,12 @@ export const customerPayments = pgTable("customer_payments", {
   status: varchar("status", { length: 20 }).notNull().default("received"), // received, applied, refunded
   appliedAt: timestamp("applied_at"),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("customer_payments_status_chk", sql`${t.status} IN ('received','applied','refunded')`),
+  check("customer_payments_payment_method_chk", sql`${t.paymentMethod} IN ('bank_transfer','cash','check','credit_card')`),
+  check("customer_payments_amount_chk", sql`${t.amount} > 0`),
   index("idx_customer_payments_customer_id").on(t.customerId),
   index("idx_customer_payments_status").on(t.status),
   index("idx_customer_payments_created_at").on(t.createdAt),
@@ -116,6 +127,7 @@ export const bankAccounts = pgTable("bank_accounts", {
 }, (t) => [
   index("idx_bank_accounts_currency").on(t.currency),
   index("idx_bank_accounts_account_type").on(t.accountType),
+  check("bank_accounts_type_chk", sql`${t.accountType} IN ('current','savings','credit')`),
 ]);
 
 
@@ -140,17 +152,19 @@ export const cashFlowTransactions = pgTable("cash_flow_transactions", {
   transactionType: varchar("transaction_type", { length: 20 }).notNull(), // inflow, outflow
   category: varchar("category", { length: 30 }).notNull(), // sales, purchase, salary, tax, loan, other
   amount: numericMoney("amount").notNull(),
-  bankAccountId: varchar("bank_account_id").references(() => bankAccounts.id),
+  bankAccountId: varchar("bank_account_id").references(() => bankAccounts.id, { onDelete: "set null" }),
   description: text("description"),
   referenceType: varchar("reference_type", { length: 50 }), // invoice, order, payroll, etc.
   referenceId: varchar("reference_id", { length: 100 }), // Related document ID
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_cash_flow_transactions_bank_account_id").on(t.bankAccountId),
   index("idx_cash_flow_transactions_transaction_type").on(t.transactionType),
   index("idx_cash_flow_transactions_category").on(t.category),
   index("idx_cash_flow_transactions_created_at").on(t.createdAt),
+  check("cash_flow_txn_type_chk", sql`${t.transactionType} IN ('inflow','outflow')`),
+  check("cash_flow_txn_category_chk", sql`${t.category} IN ('sales','purchase','salary','tax','loan','other')`),
 ]);
 
 
@@ -177,13 +191,15 @@ export const budgets = pgTable("budgets", {
   endDate: varchar("end_date", { length: 10 }).notNull(), // YYYY-MM-DD
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, approved, active, closed
   totalAmount: numericMoney("total_amount").notNull().default(0),
-  createdBy: integer("created_by").references(() => users.id),
-  approvedBy: varchar("approved_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_budgets_fiscal_year").on(t.fiscalYear),
   index("idx_budgets_status").on(t.status),
   index("idx_budgets_period_type").on(t.periodType),
+  check("budgets_period_type_chk", sql`${t.periodType} IN ('annual','quarterly','monthly')`),
+  check("budgets_status_chk", sql`${t.status} IN ('draft','approved','active','closed')`),
 ]);
 

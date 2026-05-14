@@ -1,3 +1,8 @@
+/**
+ * @module i-kanban-boards.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Result } from '@common/result';
 
 export interface KanbanBoard {
@@ -75,8 +80,17 @@ export interface UpdateCardInput {
   title: string | null;
   description: string | null;
   priority: string | null;
-  due_date: string | null;
+  due_date: string | null;          // varchar in DB
+  start_date: string | null;        // varchar in DB
   owner_user_id: string | null;
+  estimated_time: number | null;    // integer in DB
+  parent_card_id: number | null;    // integer in DB
+  project_id: number | null;        // integer in DB
+  related_type: string | null;
+  related_id: number | null;        // integer in DB
+  recurrence_pattern: string | null;
+  recurrence_interval: number | null;
+  recurrence_end_date: string | null; // varchar in DB
 }
 
 export interface MoveCardInput {
@@ -90,6 +104,7 @@ export interface IKanbanBoardsRepo {
   getBoards(): Promise<Result<KanbanBoard[]>>;
   getBoardById(boardId: string): Promise<Result<KanbanBoardDetail>>;
   createBoard(input: CreateBoardInput): Promise<Result<KanbanBoard>>;
+  deleteBoard(boardId: string): Promise<Result<void>>;
   getMaxColumnOrder(boardId: string): Promise<Result<number>>;
   addColumn(input: CreateColumnInput): Promise<Result<KanbanColumn>>;
   updateColumn(boardId: string, columnId: string, input: UpdateColumnInput): Promise<Result<KanbanColumn>>;

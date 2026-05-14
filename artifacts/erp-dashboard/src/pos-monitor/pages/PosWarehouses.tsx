@@ -1,154 +1,337 @@
+/**
+ * POS Omborlar — WMS modulidan real ma'lumotlar
+ * Barcha omborlar warehouses jadvalidan yuklanadi.
+ */
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { warehousesApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
-interface StockRow { warehouseId: string; materialCardId: number; balance: number; }
-interface WarehouseGroup { id: string; totalBalance: number; materialCount: number; pct: number; type: string; }
+interface Warehouse {
+  id: string;
+  code: string | null;
+  name: string | null;
+  type: string | null;
+  isActive: boolean;
+  departmentCode: string | null;
+  totalMaterials: number;
+  totalQty: number;
+}
 
-const WH_TYPE_COLORS: Record<string, string> = {
-  MAIN: "var(--pos-accent)", QUARANTINE: "var(--pos-warning)", DEFECTIVE: "var(--pos-danger)", DEPARTMENT: "var(--pos-success)",
+const TYPE_CFG: Record<string, { icon: string; bg: string; text: string; badge: string; label: string }> = {
+  // ERP standart 9 ta ombor turi (warehouse-9-types-seed.sql ga muvofiq)
+  RAW_MATERIAL:  { icon: "📦", bg: "#FEF3C7", text: "#92400E", badge: "#F59E0B", label: "Xom ashyo" },
+  FINISHED_GOODS:{ icon: "✅",  bg: "#ECFDF5", text: "#064E3B", badge: "#10B981", label: "Tayyor mahsulot" },
+  WIP:           { icon: "⚙️",  bg: "#F5F3FF", text: "#4C1D95", badge: "#8B5CF6", label: "Yarim tayyor" },
+  SCRAP:         { icon: "⚠️",  bg: "#FFF1F2", text: "#881337", badge: "#F43F5E", label: "Brak" },
+  QUARANTINE:    { icon: "🔒", bg: "#FEF3C7", text: "#92400E", badge: "#D97706", label: "Karantin" },
+  TOOLS:         { icon: "🔧", bg: "#EFF6FF", text: "#1E40AF", badge: "#3B82F6", label: "Asbob-uskuna" },
+  HOUSEHOLD:     { icon: "🏠", bg: "#FFF7ED", text: "#7C2D12", badge: "#F97316", label: "Xo'jalik" },
+  MRO:           { icon: "🛠️", bg: "#F0F9FF", text: "#0C4A6E", badge: "#0EA5E9", label: "MRO" },
+
+  // Eski turlar uchun fallback (legacy WH-* omborlar — endi nofaol)
+  MAIN:          { icon: "🏭", bg: "#EFF6FF", text: "#1E40AF", badge: "#3B82F6", label: "Asosiy" },
+  PRODUCTION:    { icon: "⚙️",  bg: "#F5F3FF", text: "#4C1D95", badge: "#8B5CF6", label: "Ishlab chiqarish" },
+  DEPARTMENT:    { icon: "🏢", bg: "#FFF7ED", text: "#7C2D12", badge: "#F97316", label: "Bo'lim" },
+  DEFECTIVE:     { icon: "⚠️",  bg: "#FFF1F2", text: "#881337", badge: "#F43F5E", label: "Nuqsonli" },
+  QC:            { icon: "🔬", bg: "#F0FDF4", text: "#14532D", badge: "#22C55E", label: "QC" },
 };
-const WH_BADGE: Record<string, string> = {
-  MAIN: "pos-badge-blue", QUARANTINE: "pos-badge-yellow", DEFECTIVE: "pos-badge-red", DEPARTMENT: "pos-badge-green",
-};
 
-function guessType(id: string): string {
-  if (id.includes("QC") || id.includes("QUARANTINE")) return "QUARANTINE";
-  if (id.includes("DEF") || id.includes("DEFECT")) return "DEFECTIVE";
-  if (id.includes("DEPT") || id.includes("DEP")) return "DEPARTMENT";
-  return "MAIN";
+function getTypeCfg(type: string | null) {
+  return type ? (TYPE_CFG[type] ?? TYPE_CFG["RAW_MATERIAL"]) : TYPE_CFG["RAW_MATERIAL"];
+}
+
+function WarehouseCard({ wh }: { wh: Warehouse }) {
+  const { t } = useTranslation("common");
+  const [, navigate] = useLocation();
+  const cfg = getTypeCfg(wh.type);
+  const maxQty = 1000; // for progress bar scaling
+  const pct = Math.min(100, Math.round((wh.totalQty / maxQty) * 100));
+
+  return (
+    <div
+      onClick={() => navigate(`/pos-monitor/warehouses/${wh.id}`)}
+      style={{
+        background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB",
+        overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column",
+        transition: "box-shadow 0.15s, transform 0.15s",
+        opacity: wh.isActive ? 1 : 0.6,
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "";
+        (e.currentTarget as HTMLDivElement).style.transform = "";
+      }}
+    >
+      {/* Header */}
+      <div style={{
+        background: cfg.bg, padding: "14px 16px",
+        display: "flex", alignItems: "center", gap: 10,
+        borderBottom: "1px solid #E5E7EB",
+      }}>
+        <span style={{ fontSize: 28 }}>{cfg.icon}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontWeight: 700, fontSize: 14, color: "#1F2937",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {wh.name ?? wh.code ?? wh.id}
+          </div>
+          {wh.code && wh.name && (
+            <div style={{ fontSize: 11, color: "#9CA3AF", fontFamily: "monospace" }}>{wh.code}</div>
+          )}
+        </div>
+        <span style={{
+          background: cfg.badge, color: "#FFF",
+          borderRadius: 20, padding: "2px 8px", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
+        }}>
+          {cfg.label}
+        </span>
+      </div>
+
+      {/* Stats */}
+      <div style={{ padding: "12px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{
+          background: "#F9FAFB", borderRadius: 8, padding: "10px 12px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#1F2937" }}>
+            {wh.totalMaterials}
+          </div>
+          <div style={{ fontSize: 10, color: "#9CA3AF" }}>{"Common.material Tur"}</div>
+        </div>
+        <div style={{
+          background: "#F9FAFB", borderRadius: 8, padding: "10px 12px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#059669" }}>
+            {wh.totalQty % 1 === 0 ? wh.totalQty.toLocaleString() : wh.totalQty.toFixed(1)}
+          </div>
+          <div style={{ fontSize: 10, color: "#9CA3AF" }}>{t("jamiQoldiq")}</div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ padding: "0 16px 14px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>
+          <span>{t("toldirganlik")}</span>
+          <span>{pct}%</span>
+        </div>
+        <div style={{ height: 6, background: "#F3F4F6", borderRadius: 3, overflow: "hidden" }}>
+          <div style={{
+            height: "100%", width: `${pct}%`,
+            background: pct > 80 ? "#10B981" : pct > 40 ? "#F59E0B" : "#EF4444",
+            borderRadius: 3, transition: "width 0.5s",
+          }} />
+        </div>
+      </div>
+
+      {/* Footer */}
+      {(wh.departmentCode || !wh.isActive) && (
+        <div style={{
+          padding: "8px 16px", borderTop: "1px solid #F3F4F6",
+          display: "flex", alignItems: "center", gap: 8, fontSize: 11,
+        }}>
+          {wh.departmentCode && (
+            <span style={{ color: "#6B7280" }}>{t("bolim")}<b>{wh.departmentCode}</b></span>
+          )}
+          {!wh.isActive && (
+            <span style={{
+              marginLeft: "auto", background: "#FEE2E2", color: "#DC2626",
+              borderRadius: 4, padding: "1px 6px", fontWeight: 600,
+            }}>{t("inactive")}</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function PosWarehouses() {
-  const [, navigate] = useLocation();
-  const { t } = usePosI18n();
-  const [warehouses, setWarehouses] = useState<WarehouseGroup[]>([]);
+  const { t }         = usePosI18n();
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading]       = useState(true);
-  const [viewMode, setViewMode]     = useState<"grid" | "table">("grid");
+  const [error, setError]           = useState("");
   const [search, setSearch]         = useState("");
+  const [filterType, setFilterType] = useState("all");
 
   const loadData = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
       const data = await warehousesApi.getAll();
-      const rows  = (Array.isArray(data) ? data : []) as StockRow[];
-      const map: Record<string, WarehouseGroup> = {};
-      rows.forEach(r => {
-        if (!map[r.warehouseId]) {
-          map[r.warehouseId] = { id: r.warehouseId, totalBalance: 0, materialCount: 0, pct: 0, type: guessType(r.warehouseId) };
-        }
-        const wh = map[r.warehouseId];
-        if (wh) { wh.totalBalance += r.balance; wh.materialCount += 1; }
-      });
-      const list = Object.values(map);
-      const maxBalance = Math.max(...list.map(w => w.totalBalance), 1);
-      list.forEach(w => { w.pct = Math.min(100, Math.round((w.totalBalance / maxBalance) * 100)); });
-      setWarehouses(list);
-    } catch { /* noop */ } finally { setLoading(false); }
+      const rows = (Array.isArray(data) ? data : []) as Warehouse[];
+      setWarehouses(rows);
+    } catch (e: unknown) {
+      setError((e as Error).message ?? "Omborlarni yuklashda xato");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { void loadData(); }, [loadData]);
 
-  const filtered = (warehouses ?? []).filter(w =>
-    search ? w.id.toLowerCase().includes(search.toLowerCase()) : true,
-  );
+  const typeKeys = [...new Set(warehouses.map(w => w.type).filter(Boolean))] as string[];
+
+  const filtered = warehouses.filter(w => {
+    const matchSearch = !search
+      || (w.name ?? "").toLowerCase().includes(search.toLowerCase())
+      || (w.code ?? "").toLowerCase().includes(search.toLowerCase())
+      || w.id.toLowerCase().includes(search.toLowerCase());
+    const matchType = filterType === "all" || w.type === filterType;
+    return matchSearch && matchType;
+  });
+
+  const stats = {
+    total:    warehouses.length,
+    active:   warehouses.filter(w => w.isActive).length,
+    materials:warehouses.reduce((s, w) => s + w.totalMaterials, 0),
+  };
 
   return (
-    <div>
-      {/* Toolbar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("warehouses.title")}</h2>
+    <div style={{ minHeight: "100vh", background: "#F8FAFC" }}>
+
+      {/* Top bar */}
+      <div style={{
+        background: "#FFF", borderBottom: "1px solid #E5E7EB",
+        padding: "14px 20px", display: "flex", alignItems: "center",
+        gap: 12, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10,
+      }}>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1F2937" }}>
+          {t("omborlar")}
+        </h2>
         <div style={{ flex: 1 }} />
-        <input className="pos-input" style={{ width: 220 }} placeholder={t("common.search")} value={search} onChange={e => setSearch(e.target.value)} />
-        <button className={`pos-btn ${viewMode === "grid" ? "pos-btn-primary" : "pos-btn-ghost"}`} onClick={() => setViewMode("grid")}>▦</button>
-        <button className={`pos-btn ${viewMode === "table" ? "pos-btn-primary" : "pos-btn-ghost"}`} onClick={() => setViewMode("table")}>☰</button>
+        <input
+          style={{
+            border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 12px",
+            fontSize: 13, outline: "none", width: 220, color: "#1F2937", background: "#F9FAFB",
+          }}
+          placeholder={t("omborNomiYokiKodi")}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <button
+          onClick={() => void loadData()}
+          style={{
+            background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8,
+            padding: "8px 12px", cursor: "pointer", fontSize: 13, color: "#374151",
+          }}
+        >
+          🔄
+        </button>
       </div>
 
-      {loading && <div style={{ color: "var(--pos-text-muted)", textAlign: "center", padding: 40 }}>{t("common.loading")}</div>}
-
-      {!loading && viewMode === "grid" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
-          {(filtered ?? []).map(wh => (
-            <div key={wh.id} className="pos-card pos-fade-in" style={{ cursor: "pointer" }} onClick={() => navigate(`/pos-monitor/warehouses/${wh.id}`)}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <span style={{ fontWeight: 600, fontSize: 15, color: "var(--pos-text)" }}>{wh.id}</span>
-                <span className={`pos-badge ${WH_BADGE[wh.type] ?? "pos-badge-gray"}`}>
-                  {t(`warehouses.type.${wh.type}`)}
-                </span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-                <div>
-                  <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("warehouses.totalMaterials")}</div>
-                  <div className="pos-mono" style={{ fontSize: 18, fontWeight: 600, color: "var(--pos-accent)" }}>{wh.materialCount}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("warehouses.totalValue")}</div>
-                  <div className="pos-mono" style={{ fontSize: 16, fontWeight: 600 }}>{wh.totalBalance.toFixed(0)}</div>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 6 }}>
-                  {t("warehouses.stockLevel")} — {wh.pct}%
-                </div>
-                <div className="pos-progress">
-                  <div
-                    className={`pos-progress-fill ${wh.pct > 60 ? "green" : wh.pct > 30 ? "yellow" : "red"}`}
-                    style={{ width: `${wh.pct}%` }}
-                  />
-                </div>
-              </div>
-              <button
-                className="pos-btn pos-btn-ghost"
-                style={{ marginTop: 14, width: "100%", justifyContent: "center", fontSize: 12 }}
-                onClick={e => { e.stopPropagation(); navigate(`/pos-monitor/warehouses/${wh.id}`); }}
-              >
-                👁 {t("warehouses.enter")}
-              </button>
+      {/* Stats row */}
+      {!loading && warehouses.length > 0 && (
+        <div style={{
+          background: "#FFF", borderBottom: "1px solid #E5E7EB",
+          padding: "10px 20px", display: "flex", gap: 20,
+        }}>
+          {[
+            { label: "Jami ombor", value: stats.total, color: "#3B82F6" },
+            { label: "Faol ombor", value: stats.active, color: "#059669" },
+            { label: "Material tur", value: stats.materials, color: "#F59E0B" },
+          ].map(s => (
+            <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</span>
+              <span style={{ fontSize: 12, color: "#9CA3AF" }}>{s.label}</span>
             </div>
           ))}
         </div>
       )}
 
-      {!loading && viewMode === "table" && (
-        <div className="pos-card" style={{ overflowX: "auto" }}>
-          <table className="pos-table">
-            <thead>
-              <tr>
-                <th>{t("warehouses.title")}</th>
-                <th>{t("common.status")}</th>
-                <th>{t("warehouses.totalMaterials")}</th>
-                <th>{t("warehouses.totalValue")}</th>
-                <th>{t("warehouses.stockLevel")}</th>
-                <th>{t("common.action")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(filtered ?? []).map(wh => (
-                <tr key={wh.id} style={{ cursor: "pointer" }} onClick={() => navigate(`/pos-monitor/warehouses/${wh.id}`)}>
-                  <td style={{ fontWeight: 600, color: "var(--pos-text)" }}>{wh.id}</td>
-                  <td><span className={`pos-badge ${WH_BADGE[wh.type] ?? "pos-badge-gray"}`}>{t(`warehouses.type.${wh.type}`)}</span></td>
-                  <td className="pos-mono">{wh.materialCount}</td>
-                  <td className="pos-mono">{wh.totalBalance.toFixed(0)}</td>
-                  <td style={{ minWidth: 100 }}>
-                    <div className="pos-progress">
-                      <div className={`pos-progress-fill ${wh.pct > 60 ? "green" : wh.pct > 30 ? "yellow" : "red"}`} style={{ width: `${wh.pct}%` }} />
-                    </div>
-                  </td>
-                  <td>
-                    <button className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }} onClick={e => { e.stopPropagation(); navigate(`/pos-monitor/warehouses/${wh.id}`); }}>
-                      👁 {t("warehouses.enter")}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Type filter tabs */}
+      {typeKeys.length > 1 && (
+        <div style={{
+          background: "#FFF", borderBottom: "1px solid #E5E7EB",
+          padding: "0 20px", display: "flex", gap: 4, overflowX: "auto",
+        }}>
+          {[{ key: "all", label: "Barchasi" }, ...typeKeys.map(k => ({ key: k, label: getTypeCfg(k).label }))].map(t => (
+            <button
+              key={t.key}
+              onClick={() => setFilterType(t.key)}
+              style={{
+                padding: "10px 4px", border: "none", background: "none", cursor: "pointer",
+                fontSize: 13, fontWeight: filterType === t.key ? 700 : 500,
+                color: filterType === t.key ? "#1F2937" : "#9CA3AF",
+                borderBottom: filterType === t.key ? "2px solid #F59E0B" : "2px solid transparent",
+                marginRight: 12, whiteSpace: "nowrap", flexShrink: 0,
+              }}
+            >
+              {getTypeCfg(t.key as string).icon} {t.label}
+            </button>
+          ))}
         </div>
       )}
 
-      {!loading && filtered.length === 0 && (
-        <div style={{ textAlign: "center", color: "var(--pos-text-muted)", padding: 40 }}>{t("common.noData")}</div>
-      )}
+      <div style={{ padding: 20 }}>
+
+        {/* Skeleton */}
+        {loading && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} style={{
+                background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB",
+                overflow: "hidden", animation: "pos-pulse 1.4s ease-in-out infinite",
+                animationDelay: `${i * 100}ms`,
+              }}>
+                <div style={{ height: 70, background: "#F3F4F6" }} />
+                <div style={{ padding: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div style={{ height: 48, borderRadius: 8, background: "#F3F4F6" }} />
+                  <div style={{ height: 48, borderRadius: 8, background: "#F3F4F6" }} />
+                </div>
+                <div style={{ padding: "0 14px 14px" }}>
+                  <div style={{ height: 6, borderRadius: 3, background: "#F3F4F6" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error state */}
+        {!loading && error && (
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#DC2626", marginBottom: 8 }}>
+              {t("omborlarYuklanmadi")}
+            </div>
+            <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>{error}</div>
+            <button
+              onClick={() => void loadData()}
+              style={{
+                background: "#F59E0B", color: "#FFF", border: "none",
+                borderRadius: 8, padding: "10px 24px", fontWeight: 700, cursor: "pointer",
+              }}
+            >
+              {t("qaytaUrinish1")}
+            </button>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && filtered.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "#9CA3AF" }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🏭</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#374151", marginBottom: 8 }}>
+              {t("omborTopilmadi")}
+            </div>
+            <div style={{ fontSize: 13 }}>
+              {search ? `"${search}" bo'yicha ombor yo'q` : "Hali ombor qo'shilmagan"}
+            </div>
+          </div>
+        )}
+
+        {/* Grid */}
+        {!loading && !error && filtered.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            {filtered.map(wh => (
+              <WarehouseCard key={wh.id} wh={wh} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

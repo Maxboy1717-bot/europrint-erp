@@ -1,3 +1,8 @@
+/**
+ * @module telegram-bots-pip-events.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
@@ -25,7 +30,7 @@ export class TelegramBotsPipEventsRepository {
       const r = await db.select({ telegram_chat_id: hrEmployees.telegram_chat_id })
         .from(hrEmployees)
         .where(sql`${hrEmployees.telegram_chat_id} IS NOT NULL AND ${hrEmployees.status} = 'active'`);
-      return Ok((r ?? []).map((row) => row.telegram_chat_id as string).filter(Boolean));  } catch (_e) {
+      return Ok((Array.isArray(r) ? r : []).map((row) => row.telegram_chat_id as string).filter(Boolean));  } catch (_e) {
     return Err(String(_e));
   }
 

@@ -1,3 +1,8 @@
+/**
+ * @module update-task.command
+ * @description Source module. See exports for details.
+ */
+
 export class UpdateTaskCommand {
   constructor(public readonly id: string,
     public readonly status?: string,

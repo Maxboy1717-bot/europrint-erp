@@ -1,3 +1,8 @@
+/**
+ * @module CfoConfigSettings
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -8,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Save, RefreshCw } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface CfoConfigRow {
   id: number;
@@ -27,6 +33,7 @@ const KEY_LABELS: Record<string, string> = {
 };
 
 export default function CfoConfigSettings() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [editValues, setEditValues] = useState<Record<string, string>>({});
 
@@ -87,7 +94,7 @@ export default function CfoConfigSettings() {
             step={isPct ? '0.01' : '1000'}
             min={0}
             max={isPct ? 1 : undefined}
-            className="w-32 h-8 text-xs"
+            className="w-32 h-9 text-xs"
             value={displayVal}
             onChange={e => handleEdit(cfg.configKey, e.target.value)}
           />
@@ -111,25 +118,25 @@ export default function CfoConfigSettings() {
         <div className="flex items-center gap-3">
           <Settings className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-xl font-bold">CFO Konfiguratsiyasi</h1>
-            <p className="text-sm text-muted-foreground">Moliyaviy koeffitsientlar va ECL stavkalarini boshqarish</p>
+            <h1 className="text-xl font-bold">{t("cfoKonfiguratsiyasi")}</h1>
+            <p className="text-sm text-muted-foreground">{t("moliyaviyKoeffitsientlarVaEclStavkalarini")}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
       {isLoading ? (
         <div className="space-y-3">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
         </div>
       ) : (
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">AR ECL Stavkalari</CardTitle>
+              <CardTitle className="text-base">{t("arEclStavkalari")}</CardTitle>
               <CardDescription>Debitorlik qarzlari uchun kutilayotgan kredit yo'qotish stavkalari (0.0 — 1.0)</CardDescription>
             </CardHeader>
             <CardContent>
@@ -143,12 +150,12 @@ export default function CfoConfigSettings() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Moliyaviy Parametrlar</CardTitle>
-              <CardDescription>Umumiy moliyaviy konfiguratsiya qiymatlari</CardDescription>
+              <CardTitle className="text-base">{t("moliyaviyParametrlar")}</CardTitle>
+              <CardDescription>{t("umumiyMoliyaviyKonfiguratsiyaQiymatlari")}</CardDescription>
             </CardHeader>
             <CardContent>
               {otherKeys.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Parametrlar topilmadi</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("parametrlarTopilmadi")}</p>
               ) : (
                 otherKeys.map(renderRow)
               )}

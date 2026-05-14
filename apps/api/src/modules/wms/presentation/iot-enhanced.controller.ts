@@ -1,7 +1,14 @@
+/**
+ * @module iot-enhanced.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Query,
@@ -78,6 +85,14 @@ export class IotEnhancedController {
   async addKitItem(@Param('id') id: string, @Body() body: WmsAddKitItemDto) {
     this.logger.log(`POST kit item for kit ${id}`);
     return unwrapOrThrow(await this.svc.addKitItem(safeInt(id, 0), body));
+  }
+
+  @Post('orders/:id/calculate-bom')
+  @HttpCode(HttpStatus.OK)
+  @Roles(...IOT_READ)
+  async postCalculateBom(@Param('id') id: string) {
+    this.logger.log(`POST calculate BOM for order ${id}`);
+    return unwrapOrThrow(await this.svc.calculateBom(safeInt(id, 0)));
   }
 
   @Get('orders')

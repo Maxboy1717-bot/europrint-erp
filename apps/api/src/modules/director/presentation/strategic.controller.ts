@@ -1,3 +1,8 @@
+/**
+ * @module strategic.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { z } from 'zod';
 import { assertFound } from '@common/assertions';
 import { parseOrThrow } from '@common/utils/parse-or-throw.util';
@@ -166,7 +171,7 @@ export class StrategicController {
   @Roles(...DIRECTOR_ROLES)
   async seedStrategicData() {
     const cats = ['Rivojlanish', 'Ishlab chiqarish', 'Xodimlar', 'Moliya', 'Mijozlar'];
-    const results = await Promise.allSettled((cats ?? []).map((name) => this.svc.createCategory(name, null, '#3B82F6')));
+    const results = await Promise.allSettled((Array.isArray(cats) ? cats : []).map((name) => this.svc.createCategory(name, null, '#3B82F6')));
     const created = (Array.isArray(results) ? results : []).filter((r) => r.status === 'fulfilled').length;
     const failed  = (Array.isArray(results) ? results : []).filter((r) => r.status === 'rejected').length;
     return { message: "Seed ma'lumotlar yuklandi", created, failed, total: cats.length };

@@ -1,5 +1,10 @@
-import { Controller, Get, Query, Param, UseGuards, UseInterceptors } from '@nestjs/common';
-import { throwFromError, assertOk, unwrapOrThrow } from '@common/http-result';
+/**
+ * @module hr-dashboard-extra.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Controller, Get, HttpException, HttpStatus, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { throwFromError, assertOk, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -57,24 +62,24 @@ export class HrDashboardExtraController {
   async getSafetySummary() {
     const _rRow = await this.svc.getSafetySummary();
     const row = (_rRow.ok ? _rRow.data : null) as Record<string, unknown> | null;
-    return { data: {
-      incidentsThisMonth:  Number(row?.this_month ?? 0),
+    // Return bare object so queryClient passes it through correctly
+    return {
+      incidentsThisMonth:   Number(row?.this_month ?? 0),
       ppeCompliancePercent: 0,
       expiringTrainings:    0,
       openIncidents:        Number(row?.open_count ?? 0),
-    }};
+    };
   }
 
   @Get('safety/incidents')
   async getSafetyIncidents() {
-    const data = await this.svc.getSafetyIncidents();
-    return { data };
+    // Use unwrapOrInternal so the bare array is returned directly to the frontend
+    return unwrapOrInternal(await this.svc.getSafetyIncidents());
   }
 
   @Get('offboarding/cases/stats')
   async getOffboardingStats() {
-    const data = await this.svc.getOffboardingStats();
-    return { data };
+    return unwrapOrInternal(await this.svc.getOffboardingStats());
   }
 
   @Get('safety')
@@ -100,7 +105,7 @@ export class HrDashboardExtraController {
 
   @Get('contracts')
   async getContracts(@Query() _query: Record<string, unknown>) {
-    return [];
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('contracts/expiring')

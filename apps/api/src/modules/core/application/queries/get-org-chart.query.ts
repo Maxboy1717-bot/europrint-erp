@@ -1,3 +1,8 @@
+/**
+ * @module get-org-chart.query
+ * @description Source module. See exports for details.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/types/result.type';
@@ -41,8 +46,8 @@ export class GetOrgChartHandler implements IQueryHandler<GetOrgChartQuery> {
   private buildTree(departments: Department[], positions: Position[]): OrgChartNode[] {
     const departmentMap = new Map<string, OrgChartNode>();
 
-    (departments ?? []).forEach((dept) => {
-      const deptPositions = (positions ?? []).filter((p) => p.departmentId === dept.id);
+    (Array.isArray(departments) ? departments : []).forEach((dept) => {
+      const deptPositions = (Array.isArray(positions) ? positions : []).filter((p) => p.departmentId === dept.id);
       departmentMap.set(dept.id, {
         department: dept,
         positions: deptPositions,
@@ -52,7 +57,7 @@ export class GetOrgChartHandler implements IQueryHandler<GetOrgChartQuery> {
 
     const roots: OrgChartNode[] = [];
 
-    (departments ?? []).forEach((dept) => {
+    (Array.isArray(departments) ? departments : []).forEach((dept) => {
       const node = departmentMap.get(dept.id);
       if (!node) return;
 

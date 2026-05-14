@@ -1,3 +1,8 @@
+/**
+ * @module SkillDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -6,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import type { Skill, SkillFormValues } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface SkillDialogProps {
   open: boolean;
@@ -18,44 +24,45 @@ interface SkillDialogProps {
 }
 
 export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, isPending, onCancel }: SkillDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button data-testid="button-create-skill">
           <Plus className="mr-2 h-4 w-4" />
-          Ko'nikma yaratish
+          {t("konikmaYaratish")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl" data-testid="dialog-create-skill">
+      <DialogContent className="max-w-2xl p-6" data-testid="dialog-create-skill">
         <DialogHeader>
-          <DialogTitle>{editingSkill ? "Ko'nikmani tahrirlash" : "Ko'nikma yaratish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{editingSkill ? "Ko'nikmani tahrirlash" : "Ko'nikma yaratish"}</DialogTitle>
           <DialogDescription>
             {editingSkill ? "Ko'nikma ma'lumotlarini yangilang" : "Ko'nikmalar matritsa uchun yangi ko'nikma yarating"}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="code" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kod</FormLabel>
+                  <FormLabel>{t("code")}</FormLabel>
                   <FormControl><Input {...field} placeholder="PYTHON" data-testid="input-skill-code" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="category" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kategoriya</FormLabel>
-                  <FormControl><Input {...field} placeholder="Dasturlash" data-testid="input-skill-category" /></FormControl>
+                  <FormLabel>{t("category")}</FormLabel>
+                  <FormControl><Input {...field} placeholder={t("dasturlash")} data-testid="input-skill-category" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nom (O'zbekcha)</FormLabel>
-                  <FormControl><Input {...field} placeholder="Python dasturlash" data-testid="input-skill-name-uz" /></FormControl>
+                  <FormControl><Input {...field} placeholder={t("pythonDasturlash")} data-testid="input-skill-name-uz" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -67,11 +74,11 @@ export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, 
                 </FormItem>
               )} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tavsif (O'zbekcha)</FormLabel>
-                  <FormControl><Textarea {...field} placeholder="Python dasturlash tillari..." data-testid="input-skill-desc-uz" /></FormControl>
+                  <FormControl><Textarea {...field} placeholder={t("pythonDasturlashTillari")} data-testid="input-skill-desc-uz" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -84,7 +91,7 @@ export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, 
               )} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel">Bekor qilish</Button>
+              <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel">{t("cancel")}</Button>
               <Button type="submit" disabled={isPending} data-testid="button-submit">
                 {editingSkill ? "Yangilash" : "Yaratish"}
               </Button>

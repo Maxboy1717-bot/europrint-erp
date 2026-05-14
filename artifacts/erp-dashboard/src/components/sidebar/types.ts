@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { LayoutDashboard } from "lucide-react";
 
 export interface MenuItem {

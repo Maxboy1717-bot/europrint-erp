@@ -1,3 +1,8 @@
+/**
+ * @module main
+ * @description Source module. See exports for details.
+ */
+
 import 'module-alias/register';
 import 'reflect-metadata';
 import { register as promRegister } from 'prom-client';
@@ -11,6 +16,7 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ChatService } from './modules/chat/chat.service';
 import { ensureDbInvariants, ensureSchemaAdditions } from './shared/db/invariants';
+import { seedPosMovementTypes } from './shared/db/seed-pos-movement-types';
 
 import { DEFAULT_PORT, SECONDS_PER_YEAR, MS_PER_SECOND, MAX_FILE_SIZE } from '@common/constants/app.constants';
 
@@ -64,8 +70,11 @@ function configureBlockedMethods(app: NestFastifyApplication): void {
 
 function configureLoginRateLimit(app: NestFastifyApplication): void {
   const loginBucket = new Map<string, { count: number; resetAt: number }>();
-  const LOGIN_LIMIT = 5;
-  const LOGIN_TTL_MS = 60_000;
+  // Env orqali sozlanadigan limit:
+  //   LOGIN_RATE_LIMIT  — bir TTL ichida ruxsat etilgan urinishlar (default 5)
+  //   LOGIN_TTL_MS      — derazaning uzunligi (default 60_000 = 1 daqiqa)
+  const LOGIN_LIMIT = parseInt(process.env.LOGIN_RATE_LIMIT ?? '5', 10);
+  const LOGIN_TTL_MS = parseInt(process.env.LOGIN_TTL_MS ?? '60000', 10);
   const raw = app.getHttpAdapter().getInstance() as RawFastify;
   raw.addHook('onRequest', async (req: RawReq, reply: RawReply) => {
     if (req.method !== 'POST' || !req.url?.startsWith('/api/auth/login')) return;
@@ -75,10 +84,16 @@ function configureLoginRateLimit(app: NestFastifyApplication): void {
     let entry = loginBucket.get(ip);
     if (!entry || now > entry.resetAt) { entry = { count: 0, resetAt: now + LOGIN_TTL_MS }; loginBucket.set(ip, entry); }
     entry.count++;
-    if (entry.count > LOGIN_LIMIT) {
+    if (entry.count >= LOGIN_LIMIT) {
       const retryAfter = Math.ceil((entry.resetAt - now) / MS_PER_SECOND);
       reply.code(HttpStatus.TOO_MANY_REQUESTS).header('Retry-After', String(retryAfter))
         .send({ statusCode: HttpStatus.TOO_MANY_REQUESTS, error: 'Too Many Requests', message: `Login uchun juda ko'p urinish. ${retryAfter}s dan keyin qayta urinib ko'ring.` });
+    }
+    // Periodic pruning to prevent memory leak (1% chance per request)
+    if (Math.random() < 0.01) {
+      for (const [k, v] of loginBucket.entries()) {
+        if (v.resetAt < now) loginBucket.delete(k);
+      }
     }
   });
 }
@@ -92,10 +107,10 @@ function configureAppMiddleware(app: NestFastifyApplication): void {
   const isReplitOrigin = (o: string) =>
     o.endsWith('.replit.dev') || o.endsWith('.repl.co') || o.endsWith('.replit.app');
   app.enableCors({
-    origin: (origin, cb) => {
+    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
       if (!origin) { cb(null, true); return; }
-      if ((origins ?? []).some((a) => origin === a)) { cb(null, true); return; }
-      if (isReplitOrigin(origin)) { cb(null, true); return; }
+      if ((Array.isArray(origins) ? origins : []).some((a) => origin === a)) { cb(null, true); return; }
+      if (isDev && isReplitOrigin(origin)) { cb(null, true); return; }
       cb(new Error(`CORS: origin '${origin}' ruxsat etilmagan`), false);
     },
     credentials: true,
@@ -125,7 +140,7 @@ function configureSwagger(app: NestFastifyApplication, fastify: RawFastify, port
     .setDescription('NestJS + Fastify + DDD + CQRS | ARCHITECTURE.md muvofiq')
     .setVersion('2.0').addBearerAuth().build();
   SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
-  logger.log(`Swagger: http://localhost:${port}/api/docs?secret=${secret}`);
+  logger.log(`Swagger UI: http://localhost:${port}/api/docs (secret required)`);
 }
 
 function configureHealthRoutes(fastify: RawFastify): void {
@@ -136,6 +151,10 @@ function configureHealthRoutes(fastify: RawFastify): void {
     reply.code(200).header('content-type', promRegister.contentType).send(metrics);
   });
 }
+
+// Eslatma: 404 handling NestJS Global Exception Filter ichida amalga oshiriladi
+// (apps/api/src/common/filters/global-exception.filter.ts). Fastify'ning
+// `setNotFoundHandler` ni alohida o'rnatib bo'lmaydi — Nest o'zi o'rnatadi.
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -149,6 +168,26 @@ async function bootstrap(): Promise<void> {
 
   await configureSecurityHeaders(app);
   await app.register(require('@fastify/multipart'), { limits: { fileSize: MAX_FILE_SIZE, files: 1 } });
+
+  // Parse raw binary uploads as Buffer. Registered AFTER multipart so
+  // multipart/form-data is still handled by @fastify/multipart.
+  // We register explicit types first for reliability, then a '*' wildcard fallback.
+  type CtParser = {
+    addContentTypeParser: (
+      ct: string | RegExp,
+      opts: { parseAs: 'buffer' },
+      fn: (req: unknown, body: Buffer, done: (e: Error | null, b: Buffer) => void) => void,
+    ) => void;
+  };
+  const fInst = app.getHttpAdapter().getInstance() as unknown as CtParser;
+  const bufParser = (_req: unknown, body: Buffer, done: (e: Error | null, b: Buffer) => void) => done(null, body);
+  fInst.addContentTypeParser('application/octet-stream', { parseAs: 'buffer' }, bufParser);
+  fInst.addContentTypeParser(/^image\//, { parseAs: 'buffer' }, bufParser);
+  fInst.addContentTypeParser(/^audio\//, { parseAs: 'buffer' }, bufParser);
+  fInst.addContentTypeParser(/^video\//, { parseAs: 'buffer' }, bufParser);
+  fInst.addContentTypeParser('application/pdf', { parseAs: 'buffer' }, bufParser);
+  fInst.addContentTypeParser('*', { parseAs: 'buffer' }, bufParser);
+
   configureBlockedMethods(app);
   configureLoginRateLimit(app);
   configureAppMiddleware(app);
@@ -156,33 +195,38 @@ async function bootstrap(): Promise<void> {
   configureSwagger(app, fastify, port, logger);
   configureHealthRoutes(fastify);
 
-  // Start listening FIRST so health checks pass within Replit's 60s timeout.
-  // Heavy DB operations run in the background after the port is open.
+  // TZ-D06: SD schema additions (version column, idempotency table)
+  try {
+    await ensureDbInvariants();
+    logger.log('DB invariantlar muvaffaqiyatli tekshirildi');
+  } catch (e: unknown) {
+    logger.warn(`DB invariantlar tekshiruvida xato: ${String(e)}`);
+  }
+
+  // TZ-D16: DB CHECK constraintlarini tekshirish va qo'llash
+  try {
+    await ensureSchemaAdditions();
+    logger.log('Schema additions muvaffaqiyatli qo\'llandi');
+  } catch (e: unknown) {
+    logger.warn(`Schema additions xato: ${String(e)}`);
+  }
+
+  // POS Monitor — 7 ta harakat turini seed qilish (idempotent, Drizzle ORM)
+  try {
+    await seedPosMovementTypes();
+  } catch (e: unknown) {
+    logger.warn(`pos_movement_types seed xato: ${String(e)}`);
+  }
+
   await app.listen(port, '0.0.0.0');
   logger.log(`EuroPrint NestJS API v2 ishga tushdi: http://localhost:${port}/api/v2`);
 
-  // Background initialization — runs after listen() so health check never times out
+  // Background initialization — chat tables are non-critical, run after listen
   (async () => {
     try {
       await app.get(ChatService).ensureTables();
     } catch (e: unknown) {
       logger.warn(`Chat tables init: ${e}`);
-    }
-
-    // TZ-D06: SD schema additions (version column, idempotency table)
-    try {
-      await ensureSchemaAdditions();
-      logger.log('Schema additions muvaffaqiyatli qo\'llandi');
-    } catch (e: unknown) {
-      logger.warn(`Schema additions xato: ${String(e)}`);
-    }
-
-    // TZ-D16: DB CHECK constraintlarini tekshirish va qo'llash
-    try {
-      await ensureDbInvariants();
-      logger.log('DB invariantlar muvaffaqiyatli tekshirildi');
-    } catch (e: unknown) {
-      logger.warn(`DB invariantlar tekshiruvida xato: ${String(e)}`);
     }
   })().catch((e: unknown) => logger.warn(`Background init xato: ${String(e)}`));
 }

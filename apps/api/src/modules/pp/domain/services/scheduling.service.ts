@@ -1,3 +1,8 @@
+/**
+ * @module scheduling.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Result, AppError } from '@common/result';
 import {
@@ -27,11 +32,21 @@ export type {
  */
 @Injectable()
 export class SchedulingService {
+  private readonly johnson: SchedulingJohnsonService;
+  private readonly network: SchedulingNetworkService;
+  private readonly capacity: SchedulingCapacityService;
+
   constructor(
-    private readonly johnson: SchedulingJohnsonService,
-    private readonly network: SchedulingNetworkService,
-    private readonly capacity: SchedulingCapacityService,
-  ) {}
+    johnson?: SchedulingJohnsonService,
+    network?: SchedulingNetworkService,
+    capacity?: SchedulingCapacityService,
+  ) {
+    // Allow zero-arg construction for unit tests; production DI passes injected
+    // singletons.
+    this.johnson  = johnson  ?? new SchedulingJohnsonService();
+    this.network  = network  ?? new SchedulingNetworkService();
+    this.capacity = capacity ?? new SchedulingCapacityService();
+  }
 
   johnsonRule(jobs: readonly Job[]): Result<JohnsonResult, AppError> {
     return this.johnson.johnsonRule(jobs);

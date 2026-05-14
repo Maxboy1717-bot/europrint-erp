@@ -1,3 +1,8 @@
+/**
+ * @module coordination.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -46,7 +51,7 @@ export class CoordinationRepository {
         status:       dokla.status,
         created_at:   dokla.created_at,
         updated_at:   dokla.updated_at,
-        author_name:  sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), ${appUsers.full_name}, ${dokla.from_name}, '')`,
+        author_name:  sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), ${dokla.from_name}, '')`,
       })
         .from(dokla)
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${dokla.from_user_id}::text`)
@@ -106,7 +111,7 @@ export class CoordinationRepository {
         done_note:    rasporyazhenie.done_note,
         created_at:   rasporyazhenie.created_at,
         updated_at:   rasporyazhenie.updated_at,
-        issued_by_name: sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), ${appUsers.full_name}, '')`,
+        issued_by_name: sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), '')`,
       })
         .from(rasporyazhenie)
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${rasporyazhenie.from_user_id}::text`)
@@ -163,6 +168,11 @@ export class CoordinationRepository {
       }).from(dokla).where(sql`${dokla.created_at} >= NOW() - INTERVAL '7 days'`);
       return r[0] ?? { total: 0, sent: 0, read: 0, resolved: 0 };
       }, 'DB_ERROR');
+  }
+
+  async listBaskets(): Promise<Result<Row[]>> {
+    // WHY: stub — returns empty until the basket UI is wired (Sprint H deferred).
+    return safeCall(async () => [], 'DB_ERROR');
   }
 
   async getStatsRasp(): Promise<Result<RaspStats>> {

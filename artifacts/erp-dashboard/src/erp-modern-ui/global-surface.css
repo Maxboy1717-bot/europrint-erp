@@ -9,6 +9,7 @@
   isolation: isolate;
 }
 
+/* EP Linear Soft: clean warm canvas, very subtle top-right brand hint */
 [data-erp-shell="modern"] main.erp-main-canvas::before {
   content: "";
   position: absolute;
@@ -16,16 +17,12 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 120% 90% at 100% 0%, hsl(var(--primary) / 0.09), transparent 52%),
-    radial-gradient(ellipse 100% 70% at 0% 100%, hsl(262 83% 58% / 0.07), transparent 48%),
-    linear-gradient(180deg, hsl(var(--muted) / 0.55) 0%, transparent 42%);
+    radial-gradient(ellipse 80% 50% at 100% 0%, hsl(var(--primary) / 0.04), transparent 45%);
 }
 
 .dark [data-erp-shell="modern"] main.erp-main-canvas::before {
   background:
-    radial-gradient(ellipse 100% 80% at 95% 0%, hsl(var(--primary) / 0.16), transparent 50%),
-    radial-gradient(ellipse 80% 60% at 0% 100%, hsl(262 60% 55% / 0.12), transparent 45%),
-    linear-gradient(180deg, hsl(var(--background)) 0%, transparent 35%);
+    radial-gradient(ellipse 80% 50% at 100% 0%, hsl(var(--primary) / 0.08), transparent 45%);
 }
 
 [data-erp-shell="modern"] main.erp-main-canvas > div {
@@ -48,16 +45,14 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 140% 100% at 0% 0%, hsl(var(--primary) / 0.12), transparent 55%),
-    radial-gradient(ellipse 100% 80% at 100% 100%, hsl(262 83% 58% / 0.1), transparent 50%),
-    linear-gradient(165deg, hsl(var(--muted) / 0.4) 0%, hsl(var(--background)) 45%);
+    radial-gradient(ellipse 100% 80% at 0% 0%, hsl(var(--primary) / 0.06), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 100% 100%, hsl(var(--primary) / 0.04), transparent 45%);
 }
 
 .dark .erp-auth-root::before {
   background:
-    radial-gradient(ellipse 120% 90% at 0% 0%, hsl(var(--primary) / 0.22), transparent 52%),
-    radial-gradient(ellipse 90% 70% at 100% 100%, hsl(262 55% 50% / 0.18), transparent 48%),
-    linear-gradient(165deg, hsl(222 47% 6%) 0%, hsl(var(--background)) 50%);
+    radial-gradient(ellipse 100% 80% at 0% 0%, hsl(var(--primary) / 0.12), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 100% 100%, hsl(var(--primary) / 0.08), transparent 45%);
 }
 
 .erp-auth-root > * {
@@ -68,9 +63,9 @@
 .erp-auth-hero-panel {
   background: linear-gradient(
     145deg,
-    #1a1a2e 0%,
-    #16213e 50%,
-    #0f3460 100%
+    #15171A 0%,
+    #1E2128 50%,
+    #252A34 100%
   );
   color: #fff;
   position: relative;

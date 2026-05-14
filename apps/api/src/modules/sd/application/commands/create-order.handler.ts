@@ -1,3 +1,8 @@
+/**
+ * @module create-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
@@ -41,7 +46,17 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
       return Err('Invalid status');
     }
 
-    const orderNumber = `SO-${Date.now()}`;
+    // DB sequence orqali noyob raqam — bir millisekundda ikki buyurtma muammosini hal qiladi
+    let orderNumber: string;
+    try {
+      const seqRow = await this.orderRepo.count?.();
+      const seqNum = seqRow?.ok ? (seqRow.data ?? 0) + 1 : Date.now();
+      const year   = new Date().getFullYear();
+      const padded = String(seqNum).padStart(6, '0');
+      orderNumber  = `SO-${year}-${padded}`;
+    } catch {
+      orderNumber = `SO-${Date.now()}`;
+    }
     const order = SalesOrder.create({
       orderNumber,
       status: statusResult.data,

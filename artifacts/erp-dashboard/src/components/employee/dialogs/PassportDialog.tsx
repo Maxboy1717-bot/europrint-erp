@@ -1,7 +1,13 @@
+/**
+ * @module PassportDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from '@/lib/i18n';
 
 interface PassportForm {
   passportNumber: string;
@@ -30,20 +36,21 @@ export function PassportDialog({
   onSave,
   isPending
 }: PassportDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof PassportForm, value: string) => {
     onChange({ ...form, [field]: value });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Pasport ma'lumotlarini kiritish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("pasportMalumotlariniKiritish")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="series">Seriya</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="series">{t("seriya")}</Label>
               <Input
                 id="series"
                 value={form.passportSeries}
@@ -51,8 +58,8 @@ export function PassportDialog({
                 placeholder="AA"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="number">Raqam</Label>
+            <div className="space-y-1">
+          <Label htmlFor="number">{t("raqam")}</Label>
               <Input
                 id="number"
                 value={form.passportNumber}
@@ -61,17 +68,17 @@ export function PassportDialog({
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="issuedBy">Kim tomonidan berilgan</Label>
+          <div className="space-y-1">
+          <Label htmlFor="issuedBy">{t("kimTomonidanBerilgan")}</Label>
             <Input
               id="issuedBy"
               value={form.issuedBy}
               onChange={(e) => updateField("issuedBy", e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="issuedDate">Berilgan sana</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="issuedDate">{t("berilganSana")}</Label>
               <Input
                 id="issuedDate"
                 type="date"
@@ -79,8 +86,8 @@ export function PassportDialog({
                 onChange={(e) => updateField("issuedDate", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="expiryDate">Amal qilish muddati</Label>
+            <div className="space-y-1">
+          <Label htmlFor="expiryDate">{t("amalQilishMuddati")}</Label>
               <Input
                 id="expiryDate"
                 type="date"
@@ -89,16 +96,16 @@ export function PassportDialog({
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="birthPlace">Tug'ilgan joyi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="birthPlace">{t("tugilganJoyi")}</Label>
             <Input
               id="birthPlace"
               value={form.birthPlace}
               onChange={(e) => updateField("birthPlace", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="citizenship">Fuqaroligi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="citizenship">{t("fuqaroligi")}</Label>
             <Input
               id="citizenship"
               value={form.citizenship}
@@ -107,7 +114,7 @@ export function PassportDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

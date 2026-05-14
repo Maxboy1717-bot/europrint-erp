@@ -1,3 +1,8 @@
+/**
+ * @module utils
+ * @description Source module. See exports for details.
+ */
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 

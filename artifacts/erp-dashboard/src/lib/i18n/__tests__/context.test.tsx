@@ -1,3 +1,8 @@
+/**
+ * @module context.test
+ * @description Jest / Vitest test suite.
+ */
+
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -5,6 +10,7 @@ import React from 'react';
 import { LanguageProvider, useLanguageContext } from '../context';
 import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY } from '../constants';
 import { safeStorage } from '@/lib/safeStorage';
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -14,6 +20,7 @@ function LanguageDisplay() {
 }
 
 function TranslationDisplay({ module = 'common' }: { module?: string }) {
+  const { t } = useTranslation("common");
   const { t } = useLanguageContext();
   return <div data-testid="translation">{t('save', module as never)}</div>;
 }
@@ -155,7 +162,6 @@ describe('LanguageProvider', () => {
 
   it('t() returns key itself for unknown translation key', () => {
     function MissingKeyDisplay() {
-      const { t } = useLanguageContext();
       return <div data-testid="missing">{t('__missing_key__', 'common')}</div>;
     }
 
@@ -169,7 +175,6 @@ describe('LanguageProvider', () => {
 
   it('t() with params interpolates correctly', () => {
     function InterpolatedDisplay() {
-      const { t } = useLanguageContext();
       const result = t('save', 'common', { count: 99 });
       return <div data-testid="interp">{result}</div>;
     }

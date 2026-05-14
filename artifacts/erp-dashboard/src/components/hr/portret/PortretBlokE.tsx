@@ -1,9 +1,15 @@
+/**
+ * @module PortretBlokE
+ * @description React UI component.
+ */
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PortretData } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface PortretBlokEProps {
   portret: PortretData;
@@ -11,10 +17,11 @@ interface PortretBlokEProps {
 }
 
 export function PortretBlokE({ portret, onChange }: PortretBlokEProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <h4 className="font-semibold text-sm text-primary">Blok E: Tajriba & Bilim</h4>
+        <h4 className="font-semibold text-sm text-primary">{t("blokETajribaBilim")}</h4>
         <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
       </div>
 
@@ -28,7 +35,7 @@ export function PortretBlokE({ portret, onChange }: PortretBlokEProps) {
         />
       </div>
 
-      <div className="flex items-center space-x-2 py-2 border rounded-lg px-3 bg-surface-container-low">
+      <div className="flex items-center space-x-2 py-2 border rounded-lg px-3 bg-muted/40">
         <Checkbox
           id="exp_req"
           checked={portret.experience_required ?? false}
@@ -41,9 +48,9 @@ export function PortretBlokE({ portret, onChange }: PortretBlokEProps) {
 
       {portret.experience_required && (
         <div>
-          <Label className="text-xs mb-1 block">15a. Qaysi sohada va necha yil?</Label>
+          <Label className="text-xs mb-1 block">{t("k15aQaysiSohadaVaNecha")}</Label>
           <Input
-            placeholder="Masalan: Logistika sohasida kamida 2 yil..."
+            placeholder={t("masalanLogistikaSohasidaKamida2")}
             value={portret.experience_field ?? ""}
             onChange={e => onChange("experience_field")(e.target.value)}
           />
@@ -51,18 +58,18 @@ export function PortretBlokE({ portret, onChange }: PortretBlokEProps) {
       )}
 
       <div>
-        <Label className="text-xs mb-1 block">16. Hozir qayerda ishlaydi?</Label>
+        <Label className="text-xs mb-1 block">{t("k16HozirQayerdaIshlaydi")}</Label>
         <Input
-          placeholder="Potensial kandidat hozir qaysi kompaniyalarda yoki lavozimlarda ishlayotgan bo'lishi mumkin?"
+          placeholder={t("potensialKandidatHozirQaysiKompaniyalarda")}
           value={portret.current_employment ?? ""}
           onChange={e => onChange("current_employment")(e.target.value)}
         />
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">17. Qaysi sohalardagi tajriba ustunlik beradi?</Label>
+        <Label className="text-xs mb-1 block">{t("k17QaysiSohalardagiTajribaUstunlik")}</Label>
         <Input
-          placeholder="Masalan: FMCG, Ishlab chiqarish, IT..."
+          placeholder={t("masalanFmcgIshlabChiqarishIt")}
           value={portret.industry_experience ?? ""}
           onChange={e => onChange("industry_experience")(e.target.value)}
         />

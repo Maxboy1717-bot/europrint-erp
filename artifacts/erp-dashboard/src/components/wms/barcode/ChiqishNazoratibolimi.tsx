@@ -1,3 +1,8 @@
+/**
+ * @module ChiqishNazoratibolimi
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, CheckCircle2, AlertTriangle, RotateCcw } from "lucide-react";
 import { ExitLog } from "./types";
 import { alertRangi, alertNomi, sanaTartiblash } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function ChiqishNazoratibolimi() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data: chiqishlar, isLoading } = useQuery<ExitLog[]>({
@@ -27,7 +34,7 @@ export function ChiqishNazoratibolimi() {
     },
   });
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <Skeleton className="h-40 w-full rounded-lg" />;
 
   return (
     <Card>
@@ -39,7 +46,7 @@ export function ChiqishNazoratibolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {!chiqishlar || chiqishlar.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chiqish qaydlari yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("chiqishQaydlariYoq")}</p>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(chiqishlar) ? chiqishlar : []).slice(0, 5).map((log: ExitLog) => (
@@ -63,7 +70,7 @@ export function ChiqishNazoratibolimi() {
                     disabled={notifyMutation.isPending}
                   >
                     <AlertTriangle className="h-3 w-3 mr-1" />
-                    Xavfsizlikni chaqirish
+                    {t("xavfsizlikniChaqirish")}
                   </Button>
                 )}
               </div>

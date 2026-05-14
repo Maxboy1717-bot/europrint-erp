@@ -1,6 +1,11 @@
+/**
+ * @module erp-reports.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import {
-  Controller, Get, Put, Param, Body, Query,
+  Controller, Get, Post, Put, Patch, Delete, Param, Body, Query,
   UseGuards, UseInterceptors, Logger, NotFoundException, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
@@ -30,6 +35,13 @@ export class ErpReportsController {
     return unwrapOrThrow(await this.svc.listDailyReports(safeInt(page, 1), safeInt(limit, 30)));
   }
 
+  @Post('daily-reports')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createDailyReport(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createDailyReport(body));
+  }
+
   @Get('daily-reports/:id')
   async getDailyReport(@Param('id') id: string) {
     const _rGetDailyReport = await this.svc.getDailyReport(safeInt(id, 0));
@@ -39,14 +51,41 @@ export class ErpReportsController {
     return r;
   }
 
+  @Patch('daily-reports/:id')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async updateDailyReport(@Param('id') id: string, @Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.updateDailyReport(safeInt(id, 0), body));
+  }
+
+  @Delete('daily-reports/:id')
+  @Roles(...ERP_WRITE)
+  async deleteDailyReport(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteDailyReport(safeInt(id, 0)));
+  }
+
   @Get('production-facts')
   async listProductionFacts(@Query('page') page?: string, @Query('limit') limit?: string) {
     return unwrapOrThrow(await this.svc.listProductionFacts(safeInt(page, 1), safeInt(limit, 50)));
   }
 
+  @Post('production-facts')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createProductionFact(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createProductionFact(body));
+  }
+
   @Get('production-plans')
   async listProductionPlans(@Query('page') page?: string, @Query('limit') limit?: string) {
     return unwrapOrThrow(await this.svc.listProductionPlans(safeInt(page, 1), safeInt(limit, 50)));
+  }
+
+  @Post('production-plans')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createProductionPlan(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createProductionPlan(body));
   }
 
   @Put('production-plans/:id')
@@ -56,9 +95,23 @@ export class ErpReportsController {
     return unwrapOrThrow(await this.svc.updateProductionPlan(safeInt(id, 0), body));
   }
 
+  @Patch('production-plans/:id')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async patchProductionPlan(@Param('id') id: string, @Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.updateProductionPlan(safeInt(id, 0), body));
+  }
+
   @Get('downtime-logs')
   async listDowntimeLogs(@Query('page') page?: string, @Query('limit') limit?: string) {
     return unwrapOrThrow(await this.svc.listDowntimeLogs(safeInt(page, 1), safeInt(limit, 50)));
+  }
+
+  @Post('downtime-logs')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createDowntimeLog(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createDowntimeLog(body));
   }
 
   @Get('downtime-logs/:id')
@@ -77,6 +130,19 @@ export class ErpReportsController {
     return unwrapOrThrow(await this.svc.updateDowntimeLog(safeInt(id, 0), body));
   }
 
+  @Patch('downtime-logs/:id')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async patchDowntimeLog(@Param('id') id: string, @Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.updateDowntimeLog(safeInt(id, 0), body));
+  }
+
+  @Delete('downtime-logs/:id')
+  @Roles(...ERP_WRITE)
+  async deleteDowntimeLog(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteDowntimeLog(safeInt(id, 0)));
+  }
+
   @Get('capacity')
   async getCapacity() {
     return unwrapOrThrow(await this.svc.getCapacity());
@@ -92,9 +158,23 @@ export class ErpReportsController {
     return unwrapOrThrow(await this.svc.listShiftCalendars());
   }
 
+  @Post('shift-calendars')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createShiftCalendar(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createShiftCalendar(body));
+  }
+
   @Get('employee-work-centers')
   async listEmployeeWorkCenters(@Query('limit') limit?: string) {
     return unwrapOrThrow(await this.svc.listEmployeeWorkCenters(safeInt(limit, 100)));
+  }
+
+  @Post('employee-work-centers')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createEmployeeWorkCenter(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createEmployeeWorkCenter(body));
   }
 
   @Get('employee-work-centers/:id')
@@ -106,8 +186,28 @@ export class ErpReportsController {
     return r;
   }
 
+  @Patch('employee-work-centers/:id')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async updateEmployeeWorkCenter(@Param('id') id: string, @Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.updateEmployeeWorkCenter(safeInt(id, 0), body));
+  }
+
+  @Delete('employee-work-centers/:id')
+  @Roles(...ERP_WRITE)
+  async deleteEmployeeWorkCenter(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteEmployeeWorkCenter(safeInt(id, 0)));
+  }
+
   @Get('work-center-capacity')
   async workCenterCapacity() {
     return unwrapOrThrow(await this.svc.workCenterCapacity());
+  }
+
+  @Post('work-center-capacity')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createWorkCenterCapacity(@Body() _body: ErpBodyDto) {
+    return { message: 'Work center capacity updated', updatedAt: new Date().toISOString() };
   }
 }

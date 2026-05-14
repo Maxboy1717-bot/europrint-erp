@@ -1,3 +1,8 @@
+/**
+ * @module CrpPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,11 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Factory, AlertTriangle, CheckCircle2, Gauge } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
 
 interface WorkCenterLoad {
   workCenterId: number | string;
@@ -54,8 +59,8 @@ function UtilizationBar({ pct, isBottleneck, labelBottleneck, labelHigh, labelNo
       <div className="flex justify-between text-xs mb-1">
         <span>{pct.toFixed(1)}%</span>
         {isBottleneck && <span className="text-destructive font-semibold">{labelBottleneck}</span>}
-        {!isBottleneck && pct > 80 && <span className="text-amber-600 font-semibold">{labelHigh}</span>}
-        {!isBottleneck && pct <= 80 && <span className="text-green-600">{labelNormal}</span>}
+        {!isBottleneck && pct > 80 && <span className="text-[var(--ep-yellow)] font-semibold">{labelHigh}</span>}
+        {!isBottleneck && pct <= 80 && <span className="text-[var(--ep-green)]">{labelNormal}</span>}
       </div>
       <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
         <div
@@ -93,10 +98,12 @@ export default function CrpPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <PageHeader
+      <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('crp_title')}</b></>}
         title={t('crp_title')}
-        description={t('crp_description')}
-        icon={<Factory className="w-6 h-6" />}
+        subtitle={t('crp_description')}
+        icon={<Factory className="w-6 h-6"
+      />}
       />
 
       <div className="flex justify-start">
@@ -116,7 +123,7 @@ export default function CrpPage() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <Factory className="w-8 h-8 text-blue-500" />
+                <Factory className="w-8 h-8 text-[var(--ep-blue)]" />
                 <div>
                   <p className="text-2xl font-bold">{result.workCenters?.length ?? 0}</p>
                   <p className="text-sm text-muted-foreground">{t('crp_totalCenters')}</p>
@@ -127,7 +134,7 @@ export default function CrpPage() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <Gauge className="w-8 h-8 text-purple-500" />
+                <Gauge className="w-8 h-8 text-[var(--ep-purple)]" />
                 <div>
                   <p className="text-2xl font-bold">{(result.avgUtilization ?? 0).toFixed(1)}%</p>
                   <p className="text-sm text-muted-foreground">{t('crp_avgLoad')}</p>
@@ -149,7 +156,7 @@ export default function CrpPage() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-8 h-8 text-green-500" />
+                <CheckCircle2 className="w-8 h-8 text-[var(--ep-green)]" />
                 <div>
                   <p className="text-2xl font-bold">{normal.length}</p>
                   <p className="text-sm text-muted-foreground">{t('crp_normalLoad')}</p>
@@ -165,8 +172,8 @@ export default function CrpPage() {
           <CardContent className="pt-5 space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-4 w-48 rounded-lg" />
+                <Skeleton className="h-3 w-full rounded-lg" />
               </div>
             ))}
           </CardContent>
@@ -207,7 +214,7 @@ export default function CrpPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{wc.workCenterName}</span>
                     {wc.isBottleneck && (
-                      <Badge variant="destructive" className="text-[10px] px-1 py-0">{t('crp_statusBottleneck')}</Badge>
+                      <EPStatusPill tone="danger" className="text-[10px] px-1 py-0">{t('crp_statusBottleneck')}</EPStatusPill>
                     )}
                   </div>
                   <span className="text-xs text-muted-foreground">

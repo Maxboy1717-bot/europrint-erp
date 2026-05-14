@@ -1,3 +1,8 @@
+/**
+ * @module recruitment-bot.i18n
+ * @description Source module. See exports for details.
+ */
+
 import { Logger } from '@nestjs/common';
 
 export type Lang = 'uz' | 'ru' | 'en';

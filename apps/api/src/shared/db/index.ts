@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 import { db, runQuery } from '@shared/db';
 export * from './schema';
 export { db, rawSql, runQuery, ddlRun } from './schema';
@@ -59,10 +64,21 @@ export { forecast_series } from './schema-forecast';
 export { control_chart_point } from './schema-qc-spc';
 export { overtime_policy, employee_separation } from './schema-hr-overtime';
 
+// schema-misc-app-a: App-level stubs (users, org_departments, employees, etc.)
+export {
+  appUsers, hrEmployees,
+  hrDepartments, hrPositions,
+  orgDepartments, employeeOrgDepartments,
+  shiftSchedules, leaveRequestsApp,
+} from './schema-misc-app-a';
+
 // schema-kanban: Kanban tables
 export {
   kanbanFlows, kanbanRobots, kanbanChecklists, kanbanChecklistItems,
   kanbanCardComments, kanbanCardWatchers,
+  kanbanNotifications, kanbanTemplates, kanbanTimeTracks,
+  kanbanTags, kanbanCardTags, kanbanResults, kanbanResultFiles,
+  kanbanObservers, kanbanCoExecutors, kanbanFiles,
 } from './schema-kanban';
 
 // schema-ext: Extended/stub tables for Drizzle builder usage

@@ -1,3 +1,8 @@
+/**
+ * @module crm-types
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import {
   PhoneIncoming,
@@ -310,6 +315,9 @@ export interface EntityCardProps {
   isDragging?: boolean;
   onClick?: (id: number) => void;
   onAddTask?: (id: number) => void;
+  stageColor?: string;
+  stageIndex?: number;
+  totalStages?: number;
 }
 
 export type EntityData = Lead | Deal | Contact | Company | Proposal | Invoice;
@@ -323,6 +331,8 @@ export interface KanbanColumnProps {
   onEntityClick?: (id: number) => void;
   onAddTask?: (id: number) => void;
   onQuickAdd?: () => void;
+  stageIndex?: number;
+  totalStages?: number;
 }
 
 export interface QuickCreateModalProps {

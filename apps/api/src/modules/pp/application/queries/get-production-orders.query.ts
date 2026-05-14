@@ -1,3 +1,8 @@
+/**
+ * @module get-production-orders.query
+ * @description Source module. See exports for details.
+ */
+
 export class GetProductionOrdersQuery {
   constructor(public readonly filters: {
       status?: string;

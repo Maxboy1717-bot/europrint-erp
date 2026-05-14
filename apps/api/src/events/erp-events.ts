@@ -1,3 +1,8 @@
+/**
+ * @module erp-events
+ * @description Source module. See exports for details.
+ */
+
 
 export enum ErpEvents {
   ORDER_CREATED = 'ORDER_CREATED',

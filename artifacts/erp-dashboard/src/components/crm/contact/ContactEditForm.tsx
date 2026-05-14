@@ -1,3 +1,8 @@
+/**
+ * @module ContactEditForm
+ * @description React UI component.
+ */
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save, X } from "lucide-react";
@@ -22,6 +27,7 @@ import {
 import { Contact, Company, ContactFormValues, contactFormSchema } from "./types";
 import { MultiFieldInput } from "../MultiFieldInput";
 
+import { useTranslation } from '@/lib/i18n';
 interface ContactEditFormProps {
   contact: Contact | null;
   companies: Company[] | undefined;
@@ -30,7 +36,8 @@ interface ContactEditFormProps {
   onCancel: () => void;
 }
 
-export function ContactEditForm({ contact, companies, isPending, onSubmit, onCancel }: ContactEditFormProps) {
+export function ContactEditForm({contact, companies, isPending, onSubmit, onCancel }: ContactEditFormProps) {
+  const { t } = useTranslation('common');
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     values: contact
@@ -51,13 +58,13 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Familiya</FormLabel>
+                <FormLabel>{t("familiya")}</FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value || ""} data-testid="input-lastName" />
                 </FormControl>
@@ -71,7 +78,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ism *</FormLabel>
+                <FormLabel>{t("ism")}</FormLabel>
                 <FormControl>
                   <Input {...field} data-testid="input-name" />
                 </FormControl>
@@ -85,7 +92,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
             name="secondName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Otasining ismi</FormLabel>
+                <FormLabel>{t("otasiningIsmi")}</FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value || ""} data-testid="input-secondName" />
                 </FormControl>
@@ -100,7 +107,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
           name="post"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Lavozim</FormLabel>
+              <FormLabel>{t("lavozim1")}</FormLabel>
               <FormControl>
                 <Input {...field} value={field.value || ""} data-testid="input-post" />
               </FormControl>
@@ -114,18 +121,18 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
           name="companyId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kompaniya</FormLabel>
+              <FormLabel>{t("company")}</FormLabel>
               <Select
                 value={field.value?.toString() || "none"}
                 onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
               >
                 <FormControl>
-                  <SelectTrigger data-testid="select-company">
-                    <SelectValue placeholder="Kompaniyani tanlang" />
+                  <SelectTrigger data-testid="select-company" className="h-9">
+                    <SelectValue placeholder={t("kompaniyaniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="none">Yo'q</SelectItem>
+                  <SelectItem value="none">{t("no")}</SelectItem>
                   {companies?.map((company) => (
                     <SelectItem key={company.id} value={company.id.toString()}>
                       {company.title}
@@ -143,13 +150,13 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
           name="phones"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Telefonlar</FormLabel>
+              <FormLabel>{t("telefonlar")}</FormLabel>
               <FormControl>
                 <MultiFieldInput
                   value={field.value || []}
                   onChange={field.onChange}
                   placeholder="+998 90 123 45 67"
-                  label="Telefon"
+                  label={t("phone")}
                   type="tel"
                 />
               </FormControl>
@@ -163,13 +170,13 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
           name="emails"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email manzillar</FormLabel>
+              <FormLabel>{t('emailManzillar')}</FormLabel>
               <FormControl>
                 <MultiFieldInput
                   value={field.value || []}
                   onChange={field.onChange}
                   placeholder="example@email.com"
-                  label="Email"
+                  label={t('email1')}
                   type="email"
                 />
               </FormControl>
@@ -183,7 +190,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
           name="birthdate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tug'ilgan sana</FormLabel>
+              <FormLabel>{t("tugilganSana")}</FormLabel>
               <FormControl>
                 <Input
                   type="date"
@@ -202,7 +209,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
           name="comments"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Izohlar</FormLabel>
+              <FormLabel>{t("notes")}</FormLabel>
               <FormControl>
                 <Textarea
                   {...field}
@@ -233,7 +240,7 @@ export function ContactEditForm({ contact, companies, isPending, onSubmit, onCan
             data-testid="button-cancel-edit"
           >
             <X className="h-4 w-4 mr-2" />
-            Bekor qilish
+            {t("cancel")}
           </Button>
         </div>
       </form>

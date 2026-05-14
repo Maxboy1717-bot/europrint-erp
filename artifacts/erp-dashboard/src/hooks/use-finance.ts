@@ -1,3 +1,8 @@
+/**
+ * @module use-finance
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
@@ -32,7 +37,7 @@ export function useCashFlow(period?: string) {
 export function useExchangeRates() {
   return useQuery({
     queryKey: ["/api/finance/exchange-rates"],
-    staleTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -52,9 +57,12 @@ export function useApproveBudget() {
 export function useApprovePayment() {
   return useMutation({
     mutationFn: (id: string) =>
-      apiRequest("PATCH", `/api/finance/payments/${id}/approve`, {}),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["/api/finance/payments"] }),
+      apiRequest("POST", `/api/finance/payments/${id}/approve`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/dashboard"] });
+    },
   });
 }
 

@@ -1,3 +1,8 @@
+/**
+ * @module schema
+ * @description Source module. See exports for details.
+ */
+
 import { InternalServerErrorException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -71,24 +76,44 @@ import { overtime_policy, employee_separation } from './schema-hr-overtime';
 
 const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
-if (!connectionString) {
+// In test/CI environments DATABASE_URL is often unset or empty — return a stub
+// Pool that throws only when used, so unit tests that don't actually hit the DB
+// can `import` from @shared/db without crashing at module-load time.
+//
+// NOTE: use `||` not `??` because GitHub Actions sets `DATABASE_URL` to an empty
+// string when the secret is missing; `??` would not fall through on `""`.
+const TEST_STUB_URL = 'postgres://stub:stub@localhost:5432/stub';
+const isTestEnv = process.env.NODE_ENV === 'test' || !!process.env.JEST_WORKER_ID || !!process.env.VITEST;
+const effectiveConnString = connectionString
+  || (isTestEnv ? TEST_STUB_URL : null);
+
+if (!effectiveConnString) {
   throw new InternalServerErrorException('DATABASE_URL environment variable is not set');
 }
 
-export const pool = new Pool({ connectionString });
+export const pool = new Pool({ connectionString: effectiveConnString });
 export const db = drizzle(pool);
 
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 export const rawSql = (query: SQL): ReturnType<typeof db.execute> => db.execute(query);
 
-/** DDL operations (CREATE TABLE, ALTER TABLE, etc.) — cannot use query builder */
+/**
+ * DDL operations only (CREATE TABLE, ALTER TABLE, etc.) — cannot use query builder.
+ * SECURITY: `q` MUST be a hard-coded string literal — never a user-controlled value.
+ * For DML queries use `rawSql(sql\`...\`)` with template-literal parameterisation.
+ */
 export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> =>
   db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
 
+/**
+ * Typed query helper.
+ * Accepts only `sql\`...\`` template objects — NOT plain strings — to prevent accidental
+ * SQL injection. Use `sql\`SELECT ... WHERE id = ${id}\`` for parameterised values.
+ */
 export async function runQuery<T = Record<string, unknown>>(
-  q: SQL | SQLWrapper | string,
+  q: SQL | SQLWrapper,
 ): Promise<T[] & { rows: T[] }> {
-  const result = await db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
+  const result = await db.execute(q as SQL);
   const arr = castTo<T[]>(Array.isArray(result) ? result : ((result as { rows?: unknown }).rows ?? []));
   return Object.assign(arr, { rows: arr });
 }

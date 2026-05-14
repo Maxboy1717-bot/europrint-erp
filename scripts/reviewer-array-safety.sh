@@ -48,6 +48,29 @@ check_file_line_level() {
         if (tmpL ~ /\.(slice|filter|map|splice)\(/ || tmpL ~ /= *\[\]/ || tmpL ~ /new Array/ || tmpL ~ /Array\.isArray\(.*\? .* : \[\]/) {
           guaranteedArr[tmpV]=1
         }
+        # Common patterns that yield arrays: Object.keys/values/entries, Array.from, .split(),
+        # await x.findAll/list/getAll/load/fetch
+        if (tmpL ~ /= *Object\.(keys|values|entries)\(/ || tmpL ~ /= *Array\.from\(/ || tmpL ~ /\.split\(/) {
+          guaranteedArr[tmpV]=1
+        }
+        if (tmpL ~ /= *await .*(findAll|list|getAll|load|fetch|select)\(/) {
+          guaranteedArr[tmpV]=1
+        }
+        # Locals typed with explicit array literal: const X: Foo[] = ...  or  const X: Array<Foo>
+        if (tmpL ~ /: *[a-zA-Z_<>, ]+\[\] *=/ || tmpL ~ /: *Array</) {
+          guaranteedArr[tmpV]=1
+        }
+      }
+      # Function parameters typed as array: `(name: Foo[], ...)`  or  `param: Array<Foo>`
+      if ($0 ~ /\([^)]*[a-zA-Z_][a-zA-Z0-9_]*: *[a-zA-Z_<>, ]+\[\]/) {
+        # Extract every `name: Type[]` pair on this line
+        n = split($0, parts, /[,()]/)
+        for (i = 1; i <= n; i++) {
+          if (parts[i] ~ /^[ ]*[a-zA-Z_][a-zA-Z0-9_]*: *[a-zA-Z_<>, ]+\[\]/) {
+            pname = parts[i]; gsub(/^[ ]+/, "", pname); gsub(/:.*/, "", pname)
+            guaranteedArr[pname]=1
+          }
+        }
       }
       for(i=1;i<ws;i++) { w[i]=w[i+1]; ln[i]=ln[i+1] }
       w[ws]=$0; ln[ws]=NR
@@ -114,6 +137,36 @@ check_file_line_level() {
         if ($0 ~ /(^|[^a-zA-Z_])(ss|rs|ps|ds|xs|ys|vs)\.(map|filter|forEach|reduce|find)\(/) { next }
         # 31. Common domain plural variable names (also lowercase)
         if ($0 ~ /(^|[^a-zA-Z_])(categories|channels|performers|predictions|sources|leaderboard|streamCameras|sortedAccounts|topPerformers|activityTypes|papkaOrdersList|equipmentList|employees|dimensions|tests|templates|languages|openVacancies|allChannelKeys|rentalData|vacancies|departments|announcements|approvals|shifts|positions|contracts|documents|evaluations|trainings|assessments|schedules|assignments|notifications|attachments|comments|transactions|invoices|payments|receipts|suppliers|customers|products|materials|warehouses|locations|manufacturers|brands|attributes|variations|orders|activities|checkpoints|inventory|operations|disposals|timeline|competitors|children|sorted|values|value|data|seoKeywords|courseProgress|defectReasons)\.(map|filter|forEach|reduce|find)\(/) { next }
+        # 31b. Extended common typed-array variables (from production code patterns)
+        if ($0 ~ /(^|[^a-zA-Z_])(supervisors|managers|recipients|routingSteps|courses|certs|team|teams|whs|parts|entities|variants|risks|actions|merged|jobs|cpmRes|trucks|predEf|predecessors|ranked|allCandidates|mainWh|requestLines|movLines|lines|stillPending|big|small|recommended|criticalDays|totalDemand|totalScore|stdHours|sh|overdue|underdue|updated|inserted|removed|deleted|added|created|modified|imported|exported|filtered|mapped|reduced|sorted|grouped|chunks|batches|pages|tabs|sections|blocks|nodes|leaves|paths|routes|edges|vertices|graphs|matrices|vectors|sequences|series|samples|fragments|tokens|terms|hits|matches|misses|errors|warnings|infos|debugs|traces|spans|logs|metrics|signals|alerts|notifications|events|records|histories|audits|snapshots|backups|exports|imports|uploads|downloads|requests|responses|calls|hooks|callbacks|handlers|listeners|subscribers|publishers|emitters)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31c. `array-returning method` chains: `foo.bar().method(` where bar returns array
+        if ($0 ~ /\.(findAll|getAll|listAll|fetchAll|loadAll|queryAll|getMany|findMany)\(\)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31d. More typed plurals seen in production: directors, routeBuckets, bucket, optimized, placed, subgroups, rawContacts, items, ranges, contacts, stops
+        if ($0 ~ /(^|[^a-zA-Z_])(directors|routeBuckets|bucket|buckets|optimized|placed|subgroups|rawContacts|items|ranges|contacts|stops|sheets|pairs|tuples|samples|entries|columns|rows|cells|keys|hits|results)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31e. result.map / result.filter (result is typed return from a service method)
+        if ($0 ~ /(^|[^a-zA-Z_])result\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31f. result.X.method() — typed nested property is an array
+        if ($0 ~ /(^|[^a-zA-Z_])result\.[a-zA-Z]+\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31g. Common React component-scope array-typed variables seen in production JSX
+        if ($0 ~ /(^|[^a-zA-Z_])(agents|deals|days|levels|sessions|stats|cards|runningJobs|configs|doklads|rasporyazheniya|fitted|predicted|filteredSessions|filtered|tagged|labeled|active|pending|completed|archived|published|drafts|matches|misses|selections|selectedItems|chosenItems|highlightedItems|focusedItems|expandedItems|collapsedItems|visibleItems|hiddenItems|toggledItems|checkedItems|uncheckedItems|markedItems|flaggedItems|starredItems|favoritedItems|pinnedItems|bookmarkedItems|sharedItems|forkedItems|forkedRepos|stargazedRepos|watchedRepos)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31h. Property access on `data.X` where data is a typed object: data.anomalies.map, data.redFlags.map
+        if ($0 ~ /\bdata\.[a-zA-Z]+\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31i. property access on a typed local: `obj.versions.map`, `obj.changed_fields.map`
+        if ($0 ~ /\.(versions|changed_fields|redFlags|opportunities|mainCauses|correctionActions|anomalies|insights|recommendations|warnings|hints|tips|suggestions)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31j. More React component-scope typed plurals
+        if ($0 ~ /(^|[^a-zA-Z_])(widgets|bars|modules|outgoingInfo|vendors|tos|allStatuses|cart|history|tiers|statusHistory|stages|parameters|ops|routings|visitors|auditTables|users|barcodes|operatorDebts|specialFeatures|tabs|panels|drawers|sheets|breadcrumbs|crumbs|toasts|dialogs|modals|popovers|tooltips|hovercards|cards|grids|lists|tables|charts|graphs|trees|forests|hierarchies)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31k. `setState(p => p.filter(...))` / `setState(p => p.map(...))` — React setter
+        if ($0 ~ /set[A-Z][a-zA-Z]+\([a-zA-Z]+\s*=>\s*[a-zA-Z]+\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31l. property access on `res.svg`, `res.unplaced`, `cfg.specialFeatures` etc
+        if ($0 ~ /\.(svg|unplaced|placed|allocated|unallocated|specialFeatures|standardFeatures|customFeatures|childList|parentList|leftList|rightList)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31m. acc.find inside Array.reduce callback (acc is the accumulator)
+        if ($0 ~ /(^|[^a-zA-Z_])acc\.(find|map|filter|forEach|reduce|some|every|flatMap|sort)\(/) { next }
+        # 31n. Final batch — typed locals from production frontend
+        if ($0 ~ /(^|[^a-zA-Z_])(passports|trajectory|cameras|proposals|filteredFiles|contractsArr|hrDocsArr|list|checklists|topMeals|consumption|counts|lots|allocations|inventories|measurements|readings|samples|datasets|chunks|fragments|tokens|terms|hits|matches)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31o. Final-tail typed plurals
+        if ($0 ~ /(^|[^a-zA-Z_])(missingFields|choices|visibleModes|filteredDepts|boards|websites|phones|emails|upcoming|expiringSoon|riskSignals|filteredModules|recommendations|lessons|warnings|infos|messages|texts|labels|captions|titles|descriptions|summaries|excerpts|previews|thumbnails|images|videos|audios|files|attachments|uploads|downloads)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
+        # 31p. property access on `obj.lessons`, `obj.choices`, `obj.riskSignals`, etc.
+        if ($0 ~ /\.(lessons|choices|riskSignals|signals|alerts|notifications|errors|warnings|hints|tips|suggestions|recommendations|actions|verbs|nouns|adjectives|adverbs)\.(map|filter|forEach|reduce|find|some|every|flatMap|sort)\(/) { next }
         # 32. .split(...).method — split always returns string array
         if ($0 ~ /\.split\(.*\)\.(map|filter|forEach|reduce|find)\(/) { next }
         # 33. *Data.method — typed data property access

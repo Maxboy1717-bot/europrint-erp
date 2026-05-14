@@ -1,3 +1,8 @@
+/**
+ * @module ActionDropdown
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

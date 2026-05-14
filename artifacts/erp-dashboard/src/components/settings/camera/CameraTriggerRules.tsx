@@ -1,3 +1,8 @@
+/**
+ * @module CameraTriggerRules
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,16 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { 
-  Zap, 
-  Camera, 
-  Trash2, 
-  ToggleLeft, 
-  ToggleRight, 
-  Plus, 
-  Save, 
-  Loader2 
-} from "lucide-react";
+import { Zap, Camera, Trash2, ToggleLeft, ToggleRight, Plus, Save } from "lucide-react";
 import { 
   TriggerRule, 
   CameraWithPrompt, 
@@ -27,7 +23,10 @@ import {
   SEVERITY_LABELS 
 } from "./types";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export function CameraTriggerRules() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [rules, setRules] = useState<TriggerRule[]>([]);
@@ -42,7 +41,7 @@ export function CameraTriggerRules() {
     triggerRules: TriggerRule[];
   }>({
     queryKey: ["/api/camera-ai/cameras", selectedCameraId, "trigger-rules"],
-    queryFn: () => fetch(`/api/camera-ai/cameras/${selectedCameraId}/trigger-rules`, { credentials: "include" }).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/camera-ai/cameras/${selectedCameraId}/trigger-rules`).then(r => r.json()),
     enabled: !!selectedCameraId,
   });
 
@@ -84,7 +83,7 @@ export function CameraTriggerRules() {
   };
 
   const updateRule = (id: string, changes: Partial<TriggerRule>) => {
-    setRules(prev => (prev ?? []).map(r => {
+    setRules(prev => (Array.isArray(prev) ? prev : []).map(r => {
       if (r.id !== id) return r;
       const updated = { ...r, ...changes };
       if (changes.detectionType) {
@@ -97,23 +96,23 @@ export function CameraTriggerRules() {
   };
 
   const deleteRule = (id: string) => {
-    setRules(prev => (prev ?? []).filter(r => r.id !== id));
+    setRules(prev => (Array.isArray(prev) ? prev : []).filter(r => r.id !== id));
     setIsDirty(true);
   };
 
   const toggleRule = (id: string) => {
-    setRules(prev => (prev ?? []).map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
+    setRules(prev => (Array.isArray(prev) ? prev : []).map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
     setIsDirty(true);
   };
 
-  if (camsLoading) return <div className="text-center py-8 text-muted-foreground">Yuklanmoqda...</div>;
+  if (camsLoading) return <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-orange-500" />
+            <Zap className="h-5 w-5 text-[var(--ep-primary)]" />
             Per-kamera Trigger Qoidalari (TZ-18)
           </CardTitle>
           <CardDescription>
@@ -123,13 +122,13 @@ export function CameraTriggerRules() {
         </CardHeader>
         <CardContent className="space-y-4">
           {cameras_list.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-[13px] text-muted-foreground">
               <Camera className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              <p>Kameralar topilmadi</p>
+              <p>{t("kameralarTopilmadi")}</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Kamera tanlang</Label>
+            <div className="space-y-1">
+          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("kameraTanlang")}</Label>
               <div className="flex flex-wrap gap-2">
                 {(Array.isArray(cameras_list) ? cameras_list : []).map(cam => (
                   <Button
@@ -151,14 +150,14 @@ export function CameraTriggerRules() {
             <div className="space-y-4 pt-2">
               {rulesLoading ? (
                 <div className="space-y-2">
-                  {([1, 2]).map((n) => <Skeleton key={n} className="h-20 w-full" />)}
+                  {([1, 2]).map((n) => <Skeleton key={n} className="h-20 w-full rounded-lg" />)}
                 </div>
               ) : (
                 <>
                   {rules.length === 0 && !isDirty ? (
                     <div className="text-center py-6 text-muted-foreground border-2 border-dashed rounded-lg">
                       <Zap className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                      <p className="text-sm">Bu kamera uchun trigger qoidalar yo'q. Yangi qoida qo'shing.</p>
+                      <p className="text-sm">{t("buKameraUchunTriggerQoidalar")}</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -178,7 +177,7 @@ export function CameraTriggerRules() {
                                     data-testid={`button-toggle-rule-${rule.id}`}
                                   >
                                     {rule.enabled
-                                      ? <ToggleRight className="h-4 w-4 text-green-500" />
+                                      ? <ToggleRight className="h-4 w-4 text-[var(--ep-green)]" />
                                       : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
                                   </Button>
                                   <Button
@@ -187,13 +186,13 @@ export function CameraTriggerRules() {
                                     onClick={() => deleteRule(rule.id)}
                                     data-testid={`button-delete-rule-${rule.id}`}
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <Trash2 className="h-4 w-4 text-[var(--ep-red)]" />
                                   </Button>
                                 </div>
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-muted-foreground">Aniqlash turi</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground">{t("aniqlashTuri")}</Label>
                                   <Select value={rule.detectionType} onValueChange={v => updateRule(rule.id, { detectionType: v })}>
                                     <SelectTrigger className="h-9" data-testid={`select-detection-${rule.id}`}>
                                       <SelectValue />
@@ -206,7 +205,7 @@ export function CameraTriggerRules() {
                                   </Select>
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-muted-foreground">Harakat</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground">{t("harakat")}</Label>
                                   <Select value={rule.action} onValueChange={v => updateRule(rule.id, { action: v })}>
                                     <SelectTrigger className="h-9" data-testid={`select-action-${rule.id}`}>
                                       <SelectValue />
@@ -219,22 +218,22 @@ export function CameraTriggerRules() {
                                   </Select>
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-muted-foreground">Muhimlik</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground">{t("priority")}</Label>
                                   <Select value={rule.severity} onValueChange={v => updateRule(rule.id, { severity: v })}>
                                     <SelectTrigger className="h-9" data-testid={`select-severity-${rule.id}`}>
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="low">Past</SelectItem>
-                                      <SelectItem value="medium">O'rta</SelectItem>
-                                      <SelectItem value="high">Yuqori</SelectItem>
-                                      <SelectItem value="critical">Kritik</SelectItem>
+                                      <SelectItem value="low">{t("low")}</SelectItem>
+                                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                                      <SelectItem value="high">{t("high")}</SelectItem>
+                                      <SelectItem value="critical">{t("kritik")}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span className="font-semibold">Modul:</span>
+                                <span className="font-semibold">{t("modul")}</span>
                                 <Badge variant="secondary" className="text-xs">{MODULE_LABELS[rule.targetModule] || rule.targetModule}</Badge>
                               </div>
                             </CardContent>
@@ -247,11 +246,11 @@ export function CameraTriggerRules() {
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Button variant="outline" onClick={addRule} data-testid="button-add-trigger-rule">
                       <Plus className="h-4 w-4 mr-1" />
-                      Qoida qo'shish
+                      {t("qoidaQoshish")}
                     </Button>
                     {isDirty && (
                       <Button onClick={() => saveRulesMutation.mutate()} disabled={saveRulesMutation.isPending} data-testid="button-save-trigger-rules">
-                        {saveRulesMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                        {saveRulesMutation.isPending ? <EPLoader className="mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                         Saqlash
                       </Button>
                     )}

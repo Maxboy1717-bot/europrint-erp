@@ -1,3 +1,8 @@
+/**
+ * @module schema-misc
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, uuid, text, boolean, timestamp, decimal, integer,
   index, uniqueIndex, date, jsonb,
@@ -95,6 +100,7 @@ export const kanban_tasks = pgTable('kanban_tasks', {
   created_by: uuid('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deleted_at: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => [
   index('kanban_tasks_status_idx').on(table.status),
   index('kanban_tasks_assigned_to_idx').on(table.assigned_to),

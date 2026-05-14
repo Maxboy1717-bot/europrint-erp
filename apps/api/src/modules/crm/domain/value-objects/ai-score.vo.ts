@@ -1,3 +1,8 @@
+/**
+ * @module ai-score.vo
+ * @description Value object. Immutable domain primitive with validation in its factory.
+ */
+
 import { ValueObject } from '@shared/domain/value-object.base';
 import { Result, Ok, Err } from '@common/types/result.type';
 

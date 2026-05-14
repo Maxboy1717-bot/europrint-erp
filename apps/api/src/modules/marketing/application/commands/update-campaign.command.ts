@@ -1,3 +1,8 @@
+/**
+ * @module update-campaign.command
+ * @description Source module. See exports for details.
+ */
+
 export class UpdateCampaignCommand {
   constructor(public readonly id: string,
     public readonly name?: string,

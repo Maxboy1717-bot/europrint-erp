@@ -1,3 +1,8 @@
+/**
+ * @module PosReports
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,14 +17,13 @@ interface PosReportsProps {
 
 export function PosReports({ dashboard }: PosReportsProps) {
   const { t } = useTranslation('finance');
-  const { t: tCommon } = useTranslation('common');
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bugun savdo</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("bugunSavdo")}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -29,32 +33,32 @@ export function PosReports({ dashboard }: PosReportsProps) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'rtacha chek</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("ortachaChek")}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(dashboard.avgBasket)}</div>
-            <p className="text-xs text-muted-foreground">O'rtacha xarid summasi</p>
+            <p className="text-xs text-muted-foreground">{t("ortachaXaridSummasi")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Top mahsulotlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("topMahsulotlar")}</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard.topProducts.length}</div>
-            <p className="text-xs text-muted-foreground">Eng ko'p sotilgan</p>
+            <p className="text-xs text-muted-foreground">{t("engKopSotilgan")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Kam qolganlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("kamQolganlar")}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{dashboard.lowStockCount}</div>
-            <p className="text-xs text-muted-foreground text-destructive">Zaxirada kam qolgan</p>
+            <p className="text-xs text-muted-foreground text-destructive">{t("zaxiradaKamQolgan")}</p>
           </CardContent>
         </Card>
       </div>
@@ -62,46 +66,46 @@ export function PosReports({ dashboard }: PosReportsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">To'lov turlari bo'yicha</CardTitle>
+            <CardTitle className="text-sm">{t("tolovTurlariBoyicha")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tur</TableHead>
-                  <TableHead className="text-center">Soni</TableHead>
-                  <TableHead className="text-right">Jami</TableHead>
+                  <TableHead>{t("tur")}</TableHead>
+                  <TableHead className="text-center">{t("count")}</TableHead>
+                  <TableHead className="text-right">{t("total")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(Array.isArray(dashboard.paymentBreakdown) ? dashboard.paymentBreakdown : []).map((pb) => (
-                  <TableRow key={pb.method}>
+                  <TableRow key={pb.method} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="capitalize">{pb.method}</TableCell>
                     <TableCell className="text-center">{pb.count}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(pb.total)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Top 5 mahsulot</CardTitle>
+            <CardTitle className="text-sm">{t("top5Mahsulot")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mahsulot</TableHead>
-                  <TableHead className="text-center">Soni</TableHead>
-                  <TableHead className="text-right">Tushum</TableHead>
+                  <TableHead>{t("Mahsulot")}</TableHead>
+                  <TableHead className="text-center">{t("count")}</TableHead>
+                  <TableHead className="text-right">{t("tushum")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {dashboard.topProducts.slice(0, 5).map((p, idx) => (
-                  <TableRow key={idx}>
+                  <TableRow key={idx} className="hover:bg-muted/40 transition-colors">
                     <TableCell>
                       <div className="text-xs">
                         <span className="block font-medium truncate max-w-[150px]">{p.name}</span>
@@ -113,7 +117,7 @@ export function PosReports({ dashboard }: PosReportsProps) {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>
@@ -126,7 +130,7 @@ export function PosReports({ dashboard }: PosReportsProps) {
               <p className="text-lg font-bold">{formatCurrency(dashboard.totalSalesAll)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Umumiy tranzaksiyalar</p>
+              <p className="text-xs text-muted-foreground">{t("umumiyTranzaksiyalar")}</p>
               <p className="text-lg font-bold">{dashboard.totalTransactionsAll}</p>
             </div>
           </div>

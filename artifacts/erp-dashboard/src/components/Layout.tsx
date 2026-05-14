@@ -1,3 +1,8 @@
+/**
+ * @module Layout
+ * @description React UI component.
+ */
+
 import * as React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,8 +18,10 @@ import { Button } from "./ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { NotificationBell } from "@/components/dizayn-new/NotificationBell";
 import { ChatNotificationBell } from "@/components/chat/ChatNotificationBell";
+import { useTranslation } from '@/lib/i18n';
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation("common");
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -86,7 +93,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mr-3 shadow-lg shadow-primary/20">
             <span className="font-display font-bold text-white">EP</span>
           </div>
-          <span className="font-display font-bold text-xl tracking-tight">EuroPrint ERP</span>
+          <span className="font-display font-bold text-xl tracking-tight">{t("europrintErp")}</span>
           <button className="ml-auto lg:hidden" onClick={() => setMobileMenuOpen(false)}>
             <X className="h-5 w-5 opacity-70" />
           </button>

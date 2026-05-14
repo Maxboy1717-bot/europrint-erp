@@ -1,0 +1,5734 @@
+[
+  {
+    "k": "hrEmail",
+    "v": "HR email"
+  },
+  {
+    "k": "email1",
+    "v": "Email"
+  },
+  {
+    "k": "uclDValue",
+    "v": "ucl || d.value"
+  },
+  {
+    "k": "newInProgressC0",
+    "v": "NEW, IN_PROGRESS, C0:NEW..."
+  },
+  {
+    "k": "completionRateAverageScore",
+    "v": "completion_rate, average_score, active_users"
+  },
+  {
+    "k": "aOverdueHours",
+    "v": "a.overdue_hours"
+  },
+  {
+    "k": "socialApi",
+    "v": "Social API"
+  },
+  {
+    "k": "materialId",
+    "v": "material-id"
+  },
+  {
+    "k": "vendorId",
+    "v": "vendor-id"
+  },
+  {
+    "k": "geminiVision",
+    "v": "Gemini Vision"
+  },
+  {
+    "k": "vizual",
+    "v": "Vizual"
+  },
+  {
+    "k": "abcAnaliz",
+    "v": "ABC Analiz"
+  },
+  {
+    "k": "testlardanOtish",
+    "v": "Testlardan o'tish"
+  },
+  {
+    "k": "taqdimEtilganGoyalar",
+    "v": "Taqdim etilgan g'oyalar"
+  },
+  {
+    "k": "darajagaKoraImtiyozlar",
+    "v": "Darajaga ko'ra imtiyozlar"
+  },
+  {
+    "k": "kompaniyadanKredit",
+    "v": "💰 Kompaniyadan kredit"
+  },
+  {
+    "k": "oqitishlar",
+    "v": "🎓 O'qitishlar"
+  },
+  {
+    "k": "keldi",
+    "v": "Keldi"
+  },
+  {
+    "k": "kelmadi",
+    "v": "Kelmadi"
+  },
+  {
+    "k": "k1ModulAsoslar",
+    "v": "1-modul: Asoslar"
+  },
+  {
+    "k": "amaliy",
+    "v": "Amaliy"
+  },
+  {
+    "k": "oson",
+    "v": "Oson"
+  },
+  {
+    "k": "qiyin",
+    "v": "Qiyin"
+  },
+  {
+    "k": "boglanmagan",
+    "v": "Bog'lanmagan"
+  },
+  {
+    "k": "urinishlar",
+    "v": "Urinishlar *"
+  },
+  {
+    "k": "savollarniAralashtirish",
+    "v": "Savollarni aralashtirish"
+  },
+  {
+    "k": "tashkiliyTuzilma",
+    "v": "Tashkiliy tuzilma"
+  },
+  {
+    "k": "oqilgan",
+    "v": "O'qilgan"
+  },
+  {
+    "k": "tavsiyalar",
+    "v": "Tavsiyalar:"
+  },
+  {
+    "k": "intizomBuzilishlari",
+    "v": "Intizom Buzilishlari"
+  },
+  {
+    "k": "buzilishlar",
+    "v": "Buzilishlar"
+  },
+  {
+    "k": "buzilishlarTaqsimoti",
+    "v": "Buzilishlar Taqsimoti"
+  },
+  {
+    "k": "kutishga",
+    "v": "Kutishga"
+  },
+  {
+    "k": "tasdiq",
+    "v": "Tasdiq"
+  },
+  {
+    "k": "kiruvchi",
+    "v": "Kiruvchi"
+  },
+  {
+    "k": "chiquvchi",
+    "v": "Chiquvchi"
+  },
+  {
+    "k": "mavzu",
+    "v": "Mavzu"
+  },
+  {
+    "k": "imzolashgaOtish",
+    "v": "Imzolashga o'tish"
+  },
+  {
+    "k": "xonagaOtish",
+    "v": "Xonaga o'tish"
+  },
+  {
+    "k": "mention",
+    "v": "Mention"
+  },
+  {
+    "k": "emoji",
+    "v": "Emoji"
+  },
+  {
+    "k": "reaksiya",
+    "v": "Reaksiya"
+  },
+  {
+    "k": "thread",
+    "v": "Thread"
+  },
+  {
+    "k": "variantlar",
+    "v": "Variantlar"
+  },
+  {
+    "k": "yoqish",
+    "v": "Yoqish"
+  },
+  {
+    "k": "jimlatish",
+    "v": "Jimlatish"
+  },
+  {
+    "k": "doimiy",
+    "v": "Doimiy"
+  },
+  {
+    "k": "xonaniArxivlash",
+    "v": "Xonani arxivlash"
+  },
+  {
+    "k": "ozgarish",
+    "v": "O'zgarish"
+  },
+  {
+    "k": "pasaygan",
+    "v": "Pasaygan"
+  },
+  {
+    "k": "whatsapp",
+    "v": "WhatsApp"
+  },
+  {
+    "k": "xat",
+    "v": "Xat"
+  },
+  {
+    "k": "slotlar",
+    "v": "Slotlar"
+  },
+  {
+    "k": "kutilayotganlar",
+    "v": "Kutilayotganlar"
+  },
+  {
+    "k": "bajarilganlar",
+    "v": "Bajarilganlar"
+  },
+  {
+    "k": "davomiyligi",
+    "v": "Davomiyligi"
+  },
+  {
+    "k": "shablon",
+    "v": "Shablon"
+  },
+  {
+    "k": "rejadagi",
+    "v": "Rejadagi"
+  },
+  {
+    "k": "gaOzgartirdi",
+    "v": "ga o'zgartirdi"
+  },
+  {
+    "k": "vebSaytlar",
+    "v": "Veb-saytlar"
+  },
+  {
+    "k": "vebSayt",
+    "v": "Veb-sayt"
+  },
+  {
+    "k": "kontaktniUzish",
+    "v": "Kontaktni uzish"
+  },
+  {
+    "k": "kreditLimiti",
+    "v": "Kredit limiti"
+  },
+  {
+    "k": "bloklangan",
+    "v": "Bloklangan"
+  },
+  {
+    "k": "kreditLimitiniOzgartirish",
+    "v": "Kredit limitini o'zgartirish"
+  },
+  {
+    "k": "kreditLimitiBelgilanmagan",
+    "v": "Kredit limiti belgilanmagan"
+  },
+  {
+    "k": "kreditLimitiniBelgilash",
+    "v": "Kredit limitini belgilash"
+  },
+  {
+    "k": "ozgartirishSababi",
+    "v": "O'zgartirish sababi"
+  },
+  {
+    "k": "muloqot",
+    "v": "Muloqot"
+  },
+  {
+    "k": "timelineKelajakdaCrmActivitiesJadvalidan",
+    "v": "Timeline kelajakda CRM activities jadvalidan ko'rsatiladi"
+  },
+  {
+    "k": "ehtimollik",
+    "v": "Ehtimollik:"
+  },
+  {
+    "k": "yopilish",
+    "v": "Yopilish:"
+  },
+  {
+    "k": "dealgaOtkazish",
+    "v": "Dealga o'tkazish"
+  },
+  {
+    "k": "yutildi",
+    "v": "Yutildi"
+  },
+  {
+    "k": "bosqichniOzgartirish",
+    "v": "Bosqichni o'zgartirish"
+  },
+  {
+    "k": "lidniKonvertatsiyaQilish",
+    "v": "Lidni konvertatsiya qilish"
+  },
+  {
+    "k": "manba",
+    "v": "Manba"
+  },
+  {
+    "k": "sayt",
+    "v": "Sayt"
+  },
+  {
+    "k": "telegram",
+    "v": "Telegram"
+  },
+  {
+    "k": "tavsiya",
+    "v": "Tavsiya"
+  },
+  {
+    "k": "hamkor",
+    "v": "Hamkor"
+  },
+  {
+    "k": "ustuvorlik",
+    "v": "Ustuvorlik"
+  },
+  {
+    "k": "mavzu1",
+    "v": "Mavzu *"
+  },
+  {
+    "k": "bogliqObekt",
+    "v": "Bog'liq ob'ekt"
+  },
+  {
+    "k": "aiMaslahatchi",
+    "v": "AI Maslahatchi"
+  },
+  {
+    "k": "halQildim",
+    "v": "Hal qildim"
+  },
+  {
+    "k": "paneli",
+    "v": "Paneli"
+  },
+  {
+    "k": "haqiqat",
+    "v": "Haqiqat"
+  },
+  {
+    "k": "sahifalash",
+    "v": "Sahifalash"
+  },
+  {
+    "k": "erpSystem",
+    "v": "ERP System"
+  },
+  {
+    "k": "oqilmagan",
+    "v": "O'qilmagan"
+  },
+  {
+    "k": "oqildiDebBelgilash",
+    "v": "O'qildi deb belgilash"
+  },
+  {
+    "k": "europrintErp",
+    "v": "EuroPrint ERP"
+  },
+  {
+    "k": "oilali",
+    "v": "Oilali"
+  },
+  {
+    "k": "boydoq",
+    "v": "Bo'ydoq"
+  },
+  {
+    "k": "turmushgaChiqqan",
+    "v": "Turmushga chiqqan"
+  },
+  {
+    "k": "turmushgaChiqmagan",
+    "v": "Turmushga chiqmagan"
+  },
+  {
+    "k": "ajrashgan",
+    "v": "Ajrashgan"
+  },
+  {
+    "k": "maktabgacha",
+    "v": "Maktabgacha"
+  },
+  {
+    "k": "maktabda",
+    "v": "Maktabda"
+  },
+  {
+    "k": "oliyTalimda",
+    "v": "Oliy ta'limda"
+  },
+  {
+    "k": "talimniBitirgan",
+    "v": "Ta'limni bitirgan"
+  },
+  {
+    "k": "sutkalik",
+    "v": "Sutkalik"
+  },
+  {
+    "k": "turarJoy",
+    "v": "Turar joy"
+  },
+  {
+    "k": "nomalumMuddatli",
+    "v": "Noma'lum muddatli"
+  },
+  {
+    "k": "muddatli",
+    "v": "Muddatli"
+  },
+  {
+    "k": "telegramId",
+    "v": "Telegram ID"
+  },
+  {
+    "k": "tatilda",
+    "v": "Ta'tilda"
+  },
+  {
+    "k": "kasalxonada",
+    "v": "Kasalxonada"
+  },
+  {
+    "k": "ishdanBoshatilgan",
+    "v": "Ishdan bo'shatilgan"
+  },
+  {
+    "k": "soatbay",
+    "v": "Soatbay"
+  },
+  {
+    "k": "akkord",
+    "v": "Akkord"
+  },
+  {
+    "k": "sanalar",
+    "v": "Sanalar"
+  },
+  {
+    "k": "turmushQurmagan",
+    "v": "Turmush qurmagan"
+  },
+  {
+    "k": "turmushQurgan",
+    "v": "Turmush qurgan"
+  },
+  {
+    "k": "kvartira",
+    "v": "Kvartira"
+  },
+  {
+    "k": "yotoqxona",
+    "v": "Yotoqxona"
+  },
+  {
+    "k": "ismSharif",
+    "v": "Ism-sharif"
+  },
+  {
+    "k": "masalanOtasiOnasiTurmushOrtogi",
+    "v": "Masalan: Otasi, Onasi, Turmush o'rtog'i"
+  },
+  {
+    "k": "intizomBuzilishi",
+    "v": "Intizom buzilishi"
+  },
+  {
+    "k": "maoshdanUshlabQolinsin",
+    "v": "Maoshdan ushlab qolinsin"
+  },
+  {
+    "k": "koeffitsient",
+    "v": "Koeffitsient"
+  },
+  {
+    "k": "seriya",
+    "v": "Seriya"
+  },
+  {
+    "k": "fuqaroligi",
+    "v": "Fuqaroligi"
+  },
+  {
+    "k": "parolniTasdiqlang",
+    "v": "Parolni tasdiqlang"
+  },
+  {
+    "k": "maoshniOzgartirish",
+    "v": "Maoshni o'zgartirish"
+  },
+  {
+    "k": "bozorMoslashuvi",
+    "v": "Bozor moslashuvi"
+  },
+  {
+    "k": "kasalikVaraqasiniQaydEtish",
+    "v": "Kasalik varaqasini qayd etish"
+  },
+  {
+    "k": "tashxis",
+    "v": "Tashxis"
+  },
+  {
+    "k": "tolanadigan",
+    "v": "To'lanadigan"
+  },
+  {
+    "k": "intizomMukofotlar",
+    "v": "Intizom & Mukofotlar"
+  },
+  {
+    "k": "rivojlanish",
+    "v": "Rivojlanish"
+  },
+  {
+    "k": "moslashuv",
+    "v": "Moslashuv"
+  },
+  {
+    "k": "kareraYoli",
+    "v": "Karera yo'li"
+  },
+  {
+    "k": "jihozlar",
+    "v": "Jihozlar"
+  },
+  {
+    "k": "majburiyatlar",
+    "v": "Majburiyatlar"
+  },
+  {
+    "k": "hrKapital",
+    "v": "HR Kapital"
+  },
+  {
+    "k": "ishdanBoshatish",
+    "v": "Ishdan bo'shatish"
+  },
+  {
+    "k": "dastgoh",
+    "v": "⚙️ Dastgoh"
+  },
+  {
+    "k": "attestatsiya",
+    "v": "Attestatsiya"
+  },
+  {
+    "k": "tashkiliyTuzilmagaOtish",
+    "v": "Tashkiliy tuzilmaga o'tish"
+  },
+  {
+    "k": "ishdanKetgan",
+    "v": "Ishdan ketgan"
+  },
+  {
+    "k": "euro",
+    "v": "Euro"
+  },
+  {
+    "k": "europrint",
+    "v": "Europrint"
+  },
+  {
+    "k": "joylashtirilgan",
+    "v": "Joylashtirilgan"
+  },
+  {
+    "k": "boshDaftarHujjatlari",
+    "v": "Bosh Daftar Hujjatlari"
+  },
+  {
+    "k": "otkazma",
+    "v": "O'tkazma"
+  },
+  {
+    "k": "tuzatish",
+    "v": "Tuzatish"
+  },
+  {
+    "k": "debet",
+    "v": "Debet"
+  },
+  {
+    "k": "joylashtirish",
+    "v": "Joylashtirish"
+  },
+  {
+    "k": "tartib",
+    "v": "Tartib"
+  },
+  {
+    "k": "aktivlar",
+    "v": "Aktivlar"
+  },
+  {
+    "k": "uzoqMuddatli",
+    "v": "Uzoq muddatli"
+  },
+  {
+    "k": "kirimlar",
+    "v": "Kirimlar"
+  },
+  {
+    "k": "chiqimlar",
+    "v": "Chiqimlar"
+  },
+  {
+    "k": "sofPulOqimi",
+    "v": "Sof pul oqimi"
+  },
+  {
+    "k": "ochilish",
+    "v": "Ochilish:"
+  },
+  {
+    "k": "yigildi",
+    "v": "Yig'ildi:"
+  },
+  {
+    "k": "tolandi",
+    "v": "To'landi:"
+  },
+  {
+    "k": "kpiTrendlari",
+    "v": "KPI Trendlari"
+  },
+  {
+    "k": "bilvositaUsulBoyichaPulOqimi",
+    "v": "Bilvosita usul bo'yicha pul oqimi"
+  },
+  {
+    "k": "operatsionFaoliyatdanPulOqimi",
+    "v": "Operatsion faoliyatdan pul oqimi"
+  },
+  {
+    "k": "investitsiyaFaoliyatidanPulOqimi",
+    "v": "Investitsiya faoliyatidan pul oqimi"
+  },
+  {
+    "k": "moliyalashtirishFaoliyatidanPulOqimi",
+    "v": "Moliyalashtirish faoliyatidan pul oqimi"
+  },
+  {
+    "k": "davrBoshi",
+    "v": "Davr boshi"
+  },
+  {
+    "k": "davrOxiri",
+    "v": "Davr oxiri"
+  },
+  {
+    "k": "mehnatXarajatlari",
+    "v": "Mehnat xarajatlari"
+  },
+  {
+    "k": "quickRatio",
+    "v": "Quick Ratio"
+  },
+  {
+    "k": "rentabellik",
+    "v": "Rentabellik"
+  },
+  {
+    "k": "aktivlarAylanmasi",
+    "v": "Aktivlar aylanmasi"
+  },
+  {
+    "k": "zaxiralarAylanmasi",
+    "v": "Zaxiralar aylanmasi"
+  },
+  {
+    "k": "debtToEquity",
+    "v": "Debt to Equity"
+  },
+  {
+    "k": "debtToAssets",
+    "v": "Debt to Assets"
+  },
+  {
+    "k": "formula",
+    "v": "Formula:"
+  },
+  {
+    "k": "ogish",
+    "v": "Og'ish"
+  },
+  {
+    "k": "ishbay",
+    "v": "Ishbay"
+  },
+  {
+    "k": "smenbay",
+    "v": "Smenbay"
+  },
+  {
+    "k": "masalan1Sex",
+    "v": "Masalan: 1-sex"
+  },
+  {
+    "k": "masalan5",
+    "v": "Masalan: 5"
+  },
+  {
+    "k": "masalan405286",
+    "v": "Masalan: 40.5286"
+  },
+  {
+    "k": "masalan709425",
+    "v": "Masalan: 70.9425"
+  },
+  {
+    "k": "tashkiliyTuzilmaFunksiyalari",
+    "v": "Tashkiliy tuzilma funksiyalari"
+  },
+  {
+    "k": "masalan2",
+    "v": "Masalan: 2"
+  },
+  {
+    "k": "qaytgan",
+    "v": "Qaytgan"
+  },
+  {
+    "k": "alumni",
+    "v": "Alumni"
+  },
+  {
+    "k": "karyeraRivojlanishRejalari",
+    "v": "Karyera Rivojlanish Rejalari"
+  },
+  {
+    "k": "tomonlar",
+    "v": "Tomonlar"
+  },
+  {
+    "k": "ismiSharifi",
+    "v": "Ismi-sharifi"
+  },
+  {
+    "k": "otganlar",
+    "v": "O'tganlar"
+  },
+  {
+    "k": "checklist",
+    "v": "Checklist"
+  },
+  {
+    "k": "kritik",
+    "v": "Kritik"
+  },
+  {
+    "k": "tekshirilgan",
+    "v": "Tekshirilgan"
+  },
+  {
+    "k": "mos",
+    "v": "Mos"
+  },
+  {
+    "k": "muallim",
+    "v": "Muallim"
+  },
+  {
+    "k": "jarohat",
+    "v": "Jarohat"
+  },
+  {
+    "k": "qoidabuzarlik",
+    "v": "Qoidabuzarlik"
+  },
+  {
+    "k": "jiddiy",
+    "v": "Jiddiy"
+  },
+  {
+    "k": "kask",
+    "v": "Kask"
+  },
+  {
+    "k": "botinka",
+    "v": "Botinka"
+  },
+  {
+    "k": "qolqop",
+    "v": "Qo'lqop"
+  },
+  {
+    "k": "jihozlarJoyida",
+    "v": "Jihozlar joyida"
+  },
+  {
+    "k": "dalil",
+    "v": "Dalil"
+  },
+  {
+    "k": "jpegPngWebp",
+    "v": "JPEG, PNG, WebP"
+  },
+  {
+    "k": "hurmatli",
+    "v": "Hurmatli"
+  },
+  {
+    "k": "sizni",
+    "v": "Sizni"
+  },
+  {
+    "k": "europrint1",
+    "v": "EuroPrint"
+  },
+  {
+    "k": "europrintHr",
+    "v": "EuroPrint HR"
+  },
+  {
+    "k": "masalan4000000",
+    "v": "Masalan: 4000000"
+  },
+  {
+    "k": "masalan6000000",
+    "v": "Masalan: 6000000"
+  },
+  {
+    "k": "masalan50",
+    "v": "Masalan: 50"
+  },
+  {
+    "k": "masalan3",
+    "v": "Masalan: 3"
+  },
+  {
+    "k": "imtiyozlar",
+    "v": "Imtiyozlar"
+  },
+  {
+    "k": "hhUzTelegram",
+    "v": "hh.uz, Telegram..."
+  },
+  {
+    "k": "k0Candidatecount",
+    "v": "0 && candidateCount"
+  },
+  {
+    "k": "tavsiyalar1",
+    "v": "Tavsiyalar"
+  },
+  {
+    "k": "k0Salexpmax",
+    "v": "0 && salExpMax"
+  },
+  {
+    "k": "bolinma",
+    "v": "Bo'linma"
+  },
+  {
+    "k": "nastavnik",
+    "v": "Nastavnik"
+  },
+  {
+    "k": "nastavnik1",
+    "v": "Nastavnik:"
+  },
+  {
+    "k": "yakuniyChekList",
+    "v": "Yakuniy Chek-list"
+  },
+  {
+    "k": "yolXaritasiHaliYaratilmagan",
+    "v": "Yo'l xaritasi hali yaratilmagan"
+  },
+  {
+    "k": "otaNodeId",
+    "v": "Ota node ID"
+  },
+  {
+    "k": "vakant",
+    "v": "Vakant"
+  },
+  {
+    "k": "hrCapitalPortret",
+    "v": "HR Capital Portret"
+  },
+  {
+    "k": "toldirilgan",
+    "v": "✓ To'ldirilgan"
+  },
+  {
+    "k": "dastgohOperatori",
+    "v": "Dastgoh operatori"
+  },
+  {
+    "k": "hrCapitalPortret1",
+    "v": "HR Capital portret"
+  },
+  {
+    "k": "faollik",
+    "v": "Faollik"
+  },
+  {
+    "k": "ochirishniTasdiqlang",
+    "v": "O'chirishni tasdiqlang"
+  },
+  {
+    "k": "masalanTexnikaXavfsizligiBoyichaYoriqnoma",
+    "v": "Masalan: Texnika xavfsizligi bo'yicha yo'riqnoma"
+  },
+  {
+    "k": "portretSaqlanganSorovgaAvtomatikBiriktiriladi",
+    "v": "Portret saqlangan — so'rovga avtomatik biriktiriladi"
+  },
+  {
+    "k": "k8Jins",
+    "v": "8. Jins"
+  },
+  {
+    "k": "k5XizmatSafari",
+    "v": "5. Xizmat safari"
+  },
+  {
+    "k": "k10MartabaOsishi",
+    "v": "10. Martaba o'sishi"
+  },
+  {
+    "k": "oziniOziBandQilish",
+    "v": "O'zini o'zi band qilish"
+  },
+  {
+    "k": "k16OqitishImkoniyatlari",
+    "v": "16. O'qitish imkoniyatlari"
+  },
+  {
+    "k": "masalanAgileQatiyIntizom",
+    "v": "Masalan: Agile, qat'iy intizom..."
+  },
+  {
+    "k": "noutbukCrmMaxsusKiyim",
+    "v": "Noutbuk, CRM, maxsus kiyim..."
+  },
+  {
+    "k": "sanalarniOzgartirish",
+    "v": "Sanalarni o'zgartirish"
+  },
+  {
+    "k": "k5Alo",
+    "v": "5 — 🤩 A'lo"
+  },
+  {
+    "k": "bajarilmadi",
+    "v": "Bajarilmadi"
+  },
+  {
+    "k": "kuzatuvlar",
+    "v": "Kuzatuvlar"
+  },
+  {
+    "k": "kuchliTomonlar",
+    "v": "✓ Kuchli tomonlar"
+  },
+  {
+    "k": "rivojlanishSohalari",
+    "v": "↗ Rivojlanish sohalari"
+  },
+  {
+    "k": "qaror",
+    "v": "Qaror"
+  },
+  {
+    "k": "intizom",
+    "v": "Intizom"
+  },
+  {
+    "k": "intizomYozuvi",
+    "v": "Intizom yozuvi"
+  },
+  {
+    "k": "olganSertifikatlar",
+    "v": "Olgan sertifikatlar"
+  },
+  {
+    "k": "aniqlanganSindromlar",
+    "v": "Aniqlangan sindromlar"
+  },
+  {
+    "k": "belgilanmagan",
+    "v": "— Belgilanmagan —"
+  },
+  {
+    "k": "kanbanDoskasi",
+    "v": "Kanban doskasi"
+  },
+  {
+    "k": "robotlar",
+    "v": "Robotlar"
+  },
+  {
+    "k": "oqimlar",
+    "v": "Oqimlar"
+  },
+  {
+    "k": "shablonlar",
+    "v": "Shablonlar"
+  },
+  {
+    "k": "yakunlangan",
+    "v": "Yakunlangan"
+  },
+  {
+    "k": "qolgan",
+    "v": "Qolgan"
+  },
+  {
+    "k": "boshlangich",
+    "v": "Boshlang'ich"
+  },
+  {
+    "k": "ilgor",
+    "v": "Ilg'or"
+  },
+  {
+    "k": "mentorsiz",
+    "v": "Mentorsiz"
+  },
+  {
+    "k": "qayerdan",
+    "v": "Qayerdan"
+  },
+  {
+    "k": "mutaxassislik",
+    "v": "Mutaxassislik"
+  },
+  {
+    "k": "yutuqlar",
+    "v": "Yutuqlar"
+  },
+  {
+    "k": "bizningXodimimizmi",
+    "v": "Bizning xodimimizmi?"
+  },
+  {
+    "k": "mutaxassislikSohalari",
+    "v": "Mutaxassislik sohalari..."
+  },
+  {
+    "k": "yutuqlariMukofotlariSertifikatlari",
+    "v": "Yutuqlari, mukofotlari, sertifikatlari..."
+  },
+  {
+    "k": "europrintSystem",
+    "v": "Europrint system"
+  },
+  {
+    "k": "zaxira",
+    "v": "Zaxira:"
+  },
+  {
+    "k": "yetadi",
+    "v": "Yetadi:"
+  },
+  {
+    "k": "theme",
+    "v": "Theme"
+  },
+  {
+    "k": "bazaviy",
+    "v": "Bazaviy:"
+  },
+  {
+    "k": "shtrixKod",
+    "v": "Shtrix-kod"
+  },
+  {
+    "k": "shtrixKodniSkanerlang",
+    "v": "Shtrix-kodni skanerlang"
+  },
+  {
+    "k": "scanBarcodeToAddProducts",
+    "v": "Scan barcode to add products"
+  },
+  {
+    "k": "oflaynRejimda",
+    "v": "Oflayn rejimda"
+  },
+  {
+    "k": "sinxronlanmoqda",
+    "v": "Sinxronlanmoqda..."
+  },
+  {
+    "k": "sync",
+    "v": "Sync..."
+  },
+  {
+    "k": "chegirma",
+    "v": "Chegirma:"
+  },
+  {
+    "k": "qaytim",
+    "v": "Qaytim:"
+  },
+  {
+    "k": "naqd",
+    "v": "Naqd"
+  },
+  {
+    "k": "qaytim1",
+    "v": "Qaytim"
+  },
+  {
+    "k": "tushum",
+    "v": "Tushum"
+  },
+  {
+    "k": "zaxira1",
+    "v": "Zaxira"
+  },
+  {
+    "k": "tranzaksiya",
+    "v": "Tranzaksiya:"
+  },
+  {
+    "k": "aiXulosasi",
+    "v": "AI Xulosasi"
+  },
+  {
+    "k": "standartgaMuvofiqlik",
+    "v": "Standartga muvofiqlik"
+  },
+  {
+    "k": "kiruvchiNazorat",
+    "v": "Kiruvchi nazorat"
+  },
+  {
+    "k": "gofrokartonT24",
+    "v": "Gofrokarton T-24..."
+  },
+  {
+    "k": "yoqiq",
+    "v": "Yoqiq"
+  },
+  {
+    "k": "laboratoriyaTestlari",
+    "v": "Laboratoriya Testlari"
+  },
+  {
+    "k": "parametr",
+    "v": "Parametr"
+  },
+  {
+    "k": "grammatura",
+    "v": "Grammatura"
+  },
+  {
+    "k": "qalinlik",
+    "v": "Qalinlik"
+  },
+  {
+    "k": "bosim",
+    "v": "Bosim"
+  },
+  {
+    "k": "namlik",
+    "v": "Namlik"
+  },
+  {
+    "k": "otdi",
+    "v": "O'tdi"
+  },
+  {
+    "k": "mijozlardanKelganShikoyatlarniBoshqarish",
+    "v": "Mijozlardan kelgan shikoyatlarni boshqarish"
+  },
+  {
+    "k": "kamomad",
+    "v": "Kamomad"
+  },
+  {
+    "k": "mchjEuroinvest",
+    "v": "MChJ EuroInvest..."
+  },
+  {
+    "k": "europrintPaper",
+    "v": "EuroPrint Paper..."
+  },
+  {
+    "k": "kraftTestliner",
+    "v": "Kraft, Testliner..."
+  },
+  {
+    "k": "davomiylik",
+    "v": "Davomiylik"
+  },
+  {
+    "k": "amalda",
+    "v": "Amalda"
+  },
+  {
+    "k": "toxtashlar",
+    "v": "To'xtashlar"
+  },
+  {
+    "k": "bajarilish",
+    "v": "Bajarilish %"
+  },
+  {
+    "k": "instagram",
+    "v": "Instagram"
+  },
+  {
+    "k": "facebook",
+    "v": "Facebook"
+  },
+  {
+    "k": "europrintLogo",
+    "v": "EuroPrint Logo"
+  },
+  {
+    "k": "buzilish",
+    "v": "Buzilish"
+  },
+  {
+    "k": "mos1",
+    "v": "✓ Mos"
+  },
+  {
+    "k": "instrumentlar",
+    "v": "Instrumentlar:"
+  },
+  {
+    "k": "martaba",
+    "v": "Martaba:"
+  },
+  {
+    "k": "sotsialPaket",
+    "v": "Sotsial paket:"
+  },
+  {
+    "k": "oqitish",
+    "v": "O'qitish:"
+  },
+  {
+    "k": "yolXaritasi",
+    "v": "Yo'l xaritasi"
+  },
+  {
+    "k": "skript53",
+    "v": "Skript №53"
+  },
+  {
+    "k": "cvMezonlari52",
+    "v": "CV Mezonlari №52"
+  },
+  {
+    "k": "rekrutmentJarayoniHrCapitalMetodologiyasining",
+    "v": "Rekrutment jarayoni HR Capital metodologiyasining 7 bosqichiga asoslanadi:"
+  },
+  {
+    "k": "berilmadi",
+    "v": "Berilmadi"
+  },
+  {
+    "k": "ishonch",
+    "v": "Ishonch"
+  },
+  {
+    "k": "tanaTili",
+    "v": "Tana tili"
+  },
+  {
+    "k": "professionalizm",
+    "v": "Professionalizm"
+  },
+  {
+    "k": "ijtimoiyPaket",
+    "v": "Ijtimoiy paket"
+  },
+  {
+    "k": "masalanTartibsizMasuliyatsizAgressivOrganishni",
+    "v": "Masalan: tartibsiz, mas'uliyatsiz, agressiv, o'rganishni xohlamaydigan..."
+  },
+  {
+    "k": "masalanRaqobatchiKompaniyalardaBankSohasida",
+    "v": "Masalan: raqobatchi kompaniyalarda, bank sohasida, frilansda..."
+  },
+  {
+    "k": "masalanQurilishTibbiyotIt",
+    "v": "Masalan: Qurilish, Tibbiyot, IT..."
+  },
+  {
+    "k": "k4GuruhgaJavobgarlik",
+    "v": "4. Guruhga javobgarlik"
+  },
+  {
+    "k": "kamdanKam",
+    "v": "Kamdan-kam"
+  },
+  {
+    "k": "martabaOsishi",
+    "v": "Martaba o'sishi"
+  },
+  {
+    "k": "masalan09001800",
+    "v": "Masalan: 09:00-18:00"
+  },
+  {
+    "k": "takrorlanuvchanlik",
+    "v": "Takrorlanuvchanlik"
+  },
+  {
+    "k": "struktura",
+    "v": "Struktura"
+  },
+  {
+    "k": "linkedin",
+    "v": "LinkedIn"
+  },
+  {
+    "k": "manbaa",
+    "v": "Manbaa"
+  },
+  {
+    "k": "chegirma1",
+    "v": "Chegirma"
+  },
+  {
+    "k": "royxatdan",
+    "v": "Ro'yxatdan"
+  },
+  {
+    "k": "sentiment",
+    "v": "Sentiment"
+  },
+  {
+    "k": "yonalish",
+    "v": "Yo'nalish"
+  },
+  {
+    "k": "tafsilot",
+    "v": "Tafsilot"
+  },
+  {
+    "k": "halQilindi",
+    "v": "Hal qilindi"
+  },
+  {
+    "k": "halQilingan",
+    "v": "Hal qilingan"
+  },
+  {
+    "k": "hujjatniOchirishniTasdiqlang",
+    "v": "Hujjatni o'chirishni tasdiqlang"
+  },
+  {
+    "k": "royxatga",
+    "v": "Ro'yxatga"
+  },
+  {
+    "k": "segment",
+    "v": "Segment"
+  },
+  {
+    "k": "kreditLimit",
+    "v": "Kredit limit"
+  },
+  {
+    "k": "menejerlarReytingi",
+    "v": "Menejerlar reytingi"
+  },
+  {
+    "k": "yutdi",
+    "v": "Yutdi"
+  },
+  {
+    "k": "yutqizdi",
+    "v": "Yutqizdi"
+  },
+  {
+    "k": "tolandi1",
+    "v": "To'landi"
+  },
+  {
+    "k": "qolip",
+    "v": "Qolip:"
+  },
+  {
+    "k": "tannarx",
+    "v": "Tannarx:"
+  },
+  {
+    "k": "ishlatilgan",
+    "v": "Ishlatilgan:"
+  },
+  {
+    "k": "limit",
+    "v": "Limit:"
+  },
+  {
+    "k": "ozVaqtidaTolagan",
+    "v": "O'z vaqtida to'lagan"
+  },
+  {
+    "k": "taxminiyMarja",
+    "v": "Taxminiy marja"
+  },
+  {
+    "k": "mijozlikDavri",
+    "v": "Mijozlik davri"
+  },
+  {
+    "k": "sezgirlik",
+    "v": "Sezgirlik:"
+  },
+  {
+    "k": "fikr",
+    "v": "Fikr"
+  },
+  {
+    "k": "variantprops",
+    "v": "& VariantProps"
+  },
+  {
+    "k": "sidebar1",
+    "v": "Sidebar"
+  },
+  {
+    "k": "displaysTheMobileSidebar",
+    "v": "Displays the mobile sidebar."
+  },
+  {
+    "k": "toggleSidebar3",
+    "v": "Toggle Sidebar"
+  },
+  {
+    "k": "chopEtish",
+    "v": "🖨️ Chop etish"
+  },
+  {
+    "k": "kod",
+    "v": "Kod:"
+  },
+  {
+    "k": "partiya",
+    "v": "Partiya №"
+  },
+  {
+    "k": "biriktirilgan",
+    "v": "Biriktirilgan"
+  },
+  {
+    "k": "skan",
+    "v": "Skan"
+  },
+  {
+    "k": "joylashuv",
+    "v": "Joylashuv:"
+  },
+  {
+    "k": "pickingTopshiriqlari",
+    "v": "Picking topshiriqlari"
+  },
+  {
+    "k": "chopNavbati",
+    "v": "Chop navbati"
+  },
+  {
+    "k": "xavfsizlikniChaqirish",
+    "v": "Xavfsizlikni chaqirish"
+  },
+  {
+    "k": "ushlabQolish",
+    "v": "Ushlab qolish"
+  },
+  {
+    "k": "tarozi",
+    "v": "Tarozi"
+  },
+  {
+    "k": "tugagan",
+    "v": "Tugagan"
+  },
+  {
+    "k": "normal",
+    "v": "Normal"
+  },
+  {
+    "k": "sarflashId",
+    "v": "Sarflash ID"
+  },
+  {
+    "k": "farq05KgDan",
+    "v": "Farq 0.5 kg dan oshsa avtomatik qarz yoziladi"
+  },
+  {
+    "k": "band",
+    "v": "Band"
+  },
+  {
+    "k": "aylanma",
+    "v": "Aylanma"
+  },
+  {
+    "k": "zaxiraDavri",
+    "v": "Zaxira davri"
+  },
+  {
+    "k": "karantinda",
+    "v": "Karantinda"
+  },
+  {
+    "k": "divBgDestructiveProgresspct",
+    "v": "div]:bg-destructive\" : progressPct"
+  },
+  {
+    "k": "minimal",
+    "v": "Minimal:"
+  },
+  {
+    "k": "bandQilingan",
+    "v": "Band qilingan"
+  },
+  {
+    "k": "xomAshyo",
+    "v": "Xom ashyo"
+  },
+  {
+    "k": "sarflanadigan",
+    "v": "Sarflanadigan"
+  },
+  {
+    "k": "ehtiyotQism",
+    "v": "Ehtiyot qism"
+  },
+  {
+    "k": "minimalZaxira",
+    "v": "Minimal zaxira:"
+  },
+  {
+    "k": "shahri",
+    "v": "Shahri:"
+  },
+  {
+    "k": "farq",
+    "v": "Farq"
+  },
+  {
+    "k": "binolar",
+    "v": "Binolar"
+  },
+  {
+    "k": "mebel",
+    "v": "Mebel"
+  },
+  {
+    "k": "alo",
+    "v": "A'lo"
+  },
+  {
+    "k": "qoniqarli",
+    "v": "Qoniqarli"
+  },
+  {
+    "k": "omborxona",
+    "v": "Omborxona *"
+  },
+  {
+    "k": "davriy",
+    "v": "Davriy"
+  },
+  {
+    "k": "spot",
+    "v": "Spot"
+  },
+  {
+    "k": "omborxona1",
+    "v": "Omborxona"
+  },
+  {
+    "k": "timeline",
+    "v": "Timeline"
+  },
+  {
+    "k": "action1",
+    "v": "Action:"
+  },
+  {
+    "k": "entity",
+    "v": "Entity:"
+  },
+  {
+    "k": "source",
+    "v": "Source:"
+  },
+  {
+    "k": "source1",
+    "v": "Source"
+  },
+  {
+    "k": "orderInvoicePayment",
+    "v": "Order → Invoice → Payment → ..."
+  },
+  {
+    "k": "ozbekistonQonunchiligiInobatgaOlinsin",
+    "v": "O'zbekiston qonunchiligi inobatga olinsin"
+  },
+  {
+    "k": "k1Bosqich",
+    "v": "1-Bosqich"
+  },
+  {
+    "k": "k2Bosqich",
+    "v": "2-Bosqich"
+  },
+  {
+    "k": "k3Bosqich",
+    "v": "3-Bosqich"
+  },
+  {
+    "k": "k4Bosqich",
+    "v": "4-Bosqich"
+  },
+  {
+    "k": "k5Bosqich",
+    "v": "5-Bosqich"
+  },
+  {
+    "k": "aniqChiqar",
+    "v": "Aniq chiqar:"
+  },
+  {
+    "k": "ishlatilayotganTexnologiyalar",
+    "v": "Ishlatilayotgan texnologiyalar"
+  },
+  {
+    "k": "runtimedaNimalarBoladi",
+    "v": "Runtime'da nimalar bo'ladi"
+  },
+  {
+    "k": "k12FrontendBackendMosligi",
+    "v": "1.2 Frontend ↔ Backend mosligi"
+  },
+  {
+    "k": "butunTizimBoyichaAniqla",
+    "v": "Butun tizim bo'yicha aniqla:"
+  },
+  {
+    "k": "ishlatilmayotganApi",
+    "v": "Ishlatilmayotgan API"
+  },
+  {
+    "k": "onclickHandlerlar",
+    "v": "onClick handlerlar"
+  },
+  {
+    "k": "aniqla",
+    "v": "Aniqla:"
+  },
+  {
+    "k": "bosilgandaNetworkKetadimi",
+    "v": "Bosilganda network ketadimi"
+  },
+  {
+    "k": "realDataYoziladimi",
+    "v": "Real data yoziladimi"
+  },
+  {
+    "k": "faqatUiHarakatimi",
+    "v": "Faqat UI harakatimi"
+  },
+  {
+    "k": "issueId",
+    "v": "Issue ID"
+  },
+  {
+    "k": "biznesJarayon",
+    "v": "• Biznes jarayon"
+  },
+  {
+    "k": "tasiri",
+    "v": "• Ta'siri"
+  },
+  {
+    "k": "k31QatiyBiznesQoidalar",
+    "v": "3.1 Qat'iy biznes qoidalar"
+  },
+  {
+    "k": "k33PeriodClose",
+    "v": "3.3 Period close"
+  },
+  {
+    "k": "yopilganDavrgaYozibBolmasin",
+    "v": "Yopilgan davrga yozib bo'lmasin"
+  },
+  {
+    "k": "avtomatikAniqlansin",
+    "v": "Avtomatik aniqlansin:"
+  },
+  {
+    "k": "accrualBuxgalteriya",
+    "v": "Accrual buxgalteriya"
+  },
+  {
+    "k": "uzsUsdEurQollabQuvvatlash",
+    "v": "UZS + USD + EUR qo'llab-quvvatlash"
+  },
+  {
+    "k": "auditorRejimi",
+    "v": "Auditor rejimi"
+  },
+  {
+    "k": "biznesJarayonlarUzluksiz",
+    "v": "Biznes jarayonlar uzluksiz"
+  },
+  {
+    "k": "buxgalterKorinishi",
+    "v": "Buxgalter Ko'rinishi"
+  },
+  {
+    "k": "excel",
+    "v": "Excel"
+  },
+  {
+    "k": "toifalar",
+    "v": "Toifalar"
+  },
+  {
+    "k": "feedbacklar",
+    "v": "Feedbacklar"
+  },
+  {
+    "k": "judaPast",
+    "v": "Juda past"
+  },
+  {
+    "k": "judaYuqori",
+    "v": "Juda yuqori"
+  },
+  {
+    "k": "kuchliTomonlar1",
+    "v": "Kuchli tomonlar"
+  },
+  {
+    "k": "zaifTomonlar",
+    "v": "Zaif tomonlar"
+  },
+  {
+    "k": "uzaytirilgan",
+    "v": "Uzaytirilgan"
+  },
+  {
+    "k": "dastur",
+    "v": "Dastur"
+  },
+  {
+    "k": "mentor",
+    "v": "Mentor"
+  },
+  {
+    "k": "kengQamrovliDastur",
+    "v": "Keng qamrovli dastur"
+  },
+  {
+    "k": "welcomeDayTadbirlari",
+    "v": "Welcome Day tadbirlari"
+  },
+  {
+    "k": "ketmoqda",
+    "v": "Ketmoqda"
+  },
+  {
+    "k": "masalanKonferensiyaZali3Qavat",
+    "v": "Masalan: Konferensiya zali, 3-qavat"
+  },
+  {
+    "k": "dasturlar",
+    "v": "Dasturlar"
+  },
+  {
+    "k": "elektr",
+    "v": "Elektr"
+  },
+  {
+    "k": "gaz",
+    "v": "Gaz"
+  },
+  {
+    "k": "suv",
+    "v": "Suv"
+  },
+  {
+    "k": "hrPerformanceAi",
+    "v": "HR Performance AI"
+  },
+  {
+    "k": "taminotAi",
+    "v": "Ta'minot AI"
+  },
+  {
+    "k": "oshmoqda",
+    "v": "Oshmoqda"
+  },
+  {
+    "k": "pasaymoqda",
+    "v": "Pasaymoqda"
+  },
+  {
+    "k": "barqaror",
+    "v": "Barqaror"
+  },
+  {
+    "k": "strategikAi",
+    "v": "Strategik AI"
+  },
+  {
+    "k": "optimistik",
+    "v": "🟢 Optimistik"
+  },
+  {
+    "k": "realistik",
+    "v": "🟡 Realistik"
+  },
+  {
+    "k": "pessimistik",
+    "v": "🔴 Pessimistik"
+  },
+  {
+    "k": "yuklanish",
+    "v": "Yuklanish:"
+  },
+  {
+    "k": "surcharge",
+    "v": "Surcharge:"
+  },
+  {
+    "k": "aiAvtomatizatsiya",
+    "v": "AI Avtomatizatsiya"
+  },
+  {
+    "k": "emailShablon",
+    "v": "Email shablon"
+  },
+  {
+    "k": "aiEmailShablonGeneratori",
+    "v": "AI Email Shablon Generatori"
+  },
+  {
+    "k": "ton",
+    "v": "Ton"
+  },
+  {
+    "k": "professional",
+    "v": "Professional"
+  },
+  {
+    "k": "dostona",
+    "v": "Do'stona"
+  },
+  {
+    "k": "ishontiruvchi",
+    "v": "Ishontiruvchi"
+  },
+  {
+    "k": "tasdiqKutmoqda",
+    "v": "Tasdiq kutmoqda"
+  },
+  {
+    "k": "eskirganAsbob",
+    "v": "Eskirgan asbob"
+  },
+  {
+    "k": "generatsiya",
+    "v": "Generatsiya"
+  },
+  {
+    "k": "asboblar",
+    "v": "Asboblar"
+  },
+  {
+    "k": "approvedPendingTechTrigger",
+    "v": "Approved → pending_tech trigger"
+  },
+  {
+    "k": "eskirish",
+    "v": "Eskirish"
+  },
+  {
+    "k": "hisoblanmoqda",
+    "v": "Hisoblanmoqda..."
+  },
+  {
+    "k": "k3dMockup",
+    "v": "3D Mockup"
+  },
+  {
+    "k": "aiImtixonlar",
+    "v": "AI Imtixonlar"
+  },
+  {
+    "k": "shubhaliTranzaksiyaniTekshiringAiFraud",
+    "v": "Shubhali tranzaksiyani tekshiring — AI fraud belgilarini aniqlaydi"
+  },
+  {
+    "k": "tekshirilmoqda",
+    "v": "Tekshirilmoqda..."
+  },
+  {
+    "k": "qizilBayroqlar",
+    "v": "Qizil bayroqlar"
+  },
+  {
+    "k": "shubhaliBelgilarAniqlanmadi",
+    "v": "Shubhali belgilar aniqlanmadi"
+  },
+  {
+    "k": "naqdBankKarta",
+    "v": "Naqd, bank, karta..."
+  },
+  {
+    "k": "anomaliyalar",
+    "v": "Anomaliyalar"
+  },
+  {
+    "k": "fraud",
+    "v": "Fraud"
+  },
+  {
+    "k": "anomaliyalarAniqlandi",
+    "v": "Anomaliyalar aniqlandi"
+  },
+  {
+    "k": "aniqlanganAnomaliyalar",
+    "v": "Aniqlangan anomaliyalar"
+  },
+  {
+    "k": "aiTavsiyasi",
+    "v": "AI Tavsiyasi"
+  },
+  {
+    "k": "sofOqim",
+    "v": "Sof oqim"
+  },
+  {
+    "k": "imkoniyatlar",
+    "v": "Imkoniyatlar"
+  },
+  {
+    "k": "yaxshilanmoqda",
+    "v": "Yaxshilanmoqda"
+  },
+  {
+    "k": "yomonlashmoqda",
+    "v": "Yomonlashmoqda"
+  },
+  {
+    "k": "tuzatishChoralari",
+    "v": "Tuzatish choralari"
+  },
+  {
+    "k": "tasniflanmoqda",
+    "v": "Tasniflanmoqda..."
+  },
+  {
+    "k": "fakturaniTasnifla",
+    "v": "Fakturani Tasnifla"
+  },
+  {
+    "k": "subkategoriya",
+    "v": "Subkategoriya"
+  },
+  {
+    "k": "ishonchlilik",
+    "v": "Ishonchlilik"
+  },
+  {
+    "k": "intervyular",
+    "v": "Intervyular"
+  },
+  {
+    "k": "provider",
+    "v": "Provider"
+  },
+  {
+    "k": "transkript",
+    "v": "Transkript"
+  },
+  {
+    "k": "kuchliTomonlar2",
+    "v": "Kuchli tomonlar:"
+  },
+  {
+    "k": "zaifTomonlar1",
+    "v": "Zaif tomonlar:"
+  },
+  {
+    "k": "tavsiya1",
+    "v": "Tavsiya:"
+  },
+  {
+    "k": "texnik",
+    "v": "Texnik"
+  },
+  {
+    "k": "motivatsiya",
+    "v": "Motivatsiya"
+  },
+  {
+    "k": "qiyinlik",
+    "v": "Qiyinlik"
+  },
+  {
+    "k": "ozbekTili",
+    "v": "O'zbek tili"
+  },
+  {
+    "k": "hammagaMos",
+    "v": "Hammaga mos"
+  },
+  {
+    "k": "gemini",
+    "v": "Gemini"
+  },
+  {
+    "k": "openai",
+    "v": "OpenAI"
+  },
+  {
+    "k": "xushKelibsiz",
+    "v": "Xush kelibsiz,"
+  },
+  {
+    "k": "k0Camerarejections",
+    "v": "0 && cameraRejections"
+  },
+  {
+    "k": "aiTavsiyalar",
+    "v": "AI Tavsiyalar"
+  },
+  {
+    "k": "vipFirstFifoBatchGrouping",
+    "v": "VIP-First · FIFO · Batch grouping · Dynamic reschedule"
+  },
+  {
+    "k": "tejash",
+    "v": "Tejash:"
+  },
+  {
+    "k": "pdfChopEtish",
+    "v": "PDF chop etish"
+  },
+  {
+    "k": "ustuvorlikOzgarishi",
+    "v": "Ustuvorlik o'zgarishi"
+  },
+  {
+    "k": "avtoTasdiqlashChegarasi",
+    "v": "Avto-tasdiqlash chegarasi"
+  },
+  {
+    "k": "korsatilmagan",
+    "v": "Ko'rsatilmagan"
+  },
+  {
+    "k": "avtoTasdiqlangan",
+    "v": "Avto-tasdiqlangan"
+  },
+  {
+    "k": "partiyalar",
+    "v": "Partiyalar"
+  },
+  {
+    "k": "rezervatsiyalar",
+    "v": "Rezervatsiyalar"
+  },
+  {
+    "k": "ajratilgan",
+    "v": "Ajratilgan"
+  },
+  {
+    "k": "rezervatsiyaSorovlar",
+    "v": "Rezervatsiya so'rovlar"
+  },
+  {
+    "k": "ajratildi",
+    "v": "Ajratildi"
+  },
+  {
+    "k": "aiIshonch",
+    "v": "AI ishonch"
+  },
+  {
+    "k": "rezervatsiya",
+    "v": "Rezervatsiya"
+  },
+  {
+    "k": "discriminatsiya",
+    "v": "Discriminatsiya"
+  },
+  {
+    "k": "kr20Ishonchlilik",
+    "v": "KR-20 Ishonchlilik"
+  },
+  {
+    "k": "discriminatsiyaIndeksi",
+    "v": "🎯 Discriminatsiya Indeksi"
+  },
+  {
+    "k": "kr20IshonchlilikAnalizi",
+    "v": "🔬 KR-20 Ishonchlilik Analizi"
+  },
+  {
+    "k": "sessiyalar",
+    "v": "Sessiyalar"
+  },
+  {
+    "k": "k1KunRetention",
+    "v": "1-kun Retention"
+  },
+  {
+    "k": "k7KunRetention",
+    "v": "7-kun Retention"
+  },
+  {
+    "k": "k30KunRetention",
+    "v": "30-kun Retention"
+  },
+  {
+    "k": "minimalVaqtdaTugatgan",
+    "v": "Minimal vaqtda tugatgan"
+  },
+  {
+    "k": "ustoz",
+    "v": "Ustoz"
+  },
+  {
+    "k": "otish",
+    "v": "O'tish"
+  },
+  {
+    "k": "boshladi",
+    "v": "Boshladi"
+  },
+  {
+    "k": "tugatdi",
+    "v": "Tugatdi"
+  },
+  {
+    "k": "ozlashtirishDinamikasi",
+    "v": "📈 O'zlashtirish Dinamikasi"
+  },
+  {
+    "k": "tugatganlar",
+    "v": "Tugatganlar"
+  },
+  {
+    "k": "kechikishlar",
+    "v": "Kechikishlar"
+  },
+  {
+    "k": "kechikkanlarTop10",
+    "v": "Kechikkanlar Top 10"
+  },
+  {
+    "k": "intizomCsv",
+    "v": "Intizom CSV"
+  },
+  {
+    "k": "performanceMatrix",
+    "v": "🎯 Performance Matrix"
+  },
+  {
+    "k": "mentorlikDasturi",
+    "v": "Mentorlik Dasturi"
+  },
+  {
+    "k": "topMentorlar",
+    "v": "Top Mentorlar:"
+  },
+  {
+    "k": "sorovnomalar",
+    "v": "So'rovnomalar"
+  },
+  {
+    "k": "qatnashmayotganlar",
+    "v": "Qatnashmayotganlar:"
+  },
+  {
+    "k": "learningOutcomes",
+    "v": "Learning Outcomes"
+  },
+  {
+    "k": "leaderboard",
+    "v": "Leaderboard"
+  },
+  {
+    "k": "engagement",
+    "v": "Engagement"
+  },
+  {
+    "k": "sorovchi",
+    "v": "So'rovchi"
+  },
+  {
+    "k": "hududKuzatuvchi",
+    "v": "Hudud Kuzatuvchi"
+  },
+  {
+    "k": "kechKelganlar",
+    "v": "Kech kelganlar"
+  },
+  {
+    "k": "hududVoqealari",
+    "v": "Hudud Voqealari"
+  },
+  {
+    "k": "action2",
+    "v": "Action"
+  },
+  {
+    "k": "yozuvId",
+    "v": "Yozuv ID"
+  },
+  {
+    "k": "ochirilganlar",
+    "v": "O'chirilganlar"
+  },
+  {
+    "k": "overridelar",
+    "v": "Override'lar"
+  },
+  {
+    "k": "tekshiruvlar",
+    "v": "Tekshiruvlar"
+  },
+  {
+    "k": "zebraPrinterlar",
+    "v": "Zebra printerlar"
+  },
+  {
+    "k": "eltronPrinterlar",
+    "v": "Eltron printerlar"
+  },
+  {
+    "k": "zplZebraZplIi",
+    "v": "ZPL — Zebra ZPL II"
+  },
+  {
+    "k": "eplEltronEpl2",
+    "v": "EPL — Eltron EPL2"
+  },
+  {
+    "k": "skanerlashSozlamalari",
+    "v": "Skanerlash sozlamalari"
+  },
+  {
+    "k": "awaitApirequest",
+    "v": "await apiRequest"
+  },
+  {
+    "k": "operatsiyalar",
+    "v": "Operatsiyalar"
+  },
+  {
+    "k": "explosion",
+    "v": "Explosion"
+  },
+  {
+    "k": "choraklik",
+    "v": "Choraklik"
+  },
+  {
+    "k": "joy",
+    "v": "Joy"
+  },
+  {
+    "k": "top3",
+    "v": "Top 3"
+  },
+  {
+    "k": "aiPromptlar",
+    "v": "AI Promptlar"
+  },
+  {
+    "k": "triggerQoidalar",
+    "v": "Trigger Qoidalar"
+  },
+  {
+    "k": "aiAnalytics",
+    "v": "AI Analytics"
+  },
+  {
+    "k": "kameralarniBoshqaruvSahifasidanSozlang",
+    "v": "Kameralarni boshqaruv sahifasidan sozlang"
+  },
+  {
+    "k": "gridKorinishgaQaytish",
+    "v": "Grid ko'rinishga qaytish"
+  },
+  {
+    "k": "cheklist",
+    "v": "Cheklist"
+  },
+  {
+    "k": "kandidatCheklisti",
+    "v": "Kandidat Cheklisti"
+  },
+  {
+    "k": "orqaga",
+    "v": "← Orqaga"
+  },
+  {
+    "k": "motivatsiyaSavollari",
+    "v": "Motivatsiya savollari"
+  },
+  {
+    "k": "produktivlik",
+    "v": "Produktivlik"
+  },
+  {
+    "k": "kompetensiya",
+    "v": "Kompetensiya"
+  },
+  {
+    "k": "yakuniyQaror",
+    "v": "Yakuniy qaror"
+  },
+  {
+    "k": "yakuniyTavsiyaKiritilmagan",
+    "v": "Yakuniy tavsiya kiritilmagan"
+  },
+  {
+    "k": "yakuniyTavsiya",
+    "v": "Yakuniy Tavsiya"
+  },
+  {
+    "k": "aniqNatijalargaEga",
+    "v": "Aniq natijalarga ega"
+  },
+  {
+    "k": "k1stShift2ndShift",
+    "v": "1st Shift, 2nd Shift..."
+  },
+  {
+    "k": "cfoKonfiguratsiyasi",
+    "v": "CFO Konfiguratsiyasi"
+  },
+  {
+    "k": "arEclStavkalari",
+    "v": "AR ECL Stavkalari"
+  },
+  {
+    "k": "forFetchFailures",
+    "v": "for fetch failures,"
+  },
+  {
+    "k": "tieredPricing",
+    "v": "Tiered Pricing"
+  },
+  {
+    "k": "aiRuleBased",
+    "v": "AI • Rule-based"
+  },
+  {
+    "k": "sofPozitsiya",
+    "v": "Sof pozitsiya"
+  },
+  {
+    "k": "masalan1010",
+    "v": "Masalan: 1010"
+  },
+  {
+    "k": "chiqarish",
+    "v": "Chiqarish"
+  },
+  {
+    "k": "azoniChiqarish",
+    "v": "A'zoni chiqarish"
+  },
+  {
+    "k": "arxivda",
+    "v": "Arxivda"
+  },
+  {
+    "k": "aktor",
+    "v": "Aktor"
+  },
+  {
+    "k": "nishon",
+    "v": "Nishon"
+  },
+  {
+    "k": "ushlabTurish",
+    "v": "Ushlab turish"
+  },
+  {
+    "k": "scoring20",
+    "v": "Scoring 2.0"
+  },
+  {
+    "k": "autoFill",
+    "v": "Auto-Fill"
+  },
+  {
+    "k": "sanoat",
+    "v": "Sanoat"
+  },
+  {
+    "k": "ehtiyojlar",
+    "v": "Ehtiyojlar:"
+  },
+  {
+    "k": "qollanmoqda",
+    "v": "Qo'llanmoqda..."
+  },
+  {
+    "k": "qutqarishStsenariysi",
+    "v": "Qutqarish stsenariysi"
+  },
+  {
+    "k": "baholanmoqda",
+    "v": "Baholanmoqda..."
+  },
+  {
+    "k": "ehtimollik1",
+    "v": "Ehtimollik"
+  },
+  {
+    "k": "taxminiyLtv",
+    "v": "Taxminiy LTV"
+  },
+  {
+    "k": "tavsiyaEtiladiganYondashuv",
+    "v": "Tavsiya etiladigan yondashuv"
+  },
+  {
+    "k": "skript",
+    "v": "Skript"
+  },
+  {
+    "k": "maslahatlar",
+    "v": "Maslahatlar:"
+  },
+  {
+    "k": "fakturalar",
+    "v": "Fakturalar"
+  },
+  {
+    "k": "kengaytirilganAiFunksiyalari",
+    "v": "Kengaytirilgan AI funksiyalari"
+  },
+  {
+    "k": "supervisor",
+    "v": "Supervisor"
+  },
+  {
+    "k": "ovoz",
+    "v": "Ovoz"
+  },
+  {
+    "k": "churn",
+    "v": "Churn"
+  },
+  {
+    "k": "avtomatikVazifalar",
+    "v": "Avtomatik vazifalar"
+  },
+  {
+    "k": "cohort",
+    "v": "Cohort"
+  },
+  {
+    "k": "won",
+    "v": "Won"
+  },
+  {
+    "k": "lost",
+    "v": "Lost"
+  },
+  {
+    "k": "sozlamalari",
+    "v": "Sozlamalari"
+  },
+  {
+    "k": "korinadi",
+    "v": "Ko'rinadi"
+  },
+  {
+    "k": "rekvizitlarSozlamalari",
+    "v": "Rekvizitlar sozlamalari"
+  },
+  {
+    "k": "integratsiyalar",
+    "v": "Integratsiyalar"
+  },
+  {
+    "k": "wUtilizationpct",
+    "v": "w.utilizationPct"
+  },
+  {
+    "k": "webhookXavfsizlik",
+    "v": "Webhook xavfsizlik"
+  },
+  {
+    "k": "webhookEndpointlar",
+    "v": "Webhook endpointlar"
+  },
+  {
+    "k": "javascriptKodi",
+    "v": "JavaScript kodi"
+  },
+  {
+    "k": "vebSaytgaIntegratsiyaKodi",
+    "v": "Veb-saytga integratsiya kodi"
+  },
+  {
+    "k": "cvSkriningKorsatmasi",
+    "v": "CV Skrining Ko'rsatmasi"
+  },
+  {
+    "k": "qarorMatritsasi",
+    "v": "Qaror matritsasi"
+  },
+  {
+    "k": "hisoblashUsuli",
+    "v": "Hisoblash usuli:"
+  },
+  {
+    "k": "tasiri1",
+    "v": "Ta'siri:"
+  },
+  {
+    "k": "ijobiyOqim",
+    "v": "Ijobiy oqim"
+  },
+  {
+    "k": "salbiyOqim",
+    "v": "Salbiy oqim"
+  },
+  {
+    "k": "tezTezIshlatiladiganFunksiyalar",
+    "v": "Tez-tez ishlatiladigan funksiyalar"
+  },
+  {
+    "k": "debitorlikQarzi",
+    "v": "Debitorlik qarzi"
+  },
+  {
+    "k": "kreditorlikQarzi",
+    "v": "Kreditorlik qarzi"
+  },
+  {
+    "k": "tarixim",
+    "v": "Tarixim"
+  },
+  {
+    "k": "hrKorinish",
+    "v": "HR Ko'rinish"
+  },
+  {
+    "k": "topshirildi",
+    "v": "Topshirildi"
+  },
+  {
+    "k": "yoqlikDebBelgilash",
+    "v": "Yo'qlik deb belgilash"
+  },
+  {
+    "k": "topshirmagan",
+    "v": "Topshirmagan"
+  },
+  {
+    "k": "yoqlik",
+    "v": "Yo'qlik"
+  },
+  {
+    "k": "sababsizYoqlik",
+    "v": "Sababsiz yo'qlik"
+  },
+  {
+    "k": "k3dQutiVizualizatsiya",
+    "v": "3D Quti Vizualizatsiya"
+  },
+  {
+    "k": "haliMockupYaratilmagan",
+    "v": "Hali mockup yaratilmagan"
+  },
+  {
+    "k": "shriftlar",
+    "v": "Shriftlar"
+  },
+  {
+    "k": "interBold",
+    "v": "Inter Bold"
+  },
+  {
+    "k": "interRegular",
+    "v": "Inter Regular"
+  },
+  {
+    "k": "logoQoidalari",
+    "v": "Logo qoidalari"
+  },
+  {
+    "k": "variantlarniSolishtirish",
+    "v": "Variantlarni solishtirish"
+  },
+  {
+    "k": "komponent",
+    "v": "Komponent"
+  },
+  {
+    "k": "crmgaOtish",
+    "v": "CRM'ga o'tish"
+  },
+  {
+    "k": "stakan",
+    "v": "Stakan"
+  },
+  {
+    "k": "quti",
+    "v": "Quti"
+  },
+  {
+    "k": "plakat",
+    "v": "Plakat"
+  },
+  {
+    "k": "qadoq",
+    "v": "Qadoq"
+  },
+  {
+    "k": "korrugirovanniyQuti",
+    "v": "Korrugirovanniy Quti"
+  },
+  {
+    "k": "tibbiyQadoq",
+    "v": "Tibbiy Qadoq"
+  },
+  {
+    "k": "dizayner",
+    "v": "Dizayner:"
+  },
+  {
+    "k": "kengashlar",
+    "v": "Kengashlar"
+  },
+  {
+    "k": "kechikkan",
+    "v": "Kechikkan"
+  },
+  {
+    "k": "halQilish",
+    "v": "Hal qilish"
+  },
+  {
+    "k": "stanoq",
+    "v": "Stanoq"
+  },
+  {
+    "k": "oeeStanoqlarBoyicha",
+    "v": "OEE Stanoqlar bo'yicha"
+  },
+  {
+    "k": "marshrutlash",
+    "v": "⚙️ Marshrutlash"
+  },
+  {
+    "k": "ozgarmas",
+    "v": "🔒 O'zgarmas"
+  },
+  {
+    "k": "eskalatsiyaQilindi",
+    "v": "🚨 Eskalatsiya qilindi"
+  },
+  {
+    "k": "qadamTartibi",
+    "v": "Qadam tartibi"
+  },
+  {
+    "k": "marshrutniOchirishniTasdiqlang",
+    "v": "Marshrutni o'chirishni tasdiqlang"
+  },
+  {
+    "k": "moslashuvJarayoni",
+    "v": "Moslashuv Jarayoni"
+  },
+  {
+    "k": "hrMentorTomonidanBaholashAmalga",
+    "v": "HR mentor tomonidan baholash amalga oshirilgach ko'rinadi"
+  },
+  {
+    "k": "osish",
+    "v": "O'sish"
+  },
+  {
+    "k": "ertaKetishlar",
+    "v": "Erta ketishlar"
+  },
+  {
+    "k": "smenaniAlmashtirishSorovlari",
+    "v": "Smenani almashtirish so'rovlari"
+  },
+  {
+    "k": "aslSmena",
+    "v": "Asl smena"
+  },
+  {
+    "k": "soralganSmena",
+    "v": "So'ralgan smena"
+  },
+  {
+    "k": "kechikish",
+    "v": "Kechikish"
+  },
+  {
+    "k": "kasal",
+    "v": "Kasal"
+  },
+  {
+    "k": "vaqtida",
+    "v": "Vaqtida"
+  },
+  {
+    "k": "xalqBanki",
+    "v": "Xalq banki"
+  },
+  {
+    "k": "boshlanmagan",
+    "v": "Boshlanmagan"
+  },
+  {
+    "k": "kareraYonalishi",
+    "v": "Karera yo'nalishi"
+  },
+  {
+    "k": "crossTrainingEslatma",
+    "v": "Cross-training eslatma"
+  },
+  {
+    "k": "masalanUstaxonaBoshligi",
+    "v": "Masalan: Ustaxona boshlig'i"
+  },
+  {
+    "k": "aralashTayyorlov",
+    "v": "Aralash tayyorlov"
+  },
+  {
+    "k": "belgilanmagan1",
+    "v": "Belgilanmagan"
+  },
+  {
+    "k": "eslatmalar",
+    "v": "Eslatmalar"
+  },
+  {
+    "k": "kareraProfiliToldirilmagan",
+    "v": "Karera profili to'ldirilmagan"
+  },
+  {
+    "k": "toldirish",
+    "v": "To'ldirish"
+  },
+  {
+    "k": "aiKareraTavsiyasi",
+    "v": "AI Karera Tavsiyasi"
+  },
+  {
+    "k": "erpKirishiniBloklash",
+    "v": "ERP kirishini bloklash"
+  },
+  {
+    "k": "korpTel",
+    "v": "Korp. tel:"
+  },
+  {
+    "k": "saqlanish",
+    "v": "Saqlanish:"
+  },
+  {
+    "k": "macbookPro14Inch",
+    "v": "MacBook Pro 14 inch"
+  },
+  {
+    "k": "appleSamsung",
+    "v": "Apple, Samsung..."
+  },
+  {
+    "k": "imzosiz",
+    "v": "Imzosiz"
+  },
+  {
+    "k": "qaytarilgan",
+    "v": "Qaytarilgan"
+  },
+  {
+    "k": "qurilma",
+    "v": "Qurilma"
+  },
+  {
+    "k": "serial",
+    "v": "Serial"
+  },
+  {
+    "k": "imzo",
+    "v": "Imzo"
+  },
+  {
+    "k": "imzolangan",
+    "v": "Imzolangan"
+  },
+  {
+    "k": "imzolash",
+    "v": "Imzolash"
+  },
+  {
+    "k": "qaytarildi",
+    "v": "Qaytarildi"
+  },
+  {
+    "k": "sababsizYoqlik1",
+    "v": "❌ Sababsiz yo'qlik"
+  },
+  {
+    "k": "topshirildi1",
+    "v": "✅ Topshirildi"
+  },
+  {
+    "k": "hrOzgartirdi",
+    "v": "HR o'zgartirdi"
+  },
+  {
+    "k": "dastgoh1",
+    "v": "Dastgoh:"
+  },
+  {
+    "k": "masalanPasportNusxasi",
+    "v": "Masalan: Pasport nusxasi"
+  },
+  {
+    "k": "masalanPassportPdf",
+    "v": "Masalan: passport.pdf"
+  },
+  {
+    "k": "hajmi",
+    "v": "Hajmi"
+  },
+  {
+    "k": "yuklagan",
+    "v": "Yuklagan"
+  },
+  {
+    "k": "mehnatShartnomalari",
+    "v": "Mehnat shartnomalari"
+  },
+  {
+    "k": "bonuslar",
+    "v": "Bonuslar"
+  },
+  {
+    "k": "jarimalar",
+    "v": "Jarimalar"
+  },
+  {
+    "k": "overtaym",
+    "v": "Overtaym"
+  },
+  {
+    "k": "avanslar",
+    "v": "Avanslar"
+  },
+  {
+    "k": "bayram",
+    "v": "Bayram"
+  },
+  {
+    "k": "maoshdanUshlabQolindi",
+    "v": "Maoshdan ushlab qolindi"
+  },
+  {
+    "k": "overtaymSababi",
+    "v": "Overtaym sababi..."
+  },
+  {
+    "k": "tolabTashlandi",
+    "v": "To'lab tashlandi"
+  },
+  {
+    "k": "stavka",
+    "v": "Stavka"
+  },
+  {
+    "k": "koeff",
+    "v": "Koeff."
+  },
+  {
+    "k": "overvaqt",
+    "v": "Overvaqt"
+  },
+  {
+    "k": "taraqqiyot",
+    "v": "Taraqqiyot"
+  },
+  {
+    "k": "masalanMahsuldorlikni20Oshirish",
+    "v": "Masalan: Mahsuldorlikni 20% oshirish"
+  },
+  {
+    "k": "masalan100",
+    "v": "Masalan: 100"
+  },
+  {
+    "k": "hrKapitalProfiliToldirilmagan",
+    "v": "HR Kapital profili to'ldirilmagan"
+  },
+  {
+    "k": "psixologikProfilSindromi",
+    "v": "Psixologik profil sindromi"
+  },
+  {
+    "k": "shkala",
+    "v": "Shkala..."
+  },
+  {
+    "k": "masalanLinkedinDostlarTavsiyasi",
+    "v": "Masalan: LinkedIn, Do'stlar tavsiyasi"
+  },
+  {
+    "k": "psixologikProfil",
+    "v": "Psixologik profil"
+  },
+  {
+    "k": "haqTolanmaydigan",
+    "v": "Haq to'lanmaydigan"
+  },
+  {
+    "k": "onaTugruq",
+    "v": "Ona tug'ruq"
+  },
+  {
+    "k": "otaTugruq",
+    "v": "Ota tug'ruq"
+  },
+  {
+    "k": "diagnoz",
+    "v": "Diagnoz"
+  },
+  {
+    "k": "shifokorFIO",
+    "v": "Shifokor F.I.O"
+  },
+  {
+    "k": "samarqandShahri",
+    "v": "Samarqand shahri"
+  },
+  {
+    "k": "safariMaqsadi",
+    "v": "Safari maqsadi"
+  },
+  {
+    "k": "xizmatSafaralari",
+    "v": "Xizmat safaralari"
+  },
+  {
+    "k": "kasalxona",
+    "v": "Kasalxona"
+  },
+  {
+    "k": "shifokor",
+    "v": "Shifokor"
+  },
+  {
+    "k": "yashash",
+    "v": "Yashash"
+  },
+  {
+    "k": "dastgohOperatoriProfili",
+    "v": "Dastgoh Operatori Profili"
+  },
+  {
+    "k": "dastgohSessiyalariMesTizimidaQayd",
+    "v": "Dastgoh sessiyalari MES tizimida qayd etilmagan"
+  },
+  {
+    "k": "yakunlanganSessiyalar",
+    "v": "Yakunlangan sessiyalar"
+  },
+  {
+    "k": "marta",
+    "v": "Marta"
+  },
+  {
+    "k": "mukofotlar",
+    "v": "Mukofotlar"
+  },
+  {
+    "k": "kelgan",
+    "v": "Kelgan"
+  },
+  {
+    "k": "kelmagan",
+    "v": "Kelmagan"
+  },
+  {
+    "k": "kechKelgan",
+    "v": "Kech kelgan"
+  },
+  {
+    "k": "offboardingniFinallashtirish",
+    "v": "Offboardingni Finallashtirish"
+  },
+  {
+    "k": "balki",
+    "v": "Balki"
+  },
+  {
+    "k": "ketishSababi",
+    "v": "Ketish sababi"
+  },
+  {
+    "k": "hisobKitobBlokda",
+    "v": "Hisob-kitob blokda"
+  },
+  {
+    "k": "otkazish",
+    "v": "O'tkazish"
+  },
+  {
+    "k": "shikastlangan",
+    "v": "Shikastlangan"
+  },
+  {
+    "k": "yoqolgan",
+    "v": "Yo'qolgan"
+  },
+  {
+    "k": "uchrashuvlarQaydEtilmagan",
+    "v": "Uchrashuvlar qayd etilmagan"
+  },
+  {
+    "k": "mavzular",
+    "v": "Mavzular"
+  },
+  {
+    "k": "kayfiyat",
+    "v": "Kayfiyat"
+  },
+  {
+    "k": "muhokamaQilinganMavzular",
+    "v": "Muhokama qilingan mavzular"
+  },
+  {
+    "k": "kelgusidagiVazifalar",
+    "v": "Kelgusidagi vazifalar"
+  },
+  {
+    "k": "toshkentShahri",
+    "v": "Toshkent shahri"
+  },
+  {
+    "k": "uzbekistan",
+    "v": "Uzbekistan"
+  },
+  {
+    "k": "yoqlama",
+    "v": "Yo'qlama"
+  },
+  {
+    "k": "vaqtidaKelish",
+    "v": "Vaqtida kelish"
+  },
+  {
+    "k": "isrof",
+    "v": "Isrof"
+  },
+  {
+    "k": "ozgarmasJurnalOchiribBolmaydi",
+    "v": "O'zgarmas jurnal — o'chirib bo'lmaydi"
+  },
+  {
+    "k": "bergan",
+    "v": "Bergan"
+  },
+  {
+    "k": "uzrsiz",
+    "v": "Uzrsiz"
+  },
+  {
+    "k": "uzrli",
+    "v": "Uzrli"
+  },
+  {
+    "k": "beruvchi",
+    "v": "Beruvchi"
+  },
+  {
+    "k": "etishmovchi",
+    "v": "Etishmovchi"
+  },
+  {
+    "k": "mentorlikMunosabatlari",
+    "v": "Mentorlik munosabatlari"
+  },
+  {
+    "k": "mentorSifatida",
+    "v": "Mentor sifatida"
+  },
+  {
+    "k": "menteeSifatida",
+    "v": "Mentee sifatida"
+  },
+  {
+    "k": "rolAsosidagiTizimRuxsatlari",
+    "v": "Rol asosidagi tizim ruxsatlari"
+  },
+  {
+    "k": "sertifikatdanAvtomatikUskunaRuxsatlari",
+    "v": "Sertifikatdan avtomatik uskuna ruxsatlari"
+  },
+  {
+    "k": "muddatsiz",
+    "v": "Muddatsiz"
+  },
+  {
+    "k": "dastgoh2",
+    "v": "Dastgoh"
+  },
+  {
+    "k": "nuqsonli",
+    "v": "Nuqsonli"
+  },
+  {
+    "k": "adolatlilikIndeksi",
+    "v": "Adolatlilik Indeksi"
+  },
+  {
+    "k": "kpiOlchovlari",
+    "v": "KPI O'lchovlari"
+  },
+  {
+    "k": "osmoqda",
+    "v": "↑ O'smoqda"
+  },
+  {
+    "k": "pasaymoqda1",
+    "v": "↓ Pasaymoqda"
+  },
+  {
+    "k": "barqaror1",
+    "v": "→ Barqaror"
+  },
+  {
+    "k": "ornatilgan",
+    "v": "O'rnatilgan"
+  },
+  {
+    "k": "ornatilmagan",
+    "v": "O'rnatilmagan"
+  },
+  {
+    "k": "kechQoldi",
+    "v": "kech qoldi"
+  },
+  {
+    "k": "ishlagan",
+    "v": "Ishlagan"
+  },
+  {
+    "k": "tolovsiz",
+    "v": "To'lovsiz"
+  },
+  {
+    "k": "punchIn1000Am",
+    "v": "Punch In: 10:00 AM"
+  },
+  {
+    "k": "punchOut",
+    "v": "Punch Out"
+  },
+  {
+    "k": "samarali8s36d",
+    "v": "Samarali: 8s 36d"
+  },
+  {
+    "k": "tanaffus22d",
+    "v": "Tanaffus: 22d"
+  },
+  {
+    "k": "tabriklash",
+    "v": "Tabriklash"
+  },
+  {
+    "k": "baholangan",
+    "v": "Baholangan"
+  },
+  {
+    "k": "reytinglar",
+    "v": "Reytinglar"
+  },
+  {
+    "k": "haliKpiMaqsadBelgilanmagan",
+    "v": "Hali KPI maqsad belgilanmagan"
+  },
+  {
+    "k": "tuzilma",
+    "v": "Tuzilma"
+  },
+  {
+    "k": "etibor",
+    "v": "⚠️ E'tibor"
+  },
+  {
+    "k": "asloTavsiyaEtmayman",
+    "v": "Aslo tavsiya etmayman"
+  },
+  {
+    "k": "albattaTavsiyaQilaman",
+    "v": "Albatta tavsiya qilaman"
+  },
+  {
+    "k": "fikringizniBahamKoring",
+    "v": "Fikringizni baham ko'ring..."
+  },
+  {
+    "k": "tamirda",
+    "v": "Ta'mirda"
+  },
+  {
+    "k": "joylashuvi",
+    "v": "Joylashuvi"
+  },
+  {
+    "k": "holatniOzgartirish",
+    "v": "Holatni o'zgartirish"
+  },
+  {
+    "k": "masalanPrinterFrezer",
+    "v": "Masalan: Printer, Frezer"
+  },
+  {
+    "k": "masalanSexh1ZalB",
+    "v": "Masalan: Sexh 1, Zal B"
+  },
+  {
+    "k": "abcCompany",
+    "v": "ABC Company"
+  },
+  {
+    "k": "fakt",
+    "v": "Fakt"
+  },
+  {
+    "k": "biznesQoidalar",
+    "v": "Biznes Qoidalar"
+  },
+  {
+    "k": "validatsiyaXulosasi",
+    "v": "Validatsiya xulosasi"
+  },
+  {
+    "k": "turlarBoyichaTaqsimot",
+    "v": "Turlar bo'yicha taqsimot"
+  },
+  {
+    "k": "tamirlash",
+    "v": "Ta'mirlash"
+  },
+  {
+    "k": "captured",
+    "v": "Captured"
+  },
+  {
+    "k": "boshDaftar",
+    "v": "Bosh Daftar"
+  },
+  {
+    "k": "qarzdorlik",
+    "v": "Qarzdorlik"
+  },
+  {
+    "k": "yanvar2024",
+    "v": "Yanvar 2024"
+  },
+  {
+    "k": "alpha",
+    "v": "Alpha"
+  },
+  {
+    "k": "gamifikatsiya",
+    "v": "Gamifikatsiya"
+  },
+  {
+    "k": "badgeBer",
+    "v": "Badge ber"
+  },
+  {
+    "k": "badge",
+    "v": "Badge"
+  },
+  {
+    "k": "oqitish1",
+    "v": "O'qitish"
+  },
+  {
+    "k": "innovatsiya",
+    "v": "Innovatsiya"
+  },
+  {
+    "k": "badgeKatalog",
+    "v": "🎖️ Badge Katalog"
+  },
+  {
+    "k": "ber",
+    "v": "Ber"
+  },
+  {
+    "k": "badgeBerilishSababi",
+    "v": "Badge berilish sababi..."
+  },
+  {
+    "k": "filterlar",
+    "v": "Filterlar"
+  },
+  {
+    "k": "joylangan",
+    "v": "Joylangan"
+  },
+  {
+    "k": "avtomatikBuxgalteriyaYozuvlariMonitoring",
+    "v": "Avtomatik buxgalteriya yozuvlari monitoring"
+  },
+  {
+    "k": "glPostinglar",
+    "v": "GL Postinglar"
+  },
+  {
+    "k": "qollaniladi",
+    "v": "Qo'llaniladi"
+  },
+  {
+    "k": "metrika",
+    "v": "Metrika"
+  },
+  {
+    "k": "metrika1",
+    "v": "Metrika:"
+  },
+  {
+    "k": "intizomYozuvlari",
+    "v": "Intizom Yozuvlari"
+  },
+  {
+    "k": "intizomRiski",
+    "v": "Intizom riski"
+  },
+  {
+    "k": "burnoutRiski",
+    "v": "Burnout riski"
+  },
+  {
+    "k": "ketishSabablari",
+    "v": "Ketish Sabablari"
+  },
+  {
+    "k": "hrAiAvtomatizatsiya",
+    "v": "HR AI Avtomatizatsiya"
+  },
+  {
+    "k": "hudud",
+    "v": "Hudud"
+  },
+  {
+    "k": "ruscha",
+    "v": "Ruscha"
+  },
+  {
+    "k": "toshkent",
+    "v": "Toshkent"
+  },
+  {
+    "k": "cheklistOgohlantirishlari",
+    "v": "Cheklist ogohlantirishlari"
+  },
+  {
+    "k": "hrAlumniHamjamiyati",
+    "v": "HR — Alumni Hamjamiyati"
+  },
+  {
+    "k": "hamkorlikQilayotganlar",
+    "v": "Hamkorlik qilayotganlar"
+  },
+  {
+    "k": "buzilgan",
+    "v": "Buzilgan"
+  },
+  {
+    "k": "macbookPro14",
+    "v": "MacBook Pro 14"
+  },
+  {
+    "k": "jihoz",
+    "v": "Jihoz"
+  },
+  {
+    "k": "taqdimot",
+    "v": "Taqdimot"
+  },
+  {
+    "k": "afzalliklar",
+    "v": "Afzalliklar"
+  },
+  {
+    "k": "raqamlar",
+    "v": "Raqamlar"
+  },
+  {
+    "k": "vakansiya",
+    "v": "Vakansiya"
+  },
+  {
+    "k": "haliAfzalliklarQoshilmagan",
+    "v": "Hali afzalliklar qo'shilmagan"
+  },
+  {
+    "k": "haliSharhlarQoshilmagan",
+    "v": "Hali sharhlar qo'shilmagan"
+  },
+  {
+    "k": "masalan250",
+    "v": "Masalan: 250"
+  },
+  {
+    "k": "masalan35",
+    "v": "Masalan: 3.5"
+  },
+  {
+    "k": "masalan15",
+    "v": "Masalan: 15"
+  },
+  {
+    "k": "arxiv",
+    "v": "Arxiv"
+  },
+  {
+    "k": "testniYakunlash",
+    "v": "Testni yakunlash"
+  },
+  {
+    "k": "mutlaqoRoziman",
+    "v": "Mutlaqo roziman"
+  },
+  {
+    "k": "sizgaKorsatmaBeriladi",
+    "v": "Sizga ko'rsatma beriladi"
+  },
+  {
+    "k": "korsatmaniOqing",
+    "v": "Ko'rsatmani o'qing"
+  },
+  {
+    "k": "metodologiya",
+    "v": "Metodologiya"
+  },
+  {
+    "k": "vakansiyaId",
+    "v": "Vakansiya ID..."
+  },
+  {
+    "k": "nusxalandi",
+    "v": "Nusxalandi"
+  },
+  {
+    "k": "link",
+    "v": "Link"
+  },
+  {
+    "k": "mentor1",
+    "v": "Mentor:"
+  },
+  {
+    "k": "hrKasbiyOsish",
+    "v": "HR — Kasbiy O'sish"
+  },
+  {
+    "k": "kelishmovchiliklarQaydEtilmagan",
+    "v": "Kelishmovchiliklar qayd etilmagan"
+  },
+  {
+    "k": "konfliktHodisasiniQaydEtish",
+    "v": "Konflikt Hodisasini Qayd Etish"
+  },
+  {
+    "k": "europrintJamoasi",
+    "v": "EuroPrint jamoasi"
+  },
+  {
+    "k": "recruitingFunnelniKoring",
+    "v": "Recruiting funnel'ni ko'ring"
+  },
+  {
+    "k": "attrition",
+    "v": "Attrition"
+  },
+  {
+    "k": "operatorlar",
+    "v": "Operatorlar:"
+  },
+  {
+    "k": "maxsus",
+    "v": "Maxsus"
+  },
+  {
+    "k": "qamrov",
+    "v": "Qamrov"
+  },
+  {
+    "k": "korilganlar",
+    "v": "Ko'rilganlar"
+  },
+  {
+    "k": "hrLmsIntegratsiya",
+    "v": "HR ↔ LMS Integratsiya"
+  },
+  {
+    "k": "tugayotganSertifikatlar",
+    "v": "Tugayotgan sertifikatlar"
+  },
+  {
+    "k": "tugayapti",
+    "v": "Tugayapti"
+  },
+  {
+    "k": "openstreetmap",
+    "v": "OpenStreetMap"
+  },
+  {
+    "k": "europrintZavodi",
+    "v": "Europrint Zavodi"
+  },
+  {
+    "k": "qoqonOzbekiston",
+    "v": "Qo'qon, O'zbekiston"
+  },
+  {
+    "k": "aiMarshrutlar",
+    "v": "AI Marshrutlar"
+  },
+  {
+    "k": "markerlar",
+    "v": "Markerlar"
+  },
+  {
+    "k": "zichlik",
+    "v": "Zichlik"
+  },
+  {
+    "k": "marshrutlar",
+    "v": "Marshrutlar"
+  },
+  {
+    "k": "hrOffboarding",
+    "v": "HR — Offboarding"
+  },
+  {
+    "k": "offboardingChekListi",
+    "v": "Offboarding Chek-listi"
+  },
+  {
+    "k": "chekList1",
+    "v": "Chek-list"
+  },
+  {
+    "k": "k5Alo1",
+    "v": "5 — A'lo"
+  },
+  {
+    "k": "offboardingniYakunlash",
+    "v": "Offboardingni yakunlash"
+  },
+  {
+    "k": "shikast",
+    "v": "Shikast"
+  },
+  {
+    "k": "yongin",
+    "v": "Yong'in"
+  },
+  {
+    "k": "kaska",
+    "v": "Kaska"
+  },
+  {
+    "k": "jilet",
+    "v": "Jilet"
+  },
+  {
+    "k": "kozoynak",
+    "v": "Ko'zoynak"
+  },
+  {
+    "k": "jiddiylik",
+    "v": "Jiddiylik"
+  },
+  {
+    "k": "vorislikRejalari",
+    "v": "Vorislik Rejalari"
+  },
+  {
+    "k": "k9BlokMatrix",
+    "v": "9-Blok Matrix"
+  },
+  {
+    "k": "vorislikRejalash",
+    "v": "Vorislik Rejalash"
+  },
+  {
+    "k": "rejalari",
+    "v": "Rejalari"
+  },
+  {
+    "k": "naqdPulMaqsadi",
+    "v": "Naqd pul maqsadi..."
+  },
+  {
+    "k": "tAchievementpct",
+    "v": "t.achievementPct"
+  },
+  {
+    "k": "qty1",
+    "v": "Qty"
+  },
+  {
+    "k": "anomaliya",
+    "v": "Anomaliya"
+  },
+  {
+    "k": "jihozlar1",
+    "v": "Jihozlar:"
+  },
+  {
+    "k": "haliInspeksiyaOtkazilmagan",
+    "v": "Hali inspeksiya o'tkazilmagan"
+  },
+  {
+    "k": "taqqoslash",
+    "v": "Taqqoslash"
+  },
+  {
+    "k": "tozalik",
+    "v": "Tozalik:"
+  },
+  {
+    "k": "tartib1",
+    "v": "Tartib:"
+  },
+  {
+    "k": "tozalik1",
+    "v": "Tozalik"
+  },
+  {
+    "k": "integratsiyalarBoshqaruvi",
+    "v": "Integratsiyalar boshqaruvi"
+  },
+  {
+    "k": "integratsiyaniUlash",
+    "v": "Integratsiyani ulash"
+  },
+  {
+    "k": "faqatShoshilinch",
+    "v": "Faqat shoshilinch"
+  },
+  {
+    "k": "iserror",
+    "v": ": isError ?"
+  },
+  {
+    "k": "tekshirilmagan",
+    "v": "Tekshirilmagan"
+  },
+  {
+    "k": "mosKelgan",
+    "v": "Mos kelgan"
+  },
+  {
+    "k": "mosKelmagan",
+    "v": "Mos kelmagan"
+  },
+  {
+    "k": "taminotchi1",
+    "v": "Taminotchi"
+  },
+  {
+    "k": "aiPredictiveEngine",
+    "v": "AI Predictive Engine"
+  },
+  {
+    "k": "digitalTwinVirtualZavod",
+    "v": "Digital Twin — Virtual Zavod"
+  },
+  {
+    "k": "k3dDigitalTwinVizualizatsiya",
+    "v": "3D Digital Twin Vizualizatsiya"
+  },
+  {
+    "k": "kaizenDoimiyTakomillashtirish",
+    "v": "Kaizen — Doimiy Takomillashtirish"
+  },
+  {
+    "k": "goyaTopshirish",
+    "v": "G'oya topshirish"
+  },
+  {
+    "k": "goyaniBatafsilTushuntiring",
+    "v": "G'oyani batafsil tushuntiring"
+  },
+  {
+    "k": "otaVazifa",
+    "v": "Ota vazifa"
+  },
+  {
+    "k": "takrorlanish",
+    "v": "Takrorlanish"
+  },
+  {
+    "k": "vazifaniBaholash",
+    "v": "Vazifani baholash"
+  },
+  {
+    "k": "k0Taskstartoffset",
+    "v": "0 && taskStartOffset"
+  },
+  {
+    "k": "keyinroq",
+    "v": "Keyinroq"
+  },
+  {
+    "k": "vazifaniYakunlash",
+    "v": "Vazifani yakunlash"
+  },
+  {
+    "k": "qollash",
+    "v": "Qo'llash"
+  },
+  {
+    "k": "kurslargaQaytish",
+    "v": "Kurslarga qaytish"
+  },
+  {
+    "k": "kursgaQaytish",
+    "v": "Kursga qaytish"
+  },
+  {
+    "k": "chapPaneldanDarsniBosing",
+    "v": "Chap paneldan darsni bosing"
+  },
+  {
+    "k": "brauzeringizVideoFormatiniQollabQuvvatlamaydi",
+    "v": "Brauzeringiz video formatini qo'llab-quvvatlamaydi."
+  },
+  {
+    "k": "mazmunHaliQoshilmagan",
+    "v": "Mazmun hali qo'shilmagan"
+  },
+  {
+    "k": "darajalar",
+    "v": "Darajalar"
+  },
+  {
+    "k": "lmsKengaytirilgan",
+    "v": "LMS Kengaytirilgan"
+  },
+  {
+    "k": "bilimlarBazasigaOtish",
+    "v": "Bilimlar bazasiga o'tish"
+  },
+  {
+    "k": "muammoniBildiribQoying",
+    "v": "Muammoni bildirib qo'ying"
+  },
+  {
+    "k": "lmsBoshSahifasigaQaytish",
+    "v": "LMS bosh sahifasiga qaytish"
+  },
+  {
+    "k": "yetkazishlar",
+    "v": "Yetkazishlar"
+  },
+  {
+    "k": "model",
+    "v": "Model *"
+  },
+  {
+    "k": "ozTransport",
+    "v": "O'z transport"
+  },
+  {
+    "k": "tashqi",
+    "v": "Tashqi"
+  },
+  {
+    "k": "haydovchi",
+    "v": "Haydovchi"
+  },
+  {
+    "k": "litri",
+    "v": "Litri *"
+  },
+  {
+    "k": "stantsiya",
+    "v": "Stantsiya *"
+  },
+  {
+    "k": "raximovSardor",
+    "v": "Raximov Sardor"
+  },
+  {
+    "k": "lukoilYunusobod",
+    "v": "Lukoil Yunusobod"
+  },
+  {
+    "k": "alifNashriyot",
+    "v": "Alif Nashriyot"
+  },
+  {
+    "k": "yunusobodToshkent",
+    "v": "Yunusobod, Toshkent"
+  },
+  {
+    "k": "yolgaChiq",
+    "v": "Yo'lga chiq"
+  },
+  {
+    "k": "tezlik",
+    "v": "Tezlik"
+  },
+  {
+    "k": "haydovchiXarajatlari",
+    "v": "Haydovchi Xarajatlari"
+  },
+  {
+    "k": "haydovchilarXarajatlariQaydEtilmagan",
+    "v": "Haydovchilar xarajatlari qayd etilmagan"
+  },
+  {
+    "k": "vendorFakturalari3WayMatch",
+    "v": "Vendor Fakturalari — 3-Way Match"
+  },
+  {
+    "k": "match",
+    "v": "Match"
+  },
+  {
+    "k": "k3WayMatch",
+    "v": "3-Way Match"
+  },
+  {
+    "k": "haliMashinaQoshilmagan",
+    "v": "Hali mashina qo'shilmagan"
+  },
+  {
+    "k": "model1",
+    "v": "Model"
+  },
+  {
+    "k": "sugurta",
+    "v": "Sug'urta"
+  },
+  {
+    "k": "litri1",
+    "v": "Litri"
+  },
+  {
+    "k": "stantsiya1",
+    "v": "Stantsiya"
+  },
+  {
+    "k": "probeg",
+    "v": "Probeg"
+  },
+  {
+    "k": "ustaxona",
+    "v": "Ustaxona"
+  },
+  {
+    "k": "haqiqiySarflar",
+    "v": "Haqiqiy sarflar"
+  },
+  {
+    "k": "sarflangan",
+    "v": "Sarflangan"
+  },
+  {
+    "k": "platforma",
+    "v": "Platforma"
+  },
+  {
+    "k": "konversiya",
+    "v": "Konversiya"
+  },
+  {
+    "k": "nashr",
+    "v": "Nashr"
+  },
+  {
+    "k": "rejada",
+    "v": "Rejada"
+  },
+  {
+    "k": "crmKonversiya",
+    "v": "CRM Konversiya"
+  },
+  {
+    "k": "jamoaAzolari",
+    "v": "Jamoa a'zolari"
+  },
+  {
+    "k": "qiziqish",
+    "v": "Qiziqish"
+  },
+  {
+    "k": "ozbekiston",
+    "v": "O'zbekiston"
+  },
+  {
+    "k": "aliVali",
+    "v": "Ali, Vali..."
+  },
+  {
+    "k": "top10KalitSozlar",
+    "v": "TOP 10 kalit so'zlar"
+  },
+  {
+    "k": "kalitSozlarReytingi",
+    "v": "Kalit so'zlar reytingi"
+  },
+  {
+    "k": "kalitSoz",
+    "v": "Kalit so'z"
+  },
+  {
+    "k": "variant",
+    "v": "Variant"
+  },
+  {
+    "k": "konversiya1",
+    "v": "Konversiya %"
+  },
+  {
+    "k": "tashrif",
+    "v": "Tashrif"
+  },
+  {
+    "k": "zaifTomon",
+    "v": "Zaif tomon"
+  },
+  {
+    "k": "funnel",
+    "v": "Funnel"
+  },
+  {
+    "k": "telegramInstagram",
+    "v": "Telegram, Instagram..."
+  },
+  {
+    "k": "qaydEtish",
+    "v": "Qayd etish"
+  },
+  {
+    "k": "qisqachaXulosa",
+    "v": "Qisqacha xulosa..."
+  },
+  {
+    "k": "webhooklar",
+    "v": "Webhook'lar"
+  },
+  {
+    "k": "ijtimoiyTarmoqApiTokenlariniBoshqaring",
+    "v": "Ijtimoiy tarmoq API tokenlarini boshqaring"
+  },
+  {
+    "k": "platforma1",
+    "v": "Platforma *"
+  },
+  {
+    "k": "apiKey",
+    "v": "API Key"
+  },
+  {
+    "k": "apiSecret",
+    "v": "API Secret"
+  },
+  {
+    "k": "webhookSecret",
+    "v": "Webhook Secret"
+  },
+  {
+    "k": "kalit",
+    "v": "Kalit *"
+  },
+  {
+    "k": "telegramWebhookSozlamasi",
+    "v": "Telegram Webhook Sozlamasi"
+  },
+  {
+    "k": "webhookUrllar",
+    "v": "Webhook URL'lar"
+  },
+  {
+    "k": "nusxa",
+    "v": "Nusxa"
+  },
+  {
+    "k": "oqilmagan1",
+    "v": "o'qilmagan"
+  },
+  {
+    "k": "slug",
+    "v": "Slug"
+  },
+  {
+    "k": "blogMaqolalar",
+    "v": "Blog Maqolalar"
+  },
+  {
+    "k": "yangiliklar",
+    "v": "Yangiliklar"
+  },
+  {
+    "k": "nashrQilingan",
+    "v": "Nashr qilingan"
+  },
+  {
+    "k": "qadoqlashQutiGofra",
+    "v": "qadoqlash, quti, gofra"
+  },
+  {
+    "k": "tuganganlar",
+    "v": "Tuganganlar"
+  },
+  {
+    "k": "masalanMat001",
+    "v": "Masalan: MAT-001"
+  },
+  {
+    "k": "etishmovchilik",
+    "v": "Etishmovchilik"
+  },
+  {
+    "k": "harakatniQaydEtish",
+    "v": "Harakatni qayd etish"
+  },
+  {
+    "k": "aylanmaTezligi",
+    "v": "Aylanma Tezligi"
+  },
+  {
+    "k": "partiya1",
+    "v": "Partiya"
+  },
+  {
+    "k": "referans",
+    "v": "Referans"
+  },
+  {
+    "k": "lmsMentorlik",
+    "v": "LMS Mentorlik"
+  },
+  {
+    "k": "mentee",
+    "v": "Mentee"
+  },
+  {
+    "k": "mentorId",
+    "v": "Mentor ID *"
+  },
+  {
+    "k": "menteeId",
+    "v": "Mentee ID *"
+  },
+  {
+    "k": "mentorliklar",
+    "v": "Mentorliklar"
+  },
+  {
+    "k": "mentorId1",
+    "v": "Mentor ID"
+  },
+  {
+    "k": "menteeId1",
+    "v": "Mentee ID"
+  },
+  {
+    "k": "mentorlikMaqsadi",
+    "v": "Mentorlik maqsadi..."
+  },
+  {
+    "k": "mentorlar",
+    "v": "Mentorlar"
+  },
+  {
+    "k": "tamirlashSorovi",
+    "v": "Ta'mirlash so'rovi"
+  },
+  {
+    "k": "topSabablar",
+    "v": "Top sabablar"
+  },
+  {
+    "k": "rejalanmagan",
+    "v": "Rejalanmagan"
+  },
+  {
+    "k": "sessiyaId",
+    "v": "Sessiya ID"
+  },
+  {
+    "k": "texnikXizmatSorovlari",
+    "v": "Texnik Xizmat So'rovlari"
+  },
+  {
+    "k": "normativTezlik",
+    "v": "Normativ tezlik"
+  },
+  {
+    "k": "kiruvchiOperator",
+    "v": "Kiruvchi operator"
+  },
+  {
+    "k": "orin",
+    "v": "O'rin"
+  },
+  {
+    "k": "tayinlashlar",
+    "v": "Tayinlashlar"
+  },
+  {
+    "k": "tannarx1",
+    "v": "Tannarx"
+  },
+  {
+    "k": "faolsizlashtirish",
+    "v": "Faolsizlashtirish"
+  },
+  {
+    "k": "faollashtirish",
+    "v": "Faollashtirish"
+  },
+  {
+    "k": "kodi",
+    "v": "Kodi"
+  },
+  {
+    "k": "yigish",
+    "v": "Yig'ish"
+  },
+  {
+    "k": "sessiya",
+    "v": "Sessiya"
+  },
+  {
+    "k": "toxtat",
+    "v": "To'xtat"
+  },
+  {
+    "k": "yakunla",
+    "v": "Yakunla"
+  },
+  {
+    "k": "baholovchi",
+    "v": "Baholovchi"
+  },
+  {
+    "k": "yakunlagandaBadgeAvtomatikBeriladi",
+    "v": "Yakunlaganda 🏅 badge avtomatik beriladi"
+  },
+  {
+    "k": "posSkanerlash",
+    "v": "POS Skanerlash"
+  },
+  {
+    "k": "harakatdagiTransportlar",
+    "v": "Harakatdagi transportlar"
+  },
+  {
+    "k": "gpsXaritaKorinishi",
+    "v": "GPS xarita ko'rinishi"
+  },
+  {
+    "k": "haydovchilar",
+    "v": "Haydovchilar"
+  },
+  {
+    "k": "optimalMarshrut",
+    "v": "Optimal Marshrut"
+  },
+  {
+    "k": "toifasi",
+    "v": "Toifasi"
+  },
+  {
+    "k": "akt",
+    "v": "Akt №"
+  },
+  {
+    "k": "yetkazuvchilar",
+    "v": "Yetkazuvchilar"
+  },
+  {
+    "k": "mockupKomponentlarShowcase",
+    "v": "Mockup Komponentlar Showcase"
+  },
+  {
+    "k": "k1WelcomeBanner",
+    "v": "1. Welcome Banner"
+  },
+  {
+    "k": "premium",
+    "v": "Premium"
+  },
+  {
+    "k": "k4JobTags",
+    "v": "4. Job Tags"
+  },
+  {
+    "k": "k5Avatars",
+    "v": "5. Avatars"
+  },
+  {
+    "k": "k7SpecialGradientCards",
+    "v": "7. Special Gradient Cards"
+  },
+  {
+    "k": "k8PerformanceHighlight",
+    "v": "8. Performance Highlight"
+  },
+  {
+    "k": "k9PillButtons",
+    "v": "9. Pill Buttons"
+  },
+  {
+    "k": "k11BrandColorPalette",
+    "v": "11. Brand Color Palette"
+  },
+  {
+    "k": "smenada",
+    "v": "Smenada"
+  },
+  {
+    "k": "davomiyligi1",
+    "v": "Davomiyligi:"
+  },
+  {
+    "k": "texnik1",
+    "v": "Texnik:"
+  },
+  {
+    "k": "buyumlar",
+    "v": "Buyumlar"
+  },
+  {
+    "k": "kommunal",
+    "v": "Kommunal"
+  },
+  {
+    "k": "forma",
+    "v": "Forma"
+  },
+  {
+    "k": "kod1",
+    "v": "Kod *"
+  },
+  {
+    "k": "birlik",
+    "v": "Birlik *"
+  },
+  {
+    "k": "sanitariya",
+    "v": "Sanitariya"
+  },
+  {
+    "k": "buyum",
+    "v": "Buyum *"
+  },
+  {
+    "k": "foydalanishMaqsadi",
+    "v": "Foydalanish maqsadi"
+  },
+  {
+    "k": "buyum1",
+    "v": "Buyum"
+  },
+  {
+    "k": "ozgarish1",
+    "v": "O'zgarish:"
+  },
+  {
+    "k": "sigim",
+    "v": "Sig'im"
+  },
+  {
+    "k": "chastota",
+    "v": "Chastota"
+  },
+  {
+    "k": "profilaktik",
+    "v": "Profilaktik"
+  },
+  {
+    "k": "k1Saqlash",
+    "v": "1-saqlash"
+  },
+  {
+    "k": "profilaktikTexnikXizmat",
+    "v": "Profilaktik Texnik Xizmat"
+  },
+  {
+    "k": "orqada",
+    "v": "Orqada"
+  },
+  {
+    "k": "chorak",
+    "v": "Chorak"
+  },
+  {
+    "k": "mehnat",
+    "v": "Mehnat"
+  },
+  {
+    "k": "ustama",
+    "v": "Ustama"
+  },
+  {
+    "k": "tannarxQatorlari",
+    "v": "Tannarx Qatorlari"
+  },
+  {
+    "k": "element",
+    "v": "Element"
+  },
+  {
+    "k": "hisoblangan",
+    "v": "Hisoblangan"
+  },
+  {
+    "k": "marja",
+    "v": "Marja %"
+  },
+  {
+    "k": "buyruqTafsilotlari",
+    "v": "Buyruq Tafsilotlari"
+  },
+  {
+    "k": "buyruqSarlavhasi",
+    "v": "Buyruq sarlavhasi"
+  },
+  {
+    "k": "buyruqlarRegistri",
+    "v": "Buyruqlar Registri"
+  },
+  {
+    "k": "constTransitionsRecord",
+    "v": "const transitions: Record"
+  },
+  {
+    "k": "tashkiliyTuzilma1",
+    "v": "Tashkiliy Tuzilma"
+  },
+  {
+    "k": "bolim001",
+    "v": "BO'LIM-001"
+  },
+  {
+    "k": "ortga",
+    "v": "Ortga"
+  },
+  {
+    "k": "portret",
+    "v": "Portret"
+  },
+  {
+    "k": "hrGaSorov",
+    "v": "HR ga so'rov"
+  },
+  {
+    "k": "vakantlar",
+    "v": "Vakantlar"
+  },
+  {
+    "k": "suring",
+    "v": "Suring"
+  },
+  {
+    "k": "kodYuborilmoqda",
+    "v": "Kod yuborilmoqda..."
+  },
+  {
+    "k": "gofra",
+    "v": "Gofra"
+  },
+  {
+    "k": "gladkiy",
+    "v": "Gladkiy"
+  },
+  {
+    "k": "laminated",
+    "v": "Laminated"
+  },
+  {
+    "k": "drift",
+    "v": "Drift"
+  },
+  {
+    "k": "vaqtbay",
+    "v": "Vaqtbay"
+  },
+  {
+    "k": "donabay",
+    "v": "Donabay"
+  },
+  {
+    "k": "baholanmagan",
+    "v": "Baholanmagan"
+  },
+  {
+    "k": "closed",
+    "v": "Closed"
+  },
+  {
+    "k": "k5BosqichSkript",
+    "v": "5-bosqich skript"
+  },
+  {
+    "k": "tavsiyaSorashKuchliInstrument",
+    "v": "Tavsiya so'rash — kuchli instrument"
+  },
+  {
+    "k": "nazoratchiId",
+    "v": "Nazoratchi ID"
+  },
+  {
+    "k": "otdi1",
+    "v": "✅ O'tdi"
+  },
+  {
+    "k": "otmadi",
+    "v": "❌ O'tmadi"
+  },
+  {
+    "k": "cache",
+    "v": "Cache"
+  },
+  {
+    "k": "ean13Generatsiya",
+    "v": "EAN-13 Generatsiya"
+  },
+  {
+    "k": "kassir",
+    "v": "Kassir"
+  },
+  {
+    "k": "subtotal",
+    "v": "Subtotal:"
+  },
+  {
+    "k": "toshkentShahriOzbekiston",
+    "v": "Toshkent shahri, O'zbekiston"
+  },
+  {
+    "k": "internetUlanganidaServergaYuboriladi",
+    "v": "Internet ulanganida serverga yuboriladi"
+  },
+  {
+    "k": "oflaynKeshdanKorsatilmoqda",
+    "v": "Oflayn — keshdan ko'rsatilmoqda"
+  },
+  {
+    "k": "skladId",
+    "v": "Sklad ID *"
+  },
+  {
+    "k": "skladId1",
+    "v": "Sklad ID"
+  },
+  {
+    "k": "tuzatishSababi",
+    "v": "Tuzatish sababi..."
+  },
+  {
+    "k": "bolimsiz",
+    "v": "— Bo'limsiz —"
+  },
+  {
+    "k": "kpiShabloniBiriktirish",
+    "v": "KPI Shabloni Biriktirish"
+  },
+  {
+    "k": "biriktir",
+    "v": "Biriktir"
+  },
+  {
+    "k": "ombordan",
+    "v": "Ombordan"
+  },
+  {
+    "k": "omborgacha",
+    "v": "Omborgacha"
+  },
+  {
+    "k": "yaratdi",
+    "v": "Yaratdi"
+  },
+  {
+    "k": "miqdorniSozlash",
+    "v": "Miqdorni sozlash"
+  },
+  {
+    "k": "posWarehouse",
+    "v": "POS — Warehouse"
+  },
+  {
+    "k": "stok",
+    "v": "Stok"
+  },
+  {
+    "k": "qaerdan",
+    "v": "Qaerdan"
+  },
+  {
+    "k": "movement",
+    "v": "Movement"
+  },
+  {
+    "k": "stokOgohlantirishlari",
+    "v": "Stok ogohlantirishlari"
+  },
+  {
+    "k": "order",
+    "v": "Order"
+  },
+  {
+    "k": "task",
+    "v": "Task"
+  },
+  {
+    "k": "offsetA4",
+    "v": "Offset A4"
+  },
+  {
+    "k": "ulgurji",
+    "v": "Ulgurji"
+  },
+  {
+    "k": "tannarxOgishi",
+    "v": "Tannarx og'ishi"
+  },
+  {
+    "k": "sarflash",
+    "v": "Sarflash"
+  },
+  {
+    "k": "haqiqiyTannarx",
+    "v": "Haqiqiy tannarx"
+  },
+  {
+    "k": "nosoz",
+    "v": "Nosoz"
+  },
+  {
+    "k": "chiqindi",
+    "v": "Chiqindi"
+  },
+  {
+    "k": "tashabbuskorlikMisoli",
+    "v": "Tashabbuskorlik misoli?"
+  },
+  {
+    "k": "kiruvchiOqim",
+    "v": "Kiruvchi oqim"
+  },
+  {
+    "k": "chiquvchiOqim",
+    "v": "Chiquvchi oqim"
+  },
+  {
+    "k": "korsatma",
+    "v": "Ko'rsatma:"
+  },
+  {
+    "k": "karyeraMaqsadiProfessionalRivojlanish",
+    "v": "Karyera maqsadi, professional rivojlanish..."
+  },
+  {
+    "k": "jamoadagiQiyinVaziyatMisoli",
+    "v": "Jamoadagi qiyin vaziyat misoli?"
+  },
+  {
+    "k": "yakuniyXulosa",
+    "v": "Yakuniy xulosa"
+  },
+  {
+    "k": "avtomatik",
+    "v": "Avtomatik"
+  },
+  {
+    "k": "yakuniyQaror1",
+    "v": "Yakuniy qaror:"
+  },
+  {
+    "k": "rekruterningYakuniyFikriKuzatishlar",
+    "v": "Rekruterning yakuniy fikri, kuzatishlar..."
+  },
+  {
+    "k": "rentabellikTaqsimoti",
+    "v": "Rentabellik Taqsimoti"
+  },
+  {
+    "k": "aiTavsiyalari",
+    "v": "AI Tavsiyalari"
+  },
+  {
+    "k": "inspeksiyalar",
+    "v": "Inspeksiyalar"
+  },
+  {
+    "k": "nuqsonliMahsulotniQaydEting",
+    "v": "Nuqsonli mahsulotni qayd eting"
+  },
+  {
+    "k": "yakuniyNazorat",
+    "v": "Yakuniy nazorat"
+  },
+  {
+    "k": "buyurtmachi",
+    "v": "Buyurtmachi"
+  },
+  {
+    "k": "qcBoshligiImzosi",
+    "v": "QC Boshlig'i imzosi"
+  },
+  {
+    "k": "muhr",
+    "v": "Muhr"
+  },
+  {
+    "k": "yiqilgan",
+    "v": "Yiqilgan ✗"
+  },
+  {
+    "k": "gofrokartonBFlT",
+    "v": "Gofrokarton B flüt"
+  },
+  {
+    "k": "toshmatovBS",
+    "v": "Toshmatov B.S."
+  },
+  {
+    "k": "reklamatsiyalarBoshqaruvi",
+    "v": "Reklamatsiyalar boshqaruvi"
+  },
+  {
+    "k": "previousPassrateUpLatestPassrate",
+    "v": "previous.passRate ? \"up\" : latest.passRate"
+  },
+  {
+    "k": "diqqat",
+    "v": "Diqqat!"
+  },
+  {
+    "k": "inspeksiyaniYakunlash1",
+    "v": "Inspeksiyani yakunlash"
+  },
+  {
+    "k": "qcExtended",
+    "v": "QC Extended"
+  },
+  {
+    "k": "finalInspeksiya",
+    "v": "Final Inspeksiya"
+  },
+  {
+    "k": "kritikOgishQcHoldAvtomatik",
+    "v": "Kritik og'ish → QC hold avtomatik"
+  },
+  {
+    "k": "koribChiqilmoqda",
+    "v": "Ko'rib chiqilmoqda"
+  },
+  {
+    "k": "braklar",
+    "v": "Braklar"
+  },
+  {
+    "k": "reklamatsiyalar",
+    "v": "Reklamatsiyalar"
+  },
+  {
+    "k": "inlineNazorat",
+    "v": "Inline nazorat"
+  },
+  {
+    "k": "finalInspeksiya1",
+    "v": "Final inspeksiya"
+  },
+  {
+    "k": "shablonId",
+    "v": "Shablon ID"
+  },
+  {
+    "k": "sorovnomaSavollari",
+    "v": "So'rovnoma Savollari"
+  },
+  {
+    "k": "anketaSavollari",
+    "v": "Anketa Savollari"
+  },
+  {
+    "k": "ozbek",
+    "v": "O'zbek"
+  },
+  {
+    "k": "rus",
+    "v": "Rus"
+  },
+  {
+    "k": "anketaShablonlari",
+    "v": "Anketa shablonlari"
+  },
+  {
+    "k": "qabulxona",
+    "v": "Qabulxona"
+  },
+  {
+    "k": "dasturchi",
+    "v": "Dasturchi"
+  },
+  {
+    "k": "sotuvchi",
+    "v": "Sotuvchi"
+  },
+  {
+    "k": "kutmoqda",
+    "v": "Kutmoqda:"
+  },
+  {
+    "k": "kechiktirilgan",
+    "v": "Kechiktirilgan:"
+  },
+  {
+    "k": "jobId",
+    "v": "Job ID"
+  },
+  {
+    "k": "urinishlar1",
+    "v": "Urinishlar"
+  },
+  {
+    "k": "raciInqirozlar",
+    "v": "RACI & Inqirozlar"
+  },
+  {
+    "k": "javobgarId",
+    "v": "Javobgar ID"
+  },
+  {
+    "k": "inqirozlar",
+    "v": "Inqirozlar"
+  },
+  {
+    "k": "krizislar",
+    "v": "Krizislar"
+  },
+  {
+    "k": "simptomlar",
+    "v": "Simptomlar:"
+  },
+  {
+    "k": "yechimlar",
+    "v": "Yechimlar:"
+  },
+  {
+    "k": "xomAshyolar",
+    "v": "Xom Ashyolar"
+  },
+  {
+    "k": "checkIn",
+    "v": "➕ Check-in"
+  },
+  {
+    "k": "badgeHaqiqiy",
+    "v": "✅ Badge Haqiqiy"
+  },
+  {
+    "k": "ichkari",
+    "v": "Ichkari"
+  },
+  {
+    "k": "hrCapital9",
+    "v": "HR Capital №9"
+  },
+  {
+    "k": "vakansiyalar",
+    "v": "Vakansiyalar"
+  },
+  {
+    "k": "korishlar",
+    "v": "Ko'rishlar"
+  },
+  {
+    "k": "konversiyaZanjiri",
+    "v": "Konversiya zanjiri"
+  },
+  {
+    "k": "conv",
+    "v": "Conv%"
+  },
+  {
+    "k": "recruiterBoyichaKpi",
+    "v": "Recruiter bo'yicha KPI"
+  },
+  {
+    "k": "recruiter",
+    "v": "Recruiter"
+  },
+  {
+    "k": "aiOtish",
+    "v": "AI o'tish %"
+  },
+  {
+    "k": "hrCapital7BosqichMetodologiyasi",
+    "v": "HR Capital 7-bosqich metodologiyasi · Vakansiya muddatiga asoslangan"
+  },
+  {
+    "k": "tozalash1",
+    "v": "× Tozalash"
+  },
+  {
+    "k": "aiSessiyalar",
+    "v": "AI Sessiyalar"
+  },
+  {
+    "k": "dostTavsiyaQilish",
+    "v": "Do'st tavsiya qilish"
+  },
+  {
+    "k": "boomerangHire",
+    "v": "🔄 Boomerang Hire"
+  },
+  {
+    "k": "intervyuda",
+    "v": "Intervyuda"
+  },
+  {
+    "k": "dostingizniTavsiyaQiling",
+    "v": "Do'stingizni tavsiya qiling"
+  },
+  {
+    "k": "tavsiyachi",
+    "v": "Tavsiyachi"
+  },
+  {
+    "k": "routingKonfiguratsiyasi",
+    "v": "Routing Konfiguratsiyasi"
+  },
+  {
+    "k": "domen",
+    "v": "Domen *"
+  },
+  {
+    "k": "zavodLlc",
+    "v": "Zavod LLC"
+  },
+  {
+    "k": "tenant",
+    "v": "Tenant"
+  },
+  {
+    "k": "domen1",
+    "v": "Domen"
+  },
+  {
+    "k": "bloklash",
+    "v": "Bloklash"
+  },
+  {
+    "k": "goLiveQilish",
+    "v": "Go-live qilish"
+  },
+  {
+    "k": "tavsiyaEtilgan",
+    "v": "Tavsiya etilgan"
+  },
+  {
+    "k": "tenant1",
+    "v": "Tenant:"
+  },
+  {
+    "k": "kalit1",
+    "v": "Kalit"
+  },
+  {
+    "k": "yol",
+    "v": "Yo'l"
+  },
+  {
+    "k": "imzolandi",
+    "v": "Imzolandi"
+  },
+  {
+    "k": "imzolandiDebBelgilash",
+    "v": "Imzolandi deb belgilash"
+  },
+  {
+    "k": "shartnomaniImzolandiDebBelgilash",
+    "v": "Shartnomani imzolandi deb belgilash"
+  },
+  {
+    "k": "yuridik",
+    "v": "Yuridik"
+  },
+  {
+    "k": "jismoniy",
+    "v": "Jismoniy"
+  },
+  {
+    "k": "korgazma",
+    "v": "Ko'rgazma"
+  },
+  {
+    "k": "crmWorkspace",
+    "v": "CRM Workspace"
+  },
+  {
+    "k": "kvota",
+    "v": "Kvota"
+  },
+  {
+    "k": "invoicelar",
+    "v": "Invoicelar"
+  },
+  {
+    "k": "yutilganBitimlar",
+    "v": "Yutilgan bitimlar"
+  },
+  {
+    "k": "kvotaBajarilishi",
+    "v": "Kvota bajarilishi"
+  },
+  {
+    "k": "maqsadgaYaqin",
+    "v": "Maqsadga yaqin"
+  },
+  {
+    "k": "orqadaQolmoqda",
+    "v": "Orqada qolmoqda"
+  },
+  {
+    "k": "yutilganLeadlar",
+    "v": "Yutilgan leadlar"
+  },
+  {
+    "k": "aylantirilgan",
+    "v": "Aylantirilgan"
+  },
+  {
+    "k": "chegirma2",
+    "v": "Chegirma %"
+  },
+  {
+    "k": "uzsOzbekSomi",
+    "v": "UZS - O'zbek so'mi"
+  },
+  {
+    "k": "usdDollar",
+    "v": "USD - Dollar"
+  },
+  {
+    "k": "eurEvro",
+    "v": "EUR - Evro"
+  },
+  {
+    "k": "buyurtmagaAylantirish",
+    "v": "Buyurtmaga aylantirish"
+  },
+  {
+    "k": "komissiya",
+    "v": "Komissiya"
+  },
+  {
+    "k": "modelAniqligi",
+    "v": "Model Aniqligi"
+  },
+  {
+    "k": "aniqlik",
+    "v": "Aniqlik"
+  },
+  {
+    "k": "savdochilarKomissiyasi",
+    "v": "Savdochilar Komissiyasi"
+  },
+  {
+    "k": "savdochilarRejalariQoshilgandaReytingShakllanadi",
+    "v": "Savdochilar rejalari qo'shilganda reyting shakllanadi"
+  },
+  {
+    "k": "komissiyaHisobKitobi",
+    "v": "Komissiya Hisob-Kitobi"
+  },
+  {
+    "k": "savdochi",
+    "v": "Savdochi"
+  },
+  {
+    "k": "parametrlarniKiritibNarxniHisoblashTugmasini",
+    "v": "Parametrlarni kiritib, \"Narxni hisoblash\" tugmasini bosing"
+  },
+  {
+    "k": "plastinalar",
+    "v": "Plastinalar:"
+  },
+  {
+    "k": "ishlov",
+    "v": "Ishlov:"
+  },
+  {
+    "k": "qoshimchalar",
+    "v": "Qo'shimchalar:"
+  },
+  {
+    "k": "ozgardi",
+    "v": "O'zgardi"
+  },
+  {
+    "k": "tashrifchilar",
+    "v": "Tashrifchilar"
+  },
+  {
+    "k": "zonalar",
+    "v": "Zonalar"
+  },
+  {
+    "k": "signallar",
+    "v": "Signallar"
+  },
+  {
+    "k": "tashrifchiniRoyxatdanOtkazing",
+    "v": "Tashrifchini ro'yxatdan o'tkazing"
+  },
+  {
+    "k": "mezboni",
+    "v": "Mezboni *"
+  },
+  {
+    "k": "joylasuv",
+    "v": "Joylasuv *"
+  },
+  {
+    "k": "qaydEtgan",
+    "v": "Qayd etgan *"
+  },
+  {
+    "k": "abdullayevBobur",
+    "v": "Abdullayev Bobur"
+  },
+  {
+    "k": "yigilishAuditorlik",
+    "v": "Yig'ilish, auditorlik..."
+  },
+  {
+    "k": "hodisaniBatafsilTavsiflang",
+    "v": "Hodisani batafsil tavsiflang"
+  },
+  {
+    "k": "joylasuv1",
+    "v": "Joylasuv"
+  },
+  {
+    "k": "qaydEtgan1",
+    "v": "Qayd etgan"
+  },
+  {
+    "k": "vest",
+    "v": "Vest"
+  },
+  {
+    "k": "evakuatsiyaProtokoli",
+    "v": "Evakuatsiya Protokoli"
+  },
+  {
+    "k": "usul",
+    "v": "Usul"
+  },
+  {
+    "k": "hozirdaZavoddaBolganTashrifchilar",
+    "v": "Hozirda zavodda bo'lgan tashrifchilar"
+  },
+  {
+    "k": "mezboni1",
+    "v": "Mezboni"
+  },
+  {
+    "k": "kirdi",
+    "v": "Kirdi"
+  },
+  {
+    "k": "chiqdi",
+    "v": "Chiqdi"
+  },
+  {
+    "k": "securityKengaytirilgan",
+    "v": "Security Kengaytirilgan"
+  },
+  {
+    "k": "mehmonRoyxatdanOtkazish",
+    "v": "Mehmon Ro'yxatdan O'tkazish"
+  },
+  {
+    "k": "tashrifMaqsadi",
+    "v": "Tashrif maqsadi"
+  },
+  {
+    "k": "royxatdanOtkazish",
+    "v": "Ro'yxatdan O'tkazish"
+  },
+  {
+    "k": "modda",
+    "v": "Modda"
+  },
+  {
+    "k": "toshkentShaharYashnobodTumani",
+    "v": "Toshkent shahar, Yashnobod tumani"
+  },
+  {
+    "k": "gptModel",
+    "v": "GPT Model"
+  },
+  {
+    "k": "gpt4oMini",
+    "v": "GPT-4o Mini"
+  },
+  {
+    "k": "prompt",
+    "v": "Prompt"
+  },
+  {
+    "k": "kunduz",
+    "v": "Kunduz"
+  },
+  {
+    "k": "kechqurun",
+    "v": "Kechqurun"
+  },
+  {
+    "k": "tun",
+    "v": "Tun"
+  },
+  {
+    "k": "almashishSababi",
+    "v": "Almashish sababi..."
+  },
+  {
+    "k": "almashishSorovi",
+    "v": "Almashish so'rovi"
+  },
+  {
+    "k": "k1Boshlangich",
+    "v": "1 - Boshlang'ich"
+  },
+  {
+    "k": "k2Oddiy",
+    "v": "2 - Oddiy"
+  },
+  {
+    "k": "dasturlash",
+    "v": "Dasturlash"
+  },
+  {
+    "k": "pythonDasturlash",
+    "v": "Python dasturlash"
+  },
+  {
+    "k": "pythonDasturlashTillari",
+    "v": "Python dasturlash tillari..."
+  },
+  {
+    "k": "sanoatgaMos",
+    "v": "Sanoatga mos:"
+  },
+  {
+    "k": "sanoatgaMoslashuvchan",
+    "v": "Sanoatga moslashuvchan"
+  },
+  {
+    "k": "masalanQ1Q2",
+    "v": "Masalan: Q1, Q2"
+  },
+  {
+    "k": "masalanHrCrm",
+    "v": "Masalan: HR, CRM"
+  },
+  {
+    "k": "boshSahifagaQaytish",
+    "v": "Bosh sahifaga qaytish"
+  },
+  {
+    "k": "tenantlar",
+    "v": "Tenantlar"
+  },
+  {
+    "k": "domain",
+    "v": "Domain"
+  },
+  {
+    "k": "domain1",
+    "v": "Domain *"
+  },
+  {
+    "k": "basic",
+    "v": "Basic"
+  },
+  {
+    "k": "enterprise",
+    "v": "Enterprise"
+  },
+  {
+    "k": "europrintSamarkand",
+    "v": "Europrint Samarkand"
+  },
+  {
+    "k": "taminotZanjiri",
+    "v": "Ta'minot Zanjiri"
+  },
+  {
+    "k": "tolerans",
+    "v": "Tolerans:"
+  },
+  {
+    "k": "headerFarqlar",
+    "v": "Header farqlar:"
+  },
+  {
+    "k": "haqiqiy",
+    "v": "→ Haqiqiy:"
+  },
+  {
+    "k": "matchKutmoqda",
+    "v": "Match kutmoqda"
+  },
+  {
+    "k": "heapXotira",
+    "v": "Heap xotira"
+  },
+  {
+    "k": "cpuYuklanish",
+    "v": "CPU yuklanish"
+  },
+  {
+    "k": "routingOperatsiyalarKetmaKetligi",
+    "v": "Routing — Operatsiyalar ketma-ketligi"
+  },
+  {
+    "k": "checkpointGaOtish",
+    "v": "Checkpoint ga o'tish"
+  },
+  {
+    "k": "optimallashtirish",
+    "v": "Optimallashtirish"
+  },
+  {
+    "k": "generatsiya1",
+    "v": "Generatsiya..."
+  },
+  {
+    "k": "davomiylik1",
+    "v": "Davomiylik:"
+  },
+  {
+    "k": "texnologDashbordi",
+    "v": "Texnolog Dashbordi"
+  },
+  {
+    "k": "revision",
+    "v": "Revision"
+  },
+  {
+    "k": "texnikKartalar",
+    "v": "Texnik kartalar"
+  },
+  {
+    "k": "qoliplar",
+    "v": "Qoliplar"
+  },
+  {
+    "k": "texnolog",
+    "v": "Texnolog"
+  },
+  {
+    "k": "muqobili",
+    "v": "Muqobili"
+  },
+  {
+    "k": "qatlamlar",
+    "v": "Qatlamlar"
+  },
+  {
+    "k": "mosStanoqlar",
+    "v": "Mos stanoqlar"
+  },
+  {
+    "k": "kalkulyatsiya",
+    "v": "Kalkulyatsiya"
+  },
+  {
+    "k": "potensialTejash",
+    "v": "Potensial tejash"
+  },
+  {
+    "k": "konflikt",
+    "v": "Konflikt"
+  },
+  {
+    "k": "aiDemandForecasting",
+    "v": "AI Demand Forecasting"
+  },
+  {
+    "k": "unumd",
+    "v": "Unumd."
+  },
+  {
+    "k": "seanslari",
+    "v": "Seanslari"
+  },
+  {
+    "k": "modelAniqligi1",
+    "v": "Model aniqligi"
+  },
+  {
+    "k": "kechikmoqda",
+    "v": "Kechikmoqda"
+  },
+  {
+    "k": "ochiq1",
+    "v": "O'chiq"
+  },
+  {
+    "k": "telegramUlangan",
+    "v": "Telegram ulangan"
+  },
+  {
+    "k": "otish1",
+    "v": "O'tish %"
+  },
+  {
+    "k": "aralash",
+    "v": "Aralash"
+  },
+  {
+    "k": "solishtirish",
+    "v": "Solishtirish"
+  },
+  {
+    "k": "k3TomonlamaSolishtirish",
+    "v": "3-Tomonlama Solishtirish"
+  },
+  {
+    "k": "rolniOzgartirish",
+    "v": "Rolni o'zgartirish"
+  },
+  {
+    "k": "shoshilinchVakansiya",
+    "v": "Shoshilinch vakansiya:"
+  },
+  {
+    "k": "taminotchiBahosi",
+    "v": "Taminotchi bahosi"
+  },
+  {
+    "k": "taminotchiId",
+    "v": "Taminotchi ID"
+  },
+  {
+    "k": "taminotchilar",
+    "v": "Taminotchilar"
+  },
+  {
+    "k": "batafsilMetrikalar",
+    "v": "Batafsil Metrikalar"
+  },
+  {
+    "k": "ozVaqtida",
+    "v": "O'z vaqtida"
+  },
+  {
+    "k": "k360Korinish",
+    "v": "360° Ko'rinish"
+  },
+  {
+    "k": "tekshiruvda",
+    "v": "Tekshiruvda"
+  },
+  {
+    "k": "brakli",
+    "v": "Brakli"
+  },
+  {
+    "k": "muddatgacha",
+    "v": "Muddatgacha"
+  },
+  {
+    "k": "nuqsonSababi",
+    "v": "Nuqson sababi..."
+  },
+  {
+    "k": "rollBoshqaruv",
+    "v": "Roll boshqaruv"
+  },
+  {
+    "k": "gofrokartonRulonlarFifoSkanerlashQr",
+    "v": "Gofrokarton rulonlar — FIFO + skanerlash + QR"
+  },
+  {
+    "k": "artikel",
+    "v": "Artikel"
+  },
+  {
+    "k": "rollId",
+    "v": "Roll ID *"
+  },
+  {
+    "k": "artikelKodi",
+    "v": "Artikel kodi *"
+  },
+  {
+    "k": "obyekt",
+    "v": "Obyekt"
+  },
+  {
+    "k": "autoYaratilganBarkodlar",
+    "v": "Auto-yaratilgan barkodlar"
+  },
+  {
+    "k": "chopEtishgaKutmoqda",
+    "v": "Chop etishga kutmoqda"
+  },
+  {
+    "k": "chopEtilgan",
+    "v": "Chop etilgan"
+  },
+  {
+    "k": "kutmoqda1",
+    "v": "Kutmoqda"
+  },
+  {
+    "k": "barkod",
+    "v": "Barkod"
+  },
+  {
+    "k": "realVaqtMonitoring",
+    "v": "Real-vaqt monitoring"
+  },
+  {
+    "k": "bosingBatafsilKoring",
+    "v": "Bosing — batafsil ko'ring"
+  },
+  {
+    "k": "tolganlik",
+    "v": "To'lganlik"
+  },
+  {
+    "k": "isout",
+    "v": ": isOut ?"
+  },
+  {
+    "k": "kochirishlar",
+    "v": "Ko'chirishlar"
+  },
+  {
+    "k": "kalibratsiya",
+    "v": "Kalibratsiya"
+  },
+  {
+    "k": "aging",
+    "v": "Aging"
+  },
+  {
+    "k": "turnover",
+    "v": "Turnover"
+  },
+  {
+    "k": "sinxronizatsiyaMexanizmi",
+    "v": "Sinxronizatsiya mexanizmi"
+  },
+  {
+    "k": "bron",
+    "v": "Bron"
+  },
+  {
+    "k": "topshiriq",
+    "v": "Topshiriq"
+  },
+  {
+    "k": "rejectedScrapMainOmborigaOtkaziladi",
+    "v": "REJECTED — SCRAP-MAIN omboriga o'tkaziladi"
+  },
+  {
+    "k": "qcQarori",
+    "v": "QC Qarori"
+  },
+  {
+    "k": "otkazilgan",
+    "v": "O'tkazilgan"
+  },
+  {
+    "k": "uzsOzbekSomi1",
+    "v": "UZS — O'zbek so'mi"
+  },
+  {
+    "k": "eurYevro",
+    "v": "EUR — Yevro"
+  },
+  {
+    "k": "yukXati",
+    "v": "Yuk xati:"
+  },
+  {
+    "k": "karantinga",
+    "v": "Karantinga →"
+  },
+  {
+    "k": "fgOmborga",
+    "v": "FG Omborga →"
+  },
+  {
+    "k": "wipOmborga",
+    "v": "WIP Omborga →"
+  },
+  {
+    "k": "avto",
+    "v": "Avto"
+  },
+  {
+    "k": "marotaba",
+    "v": "Marotaba"
+  },
+  {
+    "k": "yozuvlar",
+    "v": "Yozuvlar"
+  },
+  {
+    "k": "bepul",
+    "v": "Bepul"
+  },
+  {
+    "k": "exportJson",
+    "v": "📥 Export JSON"
+  },
+  {
+    "k": "chiqindilar",
+    "v": "Chiqindilar"
+  },
+  {
+    "k": "chiqindiSababi",
+    "v": "Chiqindi sababi..."
+  },
+  {
+    "k": "tranzit",
+    "v": "Tranzit"
+  },
+  {
+    "k": "asbobUskuna",
+    "v": "Asbob-uskuna"
+  },
+  {
+    "k": "sofOzgarish",
+    "v": "Sof o'zgarish"
+  },
+  {
+    "k": "glPostingBosqichlari",
+    "v": "📊 GL Posting bosqichlari"
+  },
+  {
+    "k": "belgi",
+    "v": "Belgi"
+  },
+  {
+    "k": "port",
+    "v": "Port"
+  },
+  {
+    "k": "printerlarSozlanmagan",
+    "v": "Printerlar sozlanmagan"
+  },
+  {
+    "k": "post",
+    "v": "✅ Post"
+  },
+  {
+    "k": "resurs",
+    "v": "Resurs"
+  },
+  {
+    "k": "terminallar",
+    "v": "Terminallar"
+  },
+  {
+    "k": "printerlar",
+    "v": "Printerlar"
+  },
+  {
+    "k": "kameraniYoqish",
+    "v": "📷 Kamerani yoqish"
+  },
+  {
+    "k": "serverVersiyasi",
+    "v": "🌐 Server versiyasi"
+  },
+  {
+    "k": "lMaterialcodeLQty",
+    "v": "!l.materialCode || l.qty"
+  },
+  {
+    "k": "grnGoodsReceiptNotes",
+    "v": "GRN — Goods Receipt Notes"
+  },
+  {
+    "k": "yukXati1",
+    "v": "Yuk xati"
+  },
+  {
+    "k": "pdfAct",
+    "v": "📄 PDF Act"
+  },
+  {
+    "k": "farq1",
+    "v": "🔍 Farq"
+  },
+  {
+    "k": "masalanWh001",
+    "v": "Masalan: WH-001"
+  },
+  {
+    "k": "barkodlar",
+    "v": "Barkodlar"
+  },
+  {
+    "k": "barkodlarHaliYaratilmagan",
+    "v": "Barkodlar hali yaratilmagan"
+  },
+  {
+    "k": "aggregatBalans",
+    "v": "Aggregat balans"
+  },
+  {
+    "k": "stokOmborlarda",
+    "v": "Stok omborlarda"
+  },
+  {
+    "k": "alfaTexLlc",
+    "v": "Alfa-Tex LLC"
+  },
+  {
+    "k": "k360Profil",
+    "v": "🔭 360° Profil"
+  },
+  {
+    "k": "skan1",
+    "v": "📷 Skan"
+  },
+  {
+    "k": "filterniTozalash",
+    "v": "Filterni tozalash"
+  },
+  {
+    "k": "skanerlanyapti",
+    "v": "Skanerlanyapti..."
+  },
+  {
+    "k": "tafsilot1",
+    "v": "📋 Tafsilot"
+  },
+  {
+    "k": "glPosting",
+    "v": "📊 GL Posting"
+  },
+  {
+    "k": "saqlagandanSongQcTekshiruviBoshlanadi",
+    "v": "Saqlagandan so'ng QC tekshiruvi boshlanadi"
+  },
+  {
+    "k": "ogirlik",
+    "v": "Og'irlik:"
+  },
+  {
+    "k": "tasdiqlashgaOtish",
+    "v": "Tasdiqlashga o'tish →"
+  },
+  {
+    "k": "kimdan",
+    "v": "Kimdan"
+  },
+  {
+    "k": "sinf",
+    "v": "Sinf"
+  },
+  {
+    "k": "yigma",
+    "v": "Yig'ma %"
+  },
+  {
+    "k": "asoslama",
+    "v": "Asoslama"
+  },
+  {
+    "k": "tugaydi",
+    "v": "Tugaydi"
+  },
+  {
+    "k": "bin",
+    "v": "🗂 Bin"
+  },
+  {
+    "k": "toldirganlik",
+    "v": "To'ldirganlik"
+  }
+]

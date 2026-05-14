@@ -1,3 +1,8 @@
+/**
+ * @module parse-or-throw.util
+ * @description Source module. See exports for details.
+ */
+
 import { BadRequestException } from '@nestjs/common';
 import { z } from 'zod';
 

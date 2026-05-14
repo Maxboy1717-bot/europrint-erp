@@ -1,3 +1,8 @@
+/**
+ * @module queries-remaining-a
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import {
   current_stock, ideal_rasm_targets, wms_alerts,

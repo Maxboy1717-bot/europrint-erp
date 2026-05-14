@@ -1,3 +1,8 @@
+/**
+ * @module PosLogin
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
@@ -14,14 +19,14 @@ function GridParticles() {
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
       <div className="pos-grid-bg" />
-      {Array.from({ length: 20 }, (_, i) => (
+      {Array.from({ length: 12 }, (_, i) => (
         <div key={`particle-${i}`} style={{
           position: "absolute",
-          width: 2, height: 2, borderRadius: "50%",
-          background: i % 3 === 0 ? "#00D4FF" : i % 3 === 1 ? "#00FF94" : "#FFB800",
+          width: 3, height: 3, borderRadius: "50%",
+          background: i % 3 === 0 ? "#3B82F6" : i % 3 === 1 ? "#10B981" : "#F59E0B",
           left: `${(i * 13 + 5) % 100}%`,
           top: `${(i * 17 + 10) % 100}%`,
-          opacity: 0.4 + (i % 5) * 0.1,
+          opacity: 0.18 + (i % 5) * 0.04,
           animation: `pos-pulse ${2 + (i % 4)}s infinite`,
         }} />
       ))}
@@ -118,7 +123,7 @@ export default function PosLogin() {
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{
             width: 72, height: 72, borderRadius: 18, margin: "0 auto 16px",
-            background: "linear-gradient(135deg,#00D4FF20,#00D4FF05)",
+            background: "var(--ep-primary)",
             border: "1px solid rgba(0,212,255,0.3)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 32,
@@ -133,7 +138,7 @@ export default function PosLogin() {
         </div>
 
         {/* Decorative line */}
-        <div style={{ height: 1, background: "linear-gradient(90deg,transparent,#00D4FF40,transparent)", marginBottom: 28 }} />
+        <div style={{ height: 1, background: "var(--ep-primary)", marginBottom: 28 }} />
 
         <form onSubmit={(e) => void handleLogin(e)}>
           <div style={{ marginBottom: 16 }}>
@@ -146,7 +151,7 @@ export default function PosLogin() {
               value={username}
               onChange={e => setUsername(e.target.value)}
               autoComplete="username"
-              placeholder="admin"
+              placeholder={t('common.admin1')}
             />
           </div>
 
@@ -218,7 +223,7 @@ export default function PosLogin() {
         </form>
 
         <div style={{ textAlign: "center", marginTop: 24, fontSize: 11, color: "var(--pos-text-muted)", opacity: 0.6 }}>
-          POS Monitor v2.0 · EuroPrint ERP
+          {t("posMonitorV20Europrint")}
         </div>
       </div>
     </div>

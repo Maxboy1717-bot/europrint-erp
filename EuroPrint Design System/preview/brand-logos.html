@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700,initial-scale=1"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg1);color:var(--fg1);font-family:var(--font-sans);}
+  .wrap{padding:18px 22px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;}
+  .tile{border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:150px;background:var(--bg2);overflow:hidden;position:relative;}
+  .tile.dark{background:#1a1a2e;}
+  .tile.orange{background:linear-gradient(135deg,#FF902F 0%,#EE6A1B 100%);}
+  .tile.bg{background:var(--bg1);}
+  .lbl{font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--fg2);}
+  .tile.dark .lbl,.tile.orange .lbl{color:rgba(255,255,255,.7);}
+  .full{display:flex;align-items:center;gap:14px;}
+  .full img{height:74px;width:auto;}
+  .wm{font-weight:800;line-height:.95;letter-spacing:-.02em;font-size:30px;color:#15171A;}
+  .wm.on-dark{color:#fff;}
+  .wm.on-orange{color:#fff;}
+  .mark-only{display:flex;align-items:center;justify-content:center;}
+  .mark-only img{height:84px;width:auto;animation:ep-float 5s var(--ease-in-out) infinite;}
+  .mark-on-orange{filter:brightness(0) invert(1);}
+  .fav{width:64px;height:64px;border-radius:14px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-md);}
+  .fav img{width:100%;height:100%;object-fit:contain;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Full lockup on light -->
+  <div class="tile" style="grid-column: span 2;">
+    <img src="../assets/europrint-logo-full.png" alt="EuroPrint" style="height:90px;width:auto;"/>
+    <div class="lbl">Primary lockup · official</div>
+  </div>
+
+  <!-- Mark only -->
+  <div class="tile bg">
+    <div class="mark-only"><img src="../assets/europrint-mark.png" alt=""/></div>
+    <div class="lbl">Mark only · animated float</div>
+  </div>
+
+  <!-- On orange -->
+  <div class="tile orange">
+    <img src="../assets/europrint-mark.png" alt="" class="mark-on-orange" style="height:74px"/>
+    <div class="lbl">On primary</div>
+  </div>
+
+  <!-- On navy -->
+  <div class="tile dark">
+    <div class="full">
+      <img src="../assets/europrint-mark.png" alt="" style="height:60px"/>
+      <div class="wm on-dark" style="font-size:24px">EURO<br/>PRINT</div>
+    </div>
+    <div class="lbl">On navy hero</div>
+  </div>
+
+  <!-- App / PWA -->
+  <div class="tile bg">
+    <div class="fav"><img src="../assets/europrint-mark.png" alt=""/></div>
+    <div class="lbl">App / PWA mark</div>
+  </div>
+
+  <!-- Favicon -->
+  <div class="tile">
+    <div style="width:42px;height:42px;border-radius:9px;overflow:hidden;background:#fff;border:1px solid var(--line);padding:5px;"><img src="../assets/europrint-mark.png" style="width:100%;height:100%;object-fit:contain"/></div>
+    <div class="lbl">Favicon 32–48 px</div>
+  </div>
+</div>
+</body>
+</html>

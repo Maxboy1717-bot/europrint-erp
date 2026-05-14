@@ -1,14 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
+/**
+ * @module VendorPerformance
+ * @description React page component. Route-level UI.
+ */
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { RefreshCw, PlusCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Truck, Star, TrendingUp, DollarSign, BarChart3, Award } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-import { PageHeader } from "@/components/ui/page-header";
-
+import { EPPageHeader, EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface VendorMetric {
   id: string;
   periodYear: number;
@@ -29,6 +39,30 @@ interface SpendAnalysisItem {
 }
 
 export default function VendorPerformance() {
+  const { t } = useTranslation('common');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
+  const [ratingForm, setRatingForm] = useState({ vendorId: "", score: "", comment: "" });
+
+  const addRatingMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("POST", "/api/mm/vendor-performance", {
+        vendorId: ratingForm.vendorId,
+        score: Number(ratingForm.score),
+        comment: ratingForm.comment,
+      }),
+    onSuccess: () => {
+      toast({ title: "Muvaffaqiyatli", description: "Baho muvaffaqiyatli qo'shildi." });
+      queryClient.invalidateQueries({ queryKey: ["/api/integration/vendor-performance"] });
+      setRatingDialogOpen(false);
+      setRatingForm({ vendorId: "", score: "", comment: "" });
+    },
+    onError: () => {
+      toast({ title: "Xatolik", description: "Baho qo'shishda xatolik yuz berdi.", variant: "destructive" });
+    },
+  });
+
   const { data: metrics, isLoading, isError, refetch} = useQuery<VendorMetric[]>({
     queryKey: ["/api/integration/vendor-performance"],
   });
@@ -38,10 +72,10 @@ export default function VendorPerformance() {
   });
 
   const ratingBadge = (rating: number) => {
-    if (rating >= 90) return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><Award className="w-3 h-3 mr-1" />A'lo</Badge>;
-    if (rating >= 75) return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"><Star className="w-3 h-3 mr-1" />Yaxshi</Badge>;
-    if (rating >= 60) return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">O'rtacha</Badge>;
-    return <Badge variant="destructive">Yomon</Badge>;
+    if (rating >= 90) return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><Award className="w-3 h-3 mr-1" />{t("alo")}</Badge>;
+    if (rating >= 75) return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"><Star className="w-3 h-3 mr-1" />{t("Yaxshi")}</Badge>;
+    if (rating >= 60) return <EPStatusPill tone="warning">{t("average")}</EPStatusPill>;
+    return <EPStatusPill tone="danger">{t("yomon")}</EPStatusPill>;
   };
 
   const totalVendors = (spendAnalysis || []).length;
@@ -51,121 +85,178 @@ export default function VendorPerformance() {
   const totalSpend = (spendAnalysis || []).reduce((sum, s) => sum + (parseFloat(String(s.totalSpend)) || 0), 0);
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="space-y-6" data-testid="page-vendor-performance">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-vendor-performance">
       <div className="flex items-center justify-between">
-        <PageHeader
-          label="Europrint ERP · MM"
-          title="Taminotchi"
-          boldWord="Samaradorligi"
-          subtitle="Yetkazib berish, sifat, narx raqobatbardoshligi bo'yicha baholash"
-          data-testid="text-vendor-performance-title"
-        />
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
-        </Button>
+        <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("taminotchiSamaradorligi")}</b></>}
+        title={t("taminotchiSamaradorligi")}
+        subtitle={t("yetkazibBerishSifatNarxRaqobatbardoshligi")}
+        data-testid="text-vendor-performance-title"
+      />
+        <div className="flex items-center gap-2">
+          <Dialog open={ratingDialogOpen} onOpenChange={setRatingDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" data-testid="button-add-rating">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                {t("bahoQoshish")}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md p-6">
+              <DialogHeader>
+                <DialogTitle className="text-[18px] font-semibold">{t("taminotchiBahosi")}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-1">
+                  <Label htmlFor="vp-vendorId">{t("taminotchiId")}</Label>
+                  <Input
+                    id="vp-vendorId"
+                    placeholder={t('vendorId')}
+                    value={ratingForm.vendorId}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, vendorId: e.target.value }))}
+                    data-testid="input-vendor-id"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="vp-score">Ball (0–100)</Label>
+                  <Input
+                    id="vp-score"
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="85"
+                    value={ratingForm.score}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, score: e.target.value }))}
+                    data-testid="input-score"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="vp-comment">{t("Izoh")}</Label>
+                  <Input
+                    id="vp-comment"
+                    placeholder={t("izoh1")}
+                    value={ratingForm.comment}
+                    onChange={(e) => setRatingForm((f) => ({ ...f, comment: e.target.value }))}
+                    data-testid="input-comment"
+                  />
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => addRatingMutation.mutate()}
+                  disabled={addRatingMutation.isPending || !ratingForm.vendorId || !ratingForm.score}
+                  data-testid="button-submit-rating"
+                >
+                  {addRatingMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t("refresh")}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">Taminotchilar</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface">{totalVendors}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("taminotchilar")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground">{totalVendors}</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">O'rtacha reyting</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface">{avgRating.toFixed(1)}%</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("ortachaReyting")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground">{avgRating.toFixed(1)}%</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">Jami xarid</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface">{(totalSpend / 1000000).toFixed(1)}M</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("jamiXarid")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground">{(totalSpend / 1000000).toFixed(1)}M</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">Baholangan</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface">{(metrics || []).length}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("baholangan")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground">{(metrics || []).length}</p>
         </div>
       </div>
 
-      <Card className="bg-surface-container-lowest border-none rounded-xl" data-testid="card-spend-analysis">
+      <Card className="bg-card border-none rounded-xl" data-testid="card-spend-analysis">
         <CardHeader>
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <BarChart3 className="w-4 h-4 inline mr-2 text-primary" />
-            Xarajat Tahlili
+            {t("xarajatTahlili1")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {(spendAnalysis || []).length === 0 ? (
-            <div className="text-center py-12 text-on-surface-variant">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               <Truck className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Hali taminotchi baholash mavjud emas</p>
+              <p>{t("haliTaminotchiBaholashMavjudEmas")}</p>
             </div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
-                <TableRow className="bg-surface-container hover:bg-surface-container border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Taminotchi</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Jami xarid</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Buyurtmalar</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">O'rtacha reyting</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Daraja</TableHead>
+                <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("taminotchi1")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("jamiXarid")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("buyurtmalar")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ortachaReyting")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("daraja")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(spendAnalysis || []).map((s, idx) => (
-                  <TableRow key={idx} data-testid={`row-vendor-spend-${idx}`} className="hover:bg-surface-container-low transition-colors border-none">
-                    <TableCell className="py-3 px-6 font-medium text-on-surface">{s.vendorName || "Nomsiz"}</TableCell>
-                    <TableCell className="py-3 px-6 font-mono text-on-surface">{Number(s.totalSpend).toLocaleString()} UZS</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{s.totalOrders}</TableCell>
+                  <TableRow key={idx} data-testid={`row-vendor-spend-${idx}`} className="hover:bg-muted/40 transition-colors border-none">
+                    <TableCell className="py-3 px-6 font-medium text-foreground">{s.vendorName || "Nomsiz"}</TableCell>
+                    <TableCell className="py-3 px-6 font-mono text-foreground">{Number(s.totalSpend).toLocaleString()} UZS</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{s.totalOrders}</TableCell>
                     <TableCell className="py-3 px-6">
                       <div className="flex items-center gap-2">
-                        <Progress value={parseFloat(String(s.avgRating)) || 0} className="w-20 h-1.5 bg-surface-container" />
-                        <span className="text-xs font-mono text-on-surface">{parseFloat(String(s.avgRating)).toFixed(1)}%</span>
+                        <Progress value={parseFloat(String(s.avgRating)) || 0} className="w-20 h-1.5 bg-muted/60" />
+                        <span className="text-xs font-mono text-foreground">{parseFloat(String(s.avgRating)).toFixed(1)}%</span>
                       </div>
                     </TableCell>
                     <TableCell className="py-3 px-6">{ratingBadge(parseFloat(String(s.avgRating)))}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>
 
       {(metrics || []).length > 0 && (
-        <Card className="bg-surface-container-lowest border-none rounded-xl" data-testid="card-detailed-metrics">
+        <Card className="bg-card border-none rounded-xl" data-testid="card-detailed-metrics">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Batafsil Metrikalar</CardTitle>
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("batafsilMetrikalar")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
-                <TableRow className="bg-surface-container hover:bg-surface-container border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Taminotchi</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Davr</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Buyurtmalar</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">O'z vaqtida</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Kechikkan</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Sifat</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Umumiy</TableHead>
+                <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("taminotchi1")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("period")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("buyurtmalar")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ozVaqtida")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("kechikkan")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Sifat")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("umumiy")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(metrics || []).map((m) => (
-                  <TableRow key={m.id} data-testid={`row-metric-${m.id}`} className="hover:bg-surface-container-low transition-colors border-none">
-                    <TableCell className="py-3 px-6 text-on-surface">{m.vendor?.name || "-"}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{m.periodYear}/{m.periodMonth}</TableCell>
-                    <TableCell className="py-3 px-6 text-on-surface">{m.totalOrders}</TableCell>
-                    <TableCell className="py-3 px-6 text-green-600 font-medium">{m.onTimeDeliveries}</TableCell>
-                    <TableCell className="py-3 px-6 text-error font-medium">{m.lateDeliveries}</TableCell>
-                    <TableCell className="py-3 px-6"><Progress value={m.qualityScore} className="w-16 h-1.5 bg-surface-container" /></TableCell>
+                  <TableRow key={m.id} data-testid={`row-metric-${m.id}`} className="hover:bg-muted/40 transition-colors border-none">
+                    <TableCell className="py-3 px-6 text-foreground">{m.vendor?.name || "-"}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{m.periodYear}/{m.periodMonth}</TableCell>
+                    <TableCell className="py-3 px-6 text-foreground">{m.totalOrders}</TableCell>
+                    <TableCell className="py-3 px-6 text-[var(--ep-green)] font-medium">{m.onTimeDeliveries}</TableCell>
+                    <TableCell className="py-3 px-6 text-[var(--ep-red)] font-medium">{m.lateDeliveries}</TableCell>
+                    <TableCell className="py-3 px-6"><Progress value={m.qualityScore} className="w-16 h-1.5 bg-muted/60" /></TableCell>
                     <TableCell className="py-3 px-6">{ratingBadge(m.overallRating)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       )}

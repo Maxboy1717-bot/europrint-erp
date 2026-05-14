@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-order.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
 import { eq, sql, and } from 'drizzle-orm';
@@ -87,7 +92,7 @@ export class DrizzleOrderRepo implements IOrderRepo {
         .where(where);
 
       return {
-        items: (rows ?? []).map((r) => this.toAggregate(r)),
+        items: (Array.isArray(rows) ? rows : []).map((r) => this.toAggregate(r)),
         total: Number(countRow?.cnt ?? 0),
       };
     }, 'DB_ERROR');

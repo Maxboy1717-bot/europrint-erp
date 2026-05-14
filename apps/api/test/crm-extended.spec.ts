@@ -1,3 +1,8 @@
+/**
+ * @module crm-extended.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrmContactsController } from '../src/modules/crm/presentation/crm-contacts.controller';
 import { CrmLeadsOpsController } from '../src/modules/crm/presentation/crm-leads-ops.controller';

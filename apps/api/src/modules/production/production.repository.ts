@@ -1,11 +1,16 @@
+/**
+ * @module production.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 
 import { SECONDS_PER_HOUR } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
 @Injectable()
 export class ProductionRepository {
@@ -81,7 +86,7 @@ export class ProductionRepository {
 
   async getOrder360Card(id: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT po.*, wc.name AS work_center_name, u.full_name AS operator_name, bh.bom_number AS bom_code, rt.routing_number AS routing_name FROM production_orders po LEFT JOIN work_centers wc ON wc.id = po.work_center_id LEFT JOIN users u ON u.id = po.operator_id LEFT JOIN bom_headers bh ON bh.id = po.bom_header_id LEFT JOIN routings rt ON rt.id = po.routing_id WHERE po.id = ${id}`);
+      const r = await exec(sql`SELECT po.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name, bh.bom_number AS bom_code, rt.routing_number AS routing_name FROM production_orders po LEFT JOIN work_centers wc ON wc.id = po.work_center_id LEFT JOIN users u ON u.id = po.operator_id LEFT JOIN bom_headers bh ON bh.id = po.bom_header_id LEFT JOIN routings rt ON rt.id = po.routing_id WHERE po.id = ${id}`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

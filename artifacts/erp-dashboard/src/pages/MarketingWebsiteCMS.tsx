@@ -1,6 +1,11 @@
+/**
+ * @module MarketingWebsiteCMS
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,21 +18,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Globe, Pencil, Trash2, Eye, Sparkles, Send, Newspaper } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
-import { ErrorState } from "@/components/ui/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-
-interface NewsItem {
-  id: number | string;
-  title: string;
-  title_ru?: string;
-  summary?: string;
-  image_url?: string;
-  published_at?: string;
-  is_published?: boolean;
-  created_at?: string;
-}
+import type { NewsItem } from "./MarketingWebsiteCMSTypes";
+import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function MarketingWebsiteCMS() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -41,13 +38,15 @@ export default function MarketingWebsiteCMS() {
   const [aiLang, setAiLang] = useState("uz");
   const [mainTab, setMainTab] = useState("blog");
 
-  const { data: posts, isLoading, isError, refetch} = useQuery<BlogPost[]>({
+  const { data: posts = [], isLoading, isError, refetch} = useQuery<BlogPost[]>({
     queryKey: ["/api/marketing/website/blog"],
+    select: selectArray<BlogPost>,
   });
 
-  const { data: news, isLoading: newsLoading } = useQuery<NewsItem[]>({
+  const { data: news = [], isLoading: newsLoading } = useQuery<NewsItem[]>({
     queryKey: ["/api/website/news"],
     enabled: mainTab === "news",
+    select: selectArray<NewsItem>,
   });
 
   const createMutation = useMutation({
@@ -78,7 +77,7 @@ export default function MarketingWebsiteCMS() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("PATCH", `/api/marketing/website/blog/${id}/publish`),
+    mutationFn: (id: string) => apiRequest("POST", `/api/marketing/website/blog/${id}/publish`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/website/blog"] });
       toast({ title: "Post nashr qilindi" });
@@ -132,47 +131,47 @@ export default function MarketingWebsiteCMS() {
   const published = posts?.filter(p => p.isPublished) || [];
   const drafts = posts?.filter(p => !p.isPublished) || [];
 
-  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24" />)}</div>;
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
+  if (isError) return <EPErrorState onRetry={refetch} />;
 
   return (
-    <div className="p-4 space-y-4" data-testid="marketing-website-cms">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-4" data-testid="marketing-website-cms">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Globe className="h-6 w-6 text-emerald-500" />Web sayt CMS
+          <Globe className="h-6 w-6 text-[var(--ep-green)]" />{t("webSaytCms")}
         </h1>
         {mainTab === "blog" && (
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button data-testid="button-create-blog"><Plus className="h-4 w-4 mr-1" />Yangi Maqola</Button>
+              <Button data-testid="button-create-blog"><Plus className="h-4 w-4 mr-1" />{t("yangiMaqola")}</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>{editId ? "Maqolani tahrirlash" : "Yangi Blog Maqola"}</DialogTitle></DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+              <DialogHeader><DialogTitle className="text-[18px] font-semibold">{editId ? "Maqolani tahrirlash" : "Yangi Blog Maqola"}</DialogTitle></DialogHeader>
               <Tabs defaultValue="content">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="content">Kontent</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
+                  <TabsTrigger value="content">{t("kontent")}</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
-                  <TabsTrigger value="ai">AI Yordamchi</TabsTrigger>
+                  <TabsTrigger value="ai">{t("aiYordamchi")}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="content" className="space-y-3 mt-3">
                   <div><Label>Sarlavha (UZ) *</Label><Input data-testid="input-blog-title-uz" value={form.titleUz} onChange={(e) => setForm({ ...form, titleUz: e.target.value })} /></div>
                   <div><Label>Sarlavha (RU)</Label><Input value={form.titleRu} onChange={(e) => setForm({ ...form, titleRu: e.target.value })} /></div>
-                  <div><Label>Slug</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="avtomatik-yaratiladi" /></div>
+                  <div><Label>{t("slug")}</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="avtomatik-yaratiladi" /></div>
                   <div><Label>Matn (UZ)</Label><Textarea data-testid="input-blog-body-uz" value={form.bodyUz} onChange={(e) => setForm({ ...form, bodyUz: e.target.value })} className="min-h-[200px]" /></div>
                   <div><Label>Matn (RU)</Label><Textarea value={form.bodyRu} onChange={(e) => setForm({ ...form, bodyRu: e.target.value })} className="min-h-[120px]" /></div>
-                  <div><Label>Qisqa tavsif</Label><Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} /></div>
-                  <div><Label>Cover rasm URL</Label><Input value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} /></div>
-                  <div><Label>Teglar (vergul bilan)</Label><Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="qadoqlash, quti, gofra" /></div>
+                  <div><Label>{t("qisqaTavsif")}</Label><Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} /></div>
+                  <div><Label>{t("coverRasmUrl")}</Label><Input value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} /></div>
+                  <div><Label>Teglar (vergul bilan)</Label><Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder={t("qadoqlashQutiGofra")} /></div>
                 </TabsContent>
                 <TabsContent value="seo" className="space-y-3 mt-3">
-                  <div><Label>SEO Sarlavha</Label><Input value={form.seoTitle} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} /></div>
-                  <div><Label>SEO Tavsif</Label><Textarea value={form.seoDescription} onChange={(e) => setForm({ ...form, seoDescription: e.target.value })} /></div>
+                  <div><Label>{t("seoSarlavha")}</Label><Input value={form.seoTitle} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} /></div>
+                  <div><Label>{t("seoTavsif")}</Label><Textarea value={form.seoDescription} onChange={(e) => setForm({ ...form, seoDescription: e.target.value })} /></div>
                 </TabsContent>
                 <TabsContent value="ai" className="space-y-3 mt-3">
-                  <div><Label>Mavzu</Label><Input value={aiTopic} onChange={(e) => setAiTopic(e.target.value)} placeholder="Gofra qutilari sifati haqida..." /></div>
+                  <div><Label>{t("mavzu")}</Label><Input value={aiTopic} onChange={(e) => setAiTopic(e.target.value)} placeholder={t("gofraQutilariSifatiHaqida")} /></div>
                   <div className="flex gap-2">
-                    <Button variant={aiLang === "uz" ? "default" : "outline"} onClick={() => setAiLang("uz")}>O'zbekcha</Button>
-                    <Button variant={aiLang === "ru" ? "default" : "outline"} onClick={() => setAiLang("ru")}>Ruscha</Button>
+                    <Button variant={aiLang === "uz" ? "default" : "outline"} onClick={() => setAiLang("uz")}>{t("language.uz")}</Button>
+                    <Button variant={aiLang === "ru" ? "default" : "outline"} onClick={() => setAiLang("ru")}>{t("ruscha")}</Button>
                   </div>
                   <Button onClick={() => aiMutation.mutate({ topic: aiTopic, language: aiLang })} disabled={!aiTopic || aiMutation.isPending} data-testid="button-ai-generate-blog">
                     <Sparkles className="h-4 w-4 mr-1" />{aiMutation.isPending ? "Yaratilmoqda..." : "AI bilan yaratish"}
@@ -189,27 +188,27 @@ export default function MarketingWebsiteCMS() {
 
       <Tabs value={mainTab} onValueChange={setMainTab}>
         <TabsList>
-          <TabsTrigger value="blog">Blog Maqolalar</TabsTrigger>
-          <TabsTrigger value="news"><Newspaper className="h-4 w-4 mr-1" />Yangiliklar</TabsTrigger>
+          <TabsTrigger value="blog">{t("blogMaqolalar")}</TabsTrigger>
+          <TabsTrigger value="news"><Newspaper className="h-4 w-4 mr-1" />{t("yangiliklar")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="blog" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold" data-testid="text-published-count">{published.length}</p>
-                <p className="text-sm text-muted-foreground">Nashr qilingan</p>
+                <p className="text-sm text-muted-foreground">{t("nashrQilingan")}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold" data-testid="text-draft-count">{drafts.length}</p>
-                <p className="text-sm text-muted-foreground">Qoralama</p>
+                <p className="text-sm text-muted-foreground">{t("draft")}</p>
               </CardContent>
             </Card>
           </div>
           {posts?.length === 0 ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">Hozircha blog postlar yo'q</CardContent></Card>
+            <Card><CardContent className="p-8 text-center text-muted-foreground">{t("hozirchaBlogPostlarYoq")}</CardContent></Card>
           ) : (
             <div className="space-y-3">
               {posts?.map((p) => (
@@ -248,9 +247,9 @@ export default function MarketingWebsiteCMS() {
 
         <TabsContent value="news" className="mt-4">
           {newsLoading ? (
-            <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-20" />)}</div>
+            <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-20 rounded-lg" />)}</div>
           ) : !news || news.length === 0 ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">Hozircha yangiliklar yo'q</CardContent></Card>
+            <Card><CardContent className="p-8 text-center text-muted-foreground">{t("hozirchaYangiliklarYoq")}</CardContent></Card>
           ) : (
             <div className="space-y-3">
               {(Array.isArray(news) ? news : []).map((item) => (
@@ -285,8 +284,8 @@ export default function MarketingWebsiteCMS() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Maqolani o'chirish"
-        description="Ushbu blog maqolasini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("maqolaniOchirish")}
+        description={t("ushbuBlogMaqolasiniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

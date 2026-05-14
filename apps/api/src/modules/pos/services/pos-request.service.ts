@@ -1,3 +1,8 @@
+/**
+ * @module pos-request.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 /**
@@ -111,7 +116,7 @@ export class PosRequestService {
         .returning();
   
       // Satrlari
-      const lineValues = (dto?.lines ?? []).map(line => ({
+      const lineValues = (Array.isArray(dto?.lines) ? dto?.lines : []).map(line => ({
         requestId:      request.id,
         materialCardId: line.materialCardId,
         requestedQty: Number(line.requestedQty),

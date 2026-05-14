@@ -1,3 +1,8 @@
+/**
+ * @module finance.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -89,6 +94,7 @@ import { ReportsHubService } from './reports-hub/reports-hub.service';
 import { SALES_ORDERS_FI_REPO } from './sales-orders-fi/i-sales-orders-fi.repo';
 import { DrizzleSalesOrdersFiRepository } from './sales-orders-fi/drizzle-sales-orders-fi.repo';
 import { SalesOrdersFiService } from './sales-orders-fi/sales-orders-fi.service';
+import { FinancialReportsModule } from './financial-reports/financial-reports.module';
 // Sprint 1 — new services and controllers
 import { StandardCostService } from './domain/services/standard-cost.service';
 import { VarianceAnalysisService } from './domain/services/variance-analysis.service';
@@ -120,7 +126,7 @@ const eventListeners = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot()],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), FinancialReportsModule],
   controllers: [
     FinanceInvoicesController, FinancePaymentsController, FinanceGlController,
     FinanceAdvanceController, FinanceBudgetsController, FinanceAccountingController,

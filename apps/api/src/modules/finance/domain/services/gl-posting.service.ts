@@ -1,3 +1,8 @@
+/**
+ * @module gl-posting.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { GL } from "../constants/gl-accounts.constants";
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok, Err } from '@common/result';

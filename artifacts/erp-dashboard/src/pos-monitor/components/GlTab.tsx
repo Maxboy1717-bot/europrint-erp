@@ -1,5 +1,11 @@
+/**
+ * @module GlTab
+ * @description React UI component.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { glApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface GlLog {
   id: number;
@@ -29,6 +35,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export function GlTab({ movementId }: { movementId: number }) {
+  const { t } = useTranslation("common");
   const [logs, setLogs]           = useState<GlLog[]>([]);
   const [loading, setLoading]     = useState(true);
   const [approving, setApproving] = useState(false);
@@ -53,15 +60,15 @@ export function GlTab({ movementId }: { movementId: number }) {
     catch { /* noop */ } finally { setApproving(false); }
   }
 
-  if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>;
+  if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda1")}</div>;
 
   return (
     <div>
       <div className="pos-card" style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, fontSize: 15 }}>📊 GL Posting bosqichlari</div>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>{t("glPostingBosqichlari")}</div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={() => void load()}>🔄 Yangilash</button>
+            <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={() => void load()}>{t("yangilash")}</button>
             {pendingLog && (
               <button className="pos-btn pos-btn-success" style={{ fontSize: 12 }} disabled={approving} onClick={() => void approve()}>
                 {approving ? "…" : "✅ GL Tasdiqlash"}
@@ -71,7 +78,7 @@ export function GlTab({ movementId }: { movementId: number }) {
         </div>
         {logs.length === 0 ? (
           <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)", fontSize: 13 }}>
-            Bu harakat uchun GL posting yozuvlari mavjud emas
+            {t("buHarakatUchunGlPosting")}
           </div>
         ) : (
           <div className="pos-timeline">
@@ -109,10 +116,10 @@ export function GlTab({ movementId }: { movementId: number }) {
             <table className="pos-table">
               <thead>
                 <tr>
-                  <th>Hisob kodi</th>
-                  <th>Hisob nomi</th>
-                  <th style={{ textAlign: "right" }}>Debet</th>
-                  <th style={{ textAlign: "right" }}>Kredit</th>
+                  <th>{t("hisobKodi")}</th>
+                  <th>{t("hisobNomi")}</th>
+                  <th style={{ textAlign: "right" }}>{t("debet")}</th>
+                  <th style={{ textAlign: "right" }}>{t("loan")}</th>
                 </tr>
               </thead>
               <tbody>

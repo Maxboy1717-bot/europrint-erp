@@ -1,3 +1,8 @@
+/**
+ * @module StatCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent } from "@/components/ui/card";
 
 interface StatCardProps {

@@ -1,18 +1,25 @@
+/**
+ * @module RecentMovementsPanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { RecentMovement } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MovementsProps {
   movements: RecentMovement[];
 }
 
 export function RecentMovementsPanel({ movements }: MovementsProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <BookOpen className="h-4 w-4" />
-          Oxirgi harakatlar
+          {t("oxirgiHarakatlar")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -34,7 +41,7 @@ export function RecentMovementsPanel({ movements }: MovementsProps) {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Harakatlar yo'q
+            {t("harakatlarYoq")}
           </p>
         )}
       </CardContent>

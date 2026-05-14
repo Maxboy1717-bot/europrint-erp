@@ -1,3 +1,40 @@
+/**
+ * @module standard-cost.service
+ * @description Maintains and queries the "standard cost" reference table —
+ *   the expected per-unit cost of a product before any real production
+ *   happens. Standard costs are the baseline against which actual costs are
+ *   measured (see `variance-analysis.service.ts`).
+ *
+ *   A standard cost has three components:
+ *     stdMaterial — Σ over BOM components (stdQty × stdPrice)
+ *     stdLabor    — Σ over routing steps (stdHours × stdLaborRate)
+ *     stdOverhead — Σ over routing steps (stdHours × overheadRate)
+ *
+ *   Standards are stored per `(productName, period)` so they can be
+ *   refreshed as raw material prices and wages change quarterly. The most
+ *   recent standard for a period is used; older revisions remain queryable
+ *   for retrospective variance reports.
+ * @layer Domain Service (Finance / cost accounting)
+ *
+ * WHY STANDARDS LIVE IN A DEDICATED TABLE (not computed on-demand)
+ *   Two reasons:
+ *     1. Stability — once a standard is set for Q1, it stays fixed even if
+ *        raw prices move mid-quarter. This is the entire point of standard
+ *        costing: a static reference that makes variances meaningful.
+ *     2. Audit trail — auditors want to see exactly which numbers were used
+ *        to value WIP and finished goods inventory at period close.
+ *
+ * WHY MATERIAL / LABOR / OVERHEAD ARE STORED SEPARATELY
+ *   Variance analysis decomposes spend into the same three buckets. Storing
+ *   them aggregated would lose the resolution. Total = sum, so it's free to
+ *   recompute on read.
+ *
+ * WHY refreshes ARE QUARTERLY, NOT REAL-TIME
+ *   IFRS / UZ tax convention: standard costs are reviewed at planning cycles
+ *   (typically quarterly), not on every price tick. Continuous refresh would
+ *   defeat the purpose of "standard" — it becomes actual cost again.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';

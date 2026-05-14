@@ -1,3 +1,8 @@
+/**
+ * @module schema-rbac
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, serial, integer, varchar, text, jsonb, timestamp, boolean, uniqueIndex,
 } from 'drizzle-orm/pg-core';

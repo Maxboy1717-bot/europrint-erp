@@ -1,3 +1,8 @@
+/**
+ * @module money.vo
+ * @description Value object. Immutable domain primitive with validation in its factory.
+ */
+
 import { InternalServerErrorException } from '@nestjs/common';
 export class Money {
   constructor(

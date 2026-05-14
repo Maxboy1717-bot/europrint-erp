@@ -1,3 +1,8 @@
+/**
+ * @module pos-notifications.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { PosNotificationsRepository } from '../repositories/pos-notifications.repository';
@@ -57,6 +62,33 @@ export class PosNotificationsService {
       if (!r.ok) throw new Error(r.error.message);
       this.logger.log(`[NOTIF] Sent ${type} to user ${userId}`);
       return r.data;
+    });
+  }
+
+  /**
+   * Broadcast a notification to all users with the given role.
+   * Used by background jobs (low-stock, inactive-materials) where there's no
+   * specific recipient. Best-effort: persistence failures are logged but not thrown.
+   */
+  async createNotification(input: {
+    type:       string;
+    title:      string;
+    body:       string;
+    targetRole: string;
+  }): Promise<Result<void, AppError>> {
+    return safeCall(async () => {
+      this.logger.log(`[NOTIF] Broadcast ${input.type} to role=${input.targetRole}: ${input.title}`);
+      // Persist a single role-level record (userId=0 used as broadcast marker)
+      const r = await this.repo.insert({
+        userId:           0,
+        notificationType: input.type,
+        title:            input.title,
+        body:             input.body,
+        entityType:       'role',
+        entityId:         undefined,
+        metadata:         { targetRole: input.targetRole },
+      });
+      if (!r.ok) this.logger.warn(`Broadcast notification insert failed: ${r.error.message}`);
     });
   }
 

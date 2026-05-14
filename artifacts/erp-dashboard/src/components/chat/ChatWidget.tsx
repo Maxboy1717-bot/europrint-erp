@@ -1,3 +1,8 @@
+/**
+ * @module ChatWidget
+ * @description React UI component.
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageCircle, X, Send, Search, ChevronLeft, Paperclip, Users, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +13,8 @@ import { getAuthHeaders } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStore, ChatRoom, ChatMessage } from "@/store/chatStore";
 import { useChatSocket, getSharedSocket } from "@/hooks/chat/useChatSocket";
+import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 interface Employee {
   id: number;
@@ -69,6 +76,7 @@ function formatDate(iso: string) {
 }
 
 export function ChatWidget() {
+  const { t } = useTranslation("common");
   const { user, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null);
@@ -160,12 +168,16 @@ export function ChatWidget() {
 
   const loadEmployees = useCallback(async (q?: string) => {
     try {
-      const res = await fetch(`/api/chat/employees${q ? `?search=${encodeURIComponent(q)}` : ""}`, {
-        credentials: "include",
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('GET', `/api/chat/employees${q ? `?search=${encodeURIComponent(q)}` : ''}`);
       if (res.ok) setEmployees(await res.json());
-    } catch {}
+    } catch (e) {
+      // WHY: failure here is non-critical — the employee list just stays
+      // empty. We surface a console warning in dev but never block the UI.
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn('ChatWidget loadEmployees failed:', e);
+      }
+    }
   }, []);
 
   const openNewChat = useCallback(() => {
@@ -203,19 +215,19 @@ export function ChatWidget() {
   return (
     <div className="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-2">
       {isOpen && (
-        <div className="w-[360px] h-[560px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="w-full sm:w-[360px] h-[560px] bg-background border border-border rounded-lg shadow-lg flex flex-col overflow-hidden">
           {view === "rooms" && (
             <>
               <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
-                  <span className="font-semibold text-sm">Ichki Chat</span>
+                  <span className="font-semibold text-sm">{t("ichkiChat")}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={openNewChat}
                     className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
-                    title="Yangi chat"
+                    title={t("yangiChat1")}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -234,7 +246,7 @@ export function ChatWidget() {
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Chatlarni qidirish..."
+                    placeholder={t("chatlarniQidirish")}
                     className="pl-7 h-8 text-sm"
                   />
                 </div>
@@ -244,9 +256,9 @@ export function ChatWidget() {
                 {sortedRooms.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-2">
                     <MessageCircle className="w-8 h-8 opacity-30" />
-                    <p>Chatlar yo'q</p>
+                    <p>{t("chatlarYoq")}</p>
                     <button onClick={openNewChat} className="text-primary text-xs underline">
-                      Yangi chat boshlash
+                      {t("yangiChatBoshlash")}
                     </button>
                   </div>
                 )}
@@ -280,7 +292,7 @@ export function ChatWidget() {
                             : "Xabar yo'q"}
                         </span>
                         {room.unreadCount > 0 && (
-                          <Badge className="ml-1 bg-[#ff5d2e] hover:bg-[#ff5d2e] text-white text-[10px] h-4 min-w-4 px-1 flex-shrink-0">
+                          <Badge className="ml-1 bg-primary text-primary-foreground text-[10px] h-4 min-w-4 px-1 flex-shrink-0">
                             {room.unreadCount > 99 ? "99+" : room.unreadCount}
                           </Badge>
                         )}
@@ -298,7 +310,7 @@ export function ChatWidget() {
                 <button onClick={() => setView("rooms")} className="p-1 rounded-lg hover:bg-white/20">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-semibold text-sm">Yangi Chat</span>
+                <span className="font-semibold text-sm">{t("yangiChat")}</span>
               </div>
               <div className="px-3 py-2 border-b border-border">
                 <div className="relative">
@@ -306,7 +318,7 @@ export function ChatWidget() {
                   <Input
                     value={empSearch}
                     onChange={(e) => { setEmpSearch(e.target.value); loadEmployees(e.target.value); }}
-                    placeholder="Xodimni qidirish..."
+                    placeholder={t("xodimniQidirish")}
                     className="pl-7 h-8 text-sm"
                     autoFocus
                   />
@@ -329,7 +341,7 @@ export function ChatWidget() {
                   ))}
                 {(Array.isArray(employees) ? employees : []).filter((e) => e.id !== user?.id).length === 0 && (
                   <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-                    Xodim topilmadi
+                    {t("xodimTopilmadi")}
                   </div>
                 )}
               </div>
@@ -360,7 +372,7 @@ export function ChatWidget() {
                 {messages.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-2">
                     <MessageCircle className="w-8 h-8 opacity-30" />
-                    <p>Xabarlar yo'q. Birinchi xabarni yuboring!</p>
+                    <p>{t("xabarlarYoqBirinchiXabarniYuboring")}</p>
                   </div>
                 )}
                 {(Array.isArray(groupedMessages) ? groupedMessages : []).map(({ date, msgs }) => (
@@ -378,8 +390,8 @@ export function ChatWidget() {
                         return (
                           <div key={msg.id} className={cn("flex gap-2 mb-1", isMe ? "flex-row-reverse" : "flex-row")}>
                             <div className={cn("w-7 flex-shrink-0", isMe && "hidden")} />
-                            <span className="text-xs italic text-muted-foreground/60 px-3 py-1.5 bg-muted/30 rounded-2xl">
-                              Xabar o'chirildi
+                            <span className="text-xs italic text-muted-foreground/60 px-3 py-1.5 bg-muted/30 rounded-lg">
+                              {t("xabarOchirildi")}
                             </span>
                           </div>
                         );
@@ -395,7 +407,7 @@ export function ChatWidget() {
                               <span className="text-[11px] text-muted-foreground ml-1 mb-0.5">{msg.senderName}</span>
                             )}
                             <div className={cn(
-                              "px-3 py-1.5 rounded-2xl text-sm",
+                              "px-3 py-1.5 rounded-lg text-sm",
                               isMe
                                 ? "bg-primary text-primary-foreground rounded-tr-sm"
                                 : "bg-background border border-border rounded-tl-sm",
@@ -438,7 +450,7 @@ export function ChatWidget() {
                       sendMessage();
                     }
                   }}
-                  placeholder="Xabar yozing..."
+                  placeholder={t("xabarYozing")}
                   className="flex-1 h-9 text-sm"
                 />
                 <Button size="sm" onClick={sendMessage} disabled={!inputText.trim()} className="h-9 w-9 p-0">
@@ -463,7 +475,7 @@ export function ChatWidget() {
           <div className="relative">
             <MessageCircle className="w-6 h-6" />
             {totalUnread > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#ff5d2e] text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                 {totalUnread > 99 ? "99+" : totalUnread}
               </span>
             )}

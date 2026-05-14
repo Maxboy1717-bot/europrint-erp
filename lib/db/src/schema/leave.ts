@@ -1,11 +1,17 @@
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, uniqueIndex } from "drizzle-orm/pg-core";
+/**
+ * @module leave
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
 
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   leaveType: varchar("leave_type", { length: 20 }).notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
@@ -27,11 +33,17 @@ export const leaveRequests = pgTable("leave_requests", {
   documentUrl: text("document_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("leave_requests_status_chk", sql`${t.status} IN ('draft','pending','approved','rejected','cancelled')`),
+  check("leave_requests_manager_status_chk", sql`${t.managerStatus} IN ('pending','approved','rejected')`),
+  check("leave_requests_hr_status_chk", sql`${t.hrStatus} IN ('pending','approved','rejected')`),
+  check("leave_requests_director_status_chk", sql`${t.directorStatus} IN ('pending','approved','rejected')`),
+  check("leave_requests_duration_chk", sql`${t.durationDays} IS NULL OR ${t.durationDays} >= 0`),
+]);
 
 export const sickLeaves = pgTable("sick_leaves", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   sickLeaveDate: date("sick_leave_date").notNull(),
   durationDays: integer("duration_days"),
   medicalCertificateNumber: varchar("medical_certificate_number", { length: 50 }),
@@ -47,7 +59,7 @@ export const sickLeaves = pgTable("sick_leaves", {
 
 export const businessTrips = pgTable("business_trips", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   tripPurpose: varchar("trip_purpose", { length: 255 }),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
@@ -62,11 +74,17 @@ export const businessTrips = pgTable("business_trips", {
   status: varchar("status", { length: 20 }).default("planned"),
   reportUrl: text("report_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("business_trips_status_chk", sql`${t.status} IN ('planned','approved','in_progress','completed','cancelled')`),
+  check("business_trips_daily_allowance_chk", sql`${t.dailyAllowance} IS NULL OR ${t.dailyAllowance} >= 0`),
+  check("business_trips_transport_cost_chk", sql`${t.transportCost} IS NULL OR ${t.transportCost} >= 0`),
+  check("business_trips_accommodation_cost_chk", sql`${t.accommodationCost} IS NULL OR ${t.accommodationCost} >= 0`),
+  check("business_trips_total_cost_chk", sql`${t.totalCost} IS NULL OR ${t.totalCost} >= 0`),
+]);
 
 export const leaveBalances = pgTable("leave_balances", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   leaveType: varchar("leave_type", { length: 20 }).notNull(),
   year: integer("year").notNull(),
   totalEntitlement: integer("total_entitlement").default(24),
@@ -76,6 +94,9 @@ export const leaveBalances = pgTable("leave_balances", {
   carriedOverDays: integer("carried_over_days").default(0),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
+  check("leave_balances_used_days_chk", sql`${table.usedDays} >= 0`),
+  check("leave_balances_pending_days_chk", sql`${table.pendingDays} >= 0`),
+  check("leave_balances_remaining_days_chk", sql`${table.remainingDays} >= 0`),
   uniqueIndex("uq_leave_balance_emp_type_year").on(table.employeeId, table.leaveType, table.year),
 ]);
 

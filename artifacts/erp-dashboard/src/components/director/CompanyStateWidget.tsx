@@ -1,3 +1,8 @@
+/**
+ * @module CompanyStateWidget
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,13 +13,15 @@ import { useTranslation } from "@/lib/i18n";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { stateConfig } from "./helpers";
 import type { CompanyStateCurrent, CompanyStateHistory } from "./types";
+import { apiRequest } from '@/lib/queryClient';
 
 export function CompanyStateWidget() {
+  const { t } = useTranslation("common");
   const { t: td } = useTranslation("director");
   const { data: currentState, isLoading: currentLoad, isError: currentError, refetch: refetchCurrent } = useQuery<CompanyStateCurrent>({
     queryKey: ["/api/company-state/current"],
     queryFn: async () => {
-      const res = await fetch("/api/company-state/current", { headers: getAuthHeaders() });
+      const res = await apiRequest('GET', "/api/company-state/current");
       if (!res.ok) throw new Error("company-state/current failed");
       return res.json() as Promise<CompanyStateCurrent>;
     },
@@ -23,7 +30,7 @@ export function CompanyStateWidget() {
   const { data: historyData } = useQuery<CompanyStateHistory>({
     queryKey: ["/api/director/company-state/history"],
     queryFn: async () => {
-      const res = await fetch("/api/director/company-state/history", { headers: getAuthHeaders() });
+      const res = await apiRequest('GET', "/api/director/company-state/history");
       if (!res.ok) throw new Error("history failed");
       return res.json() as Promise<CompanyStateHistory>;
     },
@@ -59,9 +66,9 @@ export function CompanyStateWidget() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
-            <span className="text-sm text-red-700">Kompaniya holati yuklanmadi</span>
+            <span className="text-sm text-[var(--ep-red)]">{t("kompaniyaHolatiYuklanmadi")}</span>
             <Button size="sm" variant="outline" onClick={() => refetchCurrent()}>
-              <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Qayta yuklash
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t("qaytaYuklash")}
             </Button>
           </div>
         </CardContent>
@@ -95,14 +102,14 @@ export function CompanyStateWidget() {
       </CardHeader>
       <CardContent>
         {currentLoad ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {([0,1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-24 rounded-xl" />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {([0,1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="rounded-xl bg-muted/40 p-4 text-center" data-testid="state-profit">
               <div className="flex items-center justify-center gap-1 mb-1">
-                {profitPct >= 100 ? <TrendingUp className="w-4 h-4 text-emerald-500" /> : <TrendingDown className="w-4 h-4 text-red-500" />}
+                {profitPct >= 100 ? <TrendingUp className="w-4 h-4 text-[var(--ep-green)]" /> : <TrendingDown className="w-4 h-4 text-[var(--ep-red)]" />}
                 <span className="text-xs text-muted-foreground">{profitFormatted} so'm</span>
               </div>
               <p className="text-2xl font-bold text-foreground">{profitPct}%</p>
@@ -111,7 +118,7 @@ export function CompanyStateWidget() {
             </div>
             <div className="rounded-xl bg-muted/40 p-4 text-center" data-testid="state-revenue">
               <div className="flex items-center justify-center gap-1 mb-1">
-                {revenuePct >= 100 ? <TrendingUp className="w-4 h-4 text-emerald-500" /> : <MinusIcon className="w-4 h-4 text-muted-foreground" />}
+                {revenuePct >= 100 ? <TrendingUp className="w-4 h-4 text-[var(--ep-green)]" /> : <MinusIcon className="w-4 h-4 text-muted-foreground" />}
                 <span className="text-xs text-muted-foreground">{revenueFormatted} so'm</span>
               </div>
               <p className="text-2xl font-bold text-foreground">{revenuePct}%</p>
@@ -120,19 +127,19 @@ export function CompanyStateWidget() {
             </div>
             <div className="rounded-xl bg-muted/40 p-4 text-center" data-testid="state-retention">
               <div className="flex items-center justify-center gap-1 mb-1">
-                {retentionPct >= 95 ? <TrendingUp className="w-4 h-4 text-emerald-500" /> : <TrendingDown className="w-4 h-4 text-red-500" />}
-                <span className="text-xs text-muted-foreground">Xodimlar</span>
+                {retentionPct >= 95 ? <TrendingUp className="w-4 h-4 text-[var(--ep-green)]" /> : <TrendingDown className="w-4 h-4 text-[var(--ep-red)]" />}
+                <span className="text-xs text-muted-foreground">{t("xodimlar")}</span>
               </div>
               <p className="text-2xl font-bold text-foreground">{retentionPct.toFixed(1)}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Xodim Saqlash</p>
-              <p className="text-[10px] text-muted-foreground">Maqsad: ≥95%</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("xodimSaqlash")}</p>
+              <p className="text-[10px] text-muted-foreground">{t("maqsad95")}</p>
             </div>
             <div className="rounded-xl bg-muted/40 p-4" data-testid="state-history">
               <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
                 {td("stateHistory", { days: "30" })}
               </p>
               {history.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Tarix yo'q</p>
+                <p className="text-xs text-muted-foreground italic">{t("tarixYoq")}</p>
               ) : (
                 <div className="space-y-1">
                   {history.slice(-5).map((h, i) => {

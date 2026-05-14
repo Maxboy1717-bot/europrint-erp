@@ -1,4 +1,10 @@
+/**
+ * @module employee-ledger.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result, safeCall } from '@common/result';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 
 import { Injectable } from '@nestjs/common';
 import { employeeInventoryLedger, db, eq, and, sql } from '@workspace/db';
@@ -11,7 +17,7 @@ export interface EmployeeBalance {
 
 type Row = Record<string, unknown>;
 type LedgerRow = typeof employeeInventoryLedger.$inferSelect;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
 
 const BALANCE_COLS = sql`
   eil.user_id, eil.material_card_id, eil.warehouse_id,
@@ -45,7 +51,7 @@ export class EmployeeLedgerRepository {
       const matFilter = materialCardId ? sql`AND eil.material_card_id = ${materialCardId}` : sql``;
       const whFilter  = warehouseId    ? sql`AND eil.warehouse_id = ${warehouseId}`        : sql``;
       const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_card_id WHERE eil.user_id = ${userId} ${matFilter} ${whFilter} GROUP BY eil.user_id, eil.material_card_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
-      return r.ok ? Ok((r?.data ?? []).map(mapBalance)) : Err(r.error);  } catch (_e) {
+      return r.ok ? Ok((Array.isArray(r?.data) ? r?.data : []).map(mapBalance)) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -54,7 +60,7 @@ export class EmployeeLedgerRepository {
   async getDepartmentBalance(departmentCode: string): Promise<Result<EmployeeBalance[]>>  {
   try {  
       const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_card_id JOIN users u ON u.id = eil.user_id WHERE u.department_code = ${departmentCode} GROUP BY eil.user_id, eil.material_card_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
-      return r.ok ? Ok((r?.data ?? []).map(mapBalance)) : Err(r.error);  } catch (_e) {
+      return r.ok ? Ok((Array.isArray(r?.data) ? r?.data : []).map(mapBalance)) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
 

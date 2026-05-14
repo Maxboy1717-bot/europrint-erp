@@ -1,3 +1,8 @@
+/**
+ * @module planning-types
+ * @description React page component. Route-level UI.
+ */
+
 export const statusColors: Record<string, string> = {
   planned: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   in_progress: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",

@@ -1,3 +1,8 @@
+/**
+ * @module mockupPreviewPlugin
+ * @description Source module. See exports for details.
+ */
+
 import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
 import glob from "fast-glob";

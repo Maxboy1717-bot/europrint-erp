@@ -1,3 +1,8 @@
+/**
+ * @module get-notifications.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, PaginatedResult , Ok } from '@common/types/result.type';

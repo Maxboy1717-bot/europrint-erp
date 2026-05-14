@@ -1,3 +1,8 @@
+/**
+ * @module admin-settings.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertOk } from '@common/http-result';
@@ -18,6 +23,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '../../infrastructure/decorators/roles.decorator';
 import { AuditInterceptor } from '../../infrastructure/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -33,7 +39,7 @@ import { MAX_USERS_DEFAULT } from '@common/constants/app.constants';
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('admin/settings')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @ApiBearerAuth()
 @ApiTags('Admin - Settings')
@@ -79,7 +85,7 @@ export class AdminSettingsController {
       freeStorageDays:  validated.freeStorageDays,
       storageDailyRate: validated.storageDailyRate,
       updatedBy:        user.id,
-      userRole:         UserRole.SUPER_ADMIN,
+      userRole:         user.role as UserRole,
     });
     assertOk(result);
     return { message: 'Settings updated successfully' };

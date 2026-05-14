@@ -1,3 +1,8 @@
+/**
+ * @module skills-matrix.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { SkillsMatrixService } from './skills-matrix.service';
 import { SkillsMatrixRepository } from './skills-matrix.repository';

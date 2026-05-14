@@ -1,3 +1,8 @@
+/**
+ * @module warehouse-barcode-ops.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, UseGuards, Get, Post, Body, Param, Query, HttpCode, HttpStatus , UseInterceptors} from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';

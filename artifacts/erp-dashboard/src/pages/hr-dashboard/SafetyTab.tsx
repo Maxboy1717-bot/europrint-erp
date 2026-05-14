@@ -1,8 +1,14 @@
+/**
+ * @module SafetyTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, ShieldAlert, Brain, Flame, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface SafetySummary {
   incidentsThisMonth: number;
@@ -26,22 +32,23 @@ interface SafetyTabProps {
 }
 
 export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
+  const { t } = useTranslation("common");
   const kpis = [
-    { label: "Bu oydagi hodisalar", value: safetySummary?.incidentsThisMonth ?? "—", Icon: AlertTriangle, accent: "text-red-500", bg: "bg-red-50" },
-    { label: "PPE Compliance", value: safetySummary?.ppeCompliancePercent !== undefined ? `${safetySummary.ppeCompliancePercent}%` : "—", Icon: ShieldAlert, accent: "text-green-500", bg: "bg-green-50" },
-    { label: "Muddati tugayotgan treninglar", value: safetySummary?.expiringTrainings ?? "—", Icon: Brain, accent: "text-orange-500", bg: "bg-orange-50" },
-    { label: "Ochiq hodisalar", value: safetySummary?.openIncidents ?? "—", Icon: Flame, accent: "text-blue-500", bg: "bg-blue-50" },
+    { label: "Bu oydagi hodisalar", value: safetySummary?.incidentsThisMonth ?? "—", Icon: AlertTriangle, accent: "text-[var(--ep-red)]", bg: "bg-red-50" },
+    { label: "PPE Compliance", value: safetySummary?.ppeCompliancePercent !== undefined ? `${safetySummary.ppeCompliancePercent}%` : "—", Icon: ShieldAlert, accent: "text-[var(--ep-green)]", bg: "bg-green-50" },
+    { label: "Muddati tugayotgan treninglar", value: safetySummary?.expiringTrainings ?? "—", Icon: Brain, accent: "text-[var(--ep-primary)]", bg: "bg-orange-50" },
+    { label: "Ochiq hodisalar", value: safetySummary?.openIncidents ?? "—", Icon: Flame, accent: "text-[var(--ep-blue)]", bg: "bg-blue-50" },
   ];
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-5">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {(Array.isArray(kpis) ? kpis : []).map((item, i) => (
           <div key={`k-${i}`} className={`${item.bg} rounded-lg p-5`} data-testid={`safety-stat-${i}`}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">{item.label}</p>
-            <p className="text-3xl font-bold tracking-tight text-on-surface mt-1">{item.value}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{item.label}</p>
+            <p className="text-3xl font-bold tracking-tight text-foreground mt-1">{item.value}</p>
             <item.Icon className={`w-4 h-4 ${item.accent} mt-2`} />
           </div>
         ))}
@@ -50,32 +57,32 @@ export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-            So'nggi Xavfsizlik Hodisalari
+            <AlertTriangle className="h-4 w-4 text-[var(--ep-red)]" />
+            {t("songgiXavfsizlikHodisalari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 {(["Xodim", "Tur", "Og'irlik", "Sana", "Holat"]).map(h => (
-                  <TableHead key={h} className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{h}</TableHead>
+                  <TableHead key={h} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {incidents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-on-surface-variant text-sm">
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-sm">
                     <CheckCircle2 className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                    Xavfsizlik hodisalari qayd etilmagan
+                    {t("xavfsizlikHodisalariQaydEtilmagan")}
                   </TableCell>
                 </TableRow>
               ) : (Array.isArray(incidents) ? incidents : []).slice(0, 10).map((inc, idx) => (
-                <TableRow key={inc.id || idx} className="hover:bg-surface-container-low transition-colors" data-testid={`safety-incident-row-${inc.id}`}>
-                  <TableCell className="text-sm font-medium text-on-surface px-6">{inc.userName || "—"}</TableCell>
+                <TableRow key={inc.id || idx} className="hover:bg-muted/40 transition-colors" data-testid={`safety-incident-row-${inc.id}`}>
+                  <TableCell className="text-sm font-medium text-foreground px-6">{inc.userName || "—"}</TableCell>
                   <TableCell className="px-6">
-                    <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-surface-container text-on-surface-variant">
+                    <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted/60 text-muted-foreground">
                       {inc.incidentType === "injury" ? "Jarohat" : inc.incidentType === "near_miss" ? "Deyarli hodisa" : "Qoidabuzarlik"}
                     </span>
                   </TableCell>
@@ -88,7 +95,7 @@ export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
                       {inc.severity === "critical" ? "Kritik" : inc.severity === "major" ? "Jiddiy" : "Kichik"}
                     </span>
                   </TableCell>
-                  <TableCell className="text-xs text-on-surface-variant px-6">{inc.incidentDate}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground px-6">{inc.incidentDate}</TableCell>
                   <TableCell className="px-6">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       inc.status === "closed" ? "bg-green-100 text-green-800" :
@@ -101,7 +108,7 @@ export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

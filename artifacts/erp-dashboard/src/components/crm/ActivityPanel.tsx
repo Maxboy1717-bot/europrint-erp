@@ -1,3 +1,8 @@
+/**
+ * @module ActivityPanel
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
 import { uz } from "date-fns/locale";
 import { formatDateTime } from "@/lib/format";
+import { useTranslation } from '@/lib/i18n';
 
 interface Activity {
   id: number;
@@ -80,15 +86,16 @@ const ACTIVITY_ICONS: Record<number, typeof Phone> = {
 };
 
 const ACTIVITY_COLORS: Record<number, string> = {
-  1: "text-green-500",
-  2: "text-blue-500",
-  3: "text-purple-500",
-  4: "text-orange-500",
-  5: "text-red-500",
-  6: "text-yellow-500",
+  1: "text-[var(--ep-green)]",
+  2: "text-[var(--ep-blue)]",
+  3: "text-[var(--ep-purple)]",
+  4: "text-[var(--ep-primary)]",
+  5: "text-[var(--ep-red)]",
+  6: "text-[var(--ep-yellow)]",
 };
 
 export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: ActivityPanelProps) {
+  const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState("activities");
   const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
@@ -164,8 +171,8 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <span>Faoliyatlar</span>
+        <CardTitle className="text-[14px] font-semibold flex items-center justify-between">
+          <span>{t("faoliyatlar")}</span>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
               {pendingActivities.length} kutilmoqda
@@ -176,15 +183,15 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
       <CardContent className="flex-1 overflow-hidden p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <div className="px-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
               <TabsTrigger value="activities" data-testid="tab-activities">
-                Ishlar
+                {t("ishlar")}
               </TabsTrigger>
               <TabsTrigger value="comments" data-testid="tab-comments">
-                Izohlar
+                {t("notes")}
               </TabsTrigger>
               <TabsTrigger value="history" data-testid="tab-history">
-                Tarix
+                {t("tarix")}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -195,31 +202,31 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
                 <div className="flex items-center gap-2 mb-4">
                   <Button size="sm" variant="outline" data-testid="button-add-call">
                     <Phone className="h-3.5 w-3.5 mr-1.5" />
-                    Qo'ng'iroq
+                    {t("qongiroq")}
                   </Button>
                   <Button size="sm" variant="outline" data-testid="button-add-email">
                     <Mail className="h-3.5 w-3.5 mr-1.5" />
-                    Email
+                    {t("email1")}
                   </Button>
                   <Button size="sm" variant="outline" data-testid="button-add-meeting">
                     <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                    Uchrashuv
+                    {t("uchrashuv")}
                   </Button>
                 </div>
 
                 {activitiesLoading ? (
-                  <div className="text-center py-4 text-muted-foreground">Yuklanmoqda...</div>
+                  <div className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>
                 ) : pendingActivities.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-8 text-[13px] text-muted-foreground">
                     <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Rejadagi ishlar yo'q</p>
+                    <p>{t("rejadagiIshlarYoq")}</p>
                   </div>
                 ) : (
                   <>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Rejadagi</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("rejadagi")}</h4>
                     {(Array.isArray(pendingActivities) ? pendingActivities : []).map((activity) => {
                       const Icon = ACTIVITY_ICONS[activity.typeId] || MessageSquare;
-                      const colorClass = ACTIVITY_COLORS[activity.typeId] || "text-on-surface-variant";
+                      const colorClass = ACTIVITY_COLORS[activity.typeId] || "text-muted-foreground";
                       return (
                         <div
                           key={activity.id}
@@ -260,7 +267,7 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
 
                 {completedActivities.length > 0 && (
                   <>
-                    <h4 className="text-sm font-medium text-muted-foreground mt-4 mb-2">Bajarilgan</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground mt-4 mb-2">{t("bajarilgan")}</h4>
                     {(Array.isArray(completedActivities) ? completedActivities : []).slice(0, 5).map((activity) => {
                       const Icon = ACTIVITY_ICONS[activity.typeId] || MessageSquare;
                       return (
@@ -269,7 +276,7 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
                           className="flex items-start gap-3 p-3 border rounded-lg opacity-60"
                           data-testid={`activity-completed-${activity.id}`}
                         >
-                          <div className="mt-0.5 text-green-500">
+                          <div className="mt-0.5 text-[var(--ep-green)]">
                             <CheckCircle2 className="h-4 w-4" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -291,7 +298,7 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
             <div className="h-full flex flex-col px-4">
               <div className="flex gap-2 mb-4">
                 <Textarea
-                  placeholder="Izoh yozing..."
+                  placeholder={t("izohYozing")}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   className="resize-none min-h-[60px]"
@@ -309,11 +316,11 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
               <ScrollArea className="flex-1">
                 <div className="space-y-3 pb-4">
                   {commentsLoading ? (
-                    <div className="text-center py-4 text-muted-foreground">Yuklanmoqda...</div>
+                    <div className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>
                   ) : !comments?.length ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-8 text-[13px] text-muted-foreground">
                       <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>Izohlar yo'q</p>
+                      <p>{t("izohlarYoq")}</p>
                     </div>
                   ) : (
                     (Array.isArray(comments) ? comments : []).map((comment) => (
@@ -351,11 +358,11 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
             <ScrollArea className="h-full px-4">
               <div className="space-y-3 pb-4">
                 {historyLoading ? (
-                  <div className="text-center py-4 text-muted-foreground">Yuklanmoqda...</div>
+                  <div className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>
                 ) : !history?.length ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-8 text-[13px] text-muted-foreground">
                     <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Tarix yo'q</p>
+                    <p>{t("tarixYoq")}</p>
                   </div>
                 ) : (
                   (Array.isArray(history) ? history : []).map((item) => (
@@ -373,7 +380,7 @@ export function ActivityPanel({ entityType, entityId, ownerTypeId = 1 }: Activit
                           {item.action === "created" && "yaratdi"}
                           {item.action === "updated" && `${item.fieldName || "ma'lumotlarni"} yangiladi`}
                           {item.action === "stage_changed" && (
-                            <>bosqichni <span className="line-through text-red-500">{item.oldValue}</span> dan <span className="text-green-500">{item.newValue}</span> ga o'zgartirdi</>
+                            <>bosqichni <span className="line-through text-[var(--ep-red)]">{item.oldValue}</span> dan <span className="text-[var(--ep-green)]">{item.newValue}</span> {t("gaOzgartirdi")}</>
                           )}
                           {item.action === "deleted" && "o'chirdi"}
                         </p>

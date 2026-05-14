@@ -1,3 +1,8 @@
+/**
+ * @module aggregate-root.base
+ * @description Source module. See exports for details.
+ */
+
 import { DomainEvent } from './domain-event.base';
 
 export abstract class AggregateRoot {

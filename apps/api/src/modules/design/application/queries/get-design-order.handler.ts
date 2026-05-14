@@ -1,3 +1,8 @@
+/**
+ * @module get-design-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err, Ok, Result } from '@common/result';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';

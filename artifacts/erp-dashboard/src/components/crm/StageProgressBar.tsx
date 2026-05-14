@@ -1,3 +1,8 @@
+/**
+ * @module StageProgressBar
+ * @description React UI component.
+ */
+
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -44,7 +49,7 @@ export function StageProgressBar({
   entityType,
 }: StageProgressBarProps) {
   const sortedStages = [...stages].sort((a, b) => a.sort - b.sort);
-  const currentIndex = (sortedStages ?? []).findIndex((s) => s.id === currentStageId);
+  const currentIndex = (Array.isArray(sortedStages) ? sortedStages : []).findIndex((s) => s.id === currentStageId);
 
   return (
     <div
@@ -63,7 +68,7 @@ export function StageProgressBar({
                 onClick={() => onChange?.(stage.id)}
                 className={cn(
                   "flex-1 h-2 rounded-sm transition-all duration-200 cursor-pointer",
-                  "hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                  "hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary",
                   !isActive && "opacity-30"
                 )}
                 style={{

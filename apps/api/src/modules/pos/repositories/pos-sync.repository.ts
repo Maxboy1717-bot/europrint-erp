@@ -1,3 +1,8 @@
+/**
+ * @module pos-sync.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db, eq, sql, and, gte } from '@workspace/db';
@@ -109,7 +114,7 @@ export class PosSyncRepository {
         .groupBy(posOfflineQueue.syncStatus);
 
       const map: Record<string, number> = {};
-      (rows ?? []).forEach(r => { map[r.syncStatus] = r.cnt; });
+      (Array.isArray(rows) ? rows : []).forEach(r => { map[r.syncStatus] = r.cnt; });
       return Ok({
         total:    Object.values(map).reduce((s, v) => s + v, 0),
         pending:  map['PENDING'] ?? 0,

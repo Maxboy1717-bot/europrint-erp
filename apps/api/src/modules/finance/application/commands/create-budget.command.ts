@@ -1,3 +1,8 @@
+/**
+ * @module create-budget.command
+ * @description Source module. See exports for details.
+ */
+
 export interface BudgetLineInput {
   category: string;
   description: string;

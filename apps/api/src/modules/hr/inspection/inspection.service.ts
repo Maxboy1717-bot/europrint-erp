@@ -1,3 +1,8 @@
+/**
+ * @module inspection.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, timeout, catchError, of } from 'rxjs';
@@ -188,7 +193,7 @@ export class InspectionService {
       }
 
       if (anomalies.length > 0) {
-        const criticalFlag = (anomalies ?? []).some((a) => a.severity === 'critical') ? ' ⚠️ FAVQULODDA' : '';
+        const criticalFlag = (Array.isArray(anomalies) ? anomalies : []).some((a) => a.severity === 'critical') ? ' ⚠️ FAVQULODDA' : '';
         const msg = `🔍 Qo'lda inspeksiya${criticalFlag}\nXona: ${dto.room_code}\nMuammolar: ${issues.join(', ')}\nInspektor: ${inspectorId ?? 'Noma\'lum'}`;
         await this._notifyRoles(msg).catch((e) =>
           this.logger.warn('Manual inspection notify failed: %s', e instanceof Error ? e.message : String(e)),

@@ -1,9 +1,15 @@
+/**
+ * @module MaterialInventoryTable
+ * @description React UI component.
+ */
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, ClipboardList } from "lucide-react";
 import { formatDate, formatCurrency, formatNumber } from "@/lib/format";
 import { InventoryCount, statusLabels, countTypeLabels, Warehouse } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MaterialInventoryTableProps {
   counts: InventoryCount[];
@@ -16,11 +22,12 @@ export function MaterialInventoryTable({
   warehouses,
   onViewLines
 }: MaterialInventoryTableProps) {
+  const { t } = useTranslation("common");
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "draft":
       case "planned":
-        return <Badge variant="outline" className="bg-gray-500/20 text-on-surface-variant border-gray-500/40">{statusLabels[status] || status}</Badge>;
+        return <Badge variant="outline" className="bg-gray-500/20 text-muted-foreground border-gray-500/40">{statusLabels[status] || status}</Badge>;
       case "in_progress":
         return <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/40">{statusLabels[status]}</Badge>;
       case "completed":
@@ -34,31 +41,31 @@ export function MaterialInventoryTable({
 
   if (counts.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-[13px] text-muted-foreground">
         <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p>Inventarizatsiya ma'lumotlari topilmadi</p>
+        <p>{t("inventarizatsiyaMalumotlariTopilmadi")}</p>
       </div>
     );
   }
 
   return (
     <div className="border rounded-md overflow-hidden">
-      <Table>
+      <div className="ep-table-scroll"><Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead>Hisob №</TableHead>
-            <TableHead>Sana</TableHead>
-            <TableHead>Tur</TableHead>
-            <TableHead>Holat</TableHead>
-            <TableHead className="text-right">Jami elementlar</TableHead>
+          <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
+            <TableHead>{t("hisob")}</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("tur")}</TableHead>
+            <TableHead>{t("status28")}</TableHead>
+            <TableHead className="text-right">{t("jamiElementlar")}</TableHead>
             <TableHead className="text-right">Jami qiymat (kitob)</TableHead>
-            <TableHead className="text-right">Farq qiymati</TableHead>
-            <TableHead className="text-right w-[100px]">Amallar</TableHead>
+            <TableHead className="text-right">{t("farqQiymati")}</TableHead>
+            <TableHead className="text-right w-[100px]">{t("Amallar")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {(Array.isArray(counts) ? counts : []).map((count) => (
-            <TableRow key={count.id}>
+            <TableRow key={count.id} className="hover:bg-muted/40 transition-colors">
               <TableCell className="font-medium">{count.countNumber}</TableCell>
               <TableCell>{formatDate(count.countDate)}</TableCell>
               <TableCell>{countTypeLabels[count.countType] || count.countType}</TableCell>
@@ -66,7 +73,7 @@ export function MaterialInventoryTable({
               <TableCell className="text-right">{formatNumber(count.totalItems)}</TableCell>
               <TableCell className="text-right">{formatCurrency(count.totalBookValue)}</TableCell>
               <TableCell className="text-right">
-                <span className={count.totalVariance > 0 ? "text-green-500" : count.totalVariance < 0 ? "text-red-500" : ""}>
+                <span className={count.totalVariance > 0 ? "text-[var(--ep-green)]" : count.totalVariance < 0 ? "text-[var(--ep-red)]" : ""}>
                   {formatCurrency(count.totalVariance)}
                 </span>
               </TableCell>
@@ -83,7 +90,7 @@ export function MaterialInventoryTable({
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </Table></div>
     </div>
   );
 }

@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { ComponentType } from "react";
 
 export interface SdContact {
@@ -156,10 +161,10 @@ export const LEAD_STATUS_LABELS: Record<string, string> = {
 };
 
 export const LEAD_STATUS_COLORS: Record<string, string> = {
-  new: "bg-surface-container-low text-on-surface", working: "bg-blue-100 text-blue-700",
-  quoted: "bg-indigo-100 text-indigo-700", negotiating: "bg-amber-100 text-amber-700",
-  won: "bg-green-100 text-green-700", lost: "bg-red-100 text-red-700",
-  frozen: "bg-surface-container-low text-on-surface",
+  new: "bg-muted/40 text-foreground", working: "bg-blue-100 text-[var(--ep-blue)]",
+  quoted: "bg-indigo-100 text-[var(--ep-blue)]", negotiating: "bg-amber-100 text-[var(--ep-yellow)]",
+  won: "bg-green-100 text-[var(--ep-green)]", lost: "bg-red-100 text-[var(--ep-red)]",
+  frozen: "bg-muted/40 text-foreground",
 };
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
@@ -171,18 +176,18 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
-  new: "bg-surface-container-low text-on-surface", advance_pending: "bg-amber-100 text-amber-700",
-  advance_paid: "bg-blue-100 text-blue-700", design: "bg-purple-100 text-purple-700",
-  technologist: "bg-indigo-100 text-indigo-700", planned: "bg-cyan-100 text-cyan-700",
-  production: "bg-orange-100 text-orange-700", quality_check: "bg-yellow-100 text-yellow-700",
-  in_warehouse: "bg-teal-100 text-teal-700", delivering: "bg-lime-100 text-lime-700",
-  delivered: "bg-green-100 text-green-700", closed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-red-100 text-red-700",
+  new: "bg-muted/40 text-foreground", advance_pending: "bg-amber-100 text-[var(--ep-yellow)]",
+  advance_paid: "bg-blue-100 text-[var(--ep-blue)]", design: "bg-purple-100 text-[var(--ep-purple)]",
+  technologist: "bg-indigo-100 text-[var(--ep-blue)]", planned: "bg-cyan-100 text-[var(--ep-cyan)]",
+  production: "bg-orange-100 text-[var(--ep-primary)]", quality_check: "bg-yellow-100 text-[var(--ep-yellow)]",
+  in_warehouse: "bg-teal-100 text-[var(--ep-cyan)]", delivering: "bg-lime-100 text-[var(--ep-green)]",
+  delivered: "bg-green-100 text-[var(--ep-green)]", closed: "bg-emerald-100 text-[var(--ep-green)]",
+  cancelled: "bg-red-100 text-[var(--ep-red)]",
 };
 
 export const PAYMENT_STATUS_COLORS: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700", paid: "bg-green-100 text-green-700",
-  overdue: "bg-red-100 text-red-700", returned: "bg-surface-container-low text-on-surface",
+  pending: "bg-amber-100 text-[var(--ep-yellow)]", paid: "bg-green-100 text-[var(--ep-green)]",
+  overdue: "bg-red-100 text-[var(--ep-red)]", returned: "bg-muted/40 text-foreground",
 };
 
 export const SOURCE_LABELS: Record<string, string> = {

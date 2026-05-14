@@ -1,11 +1,16 @@
+/**
+ * @module integration-employee.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -38,11 +43,11 @@ export class IntegrationEmployeeRepository {
   }
 
   findMentorshipsAsMentor(employeeId: string): Promise<Result<Row[]>> {
-    return safeCall(async () => exec(sql`SELECT m.id, m.mentee_id, m.status, m.start_date, m.end_date, u.full_name AS mentee_name FROM mentorships m LEFT JOIN users u ON u.id = m.mentee_id WHERE m.mentor_id = ${employeeId} ORDER BY m.created_at DESC LIMIT 50`));
+    return safeCall(async () => exec(sql`SELECT m.id, m.mentee_id, m.status, m.start_date, m.end_date, (u.first_name || ' ' || u.last_name) AS mentee_name FROM mentorships m LEFT JOIN users u ON u.id = m.mentee_id WHERE m.mentor_id = ${employeeId} ORDER BY m.created_at DESC LIMIT 50`));
   }
 
   findMentorshipsAsMentee(employeeId: string): Promise<Result<Row[]>> {
-    return safeCall(async () => exec(sql`SELECT m.id, m.mentor_id, m.status, m.start_date, m.end_date, u.full_name AS mentor_name FROM mentorships m LEFT JOIN users u ON u.id = m.mentor_id WHERE m.mentee_id = ${employeeId} ORDER BY m.created_at DESC LIMIT 50`));
+    return safeCall(async () => exec(sql`SELECT m.id, m.mentor_id, m.status, m.start_date, m.end_date, (u.first_name || ' ' || u.last_name) AS mentor_name FROM mentorships m LEFT JOIN users u ON u.id = m.mentor_id WHERE m.mentee_id = ${employeeId} ORDER BY m.created_at DESC LIMIT 50`));
   }
 
   findMesProduction(employeeId: string, months: number): Promise<Result<Row[]>> {

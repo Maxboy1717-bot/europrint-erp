@@ -47,6 +47,8 @@ async function posReq<T = unknown>(method: string, path: string, body?: unknown)
   }
 
   const json: unknown = await res.json();
+
+  // Format 1: { isSuccess, value, error }
   if (
     json !== null && typeof json === "object" &&
     "isSuccess" in (json as Record<string, unknown>) &&
@@ -56,6 +58,29 @@ async function posReq<T = unknown>(method: string, path: string, body?: unknown)
     if (wrapped.isSuccess) return wrapped.value;
     throw new Error(wrapped.error ?? "Server xatosi");
   }
+
+  // Format 2: { ok: true, data: T } — Result wrapper
+  if (
+    json !== null && typeof json === "object" &&
+    "ok" in (json as Record<string, unknown>) &&
+    typeof (json as Record<string, unknown>).ok === "boolean"
+  ) {
+    const wrapped = json as { ok: boolean; data?: T; error?: { message?: string } | string };
+    if (wrapped.ok) {
+      // Recursive unwrap (double-wrap holatlar uchun)
+      const inner = wrapped.data;
+      if (inner && typeof inner === "object" && "ok" in (inner as Record<string, unknown>)) {
+        const innerWrapped = inner as { ok: boolean; data?: T };
+        if (innerWrapped.ok) return innerWrapped.data as T;
+      }
+      return inner as T;
+    }
+    const errMsg = typeof wrapped.error === "object" && wrapped.error !== null
+      ? wrapped.error.message ?? "Server xatosi"
+      : String(wrapped.error ?? "Server xatosi");
+    throw new Error(errMsg);
+  }
+
   return json as T;
 }
 
@@ -105,8 +130,16 @@ export const notificationsApi = {
 // ─── Movements ─────────────────────────────────────────────────────────────
 
 export const movementsApi = {
-  getAll:       (params?: Record<string, string>) =>
-    posReq("GET", `/movements${params ? `?${new URLSearchParams(params).toString()}` : ""}`),
+  getAll: (params?: { status?: string; type?: string; fromDate?: string; toDate?: string; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.set("status", params.status);
+    if (params?.type) q.set("type", params.type);
+    if (params?.fromDate) q.set("fromDate", params.fromDate);
+    if (params?.toDate) q.set("toDate", params.toDate);
+    if (params?.limit) q.set("limit", String(params.limit));
+    const qs = q.toString();
+    return posReq<unknown[]>("GET", `/movements${qs ? "?" + qs : ""}`);
+  },
   getOne:       (id: number)                      => posReq("GET",  `/movements/${id}`),
   create:       (b: Record<string, unknown>)      => posReq("POST", "/movements", b),
   updateStatus: (id: number, status: string, reason?: string) =>
@@ -132,17 +165,39 @@ export const barcodeApi = {
 // ─── Materials ─────────────────────────────────────────────────────────────
 
 export const materialsApi = {
-  getAll:  (q?: string) =>
-    posReq("GET", `/reports/top-materials${q ? `?q=${encodeURIComponent(q)}` : ""}`),
-  getStock: () => posReq("GET", "/reports/stock"),
+  getAll: (params?: { q?: string; category?: string; warehouseId?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.q)           p.set("q", params.q);
+    if (params?.category)    p.set("category", params.category);
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.limit)       p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq("GET", `/wms/materials${qs ? "?" + qs : ""}`);
+  },
+  getStock: (warehouseId?: string) =>
+    warehouseId
+      ? posReq("GET", `/wms/warehouse/${encodeURIComponent(warehouseId)}/stock`)
+      : posReq("GET", "/reports/stock"),
   printLabel: (b: Record<string, unknown>) => barcodeApi.printLabel(b),
 };
 
 // ─── Warehouses ────────────────────────────────────────────────────────────
 
 export const warehousesApi = {
-  getAll: () => posReq("GET", "/reports/stock"),
-  getKpi: () => posReq("GET", "/reports/kpi"),
+  getAll:    () => posReq("GET", "/wms/warehouses"),
+  getStock:  (id: string) => posReq("GET", `/wms/warehouse/${encodeURIComponent(id)}/stock`),
+  getMovements: (id: string, limit?: number) =>
+    posReq("GET", `/wms/warehouse/${encodeURIComponent(id)}/movements${limit ? `?limit=${limit}` : ""}`),
+  getKpi:    () => posReq("GET", "/reports/kpi"),
+};
+
+// ─── Employee ──────────────────────────────────────────────────────────────
+
+export const employeeApi = {
+  getMyInventory: () => posReq("GET", "/employees/me/inventory"),
+  getChecklist:   () => posReq("GET", "/employees/me/checklist"),
+  requestReturn:  (b: Record<string, unknown>) => posReq("POST", "/employees/me/return", b),
+  getHrCheck:     (userId: number) => posReq("GET", `/employees/${userId}/hr-check`),
 };
 
 // ─── Inventory Counts ──────────────────────────────────────────────────────
@@ -168,16 +223,23 @@ export const requestsApi = {
   approve:  (b: Record<string, unknown>)      => posReq("PATCH", "/requests/approve", b),
   reject:   (b: Record<string, unknown>)      => posReq("PATCH", "/requests/reject", b),
   issue:    (b: Record<string, unknown>)      => posReq("POST", "/requests/issue", b),
+  /** Submit a DRAFT request → SUBMITTED */
+  submit:   (id: number)                      => posReq("PATCH", `/requests/${id}/submit`),
+  /** Fulfill an APPROVED request via barcode scan */
+  fulfill:  (b: { requestId: number; barcodes?: string[] }) => posReq("POST", "/requests/fulfill", b),
 };
 
 // ─── Employee / Ledger ─────────────────────────────────────────────────────
 
 export const ledgerApi = {
   getMyBalance:  (userId: number) => posReq("GET", `/employees/${userId}/balance`),
-  getMyBalance2: ()               => posReq("GET", "/employees/me/balance"),
+  /** GET /pos/employees/me/inventory — personal inventory balance */
+  getMyBalance2: ()               => posReq("GET", "/employees/me/inventory"),
   getStatement:  (userId: number, from: string, to: string) =>
     posReq("GET", `/employees/${userId}/statement?dateFrom=${from}&dateTo=${to}`),
   returnItem:    (b: Record<string, unknown>) => posReq("POST", "/movements", b),
+  /** GET /pos/employees/me/checklist — HR exit checklist */
+  getChecklist:  ()               => posReq("GET", "/employees/me/checklist"),
 };
 
 // ─── Printers ─────────────────────────────────────────────────────────────
@@ -188,6 +250,37 @@ export const printerApi = {
   create:   (b: Record<string, unknown>)  => posReq("POST", "/printer-config", b),
   update:   (id: number, b: Record<string, unknown>) => posReq("PATCH", `/printer-config/${id}`, b),
   test:     (id: number)                  => posReq("POST", `/printer-config/${id}/test`),
+};
+
+// ─── Quarantine & Inventory Passport API ─────────────────────────────────────
+export const quarantineApi = {
+  getList: () =>
+    posReq<unknown[]>("GET", "/inventory-passport/quarantine"),
+
+  recordQcDecision: (movementId: number, qcResult: "QABUL" | "REWORK" | "CHIQARISH", qcNote?: string) =>
+    posReq("POST", `/inventory-passport/${movementId}/qc-decision`, { qcResult, qcNote }),
+
+  createPassport: (dto: {
+    movementId: number;
+    supplierName?: string;
+    contractNumber?: string;
+    waybillNumber?: string;
+    quantity: number;
+    weightKg?: number;
+    certificateNumber?: string;
+  }) => posReq("POST", "/inventory-passport", dto),
+
+  getPassport: (movementId: number) =>
+    posReq("GET", `/inventory-passport/${movementId}`),
+
+  listPassports: (params: { fromDate?: string; toDate?: string; qcResult?: string; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params.fromDate) q.set("fromDate", params.fromDate);
+    if (params.toDate) q.set("toDate", params.toDate);
+    if (params.qcResult) q.set("qcResult", params.qcResult);
+    if (params.limit) q.set("limit", String(params.limit));
+    return posReq<unknown>("GET", `/inventory-passport?${q.toString()}`);
+  },
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────────
@@ -203,4 +296,82 @@ export const reportsApi = {
   getLiabilities:   () => posReq("GET", "/reports/liabilities"),
   getAudit:         (params?: Record<string, string>) =>
     posReq("GET", `/reports/audit${params ? `?${new URLSearchParams(params).toString()}` : ""}`),
+  getAbcAnalysis:   (warehouseId?: string) =>
+    posReq("GET", `/reports/abc-analysis${warehouseId ? `?warehouseId=${encodeURIComponent(warehouseId)}` : ""}`),
+  getInactiveMaterials: (days = 90, warehouseId?: string) => {
+    const p = new URLSearchParams({ days: String(days) });
+    if (warehouseId) p.set("warehouseId", warehouseId);
+    return posReq("GET", `/reports/inactive-materials?${p.toString()}`);
+  },
+};
+
+// ─── Warehouse Features (Xodimlar, Auto-Barcode, Material 360) ──────────────
+
+export const warehouseFeaturesApi = {
+  // Xodimlar
+  listEmployees:    (warehouseId: number) =>
+    posReq(`GET`, `/wh-features/warehouse/${warehouseId}/employees`),
+  listUserWarehouses: (userId: number) =>
+    posReq(`GET`, `/wh-features/user/${userId}/warehouses`),
+  assignEmployee:   (warehouseId: number, body: {
+    userId: number;
+    role: "manager" | "staff" | "keeper" | "qc_inspector" | "observer";
+    isPrimary?: boolean;
+    notes?: string;
+  }) =>
+    posReq(`POST`, `/wh-features/warehouse/${warehouseId}/employees`, body),
+  removeEmployee:   (assignmentId: number) =>
+    posReq(`DELETE`, `/wh-features/employees/${assignmentId}`),
+
+  // Auto-barkod
+  generateBarcodes: (movementId: number) =>
+    posReq(`POST`, `/wh-features/movement/${movementId}/auto-barcode`),
+  listBarcodes:     (movementId: number) =>
+    posReq(`GET`, `/wh-features/movement/${movementId}/barcodes`),
+
+  // Material 360°
+  getMaterialProfile: (materialId: number) =>
+    posReq(`GET`, `/wh-features/material/${materialId}/profile`),
+
+  // GL Posting (avtomatik)
+  postGl:           (movementId: number) =>
+    posReq(`POST`, `/wh-features/movement/${movementId}/gl-post`),
+  listGl:           (movementId: number) =>
+    posReq(`GET`, `/wh-features/movement/${movementId}/gl-postings`),
+  getGlJournal:     (params?: { dateFrom?: string; dateTo?: string; debitAccount?: string; creditAccount?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.dateFrom)      p.set('dateFrom', params.dateFrom);
+    if (params?.dateTo)        p.set('dateTo', params.dateTo);
+    if (params?.debitAccount)  p.set('debitAccount', params.debitAccount);
+    if (params?.creditAccount) p.set('creditAccount', params.creditAccount);
+    if (params?.limit)         p.set('limit', String(params.limit));
+    const qs = p.toString();
+    return posReq(`GET`, `/wh-features/gl/journal${qs ? '?' + qs : ''}`);
+  },
+
+  // KPI
+  getWarehouseKpis: () =>
+    posReq(`GET`, `/wh-features/kpi/warehouses`),
+  getSystemKpi:     () =>
+    posReq(`GET`, `/wh-features/kpi/system`),
+
+  // GRN (Qabul Akti)
+  listGrn:    (params?: { status?: string; warehouseId?: number; supplier?: string; dateFrom?: string; dateTo?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.status)      p.set('status', params.status);
+    if (params?.warehouseId) p.set('warehouseId', String(params.warehouseId));
+    if (params?.supplier)    p.set('supplier', params.supplier);
+    if (params?.dateFrom)    p.set('dateFrom', params.dateFrom);
+    if (params?.dateTo)      p.set('dateTo', params.dateTo);
+    if (params?.limit)       p.set('limit', String(params.limit));
+    const qs = p.toString();
+    return posReq(`GET`, `/wh-features/grn${qs ? '?' + qs : ''}`);
+  },
+  createGrn:  (body: {
+    supplierName: string; supplierTin?: string; warehouseId: number;
+    waybillNumber?: string; contractNumber?: string; totalAmount?: number;
+    currency?: string; notes?: string; movementId?: number; purchaseOrderId?: string;
+  }) => posReq(`POST`, `/wh-features/grn`, body),
+  approveGrn: (id: number) =>
+    posReq(`POST`, `/wh-features/grn/${id}/approve`),
 };

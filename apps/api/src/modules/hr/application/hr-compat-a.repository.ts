@@ -1,11 +1,17 @@
+/**
+ * @module hr-compat-a.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, asc } from 'drizzle-orm';
 import {
   employee_360_assessments, hr_conflict_reports, employee_skills,
   hr_interview_sessions, hrc_iq_questions, hr_health_checkups,
-  discipline_records, hrEmployees, hrDepartments,
+  discipline_records, hrEmployees, hrDepartments, hrPositions,
+  vacancies,
 } from '@shared/db';
 import { safeInt } from '../common/db-rows';
 import { safeCall, Result } from '@common/result';
@@ -215,5 +221,68 @@ export class HrCompatARepository {
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
+  }
+
+  async getDepartments(isActive?: boolean): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id:         hrDepartments.id,
+          name:       hrDepartments.name,
+          code:       hrDepartments.code,
+          parent_id:  hrDepartments.parent_id,
+          manager_id: hrDepartments.manager_id,
+          is_active:  hrDepartments.is_active,
+        })
+        .from(hrDepartments)
+        .where(isActive !== undefined ? eq(hrDepartments.is_active, isActive) : sql`TRUE`)
+        .orderBy(asc(hrDepartments.name));
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  async getPositions(departmentId?: number, isActive?: boolean): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id:            hrPositions.id,
+          name:          hrPositions.name,
+          department_id: hrPositions.department_id,
+          is_active:     hrPositions.is_active,
+          created_at:    hrPositions.created_at,
+        })
+        .from(hrPositions)
+        .where(
+          sql`(${departmentId ?? null}::int IS NULL OR ${hrPositions.department_id} = ${departmentId ?? null})
+            AND (${isActive ?? null}::boolean IS NULL OR ${hrPositions.is_active} = ${isActive ?? null})`,
+        )
+        .orderBy(asc(hrPositions.name));
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  async getVacancies(status?: string, isActive?: boolean): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id:            vacancies.id,
+          title:         vacancies.title,
+          department:    vacancies.department,
+          department_id: vacancies.department_id,
+          status:        vacancies.status,
+          is_active:     vacancies.isActive,
+          requirements:  vacancies.requirements,
+          closing_date:  vacancies.closing_date,
+          description:   vacancies.description,
+          created_at:    vacancies.createdAt,
+        })
+        .from(vacancies)
+        .where(
+          sql`(${status ?? null}::text IS NULL OR ${vacancies.status} = ${status ?? null})
+            AND (${isActive ?? null}::boolean IS NULL OR ${vacancies.isActive} = ${isActive ?? null})`,
+        )
+        .orderBy(sql`${vacancies.createdAt} DESC`);
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
   }
 }

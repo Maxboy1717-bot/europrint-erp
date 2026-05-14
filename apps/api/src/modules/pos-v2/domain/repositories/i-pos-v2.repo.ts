@@ -1,3 +1,8 @@
+/**
+ * @module i-pos-v2.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Result } from '@common/result';
 import { InventoryCount, CountStatus, CountLine } from '../aggregates/inventory-count.aggregate';
 import { TransferRequest, RequestStatus, RequestLine } from '../aggregates/transfer-request.aggregate';

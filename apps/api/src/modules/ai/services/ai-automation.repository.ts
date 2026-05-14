@@ -1,3 +1,8 @@
+/**
+ * @module ai-automation.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -52,6 +57,7 @@ export class AiAutomationRepository {
 
   async getUnscoredLeadIds(limit = 10): Promise<Result<Array<{ id: number }>>> {
     return safeCall(async () => {
+      // crm_leads has no metadata column; return all 'new' unscored leads
       return db
         .select({ id: crmLeads.id })
         .from(crmLeads)
@@ -59,22 +65,14 @@ export class AiAutomationRepository {
           and(
             isNull(crmLeads.deleted_at),
             eq(crmLeads.status, 'new'),
-            sql`${crmLeads.metadata}->>'aiScore' IS NULL`,
           ),
         )
         .limit(limit);
       }, 'DB_ERROR');
   }
 
-  async updateLeadWithAiScore(leadId: number, aiScore: number, aiGrade: string, aiScoredAt: string, aiSuggestedActions: string[]): Promise<void> {
-    await db
-      .update(crmLeads)
-      .set({
-        metadata: sql`COALESCE(${crmLeads.metadata}, '{}'::jsonb) || ${JSON.stringify({ aiScore, aiGrade, aiScoredAt, aiSuggestedActions })}::jsonb`,
-        updated_at: _time.now(),
-      })
-      .where(eq(crmLeads.id, leadId));
-  }
+  /** crm_leads has no metadata column — no-op until column is added */
+  async updateLeadWithAiScore(_leadId: number, _aiScore: number, _aiGrade: string, _aiScoredAt: string, _aiSuggestedActions: string[]): Promise<void> { /* no-op */ }
 
   async updateDealWithProbability(dealId: number, aiProbability: number, aiExpectedClose: string, aiUpdatedAt: string): Promise<void> {
     await db
@@ -86,14 +84,60 @@ export class AiAutomationRepository {
       .where(eq(crmDeals.id, dealId));
   }
 
-  async updateLeadAiScoreEvent(leadId: number, aiScore: number, aiGrade: string, aiScoredAt: string): Promise<void> {
+  /** crm_leads has no metadata column — no-op until column is added */
+  async updateLeadAiScoreEvent(_leadId: number, _aiScore: number, _aiGrade: string, _aiScoredAt: string): Promise<void> { /* no-op */ }
+
+  async getUnscreenedCandidates(limit = 5): Promise<Result<Array<{ funnelId: number; candidateId: number }>>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({ funnelId: hrCandidateFunnels.id, candidateId: hrCandidateFunnels.candidateId })
+        .from(hrCandidateFunnels)
+        .where(and(
+          eq(hrCandidateFunnels.funnelStage, 'NEW'),
+          eq(hrCandidateFunnels.isActive, true),
+          isNull(hrCandidateFunnels.screeningScore),
+        ))
+        .limit(limit);
+      return rows as Array<{ funnelId: number; candidateId: number }>;
+    }, 'DB_ERROR');
+  }
+
+  async updateCandidateFunnelScreening(
+    funnelId: number,
+    data: { screeningScore: string; initialScreeningNotes: string; productivityCategory: string },
+  ): Promise<void> {
     await db
-      .update(crmLeads)
+      .update(hrCandidateFunnels)
       .set({
-        metadata: sql`COALESCE(${crmLeads.metadata}, '{}'::jsonb) || ${JSON.stringify({ aiScore, aiGrade, aiScoredAt })}::jsonb`,
-        updated_at: _time.now(),
+        screeningScore:        data.screeningScore,
+        initialScreeningNotes: data.initialScreeningNotes,
+        productivityCategory:  data.productivityCategory as string,
+        updatedAt:             _time.now(),
       })
-      .where(eq(crmLeads.id, leadId));
+      .where(eq(hrCandidateFunnels.id, funnelId));
+  }
+
+  async rejectCandidateFunnel(funnelId: number, quickRejectionReason: string): Promise<void> {
+    await db
+      .update(hrCandidateFunnels)
+      .set({
+        funnelStage:          'REJECTED',
+        isActive:             false,
+        rejectedAt:           _time.now(),
+        isQuickRejected:      true,
+        quickRejectionReason,
+        updatedAt:            _time.now(),
+      })
+      .where(eq(hrCandidateFunnels.id, funnelId));
+  }
+
+  async getActiveDeals(limit = 20): Promise<Array<{ id: number }>> {
+    const rows = await db
+      .select({ id: crmDeals.id })
+      .from(crmDeals)
+      .where(isNull(crmDeals.deleted_at))
+      .limit(limit);
+    return rows as Array<{ id: number }>;
   }
 
   async updateGlDocumentAiCategory(invoiceId: number, aiData: { aiCategory: string; aiSubcategory: string; aiTaxCode: string; aiConfidence: number; aiClassifiedAt: string }): Promise<void> {

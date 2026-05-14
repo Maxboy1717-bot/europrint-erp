@@ -1,3 +1,8 @@
+/**
+ * @module schema-ext
+ * @description Source module. See exports for details.
+ */
+
 export * from './schema-ext-a-1';
 export * from './schema-ext-a-2';
 export * from './schema-ext-a-3';

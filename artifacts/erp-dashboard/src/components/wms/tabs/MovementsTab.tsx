@@ -1,3 +1,8 @@
+/**
+ * @module MovementsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +13,7 @@ import { fmtQty, fmtDate } from "@/components/wms/helpers";
 import { safeArray } from "@/lib/queryClient";
 import { KpiCard } from "@/components/wms/tabs/KpiCard";
 import type { MovementsData, MaterialBasic, MovementRecord, MonthlyTrendRecord } from "@/components/wms/wms-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MovementsTabProps {
   movements: MovementsData | null | undefined;
@@ -15,8 +21,9 @@ interface MovementsTabProps {
 }
 
 export function MovementsTab({ movements, basic }: MovementsTabProps) {
+  const { t } = useTranslation("common");
   const [filter, setFilter] = useState("all");
-  if (!movements) return <div className="text-muted-foreground text-sm py-8 text-center">Harakat ma'lumotlari yo'q</div>;
+  if (!movements) return <div className="text-muted-foreground text-sm py-8 text-center">{t("harakatMalumotlariYoq")}</div>;
 
   const recent = safeArray<MovementRecord>(movements.recent).filter(t => filter === "all" || t.transactionType === filter);
   const monthlyData = safeArray<MonthlyTrendRecord>(movements.monthlyTrend).map(m => ({
@@ -25,10 +32,10 @@ export function MovementsTab({ movements, basic }: MovementsTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={TrendingUp} label="30 kun kirim" value={fmtQty(movements.last30Days?.totalIn, basic.unitOfMeasure)} color="text-green-600" />
-        <KpiCard icon={TrendingDown} label="30 kun chiqim" value={fmtQty(movements.last30Days?.totalOut, basic.unitOfMeasure)} color="text-red-600" />
-        <KpiCard icon={RefreshCw} label="Aylanma" value={movements.last30Days?.turnoverDays !== null ? `${movements.last30Days?.turnoverDays} kun` : "Noma'lum"} sub="zaxira necha kunda aylandi" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <KpiCard icon={TrendingUp} label="30 kun kirim" value={fmtQty(movements.last30Days?.totalIn, basic.unitOfMeasure)} color="text-[var(--ep-green)]" />
+        <KpiCard icon={TrendingDown} label="30 kun chiqim" value={fmtQty(movements.last30Days?.totalOut, basic.unitOfMeasure)} color="text-[var(--ep-red)]" />
+        <KpiCard icon={RefreshCw} label={t("aylanma")} value={movements.last30Days?.turnoverDays !== null ? `${movements.last30Days?.turnoverDays} kun` : "Noma'lum"} sub="zaxira necha kunda aylandi" />
       </div>
 
       {monthlyData.length > 0 && (
@@ -52,7 +59,7 @@ export function MovementsTab({ movements, basic }: MovementsTabProps) {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <CardTitle className="text-sm">So'nggi harakatlar</CardTitle>
+            <CardTitle className="text-sm">{t("songgiHarakatlar")}</CardTitle>
             <div className="flex gap-1">
               {([["all", "Barchasi"], ["kirim", "Kirim"], ["chiqim", "Chiqim"]]).map(([v, l]) => (
                 <Button key={v} size="sm" variant={filter === v ? "default" : "outline"} onClick={() => setFilter(v)} className="text-xs h-7 px-2">{l}</Button>
@@ -70,7 +77,7 @@ export function MovementsTab({ movements, basic }: MovementsTabProps) {
               </thead>
               <tbody>
                 {recent.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">Ma'lumot yo'q</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">{t("malumotYoq")}</td></tr>
                 ) : (Array.isArray(recent) ? recent : []).map((t) => (
                   <tr key={t.id} className="border-b hover-elevate">
                     <td className="px-4 py-2">{fmtDate(t.transactionDate)}</td>

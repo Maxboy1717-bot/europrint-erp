@@ -1,8 +1,14 @@
+/**
+ * @module CourseCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Users, BookOpen, MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from '@/lib/i18n';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +45,7 @@ export function CourseCard({
   onDelete,
   onView,
 }: CourseCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="hover-elevate overflow-visible" data-testid={`card-course-${id}`}>
       {thumbnail && (
@@ -52,7 +59,7 @@ export function CourseCard({
       )}
       <CardHeader className="space-y-0 pb-3">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg line-clamp-2">{title}</CardTitle>
+          <CardTitle className="text-[14px] font-semibold line-clamp-2">{title}</CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -67,7 +74,7 @@ export function CourseCard({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onEdit} data-testid={`button-edit-course-${id}`}>
                 <Edit2 className="w-4 h-4 mr-2" />
-                Tahrirlash
+                {t("edit")}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={onDelete} 
@@ -75,7 +82,7 @@ export function CourseCard({
                 data-testid={`button-delete-course-${id}`}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                O'chirish
+                {t("delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -101,7 +108,7 @@ export function CourseCard({
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Tugatish</span>
+            <span className="text-muted-foreground">{t("tugatish")}</span>
             <span className="font-medium">{completionRate}%</span>
           </div>
           <Progress value={completionRate} className="h-2" />
@@ -109,9 +116,9 @@ export function CourseCard({
       </CardContent>
       <CardFooter className="flex items-center justify-between gap-2 pt-0">
         {isRequired ? (
-          <Badge className="bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-xs font-semibold">Majburiy</Badge>
+          <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("majburiy")}</Badge>
         ) : (
-          <Badge className="bg-surface-container text-on-surface-variant rounded-full px-2.5 py-0.5 text-xs font-semibold">Ixtiyoriy</Badge>
+          <Badge className="bg-muted/60 text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("Ixtiyoriy")}</Badge>
         )}
         <Button 
           variant="outline" 
@@ -119,7 +126,7 @@ export function CourseCard({
           onClick={onView}
           data-testid={`button-view-course-${id}`}
         >
-          Ko'rish
+          {t("view")}
         </Button>
       </CardFooter>
     </Card>

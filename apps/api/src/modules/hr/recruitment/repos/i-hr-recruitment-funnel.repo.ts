@@ -1,3 +1,8 @@
+/**
+ * @module i-hr-recruitment-funnel.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { candidates, hrCandidateFunnels, hrFunnelHistory } from '@europrint/schemas';
 import { Result } from '@common/result';
 

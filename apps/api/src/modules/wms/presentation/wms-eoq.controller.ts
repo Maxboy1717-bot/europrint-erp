@@ -1,3 +1,8 @@
+/**
+ * @module wms-eoq.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller, Post, Body, HttpCode,
   UseGuards, UseInterceptors,

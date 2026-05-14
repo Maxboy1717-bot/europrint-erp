@@ -1,3 +1,8 @@
+/**
+ * @module BarcodeScanner
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +16,8 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Scan, Package, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ScanResult {
   material?: {
@@ -34,6 +41,7 @@ const ACTIONS = [
 ];
 
 export default function BarcodeScanner() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [code, setCode] = useState("");
   const [action, setAction] = useState("LOOKUP");
@@ -89,23 +97,23 @@ export default function BarcodeScanner() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
         <Scan className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-base">Barcode Skaneri</h1>
-        <Badge variant="secondary">WMS</Badge>
+        <h1 className="font-semibold text-base">{t("barcodeSkaneri")}</h1>
+        <EPStatusPill tone="neutral">WMS</EPStatusPill>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-2xl mx-auto space-y-4">
+        <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Skanerlash sozlamalari</CardTitle>
+              <CardTitle className="text-sm">{t("skanerlashSozlamalari")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Amal</Label>
+                  <Label className="text-xs">{t("amal")}</Label>
                   <Select value={action} onValueChange={setAction}>
                     <SelectTrigger className="h-9" data-testid="select-action">
                       <SelectValue />
@@ -122,7 +130,7 @@ export default function BarcodeScanner() {
 
                 {action !== "LOOKUP" && (
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Miqdor</Label>
+                    <Label className="text-xs">{t("quantity")}</Label>
                     <Input
                       type="number"
                       min="1"
@@ -143,7 +151,7 @@ export default function BarcodeScanner() {
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Kodni kiriting yoki skanerlang..."
+                    placeholder={t("kodniKiritingYokiSkanerlang")}
                     className="h-10 text-base font-mono"
                     autoFocus
                     data-testid="input-barcode"
@@ -159,7 +167,7 @@ export default function BarcodeScanner() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Barcode skanerini ulang — kod avtomatik kiritiladi va Enter yuboriladi
+                  {t("barcodeSkaneriniUlangKodAvtomatik")}
                 </p>
               </div>
             </CardContent>
@@ -176,9 +184,9 @@ export default function BarcodeScanner() {
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-start gap-3">
                   {lastResult.success !== false ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)] mt-0.5 shrink-0" />
                   ) : (
-                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+                    <AlertCircle className="h-5 w-5 text-[var(--ep-red)] mt-0.5 shrink-0" />
                   )}
                   <div className="space-y-1">
                     {lastResult.material ? (
@@ -187,7 +195,7 @@ export default function BarcodeScanner() {
                           {lastResult.material.name}
                         </div>
                         <div className="text-sm text-muted-foreground flex gap-4">
-                          <span>Kod: <span className="font-mono">{lastResult.material.code}</span></span>
+                          <span>{t("kod")}<span className="font-mono">{lastResult.material.code}</span></span>
                           {lastResult.currentStock !== undefined && (
                             <span>
                               Qoldiq:{" "}
@@ -214,7 +222,7 @@ export default function BarcodeScanner() {
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">So'nggi skanerlashlar</CardTitle>
+                  <CardTitle className="text-sm">{t("songgiSkanerlashlar")}</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -222,7 +230,7 @@ export default function BarcodeScanner() {
                     onClick={() => setHistory([])}
                   >
                     <RotateCcw className="h-3 w-3 mr-1" />
-                    Tozalash
+                    {t("tozalash")}
                   </Button>
                 </div>
               </CardHeader>
@@ -236,7 +244,7 @@ export default function BarcodeScanner() {
                       <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="font-mono text-xs">{item.code}</span>
                       <Badge variant="outline" className="text-xs">
-                        {(ACTIONS ?? []).find((a) => a.value === item.action)?.label}
+                        {(Array.isArray(ACTIONS) ? ACTIONS : []).find((a) => a.value === item.action)?.label}
                       </Badge>
                       <span className="text-muted-foreground truncate flex-1">
                         {item.result.material?.name ?? item.result.message ?? "—"}

@@ -1,3 +1,8 @@
+/**
+ * @module OperatorQarzlariBolimi
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { User, CheckCircle2, RotateCcw } from "lucide-react";
 import { OperatorDebt } from "./types";
 import { statusRangi, statusNomi } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function OperatorQarzlariBolimi() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data: qarzlar, isLoading } = useQuery<OperatorDebt[]>({
@@ -28,7 +35,7 @@ export function OperatorQarzlariBolimi() {
     },
   });
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <Skeleton className="h-40 w-full rounded-lg" />;
 
   return (
     <Card>
@@ -40,7 +47,7 @@ export function OperatorQarzlariBolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {!qarzlar || qarzlar.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Qarzlar yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("qarzlarYoq")}</p>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(qarzlar) ? qarzlar : []).map((item: OperatorDebt) => (
@@ -48,7 +55,7 @@ export function OperatorQarzlariBolimi() {
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <span className="font-medium text-sm">{item.operatorName}</span>
-                    <div className="text-xs text-red-600 font-bold">
+                    <div className="text-xs text-[var(--ep-red)] font-bold">
                       Qarz: {item.balance.qtyDebt} (BC: {item.barcodeCode})
                     </div>
                   </div>
@@ -65,7 +72,7 @@ export function OperatorQarzlariBolimi() {
                     disabled={halQilishMutation.isPending}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Yopish
+                    {t("close2")}
                   </Button>
                   <Button
                     data-testid={`button-debt-deduct-${item.balance.id}`}
@@ -75,7 +82,7 @@ export function OperatorQarzlariBolimi() {
                     disabled={halQilishMutation.isPending}
                     className="flex-1"
                   >
-                    Ushlab qolish
+                    {t("ushlabQolish")}
                   </Button>
                 </div>
               </div>

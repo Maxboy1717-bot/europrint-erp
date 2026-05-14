@@ -1,3 +1,8 @@
+/**
+ * @module ai-reports.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common'
@@ -40,8 +45,8 @@ export class AiReportsHandler {
         director_chat_id: directorChatId,
       }
 
-      const risksText = (report?.risk_alerts ?? []).map(r => `⚠️ ${r}`).join('\n')
-      const recsText = (report?.recommendations ?? []).map(r => `✓ ${r}`).join('\n')
+      const risksText = (Array.isArray(report?.risk_alerts) ? report?.risk_alerts : []).map(r => `⚠️ ${r}`).join('\n')
+      const recsText = (Array.isArray(report?.recommendations) ? report?.recommendations : []).map(r => `✓ ${r}`).join('\n')
 
       const text = `
 🤖 <b>Kunlik AI Tahlili</b> - ${report.date}

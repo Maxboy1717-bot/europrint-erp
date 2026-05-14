@@ -1,3 +1,8 @@
+/**
+ * @module ERPProductsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -42,7 +47,7 @@ export function ERPProductsTab() {
   const save = useMutation({
     mutationFn: async (data: InsertProduct) => {
       if (editingProduct) {
-        await apiRequest("PATCH", `/api/erp/products/${editingProduct.id}`, data);
+        await apiRequest("PUT", `/api/erp/products/${editingProduct.id}`, data);
       } else {
         await apiRequest("POST", "/api/erp/products", data);
       }
@@ -99,9 +104,9 @@ export function ERPProductsTab() {
                   {tCommon('add')}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[500px] p-6">
                 <DialogHeader>
-                  <DialogTitle>{editingProduct ? t('editProduct') : t('newProduct')}</DialogTitle>
+                  <DialogTitle className="text-[18px] font-semibold">{editingProduct ? t('editProduct') : t('newProduct')}</DialogTitle>
                   <DialogDescription>{t('enterProductData')}</DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -116,7 +121,7 @@ export function ERPProductsTab() {
                     <FormField control={form.control} name="name" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('nameUz')} <span className="text-destructive">*</span></FormLabel>
-                        <FormControl><Input {...field} placeholder="Karton quti" data-testid="input-product-name" /></FormControl>
+                        <FormControl><Input {...field} placeholder={t("kartonQuti")} data-testid="input-product-name" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -130,7 +135,7 @@ export function ERPProductsTab() {
                     <FormField control={form.control} name="category" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{tCommon('category')}</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="Karton mahsulotlari" data-testid="input-product-category" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} placeholder={t("kartonMahsulotlari")} data-testid="input-product-category" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -139,7 +144,7 @@ export function ERPProductsTab() {
                         <FormLabel>{t('measureUnit')} <span className="text-destructive">*</span></FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-product-unit">
+                            <SelectTrigger data-testid="select-product-unit" className="h-9">
                               <SelectValue placeholder={t('selectUnit')} />
                             </SelectTrigger>
                           </FormControl>
@@ -182,7 +187,7 @@ export function ERPProductsTab() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{tCommon('code')}</TableHead>
@@ -196,22 +201,22 @@ export function ERPProductsTab() {
               </TableHeader>
               <TableBody>
                 {([1, 2, 3, 4, 5]).map((i) => (
-                  <TableRow key={`k-${i}`}>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell><Skeleton className="h-4 w-20 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16 rounded-lg" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           ) : products.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">{t('noProductsFound')}</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">{t('noProductsFound')}</div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{tCommon('code')}</TableHead>
@@ -225,7 +230,7 @@ export function ERPProductsTab() {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(products) ? products : []).map((product) => (
-                  <TableRow key={product.id} data-testid={`row-product-${product.id}`}>
+                  <TableRow key={product.id} data-testid={`row-product-${product.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{product.code}</TableCell>
                     <TableCell>{product.name}</TableCell>
                     <TableCell>{product.category || '-'}</TableCell>
@@ -247,7 +252,7 @@ export function ERPProductsTab() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

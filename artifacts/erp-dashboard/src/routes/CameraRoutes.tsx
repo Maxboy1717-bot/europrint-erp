@@ -1,3 +1,8 @@
+/**
+ * @module CameraRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
 const CameraDashboard = lazy(() => import("@/pages/camera-dashboard"));

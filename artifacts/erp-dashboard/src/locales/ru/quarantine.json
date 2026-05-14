@@ -1,0 +1,10 @@
+{
+  "title": "Заголовок",
+  "empty": "Пусто",
+  "emptyDesc": "Данные не найдены",
+  "hoursInQuarantine": "Часов в карантине",
+  "qcDecision": "Решение QC",
+  "decision": "Решение",
+  "note": "Заметка",
+  "notePlaceholder": "Введите заметку"
+}

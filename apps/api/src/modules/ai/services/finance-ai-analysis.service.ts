@@ -1,3 +1,8 @@
+/**
+ * @module finance-ai-analysis.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { AI_SHORT_MAX_TOKENS } from '@common/constants/app.constants';
 /**
  * Finance AI Analysis Service — Budget variance, Invoice classification, Fraud risk

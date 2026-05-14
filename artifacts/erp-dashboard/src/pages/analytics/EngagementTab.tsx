@@ -1,3 +1,8 @@
+/**
+ * @module EngagementTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Users, Activity, RefreshCw } from "lucide-react";
@@ -5,6 +10,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import type { ActiveUsersData, UserActivityItem, RetentionData, SessionStatsData } from "./analytics-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface EngagementTabProps {
   activeUsers: ActiveUsersData | undefined;
@@ -23,9 +29,10 @@ export function EngagementTab({
   retention,
   sessionStats,
 }: EngagementTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -35,7 +42,7 @@ export function EngagementTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeUsers?.dau || 0}</div>
-            <p className="text-xs text-muted-foreground">Kunlik faol foydalanuvchilar</p>
+            <p className="text-xs text-muted-foreground">{t("kunlikFaolFoydalanuvchilar")}</p>
             <Progress value={activeUsers?.dau_wau_ratio || 0} className="h-2 mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
               WAU dan {activeUsers?.dau_wau_ratio || 0}%
@@ -50,7 +57,7 @@ export function EngagementTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeUsers?.wau || 0}</div>
-            <p className="text-xs text-muted-foreground">Haftalik faol foydalanuvchilar</p>
+            <p className="text-xs text-muted-foreground">{t("haftalikFaolFoydalanuvchilar")}</p>
             <Progress value={activeUsers?.wau_mau_ratio || 0} className="h-2 mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
               MAU dan {activeUsers?.wau_mau_ratio || 0}%
@@ -65,7 +72,7 @@ export function EngagementTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeUsers?.mau || 0}</div>
-            <p className="text-xs text-muted-foreground">Oylik faol foydalanuvchilar</p>
+            <p className="text-xs text-muted-foreground">{t("oylikFaolFoydalanuvchilar")}</p>
             <Progress value={(activeUsers?.totalActiveUsers ?? 0) > 0 ? Math.round(((activeUsers?.mau ?? 0) / (activeUsers?.totalActiveUsers ?? 1)) * 100) : 0} className="h-2 mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
               Jami {activeUsers?.totalActiveUsers || 0} foydalanuvchidan
@@ -75,12 +82,12 @@ export function EngagementTab({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sessiyalar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("sessiyalar")}</CardTitle>
             <Activity className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{sessionStats?.totalSessions || 0}</div>
-            <p className="text-xs text-muted-foreground">Jami sessiyalar</p>
+            <p className="text-xs text-muted-foreground">{t("jamiSessiyalar")}</p>
             <div className="mt-2 space-y-1">
               <p className="text-xs text-muted-foreground">
                 O'rtacha: {sessionStats?.averageSessionDuration || 0} daqiqa
@@ -95,8 +102,8 @@ export function EngagementTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>30 Kunlik Faollik Tendentsiyasi</CardTitle>
-          <CardDescription>Kunlik faol foydalanuvchilar soni</CardDescription>
+          <CardTitle>{t("k30KunlikFaollikTendentsiyasi")}</CardTitle>
+          <CardDescription>{t("kunlikFaolFoydalanuvchilarSoni")}</CardDescription>
         </CardHeader>
         <CardContent>
           {activityTrend.length > 0 ? (
@@ -126,7 +133,7 @@ export function EngagementTab({
             </div>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Ma'lumot topilmadi
+              {t("noData")}
             </div>
           )}
         </CardContent>
@@ -136,14 +143,14 @@ export function EngagementTab({
         <Card>
           <CardHeader>
             <CardTitle>📈 Retention (Qaytish darajasi)</CardTitle>
-            <CardDescription>Foydalanuvchilarning qaytish ko'rsatkichlari</CardDescription>
+            <CardDescription>{t("foydalanuvchilarningQaytishKorsatkichlari")}</CardDescription>
           </CardHeader>
           <CardContent>
             {retention ? (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">1-kun Retention</span>
+                    <span className="text-sm font-medium">{t("k1KunRetention")}</span>
                     <span className="text-2xl font-bold text-primary">{retention.day1Retention}%</span>
                   </div>
                   <Progress value={retention.day1Retention} className="h-3" />
@@ -154,8 +161,8 @@ export function EngagementTab({
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">7-kun Retention</span>
-                    <span className="text-2xl font-bold text-blue-600">{retention.day7Retention}%</span>
+                    <span className="text-sm font-medium">{t("k7KunRetention")}</span>
+                    <span className="text-2xl font-bold text-[var(--ep-blue)]">{retention.day7Retention}%</span>
                   </div>
                   <Progress value={retention.day7Retention} className="h-3" />
                   <p className="text-xs text-muted-foreground">
@@ -165,8 +172,8 @@ export function EngagementTab({
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">30-kun Retention</span>
-                    <span className="text-2xl font-bold text-green-600">{retention.day30Retention}%</span>
+                    <span className="text-sm font-medium">{t("k30KunRetention")}</span>
+                    <span className="text-2xl font-bold text-[var(--ep-green)]">{retention.day30Retention}%</span>
                   </div>
                   <Progress value={retention.day30Retention} className="h-3" />
                   <p className="text-xs text-muted-foreground">
@@ -194,7 +201,7 @@ export function EngagementTab({
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot yuklanmoqda...
+                {t("malumotYuklanmoqda")}
               </div>
             )}
           </CardContent>
@@ -202,8 +209,8 @@ export function EngagementTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>⏱️ Session Statistikasi</CardTitle>
-            <CardDescription>Foydalanuvchilarning sessiya ko'rsatkichlari</CardDescription>
+            <CardTitle>{t("sessionStatistikasi")}</CardTitle>
+            <CardDescription>{t("foydalanuvchilarningSessiyaKorsatkichlari")}</CardDescription>
           </CardHeader>
           <CardContent>
             {sessionStats ? (
@@ -215,19 +222,19 @@ export function EngagementTab({
                   <p className="text-sm text-muted-foreground">O'rtacha sessiya davomiyligi (daqiqa)</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="text-center p-4 rounded-lg border">
-                    <div className="text-3xl font-bold text-blue-600">{sessionStats.totalSessions}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Jami sessiyalar</p>
+                    <div className="text-3xl font-bold text-[var(--ep-blue)]">{sessionStats.totalSessions}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{t("jamiSessiyalar")}</p>
                   </div>
                   <div className="text-center p-4 rounded-lg border">
-                    <div className="text-3xl font-bold text-green-600">{sessionStats.uniqueUsers}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Faol foydalanuvchilar</p>
+                    <div className="text-3xl font-bold text-[var(--ep-green)]">{sessionStats.uniqueUsers}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{t("faolFoydalanuvchilar")}</p>
                   </div>
                 </div>
 
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-purple-600">{sessionStats.sessionsPerUser}</div>
+                  <div className="text-3xl font-bold text-[var(--ep-purple)]">{sessionStats.sessionsPerUser}</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     O'rtacha sessiya/foydalanuvchi
                   </p>
@@ -253,7 +260,7 @@ export function EngagementTab({
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot yuklanmoqda...
+                {t("malumotYuklanmoqda")}
               </div>
             )}
           </CardContent>

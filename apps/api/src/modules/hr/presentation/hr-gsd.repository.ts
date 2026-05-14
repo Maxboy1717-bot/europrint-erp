@@ -1,3 +1,8 @@
+/**
+ * @module hr-gsd.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { employees, employee_skills, adaptation_milestones, salary_history } from '@shared/db';

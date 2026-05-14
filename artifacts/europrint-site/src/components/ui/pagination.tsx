@@ -1,3 +1,8 @@
+/**
+ * @module pagination
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 

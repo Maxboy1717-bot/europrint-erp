@@ -1,25 +1,31 @@
+/**
+ * @module auth.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import type { SignOptions } from 'jsonwebtoken';
 
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { AuthController } from './presentation/auth.controller';
+import { MePermissionsController } from './presentation/me-permissions.controller';
 import { LoginHandler } from './application/commands/login.handler';
 import { LogoutHandler } from './application/commands/logout.handler';
 import { ChangePasswordHandler } from './application/commands/change-password.handler';
 import { VerifyOtpHandler } from './application/commands/verify-otp.handler';
 import { ResendOtpHandler } from './application/commands/resend-otp.handler';
+import { GetMyPermissionsHandler } from './application/queries/get-my-permissions.handler';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { DrizzleAuthRepo } from './infrastructure/repositories/drizzle-auth.repo';
+import { DrizzleMyPermissionsRepository } from './infrastructure/repositories/drizzle-my-permissions.repo';
 import { OtpSessionRepository } from './infrastructure/repositories/otp-session.repository';
 import { AuthSchemaService } from './infrastructure/auth-schema.service';
 import { AuthSchemaRepository } from './infrastructure/auth-schema.repository';
 
 import { AUTH_REPO } from './auth.tokens';
-import { QUERY_TIMEOUT_MS } from '@common/constants/app.constants';
 export { AUTH_REPO } from './auth.tokens';
 
 @Module({
@@ -35,26 +41,21 @@ export { AUTH_REPO } from './auth.tokens';
         },
       }),
     }),
-    ThrottlerModule.forRoot([
-      {
-        name: 'auth',
-        ttl: QUERY_TIMEOUT_MS,
-        limit: 5,
-      },
-    ]),
     DatabaseModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, MePermissionsController],
   providers: [
     LoginHandler,
     LogoutHandler,
     ChangePasswordHandler,
     VerifyOtpHandler,
     ResendOtpHandler,
+    GetMyPermissionsHandler,
     JwtStrategy,
     OtpSessionRepository,
     AuthSchemaRepository,
     AuthSchemaService,
+    DrizzleMyPermissionsRepository,
     {
       provide: AUTH_REPO,
       useClass: DrizzleAuthRepo,

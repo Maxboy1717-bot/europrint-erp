@@ -1,3 +1,8 @@
+/**
+ * @module HRConflict
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +16,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { MessageSquareWarning, Plus } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
+
+const ConflictSchema = z.object({
+  party1:      z.string().min(1, "1-tomon majburiy"),
+  party2:      z.string().min(1, "2-tomon majburiy"),
+  description: z.string().min(3, "Tavsif majburiy"),
+  severity:    z.enum(["low", "medium", "high"]),
+});
+type ConflictData = z.infer<typeof ConflictSchema>;
 
 interface ConflictReport {
   id: string;
@@ -27,10 +44,12 @@ const SEVERITY_LABELS: Record<string, string> = { low: "Past", medium: "O'rta", 
 const STATUS_LABELS: Record<string, string> = { open: "Ochiq", investigating: "Ko'rilmoqda", resolved: "Hal etilgan" };
 
 export default function HRConflict() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
-  const form = useForm({
+  const form = useForm<ConflictData>({
+    resolver: zodResolver(ConflictSchema),
     defaultValues: { party1: "", party2: "", description: "", severity: "low" },
   });
 
@@ -53,24 +72,24 @@ export default function HRConflict() {
   const high = (reports as ConflictReport[]).filter((r) => r.severity === "high").length;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <MessageSquareWarning className="h-5 w-5 text-indigo-600" />
-          <h1 className="font-semibold text-base">HR — Konflikt Boshqaruvi</h1>
-          {open > 0 && <Badge variant="destructive">{open} ochiq</Badge>}
+          <MessageSquareWarning className="h-5 w-5 text-[var(--ep-blue)]" />
+          <h1 className="font-semibold text-base">{t("hrKonfliktBoshqaruvi")}</h1>
+          {open > 0 && <EPStatusPill tone="danger">{open} ochiq</EPStatusPill>}
         </div>
         <Button size="sm" onClick={() => setShowDialog(true)} data-testid="button-add-conflict">
-          <Plus className="h-3.5 w-3.5 mr-1.5" />Hodisa Qayd Etish
+          <Plus className="h-3.5 w-3.5 mr-1.5" />{t("hodisaQaydEtish1")}
         </Button>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {([
-            { label: "Jami hodisalar", value: (reports as ConflictReport[]).length, color: "text-blue-600" },
-            { label: "Ochiq hodisalar", value: open, color: "text-orange-600" },
-            { label: "Yuqori og'irlik", value: high, color: "text-red-600" },
+            { label: "Jami hodisalar", value: (reports as ConflictReport[]).length, color: "text-[var(--ep-blue)]" },
+            { label: "Ochiq hodisalar", value: open, color: "text-[var(--ep-primary)]" },
+            { label: "Yuqori og'irlik", value: high, color: "text-[var(--ep-red)]" },
           ]).map((s) => (
             <Card key={s.label}>
               <CardContent className="pt-4 pb-3">
@@ -83,27 +102,27 @@ export default function HRConflict() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
+            <div className="ep-table-scroll"><Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Tomonlar</TableHead>
-                  <TableHead>Tavsif</TableHead>
-                  <TableHead>Og'irlik</TableHead>
-                  <TableHead>Sana</TableHead>
-                  <TableHead>Holati</TableHead>
+                  <TableHead>{t("tomonlar")}</TableHead>
+                  <TableHead>{t("progress.description")}</TableHead>
+                  <TableHead>{t("weight")}</TableHead>
+                  <TableHead>{t("date")}</TableHead>
+                  <TableHead>{t("holati")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
                 ) : (reports as ConflictReport[]).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      Kelishmovchiliklar qayd etilmagan
+                    <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
+                      {t("kelishmovchiliklarQaydEtilmagan")}
                     </TableCell>
                   </TableRow>
                 ) : (reports as ConflictReport[]).map((r) => (
-                  <TableRow key={r.id} data-testid={`row-conflict-${r.id}`}>
+                  <TableRow key={r.id} data-testid={`row-conflict-${r.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{r.party1} / {r.party2}</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.description}</TableCell>
                     <TableCell>
@@ -120,42 +139,45 @@ export default function HRConflict() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Konflikt Hodisasini Qayd Etish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("konfliktHodisasiniQaydEtish")}</DialogTitle></DialogHeader>
           <form onSubmit={form.handleSubmit((d) => createReport.mutate(d))} className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>1-tomon</Label>
-              <Input {...form.register("party1", { required: true })} placeholder="Xodim ismi" data-testid="input-party1" />
+            <div className="space-y-1">
+          <Label>1-tomon</Label>
+              <Input {...form.register("party1")} placeholder={t("xodimIsmi")} data-testid="input-party1" />
+              {form.formState.errors.party1 && <p className="text-xs text-destructive">{form.formState.errors.party1.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label>2-tomon</Label>
-              <Input {...form.register("party2", { required: true })} placeholder="Xodim ismi yoki bo'lim" />
+            <div className="space-y-1">
+          <Label>2-tomon</Label>
+              <Input {...form.register("party2")} placeholder={t("xodimIsmiYokiBolim")} />
+              {form.formState.errors.party2 && <p className="text-xs text-destructive">{form.formState.errors.party2.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label>Holat tavsifi</Label>
-              <Input {...form.register("description", { required: true })} />
+            <div className="space-y-1">
+          <Label>{t("holatTavsifi")}</Label>
+              <Input {...form.register("description")} />
+              {form.formState.errors.description && <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label>Og'irlik darajasi</Label>
+            <div className="space-y-1">
+          <Label>{t("ogirlikDarajasi")}</Label>
               <Controller control={form.control} name="severity" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Past</SelectItem>
-                    <SelectItem value="medium">O'rta</SelectItem>
-                    <SelectItem value="high">Yuqori</SelectItem>
+                    <SelectItem value="low">{t("low")}</SelectItem>
+                    <SelectItem value="medium">{t("medium")}</SelectItem>
+                    <SelectItem value="high">{t("high")}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
             </div>
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setShowDialog(false)}>Bekor</Button>
+              <Button variant="outline" type="button" onClick={() => setShowDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createReport.isPending}>
                 {createReport.isPending ? "Saqlanmoqda..." : "Saqlash"}
               </Button>

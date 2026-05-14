@@ -1,3 +1,8 @@
+/**
+ * @module pos-event.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db, eq, and, sql, inArray, posMovements } from '@workspace/db';
 import { users } from '@europrint/schemas';

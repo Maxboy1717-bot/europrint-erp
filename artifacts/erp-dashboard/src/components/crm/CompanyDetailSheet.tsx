@@ -1,3 +1,8 @@
+/**
+ * @module CompanyDetailSheet
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,6 +18,8 @@ import { ContactsTab } from "./company/ContactsTab";
 import { DealsTab } from "./company/DealsTab";
 import { CreditTab } from "./company/CreditTab";
 import { CompanyEditForm } from "./company/CompanyEditForm";
+import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 interface CompanyDetailSheetProps {
   companyId: number | null;
@@ -20,6 +27,7 @@ interface CompanyDetailSheetProps {
 }
 
 export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetProps) {
+  const { t } = useTranslation("common");
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
 
@@ -31,21 +39,21 @@ export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetPro
   const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ["/api/crm/companies", companyId, "contacts"],
     queryFn: () =>
-      fetch(`/api/crm/companies/${companyId}/contacts`, { credentials: "include" }).then((res) => res.json()),
+      apiRequest('GET', `/api/crm/companies/${companyId}/contacts`).then((res) => res.json()),
     enabled: !!companyId,
   });
 
   const { data: deals = [] } = useQuery<Deal[]>({
     queryKey: ["/api/crm/companies", companyId, "deals"],
     queryFn: () =>
-      fetch(`/api/crm/companies/${companyId}/deals`, { credentials: "include" }).then((res) => res.json()),
+      apiRequest('GET', `/api/crm/companies/${companyId}/deals`).then((res) => res.json()),
     enabled: !!companyId,
   });
 
   const { data: creditData } = useQuery<CreditLimit | null>({
     queryKey: ["/api/crm/companies", companyId, "credit"],
     queryFn: () =>
-      fetch(`/api/crm/companies/${companyId}/credit`, { credentials: "include" }).then((res) => res.json()),
+      apiRequest('GET', `/api/crm/companies/${companyId}/credit`).then((res) => res.json()),
     enabled: !!companyId,
   });
 
@@ -53,14 +61,14 @@ export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetPro
 
   return (
     <Sheet open={!!companyId} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto p-6">
         {isLoading ? (
           <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-8 w-3/4 rounded-lg" />
+            <Skeleton className="h-4 w-1/2 rounded-lg" />
             <div className="space-y-2">
               {([...Array(5)]).map((_, i) => (
-                <Skeleton key={`k-${i}`} className="h-16 w-full" />
+                <Skeleton key={`k-${i}`} className="h-16 w-full rounded-lg" />
               ))}
             </div>
           </div>
@@ -81,11 +89,11 @@ export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetPro
                 />
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="info">Ma'lumotlar</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+                    <TabsTrigger value="info">{t("malumotlar")}</TabsTrigger>
                     <TabsTrigger value="contacts">Kontaktlar ({contacts.length})</TabsTrigger>
                     <TabsTrigger value="deals">Bitimlar ({deals.length})</TabsTrigger>
-                    <TabsTrigger value="credit">Kredit</TabsTrigger>
+                    <TabsTrigger value="credit">{t("loan")}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="info">
@@ -108,7 +116,7 @@ export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetPro
             </div>
           </>
         ) : (
-          <div className="text-center text-muted-foreground">Kompaniya topilmadi</div>
+          <div className="text-center text-muted-foreground">{t("kompaniyaTopilmadi")}</div>
         )}
       </SheetContent>
     </Sheet>

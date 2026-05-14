@@ -1,3 +1,8 @@
+/**
+ * @module useOrgNodeData
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";

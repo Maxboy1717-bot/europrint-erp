@@ -1,3 +1,8 @@
+/**
+ * @module contacts.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
 import { ICrmContactsRepository, CRM_CONTACTS_REPO } from './i-crm-contacts.repo';
 import { safeCall, Result, AppError } from '@common/result';

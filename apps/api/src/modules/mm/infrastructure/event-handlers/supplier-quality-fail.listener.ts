@@ -1,3 +1,8 @@
+/**
+ * @module supplier-quality-fail.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { IMmRepository } from '../../domain/repositories/mm.repository';

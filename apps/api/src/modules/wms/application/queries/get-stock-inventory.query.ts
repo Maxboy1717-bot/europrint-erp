@@ -1,3 +1,8 @@
+/**
+ * @module get-stock-inventory.query
+ * @description Source module. See exports for details.
+ */
+
 export interface StockFilters {
   category?: string;
   location?: string;

@@ -1,3 +1,8 @@
+/**
+ * @module SDEuroprint
+ * @description React page component. Route-level UI.
+ */
+
 import { TrendingUp, BarChart3, Building2, Users, FileText, ShoppingCart, CreditCard, Target } from "lucide-react";
 import { SectionHeader } from "@/components/sd/europrint/SectionHeader";
 import { OverviewDashboard } from "@/components/sd/europrint/OverviewDashboard";
@@ -7,6 +12,7 @@ import { QuotationsTab } from "@/components/sd/europrint/QuotationsTab";
 import { OrdersTab } from "@/components/sd/europrint/OrdersTab";
 import { PaymentsTab } from "@/components/sd/europrint/PaymentsTab";
 import { KPITab } from "@/components/sd/europrint/KPITab";
+import { useTranslation } from '@/lib/i18n';
 
 const SECTIONS = [
   { id: "s-dashboard", icon: BarChart3, label: "Dashboard", title: "Dashboard", description: "Umumiy ko'rsatkichlar va lead funnel", Component: OverviewDashboard },
@@ -19,16 +25,17 @@ const SECTIONS = [
 ];
 
 export default function SDEuroprint() {
+  const { t } = useTranslation("common");
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Sticky quick-nav */}
       <div className="sticky top-0 z-50 bg-background border-b px-4 py-2 flex items-center gap-1 flex-wrap">
         <TrendingUp className="w-4 h-4 text-primary shrink-0 mr-1" />
-        <span className="text-sm font-semibold mr-3">CRM + Savdo</span>
+        <span className="text-sm font-semibold mr-3">{t("crmSavdo")}</span>
         {(Array.isArray(SECTIONS) ? SECTIONS : []).map(s => (
           <button
             key={s.id}

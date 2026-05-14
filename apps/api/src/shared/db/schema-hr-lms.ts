@@ -1,3 +1,8 @@
+/**
+ * @module schema-hr-lms
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable,
   uuid,
@@ -175,6 +180,22 @@ export const user_panels = pgTable('user_panels', {
   isDefault: boolean('is_default').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// ============================================================================
+// LMS — Support Tickets
+// ============================================================================
+
+export const lms_support_tickets = pgTable('lms_support_tickets', {
+  id:         uuid('id').primaryKey().$defaultFn(() => createId()),
+  subject:    text('subject').notNull(),
+  message:    text('message').notNull(),
+  priority:   text('priority').default('medium'), // low | medium | high
+  status:     text('status').default('open'),      // open | in_progress | resolved
+  created_by: text('created_by'),
+  resolved_at: timestamp('resolved_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // ============================================================================

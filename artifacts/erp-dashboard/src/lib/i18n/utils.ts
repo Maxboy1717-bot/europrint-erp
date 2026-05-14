@@ -1,3 +1,8 @@
+/**
+ * @module utils
+ * @description Frontend utility / library module.
+ */
+
 import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY, SUPPORTED_LANGUAGES } from './constants';
 import type { Language } from './types';
 import { safeStorage } from '@/lib/safeStorage';

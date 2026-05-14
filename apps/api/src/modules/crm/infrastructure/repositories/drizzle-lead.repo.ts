@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-lead.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
@@ -15,12 +20,29 @@ type DbRow = Record<string, unknown>;
 @Injectable()
 export class DrizzleLeadRepository implements ILeadRepository {
   async save(lead: Lead): Promise<{ ok: true; data: Lead }> {
-    const payload: Omit<typeof crmLeads.$inferInsert, 'id'> = {
-      company_id:  lead.getCompanyId(),
-      status:      lead.getStatus(),
-      ai_score:    String(lead.getAiScore()),
-    };
-    await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).onConflictDoNothing();
+    const payload = {
+      customer_id:   lead.getCompanyId(),
+      status:        lead.getStatus(),
+      contact_email: lead.getEmail?.() ?? undefined,
+      contact_phone: lead.getPhone?.() ?? undefined,
+      contact_name:  `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
+      source:        lead.getSource?.() ?? undefined,
+      notes:         lead.getNotes?.() ?? undefined,
+      manager_id:    lead.getAssignedTo?.() ?? undefined,
+    } as typeof crmLeads.$inferInsert;
+    await db.insert(crmLeads).values(payload)
+      .onConflictDoUpdate({
+        target: crmLeads.id,
+        set: {
+          status:        payload.status,
+          contact_email: payload.contact_email,
+          contact_phone: payload.contact_phone,
+          contact_name:  payload.contact_name,
+          source:        payload.source,
+          notes:         payload.notes,
+          manager_id:    payload.manager_id,
+        },
+      });
     return { ok: true as const, data: lead };
   }
 
@@ -31,7 +53,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
   }
 
   async findByEmail(email: string): Promise<{ ok: true; data: Lead | null }> {
-    const rows = await db.select().from(crmLeads).where(eq(crmLeads.email, email)).limit(1);
+    const rows = await db.select().from(crmLeads).where(eq(crmLeads.contact_email, email)).limit(1);
     if (!rows[0]) return { ok: true as const, data: null };
     return { ok: true as const, data: this.toDomain(castTo<DbRow>(rows[0])) };
   }
@@ -39,7 +61,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
   async findByCompanyId(companyId: number, limit: number, offset: number): Promise<{ ok: true; data: Lead[] }> {
     try {
       const rows = await db.select().from(crmLeads)
-        .where(companyId != null ? eq(crmLeads.company_id, companyId) : sql`true`)
+        .where(companyId != null ? eq(crmLeads.customer_id, companyId) : sql`true`)
         .limit(limit).offset(offset);
       return { ok: true as const, data: rows.map((r) => this.toDomain(castTo<DbRow>(r))) };
     } catch {
@@ -60,14 +82,20 @@ export class DrizzleLeadRepository implements ILeadRepository {
 
   async update(lead: Lead): Promise<{ ok: true; data: void }> {
     await db.update(crmLeads).set({
-      status:     lead.getStatus(),
-      updated_at: _time.now(),
+      status:        lead.getStatus(),
+      contact_email: lead.getEmail?.() ?? undefined,
+      contact_phone: lead.getPhone?.() ?? undefined,
+      contact_name:  `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
+      source:        lead.getSource?.() ?? undefined,
+      notes:         lead.getNotes?.() ?? undefined,
+      manager_id:    lead.getAssignedTo?.() ?? undefined,
+      updated_at:    _time.now(),
     }).where(eq(crmLeads.id, lead.getId()));
     return { ok: true as const, data: undefined };
   }
 
   async delete(id: number): Promise<{ ok: true; data: void }> {
-    await db.delete(crmLeads).where(eq(crmLeads.id, id));
+    await db.update(crmLeads).set({ deleted_at: _time.now() }).where(eq(crmLeads.id, id));
     return { ok: true as const, data: undefined };
   }
 
@@ -95,7 +123,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
   private toDomain(row: DbRow): Lead {
     return new Lead({
       id:         Number(row['id']),
-      companyId:  Number(row['company_id']),
+      companyId:  Number(row['customer_id']),
       firstName:  String(row['first_name'] ?? ''),
       lastName:   String(row['last_name'] ?? ''),
       email:      String(row['email'] ?? ''),

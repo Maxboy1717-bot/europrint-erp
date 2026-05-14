@@ -1,3 +1,8 @@
+/**
+ * @module leads.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { marketingLeads } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
@@ -59,5 +64,11 @@ export class LeadsService {
       this.logger.log(`leads: o'chirildi id=${id}`);
       return { message: 'O\'chirildi' };
     });
+  }
+
+  async getLossAnalysis() {
+    const r = await this.repo.getLossAnalysis();
+    if (!r.ok) throw new Error(String(r.error));
+    return r.data;
   }
 }

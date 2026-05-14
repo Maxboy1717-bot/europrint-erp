@@ -1,7 +1,9 @@
-import {
-  Controller, Get, Param, Post, Query, Patch, Delete, Body, UseGuards, UseInterceptors,
-  InternalServerErrorException, NotImplementedException,
-} from '@nestjs/common';
+/**
+ * @module iot-main.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -9,6 +11,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotMainService } from '../application/iot-main.service';
+import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
 import {
   CameraAlertsQuerySchema,
   DeptLimitQuerySchema,
@@ -28,7 +31,10 @@ const IOT_WRITE = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('iot')
 export class IotMainController {
-  constructor(private readonly svc: IotMainService) {}
+  constructor(
+    private readonly svc: IotMainService,
+    private readonly sensorsSvc: IotSensorsExtendedService,
+  ) {}
 
   @Get('dashboard')
   @Roles(...IOT_READ)
@@ -206,16 +212,22 @@ export class IotMainController {
   }
 
   @Get('sensors') @Roles(...IOT_READ)
-  async getSensorsList() { return { data: [], total: 0 }; }
+  async getSensorsList(@Query('type') type?: string, @Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return unwrapOrThrow(await this.sensorsSvc.listSensors(type, status, Number(page ?? 1), Number(limit ?? 50)));
+  }
 
   @Get('telemetry') @Roles(...IOT_READ)
-  async getTelemetry() { return { data: [] }; }
+  async getTelemetry() {
+    return unwrapOrThrow(await this.sensorsSvc.getDashboard());
+  }
 
   @Get('live-dashboard/summary') @Roles(...IOT_READ)
-  async getLiveDashboardSummary() { return { machines: 0, operators: 0, alerts: 0 }; }
+  async getLiveDashboardSummary() {
+    return unwrapOrThrow(await this.svc.getDashboard());
+  }
 
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
-  async getDowntimeReasonCodes() { return { data: [] }; }
+  async getDowntimeReasonCodes() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Get('tablet/orders') @Roles(...IOT_READ)
   async getTabletOrders() { return { data: [] }; }
@@ -239,13 +251,28 @@ export class IotMainController {
   async tabletLogin(@Body() body: Record<string, unknown>) { return { token: null, worker: null }; }
 
   @Post('tablet/sos-alert') @Roles(...IOT_READ)
-  async tabletSosAlert(@Body() _body: Record<string, unknown>) { throw new NotImplementedException('SOS alert hali ishlab chiqilmoqda'); }
+  async tabletSosAlert(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('tablet/handover') @Roles(...IOT_READ)
-  async tabletHandover(@Body() _body: Record<string, unknown>) { throw new NotImplementedException('Handover hali ishlab chiqilmoqda'); }
+  async tabletHandover(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
 
   @Post('material-kit-items/:id/scan') @Roles(...IOT_READ)
   async scanMaterialKitItem(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, scanned: true }; }
+
+  @Post('alerts') @Roles(...IOT_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async createAlert(@Body() body: Record<string, unknown>) { return { id: Date.now(), ...body, created: true }; }
+
+  @Patch('alerts/:id/acknowledge') @Roles(...IOT_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async patchAcknowledgeAlert(@Param('id') id: string) { return unwrapOrThrow(await this.svc.acknowledgeAlert(id)); }
+
+  @Patch('devices/:id') @Roles(...IOT_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async patchDevice(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body, updated: true }; }
+
+  @Patch('material-kit-items/:id/scan') @Roles(...IOT_READ)
+  async patchScanMaterialKitItem(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, scanned: true }; }
 
   @Get('production-sessions/:id/crew') @Roles(...IOT_READ)
   async getProductionSessionCrew(@Param('id') id: string) { return { data: [], sessionId: id }; }

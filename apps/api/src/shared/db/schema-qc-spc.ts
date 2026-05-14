@@ -1,3 +1,8 @@
+/**
+ * @module schema-qc-spc
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable,
   text,

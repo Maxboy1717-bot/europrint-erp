@@ -1,3 +1,8 @@
+/**
+ * @module jwt.strategy
+ * @description Passport strategy. Extracts and validates auth credentials from the request.
+ */
+
 import { Injectable, Logger, Inject, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';

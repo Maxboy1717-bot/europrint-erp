@@ -1,3 +1,8 @@
+/**
+ * @module global-exception.filter
+ * @description NestJS exception filter. Converts thrown errors to HTTP responses.
+ */
+
 import {
   ExceptionFilter,
   Catch,
@@ -50,6 +55,36 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     this.logException(logLevel, message, code, status, request.url)
 
+    // Graceful fallback (TORLI): faqat stats/dashboard tipidagi endpointlar uchun
+    // 5xx server xatosida bo'sh javob qaytariladi — UI buzilmaydi.
+    //
+    // MUHIM: Bu fallback faqat AGREGAT/STATS endpointlar uchun ishlaydi
+    // (dashboard widgetlari, KPI kartalar). Oddiy data endpointlari (orders, employees,
+    // invoices va boshqalar) uchun haqiqiy xato qaytariladi — UI "Yuklashda xato"
+    // xabarini ko'rsata olishi uchun. 404 va 422 ham haqiqiy xato sifatida qaytadi
+    // (avval ular ham maskirovka qilingan edi — bu xato edi).
+    if (
+      request.method === 'GET' &&
+      status >= HttpStatus.INTERNAL_SERVER_ERROR  // faqat 5xx — 4xx haqiqiy
+    ) {
+      const url = request.url || ''
+      // Strict regex: faqat aniq stats/dashboard endpointlar
+      const isStatsLike = /\/(stats|summary|dashboard|kpi|metrics|overview|live|monitor|health|aggregate)(\/|\?|$)/i.test(url)
+      if (isStatsLike) {
+        reply.status(HttpStatus.OK).send({})
+        return
+      }
+      // Boshqa GET endpointlar uchun 503 qaytaramiz (haqiqiy xato),
+      // body'da xato matnsiz — frontend retry yoki error UI ko'rsata oladi
+      reply.status(HttpStatus.SERVICE_UNAVAILABLE).send({
+        success: false,
+        error: 'Server temporarily unavailable',
+        code: 'SERVICE_UNAVAILABLE',
+        timestamp: new Date().toISOString(),
+      })
+      return
+    }
+
     reply.status(status).send({
       success: false,
       error: message,
@@ -57,6 +92,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     })
   }
+
 
   private getLogLevel(status: number): LogLevel {
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) return 'CRITICAL'

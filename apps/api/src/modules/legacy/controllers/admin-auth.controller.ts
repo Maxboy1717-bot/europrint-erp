@@ -1,3 +1,8 @@
+/**
+ * @module admin-auth.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { assertInternal } from '@common/assertions';
 import {
@@ -7,6 +12,7 @@ import {
   Logger, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -22,16 +28,19 @@ export class AdminAuthController {
   private readonly logger = new Logger(AdminAuthController.name);
 
   constructor(
-    private readonly db: LegacyService,
+    private readonly legacyService: LegacyService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Public()
   @Post('auth/refresh')
   @UsePipes(new ZodValidationPipe(LegacyRefreshTokenSchema))
   async refreshToken(@Body() body: LegacyRefreshTokenDto) {
-    const decoded = this.jwtService.verify(body.refreshToken) as Record<string, unknown>;
-    const admin = await this.db.findAdminById(decoded['id'] as string | number);
+    // getOrThrow: fail loudly if JWT_REFRESH_SECRET is missing — never fall back to JWT_SECRET
+    const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+    const decoded = this.jwtService.verify(body.refreshToken, { secret: refreshSecret }) as Record<string, unknown>;
+    const admin = await this.legacyService.findAdminById(decoded['id'] as string | number);
     assertInternal(admin, 'Admin topilmadi');
 
     const accessToken = this.jwtService.sign(

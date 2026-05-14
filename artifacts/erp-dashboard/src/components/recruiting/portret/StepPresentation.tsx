@@ -1,3 +1,8 @@
+/**
+ * @module StepPresentation
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PortretData } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StepPresentationProps {
   portret: PortretData;
@@ -13,31 +19,32 @@ interface StepPresentationProps {
 }
 
 export function StepPresentation({ portret, onChangePresentation }: StepPresentationProps) {
+  const { t } = useTranslation("common");
   const cp = onChangePresentation;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">IV bo'lim: Kandidatga taqdimot</h3>
-        <Badge variant="outline" className="text-[9px]">Suhbatda aytiladigan 16 savol</Badge>
+        <h3 className="font-semibold text-sm text-primary">{t("ivBolimKandidatgaTaqdimot1")}</h3>
+        <Badge variant="outline" className="text-[9px]">{t("suhbatdaAytiladigan16Savol")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
         {/* 1–3: Kompaniya, Ish tartibi, Instrumentlar */}
         <div>
-          <Label className="text-xs mb-1 block">1. Kompaniya haqida qisqacha taqdimot</Label>
+          <Label className="text-xs mb-1 block">{t("k1KompaniyaHaqidaQisqachaTaqdimot")}</Label>
           <Textarea
-            placeholder="Kompaniya faoliyati, qisqa tarixi va yutuqlari..."
+            placeholder={t("kompaniyaFaoliyatiQisqaTarixiVa")}
             rows={2}
             value={portret.candidate_presentation?.kompaniya_taqdimoti ?? ""}
             onChange={e => cp("kompaniya_taqdimoti")(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs mb-1 block">2. Ish tartibi va jarayonlar</Label>
+            <Label className="text-xs mb-1 block">{t("k2IshTartibiVaJarayonlar")}</Label>
             <Input
-              placeholder="Kompaniyada ish qanday tashkil qilingan?"
+              placeholder={t("kompaniyadaIshQandayTashkilQilingan")}
               value={portret.candidate_presentation?.ish_tartibi ?? ""}
               onChange={e => cp("ish_tartibi")(e.target.value)}
             />
@@ -45,7 +52,7 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
           <div>
             <Label className="text-xs mb-1 block">3. Instrumentlar/Dasturlar</Label>
             <Input
-              placeholder="Qanday asboblar ishlatiladi?"
+              placeholder={t("qandayAsboblarIshlatiladi")}
               value={portret.candidate_presentation?.instrumentlar ?? ""}
               onChange={e => cp("instrumentlar")(e.target.value)}
             />
@@ -53,17 +60,17 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         </div>
 
         {/* 4–6: Guruh, Safar, Sinov muddati */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <Label className="text-xs mb-1 block">4. Guruhga javobgarlik</Label>
+            <Label className="text-xs mb-1 block">{t("k4GuruhgaJavobgarlik")}</Label>
             <Input
-              placeholder="Necha kishi?"
+              placeholder={t("nechaKishi")}
               value={portret.candidate_presentation?.guruh_javob ?? ""}
               onChange={e => cp("guruh_javob")(e.target.value)}
             />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">5. Xizmat safari</Label>
+            <Label className="text-xs mb-1 block">{t("k5XizmatSafari")}</Label>
             <Select
               value={portret.candidate_presentation?.xizmat_safari ?? "no"}
               onValueChange={v => cp("xizmat_safari")(v)}
@@ -71,15 +78,15 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="yes">Ha</SelectItem>
-                <SelectItem value="no">Yo'q</SelectItem>
-                <SelectItem value="rare">Kamdan-kam</SelectItem>
+                <SelectItem value="no">{t("no")}</SelectItem>
+                <SelectItem value="rare">{t("kamdanKam")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs mb-1 block">6. Sinov muddati</Label>
+            <Label className="text-xs mb-1 block">{t("k6SinovMuddati")}</Label>
             <Input
-              placeholder="Masalan: 3 oy"
+              placeholder={t("masalan3Oy")}
               value={portret.candidate_presentation?.sinov_muddat ?? ""}
               onChange={e => cp("sinov_muddat")(e.target.value)}
             />
@@ -87,35 +94,35 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         </div>
 
         {/* 7–10: Maoshlar va Martaba */}
-        <div className="grid grid-cols-2 gap-4 border p-3 rounded-lg bg-surface-container-low/50">
-          <div className="space-y-2">
-            <Label className="text-[11px] font-semibold text-primary">Sinov davri maoshi</Label>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border p-3 rounded-lg bg-muted/40/50">
+          <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-primary">{t("sinovDavriMaoshi")}</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input
-                placeholder="Min" size={1}
+                placeholder={t("min1")} size={1}
                 className="h-8 text-xs"
                 value={portret.candidate_presentation?.sinov_maosh_min ?? ""}
                 onChange={e => cp("sinov_maosh_min")(e.target.value)}
               />
               <Input
-                placeholder="Max"
+                placeholder={t("max1")}
                 className="h-8 text-xs"
                 value={portret.candidate_presentation?.sinov_maosh_max ?? ""}
                 onChange={e => cp("sinov_maosh_max")(e.target.value)}
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-[11px] font-semibold text-primary">Asosiy maosh va Martaba</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-primary">{t("asosiyMaoshVaMartaba")}</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input
-                placeholder="Asosiy maosh"
+                placeholder={t("asosiyMaosh1")}
                 className="h-8 text-xs"
                 value={portret.candidate_presentation?.asosiy_maosh ?? ""}
                 onChange={e => cp("asosiy_maosh")(e.target.value)}
               />
               <Input
-                placeholder="Martaba o'sishi"
+                placeholder={t("martabaOsishi")}
                 className="h-8 text-xs"
                 value={portret.candidate_presentation?.martaba ?? ""}
                 onChange={e => cp("martaba")(e.target.value)}
@@ -125,35 +132,35 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         </div>
 
         {/* 11–13: Ta'til, Rejim, Shartnoma */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs mb-1 block">11. Yillik ta'til</Label>
+              <Label className="text-xs mb-1 block">{t("k11YillikTatil")}</Label>
               <Input
-                placeholder="Kun"
+                placeholder={t("kun")}
                 value={portret.candidate_presentation?.tatil_kun ?? ""}
                 onChange={e => cp("tatil_kun")(e.target.value)}
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block">12. Ish rejimi</Label>
+              <Label className="text-xs mb-1 block">{t("k12IshRejimi")}</Label>
               <Input
-                placeholder="Masalan: 09:00-18:00"
+                placeholder={t("masalan09001800")}
                 value={portret.candidate_presentation?.ish_rejimi ?? ""}
                 onChange={e => cp("ish_rejimi")(e.target.value)}
               />
             </div>
           </div>
           <div>
-            <Label className="text-xs mb-1 block">13. Shartnoma turi</Label>
+            <Label className="text-xs mb-1 block">{t("k13ShartnomaTuri")}</Label>
             <Select
               value={portret.candidate_presentation?.shartnoma_tur ?? ""}
               onValueChange={v => cp("shartnoma_tur")(v)}
             >
-              <SelectTrigger><SelectValue placeholder="Tanlang..." /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("tanlang1")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="unlimited">Muddatsiz (doimiy)</SelectItem>
-                <SelectItem value="limited">Muddatli</SelectItem>
+                <SelectItem value="limited">{t("muddatli")}</SelectItem>
                 <SelectItem value="gpc">Fuqarolik shartnomasi (GPC)</SelectItem>
                 <SelectItem value="ip">IP / Yakka tartibdagi tadbirkor</SelectItem>
               </SelectContent>
@@ -164,10 +171,10 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         {/* 14–16: Jalb qiluvchi, Sotsial paket, O'qitish */}
         <div>
           <Label className="text-xs mb-1 block">
-            14. Nima uchun bizda ishlash kerak? — Asosiy jalb qiluvchi omil <span className="text-red-400">*</span>
+            {t("k14NimaUchunBizdaIshlash")}<span className="text-red-400">*</span>
           </Label>
           <Textarea
-            placeholder="Kompaniyaning eng kuchli tomoni — nima uchun aqlli kandidat bizni tanlaydi? Imkoniyatlar, jamoa, missiya..."
+            placeholder={t("kompaniyaningEngKuchliTomoniNima")}
             rows={3}
             value={portret.candidate_presentation?.jalb_qiluvchi ?? ""}
             onChange={e => cp("jalb_qiluvchi")(e.target.value)}
@@ -176,16 +183,16 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
         <div>
           <Label className="text-xs mb-1 block">15. Ijtimoiy paket (sotsial paket)</Label>
           <Textarea
-            placeholder="Masalan: Tibbiy sug'urta, korporativ transport, ovqatlanish, sport zali, bonus dasturi..."
+            placeholder={t("masalanTibbiySugurtaKorporativTransport")}
             rows={2}
             value={portret.candidate_presentation?.sotsial_paket ?? ""}
             onChange={e => cp("sotsial_paket")(e.target.value)}
           />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">16. O'qitish imkoniyatlari</Label>
+          <Label className="text-xs mb-1 block">{t("k16OqitishImkoniyatlari")}</Label>
           <Textarea
-            placeholder="Masalan: Ichki treninglar, kasbiy kurslar, sertifikatlar, xorijiy o'qishlar..."
+            placeholder={t("masalanIchkiTreninglarKasbiyKurslar")}
             rows={2}
             value={portret.candidate_presentation?.oqutish ?? ""}
             onChange={e => cp("oqutish")(e.target.value)}

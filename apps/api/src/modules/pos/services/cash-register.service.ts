@@ -1,6 +1,11 @@
+/**
+ * @module cash-register.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { CashRegisterRepository, CreateProductInput, CreateTransactionInput, RetailTransaction } from '../repositories/cash-register.repository';
 import { z } from 'zod';
@@ -95,7 +100,7 @@ export class CashRegisterService {
 
   async getTransactions() {
     const result = await this.repo.findTransactions();
-    if (!result.ok) throw new BadRequestException(result.error.message);
+    if (!result.ok) throw new InternalServerErrorException(result.error.message);
     return (Array.isArray(result.data) ? result.data : []).map((t) => this.mapTransaction(t));
   }
 
@@ -165,7 +170,7 @@ export class CashRegisterService {
 
   async getDashboard() {
     const result = await this.repo.getDashboard();
-    if (!result.ok) throw new BadRequestException(result.error.message);
+    if (!result.ok) throw new InternalServerErrorException(result.error.message);
     return result.data;
   }
 

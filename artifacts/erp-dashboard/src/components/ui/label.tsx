@@ -1,3 +1,8 @@
+/**
+ * @module label
+ * @description React UI component.
+ */
+
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { cva, type VariantProps } from "class-variance-authority"

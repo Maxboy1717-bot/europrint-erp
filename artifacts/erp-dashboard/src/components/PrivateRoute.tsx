@@ -1,3 +1,8 @@
+/**
+ * @module PrivateRoute
+ * @description React UI component.
+ */
+
 import { Redirect } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 

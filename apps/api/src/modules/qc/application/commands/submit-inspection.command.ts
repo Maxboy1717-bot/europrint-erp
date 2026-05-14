@@ -1,3 +1,8 @@
+/**
+ * @module submit-inspection.command
+ * @description Source module. See exports for details.
+ */
+
 export class SubmitInspectionCommand {
   constructor(readonly inspectionId: string,
     readonly orderId: number,

@@ -1,3 +1,8 @@
+/**
+ * @module update-incident.command
+ * @description Source module. See exports for details.
+ */
+
 export class UpdateIncidentCommand {
   constructor(readonly incidentId: string,
     readonly assignedTo?: string,

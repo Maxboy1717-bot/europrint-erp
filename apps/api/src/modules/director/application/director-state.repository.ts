@@ -1,15 +1,20 @@
+/**
+ * @module director-state.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 import { execSalesOrderSetVip } from '@common/database/queries-remaining';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -40,13 +45,13 @@ export class DirectorStateRepository {
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const daysElapsed = now.getDate();
       const r = await castTo<WRow[]>(exec(sql`SELECT w.id::text AS warehouse_id, w.name AS warehouse_name, w.type AS warehouse_type, COALESCE(SUM(si.quantity), 0) AS total_qty, COALESCE(SUM(si.quantity * si.unit_cost), 0) AS total_value, COUNT(DISTINCT si.id) AS item_count, COALESCE(w.monthly_rental_cost, 0) AS rental_cost_monthly FROM warehouses w LEFT JOIN stock_items si ON si.warehouse_id = w.id WHERE w.is_active = true GROUP BY w.id, w.name, w.type, w.monthly_rental_cost ORDER BY rental_cost_monthly DESC`));
-      const rentalData = (r ?? []).map(row => {
+      const rentalData = (Array.isArray(r) ? r : []).map(row => {
         const rentalCostMonthly = parseFloat(row.rental_cost_monthly) || 0;
         const rentalCostToDate = Math.round((rentalCostMonthly / daysInMonth) * daysElapsed);
         return { warehouseId: row.warehouse_id, warehouseName: row.warehouse_name ?? '', warehouseType: row.warehouse_type ?? '', totalQty: parseFloat(row.total_qty)||0, totalValue: parseFloat(row.total_value)||0, itemCount: parseInt(row.item_count,10)||0, rentalCostMonthly, rentalCostToDate };
       });
-      const grandTotal = (rentalData ?? []).reduce((s, x) => s + x.rentalCostMonthly, 0);
-      const grandTotalToDate = (rentalData ?? []).reduce((s, x) => s + x.rentalCostToDate, 0);
+      const grandTotal = (Array.isArray(rentalData) ? rentalData : []).reduce((s, x) => s + x.rentalCostMonthly, 0);
+      const grandTotalToDate = (Array.isArray(rentalData) ? rentalData : []).reduce((s, x) => s + x.rentalCostToDate, 0);
       return { rentalData, grandTotal, grandTotalToDate, daysElapsed, daysInMonth, month: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`, generatedAt: now.toISOString() };
     }, 'DB_ERROR');
   }
@@ -55,7 +60,7 @@ export class DirectorStateRepository {
     
     return safeCall(async () => {
       const r = await castTo<WR[]>(exec(sql`SELECT TO_CHAR(DATE_TRUNC('week', si.created_at), 'DD.MM') AS week_label, DATE_TRUNC('week', si.created_at)::date::text AS week_start, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) AS revenue, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) - COALESCE((SELECT SUM(pi.total_amount) FROM purchase_invoices pi WHERE DATE_TRUNC('week', pi.created_at) = DATE_TRUNC('week', si.created_at) AND pi.payment_status IN ('paid','partial')), 0) AS profit FROM sales_invoices si WHERE si.created_at >= NOW() - INTERVAL '8 weeks' GROUP BY DATE_TRUNC('week', si.created_at) ORDER BY week_start ASC`));
-      const history = (r ?? []).map(row => {
+      const history = (Array.isArray(r) ? r : []).map(row => {
         const revenue = parseFloat(row.revenue)||0; const profit = parseFloat(row.profit)||0;
         const perfRatio = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
         let stateKey = 'inqiroz';

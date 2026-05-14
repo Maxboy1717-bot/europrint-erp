@@ -1,10 +1,18 @@
-import { Loader2 } from "lucide-react";
+/**
+ * @module PageLoader
+ * @description React UI component.
+ */
 
+;
+
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export function PageLoader() {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col items-center justify-center h-[50vh] gap-3" data-testid="page-loader">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">Yuklanmoqda...</p>
+      <EPLoader className="w-8 h-8" />
+      <p className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</p>
     </div>
   );
 }

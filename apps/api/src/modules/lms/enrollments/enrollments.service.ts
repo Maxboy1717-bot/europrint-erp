@@ -1,3 +1,8 @@
+/**
+ * @module enrollments.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { ILmsEnrollmentsRepository, LMS_ENROLLMENTS_REPO } from './i-lms-enrollments.repo';
 import { safeCall, Result, AppError } from '@common/result';

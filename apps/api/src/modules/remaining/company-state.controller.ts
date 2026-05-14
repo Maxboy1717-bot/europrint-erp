@@ -1,3 +1,8 @@
+/**
+ * @module company-state.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';

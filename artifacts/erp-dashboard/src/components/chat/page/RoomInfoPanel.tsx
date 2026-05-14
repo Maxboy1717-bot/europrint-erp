@@ -1,3 +1,8 @@
+/**
+ * @module RoomInfoPanel
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { X, Crown, ShieldCheck, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +14,7 @@ import { SharedFiles } from "./SharedFiles";
 import { PinnedMessages } from "./PinnedMessages";
 import { RoomSettingsModal } from "./RoomSettingsModal";
 
+import { useTranslation } from '@/lib/i18n';
 interface Props {
   room: ChatRoom;
   onClose: () => void;
@@ -17,14 +23,15 @@ interface Props {
 type InfoTab = "members" | "files" | "pinned";
 
 function RoleBadge({ role }: { role: string }) {
+  const { t } = useTranslation("common");
   if (role === "OWNER") return (
-    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/50 text-yellow-600 dark:text-yellow-400 gap-1">
+    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/50 text-[var(--ep-yellow)] dark:text-yellow-400 gap-1">
       <Crown className="w-2.5 h-2.5" />
-      Egasi
+      {t("egasi")}
     </Badge>
   );
   if (role === "ADMIN") return (
-    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500/50 text-blue-600 dark:text-blue-400 gap-1">
+    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500/50 text-[var(--ep-blue)] dark:text-blue-400 gap-1">
       <ShieldCheck className="w-2.5 h-2.5" />
       Admin
     </Badge>
@@ -32,7 +39,8 @@ function RoleBadge({ role }: { role: string }) {
   return null;
 }
 
-export function RoomInfoPanel({ room, onClose }: Props) {
+export function RoomInfoPanel({room, onClose }: Props) {
+  const { t } = useTranslation('common');
   const [tab, setTab] = useState<InfoTab>("members");
   const [showSettings, setShowSettings] = useState(false);
   const onlineUserIds = useChatStore((s) => s.onlineUserIds);
@@ -56,12 +64,12 @@ export function RoomInfoPanel({ room, onClose }: Props) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 flex-shrink-0">
-        <h3 className="font-semibold text-sm">Ma'lumot</h3>
+        <h3 className="font-semibold text-sm">{t("info")}</h3>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowSettings(true)}
             className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Xona sozlamalari"
+            title={t("xonaSozlamalari")}
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -119,7 +127,7 @@ export function RoomInfoPanel({ room, onClose }: Props) {
           <div className="h-full overflow-y-auto">
             <div className="flex items-center justify-between px-3 py-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                A'zolar
+                {t("azolar")}
               </p>
               <span className="text-xs text-muted-foreground">
                 {onlineCount} online · {members.length} jami
@@ -141,9 +149,9 @@ export function RoomInfoPanel({ room, onClose }: Props) {
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {isOnline ? (
-                          <span className="text-green-500 font-medium">Online</span>
+                          <span className="text-[var(--ep-green)] font-medium">{t('online1')}</span>
                         ) : (
-                          <span>Offline</span>
+                          <span>{t('offline3')}</span>
                         )}
                       </p>
                     </div>
@@ -151,7 +159,7 @@ export function RoomInfoPanel({ room, onClose }: Props) {
                 );
               })}
               {members.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-6">A'zolar yo'q</p>
+                <p className="text-sm text-muted-foreground text-center py-6">{t("azolarYoq")}</p>
               )}
             </div>
           </div>

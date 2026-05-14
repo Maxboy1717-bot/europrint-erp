@@ -1,3 +1,8 @@
+/**
+ * @module purchase.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { IPurchaseSvcRepository, PURCHASE_SVC_REPO } from './i-purchase-svc.repo';
 import { safeCall, Result, AppError } from '@common/result';

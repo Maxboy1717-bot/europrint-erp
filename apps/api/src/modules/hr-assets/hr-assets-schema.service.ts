@@ -1,3 +1,8 @@
+/**
+ * @module hr-assets-schema.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { HrAssetsSchemaRepository } from './hr-assets-schema.repository';
 

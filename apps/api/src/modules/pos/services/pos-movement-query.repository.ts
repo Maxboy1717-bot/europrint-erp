@@ -1,3 +1,8 @@
+/**
+ * @module pos-movement-query.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { posMovements, posMovementLines, db, and, eq, sql, desc } from '@workspace/db';

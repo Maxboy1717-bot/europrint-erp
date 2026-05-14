@@ -1,4 +1,10 @@
+/**
+ * @module pos-stock-reservation.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 const _time = new TashkentTimeService();
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -7,7 +13,7 @@ import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
 type ReservationRow = typeof stockReservations.$inferSelect;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await db.execute(q)).rows as Row[];
 };
 

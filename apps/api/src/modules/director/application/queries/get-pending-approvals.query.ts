@@ -1,3 +1,8 @@
+/**
+ * @module get-pending-approvals.query
+ * @description Source module. See exports for details.
+ */
+
 import { HitlDocumentType } from '../../domain/enums/hitl-document-type.enum';
 
 export class GetPendingApprovalsQuery {

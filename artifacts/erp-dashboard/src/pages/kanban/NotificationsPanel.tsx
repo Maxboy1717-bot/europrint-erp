@@ -1,3 +1,8 @@
+/**
+ * @module NotificationsPanel
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -10,6 +15,8 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import type { TaskNotification } from "@shared/schema";
 import { type T, type NotificationCategory } from "./kanban-types";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function NotificationsPanel({
   open,
@@ -20,6 +27,7 @@ export function NotificationsPanel({
   onOpenChange: (open: boolean) => void;
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>("all");
   const [selectedNotification, setSelectedNotification] = useState<TaskNotification | null>(null);
@@ -81,7 +89,7 @@ export function NotificationsPanel({
   return (
     <PopoverContent className="w-[480px] p-0" align="end">
       <div className="flex h-[400px]">
-        <div className="w-[140px] border-r bg-muted/30 flex flex-col">
+        <div className="w-full sm:w-[140px] border-r bg-muted/30 flex flex-col">
           <div className="p-2 border-b">
             <h4 className="text-xs font-medium text-muted-foreground">{t.notifications.categories || "Kategoriyalar"}</h4>
           </div>
@@ -91,16 +99,16 @@ export function NotificationsPanel({
                 key={cat.id}
                 variant={activeCategory === cat.id ? "secondary" : "ghost"}
                 size="sm"
-                className="w-full justify-start h-8 text-xs"
+                className="w-full justify-start h-9 text-xs"
                 onClick={() => setActiveCategory(cat.id)}
                 data-testid={`notification-category-${cat.id}`}
               >
                 <cat.icon className="h-3 w-3 mr-1.5" />
                 {cat.label}
                 {unreadCounts[cat.id] > 0 && (
-                  <Badge variant="destructive" className="ml-auto h-4 px-1 text-[10px]">
+                  <EPStatusPill tone="danger" className="ml-auto h-4 px-1 text-[10px]">
                     {unreadCounts[cat.id]}
-                  </Badge>
+                  </EPStatusPill>
                 )}
               </Button>
             ))}
@@ -132,7 +140,7 @@ export function NotificationsPanel({
             <div className="flex-1 p-3 space-y-3">
               <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setSelectedNotification(null)}>
                 <ChevronLeft className="h-3 w-3 mr-1" />
-                Orqaga
+                {t("back")}
               </Button>
               <div className="space-y-2">
                 <h4 className="font-medium">{selectedNotification.title}</h4>
@@ -167,9 +175,9 @@ export function NotificationsPanel({
                         data-testid={`notification-${notif.id}`}
                       >
                         <div className={`h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          category === "reminder" ? "bg-amber-500/20 text-amber-500" :
-                          category === "automation" ? "bg-purple-500/20 text-purple-500" :
-                          "bg-blue-500/20 text-blue-500"
+                          category === "reminder" ? "bg-amber-500/20 text-[var(--ep-yellow)]" :
+                          category === "automation" ? "bg-purple-500/20 text-[var(--ep-purple)]" :
+                          "bg-blue-500/20 text-[var(--ep-blue)]"
                         }`}>
                           <CategoryIcon className="h-3.5 w-3.5" />
                         </div>

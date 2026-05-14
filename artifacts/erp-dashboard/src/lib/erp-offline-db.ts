@@ -1,3 +1,8 @@
+/**
+ * @module erp-offline-db
+ * @description Frontend utility / library module.
+ */
+
 import Dexie, { type Table } from "dexie";
 
 /* ════════════════════════════════════════════════════════════════
@@ -285,7 +290,7 @@ export async function syncPosMovements(
         offlineCreatedAt: new Date(pending[0]?.wallClock ?? Date.now()).toISOString(),
         movements,
       });
-      const conflictSet = new Set((res?.conflicts ?? []).map(String));
+      const conflictSet = new Set((Array.isArray(res?.conflicts) ? res?.conflicts : []).map(String));
       let success = 0; let conflicts = 0;
       for (const mv of pending) {
         if (conflictSet.has(String(mv.localId))) {

@@ -1,5 +1,45 @@
 /**
- * cohort.service.ts — TZ-43: Cohort Analysis (Retention Matrix)
+ * @module cohort.service
+ * @description Customer-cohort retention analysis. Groups customers by the
+ *   month of their first purchase ("cohort") and tracks how many remain
+ *   active (or how much revenue they generate) in subsequent months.
+ *
+ *   Two flavours:
+ *     - **count**   — % of cohort customers active in period N
+ *                     (1.0 = 100% retained, 0 = all churned)
+ *     - **revenue** — period N revenue ÷ cohort's first-month revenue
+ *                     (>1.0 = expansion, <1.0 = compression)
+ *
+ *   Period 0 is the cohort itself (always 1.0 by definition).
+ * @layer Service (CRM analytics — pure compute over DB read)
+ *
+ * WHY TWO MATRICES, NOT ONE
+ *   Count retention answers "do customers come back?". Revenue retention
+ *   answers "do they spend more or less when they come back?". A SaaS-style
+ *   business cares about revenue retention (NDR > 100% is the signal of
+ *   expansion). A transactional B2B business like ours uses both — count to
+ *   flag churn, revenue to flag account compression.
+ *
+ * WHY FIRST-PURCHASE MONTH AS COHORT KEY
+ *   The standard convention. Alternative would be "first signup" or "first
+ *   contact" — those need event data we don't always have for legacy
+ *   customers. Using first sales_order is universally available.
+ *
+ * WHY 5000-ROW SQL LIMIT
+ *   We expect ~10-15k orders per year. 5k limits cap analysis at ~6 months
+ *   of orders at full volume — fine for current data volume. If analysis
+ *   horizon grows past 18 months we need pagination or a materialised view.
+ *
+ * WHY THE REVENUE BASELINE IS FIRST-MONTH SPEND, NOT MONTHLY AVERAGE
+ *   Convention. NDR is conventionally measured against the cohort's *entry*
+ *   revenue (what they spent when they joined). Choosing an average would
+ *   smooth out signup-month promotions but obscure the "are they renewing
+ *   at the same level" question.
+ *
+ * COMPLEXITY NOTE
+ *   The two `build*RetentionMatrix` methods walk the order list 3-4 times.
+ *   For 5000 orders this is ~20k iterations — fine in JS. If we hit 50k+
+ *   orders, port to a single-pass with a `Map<cohortMonth, ActivityBucket>`.
  */
 
 import { Injectable } from '@nestjs/common';

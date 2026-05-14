@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-purchase-svc.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { purchaseOrders, purchaseOrderItems } from '@europrint/schemas';

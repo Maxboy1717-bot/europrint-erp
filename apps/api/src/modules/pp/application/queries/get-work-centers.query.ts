@@ -1,3 +1,8 @@
+/**
+ * @module get-work-centers.query
+ * @description Source module. See exports for details.
+ */
+
 import { WorkCenterType } from '../../domain/aggregates/work-center.aggregate';
 
 export class GetWorkCentersQuery {

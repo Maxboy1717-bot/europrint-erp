@@ -1,3 +1,8 @@
+/**
+ * @module goals-compat.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,

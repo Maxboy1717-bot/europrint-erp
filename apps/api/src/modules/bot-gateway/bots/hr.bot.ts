@@ -1,5 +1,13 @@
+/**
+ * @module hr.bot
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
-import { execSql, helpReply, deniedReply, hasBotPermission, sql } from './bot.helpers';
+import {
+  execSqlResult, helpReply, deniedReply, dbErrorReply,
+  hasBotPermission, sql,
+} from './bot.helpers';
 import type { BotMessage, BotReply } from './bot.helpers';
 
 
@@ -20,22 +28,37 @@ export class HrBotService {
   }
 
   private async getBirthdays(): Promise<BotReply> {
-    const rows = await execSql<{ full_name: string; department: string }>(sql`
-      SELECT e.full_name, d.name AS department
-      FROM employees e
-      LEFT JOIN departments d ON d.id = e.department_id
-      WHERE EXTRACT(month FROM e.birth_date) = EXTRACT(month FROM NOW())
-        AND EXTRACT(day FROM e.birth_date) = EXTRACT(day FROM NOW())
-    `);
-    if (!rows.length) return helpReply('🎂 Bugun tug\'ilgan kun yo\'q');
-    const lines = rows.map((r) => `  🎉 <b>${r.full_name}</b> — ${r.department}`);
+    const res = await execSqlResult<{ full_name: string; department: string }>(
+      sql`
+        SELECT e.full_name, d.name AS department
+        FROM employees e
+        LEFT JOIN departments d ON d.id = e.department_id
+        WHERE EXTRACT(month FROM e.birth_date) = EXTRACT(month FROM NOW())
+          AND EXTRACT(day FROM e.birth_date) = EXTRACT(day FROM NOW())
+      `,
+      'hr.bot/getBirthdays',
+    );
+    if (!res.ok) {
+      this.logger.error(`getBirthdays DB error: ${res.error}`);
+      return dbErrorReply();
+    }
+    if (!res.rows.length) return helpReply('🎂 Bugun tug\'ilgan kun yo\'q');
+    const lines = res.rows.map((r) => `  🎉 <b>${r.full_name}</b> — ${r.department}`);
     return { text: `🎂 <b>Bugungi Tug'ilgan Kunlar</b>\n${lines.join('\n')}`, parse: 'HTML', success: true };
   }
 
   private async getHeadcount(): Promise<BotReply> {
-    const rows = await execSql<{ cnt: string }>(sql`
-      SELECT COUNT(*) AS cnt FROM employees WHERE status = 'ACTIVE'
-    `, [{ cnt: '0' }]);
-    return helpReply(`👥 <b>Faol Xodimlar</b>: ${rows[0].cnt} nafar`);
+    // No fallback — if the DB is down the user sees the dbErrorReply, NOT a
+    // false "0 active employees" message that they'd mistake for accurate data.
+    const res = await execSqlResult<{ cnt: string }>(
+      sql`SELECT COUNT(*) AS cnt FROM employees WHERE status = 'ACTIVE'`,
+      'hr.bot/getHeadcount',
+    );
+    if (!res.ok) {
+      this.logger.error(`getHeadcount DB error: ${res.error}`);
+      return dbErrorReply();
+    }
+    const count = Number(res.rows[0]?.cnt ?? 0);
+    return helpReply(`👥 <b>Faol Xodimlar</b>: ${count.toLocaleString('uz-UZ')} nafar`);
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module inspection-status.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum InspectionStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',

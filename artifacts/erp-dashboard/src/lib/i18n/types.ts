@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description Frontend utility / library module.
+ */
+
 import { SUPPORTED_LANGUAGES, TRANSLATION_MODULES } from './constants';
 
 /** 'uz' | 'ru' */

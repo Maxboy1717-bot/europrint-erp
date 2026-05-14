@@ -1,3 +1,8 @@
+/**
+ * @module crm-extended.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, UseGuards, Get, Post, Body, Query, HttpCode, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -52,7 +57,7 @@ export class CrmExtendedCompatController {
     return { items, total: items.length };
   }
 
-  @Post(['ai/create-task', 'ai/nba/create-task'])
+  @Post('ai/create-task')
   @HttpCode(HttpStatus.CREATED)
   async createTask(@Body() body: CrmCreateTaskDto) {
     return unwrapOrInternal(await this.svc.createTask(body));
@@ -64,7 +69,7 @@ export class CrmExtendedCompatController {
     return unwrapOrInternal(await this.svc.processChat(body));
   }
 
-  @Post(['auto-tasks', 'ai/extended/auto-tasks/suggest', 'ai/extended/auto-tasks/create'])
+  @Post('auto-tasks')
   @HttpCode(HttpStatus.OK)
   async runAutoTasks(@Body() body: CrmAutoTasksDto) {
     return unwrapOrInternal(await this.svc.runAutoTasks(body));

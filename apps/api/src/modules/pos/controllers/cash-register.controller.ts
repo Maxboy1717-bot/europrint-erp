@@ -1,3 +1,8 @@
+/**
+ * @module cash-register.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Controller, Get, Post, Body, Param, Query,
   UseGuards, UseInterceptors, HttpCode, HttpStatus, UsePipes,

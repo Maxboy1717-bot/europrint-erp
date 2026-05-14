@@ -1,9 +1,15 @@
+/**
+ * @module courses.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -88,5 +94,14 @@ export class CoursesController {
     const result = await this.svc.deleteCourse(id);
     unwrapOrInternal(result);
     return { message: "Kurs o'chirildi" };
+  }
+
+  @Patch(':id')
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  @UsePipes(new ZodValidationPipe(UpdateCourseSchema))
+  async patchCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
+    const result = await this.svc.updateCourse(id, dto);
+    const data = unwrapOrInternal(result);
+    return { message: 'Kurs yangilandi', data };
   }
 }

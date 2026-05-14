@@ -1,6 +1,12 @@
+/**
+ * @module SyndromeAnalysis
+ * @description React UI component.
+ */
+
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export interface ToolTestResults {
   A?: number;
@@ -169,6 +175,7 @@ interface SyndromeAnalysisProps {
 }
 
 export function SyndromeAnalysis({ toolTestResults, compact = false }: SyndromeAnalysisProps) {
+  const { t } = useTranslation("common");
   const detectedSyndromes = useMemo(() => {
     if (!toolTestResults || Object.keys(toolTestResults).length === 0) return [];
     return SYNDROME_DEFINITIONS.filter((s) => s.condition(toolTestResults));
@@ -186,7 +193,7 @@ export function SyndromeAnalysis({ toolTestResults, compact = false }: SyndromeA
     return (
       <div className="flex items-center gap-2 py-2">
         <CheckCircle className="w-4 h-4 text-green-400" />
-        <span className="text-sm text-green-400">Hech qanday sindrom aniqlanmadi</span>
+        <span className="text-sm text-green-400">{t("hechQandaySindromAniqlanmadi")}</span>
       </div>
     );
   }
@@ -218,7 +225,7 @@ export function SyndromeAnalysis({ toolTestResults, compact = false }: SyndromeA
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Aniqlangan sindromlar
+          {t("aniqlanganSindromlar")}
         </span>
         <Badge className="text-[10px]" variant="secondary">
           {detectedSyndromes.length} ta

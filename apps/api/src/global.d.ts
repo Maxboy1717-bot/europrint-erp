@@ -1,3 +1,8 @@
+/**
+ * @module global.d
+ * @description Source module. See exports for details.
+ */
+
 import { Result } from './shared/domain/result';
 
 declare global {

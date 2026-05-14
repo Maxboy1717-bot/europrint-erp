@@ -1,3 +1,8 @@
+/**
+ * @module settings-admin.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Post, Put,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';

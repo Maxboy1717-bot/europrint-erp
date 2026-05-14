@@ -1,8 +1,14 @@
+/**
+ * @module ContactHeader
+ * @description React UI component.
+ */
+
 import { Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Contact } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface ContactHeaderProps {
   contact: Contact | null;
@@ -12,6 +18,7 @@ interface ContactHeaderProps {
 }
 
 export function ContactHeader({ contact, isLoading, isEditing, onEdit }: ContactHeaderProps) {
+  const { t } = useTranslation("common");
   const getFullName = () => {
     if (!contact) return "";
     return [contact.lastName, contact.name, contact.secondName]
@@ -25,14 +32,14 @@ export function ContactHeader({ contact, isLoading, isEditing, onEdit }: Contact
         <div className="flex-1">
           <SheetTitle data-testid="text-sheet-title">
             {isLoading ? (
-              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-6 w-48 rounded-lg" />
             ) : (
               getFullName()
             )}
           </SheetTitle>
           <SheetDescription data-testid="text-sheet-description">
             {isLoading ? (
-              <Skeleton className="h-4 w-32 mt-2" />
+              <Skeleton className="h-4 w-32 mt-2 rounded-lg" />
             ) : contact?.post ? (
               contact.post
             ) : (
@@ -48,7 +55,7 @@ export function ContactHeader({ contact, isLoading, isEditing, onEdit }: Contact
             data-testid="button-edit-contact"
           >
             <Edit className="h-4 w-4 mr-2" />
-            Tahrirlash
+            {t("edit")}
           </Button>
         )}
       </div>

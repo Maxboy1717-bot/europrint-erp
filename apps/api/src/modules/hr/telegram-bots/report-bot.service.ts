@@ -1,3 +1,8 @@
+/**
+ * @module report-bot.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
@@ -6,6 +11,7 @@ import { Result, AppError, safeCall } from '@common/result';
 import { errMsg } from '../hr-v2-error';
 import { ReportBotDataService } from './report-bot-data.service';
 import type { Telegraf, Context } from 'telegraf';
+import { message } from 'telegraf/filters';
 import { ReportBotDataRepository } from './report-bot-data.repository';
 
 type ReportStep = 'awaiting_q1' | 'awaiting_q2' | 'awaiting_q3';
@@ -35,7 +41,7 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[report-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('Report Bot token not configured (TELEGRAM_REPORT_BOT_TOKEN missing) — skipping');
         return;
@@ -136,7 +142,7 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       type TxtCtx = Context & {
         chat?: { id?: number };
         message?: { text?: string };

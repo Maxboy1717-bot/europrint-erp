@@ -1,3 +1,8 @@
+/**
+ * @module update-device-thresholds.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -8,10 +13,9 @@ import { SensorType } from '../../domain/enums/sensor-status.enum';
 import { ISensorRepo, SENSOR_REPO } from '../../domain/repositories/i-sensor.repo';
 import { UpdateDeviceThresholdsCommand } from './update-device-thresholds.command';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
-
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

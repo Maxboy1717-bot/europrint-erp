@@ -1,3 +1,8 @@
+/**
+ * @module blue-cta-card
+ * @description React UI component.
+ */
+
 import type { ReactNode, ComponentType } from "react";
 import { cn } from "@/lib/utils";
 
@@ -24,14 +29,14 @@ export function BlueCTACard({
 }: BlueCTACardProps) {
   return (
     <div className={cn(
-      "rounded-2xl bg-blue-700 dark:bg-blue-800 text-white p-6",
+      "rounded-xl bg-[var(--ep-blue)] dark:bg-blue-800 text-white p-6",
       "shadow-[0_4px_20px_rgba(29,78,216,0.25)] dark:shadow-[0_4px_20px_rgba(29,78,216,0.15)]",
       className
     )}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           {Icon && (
-            <div className="w-7 h-7 rounded-lg bg-surface-container-lowest/15 flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-card/15 flex items-center justify-center shrink-0">
               <Icon className="h-4 w-4 text-white" />
             </div>
           )}
@@ -40,7 +45,7 @@ export function BlueCTACard({
           </p>
         </div>
         {badge && (
-          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-surface-container-lowest/15 text-white">
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-card/15 text-white">
             {badge}
           </span>
         )}
@@ -54,7 +59,7 @@ export function BlueCTACard({
         </div>
       )}
       {description && (
-        <p className="text-sm text-blue-100 mb-4 leading-relaxed">{description}</p>
+        <p className="text-sm text-white/80 mb-4 leading-relaxed">{description}</p>
       )}
       {children}
     </div>

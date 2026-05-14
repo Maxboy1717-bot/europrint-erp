@@ -1,5 +1,11 @@
+/**
+ * @module use-wms
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, safeArray } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function useWarehouseDashboard() {
   return useQuery({ queryKey: ["/api/warehouse/dashboard/kpis"] });
@@ -57,9 +63,18 @@ export function useGoodsIssue() {
 }
 
 export function useBarcodeScan() {
+  const { toast } = useToast();
   return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
       apiRequest("POST", "/api/wms/barcode/scan", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/warehouse/stock"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wms/stock"] });
+      toast({ title: "Skanerlandi", description: "Tovar muvaffaqiyatli skanerlandi" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Xatolik", description: err.message, variant: "destructive" });
+    },
   });
 }
 

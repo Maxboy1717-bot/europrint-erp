@@ -1,3 +1,8 @@
+/**
+ * @module input-otp
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
 import { Minus } from "lucide-react"

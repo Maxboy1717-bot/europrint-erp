@@ -1,9 +1,14 @@
+/**
+ * @module crm-companies.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { crmCompanies, crmContacts, crmDeals, crm_lead_stages } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
@@ -160,5 +165,24 @@ export class CrmCompaniesRepository {
 
   async deleteCompany(cid: number): Promise<void> {
     await db.delete(crmCompanies).where(eq(crmCompanies.id, cid));
+  }
+
+  async createCompanyContact(companyId: number, body: Row): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db.insert(crmContacts).values({
+        company_id: companyId,
+        first_name: (body.firstName ?? body.first_name ?? 'Unknown') as string,
+        last_name:  (body.lastName ?? body.last_name) as string | undefined,
+        email:      (body.email) as string | undefined,
+        phone:      (body.phone) as string | undefined,
+        position:   (body.post ?? body.position) as string | undefined,
+      } as unknown as typeof crmContacts.$inferInsert).returning();
+      return (rows[0] ?? {}) as Row;
+    }, 'DB_ERROR');
+  }
+
+  async deleteCompanyContact(companyId: number, contactId: number): Promise<void> {
+    await db.delete(crmContacts)
+      .where(and(eq(crmContacts.company_id, companyId), eq(crmContacts.id, contactId)));
   }
 }

@@ -1,16 +1,23 @@
+/**
+ * @module ChopNavbatiBolimi
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Printer } from "lucide-react";
 import { PrintJob } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function ChopNavbatiBolimi() {
+  const { t } = useTranslation("common");
   const { data: navbat, isLoading } = useQuery<PrintJob[]>({
     queryKey: ["/api/barcode-warehouse/print-queue"],
   });
 
-  if (isLoading) return <Skeleton className="h-20 w-full" />;
+  if (isLoading) return <Skeleton className="h-20 w-full rounded-lg" />;
 
   const kutayotganlar = navbat?.filter((p: PrintJob) => p.status === "PENDING") || [];
 
@@ -24,7 +31,7 @@ export function ChopNavbatiBolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {kutayotganlar.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-2">Navbat bo'sh</p>
+          <p className="text-sm text-muted-foreground text-center py-2">{t("navbatBosh")}</p>
         ) : (
           <div className="space-y-1">
             {(Array.isArray(kutayotganlar) ? kutayotganlar : []).slice(0, 10).map((p: PrintJob) => (

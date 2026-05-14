@@ -1,6 +1,11 @@
+/**
+ * @module core-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, real } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, real, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { courses } from "./lms-schema";
@@ -104,7 +109,7 @@ export const calendarEvents = pgTable("calendar_events", {
   targetDepartments: text("target_departments").array(),
   targetPositions: text("target_positions").array(),
   status: varchar("status", { length: 20 }).notNull().default("scheduled"),
-  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
@@ -193,7 +198,7 @@ export const surveys = pgTable("surveys", {
   questions: jsonb("questions").notNull(),
   targetDepartments: jsonb("target_departments"),
   targetPositions: jsonb("target_positions"),
-  createdBy: varchar("created_by").references(() => admins.id),
+  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   closedAt: timestamp("closed_at"),
@@ -271,7 +276,10 @@ export const kpiResults = pgTable("kpi_results", {
   variancePercent: numericMoney("variance_percent"),
   status: varchar("status", { length: 20 }).notNull().default("normal"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("kpi_results_status_chk", sql`${t.status} IN ('below_target','normal','above_target')`),
+  check("kpi_results_period_type_chk", sql`${t.periodType} IN ('daily','weekly','monthly')`),
+]);
 
 export const insertKpiResultSchema = createInsertSchema(kpiResults, {
   kpiName: z.string().min(1, "KPI nomi talab qilinadi"),
@@ -347,7 +355,9 @@ export const companyGoals = pgTable("company_goals", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("company_goals_status_chk", sql`${t.status} IN ('active','completed','cancelled')`),
+]);
 
 export const insertCompanyGoalSchema = createInsertSchema(companyGoals, {
   title: z.string().min(3, "Maqsad nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
@@ -371,7 +381,10 @@ export const companyPlanItems = pgTable("company_plan_items", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("company_plan_items_status_chk", sql`${t.status} IN ('planned','in_progress','completed','delayed')`),
+  check("company_plan_items_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+]);
 
 export const insertCompanyPlanItemSchema = createInsertSchema(companyPlanItems, {
   taskTitle: z.string().min(3, "Vazifa nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
@@ -507,7 +520,7 @@ export type InsertHrAlumni = z.infer<typeof insertHrAlumniSchema>;
 // ========== HR HEALTH CHECKUPS ==========
 export const hrHealthCheckups = pgTable("hr_health_checkups", {
   id: serial("id").primaryKey(),
-  departmentId: integer("department_id").references(() => departments.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   departmentName: varchar("department_name", { length: 200 }).notNull(),
   totalEmployees: integer("total_employees").default(0),
   examinedCount: integer("examined_count").default(0),

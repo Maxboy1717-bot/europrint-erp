@@ -1,9 +1,15 @@
+/**
+ * @module AttendanceDisciplineTables
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, AlertTriangle } from "lucide-react";
 import { AttendanceRecord, DisciplineRecord } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface AttendanceDisciplineTablesProps {
   attendance: AttendanceRecord[];
@@ -22,6 +28,7 @@ export function AttendanceDisciplineTables({
   onOpenAttendanceDialog,
   onOpenDisciplineDialog,
 }: AttendanceDisciplineTablesProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Attendance Table */}
@@ -30,28 +37,28 @@ export function AttendanceDisciplineTables({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              <CardTitle>Davomat</CardTitle>
+              <CardTitle>{t("davomat")}</CardTitle>
             </div>
             <Button size="sm" onClick={onOpenAttendanceDialog} data-testid="button-add-attendance">
-              Davomat qo'shish
+              {t("davomatQoshish")}
             </Button>
           </div>
-          <CardDescription>Oxirgi davomat yozuvlari</CardDescription>
+          <CardDescription>{t("oxirgiDavomatYozuvlari")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead>Izoh</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead>{t("Izoh")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(Array.isArray(attendance) ? attendance : []).slice(0, 5).map((record: AttendanceRecord) => {
                 const badge = getAttendanceStatusBadge(record.status);
                 return (
-                  <TableRow key={record.id} data-testid={`row-attendance-${record.id}`}>
+                  <TableRow key={record.id} data-testid={`row-attendance-${record.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{new Date(record.date).toLocaleDateString('uz-UZ')}</TableCell>
                     <TableCell>
                       <Badge variant={badge.variant}>{badge.label}</Badge>
@@ -62,13 +69,13 @@ export function AttendanceDisciplineTables({
               })}
               {attendance.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                    Ma'lumot topilmadi
+                  <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
+                    {t("noData")}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 
@@ -78,28 +85,28 @@ export function AttendanceDisciplineTables({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              <CardTitle>Intizom</CardTitle>
+              <CardTitle>{t("intizom")}</CardTitle>
             </div>
             <Button size="sm" variant="outline" onClick={onOpenDisciplineDialog} data-testid="button-add-discipline">
-              Intizom yozuvi
+              {t("intizomYozuvi")}
             </Button>
           </div>
-          <CardDescription>Rag'bat va choralar</CardDescription>
+          <CardDescription>{t("ragbatVaChoralar")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>Tavsif</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("progress.description")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(Array.isArray(discipline) ? discipline : []).slice(0, 5).map((record: DisciplineRecord) => {
                 const badge = getDisciplineTypeBadge(record.type);
                 return (
-                  <TableRow key={record.id} data-testid={`row-discipline-${record.id}`}>
+                  <TableRow key={record.id} data-testid={`row-discipline-${record.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{new Date(record.date).toLocaleDateString('uz-UZ')}</TableCell>
                     <TableCell>
                       <Badge variant={badge.variant}>{badge.label}</Badge>
@@ -110,13 +117,13 @@ export function AttendanceDisciplineTables({
               })}
               {discipline.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                    Ma'lumot topilmadi
+                  <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
+                    {t("noData")}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

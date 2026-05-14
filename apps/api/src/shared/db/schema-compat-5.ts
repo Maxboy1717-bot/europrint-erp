@@ -1,3 +1,8 @@
+/**
+ * @module schema-compat-5
+ * @description Source module. See exports for details.
+ */
+
 import { pgTable, text, decimal, integer, ts, stub, serial, varchar } from './schema-compat-helpers';
 import { numeric } from 'drizzle-orm/pg-core';
 

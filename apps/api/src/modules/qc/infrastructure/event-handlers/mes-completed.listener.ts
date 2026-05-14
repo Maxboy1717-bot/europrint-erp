@@ -1,3 +1,8 @@
+/**
+ * @module mes-completed.listener
+ * @description Source module. See exports for details.
+ */
+
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { IQcRepository } from '../../application/repositories/qc.repository';

@@ -1,3 +1,8 @@
+/**
+ * @module attendance-face.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller,
   Get,
@@ -19,26 +24,28 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FaceRecognitionService } from './face-recognition.service';
 import { TerritoryLogService, CameraEventDto } from './territory-log.service';
 import { LateArrivalService } from './late-arrival.service';
+import { z } from 'zod';
 
-class RegisterFaceDto {
-  employee_id!: string;
-  /** Preferred: send 3 images for enrollment with automatic embedding averaging */
-  images?: string[];
-  /** Legacy single-embedding path (backward compat) */
-  embedding?: number[];
-  confidence?: number;
-  image_url?: string;
-}
+// ─── Zod DTOs (Rule 3) ──────────────────────────────────────────────────────
+const RegisterFaceSchema = z.object({
+  employee_id: z.string().min(1),
+  images: z.array(z.string()).optional(),
+  embedding: z.array(z.number()).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  image_url: z.string().optional(),
+});
+type RegisterFaceDto = z.infer<typeof RegisterFaceSchema>;
 
-class CameraEventBodyDto implements CameraEventDto {
-  image_base64?: string;
-  embedding?: number[];
-  event_type!: 'enter' | 'exit' | 'detected' | 'absent_check';
-  camera_id?: string;
-  room_code?: string;
-  face_confidence?: number;
-  ts?: string;
-}
+const CameraEventBodySchema = z.object({
+  image_base64: z.string().optional(),
+  embedding: z.array(z.number()).optional(),
+  event_type: z.enum(['enter', 'exit', 'detected', 'absent_check']),
+  camera_id: z.string().optional(),
+  room_code: z.string().optional(),
+  face_confidence: z.number().optional(),
+  ts: z.string().optional(),
+});
+type CameraEventBodyDto = z.infer<typeof CameraEventBodySchema>;
 
 @Throttle({ default: { limit: 200, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -56,7 +63,8 @@ export class AttendanceFaceController {
 
   @Post('face/register')
   @HttpCode(HttpStatus.OK)
-  async registerFace(@Body() dto: RegisterFaceDto) {
+  async registerFace(@Body() raw: unknown) {
+    const dto: RegisterFaceDto = RegisterFaceSchema.parse(raw);
     if ((dto.images ?? []).length > 0) {
       if (dto.images!.length !== 3) {
         throw new BadRequestException(
@@ -87,7 +95,8 @@ export class AttendanceFaceController {
 
   @Post('territory')
   @HttpCode(HttpStatus.OK)
-  async cameraEvent(@Body() dto: CameraEventBodyDto) {
+  async cameraEvent(@Body() raw: unknown) {
+    const dto: CameraEventBodyDto = CameraEventBodySchema.parse(raw);
     const result = await this.territory.handleCameraEvent(dto);
     if (!result.ok) {
       return { ok: false, error: String(result.error) };

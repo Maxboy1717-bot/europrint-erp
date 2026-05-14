@@ -1,3 +1,8 @@
+/**
+ * @module CreateTaskModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -11,6 +16,7 @@ import { ChatMessage } from "@/store/chatStore";
 import { CheckSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
+import { useTranslation } from '@/lib/i18n';
 interface Employee {
   id: string;
   fullName: string;
@@ -23,7 +29,8 @@ interface Props {
   onClose: () => void;
 }
 
-export function CreateTaskModal({ message, open, onClose }: Props) {
+export function CreateTaskModal({message, open, onClose }: Props) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [title, setTitle] = useState(message?.content?.slice(0, 100) ?? "");
   const [assignedTo, setAssignedTo] = useState("");
@@ -62,39 +69,39 @@ export function CreateTaskModal({ message, open, onClose }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckSquare className="w-4 h-4 text-primary" />
-            Xabardan Task Yaratish
+            {t("xabardanTaskYaratish")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {message && (
             <div className="bg-muted/30 rounded-lg px-3 py-2 text-xs text-muted-foreground border border-border/50">
-              <p className="font-medium text-foreground/80 mb-0.5">Asos xabar:</p>
+              <p className="font-medium text-foreground/80 mb-0.5">{t("asosXabar")}</p>
               <p className="line-clamp-2">{message.content}</p>
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-title" className="text-xs">Sarlavha *</Label>
+            <Label htmlFor="task-title" className="text-xs">{t("sarlavha")}</Label>
             <Input
               id="task-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Task sarlavhasi..."
+              placeholder={t('taskSarlavhasi')}
               className="text-sm"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Mas'ul xodim</Label>
+            <Label className="text-xs">{t("masulXodim")}</Label>
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Xodim qidirish..."
+              placeholder={t("xodimQidirish")}
               className="text-sm mb-1"
             />
             {search && filtered.length > 0 && (
@@ -110,7 +117,7 @@ export function CreateTaskModal({ message, open, onClose }: Props) {
                       setSearch(emp.fullName);
                     }}
                   >
-                    <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-bold text-primary flex-shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary flex-shrink-0">
                       {emp.fullName[0]}
                     </div>
                     {emp.fullName}
@@ -122,12 +129,12 @@ export function CreateTaskModal({ message, open, onClose }: Props) {
               </div>
             )}
             {assignedTo && (
-              <p className="text-xs text-primary">Tanlandi: {(employees ?? []).find((e: Employee) => e.id === assignedTo)?.fullName ?? assignedTo}</p>
+              <p className="text-xs text-primary">Tanlandi: {(Array.isArray(employees) ? employees : []).find((e: Employee) => e.id === assignedTo)?.fullName ?? assignedTo}</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-due" className="text-xs">Muddat</Label>
+            <Label htmlFor="task-due" className="text-xs">{t("muddat")}</Label>
             <Input
               id="task-due"
               type="date"
@@ -140,7 +147,7 @@ export function CreateTaskModal({ message, open, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} className="text-sm">
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             onClick={handleCreate}

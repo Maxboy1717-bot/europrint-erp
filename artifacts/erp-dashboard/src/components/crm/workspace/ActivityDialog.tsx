@@ -1,3 +1,8 @@
+/**
+ * @module ActivityDialog
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +23,8 @@ import {
 import { Plus } from "lucide-react";
 import { ActivityDialogProps } from "./types";
 
-export function ActivityDialog({
-  open,
+import { useTranslation } from '@/lib/i18n';
+export function ActivityDialog({open,
   onOpenChange,
   form,
   setForm,
@@ -27,22 +32,23 @@ export function ActivityDialog({
   isPending,
   activityTypes,
 }: ActivityDialogProps) {
+  const { t } = useTranslation('common');
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-4 w-4" /> Yangi faoliyat
+            <Plus className="h-4 w-4" /> {t("yangiFaoliyat")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label className="text-xs">Tur</Label>
+            <Label className="text-xs">{t("tur")}</Label>
             <Select
               value={form.type}
               onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}
             >
-              <SelectTrigger data-testid="select-activity-type">
+              <SelectTrigger data-testid="select-activity-type" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -55,9 +61,9 @@ export function ActivityDialog({
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Mavzu *</Label>
+            <Label className="text-xs">{t("mavzu1")}</Label>
             <Input
-              placeholder="Masalan: Mijozga qo'ng'iroq"
+              placeholder={t("masalanMijozgaQongiroq")}
               value={form.subject}
               onChange={(e) =>
                 setForm((f) => ({ ...f, subject: e.target.value }))
@@ -65,20 +71,20 @@ export function ActivityDialog({
               data-testid="input-activity-subject"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Bog'liq ob'ekt</Label>
+              <Label className="text-xs">{t("bogliqObekt")}</Label>
               <Select
                 value={form.entityType}
                 onValueChange={(v) => setForm((f) => ({ ...f, entityType: v }))}
               >
-                <SelectTrigger data-testid="select-activity-entity">
+                <SelectTrigger data-testid="select-activity-entity" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="lead">Lead</SelectItem>
-                  <SelectItem value="deal">Deal</SelectItem>
-                  <SelectItem value="contact">Kontakt</SelectItem>
+                  <SelectItem value="lead">{t("lead")}</SelectItem>
+                  <SelectItem value="deal">{t('deal')}</SelectItem>
+                  <SelectItem value="contact">{t("kontakt")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -95,7 +101,7 @@ export function ActivityDialog({
             </div>
           </div>
           <div>
-            <Label className="text-xs">Muddat</Label>
+            <Label className="text-xs">{t("muddat")}</Label>
             <Input
               type="datetime-local"
               value={form.dueDate}
@@ -106,9 +112,9 @@ export function ActivityDialog({
             />
           </div>
           <div>
-            <Label className="text-xs">Izoh</Label>
+            <Label className="text-xs">{t("Izoh")}</Label>
             <Textarea
-              placeholder="Qo'shimcha ma'lumot..."
+              placeholder={t("qoshimchaMalumot")}
               value={form.note}
               onChange={(e) =>
                 setForm((f) => ({ ...f, note: e.target.value }))

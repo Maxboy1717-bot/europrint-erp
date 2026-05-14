@@ -1,3 +1,8 @@
+/**
+ * @module ActivityFeed
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import { TimelineItem, Activity, Comment, PRIORITY_OPTIONS } from "./types";
 import { getActivityIcon, getActivityColor } from "./utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface ActivityFeedProps {
   entityType: string;
@@ -27,6 +33,7 @@ export function ActivityFeed({
   timeline,
   isLoading,
 }: ActivityFeedProps) {
+  const { t } = useTranslation("common");
   const [playingRecording, setPlayingRecording] = useState<number | null>(null);
   const { toast } = useToast();
 
@@ -58,7 +65,7 @@ export function ActivityFeed({
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-        Yuklanmoqda...
+        {t("Yuklanmoqda...")}
       </div>
     );
   }
@@ -68,8 +75,8 @@ export function ActivityFeed({
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
           {timeline.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">Hozircha faoliyatlar yo'q</p>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">
+              <p className="text-sm">{t("hozirchaFaoliyatlarYoq")}</p>
             </div>
           ) : (
             (Array.isArray(timeline) ? timeline : []).map((item) => (
@@ -80,7 +87,7 @@ export function ActivityFeed({
                 <div className="absolute left-0 top-1 w-8 h-8 rounded-full bg-background border flex items-center justify-center z-10">
                   {item.type === "comment" ? (
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-[10px]">
+                      <AvatarFallback className="bg-blue-100 text-[var(--ep-blue)] text-[10px]">
                         {(item.data as Comment).authorName?.[0] || "U"}
                       </AvatarFallback>
                     </Avatar>
@@ -105,7 +112,7 @@ export function ActivityFeed({
                   {item.type === "comment" ? (
                     <div className="bg-muted/50 rounded-lg p-3 text-sm">
                       <p className="whitespace-pre-wrap">{(item.data as Comment).content}</p>
-                      {(item.data as Comment).attachments && (item.data as Comment).attachments!.length > 0 && (
+                      {((item.data as Comment).attachments?.length ?? 0) > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {(item.data as Comment).attachments?.map((file, i) => (
                             <a
@@ -113,7 +120,7 @@ export function ActivityFeed({
                               href={file.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-blue-500 hover:underline flex items-center gap-1 bg-background px-2 py-1 rounded border"
+                              className="text-xs text-[var(--ep-blue)] hover:underline flex items-center gap-1 bg-background px-2 py-1 rounded border"
                             >
                               {file.name}
                             </a>
@@ -166,17 +173,17 @@ export function ActivityFeed({
                             variant="secondary"
                             className={cn(
                               "text-[10px] h-4 px-1.5",
-                              (item.data as Activity).priority === "high" && "bg-red-500/10 text-red-600 border-red-200",
-                              (item.data as Activity).priority === "medium" && "bg-yellow-500/10 text-yellow-600 border-yellow-200",
-                              (item.data as Activity).priority === "low" && "bg-green-500/10 text-green-600 border-green-200"
+                              (item.data as Activity).priority === "high" && "bg-red-500/10 text-[var(--ep-red)] border-red-200",
+                              (item.data as Activity).priority === "medium" && "bg-yellow-500/10 text-[var(--ep-yellow)] border-yellow-200",
+                              (item.data as Activity).priority === "low" && "bg-green-500/10 text-[var(--ep-green)] border-green-200"
                             )}
                           >
-                            {(PRIORITY_OPTIONS ?? []).find((p) => p.value === (item.data as Activity).priority)?.label}
+                            {(Array.isArray(PRIORITY_OPTIONS) ? PRIORITY_OPTIONS : []).find((p) => p.value === (item.data as Activity).priority)?.label}
                           </Badge>
                         )}
                         {(item.data as Activity).completed && (
-                          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 bg-green-500/10 text-green-600 border-green-200">
-                            Bajarilgan
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 bg-green-500/10 text-[var(--ep-green)] border-green-200">
+                            {t("bajarilgan")}
                           </Badge>
                         )}
                       </div>

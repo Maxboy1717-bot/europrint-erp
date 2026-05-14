@@ -1,3 +1,8 @@
+/**
+ * @module hr-v2-seed.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { HrV2SeedRepository } from './hr-v2-seed.repository';

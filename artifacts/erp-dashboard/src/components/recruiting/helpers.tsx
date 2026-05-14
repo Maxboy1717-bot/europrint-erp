@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -20,6 +25,7 @@ import {
 } from "lucide-react";
 import { MarketAnalysisBadge } from "@/components/hr/LaborMarketSheet";
 import type { Vacancy, PipelineEntry, AIInterviewSession, FunnelStage } from "@/components/recruiting/types";
+import { useTranslation } from '@/lib/i18n';
 
 export type { FunnelStage };
 
@@ -63,6 +69,7 @@ export const HC_PHASES = [
 ];
 
 export function getPhaseForStage(stage: FunnelStage) {
+  const { t } = useTranslation("common");
   return HC_PHASES.find(p => p.stages.includes(stage));
 }
 
@@ -106,19 +113,20 @@ export function StatCard({ icon: Icon, label, value, color }: {
   label: string; value: number | string; color?: string;
 }) {
   return (
-    <div className="bg-surface-container-low rounded-xl p-4 flex items-center gap-3 min-w-[130px]">
+    <div className="bg-muted/40 rounded-xl p-4 flex items-center gap-3 min-w-[130px]">
       <div className={`p-2 rounded-lg ${color ?? "bg-primary/10"}`}>
         <Icon className={`w-5 h-5 ${color ? "text-white" : "text-primary"}`} />
       </div>
       <div>
-        <div className="text-xl font-bold text-on-surface">{value}</div>
-        <div className="text-xs text-on-surface-variant">{label}</div>
+        <div className="text-xl font-bold text-foreground">{value}</div>
+        <div className="text-xs text-muted-foreground">{label}</div>
       </div>
     </div>
   );
 }
 
 export function HCMethodologyBanner() {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   return (
     <div className="mb-4">
@@ -126,7 +134,7 @@ export function HCMethodologyBanner() {
         variant="outline"
         size="sm"
         onClick={() => setOpen(p => !p)}
-        className="mb-2 gap-2 border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+        className="mb-2 gap-2 border-purple-500/30 text-purple-400 hover:bg-[var(--ep-purple)]/90/10"
         data-testid="button-toggle-hc-methodology"
       >
         <BookOpen className="w-4 h-4" />
@@ -134,9 +142,9 @@ export function HCMethodologyBanner() {
         {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </Button>
       {open && (
-        <div className="bg-surface-container rounded-xl p-4 border border-purple-500/20">
+        <div className="bg-muted/60 rounded-xl p-4 border border-purple-500/20">
           <p className="text-xs text-muted-foreground mb-3">
-            Rekrutment jarayoni HR Capital metodologiyasining 7 bosqichiga asoslanadi:
+            {t("rekrutmentJarayoniHrCapitalMetodologiyasining")}
           </p>
           <div className="flex flex-wrap gap-2">
             {(Array.isArray(HC_PHASES) ? HC_PHASES : []).map((phase, i) => (
@@ -158,7 +166,7 @@ export function HCMethodologyBanner() {
             {(Array.isArray(STAGES) ? STAGES : []).filter(s => s.key !== "REJECTED").map(stage => {
               const phase = getPhaseForStage(stage.key);
               return (
-                <span key={stage.key} className="inline-flex items-center gap-1 text-[10px] bg-surface-container-low rounded px-1.5 py-0.5 border border-border/40">
+                <span key={stage.key} className="inline-flex items-center gap-1 text-[10px] bg-muted/40 rounded px-1.5 py-0.5 border border-border/40">
                   <div className={`w-1.5 h-1.5 rounded-full ${stage.accent}`} />
                   {stage.label}
                   {phase && <span className="text-muted-foreground">→ {phase.label}</span>}
@@ -187,12 +195,13 @@ export function ChannelDots({ channels }: { channels: Record<string, { active: b
 }
 
 export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; onUpdate?: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const channels = vacancy.channels ?? {};
 
   const updateChannelMutation = useMutation({
     mutationFn: ({ channel, status }: { channel: string; status: string }) =>
-      apiRequest("PATCH", `/api/hr/recruitment/vacancies/${vacancy.id}/channel-status`, { channel, status }),
+      apiRequest("POST", `/api/hr/recruitment/vacancies/${vacancy.id}/channel-status`, { channel, status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/vacancies"] });
       toast({ title: "Kanal holati yangilandi" });
@@ -221,19 +230,19 @@ export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; on
   return (
     <div className="border border-border/40 rounded-lg p-3 bg-muted/20 space-y-2">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <p className="text-xs font-semibold text-on-surface flex items-center gap-1">
-          <Globe className="w-3.5 h-3.5 text-primary" />Kanal holatlari
+        <p className="text-xs font-semibold text-foreground flex items-center gap-1">
+          <Globe className="w-3.5 h-3.5 text-primary" />{t("kanalHolatlari")}
         </p>
         <div className="flex gap-1">
-          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-sky-500/40 text-sky-400 hover:bg-sky-500/10"
+          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-sky-500/40 text-sky-400 hover:bg-[var(--ep-blue)]/90/10"
             onClick={() => announceOnTelegramMutation.mutate()} disabled={announceOnTelegramMutation.isPending}
             data-testid={`button-telegram-announce-${vacancy.id}`}>
-            <Send className="w-2.5 h-2.5" />Telegram
+            <Send className="w-2.5 h-2.5" />{t("telegram")}
           </Button>
-          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/10"
+          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-indigo-500/40 text-indigo-400 hover:bg-[var(--ep-blue)]/90/10"
             onClick={() => notifyAlumniMutation.mutate()} disabled={notifyAlumniMutation.isPending}
             data-testid={`button-alumni-notify-${vacancy.id}`}>
-            <RefreshCcw className="w-2.5 h-2.5" />Alumni
+            <RefreshCcw className="w-2.5 h-2.5" />{t("alumni")}
           </Button>
         </div>
       </div>
@@ -246,16 +255,16 @@ export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; on
             <div key={ch} className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <div className={`w-2 h-2 rounded-full ${CHANNEL_COLORS[ch] ?? "bg-gray-400"}`} />
-                <span className="text-xs text-on-surface">{CHANNEL_LABELS[ch] ?? ch}</span>
+                <span className="text-xs text-foreground">{CHANNEL_LABELS[ch] ?? ch}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className={`text-[10px] border rounded-full px-2 py-0.5 ${statusInfo.color}`}>{statusInfo.label}</span>
                 <Select value={status} onValueChange={newStatus => updateChannelMutation.mutate({ channel: ch, status: newStatus })}>
                   <SelectTrigger className="h-5 text-[10px] w-24 px-1.5 border-border/40"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="posted">E'lon berildi</SelectItem>
+                    <SelectItem value="posted">{t("elonBerildi")}</SelectItem>
                     <SelectItem value="pending">Ждёт</SelectItem>
-                    <SelectItem value="not_posted">Berilmadi</SelectItem>
+                    <SelectItem value="not_posted">{t("berilmadi")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -284,6 +293,7 @@ export function ScoreBar({ label, score }: { label: string; score: number | null
 }
 
 export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; sessions: AIInterviewSession[] }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [recruiterNotes, setRecruiterNotes] = useState("");
@@ -295,7 +305,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
   );
 
   const createSessionMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/hr/ai-interview/sessions", {
+    mutationFn: () => apiRequest("POST", "/api/hr-v2/ai-interview/sessions", {
       candidate_name: entry.candidate_name,
       candidate_language: "uz",
       pipeline_entry_id: entry.id,
@@ -316,7 +326,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
   });
 
   const reviewMutation = useMutation({
-    mutationFn: () => apiRequest("PATCH", `/api/hr/ai-interview/session/${entrySession!.id}/review`, { recruiter_notes: recruiterNotes, recommendation }),
+    mutationFn: () => apiRequest("PATCH", `/api/hr/ai-interview/session/${entrySession?.id}/review`, { recruiter_notes: recruiterNotes, recommendation }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/ai-interview/sessions"] });
       toast({ title: "Izoh saqlandi" });
@@ -342,10 +352,10 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-indigo-500/30 text-indigo-400" data-testid={`button-ai-interview-${entry.id}`}>
-          <Bot className="w-3 h-3" />AI Intervyu
+          <Bot className="w-3 h-3" />{t("aiIntervyu")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="w-5 h-5 text-indigo-400" />
@@ -354,7 +364,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
         </DialogHeader>
         {!entrySession ? (
           <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">Nomzod uchun AI intervyu sessiyasi yaratilmagan.</p>
+            <p className="text-sm text-muted-foreground">{t("nomzodUchunAiIntervyuSessiyasi")}</p>
             <Button onClick={() => createSessionMutation.mutate()} disabled={createSessionMutation.isPending} className="w-full gap-2" data-testid={`button-create-ai-session-${entry.id}`}>
               <Bot className="w-4 h-4" />
               {createSessionMutation.isPending ? "Yaratilmoqda..." : "AI Intervyu Havolasini Yaratish"}
@@ -370,9 +380,9 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
             </div>
             {interviewLink && (
               <div className="bg-muted/40 rounded-lg p-3 space-y-2">
-                <p className="text-xs text-muted-foreground">Intervyu havolasi:</p>
+                <p className="text-xs text-muted-foreground">{t("intervyuHavolasi")}</p>
                 <div className="flex gap-2">
-                  <Input readOnly value={interviewLink} className="text-xs h-8 flex-1" />
+                  <Input readOnly value={interviewLink} className="text-xs h-9 flex-1" />
                   <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => { navigator.clipboard.writeText(interviewLink).catch(() => {}); toast({ title: "Nusxalandi!" }); }}>
                     <Copy className="w-3.5 h-3.5" />
                   </Button>
@@ -386,21 +396,21 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
               <>
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <Star className="w-4 h-4 text-amber-400" />AI Baholash Natijalari
+                    <Star className="w-4 h-4 text-amber-400" />{t("aiBaholashNatijalari")}
                   </h4>
                   {entrySession.overall_score !== null && (
                     <div className="text-center py-2 bg-primary/10 rounded-lg">
                       <div className="text-3xl font-bold text-primary">{Math.round(entrySession.overall_score!)}%</div>
-                      <div className="text-xs text-muted-foreground">Umumiy ball</div>
+                      <div className="text-xs text-muted-foreground">{t("umumiyBall")}</div>
                     </div>
                   )}
                   <div className="space-y-2">
-                    <ScoreBar label="Muloqot" score={entrySession.communication_score} />
-                    <ScoreBar label="Ishonch" score={entrySession.confidence_score} />
-                    <ScoreBar label="Muammo yechish" score={entrySession.problem_solving_score} />
-                    <ScoreBar label="Tana tili" score={entrySession.body_language_score} />
-                    <ScoreBar label="Hissiy holat" score={entrySession.emotional_state_score} />
-                    <ScoreBar label="Professionalizm" score={entrySession.professional_appearance_score} />
+                    <ScoreBar label={t("muloqot")} score={entrySession.communication_score} />
+                    <ScoreBar label={t("ishonch")} score={entrySession.confidence_score} />
+                    <ScoreBar label={t("muammoYechish")} score={entrySession.problem_solving_score} />
+                    <ScoreBar label={t("tanaTili")} score={entrySession.body_language_score} />
+                    <ScoreBar label={t("hissiyHolat")} score={entrySession.emotional_state_score} />
+                    <ScoreBar label={t("professionalizm")} score={entrySession.professional_appearance_score} />
                   </div>
                 </div>
                 {entrySession.ai_summary && (
@@ -412,25 +422,25 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
                 {entrySession.transcript && (
                   <details className="text-xs">
                     <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1">
-                      <MessageSquare className="w-3.5 h-3.5" /> Transkriptsiya ko'rish
+                      <MessageSquare className="w-3.5 h-3.5" /> {t("transkriptsiyaKorish")}
                     </summary>
                     <pre className="mt-2 bg-muted/30 rounded-lg p-3 whitespace-pre-wrap text-[11px] max-h-40 overflow-y-auto">{entrySession.transcript}</pre>
                   </details>
                 )}
                 <div className="border-t pt-4 space-y-3">
-                  <h4 className="text-sm font-semibold">Rekruter Izohi</h4>
+                  <h4 className="text-sm font-semibold">{t("rekruterIzohi")}</h4>
                   {entrySession.recruiter_notes && (
                     <p className="text-xs bg-amber-500/10 rounded-lg p-2 text-amber-300">{entrySession.recruiter_notes}</p>
                   )}
-                  <Textarea placeholder="Rekruter izohi yozing..." value={recruiterNotes || entrySession.recruiter_notes || ""} onChange={e => setRecruiterNotes(e.target.value)} className="text-sm min-h-[80px]" data-testid={`textarea-recruiter-notes-${entry.id}`} />
+                  <Textarea placeholder={t("rekruterIzohiYozing")} value={recruiterNotes || entrySession.recruiter_notes || ""} onChange={e => setRecruiterNotes(e.target.value)} className="text-sm min-h-[80px]" data-testid={`textarea-recruiter-notes-${entry.id}`} />
                   <Select value={recommendation || entrySession.recommendation || ""} onValueChange={setRecommendation}>
-                    <SelectTrigger className="text-sm" data-testid={`select-recommendation-${entry.id}`}>
-                      <SelectValue placeholder="Tavsiya tanlang..." />
+                    <SelectTrigger className="text-sm h-9" data-testid={`select-recommendation-${entry.id}`}>
+                      <SelectValue placeholder={t("tavsiyaTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="hire">Qabul qilish tavsiya etiladi</SelectItem>
-                      <SelectItem value="maybe">Ko'rib chiqish mumkin</SelectItem>
-                      <SelectItem value="reject">Rad etish tavsiya etiladi</SelectItem>
+                      <SelectItem value="hire">{t("qabulQilishTavsiyaEtiladi")}</SelectItem>
+                      <SelectItem value="maybe">{t("koribChiqishMumkin")}</SelectItem>
+                      <SelectItem value="reject">{t("radEtishTavsiyaEtiladi")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -444,7 +454,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
               {reviewMutation.isPending ? "Saqlanmoqda..." : "Izohni Saqlash"}
             </Button>
           )}
-          <Button variant="outline" onClick={() => setOpen(false)}>Yopish</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>{t("close2")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -472,7 +482,7 @@ export function ProbationCompleteButton({ entryId, onComplete, isPending }: { en
       data-testid={`button-sinov-complete-${entryId}`}
       size="sm"
       variant="default"
-      className="h-7 text-xs flex-1 bg-lime-600 hover:bg-lime-700 disabled:opacity-40"
+      className="h-7 text-xs flex-1 bg-lime-600 hover:bg-[var(--ep-green)]/90 disabled:opacity-40"
       disabled={isPending || !day90Done}
       title={!day90Done ? "90-kun baholash to'ldirilishi shart" : undefined}
       onClick={onComplete}

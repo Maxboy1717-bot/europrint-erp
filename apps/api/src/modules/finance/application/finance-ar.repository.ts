@@ -1,5 +1,9 @@
+/**
+ * @module finance-ar.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
-import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { ar_aging_buckets, sales_invoices } from '@shared/db';
@@ -18,7 +22,7 @@ export class FinanceArRepository {
   async getArAgingBuckets(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       return db.select().from(ar_aging_buckets)
-        .orderBy(sql`${ar_aging_buckets.total_outstanding} DESC`).then(r => castTo<Row[]>(r));
+        .orderBy(sql`${ar_aging_buckets.total_outstanding} DESC`).then(r => r as Row[]);
       }, 'DB_ERROR');
   }
 
@@ -40,7 +44,7 @@ export class FinanceArRepository {
     return safeCall(async () => {
       return db.select().from(sales_invoices)
         .where(sql`${sales_invoices.payment_status} != 'paid' AND ${sales_invoices.due_date} < ${today}::date`)
-        .orderBy(sales_invoices.due_date).then(r => castTo<Row[]>(r));
+        .orderBy(sales_invoices.due_date).then(r => r as Row[]);
       }, 'DB_ERROR');
   }
 
@@ -53,7 +57,7 @@ export class FinanceArRepository {
         paid_amount:   sales_invoices.paid_amount,
         customer_name: sales_invoices.customer_name,
       }).from(sales_invoices)
-        .where(sql`${sales_invoices.payment_status} != 'paid'`).then(r => castTo<Row[]>(r));
+        .where(sql`${sales_invoices.payment_status} != 'paid'`).then(r => r as Row[]);
       }, 'DB_ERROR');
   }
 

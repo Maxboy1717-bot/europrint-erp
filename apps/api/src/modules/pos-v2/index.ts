@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 export { PosV2Module } from './pos-v2.module';
 
 // Aggregates

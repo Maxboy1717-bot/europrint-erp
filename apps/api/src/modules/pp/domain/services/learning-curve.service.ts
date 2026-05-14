@@ -1,3 +1,64 @@
+/**
+ * @module learning-curve.service
+ * @description Wright's Learning Curve calculator. Predicts how unit-time
+ *   drops as workers gain experience producing the same item. Used when
+ *   quoting a new product (no historical actuals) or planning a ramp-up
+ *   for a redesigned product line.
+ *
+ *   Wright (1936) formula — cumulative average time:
+ *     T̄_n = t1 × n^(log₂ rate)
+ *
+ *   Individual unit time (n-th unit alone):
+ *     t_n = T̄_n × n − T̄_{n−1} × (n−1)
+ *
+ *   "Rate" is the learning factor: 0.80 means each doubling of cumulative
+ *   volume reduces average time to 80% of its previous value. So:
+ *     unit  1: t1 minutes
+ *     unit  2: 0.80 × t1
+ *     unit  4: 0.80² × t1 = 0.64 × t1
+ *     unit  8: 0.80³ × t1 = 0.512 × t1
+ *     unit 16: 0.80⁴ × t1 = 0.41 × t1
+ *
+ *   Two operations:
+ *     - `calculate(input)`   — predict the curve from a known t1 + rate
+ *     - `calibrate(n1, t1, n2, t2)` — derive `rate` from two observed
+ *                                      production data points
+ * @layer Domain Service (PP — pure math, no I/O)
+ *
+ * WHY 80% AS THE DEFAULT
+ *   80% is the industry-standard "moderate complexity assembly" learning
+ *   rate (aerospace + automotive baselines). Print packaging is in the same
+ *   complexity zone — operators learn the press setup over a few hundred
+ *   units. Highly automated lines have higher rates (less manual learning
+ *   to do — 90%+); fully manual artisan work has lower rates (70-75%).
+ *
+ *   Override via `input.rate` when you have a per-product calibration.
+ *
+ * WHY THE [0.60, 1.00] BOUND ON rate
+ *   - rate ≥ 1.00 = no learning happens (units don't get faster). Always
+ *     a sign of bad data; we reject.
+ *   - rate < 0.60 = 40%+ improvement per doubling. Physically implausible
+ *     for non-toy operations; almost certainly a data-entry error.
+ *   Either failure points to bad calibration inputs rather than a real
+ *   learning curve.
+ *
+ * WHY LOGARITHMIC CHECKPOINTS (1,2,...10,20,...100,150,...)
+ *   The curve flattens — the difference between unit 100 and unit 101 is
+ *   tiny compared to unit 1 vs unit 2. Plotting every unit wastes
+ *   pixels. Logarithmic checkpoints give a roughly even-density curve in
+ *   log space, which is what the dashboard chart actually renders.
+ *
+ * WHY THIS LIVES IN PP, NOT FI
+ *   The output is a *time* prediction, which feeds production scheduling
+ *   (MES timing, capacity planning). FI uses it indirectly via standard
+ *   cost — but PP owns the curve generation because rate calibration
+ *   requires understanding the routing and labour stations.
+ *
+ * REFERENCE
+ *   T.P. Wright, "Factors Affecting the Cost of Airplanes" (1936),
+ *   Journal of Aeronautical Sciences. Still the canonical citation.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeDiv } from '@common/math/math-utils';
@@ -69,7 +130,7 @@ export class LearningCurveService {
     const slope = Math.log2(rate);
     const checkpoints = buildCheckpoints(maxN);
 
-    const points: LearningCurvePoint[] = (checkpoints ?? []).map((n) => ({
+    const points: LearningCurvePoint[] = (Array.isArray(checkpoints) ? checkpoints : []).map((n) => ({
       n,
       avgTimeMinutes: cumulativeAvgTime(t1, rate, n),
       unitTimeMinutes: unitTime(t1, rate, n),

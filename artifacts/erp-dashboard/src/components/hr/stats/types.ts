@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface Subordinate {
   id: string;
   fullName: string;

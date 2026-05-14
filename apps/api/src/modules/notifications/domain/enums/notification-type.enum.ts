@@ -1,3 +1,8 @@
+/**
+ * @module notification-type.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum NotificationType {
   QC_RESULT = 'qc_result',
   ORDER_STATUS = 'order_status',

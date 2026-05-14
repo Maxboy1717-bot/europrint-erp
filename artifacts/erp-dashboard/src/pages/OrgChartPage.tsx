@@ -1,5 +1,11 @@
+/**
+ * @module OrgChartPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Card,
   CardContent,
@@ -24,9 +30,10 @@ import {
   FileText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { useTranslation } from "@/lib/i18n";
-import { ErrorState } from "@/components/ui/error-state";
 import { safeStorage } from '@/lib/safeStorage';
+import { EPErrorState } from "@/components/ep";
 
 interface OrgChartNode {
   id: string;
@@ -127,10 +134,10 @@ const TreeSkeleton = () => (
     <CardContent className="p-6 space-y-3">
       {([1, 2, 3, 4, 5]).map((i) => (
         <div key={`k-${i}`} className="flex items-center gap-3" style={{ paddingLeft: `${(i % 3) * 24}px` }}>
-          <Skeleton className="h-4 w-4" />
           <Skeleton className="h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-5 w-12 ml-auto" />
+          <Skeleton className="h-4 w-4 rounded-full" />
+          <Skeleton className="h-4 w-32 rounded-lg" />
+          <Skeleton className="h-5 w-12 ml-auto rounded-lg" />
         </div>
       ))}
     </CardContent>
@@ -140,6 +147,7 @@ const TreeSkeleton = () => (
 export default function OrgChartPage() {
   const { t } = useTranslation("hr");
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState<"" | "pdf" | "excel">("");
 
@@ -188,31 +196,63 @@ export default function OrgChartPage() {
     }
   };
 
-  const handleAIRecommendation = () => {
-    toast({
-      title: "AI tavsiya",
-      description: "AI tavsiya tez orada ishga tushadi",
-    });
+  const aiRecommendationMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/org-chart/ai-recommendations");
+      return res.json();
+    },
+    onSuccess: (data: { summary?: string }) => {
+      toast({
+        title: "AI tavsiya",
+        description: data?.summary ?? "Tashkiliy tuzilma tahlili tayyor",
+      });
+    },
+    onError: () => {
+      toast({ title: "Xatolik", description: "AI tavsiya olishda xatolik", variant: "destructive" });
+    },
+  });
+
+  const handleSnapshot = async () => {
+    try {
+      const token = safeStorage.getItem("access_token");
+      const res = await fetch("/api/org-structure/export/png", {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Snapshot failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `org-structure-${new Date().toISOString().slice(0, 10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Snapshot yuklandi", description: "Tuzilma rasmi yuklandi" });
+    } catch {
+      toast({ title: "Xatolik", description: "Snapshot amalga oshmadi", variant: "destructive" });
+    }
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   if (isLoading) {
     return (
       <ModulePage
         module="hr"
-        title="Tashkiliy Tuzilma"
+        title={t("tashkiliyTuzilma1")}
         icon={<Building2 className="h-5 w-5" />}
-        actions={<Skeleton className="h-9 w-32" />}
+        actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {([1, 2, 3]).map((i) => (
             <Card key={`k-${i}`}>
               <CardContent className="p-4">
-                <Skeleton className="h-4 w-24 mb-2" />
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-4 w-24 mb-2 rounded-lg" />
+                <Skeleton className="h-8 w-16 rounded-lg" />
               </CardContent>
             </Card>
           ))}
@@ -225,7 +265,7 @@ export default function OrgChartPage() {
   return (
     <ModulePage
       module="hr"
-      title="Tashkiliy Tuzilma"
+      title={t("tashkiliyTuzilma1")}
       icon={<Building2 className="h-5 w-5" />}
       actions={
         <div className="flex items-center gap-2 flex-wrap">
@@ -233,9 +273,7 @@ export default function OrgChartPage() {
             variant="outline"
             size="icon"
             data-testid="button-settings"
-            onClick={() => {
-              toast({ title: "Sozlamalar", description: "Sozlamalar sahifasi tez orada" });
-            }}
+            onClick={() => navigate("/hr/org-departments")}
           >
             <Settings className="h-4 w-4" />
           </Button>
@@ -243,9 +281,7 @@ export default function OrgChartPage() {
             variant="outline"
             size="icon"
             data-testid="button-snapshot"
-            onClick={() => {
-              toast({ title: "Snapshot", description: "Tuzilma rasmi yuklanmoqda..." });
-            }}
+            onClick={handleSnapshot}
           >
             <Camera className="h-4 w-4" />
           </Button>
@@ -271,7 +307,8 @@ export default function OrgChartPage() {
           </Button>
           <Button
             data-testid="button-ai-recommendation"
-            onClick={handleAIRecommendation}
+            onClick={() => aiRecommendationMutation.mutate()}
+            disabled={aiRecommendationMutation.isPending}
           >
             <TrendingUp className="h-4 w-4 mr-2" />
             AI tavsiya
@@ -282,7 +319,7 @@ export default function OrgChartPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Jami bo'limlar</p>
+            <p className="text-sm text-muted-foreground">{t("jamiBolimlar")}</p>
             <p className="text-2xl font-bold" data-testid="text-total-departments">
               {stats?.totalDepartments || 0}
             </p>
@@ -290,7 +327,7 @@ export default function OrgChartPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Jami xodimlar</p>
+            <p className="text-sm text-muted-foreground">{t("jamiXodimlar1")}</p>
             <p className="text-2xl font-bold" data-testid="text-total-employees">
               {stats?.totalEmployees || 0}
             </p>
@@ -298,7 +335,7 @@ export default function OrgChartPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Maksimal chuqurlik</p>
+            <p className="text-sm text-muted-foreground">{t("maksimalChuqurlik")}</p>
             <p className="text-2xl font-bold" data-testid="text-max-depth">
               {stats?.maxDepth || 0}
             </p>
@@ -310,7 +347,7 @@ export default function OrgChartPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            Bo'limlar daraxti
+            {t("bolimlarDaraxti")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -318,7 +355,7 @@ export default function OrgChartPage() {
             <div className="text-center py-12" data-testid="empty-state">
               <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                Tashkiliy tuzilma mavjud emas
+                {t("tashkiliyTuzilmaMavjudEmas")}
               </p>
             </div>
           ) : (

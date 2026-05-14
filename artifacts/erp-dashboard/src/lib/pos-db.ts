@@ -1,3 +1,8 @@
+/**
+ * @module pos-db
+ * @description Frontend utility / library module.
+ */
+
 import Dexie, { type Table } from "dexie";
 
 export interface OfflinePosProduct {
@@ -57,6 +62,10 @@ export class PosDatabase extends Dexie {
       pendingSales: "++id, localId, status, createdAt",
       syncMeta: "key",
     });
+    // Yangi maydon qo'shilganda shu pattern (version BUMP MAJBURIY):
+    // this.version(2)
+    //   .stores({ pendingSales: "++id, localId, status, createdAt, discountId" })
+    //   .upgrade(tx => tx.table("pendingSales").toCollection().modify(() => {}));
   }
 }
 

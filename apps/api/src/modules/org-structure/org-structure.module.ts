@@ -1,3 +1,8 @@
+/**
+ * @module org-structure.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { OrgStructureController } from './org-structure.controller';
 import { OrgStructureService } from './org-structure.service';

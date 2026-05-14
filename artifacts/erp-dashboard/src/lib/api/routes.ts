@@ -1,3 +1,8 @@
+/**
+ * @module routes
+ * @description Frontend utility / library module.
+ */
+
 export const API_ROUTES = {
   auth: {
     login: '/api/auth/login',

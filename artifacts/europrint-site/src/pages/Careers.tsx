@@ -1,3 +1,8 @@
+/**
+ * @module Careers
+ * @description Source module. See exports for details.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Clock, Briefcase, ChevronDown, ChevronUp, Users, Star, Send, Loader2, AlertCircle } from "lucide-react";

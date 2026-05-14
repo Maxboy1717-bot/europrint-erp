@@ -1,3 +1,8 @@
+/**
+ * @module PosInventory
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { inventoryApi } from "../api/pos-monitor.api";
@@ -23,8 +28,8 @@ function NewPlanModal({ onClose, onCreated, t }: { onClose: () => void; onCreate
         <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 16 }}>📋 {t("inventory.newPlan")}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>Ombor ID *</label>
-            <input className="pos-input" placeholder="Masalan: WH-001" value={warehouseId} onChange={e => setWarehouseId(e.target.value)} />
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("omborId1")}</label>
+            <input className="pos-input" placeholder={t("masalanWh001")} value={warehouseId} onChange={e => setWarehouseId(e.target.value)} />
           </div>
           <div>
             <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("inventory.scheduledFor")}</label>
@@ -101,10 +106,10 @@ export default function PosInventory() {
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="pos-btn pos-btn-primary" style={{ fontSize: 12, padding: "6px 14px" }} onClick={() => void loadVariances(active.id)}>
-              🔍 Farqlarni ko'rish
+              {t("farqlarniKorish")}
             </button>
             <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12, padding: "6px 14px" }}>
-              📄 PDF Act
+              {t("pdfAct")}
             </button>
           </div>
         </div>
@@ -124,14 +129,14 @@ export default function PosInventory() {
             <thead>
               <tr>
                 <th>{t("inventory.planNo")}</th>
-                <th>Ombor</th>
+                <th>{t("ombor")}</th>
                 <th>{t("common.status")}</th>
                 <th>{t("inventory.scheduledFor")}</th>
-                <th>Amallar</th>
+                <th>{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody>
-              {(plans ?? []).map(plan => (
+              {(Array.isArray(plans) ? plans : []).map(plan => (
                 <tr key={plan.id}>
                   <td className="pos-mono" style={{ color: "var(--pos-accent)", fontWeight: 600 }}>{plan.planNumber ?? `#${plan.id}`}</td>
                   <td>{plan.warehouseId ?? "—"}</td>
@@ -141,7 +146,7 @@ export default function PosInventory() {
                   </td>
                   <td>
                     <button className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "3px 8px" }} onClick={() => void loadVariances(plan.id)}>
-                      🔍 Farq
+                      {t("farq1")}
                     </button>
                   </td>
                 </tr>
@@ -158,11 +163,11 @@ export default function PosInventory() {
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Faol sanoq: {active.planNumber ?? `#${active.id}`}</div>
               <div style={{ color: "var(--pos-text-muted)", fontSize: 13 }}>
-                Sanoq qatorlarini kiritish uchun barcode skanerlang yoki miqdorni qo'lda kiriting
+                {t("sanoqQatorlariniKiritishUchunBarcode")}
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Faol sanoq yo'q</div>
+            <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("faolSanoqYoq")}</div>
           )}
         </div>
       )}
@@ -173,15 +178,15 @@ export default function PosInventory() {
             <table className="pos-table">
               <thead>
                 <tr>
-                  <th>Material ID</th>
+                  <th>{t('common.materialId')}</th>
                   <th>{t("inventory.systemQty")}</th>
                   <th>{t("inventory.actualQty")}</th>
                   <th>{t("inventory.difference")}</th>
-                  <th>Tur</th>
+                  <th>{t("tur")}</th>
                 </tr>
               </thead>
               <tbody>
-                {(variances ?? []).map((v) => {
+                {(Array.isArray(variances) ? variances : []).map((v) => {
                   const diff = v.varianceQty ?? (v.actualQty - v.systemQty);
                   const isShort = diff < 0;
                   return (
@@ -204,7 +209,7 @@ export default function PosInventory() {
             </table>
           ) : (
             <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>
-              Reja tanlang va Farq tugmasini bosing
+              {t("rejaTanlangVaFarqTugmasini")}
             </div>
           )}
         </div>

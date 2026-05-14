@@ -1,3 +1,8 @@
+/**
+ * @module TestDetail
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -19,9 +24,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export default function TestDetail() {
+  const { t } = useTranslation("common");
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -88,16 +94,16 @@ export default function TestDetail() {
   });
 
   if (testLoading || questionsLoading) {
-    return <div className="text-center py-12">Yuklanmoqda...</div>;
+    return <div className="text-center py-12">{t("Yuklanmoqda...")}</div>;
   }
 
   if (!test) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground mb-4">Test topilmadi</p>
+        <p className="text-muted-foreground mb-4">{t("testTopilmadi")}</p>
         <Button onClick={() => navigate("/tests")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Orqaga
+          {t("back")}
         </Button>
       </div>
     );
@@ -127,26 +133,27 @@ export default function TestDetail() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/tests")} data-testid="button-back" className="hover:bg-surface-container-high text-on-surface">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/tests")} data-testid="button-back" className="hover:bg-muted text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-4xl font-light tracking-tight text-on-surface mb-2">
-              {test.title.split(' ')[0]} <span className="font-bold text-primary">{test.title.split(' ').slice(1).join(' ')}</span>
-            </h1>
-            <div className="flex items-center gap-3 text-sm text-on-surface-variant font-medium">
-              <Badge variant="outline" className="bg-surface-container text-on-surface border-none shadow-none">O'tish: {test.passPercentage}%</Badge>
+            <EPPageHeader
+        breadcrumb={<>{t("dashboardLms")}<b className="text-foreground">{test.title}</b></>}
+        title={test.title}
+      />
+            <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
+              <Badge variant="outline" className="bg-muted/60 text-foreground border-none shadow-none">O'tish: {test.passPercentage}%</Badge>
               <span>•</span>
-              <Badge variant="outline" className="bg-surface-container text-on-surface border-none shadow-none">{test.timeLimit ? `${test.timeLimit} daqiqa` : "Cheksiz vaqt"}</Badge>
+              <Badge variant="outline" className="bg-muted/60 text-foreground border-none shadow-none">{test.timeLimit ? `${test.timeLimit} daqiqa` : "Cheksiz vaqt"}</Badge>
               <span>•</span>
-              <Badge variant="outline" className="bg-surface-container text-on-surface border-none shadow-none">{test.maxAttempts} urinish</Badge>
+              <Badge variant="outline" className="bg-muted/60 text-foreground border-none shadow-none">{test.maxAttempts} urinish</Badge>
             </div>
           </div>
         </div>
@@ -157,38 +164,38 @@ export default function TestDetail() {
           className="bg-red-100 text-red-800 hover:bg-red-200 border-none shadow-none rounded-lg px-4 py-2 font-semibold"
         >
           <Trash2 className="w-4 h-4 mr-2" />
-          Testni o'chirish
+          {t("testniOchirish")}
         </Button>
       </div>
 
-      <Card className="bg-surface-container-lowest border-outline-variant shadow-none">
+      <Card className="bg-card border-border shadow-none">
         <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
           <div>
-            <CardTitle className="text-on-surface">Savollar</CardTitle>
-            <CardDescription className="text-on-surface-variant">
+            <CardTitle className="text-foreground">{t("questions")}</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Jami {questions.length} ta savol
             </CardDescription>
           </div>
           <Button 
             onClick={() => setShowAddQuestion(true)} 
             data-testid="button-add-question"
-            className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
+            className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Savol qo'shish
+            {t("savolQoshish")}
           </Button>
         </CardHeader>
         <CardContent>
           {questions.length === 0 ? (
             <div className="text-center py-12">
               <FileQuestion className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Savollar mavjud emas</h3>
+              <h3 className="text-lg font-medium mb-2">{t("savollarMavjudEmas")}</h3>
               <p className="text-muted-foreground mb-4">
-                Testga birinchi savolni qo'shing
+                {t("testgaBirinchiSavolniQoshing")}
               </p>
               <Button onClick={() => setShowAddQuestion(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Savol qo'shish
+                {t("savolQoshish")}
               </Button>
             </div>
           ) : (
@@ -203,16 +210,16 @@ export default function TestDetail() {
                           {getTypeBadge(question.type)}
                           {getDifficultyBadge(question.difficulty)}
                           {question.category && (
-                            <Badge variant="secondary" className="text-xs">
+                            <EPStatusPill tone="neutral" className="text-xs">
                               {question.category}
-                            </Badge>
+                            </EPStatusPill>
                           )}
                         </div>
                         <p className="text-base font-medium">{question.question}</p>
                       </div>
                       <DeleteConfirmDialog
-                        title="Savolni o'chirishni tasdiqlaysizmi?"
-                        description="Savol butunlay o'chiriladi."
+                        title={t("savolniOchirishniTasdiqlaysizmi")}
+                        description={t("savolButunlayOchiriladi")}
                         onConfirm={() => deleteQuestionMutation.mutate(question.id)}
                         isPending={deleteQuestionMutation.isPending}
                       />
@@ -235,9 +242,9 @@ export default function TestDetail() {
                             </span>
                             <span className="text-sm">{option}</span>
                             {question.correctAnswer === String(optIndex + 1) && (
-                              <Badge variant="default" className="ml-auto text-xs">
-                                To'g'ri
-                              </Badge>
+                              <EPStatusPill tone="success" className="ml-auto text-xs">
+                                {t("togri")}
+                              </EPStatusPill>
                             )}
                           </div>
                         ))}
@@ -260,18 +267,18 @@ export default function TestDetail() {
       <AlertDialog open={deleteTestDialog} onOpenChange={setDeleteTestDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Testni o'chirish</AlertDialogTitle>
+            <AlertDialogTitle>{t("testniOchirish")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Haqiqatan ham bu testni o'chirmoqchimisiz? Bu amal qaytarib bo'lmaydi va barcha savollar ham o'chib ketadi.
+              {t("haqiqatanHamBuTestniOchirmoqchimisiz")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteTestMutation.mutate()}
               className="bg-destructive hover:bg-destructive/90"
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

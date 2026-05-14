@@ -1,10 +1,17 @@
+/**
+ * @module PublicHeader
+ * @description React UI component.
+ */
+
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
 import logoImage from '@assets/Logo_Euro_Print_1769616882846.png';
+import { useTranslation } from '@/lib/i18n';
 
 export default function PublicHeader() {
+  const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
   const { language, setLanguage, t } = useLanguage();
@@ -29,7 +36,7 @@ export default function PublicHeader() {
           <Link href="/site" className="flex items-center" data-testid="link-logo">
             <img 
               src={logoImage} 
-              alt="EuroPrint Logo" 
+              alt={t("europrintLogo")} 
               className="h-14 lg:h-16 w-auto"
             />
           </Link>

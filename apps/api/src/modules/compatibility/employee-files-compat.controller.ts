@@ -1,8 +1,13 @@
+/**
+ * @module employee-files-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Controller, Get, Post, Delete, Param, Query, Body,
-  UseGuards, UseInterceptors, InternalServerErrorException,
+  Controller, Get, Patch, Post, Delete, Param, Query, Body,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { throwFromError, unwrapOrThrow } from '@common/http-result';
+import { unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -40,6 +45,11 @@ export class EmployeeFilesCompatController {
   @Get(':id')
   async getFile(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getFile(id));
+  }
+
+  @Patch(':id')
+  async updateFile(@Param('id') id: string, @Body() body: CompatBodyDto) {
+    return unwrapOrThrow(await this.svc.updateFile(id, body as Record<string, unknown>));
   }
 
   @Delete(':id')

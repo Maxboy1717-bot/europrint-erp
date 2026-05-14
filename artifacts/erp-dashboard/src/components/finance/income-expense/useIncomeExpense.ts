@@ -1,3 +1,8 @@
+/**
+ * @module useIncomeExpense
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -129,7 +134,7 @@ export function useIncomeExpense() {
       data: Partial<CategoryFormData>;
     }) => {
       return apiRequest(
-        "PATCH",
+        "PUT",
         `/api/finance-extended/finance-categories/${id}`,
         data
       );

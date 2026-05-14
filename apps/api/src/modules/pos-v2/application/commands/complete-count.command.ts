@@ -1,3 +1,8 @@
+/**
+ * @module complete-count.command
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Result, Ok as ok, Err as err, isErr, Err } from '@common/result';
@@ -28,7 +33,7 @@ export class CompleteCountHandler implements ICommandHandler<CompleteCountComman
       const count = countResult.data;
 
       // Check if all lines have been counted
-      const uncountedLines = (count?.lines ?? []).filter((l) => l.countedQuantity === 0);
+      const uncountedLines = (Array.isArray(count?.lines) ? count?.lines : []).filter((l) => l.countedQuantity === 0);
 
       if (uncountedLines.length > 0) {
         return err({

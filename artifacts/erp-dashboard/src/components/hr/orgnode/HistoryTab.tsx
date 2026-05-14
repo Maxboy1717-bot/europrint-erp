@@ -1,13 +1,20 @@
+/**
+ * @module HistoryTab
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { History } from "lucide-react";
 import { HistoryEntry } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface HistoryTabProps {
   nodeId: string | number;
 }
 
 export function HistoryTab({ nodeId }: HistoryTabProps) {
+  const { t } = useTranslation("common");
   const { data: historyData, isLoading: histLoading } = useQuery<{
     nodeId: number; history: HistoryEntry[];
   }>({
@@ -18,7 +25,7 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
   if (histLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff5d2e]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -27,7 +34,7 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
         <History className="h-10 w-10 opacity-20" />
-        <p>Hozircha tarix mavjud emas</p>
+        <p>{t("hozirchaTarixMavjudEmas")}</p>
       </div>
     );
   }
@@ -35,7 +42,7 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
   return (
     <div className="space-y-3">
       {(Array.isArray(historyData.history) ? historyData.history : []).map((entry) => (
-        <Card key={entry.id} className="border-l-4 border-l-[#ff5d2e]/50">
+        <Card key={entry.id} className="border-l-4 border-l-primary/50">
           <CardContent className="py-3 px-4 flex justify-between gap-4">
             <div>
               <p className="font-semibold text-sm">{entry.action}</p>

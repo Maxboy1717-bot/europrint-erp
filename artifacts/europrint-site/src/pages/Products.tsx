@@ -1,3 +1,8 @@
+/**
+ * @module Products
+ * @description Source module. See exports for details.
+ */
+
 import { useState } from "react";
 import { Link } from "wouter";
 import { Search, Filter, ShoppingCart, ArrowRight } from "lucide-react";

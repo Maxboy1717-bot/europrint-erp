@@ -1,7 +1,7 @@
 /**
  * math-utils — TZ-D03: Xavfsiz matematik utility funksiyalar
  *
- * Maqsad: parseFloat(String(x)), a/b, (arr ?? []).reduce(fn) kabi xavfli
+ * Maqsad: parseFloat(String(x)), a/b, (Array.isArray(arr) ? arr : []).reduce(fn) kabi xavfli
  * pattern'larni almashtirish. Barcha funksiyalar NaN / Infinity'ni
  * fallback bilan boshqaradi.
  *
@@ -46,7 +46,7 @@ export const safeDiv = (a: number, b: number, fb = 0): number =>
 /**
  * safeSum — Massiv elementlarini xavfsiz yig'adi.
  *
- * (arr ?? []).reduce(fn) — initial value MAJBURIY (bu funksiya uni ta'minlaydi).
+ * (Array.isArray(arr) ? arr : []).reduce(fn) — initial value MAJBURIY (bu funksiya uni ta'minlaydi).
  */
 export const safeSum = (arr: readonly unknown[]): number =>
   arr.reduce<number>((s, x) => s + safeNum(x), 0);
@@ -71,7 +71,7 @@ export const clamp = (x: number, lo: number, hi: number): number =>
 export const stddev = (arr: readonly number[]): number => {
   if (arr.length < 2) return 0;
   const mu = safeAvg(arr);
-  const variance = safeAvg((arr ?? []).map((x) => (x - mu) ** 2));
+  const variance = safeAvg((Array.isArray(arr) ? arr : []).map((x) => (x - mu) ** 2));
   return Math.sqrt(variance);
 };
 

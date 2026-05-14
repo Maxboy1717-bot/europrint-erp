@@ -1,3 +1,8 @@
+/**
+ * @module i-hr-onboarding.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { hrOnboardingPlans, hrEmployeeOnboardings } from '@europrint/schemas';
 import { Result } from '@common/result';
 

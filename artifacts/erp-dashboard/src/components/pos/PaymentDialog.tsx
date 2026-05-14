@@ -1,3 +1,8 @@
+/**
+ * @module PaymentDialog
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -22,11 +27,10 @@ export function PaymentDialog({
   paymentMethodLabels,
 }: PaymentDialogProps) {
   const { t } = useTranslation('finance');
-  const { t: tCommon } = useTranslation('common');
 
   return (
     <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
-      <DialogContent className="max-w-md" data-testid="dialog-receipt">
+      <DialogContent className="max-w-md p-6" data-testid="dialog-receipt">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5" /> Chek / Receipt
@@ -41,32 +45,32 @@ export function PaymentDialog({
             </div>
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Chek:</span>
+                <span className="text-muted-foreground">{t("chek")}</span>
                 <span className="font-mono">{receiptData.receiptNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Sana:</span>
+                <span className="text-muted-foreground">{t("sana1")}</span>
                 <span>{formatDateTime(receiptData.createdAt)}</span>
               </div>
               {receiptData.customerName && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mijoz:</span>
+                  <span className="text-muted-foreground">{t("mijoz")}</span>
                   <span>{receiptData.customerName}</span>
                 </div>
               )}
             </div>
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Mahsulot</TableHead>
-                  <TableHead className="text-xs text-center">Soni</TableHead>
-                  <TableHead className="text-xs text-right">Narx</TableHead>
-                  <TableHead className="text-xs text-right">Jami</TableHead>
+                  <TableHead className="text-xs">{t("Mahsulot")}</TableHead>
+                  <TableHead className="text-xs text-center">{t("count")}</TableHead>
+                  <TableHead className="text-xs text-right">{t("price")}</TableHead>
+                  <TableHead className="text-xs text-right">{t("total")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(Array.isArray(receiptData.items) ? receiptData.items : []).map((item: TransactionItem, idx: number) => (
-                  <TableRow key={idx}>
+                  <TableRow key={idx} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="text-xs">{item.name}</TableCell>
                     <TableCell className="text-xs text-center">{item.quantity}</TableCell>
                     <TableCell className="text-xs text-right">{formatCurrency(item.unitPrice)}</TableCell>
@@ -74,15 +78,15 @@ export function PaymentDialog({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
             <div className="border-t pt-2 space-y-1">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Jami:</span>
+                <span className="text-muted-foreground">{t("jami")}</span>
                 <span>{formatCurrency(receiptData.subtotal)}</span>
               </div>
               {receiptData.discountAmount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Chegirma:</span>
+                  <span className="text-muted-foreground">{t("chegirma")}</span>
                   <span>-{formatCurrency(receiptData.discountAmount)}</span>
                 </div>
               )}
@@ -95,12 +99,12 @@ export function PaymentDialog({
                 <span>{formatCurrency(receiptData.totalAmount)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>To'lov:</span>
+                <span>{t("tolov2")}</span>
                 <span>{paymentMethodLabels[receiptData.paymentMethod]?.uz || receiptData.paymentMethod}</span>
               </div>
               {(receiptData.paymentDetails?.changeAmount ?? 0) > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Qaytim:</span>
+                  <span className="text-muted-foreground">{t("qaytim")}</span>
                   <span>{formatCurrency(receiptData.paymentDetails.changeAmount ?? 0)}</span>
                 </div>
               )}
@@ -109,10 +113,10 @@ export function PaymentDialog({
         )}
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => setShowReceipt(false)} data-testid="button-close-receipt">
-            Yopish
+            {t("close2")}
           </Button>
           <Button onClick={handlePrintReceipt} data-testid="button-print-receipt">
-            <Printer className="h-4 w-4 mr-1" /> Chop etish
+            <Printer className="h-4 w-4 mr-1" /> {t("print1")}
           </Button>
         </DialogFooter>
       </DialogContent>

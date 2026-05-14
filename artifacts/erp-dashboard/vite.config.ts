@@ -1,3 +1,8 @@
+/**
+ * @module vite.config
+ * @description Configuration loader. Wraps env vars via @nestjs/config ConfigService.
+ */
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -14,10 +19,16 @@ const port = rawPort && !Number.isNaN(Number(rawPort)) && Number(rawPort) > 0
 const basePath = process.env.BASE_PATH || "/erp-dashboard/";
 const basePrefix = basePath.replace(/\/$/, "");
 
-const apiUrl = process.env.API_URL ?? "http://localhost:3005";
-const nestApiUrl = process.env.NEST_API_URL ?? "http://localhost:8080";
+// Backend NestJS port — apps/api/.env'da PORT=3000 (Windows 8080 EACCES sababli)
+const apiUrl = process.env.API_URL ?? "http://localhost:3000";
+const nestApiUrl = process.env.NEST_API_URL ?? "http://localhost:3000";
 
 function posAuthDirectPlugin(nestUrl: string, prefix: string) {
+  // nestUrl'dan host/port chiqarib olish — hard-coded 8080 emas
+  const parsedUrl = new URL(nestUrl);
+  const targetHost = parsedUrl.hostname || "localhost";
+  const targetPort = parsedUrl.port ? Number(parsedUrl.port) : 80;
+
   return {
     name: "pos-auth-direct",
     configureServer(server: { middlewares: { use: (fn: (req: http.IncomingMessage, res: http.ServerResponse, next: () => void) => void) => void } }) {
@@ -33,10 +44,10 @@ function posAuthDirectPlugin(nestUrl: string, prefix: string) {
             const body = Buffer.concat(chunks);
             let username = "?";
             try { username = (JSON.parse(body.toString()) as { username?: string }).username ?? "?"; } catch { /* noop */ }
-            process.stdout.write(`[pos-auth-direct] intercepted login for user="${username}" url=${req.url ?? ""} bodyLen=${body.length}\n`);
+            process.stdout.write(`[pos-auth-direct] intercepted login for user="${username}" url=${req.url ?? ""} bodyLen=${body.length} → ${targetHost}:${targetPort}\n`);
             const forwarded = req.headers["x-forwarded-for"] ?? req.socket?.remoteAddress ?? "";
             const nestReq = http.request(
-              { host: "localhost", port: 8080, path: "/api/pos/auth/login", method: "POST",
+              { host: targetHost, port: targetPort, path: "/api/pos/auth/login", method: "POST",
                 headers: { "content-type": "application/json", "content-length": body.length, "x-forwarded-for": forwarded } },
               (nestRes) => {
                 const parts: Buffer[] = [];
@@ -281,6 +292,12 @@ export default defineConfig({
         target: nestApiUrl,
         changeOrigin: true,
         ws: true,
+      },
+      // Fayl yuklash/ko'rish: /storage/... → nestjs /api/storage/...
+      "/storage": {
+        target: nestApiUrl,
+        changeOrigin: true,
+        rewrite: (path: string) => `/api${path}`,
       },
       "/socket.io": {
         target: nestApiUrl,

@@ -1,3 +1,8 @@
+/**
+ * @module SupplierQualityPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -19,10 +24,10 @@ interface SupplierQualityRow {
 }
 
 const GRADE_CONFIG: Record<SupplierQualityRow["grade"], { label: string; color: string }> = {
-  A: { label: "A'lo (81-100)",     color: "bg-emerald-500 text-white" },
-  B: { label: "Yaxshi (61-80)",    color: "bg-blue-500 text-white" },
-  C: { label: "Qoniqarli (41-60)", color: "bg-yellow-500 text-white" },
-  D: { label: "Yomon (0-40)",      color: "bg-rose-500 text-white" },
+  A: { label: "A'lo (81-100)",     color: "bg-[var(--ep-green)] text-white" },
+  B: { label: "Yaxshi (61-80)",    color: "bg-[var(--ep-blue)] text-white" },
+  C: { label: "Qoniqarli (41-60)", color: "bg-[var(--ep-yellow)] text-white" },
+  D: { label: "Yomon (0-40)",      color: "bg-[var(--ep-red)] text-white" },
 };
 
 const PASS_RATE_THRESHOLD_GOOD = 95;
@@ -56,7 +61,7 @@ export default function SupplierQualityPage() {
 
       <Section title={t('supplierQc.list', "Yetkazuvchilar reytingi")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14" />)}</div>
+          <div className="space-y-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('supplierQc.empty', "Ma'lumot yo'q")}</p>
         ) : (
@@ -81,8 +86,8 @@ export default function SupplierQualityPage() {
                     <tr key={v.vendorId} className="border-b">
                       <td className="p-2 font-medium">{v.vendorName}</td>
                       <td className="text-right p-2">{v.totalReceipts}</td>
-                      <td className="text-right p-2 text-emerald-600">{v.passedCount}</td>
-                      <td className="text-right p-2 text-rose-600">{v.failedCount}</td>
+                      <td className="text-right p-2 text-[var(--ep-green)]">{v.passedCount}</td>
+                      <td className="text-right p-2 text-[var(--ep-red)]">{v.failedCount}</td>
                       <td className="text-right p-2 font-medium">{v.passRate}%</td>
                       <td className="text-right p-2 font-medium">{v.qualityScore}</td>
                       <td className="text-center p-2"><Badge className={cfg.color}>{v.grade}</Badge></td>

@@ -1,3 +1,8 @@
+/**
+ * @module three-way-match.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { ThreeWayMatchRepository } from './three-way-match.repository';

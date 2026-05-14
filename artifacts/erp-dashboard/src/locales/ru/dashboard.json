@@ -54,5 +54,17 @@
   "director.approve": "Утвердить",
   "director.reject": "Отклонить",
   "auditor.title": "Панель аудитора",
-  "accountant.title": "Вид бухгалтера"
+  "accountant.title": "Вид бухгалтера",
+  "scan": "Сканировать",
+  "inward": "Поступление",
+  "outward": "Выдача",
+  "transfer": "Перемещение",
+  "request": "Запрос",
+  "todayMovements": "Движения за сегодня",
+  "todayAmount": "Сумма за сегодня",
+  "awaitingApproval": "Ожидает утверждения",
+  "lowStockAlerts": "Низкий запас",
+  "recentFeed": "Последняя активность",
+  "warehouseMap": "Карта склада",
+  "myTasks": "Мои задачи"
 }

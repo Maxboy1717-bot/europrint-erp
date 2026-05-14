@@ -1,3 +1,8 @@
+/**
+ * @module chart
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 

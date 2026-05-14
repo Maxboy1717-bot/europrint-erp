@@ -1,3 +1,8 @@
+/**
+ * @module queries-sd
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import {
   sd_customers, sd_customer_contacts, sd_customer_documents,

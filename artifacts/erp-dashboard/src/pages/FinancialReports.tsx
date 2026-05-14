@@ -1,3 +1,8 @@
+/**
+ * @module FinancialReports
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { exportToCSV } from "@/lib/export-utils";
@@ -13,8 +18,6 @@ import {
   Factory,
   FileSpreadsheet,
 } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-
 // Sub-components
 import { WeeklyOverview } from "@/components/finance/reports/WeeklyOverview";
 import { CashFlowARAP } from "@/components/finance/reports/CashFlowARAP";
@@ -30,8 +33,11 @@ import { ProductionAnalysis } from "@/components/finance/reports/ProductionAnaly
 
 // Types
 import { WeeklySummary, MonthlySummary, KPIDashboard, ProductionEfficiency } from "@/components/finance/reports/types";
+import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function FinancialReports() {
+  const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState("weekly");
   const [selectedPeriod, setSelectedPeriod] = useState("current-week");
 
@@ -85,76 +91,76 @@ export default function FinancialReports() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="min-h-screen bg-background" data-testid="financial-reports">
-      <div className="border-b bg-gradient-to-r from-green-600 to-emerald-500 text-white">
-        <div className="container mx-auto px-4 py-4">
+    <div data-testid="financial-reports">
+      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
+        <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <FileText className="h-8 w-8" />
               <div>
-                <h1 className="text-2xl font-bold">Moliyaviy Hisobotlar</h1>
-                <p className="text-green-100 text-sm">Haftalik, oylik va KPI hisobotlari</p>
+                <h1 className="text-2xl font-bold">{t("moliyaviyHisobotlar1")}</h1>
+                <p className="text-white/75 text-sm">{t("haftalikOylikVaKpiHisobotlari")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Button 
                 variant="outline" 
-                className="bg-surface-container-lowest/10 border-white/30 text-white hover:bg-surface-container-lowest/20"
+                className="bg-card/10 border-white/30 text-white hover:bg-card/20 gap-2"
                 onClick={handleExportPDF}
                 data-testid="button-export-pdf"
               >
-                <Download className="h-4 w-4 mr-2" />
-                PDF yuklab olish
+                <Download className="h-4 w-4" />
+                {t("pdfYuklabOlish")}
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-surface-container-lowest/10 border-white/30 text-white hover:bg-surface-container-lowest/20"
+                className="bg-card/10 border-white/30 text-white hover:bg-card/20 gap-2"
                 onClick={handleExportExcel}
                 data-testid="button-export-excel"
               >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Excel yuklab olish
+                <FileSpreadsheet className="h-4 w-4" />
+                {t("excelYuklabOlish")}
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="weekly" data-testid="tab-weekly">
               <Calendar className="h-4 w-4 mr-2" />
-              Haftalik
+              {t("weekly")}
             </TabsTrigger>
             <TabsTrigger value="monthly" data-testid="tab-monthly">
               <BarChart3 className="h-4 w-4 mr-2" />
-              Oylik
+              {t("monthly")}
             </TabsTrigger>
             <TabsTrigger value="kpi" data-testid="tab-kpi">
               <Target className="h-4 w-4 mr-2" />
-              KPI Dashboard
+              {t("kpiDashboard")}
             </TabsTrigger>
             <TabsTrigger value="production" data-testid="tab-production">
               <Factory className="h-4 w-4 mr-2" />
-              Ishlab chiqarish
+              {t("ishlabChiqarish2")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="weekly" className="space-y-6">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-xl font-semibold">Haftalik Moliyaviy Xulosa</h2>
+              <h2 className="text-xl font-semibold">{t("haftalikMoliyaviyXulosa")}</h2>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-[200px]" data-testid="select-period">
-                  <SelectValue placeholder="Davrni tanlang" />
+                <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-period">
+                  <SelectValue placeholder={t("davrniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="current-week">Joriy hafta</SelectItem>
-                  <SelectItem value="last-week">O'tgan hafta</SelectItem>
+                  <SelectItem value="current-week">{t("joriyHafta")}</SelectItem>
+                  <SelectItem value="last-week">{t("otganHafta")}</SelectItem>
                   <SelectItem value="two-weeks-ago">2 hafta oldin</SelectItem>
                 </SelectContent>
               </Select>
@@ -166,7 +172,7 @@ export default function FinancialReports() {
           </TabsContent>
 
           <TabsContent value="monthly" className="space-y-6">
-            <h2 className="text-xl font-semibold">Oylik Moliyaviy Hisobot</h2>
+            <h2 className="text-xl font-semibold">{t("oylikMoliyaviyHisobot")}</h2>
             <div className="grid gap-6 lg:grid-cols-2">
               <IncomeStatement data={monthlySummary} isLoading={monthlyLoading} />
               <BalanceSheet data={monthlySummary} isLoading={monthlyLoading} />
@@ -178,13 +184,13 @@ export default function FinancialReports() {
           </TabsContent>
 
           <TabsContent value="kpi" className="space-y-6">
-            <h2 className="text-xl font-semibold">Moliyaviy KPI Tahlili</h2>
+            <h2 className="text-xl font-semibold">{t("moliyaviyKpiTahlili")}</h2>
             <RatioAnalysis data={kpiDashboard} isLoading={kpiLoading} />
             <KPITrendChart data={kpiDashboard} isLoading={kpiLoading} />
           </TabsContent>
 
           <TabsContent value="production" className="space-y-6">
-            <h2 className="text-xl font-semibold">Ishlab chiqarish samaradorligi</h2>
+            <h2 className="text-xl font-semibold">{t("ishlabChiqarishSamaradorligi")}</h2>
             <ProductionStats data={productionEfficiency} isLoading={productionLoading} />
             <ProductionAnalysis data={productionEfficiency} isLoading={productionLoading} />
           </TabsContent>

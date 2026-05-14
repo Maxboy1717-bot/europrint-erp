@@ -1,7 +1,12 @@
+/**
+ * @module drizzle-sd-orders.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { salesOrders } from '@europrint/schemas';
 import { eq, isNull, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
@@ -20,14 +25,14 @@ export class DrizzleSdOrdersRepository implements ISdOrdersRepository {
 
   async findById(id: number) {
     try {
-      const rows = await db.select().from(salesOrders).where(sql`id = ${id}`).limit(1).offset(0);
+      const rows = await db.select().from(salesOrders).where(sql`id = ${id} AND deleted_at IS NULL`).limit(1).offset(0);
       return Ok((rows[0] as SalesOrderRow) || null);
     } catch (e: unknown) { return Err((e as Error)?.message || `Buyurtma #${id} topilmadi`); }
   }
 
   async findByDocumentNumber(docNum: string) {
     try {
-      const rows = await db.select().from(salesOrders).where(eq(salesOrders.documentNumber, docNum)).limit(1).offset(0);
+      const rows = await db.select().from(salesOrders).where(sql`document_number = ${docNum} AND deleted_at IS NULL`).limit(1).offset(0);
       return Ok((rows[0] as SalesOrderRow) || null);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Buyurtma topilmadi'); }
   }
@@ -64,28 +69,42 @@ export class DrizzleSdOrdersRepository implements ISdOrdersRepository {
         ...(dto.createdBy !== undefined ? { createdBy: dto.createdBy as string } : {}),
         updatedAt: _time.now(),
       };
-      const result = await db.update(salesOrders).set(patch).where(sql`id = ${id}`).returning();
+      const result = await db.update(salesOrders).set(patch).where(sql`id = ${id} AND deleted_at IS NULL`).returning();
       return Ok(result[0] as SalesOrderRow);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
   }
 
   async updateMasterStatus(id: number, masterStatus: string) {
     try {
-      const result = await db.update(salesOrders).set({ overallStatus: masterStatus, updatedAt: _time.now() }).where(sql`id = ${id}`).returning();
+      const result = await db.update(salesOrders).set({ overallStatus: masterStatus, updatedAt: _time.now() }).where(sql`id = ${id} AND deleted_at IS NULL`).returning();
       return Ok(result[0] as SalesOrderRow);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Holat yangilashda xatolik'); }
   }
 
   async updateAdvancePayment(id: number, dto: { advancePaidAmount: string; advanceStatus: string; balanceDueAmount: string }) {
     try {
-      await db.execute(sql`UPDATE sales_orders SET notes = COALESCE(notes,'') || ' [advance:' || ${dto.advancePaidAmount} || ']', updated_at = NOW() WHERE id = ${id}`);
-      const rows = await db.select().from(salesOrders).where(sql`id = ${id}`).limit(1);
+      const amount = dto.advancePaidAmount;
+      await db.execute(sql`
+        UPDATE sales_orders
+        SET advance_paid_amount = ${amount},
+            advance_status = 'paid',
+            balance_due_amount = GREATEST(0, COALESCE(total_amount::numeric, 0) - ${amount}::numeric),
+            updated_at = NOW()
+        WHERE id = ${id} AND deleted_at IS NULL
+      `);
+      const rows = await db.select().from(salesOrders).where(sql`id = ${id} AND deleted_at IS NULL`).limit(1);
       return Ok(rows[0] as SalesOrderRow);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Avans yangilashda xatolik'); }
   }
 
   async cancel(id: number): Promise<Result<void>> {
     try {
+      await runQuery(sql`
+        UPDATE kanban_cards SET
+          description = COALESCE(description, '') || E'\n[Buyurtma bekor qilindi]',
+          updated_at = NOW()
+        WHERE related_type = 'sales_order' AND related_id::text = ${id}::text AND deleted_at IS NULL
+      `);
       await db.update(salesOrders).set({ overallStatus: 'CANCELLED', status: 'cancelled', deletedAt: _time.now() }).where(sql`id = ${id}`);
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error)?.message || "O'chirishda xatolik"); }

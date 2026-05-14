@@ -1,3 +1,8 @@
+/**
+ * @module cron-status.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Logger } from '@nestjs/common';
@@ -190,9 +195,9 @@ export class CronStatusService {
     const all = this.getAllStatuses()
     return Ok({
       total: all.length,
-      neverRan: (all ?? []).filter(j => j.lastResult === 'never').length,
-      successLast: (all ?? []).filter(j => j.lastResult === 'success').length,
-      failureLast: (all ?? []).filter(j => j.lastResult === 'failure').length,
+      neverRan: (Array.isArray(all) ? all : []).filter(j => j.lastResult === 'never').length,
+      successLast: (Array.isArray(all) ? all : []).filter(j => j.lastResult === 'success').length,
+      failureLast: (Array.isArray(all) ? all : []).filter(j => j.lastResult === 'failure').length,
     })
   }
 }

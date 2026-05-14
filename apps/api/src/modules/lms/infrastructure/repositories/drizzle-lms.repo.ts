@@ -1,12 +1,17 @@
+/**
+ * @module drizzle-lms.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { ILmsRepo, Course, Enrollment } from '../../domain/repositories/i-lms.repo';
 import { LmsCertRepo } from './drizzle-lms-cert.repo';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -68,7 +73,7 @@ export class LmsRepository implements ILmsRepo {
           : exec(sql`SELECT * FROM courses WHERE is_active = true ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`),
         runQuery<{ cnt: number }>(sql`SELECT COUNT(*) AS cnt FROM courses WHERE is_active = true`),
       ]);
-      return Ok({ items: (rows ?? []).map(mapCourse), total: Number(countRows.rows[0]?.cnt ?? 0) });
+      return Ok({ items: (Array.isArray(rows) ? rows : []).map(mapCourse), total: Number(countRows.rows[0]?.cnt ?? 0) });
     } catch (error: unknown) {
       this.logger.error(`findAllCourses: ${(error as Error).message}`);
       return Err((error as Error).message);
@@ -107,7 +112,7 @@ export class LmsRepository implements ILmsRepo {
           : exec(sql`SELECT e.*, c.title_uz AS course_title, c.category, cert.expiry_date AS certificate_expires_at, cert.is_active AS cert_active FROM enrollments e JOIN courses c ON c.id = e.course_id LEFT JOIN certificates cert ON cert.employee_id = e.employee_id AND cert.course_id = e.course_id WHERE e.employee_id = ${parseInt(userId, 10)} ORDER BY e.created_at DESC LIMIT ${limit} OFFSET ${offset}`),
         runQuery<{ cnt: number }>(sql`SELECT COUNT(*) AS cnt FROM enrollments WHERE employee_id = ${parseInt(userId, 10)}`),
       ]);
-      return { ok: true, data: { items: (rows ?? []).map((row) => ({ ...mapEnrollment(row), course_title: row.course_title as string | undefined, certificate_expires_at: row.certificate_expires_at ? new Date(String(row.certificate_expires_at)) : undefined })) as Enrollment[], total: Number(countRows.rows[0]?.cnt ?? 0) } };
+      return { ok: true, data: { items: (Array.isArray(rows) ? rows : []).map((row) => ({ ...mapEnrollment(row), course_title: row.course_title as string | undefined, certificate_expires_at: row.certificate_expires_at ? new Date(String(row.certificate_expires_at)) : undefined })) as Enrollment[], total: Number(countRows.rows[0]?.cnt ?? 0) } };
     } catch (error: unknown) {
       this.logger.error(`findEnrollmentsByUser: ${(error as Error).message}`);
       return Err((error as Error).message);
@@ -131,6 +136,18 @@ export class LmsRepository implements ILmsRepo {
       return Ok(mapEnrollment(r[0]));
     } catch (error: unknown) {
       this.logger.error(`updateEnrollment: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  async deleteCourse(id: string): Promise<Result<{ deleted: boolean }>> {
+    try {
+      const existing = await exec(sql`SELECT id FROM courses WHERE id = ${parseInt(id, 10)} AND (is_active IS NULL OR is_active = true) LIMIT 1`);
+      if (!existing[0]) return Err('Course not found');
+      await exec(sql`UPDATE courses SET is_active = false, updated_at = NOW() WHERE id = ${parseInt(id, 10)}`);
+      return Ok({ deleted: true });
+    } catch (error: unknown) {
+      this.logger.error(`deleteCourse: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

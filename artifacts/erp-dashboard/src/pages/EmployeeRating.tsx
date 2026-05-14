@@ -1,3 +1,8 @@
+/**
+ * @module EmployeeRating
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,9 +14,10 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, TrendingUp, TrendingDown, Minus, Award, Target, BarChart3, Star, Activity } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
 import { PageState } from "@/components/ui/page-state";
+import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
 
+import { useTranslation } from '@/lib/i18n';
 interface EmployeeRatingItem {
   id: string;
   productivityScore: number;
@@ -47,6 +53,7 @@ interface RatingStats {
 }
 
 export default function EmployeeRating() {
+  const { t } = useTranslation('common');
   const now = new Date();
   const [periodYear, setPeriodYear] = useState(now.getFullYear().toString());
   const [periodMonth, setPeriodMonth] = useState((now.getMonth() + 1).toString());
@@ -66,16 +73,16 @@ export default function EmployeeRating() {
   const ratings = ratingsData?.ratings || [];
 
   const trendIcon = (trend: string) => {
-    if (trend === "up") return <TrendingUp className="w-4 h-4 text-green-600" />;
-    if (trend === "down") return <TrendingDown className="w-4 h-4 text-red-600" />;
+    if (trend === "up") return <TrendingUp className="w-4 h-4 text-[var(--ep-green)]" />;
+    if (trend === "down") return <TrendingDown className="w-4 h-4 text-[var(--ep-red)]" />;
     return <Minus className="w-4 h-4 text-muted-foreground" />;
   };
 
   const scoreBadge = (score: number) => {
-    if (score >= 90) return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold"><Award className="w-3 h-3 mr-1" />A'lo</Badge>;
-    if (score >= 75) return <Badge className="bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-xs font-semibold"><Star className="w-3 h-3 mr-1" />Yaxshi</Badge>;
-    if (score >= 50) return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">O'rtacha</Badge>;
-    return <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">Yomon</Badge>;
+    if (score >= 90) return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold"><Award className="w-3 h-3 mr-1" />{t("alo")}</Badge>;
+    if (score >= 75) return <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold"><Star className="w-3 h-3 mr-1" />{t("Yaxshi")}</Badge>;
+    if (score >= 50) return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("average")}</Badge>;
+    return <EPStatusPill tone="danger">{t("yomon")}</EPStatusPill>;
   };
 
   const avgComposite = stats?.avgScores?.avgComposite || 0;
@@ -90,61 +97,62 @@ export default function EmployeeRating() {
   ];
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            Xodim <span className="font-bold text-primary">Reytingi</span>
-          </h1>
-          <p className="text-on-surface-variant -mt-1">KPI baholash, trend tahlili, maqsad monitoring</p>
+          <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimReytingi")}</b></>}
+        title={t("xodimReytingi")}
+        subtitle={t("kpiBaholashTrendTahliliMaqsad")}
+      />
         </div>
-        <div className="flex gap-2 bg-surface-container p-1 rounded-lg">
+        <div className="flex gap-2 bg-muted/60 p-1 rounded-lg">
           <Select value={periodYear} onValueChange={setPeriodYear}>
-            <SelectTrigger className="w-24 bg-surface-container-lowest border-none shadow-none" data-testid="select-year"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-24 bg-card border-none shadow-none h-9" data-testid="select-year"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="2025">2025</SelectItem>
               <SelectItem value="2026">2026</SelectItem>
             </SelectContent>
           </Select>
           <Select value={periodMonth} onValueChange={setPeriodMonth}>
-            <SelectTrigger className="w-32 bg-surface-container-lowest border-none shadow-none" data-testid="select-month"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-32 bg-card border-none shadow-none h-9" data-testid="select-month"><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Array.isArray(months) ? months : []).map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="sm" onClick={() => refetch()} title="Yangilash">
+          <Button variant="ghost" size="sm" onClick={() => refetch()} title={t("refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Baholangan</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">{totalRated}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("baholangan")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{totalRated}</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">O'rtacha ball</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">{avgComposite.toString()}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("ortachaBall1")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{avgComposite.toString()}</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Samaradorlik</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">{avgProductivity.toString()}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("samaradorlik")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{avgProductivity.toString()}</p>
         </div>
-        <div className="bg-surface-container-lowest rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">KPI maqsadlar</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface mt-1">{(goals || []).length}</p>
+        <div className="bg-card rounded-lg p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('kpiMaqsadlar1')}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(goals || []).length}</p>
         </div>
       </div>
 
       <Tabs defaultValue="ratings" className="w-full">
         <TabsList>
-          <TabsTrigger value="ratings" data-testid="tab-ratings">Reytinglar</TabsTrigger>
-          <TabsTrigger value="goals" data-testid="tab-goals">KPI Maqsadlar</TabsTrigger>
+          <TabsTrigger value="ratings" data-testid="tab-ratings">{t("reytinglar")}</TabsTrigger>
+          <TabsTrigger value="goals" data-testid="tab-goals">{t('kpiMaqsadlar')}</TabsTrigger>
         </TabsList>
         <TabsContent value="ratings">
           <Card>
@@ -163,23 +171,23 @@ export default function EmployeeRating() {
                 emptyTitle="Reyting hali hisoblanmagan"
                 emptyDescription="Bu davr uchun ma'lumot yo'q. Boshqa davrni tanlab ko'ring."
               >
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">#</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Xodim</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Samaradorlik</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Intizom</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Sifat</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Ko'nikmalar</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Umumiy ball</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Trend</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Daraja</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">#</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("xodim1")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("samaradorlik")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("intizom")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Sifat")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("konikmalar")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("umumiyBall")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('trend2')}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("daraja")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(Array.isArray(ratings) ? ratings : []).map((r, idx) => (
-                      <TableRow key={r.id} data-testid={`row-rating-${r.id}`} className="hover:bg-surface-container-low transition-colors">
+                      <TableRow key={r.id} data-testid={`row-rating-${r.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-bold px-6">{idx + 1}</TableCell>
                         <TableCell className="font-medium px-6">{r.employee?.fullName || "-"}</TableCell>
                         <TableCell className="px-6">
@@ -212,7 +220,7 @@ export default function EmployeeRating() {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
               </PageState>
             </CardContent>
           </Card>
@@ -221,24 +229,24 @@ export default function EmployeeRating() {
           <Card>
             <CardContent className="p-0">
               {(goals || []).length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground"><Target className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>Hali KPI maqsad belgilanmagan</p></div>
+                <div className="text-center py-12 text-[13px] text-muted-foreground"><Target className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>{t("haliKpiMaqsadBelgilanmagan")}</p></div>
               ) : (
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Xodim</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Maqsad</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Joriy</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Maqsad</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Bajarilish</TableHead>
-                      <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Holat</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("xodim1")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Maqsad")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("joriy")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Maqsad")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("progress5")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(goals || []).map((g) => {
                       const progress = g.targetValue > 0 ? Math.min(100, (g.currentValue / g.targetValue) * 100) : 0;
                       return (
-                        <TableRow key={g.id} data-testid={`row-goal-${g.id}`} className="hover:bg-surface-container-low transition-colors">
+                        <TableRow key={g.id} data-testid={`row-goal-${g.id}`} className="hover:bg-muted/40 transition-colors">
                           <TableCell className="px-6">{g.employee?.fullName || "-"}</TableCell>
                           <TableCell className="px-6">{g.title}</TableCell>
                           <TableCell className="font-mono px-6">{g.currentValue} {g.unit}</TableCell>
@@ -249,12 +257,12 @@ export default function EmployeeRating() {
                               <span className="text-xs font-mono">{progress.toFixed(0)}%</span>
                             </div>
                           </TableCell>
-                          <TableCell className="px-6"><Badge variant={g.status === "completed" ? "default" : "secondary"} className={g.status === "completed" ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold" : "bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-xs font-semibold"}>{g.status}</Badge></TableCell>
+                          <TableCell className="px-6"><Badge variant={g.status === "completed" ? "default" : "secondary"} className={g.status === "completed" ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold" : "bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold"}>{g.status}</Badge></TableCell>
                         </TableRow>
                       );
                     })}
                   </TableBody>
-                </Table>
+                </Table></div>
               )}
             </CardContent>
           </Card>

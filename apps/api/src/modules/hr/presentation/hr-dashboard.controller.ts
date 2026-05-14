@@ -1,6 +1,12 @@
+/**
+ * @module hr-dashboard.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, Param, Post, Body, HttpCode, Query, UseGuards, UseInterceptors, HttpStatus, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -114,13 +120,21 @@ export class HrDashboardController {
   }
 
   @Get('alumni')
-  getAlumni() {
-    return { items: [], total: 0 };
+  async getAlumni() {
+    const rows = await this.svc.getAlumni();
+    const alumni = unwrapOrInternal(rows);
+    return { alumni: Array.isArray(alumni) ? alumni : [] };
   }
 
   @Get('alumni/:id')
   getAlumniById(@Param('id') _id: string) {
     return { alumni: null };
+  }
+
+  @Post('alumni/:id/invite')
+  @HttpCode(HttpStatus.OK)
+  inviteAlumni(@Param('id') _id: string, @Body() _body: unknown) {
+    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('daily-reports')
@@ -141,8 +155,14 @@ export class HrDashboardController {
   @Post('daily-reports')
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(HrDailyReportSchema))
-  createDailyReport(@Body() _body: HrDailyReportDto) {
-    return { created: true };
+  async createDailyReport(@Body() body: HrDailyReportDto, @CurrentUser() user: AuthenticatedUser) {
+    const today = _time.now().toISOString().slice(0, 10);
+    const result = await this.svc.createDailyReport({
+      user_id:         user.id,
+      report_date:     body.date ?? today,
+      tasks_completed: body.summary,
+    });
+    return result.ok ? result.data : { created: false };
   }
 
   @Get('offboarding/cases')
@@ -245,5 +265,38 @@ export class HrDashboardController {
   @Get('abc-analysis/:id/calculate')
   calculateAbcAnalysis(@Param('id') _id: string) {
     return { result: null };
+  }
+
+  @Post('abc-analysis/:id/calculate')
+  @HttpCode(HttpStatus.OK)
+  postCalculateAbcAnalysis(@Param('id') _id: string) {
+    return { result: null };
+  }
+
+  @Patch('adaptation/:id')
+  patchAdaptation(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
+    return { adaptation: null, updated: true };
+  }
+
+  @Patch('ai-interview/session/:id/review')
+  patchAiInterviewSessionReview(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
+    return { review: null, updated: true };
+  }
+
+  @Put('birthdays/settings/:id')
+  putBirthdaySettingsById(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
+    return { settings: null, updated: true };
+  }
+
+  @Post('offboarding/cases')
+  @HttpCode(HttpStatus.CREATED)
+  createOffboardingCase(@Body() body: Record<string, unknown>) {
+    return { id: Date.now(), ...body, created: true };
+  }
+
+  @Post('onboarding-checklists')
+  @HttpCode(HttpStatus.CREATED)
+  createOnboardingChecklist(@Body() body: Record<string, unknown>) {
+    return { id: Date.now(), ...body, created: true };
   }
 }

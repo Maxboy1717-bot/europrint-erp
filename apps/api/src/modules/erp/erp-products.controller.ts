@@ -1,9 +1,16 @@
+/**
+ * @module erp-products.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import {
   Controller,
   Get,
   Post,
   Put,
+  Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -52,6 +59,13 @@ export class ErpProductsController {
     return r;
   }
 
+  @Post('products')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createProduct(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createProduct(body));
+  }
+
   @Put('products/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -59,6 +73,19 @@ export class ErpProductsController {
     const r = await this.svc.updateProduct(safeInt(id, 0), body);
     assertFound(r, 'Product not found');
     return r;
+  }
+
+  @Patch('products/:id')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async patchProduct(@Param('id') id: string, @Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.updateProduct(safeInt(id, 0), body));
+  }
+
+  @Delete('products/:id')
+  @Roles(...ERP_WRITE)
+  async deleteProduct(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteProduct(safeInt(id, 0)));
   }
 
   @Get('bom-headers')
@@ -89,6 +116,19 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.listBomItems(safeInt(bomHeaderId ?? '0', 0)));
   }
 
+  @Post('bom-headers')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createBomHeader(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createBomHeader(body));
+  }
+
+  @Delete('bom-headers/:id')
+  @Roles(...ERP_WRITE)
+  async deleteBomHeader(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteBomHeader(safeInt(id, 0)));
+  }
+
   @Post('bom-items')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -101,6 +141,12 @@ export class ErpProductsController {
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
   async updateBomItem(@Param('id') id: string, @Body() body: ErpBodyDto) {
     return unwrapOrThrow(await this.svc.updateBomItem(safeInt(id, 0), body));
+  }
+
+  @Delete('bom-items/:id')
+  @Roles(...ERP_WRITE)
+  async deleteBomItem(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteBomItem(safeInt(id, 0)));
   }
 
   @Get('routings')
@@ -123,10 +169,36 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.listRoutingOperations(routingId ? safeInt(routingId, 0) : undefined));
   }
 
+  @Post('routings')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createRouting(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createRouting(body));
+  }
+
+  @Delete('routings/:id')
+  @Roles(...ERP_WRITE)
+  async deleteRouting(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteRouting(safeInt(id, 0)));
+  }
+
+  @Post('routing-operations')
+  @Roles(...ERP_WRITE)
+  @UsePipes(new ZodValidationPipe(ErpBodySchema))
+  async createRoutingOp(@Body() body: ErpBodyDto) {
+    return unwrapOrThrow(await this.svc.createRoutingOperation(body));
+  }
+
   @Put('routing-operations/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
   async updateRoutingOp(@Param('id') id: string, @Body() body: ErpBodyDto) {
     return unwrapOrThrow(await this.svc.updateRoutingOperation(safeInt(id, 0), body));
+  }
+
+  @Delete('routing-operations/:id')
+  @Roles(...ERP_WRITE)
+  async deleteRoutingOp(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteRoutingOperation(safeInt(id, 0)));
   }
 }

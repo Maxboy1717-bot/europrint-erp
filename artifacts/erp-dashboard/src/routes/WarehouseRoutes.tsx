@@ -1,6 +1,11 @@
+/**
+ * @module WarehouseRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
-const WarehouseHub = lazy(() => import("@/pages/WarehouseHub"));
+const WarehouseHub = lazy(() => import("@/pages/WarehouseHub12"));
 const BarcodeWarehouse = lazy(() => import("@/pages/BarcodeWarehouse"));
 const WarehouseDirectory = lazy(() => import("@/pages/WarehouseDirectory"));
 const InventoryCount = lazy(() => import("@/pages/InventoryCount"));
@@ -22,6 +27,17 @@ const BarcodeScanner = lazy(() => import("@/pages/BarcodeScanner"));
 const WMSMaterials = lazy(() => import("@/pages/WMSMaterials"));
 const LogisticsDashboard = lazy(() => import("@/pages/LogisticsDashboard"));
 const WmsAnalytics = lazy(() => import("@/pages/WmsAnalytics"));
+const WarehouseKpiHub = lazy(() => import("@/pages/WarehouseKpiHub"));
+const WarehouseReportsAll = lazy(() => import("@/pages/WarehouseReportsAll"));
+const WarehouseMaterial360 = lazy(() => import("@/pages/WarehouseMaterial360"));
+const WarehouseQuarantine = lazy(() => import("@/pages/WarehouseQuarantine"));
+const WarehouseBarcodeQueue = lazy(() => import("@/pages/WarehouseBarcodeQueue"));
+const WarehouseInventoryPassport = lazy(() => import("@/pages/WarehouseInventoryPassport"));
+const WarehouseQCReview = lazy(() => import("@/pages/WarehouseQCReview"));
+const EmployeeInventory = lazy(() => import("@/pages/EmployeeInventory"));
+const WarehouseKirimWizard = lazy(() => import("@/pages/WarehouseKirimWizard"));
+const NotificationCenter = lazy(() => import("@/pages/NotificationCenter"));
+const WarehouseAuditLog = lazy(() => import("@/pages/WarehouseAuditLog"));
 
 export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/warehouse/hub',              WarehouseHub],
@@ -53,6 +69,18 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/rental',                 WarehouseRental],
   ['/wms/dashboard',              WMSDashboard],
   ['/wms/analytics',              WmsAnalytics],
+  ['/wms/kpi-hub',                WarehouseKpiHub],
+  ['/wms/reports',                WarehouseReportsAll],
+  ['/wms/reports-all',            WarehouseReportsAll],
+  ['/wms/material/360/:id',       WarehouseMaterial360],
+  ['/wms/quarantine',             WarehouseQuarantine],
+  ['/wms/barcodes-queue',         WarehouseBarcodeQueue],
+  ['/wms/passports',              WarehouseInventoryPassport],
+  ['/wms/qc-review',              WarehouseQCReview],
+  ['/wms/employee-inventory',     EmployeeInventory],
+  ['/wms/kirim-new',              WarehouseKirimWizard],
+  ['/wms/notifications',          NotificationCenter],
+  ['/wms/audit-log',              WarehouseAuditLog],
   ['/wms/material-balance',       MaterialBalance],
   ['/wms/scanner',                BarcodeScanner],
   ['/inventory/materials',        WMSMaterials],

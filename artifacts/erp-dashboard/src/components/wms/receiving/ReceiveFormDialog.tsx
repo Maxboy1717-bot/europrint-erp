@@ -1,3 +1,8 @@
+/**
+ * @module ReceiveFormDialog
+ * @description React UI component.
+ */
+
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -69,11 +74,11 @@ export function ReceiveFormDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { onOpenChange(open); if (!open) form.reset(); }}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>{t.createReceipt}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t.createReceipt}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleCreate)} className="grid grid-cols-2 gap-4 py-4">
+        <form onSubmit={form.handleSubmit(handleCreate)} className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
           <div className="grid gap-2">
             <Label>{t.receiptDate}</Label>
             <Input type="date" {...form.register("receiptDate")} data-testid="input-receipt-date" />
@@ -83,7 +88,7 @@ export function ReceiveFormDialog({
             <Label>{t.warehouse}</Label>
             <Controller control={form.control} name="warehouseId" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger data-testid="select-warehouse">
+                <SelectTrigger data-testid="select-warehouse" className="h-9">
                   <SelectValue placeholder={t.selectWarehouse} />
                 </SelectTrigger>
                 <SelectContent>
@@ -99,7 +104,7 @@ export function ReceiveFormDialog({
             <Label>{t.supplier}</Label>
             <Controller control={form.control} name="supplierId" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger data-testid="select-supplier">
+                <SelectTrigger data-testid="select-supplier" className="h-9">
                   <SelectValue placeholder={t.selectSupplier} />
                 </SelectTrigger>
                 <SelectContent>

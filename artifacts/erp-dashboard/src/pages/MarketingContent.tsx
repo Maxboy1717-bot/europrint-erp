@@ -1,3 +1,8 @@
+/**
+ * @module MarketingContent
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, type ElementType } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -13,13 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, FileText, Pencil, Trash2, Sparkles, Send, Clock, Archive, Eye, Calendar } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const statusLabels: Record<string, string> = { draft: "Qoralama", scheduled: "Rejalashtirilgan", published: "Nashr qilingan", failed: "Xatolik" };
 const statusIcons: Record<string, ElementType> = { draft: FileText, scheduled: Clock, published: Send, failed: Archive };
 const platformLabels: Record<string, string> = { telegram: "Telegram", instagram: "Instagram", facebook: "Facebook", website: "Veb-sayt", linkedin: "LinkedIn" };
-const platformColors: Record<string, string> = { telegram: "text-sky-500", instagram: "text-pink-500", facebook: "text-blue-600", website: "text-emerald-500", linkedin: "text-blue-700" };
+const platformColors: Record<string, string> = { telegram: "text-[var(--ep-blue)]", instagram: "text-pink-500", facebook: "text-[var(--ep-blue)]", website: "text-[var(--ep-green)]", linkedin: "text-[var(--ep-blue)]" };
 
 interface ContentPost {
   id: string;
@@ -40,6 +46,7 @@ interface ContentPost {
 }
 
 export default function MarketingContent() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -67,7 +74,7 @@ export default function MarketingContent() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => apiRequest("PATCH", `/api/marketing/content/posts/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => apiRequest("PUT", `/api/marketing/content/posts/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/content/posts"] });
       setOpen(false); resetForm();
@@ -147,116 +154,117 @@ export default function MarketingContent() {
     draft: safeContentList.filter(c => c.status === "draft").length,
   };
 
-  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24" />)}</div>;
+  if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="p-6 space-y-6" data-testid="marketing-content">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-content">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-4xl font-light tracking-tight text-on-surface">
-          Marketing <span className="font-bold text-primary">Kontent</span>
-        </h1>
+        <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("marketingKontent")}</b></>}
+        title={t("marketingKontent")}
+      />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-5 py-2.5 text-sm font-semibold" data-testid="button-create-content">
-              <Plus className="h-4 w-4 mr-2" />
-              Yangi Kontent
+            <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-content">
+              <Plus className="h-4 w-4" />
+              {t("yangiKontent")}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto bg-surface-container-lowest border-none ">
-            <DialogHeader><DialogTitle className="text-on-surface font-bold">{editId ? "Kontentni tahrirlash" : "Yangi Kontent"}</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto bg-card border-none p-6">
+            <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "Kontentni tahrirlash" : "Yangi Kontent"}</DialogTitle></DialogHeader>
             <Tabs defaultValue="content" className="mt-4">
-              <TabsList className="grid w-full grid-cols-2 bg-surface-container-low p-1 rounded-lg">
-                <TabsTrigger value="content" className="data-[state=active]:bg-surface-container-lowest data-[state=active]:text-primary rounded-md">Kontent</TabsTrigger>
-                <TabsTrigger value="ai" className="data-[state=active]:bg-surface-container-lowest data-[state=active]:text-primary rounded-md">AI Yordamchi</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 bg-muted/40 p-1 rounded-lg">
+                <TabsTrigger value="content" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("kontent")}</TabsTrigger>
+                <TabsTrigger value="ai" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("aiYordamchi")}</TabsTrigger>
               </TabsList>
               <TabsContent value="content" className="space-y-4 mt-4">
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Sarlavha *</Label><Input className="bg-surface border-outline-variant" data-testid="input-content-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Matn *</Label><Textarea className="bg-surface border-outline-variant min-h-[120px]" data-testid="input-content-body" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sarlavha")}</Label><Input className="bg-background border-border" data-testid="input-content-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("matn1")}</Label><Textarea className="bg-background border-border min-h-[120px]" data-testid="input-content-body" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-on-surface-variant">Platforma</Label>
+                    <Label className="text-muted-foreground">{t("platforma")}</Label>
                     <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}>
-                      <SelectTrigger className="bg-surface border-outline-variant"><SelectValue /></SelectTrigger>
-                      <SelectContent className="bg-surface-container-lowest border-outline-variant">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                      <SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-on-surface-variant">Holat</Label>
+                    <Label className="text-muted-foreground">{t("status28")}</Label>
                     <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                      <SelectTrigger className="bg-surface border-outline-variant"><SelectValue /></SelectTrigger>
-                      <SelectContent className="bg-surface-container-lowest border-outline-variant">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                      <SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Hashtag'lar (vergul bilan)</Label><Input className="bg-surface border-outline-variant" value={form.hashtags} onChange={(e) => setForm({ ...form, hashtags: e.target.value })} placeholder="#europrint, #quti" /></div>
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">Rejali vaqt</Label><Input className="bg-surface border-outline-variant" type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">Hashtag'lar (vergul bilan)</Label><Input className="bg-background border-border" value={form.hashtags} onChange={(e) => setForm({ ...form, hashtags: e.target.value })} placeholder="#europrint, #quti" /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("rejaliVaqt")}</Label><Input className="bg-background border-border" type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} /></div>
               </TabsContent>
               <TabsContent value="ai" className="space-y-4 mt-4">
-                <div className="space-y-1.5"><Label className="text-on-surface-variant">AI prompt</Label><Textarea className="bg-surface border-outline-variant min-h-[100px]" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="Qadoqlash sifati haqida post yozing..." /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">AI prompt</Label><Textarea className="bg-background border-border min-h-[100px]" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder={t("qadoqlashSifatiHaqidaPostYozing")} /></div>
                 <Button onClick={() => aiMutation.mutate({ prompt: aiPrompt, platform: form.platform })} disabled={!aiPrompt || aiMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-ai-generate">
                   <Sparkles className="h-4 w-4 mr-2" />{aiMutation.isPending ? "Yaratilmoqda..." : "AI bilan yaratish"}
                 </Button>
               </TabsContent>
             </Tabs>
-            <Button onClick={handleSubmit} disabled={!form.title || !form.body || createMutation.isPending || updateMutation.isPending} className="w-full mt-6 bg-gradient-to-br from-primary to-primary-dim text-white font-bold h-11" data-testid="button-submit-content">
+            <Button onClick={handleSubmit} disabled={!form.title || !form.body || createMutation.isPending || updateMutation.isPending} className="w-full mt-6 bg-primary text-white font-bold h-11" data-testid="button-submit-content">
               {editId ? "Saqlash" : "Yaratish"}
             </Button>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-surface-container-lowest rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">Jami</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface">{stats.total}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-card rounded-lg p-5 border-none text-center">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("total")}</p>
+          <p className="text-4xl font-bold tracking-tight text-foreground">{stats.total}</p>
         </Card>
-        <Card className="bg-surface-container-lowest rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">Nashr</p>
-          <p className="text-4xl font-bold tracking-tight text-green-600">{stats.published}</p>
+        <Card className="bg-card rounded-lg p-5 border-none text-center">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("nashr")}</p>
+          <p className="text-4xl font-bold tracking-tight text-[var(--ep-green)]">{stats.published}</p>
         </Card>
-        <Card className="bg-surface-container-lowest rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">Rejada</p>
+        <Card className="bg-card rounded-lg p-5 border-none text-center">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("rejada")}</p>
           <p className="text-4xl font-bold tracking-tight text-primary">{stats.scheduled}</p>
         </Card>
-        <Card className="bg-surface-container-lowest rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">Qoralama</p>
-          <p className="text-4xl font-bold tracking-tight text-on-surface-variant">{stats.draft}</p>
+        <Card className="bg-card rounded-lg p-5 border-none text-center">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("draft")}</p>
+          <p className="text-4xl font-bold tracking-tight text-muted-foreground">{stats.draft}</p>
         </Card>
       </div>
 
       <div className="flex gap-3 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-44 bg-surface-container-lowest border-none" data-testid="select-status-filter"><SelectValue placeholder="Holat" /></SelectTrigger>
-          <SelectContent className="bg-surface-container-lowest border-outline-variant">
-            <SelectItem value="all">Barchasi</SelectItem>
+          <SelectTrigger className="w-44 bg-card border-none h-9" data-testid="select-status-filter"><SelectValue placeholder={t("status28")} /></SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={platformFilter} onValueChange={setPlatformFilter}>
-          <SelectTrigger className="w-44 bg-surface-container-lowest border-none" data-testid="select-platform-filter"><SelectValue placeholder="Platforma" /></SelectTrigger>
-          <SelectContent className="bg-surface-container-lowest border-outline-variant">
-            <SelectItem value="all">Barchasi</SelectItem>
+          <SelectTrigger className="w-44 bg-card border-none h-9" data-testid="select-platform-filter"><SelectValue placeholder={t("platforma")} /></SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="bg-surface-container-lowest border-none"><CardContent className="p-12 text-center text-on-surface-variant">Kontent topilmadi</CardContent></Card>
+        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">{t("kontentTopilmadi")}</CardContent></Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {(Array.isArray(filtered) ? filtered : []).map((c) => {
             const StatusIcon = statusIcons[c.status] || FileText;
             return (
-              <Card key={c.id} className="bg-surface-container-lowest border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden" data-testid={`card-content-${c.id}`}>
+              <Card key={c.id} className="bg-card border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden" data-testid={`card-content-${c.id}`}>
                 <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 p-5">
                   <div className="min-w-0 flex-1">
-                    <CardTitle className="text-lg font-bold text-on-surface truncate">{c.title}</CardTitle>
-                    <p className={`text-xs font-semibold mt-1.5 ${platformColors[c.platform] || "text-on-surface-variant"}`}>
+                    <CardTitle className="text-[14px] font-semibold font-bold text-foreground truncate">{c.title}</CardTitle>
+                    <p className={`text-xs font-semibold mt-1.5 ${platformColors[c.platform] || "text-muted-foreground"}`}>
                       {platformLabels[c.platform] || c.platform}
                     </p>
                   </div>
@@ -266,18 +274,18 @@ export default function MarketingContent() {
                         <Send className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high no-default-hover-elevate" onClick={() => handleEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-on-surface-variant hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate" onClick={() => handleEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(c.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </CardHeader>
                 <CardContent className="px-5 pb-5 pt-0">
-                  {c.body && <p className="text-sm text-on-surface-variant line-clamp-3 mb-4 leading-relaxed">{c.body}</p>}
+                  {c.body && <p className="text-sm text-muted-foreground line-clamp-3 mb-4 leading-relaxed">{c.body}</p>}
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="border-outline-variant text-on-surface rounded-full px-2 py-0.5 text-[10px] font-bold no-default-hover-elevate"><StatusIcon className="h-3 w-3 mr-1" />{statusLabels[c.status] || c.status}</Badge>
+                    <Badge variant="outline" className="border-border text-foreground rounded-full px-2 py-0.5 text-[10px] font-bold no-default-hover-elevate"><StatusIcon className="h-3 w-3 mr-1" />{statusLabels[c.status] || c.status}</Badge>
                     {c.isAiGenerated && <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5 rounded-full px-2 py-0.5 text-[10px] font-bold no-default-hover-elevate"><Sparkles className="h-3 w-3 mr-1" />AI</Badge>}
-                    {c.scheduledAt && <Badge variant="outline" className="border-outline-variant text-on-surface-variant rounded-full px-2 py-0.5 text-[10px] font-bold no-default-hover-elevate"><Calendar className="h-3 w-3 mr-1" />{new Date(c.scheduledAt).toLocaleDateString("uz-UZ")}</Badge>}
+                    {c.scheduledAt && <Badge variant="outline" className="border-border text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-bold no-default-hover-elevate"><Calendar className="h-3 w-3 mr-1" />{new Date(c.scheduledAt).toLocaleDateString("uz-UZ")}</Badge>}
                     {Array.isArray(c.hashtags) && c.hashtags.slice(0, 3).map((h, i) => (
-                      <Badge key={`k-${i}`} variant="secondary" className="bg-surface-container text-on-surface-variant text-[10px] rounded-full px-2 py-0.5 font-bold no-default-hover-elevate">{h}</Badge>
+                      <Badge key={`k-${i}`} variant="secondary" className="bg-muted/60 text-muted-foreground text-[10px] rounded-full px-2 py-0.5 font-bold no-default-hover-elevate">{h}</Badge>
                     ))}
                   </div>
                 </CardContent>
@@ -289,8 +297,8 @@ export default function MarketingContent() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Kontentni o'chirish"
-        description="Ushbu kontent postni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("kontentniOchirish")}
+        description={t("ushbuKontentPostniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

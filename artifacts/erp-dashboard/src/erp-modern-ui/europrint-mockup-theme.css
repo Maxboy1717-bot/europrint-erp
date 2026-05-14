@@ -1,0 +1,821 @@
+/**
+ * EuroPrint ERP — "Linear Soft" Design System
+ *
+ * Direction A: Minimal SaaS, warm off-white bg, subtle warm borders.
+ *   --ep-primary:  #FF902F  (warm orange brand)
+ *   --ep-bg:       #FAFAF9  (warm off-white page bg)
+ *   --ep-surface:  #FFFFFF  (card surface)
+ *   --ep-border:   #EBEAE6  (warm subtle border)
+ *   --ep-fg:       #15171A  (near-black warm text)
+ *   --ep-muted:    #6B6E72  (muted text)
+ *   Font: Inter
+ *   Radius: 8px (components), 10px (cards)
+ */
+
+:root {
+  /* === Brand colors (raw HEX) === */
+  --ep-primary:       #FF902F;
+  --ep-primary-dark:  #F07F1B;
+  --ep-primary-rgb:   255, 144, 47;
+  --ep-primary-soft:  rgba(255, 144, 47, 0.10);
+
+  --ep-dark:    #15171A;
+  --ep-muted:   #6B6E72;
+  --ep-subtle:  #9A9CA0;
+
+  --ep-bg:      #FAFAF9;
+  --ep-surface: #FFFFFF;
+  --ep-border:  #EBEAE6;
+  --ep-text:    #15171A;
+
+  /* Status */
+  --ep-green:   #2E8A5A;
+  --ep-yellow:  #B5891C;
+  --ep-red:     #C0432F;
+  --ep-blue:    #3563AC;
+  --ep-purple:  #7A4FB1;
+  --ep-cyan:    #1A8FAF;
+  --ep-pink:    #C45C7A;
+
+  /* === Tailwind/shadcn tokens — EP Linear Soft === */
+  /* Primary #FF902F → HSL(28°, 100%, 59%) */
+  --primary:            28 100% 59%;
+  --primary-dim:        28 100% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Background #FAFAF9 → warm off-white */
+  --background:   60 6% 98%;     /* #FAFAF9 */
+  --foreground:   213 11% 9%;    /* #15171A */
+  --border:       45 9% 91%;     /* #EBEAE6 */
+
+  /* Card: pure white */
+  --card:            0 0% 100%;
+  --card-foreground: 213 11% 9%;
+
+  /* Sidebar: white (light sidebar — Linear Soft style) */
+  --sidebar:                    0 0% 100%;
+  --sidebar-foreground:         213 11% 9%;
+  --sidebar-border:             45 9% 91%;
+  --sidebar-primary:            28 100% 59%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent:             28 100% 97%;
+  --sidebar-accent-foreground:  28 100% 40%;
+  --sidebar-ring:               28 100% 59%;
+
+  /* Surface tints */
+  --surface-container-lowest:  0 0% 100%;
+  --surface-container-low:     60 5% 97%;
+  --surface-container:         45 5% 95%;
+  --surface-container-high:    45 6% 92%;
+  --surface-container-highest: 45 7% 89%;
+
+  --on-surface:         213 11% 9%;
+  --on-surface-variant: 210 3% 43%;
+  --outline-variant:    45 6% 82%;
+
+  /* Muted */
+  --muted:            45 5% 96%;
+  --muted-foreground: 210 3% 43%;  /* #6B6E72 */
+
+  /* Secondary */
+  --secondary:            45 6% 93%;
+  --secondary-foreground: 213 11% 9%;
+
+  /* Accent: brand soft for hover states */
+  --accent:            28 100% 97%;
+  --accent-foreground: 28 100% 35%;
+
+  /* Status */
+  --success:     151 50% 36%;   /* #2E8A5A */
+  --warning:     41 72% 40%;    /* #B5891C */
+  --info:        213 53% 44%;   /* #3563AC */
+  --error:       9 61% 47%;     /* #C0432F */
+
+  --destructive:            9 61% 47%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Input / ring */
+  --input: 45 9% 91%;
+  --ring:  28 100% 59%;
+
+  /* Popover */
+  --popover:            0 0% 100%;
+  --popover-foreground: 213 11% 9%;
+
+  /* Chart palette — EP c1–c5 */
+  --chart-1: 28 100% 59%;   /* brand orange */
+  --chart-2: 151 50% 36%;   /* green */
+  --chart-3: 213 53% 44%;   /* blue */
+  --chart-4: 270 45% 50%;   /* purple */
+  --chart-5: 41 72% 40%;    /* amber */
+
+  /* ERP Module Colors */
+  --module-sd:              213 53% 44%;
+  --module-sd-light:        213 53% 96%;
+  --module-sd-dark:         213 53% 34%;
+  --module-pp:              151 50% 36%;
+  --module-pp-light:        151 50% 95%;
+  --module-pp-dark:         151 50% 26%;
+  --module-hr:              270 45% 50%;
+  --module-hr-light:        270 45% 95%;
+  --module-hr-dark:         270 45% 38%;
+  --module-warehouse:       41 72% 40%;
+  --module-warehouse-light: 41 72% 94%;
+  --module-warehouse-dark:  41 72% 28%;
+  --module-fi:              187 60% 38%;
+  --module-fi-light:        187 60% 94%;
+  --module-fi-dark:         187 60% 26%;
+
+  /* Typography — Inter */
+  --font-sans: 'Inter', -apple-system, 'SF Pro Text', system-ui, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* Radius — EP: r2=6px for controls, r3=8px for cards */
+  --radius: 0.5rem;  /* 8px */
+
+  /* Shadows — Linear-style very soft */
+  --shadow-2xs: 0 1px 2px rgba(15,17,21,0.04);
+  --shadow-xs:  0 1px 3px rgba(15,17,21,0.06);
+  --shadow-sm:  0 2px 6px rgba(15,17,21,0.06), 0 1px 2px rgba(15,17,21,0.04);
+  --shadow:     0 4px 12px rgba(15,17,21,0.07), 0 2px 4px rgba(15,17,21,0.04);
+  --shadow-md:  0 8px 20px rgba(15,17,21,0.08), 0 3px 6px rgba(15,17,21,0.04);
+  --shadow-lg:  0 16px 32px rgba(15,17,21,0.09), 0 6px 12px rgba(15,17,21,0.04);
+  --shadow-xl:  0 24px 48px rgba(15,17,21,0.10);
+  --shadow-2xl: 0 32px 64px rgba(15,17,21,0.12);
+}
+
+/* ── Dark mode — EP_DARK tokens ── */
+.dark {
+  --ep-bg:      #0E0F11;
+  --ep-surface: #17191C;
+  --ep-border:  #26292E;
+  --ep-text:    #ECECEC;
+  --ep-muted:   #9A9DA1;
+
+  --background:   217 12% 7%;    /* #0E0F11 */
+  --foreground:   0 0% 93%;      /* #ECECEC */
+  --border:       216 9% 17%;    /* #26292E */
+
+  --card:            213 10% 10%;
+  --card-foreground: 0 0% 93%;
+
+  --sidebar:                    213 9% 11%;  /* #17191C */
+  --sidebar-foreground:         0 0% 93%;
+  --sidebar-border:             216 9% 17%;
+  --sidebar-primary:            28 100% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent:             216 10% 16%;
+  --sidebar-accent-foreground:  0 0% 93%;
+  --sidebar-ring:               28 100% 60%;
+
+  --surface-container-lowest:  213 9% 8%;
+  --surface-container-low:     213 9% 10%;
+  --surface-container:         213 8% 12%;
+  --surface-container-high:    213 8% 15%;
+  --surface-container-highest: 213 7% 18%;
+
+  --on-surface:         0 0% 93%;
+  --on-surface-variant: 210 3% 61%;
+  --outline-variant:    216 8% 24%;
+
+  --muted:            216 9% 14%;
+  --muted-foreground: 210 3% 61%;
+
+  --secondary:            216 9% 16%;
+  --secondary-foreground: 0 0% 93%;
+
+  --accent:            216 10% 16%;
+  --accent-foreground: 0 0% 93%;
+
+  --input: 216 9% 17%;
+  --ring:  28 100% 60%;
+
+  --popover:            213 9% 10%;
+  --popover-foreground: 0 0% 93%;
+
+  --chart-1: 28 100% 62%;
+  --chart-2: 151 48% 44%;
+  --chart-3: 213 55% 56%;
+  --chart-4: 270 42% 62%;
+  --chart-5: 41 68% 52%;
+
+  --module-sd:              213 55% 56%;
+  --module-sd-light:        213 30% 18%;
+  --module-sd-dark:         213 55% 66%;
+  --module-pp:              151 48% 44%;
+  --module-pp-light:        151 30% 16%;
+  --module-pp-dark:         151 48% 54%;
+  --module-hr:              270 42% 62%;
+  --module-hr-light:        270 30% 18%;
+  --module-hr-dark:         270 42% 72%;
+  --module-warehouse:       41 68% 52%;
+  --module-warehouse-light: 41 30% 16%;
+  --module-warehouse-dark:  41 68% 62%;
+  --module-fi:              187 55% 48%;
+  --module-fi-light:        187 30% 16%;
+  --module-fi-dark:         187 55% 58%;
+
+  --shadow-2xs: 0 1px 2px rgba(0,0,0,0.40);
+  --shadow-xs:  0 1px 3px rgba(0,0,0,0.48);
+  --shadow-sm:  0 2px 6px rgba(0,0,0,0.44), 0 1px 2px rgba(0,0,0,0.32);
+  --shadow:     0 4px 12px rgba(0,0,0,0.48), 0 2px 4px rgba(0,0,0,0.28);
+  --shadow-md:  0 8px 20px rgba(0,0,0,0.52), 0 3px 6px rgba(0,0,0,0.28);
+  --shadow-lg:  0 16px 32px rgba(0,0,0,0.56), 0 6px 12px rgba(0,0,0,0.28);
+  --shadow-xl:  0 24px 48px rgba(0,0,0,0.60);
+  --shadow-2xl: 0 32px 64px rgba(0,0,0,0.65);
+}
+
+/* ============================================================================
+   COMPONENT STYLES — Mockup'ga aniq mos
+   ============================================================================ */
+
+/* Welcome banner (Dashboard) */
+.welcome-banner {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.welcome-banner .wba {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--ep-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* KPI Card (mockup style) */
+.kpi-card-mockup {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.kpi-icon-sq {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+}
+
+.kpi-icon-sq.ki-orange { background: var(--ep-primary); }
+.kpi-icon-sq.ki-dark   { background: var(--ep-dark); }
+.kpi-icon-sq.ki-blue   { background: var(--ep-blue); }
+.kpi-icon-sq.ki-pink   { background: var(--ep-pink); }
+.kpi-icon-sq.ki-purple { background: var(--ep-purple); }
+.kpi-icon-sq.ki-red    { background: var(--ep-red); }
+.kpi-icon-sq.ki-green  { background: var(--ep-green); }
+
+.kpi-card-mockup .kpi-label { font-size: 11px; color: var(--ep-muted); margin-top: 10px; }
+.kpi-card-mockup .kpi-value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.kpi-card-mockup .kpi-link  { font-size: 11px; color: var(--ep-primary); text-decoration: none; margin-top: 8px; display: inline-block; font-weight: 500; }
+.kpi-card-mockup .kpi-link:hover { text-decoration: underline; }
+
+/* Status pills (mockup style) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+.status-pill::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.sp-success { background: rgba(0, 192, 135, 0.12); color: var(--ep-green); }
+.sp-danger  { background: rgba(255, 82, 82, 0.12); color: var(--ep-red); }
+.sp-warning { background: rgba(255, 193, 7, 0.18); color: #b58a00; }
+.sp-info    { background: rgba(40, 201, 232, 0.15); color: #0aa2c0; }
+.sp-primary { background: rgba(255, 144, 47, 0.15); color: var(--ep-primary); }
+.sp-purple  { background: rgba(132, 94, 230, 0.15); color: var(--ep-purple); }
+.sp-pink    { background: rgba(255, 111, 145, 0.15); color: var(--ep-pink); }
+.sp-dark    { background: rgba(27, 40, 80, 0.10); color: var(--ep-dark); }
+
+/* Avatars (mockup) */
+.av-mockup {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--ep-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.av-mockup.av-sm { width: 28px; height: 28px; font-size: 11px; }
+.av-mockup.av-lg { width: 48px; height: 48px; font-size: 16px; }
+.av-mockup.av-xl { width: 72px; height: 72px; font-size: 24px; }
+
+/* Job tags (mockup) */
+.job-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #fff;
+}
+.jt-dark   { background: #1f2937; }
+.jt-blue   { background: #3B82F6; }
+.jt-pink   { background: var(--ep-pink); }
+.jt-purple { background: var(--ep-purple); }
+.jt-green  { background: var(--ep-green); }
+.jt-orange { background: var(--ep-primary); }
+
+/* Mockup dark cards */
+.card-dark-grad {
+  background: linear-gradient(135deg, var(--ep-dark) 0%, #0f1830 100%);
+  color: #fff;
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+}
+.card-yellow {
+  background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%);
+  color: var(--ep-dark);
+  border-radius: 10px;
+  padding: 18px;
+}
+.card-teal {
+  background: linear-gradient(135deg, #0f5e6b 0%, var(--ep-dark) 100%);
+  color: #fff;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+/* EP page tabs */
+.ep-tabs {
+  display: inline-flex;
+  background: hsl(var(--muted));
+  border-radius: 8px;
+  padding: 3px;
+}
+.ep-tabs button {
+  background: transparent;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ep-muted);
+  cursor: pointer;
+}
+.ep-tabs button.active {
+  background: var(--ep-primary);
+  color: #fff;
+}
+
+/* Dashboard helper utilities */
+.ep-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+}
+.ep-card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ep-card-header h6 { margin: 0; font-weight: 600; font-size: 14px; }
+.ep-card-body { padding: 18px; }
+
+/* ============================================================================
+   GLOBAL OVERRIDES — Butun loyihaga mockup ko'rinishini qo'llash
+   ============================================================================ */
+
+/* Body/font */
+body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* shadcn/ui Card → mockup style (10px radius, soft border) */
+[data-erp-shell="modern"] .rounded-lg,
+[data-erp-shell="modern"] .rounded-xl,
+[data-erp-shell="modern"] [data-slot="card"] {
+  border-radius: 10px !important;
+}
+
+/* Buttons — mockup uslubi (10px radius, 13px font) */
+[data-erp-shell="modern"] button.btn-primary,
+button[data-variant="default"] {
+  background: var(--ep-primary);
+  border-color: var(--ep-primary);
+  color: #fff;
+  font-weight: 500;
+  font-size: 13px;
+}
+[data-erp-shell="modern"] button.btn-primary:hover,
+button[data-variant="default"]:hover {
+  background: var(--ep-primary-dark);
+  border-color: var(--ep-primary-dark);
+}
+
+/* Tables — mockup style (uppercase headers, bg-tertiary) */
+table thead tr th {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--ep-muted) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px;
+  padding: 10px 14px !important;
+  background: hsl(var(--muted) / 0.5);
+}
+table tbody tr td {
+  padding: 14px !important;
+  vertical-align: middle;
+  font-size: 13px;
+}
+table tbody tr:hover {
+  background: hsl(var(--muted) / 0.3);
+}
+
+/* Sidebar — mockup uslubi (oq fon, profile block, sections) */
+[data-sidebar="sidebar"],
+.app-sidebar,
+nav[data-erp-sidebar] {
+  background: hsl(var(--sidebar)) !important;
+  border-right: 1px solid hsl(var(--sidebar-border));
+}
+
+/* Sidebar nav-items mockup ko'rinishi */
+[data-sidebar="menu-button"][data-active="true"],
+[data-sidebar="menu-button"].active,
+.sidebar-item-active {
+  border-left: 3px solid var(--ep-primary) !important;
+  background: rgba(var(--ep-primary-rgb), 0.06) !important;
+  color: var(--ep-primary) !important;
+  font-weight: 600;
+}
+[data-sidebar="menu-button"]:hover {
+  background: rgba(var(--ep-primary-rgb), 0.04) !important;
+  color: var(--ep-primary) !important;
+}
+
+/* Sidebar section headers (uppercase muted) */
+[data-sidebar="group-label"],
+.sidebar-section-label {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ep-muted) !important;
+  padding: 16px 18px 6px !important;
+}
+
+/* TopBar — mockup uslubi */
+[data-erp-shell="modern"] header {
+  height: 60px;
+  background: hsl(var(--card));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Search input mockup */
+[data-erp-shell="modern"] header input[type="search"],
+[data-erp-shell="modern"] header input[type="text"] {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* Top icon buttons (notification, chat, theme — mockup style) */
+[data-erp-shell="modern"] header button {
+  border-radius: 50%;
+}
+[data-erp-shell="modern"] header button.rounded-xl {
+  border-radius: 50% !important;
+  width: 36px;
+  height: 36px;
+  background: hsl(var(--muted));
+}
+[data-erp-shell="modern"] header button.rounded-xl:hover {
+  background: rgba(var(--ep-primary-rgb), 0.1);
+  color: var(--ep-primary);
+}
+
+/* Badges/Pills universal */
+.badge,
+[data-slot="badge"] {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+/* Input mockup style */
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], input[type="number"], input[type="tel"],
+textarea, select {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  font-size: 13px;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--ep-primary);
+  outline: 2px solid rgba(var(--ep-primary-rgb), 0.15);
+  outline-offset: 0;
+}
+
+/* Page title (mockup standart) */
+h1, .page-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Breadcrumb mini (mockup) */
+.breadcrumb-mini {
+  font-size: 12px;
+  color: var(--ep-muted);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Form labels */
+label {
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Pill-button (mockup) */
+.pill-btn {
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.pill-btn:hover {
+  background: rgba(var(--ep-primary-rgb), 0.08);
+  border-color: var(--ep-primary);
+  color: var(--ep-primary);
+}
+
+/* Module page wrapper standart padding */
+.ep-content,
+[data-erp-page] {
+  padding: 20px 24px;
+}
+
+/* Sub-tabs (page-level) — mockup */
+.sub-nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid hsl(var(--border));
+  margin-bottom: 18px;
+  overflow-x: auto;
+}
+.sub-nav button {
+  background: transparent;
+  border: none;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--ep-muted);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.sub-nav button.active {
+  color: var(--ep-primary);
+  border-bottom-color: var(--ep-primary);
+  font-weight: 600;
+}
+
+/* Skill row, todo row, schedule card — mockup elements */
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.todo-row.high   { border-left: 3px solid var(--ep-purple); }
+.todo-row.medium { border-left: 3px solid var(--ep-yellow); }
+.todo-row.low    { border-left: 3px solid var(--ep-green); }
+
+/* Sched card */
+.sched-card {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: hsl(var(--card));
+}
+.sched-card .sc-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 6px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.sched-card .sc-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+.sched-card .sc-meta { font-size: 12px; color: var(--ep-muted); display: flex; align-items: center; gap: 14px; }
+
+/* Activity item */
+.act-item {
+  display: flex;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.act-item:last-child { border-bottom: none; }
+.act-item .at { flex: 1; font-size: 13px; }
+.act-item .att { color: var(--ep-primary); font-weight: 500; }
+.act-item .atime { font-size: 11px; color: var(--ep-muted); white-space: nowrap; }
+
+/* Skill row */
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.skill-row:last-child { border-bottom: none; }
+.skill-row .bar-strip { width: 3px; height: 32px; border-radius: 2px; flex-shrink: 0; }
+
+/* Av-group (overlapping avatars) */
+.av-group { display: inline-flex; }
+.av-group .av-mockup {
+  border: 2px solid hsl(var(--card));
+  margin-left: -10px;
+}
+.av-group .av-mockup:first-child { margin-left: 0; }
+
+/* Half gauge (mockup KPI) */
+.gauge-wrap { position: relative; height: 200px; }
+.gauge-center { position: absolute; left: 0; right: 0; bottom: 38px; text-align: center; }
+.gauge-center .gv { font-size: 32px; font-weight: 700; }
+.gauge-center .gl { font-size: 11px; color: var(--ep-muted); }
+
+/* Stacked bar (Employee Status) */
+.stk-bar {
+  display: flex;
+  height: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.stk-bar > div { height: 100%; }
+
+/* Performance highlight (orange-tint) */
+.perf-highlight {
+  background: rgba(var(--ep-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--ep-primary-rgb), 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Charts container */
+.chart-box    { position: relative; height: 240px; }
+.chart-box-sm { position: relative; height: 180px; }
+.chart-box-lg { position: relative; height: 320px; }
+
+/* Kanban (mockup) */
+.kanban-column {
+  background: hsl(var(--muted));
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 500px;
+}
+.kanban-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.kanban-col-title {
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.kanban-col-title::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.kc-new::before  { background: var(--ep-pink); }
+.kc-prog::before { background: var(--ep-yellow); }
+.kc-hold::before { background: var(--ep-red); }
+.kc-done::before { background: var(--ep-green); }
+.kanban-col-count {
+  background: hsl(var(--card));
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ep-muted);
+}
+
+/* Project card in kanban */
+.proj-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: grab;
+}
+.proj-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+
+.proj-pri {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.proj-pri::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.pri-low    { background: rgba(0, 192, 135, 0.12); color: var(--ep-green); }
+.pri-medium { background: rgba(255, 193, 7, 0.18); color: #b58a00; }
+.pri-high   { background: rgba(132, 94, 230, 0.15); color: var(--ep-purple); }
+
+/* Notes card (mockup) */
+.note-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 14px;
+  position: relative;
+}
+.note-priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Email item (mockup) */
+.email-item {
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  cursor: pointer;
+}
+.email-item:hover { background: hsl(var(--muted) / 0.5); }
+.email-item:last-child { border-bottom: none; }
+
+/* Hover/transition smoothing */
+button, a, .pill-btn, .nav-item, [data-slot="card"] {
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.2s;
+}

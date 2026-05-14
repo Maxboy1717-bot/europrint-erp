@@ -1,3 +1,8 @@
+/**
+ * @module MarketHeatBadge
+ * @description React UI component.
+ */
+
 import { TrendingUp } from "lucide-react";
 
 export const HEAT_OPTIONS: { value: "hot" | "medium" | "cold"; label: string; color: string }[] = [

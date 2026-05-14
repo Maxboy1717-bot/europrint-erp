@@ -1,3 +1,8 @@
+/**
+ * @module ListView
+ * @description React UI component.
+ */
+
 import {
   Table,
   TableBody,
@@ -13,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
 import { CrmEntityLike, ListViewProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function ListView({
   items,
@@ -22,10 +28,11 @@ export function ListView({
   onToggleAll,
   onItemClick,
 }: ListViewProps) {
+  const { t } = useTranslation("common");
   return (
     <ScrollArea className="flex-1">
-      <Table>
-        <TableHeader className="bg-surface-container-low sticky top-0 z-10 shadow-sm">
+      <div className="ep-table-scroll"><Table>
+        <TableHeader className="bg-muted/40 sticky top-0 z-10 shadow-sm">
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
@@ -35,15 +42,15 @@ export function ListView({
               />
             </TableHead>
             <TableHead className="w-12">№</TableHead>
-            <TableHead>Nomi</TableHead>
+            <TableHead>{t("name")}</TableHead>
             {activeEntity !== "contacts" && activeEntity !== "companies" && (
-              <TableHead>Bosqich</TableHead>
+              <TableHead>{t("milestone1")}</TableHead>
             )}
             {(activeEntity === "deals" ||
               activeEntity === "proposals" ||
-              activeEntity === "invoices") && <TableHead>Summa</TableHead>}
-            <TableHead>Mas'ul</TableHead>
-            <TableHead>Yaratilgan</TableHead>
+              activeEntity === "invoices") && <TableHead>{t("summa")}</TableHead>}
+            <TableHead>{t("masul")}</TableHead>
+            <TableHead>{t("Yaratilgan")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -59,7 +66,7 @@ export function ListView({
             return (
               <TableRow
                 key={item.id}
-                className="hover:bg-surface-container-lowest transition-colors cursor-pointer"
+                className="hover:bg-card transition-colors cursor-pointer"
                 onClick={() => onItemClick(item.id)}
                 data-testid={`row-${item.id}`}
               >
@@ -70,15 +77,15 @@ export function ListView({
                     data-testid={`checkbox-${item.id}`}
                   />
                 </TableCell>
-                <TableCell className="text-on-surface-variant font-medium">
+                <TableCell className="text-muted-foreground font-medium">
                   {index + 1}
                 </TableCell>
                 <TableCell>
-                  <div className="font-semibold text-on-surface line-clamp-1">
+                  <div className="font-semibold text-foreground line-clamp-1">
                     {title}
                   </div>
                   {rec.companyTitle && (
-                    <div className="text-xs text-on-surface-variant truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                       {rec.companyTitle}
                     </div>
                   )}
@@ -109,14 +116,14 @@ export function ListView({
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="text-on-surface-variant text-xs">
+                <TableCell className="text-muted-foreground text-xs">
                   {date ? format(new Date(date), "dd.MM.yyyy") : "-"}
                 </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
-      </Table>
+      </Table></div>
     </ScrollArea>
   );
 }

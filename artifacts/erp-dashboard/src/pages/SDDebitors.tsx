@@ -1,3 +1,8 @@
+/**
+ * @module SDDebitors
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -13,6 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/sd-helpers";
 import { AlertCircle, RefreshCw, Send, FileText, Search, Download } from "lucide-react";
+import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Debitor {
   id?: string;
@@ -30,6 +37,7 @@ interface Debitor {
 }
 
 export default function SDDebitors() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [reminderOpen, setReminderOpen] = useState<Debitor | null>(null);
@@ -79,7 +87,7 @@ export default function SDDebitors() {
   const criticalCount = (Array.isArray(debitors) ? debitors : []).filter(d => (d["90+"] ?? 0) > 0).length;
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -87,20 +95,21 @@ export default function SDDebitors() {
             <AlertCircle className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-4xl font-light tracking-tight text-on-surface">
-              Debitorlar <span className="font-bold text-primary">Nazorati</span>
-            </h1>
-            <p className="text-on-surface-variant mt-1">Muddati o'tgan to'lovlar va qarzdorlik tahlili (Aging Report)</p>
+            <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("debitorlarNazorati")}</b></>}
+        title={t("debitorlarNazorati")}
+        subtitle="Muddati o'tgan to'lovlar va qarzdorlik tahlili (Aging Report)"
+      />
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="bg-surface-container-lowest rounded-lg p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Jami qarzdorlik</p>
-            <p className="text-3xl font-bold tracking-tight text-on-surface mt-1">{fmt(totalDebts)} so'm</p>
+          <div className="bg-card rounded-lg p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiQarzdorlik")}</p>
+            <p className="text-3xl font-bold tracking-tight text-foreground mt-1">{fmt(totalDebts)} so'm</p>
           </div>
           <div className="bg-red-50 rounded-lg p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-red-600">Kritik (90+ kun)</p>
-            <p className="text-3xl font-bold tracking-tight text-red-700 mt-1">{criticalCount} ta</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)]">Kritik (90+ kun)</p>
+            <p className="text-3xl font-bold tracking-tight text-[var(--ep-red)] mt-1">{criticalCount} ta</p>
           </div>
         </div>
       </div>
@@ -111,14 +120,14 @@ export default function SDDebitors() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Mijoz qidirish..."
+            placeholder={t("mijozQidirish")}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
         <Button variant="outline" size="sm" onClick={() => {
           const rows = (Array.isArray(filtered) ? filtered : []).map(d =>
@@ -130,52 +139,52 @@ export default function SDDebitors() {
           URL.revokeObjectURL(url);
         }}>
           <Download className="h-4 w-4 mr-2" />
-          CSV yuklab olish
+          {t("csvYuklabOlish")}
         </Button>
       </div>
 
-      <div className="bg-surface-container-lowest rounded-xl p-6">
+      <div className="bg-card rounded-xl p-6">
         <div className="rounded-md border overflow-hidden">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-4">Mijoz</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-4 text-right">Jami</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-4 text-right">0-30 kun</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-4 text-right">31-60 kun</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-4 text-right">61-90 kun</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-red-600 py-3 px-4 text-right">90+ kun</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-4 text-center">Holat</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-4 text-center">Amallar</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("mijoz1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("total")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">0-30 kun</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">31-60 kun</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">61-90 kun</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)] py-3 px-4 text-right">90+ kun</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">{t("status28")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-on-surface-variant bg-transparent">
-                    Yuklanmoqda...
+                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground bg-transparent">
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-on-surface-variant bg-transparent">
-                    Debitorlar topilmadi
+                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground bg-transparent">
+                    {t("debitorlarTopilmadi")}
                   </TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(filtered) ? filtered : []).map((d, i) => (
-                  <TableRow key={d.customerId ?? i} className="hover:bg-surface-container-low transition-colors border-none">
+                  <TableRow key={d.customerId ?? i} className="hover:bg-muted/40 transition-colors border-none">
                     <TableCell className="py-3 px-4 font-medium border-none">
-                      <div className="text-on-surface">{d.customerName || d.company || `Mijoz #${String(d.customerId ?? i).slice(0, 8)}`}</div>
+                      <div className="text-foreground">{d.customerName || d.company || `Mijoz #${String(d.customerId ?? i).slice(0, 8)}`}</div>
                       {d.segment && d.segment !== "new" && (
-                        <div className="text-xs text-on-surface-variant capitalize mt-0.5">{d.segment}</div>
+                        <div className="text-xs text-muted-foreground capitalize mt-0.5">{d.segment}</div>
                       )}
                     </TableCell>
-                    <TableCell className="py-3 px-4 text-right font-bold text-on-surface border-none">{fmt(d.total ?? 0)}</TableCell>
-                    <TableCell className="py-3 px-4 text-right text-on-surface-variant border-none">{fmt(d["0-30"] ?? 0)}</TableCell>
-                    <TableCell className="py-3 px-4 text-right text-on-surface-variant border-none">{fmt(d["31-60"] ?? 0)}</TableCell>
-                    <TableCell className="py-3 px-4 text-right text-on-surface-variant border-none">{fmt(d["61-90"] ?? 0)}</TableCell>
-                    <TableCell className="py-3 px-4 text-right text-red-600 font-bold border-none">{fmt(d["90+"] ?? 0)}</TableCell>
+                    <TableCell className="py-3 px-4 text-right font-bold text-foreground border-none">{fmt(d.total ?? 0)}</TableCell>
+                    <TableCell className="py-3 px-4 text-right text-muted-foreground border-none">{fmt(d["0-30"] ?? 0)}</TableCell>
+                    <TableCell className="py-3 px-4 text-right text-muted-foreground border-none">{fmt(d["31-60"] ?? 0)}</TableCell>
+                    <TableCell className="py-3 px-4 text-right text-muted-foreground border-none">{fmt(d["61-90"] ?? 0)}</TableCell>
+                    <TableCell className="py-3 px-4 text-right text-[var(--ep-red)] font-bold border-none">{fmt(d["90+"] ?? 0)}</TableCell>
                     <TableCell className="py-3 px-4 text-center border-none">
                       <Badge className={cn(
                         "rounded-full px-2.5 py-0.5 text-xs font-semibold border-none",
@@ -195,7 +204,7 @@ export default function SDDebitors() {
                           onClick={() => { setReminderOpen(d); setReminderNote(""); }}
                         >
                           <Send className="h-3 w-3 mr-1" />
-                          Eslatma
+                          {t("eslatma")}
                         </Button>
                         <Button
                           size="sm"
@@ -205,7 +214,7 @@ export default function SDDebitors() {
                           disabled={createInvoiceMutation.isPending}
                         >
                           <FileText className="h-3 w-3 mr-1" />
-                          Faktura
+                          {t("faktura")}
                         </Button>
                       </div>
                     </TableCell>
@@ -213,7 +222,7 @@ export default function SDDebitors() {
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </div>
       </div>
 
@@ -221,37 +230,37 @@ export default function SDDebitors() {
       <Dialog open={!!reminderOpen} onOpenChange={(o) => { if (!o) setReminderOpen(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>To'lov eslatmasi yuborish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("tolovEslatmasiYuborish")}</DialogTitle>
           </DialogHeader>
           {reminderOpen && (
             <div className="space-y-4">
               <Card>
                 <CardContent className="pt-4 pb-3">
                   <p className="font-medium">{reminderOpen.customerName || reminderOpen.company}</p>
-                  <p className="text-sm text-muted-foreground">Jami qarzdorlik: <span className="font-semibold text-red-600">{fmt(reminderOpen.total ?? 0)} so'm</span></p>
+                  <p className="text-sm text-muted-foreground">{t("jamiQarzdorlik1")}<span className="font-semibold text-[var(--ep-red)]">{fmt(reminderOpen.total ?? 0)} so'm</span></p>
                   {(reminderOpen["90+"] ?? 0) > 0 && (
-                    <p className="text-xs text-red-600 mt-1">⚠ 90+ kunlik qarzdorlik: {fmt(reminderOpen["90+"] ?? 0)} so'm</p>
+                    <p className="text-xs text-[var(--ep-red)] mt-1">⚠ 90+ kunlik qarzdorlik: {fmt(reminderOpen["90+"] ?? 0)} so'm</p>
                   )}
                 </CardContent>
               </Card>
-              <div className="space-y-2">
-                <Label>Izoh (ixtiyoriy)</Label>
+              <div className="space-y-1">
+          <Label>Izoh (ixtiyoriy)</Label>
                 <Input
                   value={reminderNote}
                   onChange={e => setReminderNote(e.target.value)}
-                  placeholder="Qo'shimcha eslatma matni..."
+                  placeholder={t("qoshimchaEslatmaMatni")}
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReminderOpen(null)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setReminderOpen(null)}>{t("cancel")}</Button>
             <Button
               onClick={() => reminderOpen && sendReminderMutation.mutate(reminderOpen)}
               disabled={sendReminderMutation.isPending}
             >
               <Send className="h-4 w-4 mr-2" />
-              Eslatma yuborish
+              {t("eslatmaYuborish")}
             </Button>
           </DialogFooter>
         </DialogContent>

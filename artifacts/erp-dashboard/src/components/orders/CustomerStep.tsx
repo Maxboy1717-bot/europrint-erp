@@ -1,3 +1,8 @@
+/**
+ * @module CustomerStep
+ * @description React UI component.
+ */
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -55,14 +60,14 @@ export function CustomerStep({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="space-y-6">
-        <div className="space-y-2">
-          <Label className="text-on-surface-variant font-semibold">{t.papkaNo}</Label>
+        <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.papkaNo}</Label>
           <div className="flex gap-2">
             <Input
               value={formData.papkaNo}
               onChange={(e) => setFormData({ ...formData, papkaNo: e.target.value })}
               placeholder={t.papkaNoPlaceholder}
-              className="bg-surface-container-low border-outline-variant rounded-lg"
+              className="bg-muted/40 border-border rounded-lg"
               data-testid="input-papka-no"
             />
             <Button variant="outline" size="sm" className="shrink-0 border-primary text-primary hover:bg-primary/10">
@@ -71,23 +76,23 @@ export function CustomerStep({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-on-surface-variant font-semibold">{t.customer} <span className="text-red-500">*</span></Label>
+        <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.customer} <span className="text-[var(--ep-red)]">*</span></Label>
           <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 aria-expanded={customerOpen}
-                className="w-full justify-between bg-surface-container-low border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors text-left font-normal"
+                className="w-full justify-between bg-muted/40 border-border text-foreground hover:bg-muted transition-colors text-left font-normal"
                 data-testid="button-customer-select"
               >
                 {formData.mijozNomi || t.customerPlaceholder}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0" align="start">
-              <Command className="bg-surface">
+            <PopoverContent className="w-full sm:w-[400px] p-0" align="start">
+              <Command className="bg-background">
                 <CommandInput placeholder={t.searchCustomer} className="border-none focus:ring-0" />
                 <CommandList>
                   <CommandEmpty>{t.noCustomers}</CommandEmpty>
@@ -117,23 +122,23 @@ export function CustomerStep({
           </Popover>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-on-surface-variant font-semibold">{t.product} <span className="text-red-500">*</span></Label>
+        <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.product} <span className="text-[var(--ep-red)]">*</span></Label>
           <Popover open={productOpen} onOpenChange={setProductOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 aria-expanded={productOpen}
-                className="w-full justify-between bg-surface-container-low border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors text-left font-normal"
+                className="w-full justify-between bg-muted/40 border-border text-foreground hover:bg-muted transition-colors text-left font-normal"
                 data-testid="button-product-select"
               >
                 {formData.mahsulotNomi || t.productPlaceholder}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0" align="start">
-              <Command className="bg-surface">
+            <PopoverContent className="w-full sm:w-[400px] p-0" align="start">
+              <Command className="bg-background">
                 <CommandInput placeholder={t.searchProduct} className="border-none focus:ring-0" />
                 <CommandList>
                   <CommandEmpty>{t.noProducts}</CommandEmpty>
@@ -152,7 +157,7 @@ export function CustomerStep({
                         />
                         <div className="flex flex-col">
                           <span>{product.name}</span>
-                          <span className="text-xs text-on-surface-variant font-mono">{product.code}</span>
+                          <span className="text-xs text-muted-foreground font-mono">{product.code}</span>
                         </div>
                       </CommandItem>
                     ))}
@@ -163,14 +168,14 @@ export function CustomerStep({
           </Popover>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant font-semibold">{t.productType}</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.productType}</Label>
             <Select
               value={formData.mahsulotTuri}
               onValueChange={(val) => setFormData({ ...formData, mahsulotTuri: val })}
             >
-              <SelectTrigger className="bg-surface-container-low border-outline-variant">
+              <SelectTrigger className="bg-muted/40 border-border h-9">
                 <SelectValue placeholder={t.productType} />
               </SelectTrigger>
               <SelectContent>
@@ -182,13 +187,13 @@ export function CustomerStep({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant font-semibold">{t.vidZakaza}</Label>
+          <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.vidZakaza}</Label>
             <Select
               value={formData.vidZakaza}
               onValueChange={(val) => setFormData({ ...formData, vidZakaza: val })}
             >
-              <SelectTrigger className="bg-surface-container-low border-outline-variant">
+              <SelectTrigger className="bg-muted/40 border-border h-9">
                 <SelectValue placeholder={t.vidZakaza} />
               </SelectTrigger>
               <SelectContent>
@@ -204,24 +209,24 @@ export function CustomerStep({
       </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant font-semibold">{t.quantity} <span className="text-red-500">*</span></Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.quantity} <span className="text-[var(--ep-red)]">*</span></Label>
             <Input
               type="number"
               value={formData.tiraj}
               onChange={(e) => setFormData({ ...formData, tiraj: Number(e.target.value) })}
-              className="bg-surface-container-low border-outline-variant font-bold text-primary"
+              className="bg-muted/40 border-border font-bold text-primary"
               data-testid="input-tiraj"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant font-semibold">{t.krasok}</Label>
+          <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.krasok}</Label>
             <Select
               value={formData.krasok}
               onValueChange={(val) => setFormData({ ...formData, krasok: val })}
             >
-              <SelectTrigger className="bg-surface-container-low border-outline-variant">
+              <SelectTrigger className="bg-muted/40 border-border h-9">
                 <SelectValue placeholder={t.krasok} />
               </SelectTrigger>
               <SelectContent>
@@ -233,43 +238,43 @@ export function CustomerStep({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant font-semibold">{t.formatA}</Label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.formatA}</Label>
             <Input
               type="number"
               value={formData.formatA}
               onChange={(e) => setFormData({ ...formData, formatA: Number(e.target.value) })}
-              className="bg-surface-container-low border-outline-variant"
+              className="bg-muted/40 border-border"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant font-semibold">{t.formatB}</Label>
+          <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.formatB}</Label>
             <Input
               type="number"
               value={formData.formatB}
               onChange={(e) => setFormData({ ...formData, formatB: Number(e.target.value) })}
-              className="bg-surface-container-low border-outline-variant"
+              className="bg-muted/40 border-border"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-on-surface-variant font-semibold">{t.formatC}</Label>
+          <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.formatC}</Label>
             <Input
               type="number"
               value={formData.formatC}
               onChange={(e) => setFormData({ ...formData, formatC: Number(e.target.value) })}
-              className="bg-surface-container-low border-outline-variant"
+              className="bg-muted/40 border-border"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-on-surface-variant font-semibold">{t.primZakaza}</Label>
+        <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.primZakaza}</Label>
           <Textarea
             value={formData.primZakaza}
             onChange={(e) => setFormData({ ...formData, primZakaza: e.target.value })}
             placeholder={t.primZakazaPlaceholder}
-            className="bg-surface-container-low border-outline-variant min-h-[100px]"
+            className="bg-muted/40 border-border min-h-[100px]"
           />
         </div>
       </div>

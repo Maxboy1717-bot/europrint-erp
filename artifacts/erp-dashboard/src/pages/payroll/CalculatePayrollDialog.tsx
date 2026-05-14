@@ -1,4 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+/**
+ * @module CalculatePayrollDialog
+ * @description React page component. Route-level UI.
+ */
+
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -38,9 +43,8 @@ export function CalculatePayrollDialog({
   trigger,
 }: CalculatePayrollDialogProps) {
   const { t } = useTranslation('hr');
-  const { t: tCommon } = useTranslation('common');
   const { t: tFinance } = useTranslation('finance');
-  const [previewCalculation, setPreviewCalculation] = useState<Record<string, any> | null>(null);
+  const { t: tCommon } = useTranslation('common');
   const { toast } = useToast();
 
   const form = useForm<CalculationFormValues>({
@@ -63,7 +67,6 @@ export function CalculatePayrollDialog({
       toast({ title: tCommon('success'), description: tCommon('savedSuccessfully') });
       onOpenChange(false);
       form.reset();
-      setPreviewCalculation(null);
     },
     onError: (error: Error) => {
       toast({ title: tCommon('error'), description: error.message || tCommon('operationFailed'), variant: "destructive" });
@@ -94,11 +97,13 @@ export function CalculatePayrollDialog({
   };
 
   const watchedValues = form.watch();
-  useEffect(() => {
-    if (watchedValues.employeeId) {
-      setPreviewCalculation(calculatePreview(watchedValues));
-    }
-  }, [watchedValues.employeeId, watchedValues.workDays, watchedValues.workHours, watchedValues.productionUnits, watchedValues.bonuses, watchedValues.allowances, watchedValues.advances, watchedValues.loans, watchedValues.otherDeductions]);
+  const previewCalculation = useMemo(
+    () => (watchedValues.employeeId ? calculatePreview(watchedValues) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [watchedValues.employeeId, watchedValues.workDays, watchedValues.workHours,
+     watchedValues.productionUnits, watchedValues.bonuses, watchedValues.allowances,
+     watchedValues.advances, watchedValues.loans, watchedValues.otherDeductions],
+  );
 
   const onSubmit = (values: CalculationFormValues) => calculateMutation.mutate(values);
 
@@ -112,9 +117,9 @@ export function CalculatePayrollDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>{tFinance('payrollCalculation')}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{tFinance('payrollCalculation')}</DialogTitle>
           <DialogDescription>{tFinance('payrollAutomation')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -124,7 +129,7 @@ export function CalculatePayrollDialog({
                 <FormLabel>{t('employee')}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger data-testid="select-employee"><SelectValue placeholder={tCommon('select')} /></SelectTrigger>
+                    <SelectTrigger data-testid="select-employee" className="h-9"><SelectValue placeholder={tCommon('select')} /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {(Array.isArray(contracts) ? contracts : []).filter(c => c.status === "active").map((contract) => (
@@ -222,11 +227,11 @@ export function CalculatePayrollDialog({
                       <span className="font-medium">{formatCurrency(previewCalculation.grossPay)}</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between text-orange-500"><span>INPS (12%):</span><span>- {formatCurrency(previewCalculation.taxInps)}</span></div>
-                    <div className="flex justify-between text-red-500"><span>JSHD (12%):</span><span>- {formatCurrency(previewCalculation.taxJshd)}</span></div>
+                    <div className="flex justify-between text-[var(--ep-primary)]"><span>INPS ({(taxConstants.INPS_RATE * 100).toFixed(0)}%):</span><span>- {formatCurrency(previewCalculation.taxInps)}</span></div>
+                    <div className="flex justify-between text-[var(--ep-red)]"><span>JSHD ({(taxConstants.JSHD_RATE * 100).toFixed(0)}%):</span><span>- {formatCurrency(previewCalculation.taxJshd)}</span></div>
                     <div className="flex justify-between font-medium">
                       <span>{tFinance('totalTaxes')}:</span>
-                      <span className="text-red-500">- {formatCurrency(previewCalculation.totalTaxes)}</span>
+                      <span className="text-[var(--ep-red)]">- {formatCurrency(previewCalculation.totalTaxes)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between">
@@ -234,7 +239,7 @@ export function CalculatePayrollDialog({
                       <span>- {formatCurrency(previewCalculation.totalDeductions)}</span>
                     </div>
                     {previewCalculation.minWageTopUp > 0 && (
-                      <div className="flex justify-between text-green-500">
+                      <div className="flex justify-between text-[var(--ep-green)]">
                         <span>{tFinance('minWageTopUp')}:</span>
                         <span>+ {formatCurrency(previewCalculation.minWageTopUp)}</span>
                       </div>
@@ -242,7 +247,7 @@ export function CalculatePayrollDialog({
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>{tFinance('netSalary')}:</span>
-                      <span className="text-green-600">{formatCurrency(previewCalculation.netPay)}</span>
+                      <span className="text-[var(--ep-green)]">{formatCurrency(previewCalculation.netPay)}</span>
                     </div>
                   </div>
                 </CardContent>

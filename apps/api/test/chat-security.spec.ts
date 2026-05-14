@@ -1,3 +1,8 @@
+/**
+ * @module chat-security.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { ChatService } from '../src/modules/chat/chat.service';
 
 describe('ChatService – room membership authorization', () => {

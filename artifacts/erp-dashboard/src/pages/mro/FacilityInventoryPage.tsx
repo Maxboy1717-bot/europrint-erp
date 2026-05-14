@@ -1,3 +1,8 @@
+/**
+ * @module FacilityInventoryPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -18,10 +23,10 @@ interface FacilityRow {
 }
 
 const TYPE_CONFIG: Record<FacilityRow["facilityType"], { label: string; className: string }> = {
-  office:     { label: "Ofis",        className: "bg-blue-100 text-blue-700" },
-  production: { label: "Ishlab chiq.", className: "bg-purple-100 text-purple-700" },
-  warehouse:  { label: "Ombor",       className: "bg-emerald-100 text-emerald-700" },
-  canteen:    { label: "Oshxona",     className: "bg-orange-100 text-orange-700" },
+  office:     { label: "Ofis",        className: "bg-blue-100 text-[var(--ep-blue)]" },
+  production: { label: "Ishlab chiq.", className: "bg-purple-100 text-[var(--ep-purple)]" },
+  warehouse:  { label: "Ombor",       className: "bg-emerald-100 text-[var(--ep-green)]" },
+  canteen:    { label: "Oshxona",     className: "bg-orange-100 text-[var(--ep-primary)]" },
   outdoor:    { label: "Tashqi",      className: "bg-slate-100 text-slate-700" },
 };
 
@@ -53,7 +58,7 @@ export default function FacilityInventoryPage() {
       <Section title={t('facility.list', "Binolar ro'yxati")}>
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
           </div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('facility.empty', "Bino yo'q")}</p>
@@ -65,16 +70,16 @@ export default function FacilityInventoryPage() {
                 <div key={f.id} className="border rounded-md p-3">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-blue-600" />
+                      <Building className="h-4 w-4 text-[var(--ep-blue)]" />
                       <span className="font-medium">{f.name}</span>
                       <Badge variant="outline" className="text-xs">{f.facilityCode}</Badge>
                     </div>
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                    <span>Maydon: <strong>{f.totalAreaSqm?.toLocaleString() ?? '—'} m²</strong></span>
-                    <span>Inventar: <strong>{f.itemsCount}</strong></span>
-                    <span>Mas'ul: <strong>{f.responsibleEmployee ?? '—'}</strong></span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
+                    <span>{t("maydon")}<strong>{f.totalAreaSqm?.toLocaleString() ?? '—'} m²</strong></span>
+                    <span>{t("inventar2")}<strong>{f.itemsCount}</strong></span>
+                    <span>{t("masul1")}<strong>{f.responsibleEmployee ?? '—'}</strong></span>
                   </div>
                 </div>
               );

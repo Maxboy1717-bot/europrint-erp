@@ -1,3 +1,8 @@
+/**
+ * @module iot-camera.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import { parseOrThrow } from '@common/utils/parse-or-throw.util';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';

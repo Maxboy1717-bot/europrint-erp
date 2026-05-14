@@ -1,3 +1,8 @@
+/**
+ * @module qc.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 // ─── FMEA RPN chegaralari (IEC 60812 / AIAG FMEA standart) ──────────────────
 export const FMEA_SOD_MIN = 1;           // S/O/D minimal ball
 export const FMEA_SOD_MAX = 10;          // S/O/D maksimal ball

@@ -1,3 +1,8 @@
+/**
+ * @module LeadCard
+ * @description React UI component.
+ */
+
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";

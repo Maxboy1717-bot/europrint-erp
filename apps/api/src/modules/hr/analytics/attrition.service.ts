@@ -133,7 +133,7 @@ export class AttritionService {
 
     const n = safeNum(initialHeadcount);
     const safePeriods = Array.isArray(cumulativeAttritionByPeriod) ? cumulativeAttritionByPeriod : [];
-    const survivalRates = (safePeriods ?? []).map(cumAttrition => {
+    const survivalRates = (Array.isArray(safePeriods) ? safePeriods : []).map(cumAttrition => {
       const s = 1 - safeDiv(safeNum(cumAttrition), n);
       return Math.round(Math.max(0, s) * 1000) / 1000;
     });

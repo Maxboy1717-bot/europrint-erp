@@ -1,3 +1,8 @@
+/**
+ * @module queries-technology
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { papka_orders_tech, technology_approvals, tech_cards, clients } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';

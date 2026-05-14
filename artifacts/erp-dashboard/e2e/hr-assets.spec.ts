@@ -1,3 +1,8 @@
+/**
+ * @module hr-assets.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { test, expect } from '@playwright/test';
 
 const API = process.env.API_BASE_URL ?? 'http://localhost:8080';

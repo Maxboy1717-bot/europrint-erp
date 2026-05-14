@@ -1,3 +1,8 @@
+/**
+ * @module kbd
+ * @description React UI component.
+ */
+
 import { cn } from "@/lib/utils"
 
 function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {

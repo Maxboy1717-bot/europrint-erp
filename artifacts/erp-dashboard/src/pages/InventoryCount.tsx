@@ -1,3 +1,8 @@
+/**
+ * @module InventoryCount
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +12,6 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/ui/error-state";
 import {
   Select,
   SelectContent,
@@ -32,8 +36,11 @@ import { DiscrepancyReport } from "@/components/wms/inventory/DiscrepancyReport"
 import { CreateUpdateCountDialog } from "@/components/wms/inventory/CreateUpdateCountDialog";
 import { InventoryStats } from "@/components/wms/inventory/InventoryStats";
 import { CountDetailHeader } from "@/components/wms/inventory/CountDetailHeader";
+import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function InventoryCount() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { language, setLanguage } = useLanguage();
   const t = useInventoryCountTranslations();
@@ -171,12 +178,12 @@ export default function InventoryCount() {
 
   if (isDetailView && selectedCount) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
         <CountDetailHeader 
           countDetail={countDetail} 
           onBack={() => { setIsDetailView(false); setSelectedCount(null); }} 
-          onStatusChange={(status) => statusMutation.mutate({ id: countDetail!.id, status })}
-          onGenerateLines={() => generateLinesMutation.mutate(countDetail!.id)}
+          onStatusChange={(status) => statusMutation.mutate({ id: countDetail?.id ?? 0, status })}
+          onGenerateLines={() => generateLinesMutation.mutate(countDetail?.id ?? 0)}
           onSaveAllLines={handleSaveAllLines}
           onExport={handleExport}
           isGeneratingLines={generateLinesMutation.isPending}
@@ -191,7 +198,7 @@ export default function InventoryCount() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-bold tracking-tight text-foreground">{t.title}</h1><p className="text-muted-foreground">{t.subtitle}</p></div>
+        <div><h1 className="ep-h1 text-foreground">{t.title}</h1><p className="text-muted-foreground">{t.subtitle}</p></div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setLanguage(language === "uz" ? "ru" : "uz")}>{language === "uz" ? "RU" : "UZ"}</Button>
           <Button onClick={() => setIsCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />{t.actions.create}</Button>
@@ -204,18 +211,18 @@ export default function InventoryCount() {
             <CardTitle>{t.title}</CardTitle>
             <div className="flex items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]"><SelectValue placeholder={t.filters.allStatuses} /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[180px] h-9"><SelectValue placeholder={t.filters.allStatuses} /></SelectTrigger>
                 <SelectContent><SelectItem value="all">{t.filters.allStatuses}</SelectItem><SelectItem value="planned">{t.statuses.planned}</SelectItem><SelectItem value="in_progress">{t.statuses.in_progress}</SelectItem><SelectItem value="completed">{t.statuses.completed}</SelectItem><SelectItem value="approved">{t.statuses.approved}</SelectItem></SelectContent>
               </Select>
               <Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
-                <SelectTrigger className="w-[180px]"><SelectValue placeholder={t.filters.allWarehouses} /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[180px] h-9"><SelectValue placeholder={t.filters.allWarehouses} /></SelectTrigger>
                 <SelectContent><SelectItem value="all">{t.filters.allWarehouses}</SelectItem>{(Array.isArray(warehouses) ? warehouses : []).map((w) => (<SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>))}</SelectContent>
               </Select>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {countsLoading ? <div className="space-y-4">{([...Array(5)]).map((_, i) => (<Skeleton key={`k-${i}`} className="h-12 w-full" />))}</div> : isError ? <ErrorState message={(countsError as Error)?.message} onRetry={() => refetch()} /> : <CountSessionTable counts={filteredCounts} onEdit={(c) => { setEditingCount(c); setFormData({ countDate: c.countDate, warehouseId: c.warehouseId || "", countType: c.countType, assignedTo: c.assignedTo ? String(c.assignedTo) : "", notes: c.notes || "" }); }} onView={handleViewDetail} />}
+          {countsLoading ? <div className="space-y-4">{([...Array(5)]).map((_, i) => (<Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />))}</div> : countsError ? <EPErrorState message={(countsError as Error)?.message} onRetry={() => refetch()} /> : <CountSessionTable counts={filteredCounts} onEdit={(c) => { setEditingCount(c); setFormData({ countDate: c.countDate, warehouseId: c.warehouseId || "", countType: c.countType, assignedTo: c.assignedTo ? String(c.assignedTo) : "", notes: c.notes || "" }); }} onView={handleViewDetail} />}
         </CardContent>
       </Card>
       <CreateUpdateCountDialog isOpen={isCreateDialogOpen || !!editingCount} onOpenChange={(open) => { if (!open) { setIsCreateDialogOpen(false); setEditingCount(null); resetForm(); } else setIsCreateDialogOpen(true); }} isEditing={!!editingCount} formData={formData} onFormChange={(data) => setFormData((prev) => ({ ...prev, ...data }))} onSubmit={handleFormSubmit} isPending={createMutation.isPending || updateMutation.isPending} warehouses={warehouses} users={users} />

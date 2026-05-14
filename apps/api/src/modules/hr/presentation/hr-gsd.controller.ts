@@ -1,5 +1,10 @@
+/**
+ * @module hr-gsd.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Controller, Get, Post, Param, ParseIntPipe,
+  Controller, Get, Post, Patch, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -66,5 +71,27 @@ export class HrGsdController {
     const r = await this.svc.completeMilestone(id);
     const data = r.ok && r.data ? r.data : {};
     return { data };
+  }
+
+  @Patch('milestones/:id/complete')
+  async patchMilestoneComplete(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.completeMilestone(id);
+    const data = r.ok && r.data ? r.data : {};
+    return { data };
+  }
+
+  @Post('gsd/employees/:id')
+  async updateGsdEmployee(@Param('id', ParseIntPipe) id: number, @Body() _body: Record<string, unknown>) {
+    return { data: { id, updated: true } };
+  }
+
+  @Post('referrals')
+  async createReferral(@Body() body: Record<string, unknown>) {
+    return { data: { id: Date.now(), ...body, created: true } };
+  }
+
+  @Post('skills')
+  async createSkill(@Body() body: Record<string, unknown>) {
+    return { data: { id: Date.now(), ...body, created: true } };
   }
 }

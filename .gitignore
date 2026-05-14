@@ -57,6 +57,12 @@ tmp/
 temp/
 /tmp/
 
+# Backup va vaqtinchalik fayllar (P2-8, P2-13)
+*.bak
+*.old
+_archive/
+reviewer-*.sh
+
 # Coverage
 coverage/
 .nyc_output/
@@ -64,3 +70,4 @@ coverage/
 # Misc
 *.tsbuildinfo
 .eslintcache
+.claude/settings.local.json

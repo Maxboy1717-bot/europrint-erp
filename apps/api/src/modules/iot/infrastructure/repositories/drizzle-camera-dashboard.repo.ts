@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-camera-dashboard.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { desc, count, eq, and, gte, lte, inArray, sql } from 'drizzle-orm';
 import {

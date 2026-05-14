@@ -1,3 +1,8 @@
+/**
+ * @module hr-bot-helpers
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Logger } from '@nestjs/common';
@@ -18,10 +23,15 @@ export type HrSession = SickSession | LeaveSession;
 export const MENU_TEXT =
   '👋 <b>EuroPrint HR Bot</b>\n\n' +
   'Quyidagilardan birini tanlang:\n\n' +
+  '/profil — 👤 Mening ma\'lumotlarim\n' +
   '/kasalman — 🏥 Kasallik varaqasi topshirish\n' +
   '/tatil — 🌴 Ta\'til qoldig\'ini va so\'rovini ko\'rish\n' +
   '/hisobot — 📊 Kunlik hisobot holati\n' +
   '/mening_ballarim — 🎮 Gamifikatsiya ballarim\n' +
+  '/reyting — 🏆 Top-10 liderlar jadvali\n' +
+  '/baholash — ⭐ Mening baholash natijalarim\n' +
+  '/oqish — 📚 Mening kurslarim\n' +
+  '/inventar — 📦 Mening inventarim\n' +
   '/bekor — ❌ Amalni bekor qilish';
 
 const log = new Logger('HrBotHelpers');

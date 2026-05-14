@@ -1,6 +1,11 @@
+/**
+ * @module iot-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -23,7 +28,7 @@ export const cameras = pgTable("cameras", {
   port: integer("port"),
   username: varchar("username", { length: 50 }),
   passwordHash: text("password_hash"),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   location: text("location"),
   isActive: boolean("is_active").notNull().default(true),
   // TZ-15: Super admin tomonidan har kamera uchun alohida AI prompt
@@ -33,7 +38,10 @@ export const cameras = pgTable("cameras", {
   aiEnabled: boolean("ai_enabled").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("cameras_stream_type_chk", sql`${t.streamType} IS NULL OR ${t.streamType} IN ('youtube','mjpeg','hls','image','rtsp')`),
+  check("cameras_ai_sensitivity_chk", sql`${t.aiSensitivity} IS NULL OR ${t.aiSensitivity} IN ('low','medium','high')`),
+]);
 
 
 export const insertCameraSchema = createInsertSchema(cameras, {
@@ -50,7 +58,7 @@ export type InsertCamera = z.infer<typeof insertCameraSchema>;
 // Camera Zones (kuzatuv zonalari)
 export const cameraZones = pgTable("camera_zones", {
   id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id").references(() => cameras.id),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "set null" }),
   zoneName: text("zone_name").notNull(),
   zoneType: varchar("zone_type", { length: 50 }).notNull(), // safety, quality, packaging, production
   coordinates: jsonb("coordinates"), // {x1, y1, x2, y2} - zona koordinatalari
@@ -58,7 +66,9 @@ export const cameraZones = pgTable("camera_zones", {
   confidenceThreshold: numericMoney("confidence_threshold").notNull().default(0.7),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("camera_zones_type_chk", sql`${t.zoneType} IN ('safety','quality','packaging','production')`),
+]);
 
 
 export const insertCameraZoneSchema = createInsertSchema(cameraZones, {
@@ -75,9 +85,9 @@ export type InsertCameraZone = z.infer<typeof insertCameraZoneSchema>;
 // Camera Events (kamera hodisalari - xodim intizom va xavfsizlik monitoring)
 export const cameraEvents = pgTable("camera_events", {
   id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id").references(() => cameras.id),
-  userId: integer("user_id").references(() => users.id), // Xodim ID (nullable - aniqlangan xodim)
-  zoneId: varchar("zone_id").references(() => cameraZones.id),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "set null" }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }), // Xodim ID (nullable - aniqlangan xodim)
+  zoneId: varchar("zone_id").references(() => cameraZones.id, { onDelete: "set null" }),
   eventType: varchar("event_type", { length: 50 }).notNull(), 
   // Intizom: telefon_ishlatish, uyqu, loqaydlik, himoya_kiyimi_yoq, bosh_turish
   // Xavfsizlik: unknown_face, near_miss, yiqilish, toqnashish, kamera_yopilishi
@@ -90,12 +100,15 @@ export const cameraEvents = pgTable("camera_events", {
   videoUrl: text("video_url"),
   aiConfidence: numericMoney("ai_confidence"), // AI ishonch darajasi (0-1)
   status: varchar("status", { length: 20 }).notNull().default("new"), // new, reviewing, resolved, false_positive
-  assignedTo: integer("assigned_to").references(() => users.id),
+  assignedTo: integer("assigned_to").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
   telegramSent: boolean("telegram_sent").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   resolvedAt: timestamp("resolved_at"),
-});
+}, (t) => [
+  check("camera_events_severity_chk", sql`${t.severity} IN ('low','medium','high','critical')`),
+  check("camera_events_status_chk", sql`${t.status} IN ('new','reviewing','resolved','false_positive')`),
+]);
 
 
 export const insertCameraEventSchema = createInsertSchema(cameraEvents, {
@@ -122,8 +135,8 @@ export type InsertCameraEvent = z.infer<typeof insertCameraEventSchema>;
 // Camera Detections (Kamera orqali aniqlangan xodimlar)
 export const cameraDetections = pgTable("camera_detections", {
   id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id").references(() => cameras.id).notNull(),
-  userId: integer("user_id").references(() => users.id),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   detectionDate: varchar("detection_date", { length: 10 }).notNull(), // YYYY-MM-DD
   detectionTime: varchar("detection_time", { length: 8 }).notNull(), // HH:MM:SS
   zoneName: text("zone_name"), // Qaysi zonada (masalan: "Gofrokarton liniyasi")
@@ -148,7 +161,7 @@ export type InsertCameraDetection = z.infer<typeof insertCameraDetectionSchema>;
 export const employeeZoneTracking = pgTable("employee_zone_tracking", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  cameraId: varchar("camera_id").references(() => cameras.id),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "set null" }),
   zoneName: text("zone_name").notNull(),
   trackingDate: varchar("tracking_date", { length: 10 }).notNull(), // YYYY-MM-DD
   entryTime: varchar("entry_time", { length: 8 }), // HH:MM:SS - Kirish vaqti
@@ -179,9 +192,9 @@ export type InsertEmployeeZoneTracking = z.infer<typeof insertEmployeeZoneTracki
 // Safety Violations (Xavfsizlik buzilishlari - batafsil)
 export const safetyViolations = pgTable("safety_violations", {
   id: serial("id").primaryKey(),
-  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id),
-  cameraId: varchar("camera_id").references(() => cameras.id).notNull(),
-  userId: integer("user_id").references(() => users.id), // Buzilish qilgan xodim
+  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id, { onDelete: "set null" }),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }), // Buzilish qilgan xodim
   violationType: varchar("violation_type", { length: 50 }).notNull(), // no_helmet, no_gloves, no_glasses, danger_zone, unsafe_behavior
   location: text("location"),
   imageUrl: text("image_url"),
@@ -190,10 +203,12 @@ export const safetyViolations = pgTable("safety_violations", {
   actionTaken: text("action_taken"), // Qilingan chora
   penaltyApplied: boolean("penalty_applied").notNull().default(false),
   penaltyAmount: numericMoney("penalty_amount"),
-  acknowledgedById: varchar("acknowledged_by_id").references(() => users.id),
+  acknowledgedById: varchar("acknowledged_by_id").references(() => users.id, { onDelete: "set null" }),
   acknowledgedAt: timestamp("acknowledged_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("safety_violations_type_chk", sql`${t.violationType} IN ('no_helmet','no_gloves','no_glasses','danger_zone','unsafe_behavior','other')`),
+]);
 
 
 export const insertSafetyViolationSchema = createInsertSchema(safetyViolations, {
@@ -210,10 +225,10 @@ export type InsertSafetyViolation = z.infer<typeof insertSafetyViolationSchema>;
 // Quality Defects Camera (Kamera orqali aniqlangan sifat nuqsonlari)
 export const qualityDefectsCamera = pgTable("quality_defects_camera", {
   id: serial("id").primaryKey(),
-  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id),
-  cameraId: varchar("camera_id").references(() => cameras.id).notNull(),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
-  productionOrderId: varchar("production_order_id").references(() => productionOrders.id),
+  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id, { onDelete: "set null" }),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "cascade" }).notNull(),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
+  productionOrderId: varchar("production_order_id").references(() => productionOrders.id, { onDelete: "set null" }),
   defectType: varchar("defect_type", { length: 50 }).notNull(), // tear, crush, misprint, misalignment, glue_issue, dimension_error
   defectLocation: text("defect_location"), // Qutining qaysi qismi
   imageUrl: text("image_url"),
@@ -221,10 +236,13 @@ export const qualityDefectsCamera = pgTable("quality_defects_camera", {
   defectCount: integer("defect_count").default(1),
   batchId: varchar("batch_id", { length: 100 }), // Partiya raqami
   actionTaken: varchar("action_taken", { length: 30 }), // rejected, rework, passed
-  reviewedById: varchar("reviewed_by_id").references(() => users.id),
+  reviewedById: varchar("reviewed_by_id").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("quality_defects_cam_type_chk", sql`${t.defectType} IN ('tear','crush','misprint','misalignment','glue_issue','dimension_error','other')`),
+  check("quality_defects_cam_action_chk", sql`${t.actionTaken} IS NULL OR ${t.actionTaken} IN ('rejected','rework','passed')`),
+]);
 
 
 export const insertQualityDefectCameraSchema = createInsertSchema(qualityDefectsCamera, {
@@ -241,8 +259,8 @@ export type InsertQualityDefectCamera = z.infer<typeof insertQualityDefectCamera
 // Machine Status Logs (Mashina holati tarixi - kamera kuzatuvi)
 export const machineStatusLogs = pgTable("machine_status_logs", {
   id: serial("id").primaryKey(),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id).notNull(),
-  cameraId: varchar("camera_id").references(() => cameras.id),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "cascade" }).notNull(),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "set null" }),
   status: varchar("status", { length: 30 }).notNull(), // running, idle, stopped, maintenance, breakdown
   previousStatus: varchar("previous_status", { length: 30 }),
   statusStartedAt: timestamp("status_started_at").notNull().defaultNow(),
@@ -252,13 +270,18 @@ export const machineStatusLogs = pgTable("machine_status_logs", {
   stopReason: varchar("stop_reason", { length: 50 }), // material_shortage, maintenance, breakdown, changeover, no_order
   stopReasonDetail: text("stop_reason_detail"),
   // Operator
-  operatorId: varchar("operator_id").references(() => users.id),
+  operatorId: varchar("operator_id").references(() => users.id, { onDelete: "set null" }),
   // AI aniqlash
   aiDetected: boolean("ai_detected").notNull().default(false),
   aiConfidence: numericMoney("ai_confidence"),
   imageUrl: text("image_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("machine_status_logs_status_chk", sql`${t.status} IN ('running','idle','stopped','maintenance','breakdown')`),
+  check("machine_status_logs_prev_status_chk", sql`${t.previousStatus} IS NULL OR ${t.previousStatus} IN ('running','idle','stopped','maintenance','breakdown')`),
+  check("machine_status_logs_duration_chk", sql`${t.durationMinutes} IS NULL OR ${t.durationMinutes} >= 0`),
+  check("machine_status_logs_stop_reason_chk", sql`${t.stopReason} IS NULL OR ${t.stopReason} IN ('material_shortage','maintenance','breakdown','changeover','no_order')`),
+]);
 
 
 export const insertMachineStatusLogSchema = createInsertSchema(machineStatusLogs, {
@@ -275,8 +298,8 @@ export type InsertMachineStatusLog = z.infer<typeof insertMachineStatusLogSchema
 // Camera Alerts (Kamera ogohlantirishlari)
 export const cameraAlerts = pgTable("camera_alerts", {
   id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id").references(() => cameras.id).notNull(),
-  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id),
+  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "cascade" }).notNull(),
+  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id, { onDelete: "set null" }),
   alertType: varchar("alert_type", { length: 30 }).notNull(), // safety, quality, productivity, machine, system
   severity: varchar("severity", { length: 20 }).notNull().default("medium"), // low, medium, high, critical
   title: text("title").notNull(),
@@ -289,14 +312,17 @@ export const cameraAlerts = pgTable("camera_alerts", {
   telegramRecipients: jsonb("telegram_recipients"), // [{userId, chatId, sentAt}]
   // Holat
   isAcknowledged: boolean("is_acknowledged").notNull().default(false),
-  acknowledgedById: varchar("acknowledged_by_id").references(() => users.id),
+  acknowledgedById: varchar("acknowledged_by_id").references(() => users.id, { onDelete: "set null" }),
   acknowledgedAt: timestamp("acknowledged_at"),
   isResolved: boolean("is_resolved").notNull().default(false),
-  resolvedById: varchar("resolved_by_id").references(() => users.id),
+  resolvedById: varchar("resolved_by_id").references(() => users.id, { onDelete: "set null" }),
   resolvedAt: timestamp("resolved_at"),
   resolutionNotes: text("resolution_notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("camera_alerts_type_chk", sql`${t.alertType} IN ('safety','quality','productivity','machine','system')`),
+  check("camera_alerts_severity_chk", sql`${t.severity} IN ('low','medium','high','critical')`),
+]);
 
 
 export const insertCameraAlertSchema = createInsertSchema(cameraAlerts, {
@@ -383,26 +409,31 @@ export const iotSensors = pgTable("iot_sensors", {
 
 export const iotSensorReadings = pgTable("iot_sensor_readings", {
   id: serial("id").primaryKey(),
-  sensorId: varchar("sensor_id").notNull().references(() => iotSensors.id),
+  sensorId: varchar("sensor_id").notNull().references(() => iotSensors.id, { onDelete: "cascade" }),
   value: numericMoney("value").notNull(),
   status: varchar("status", { length: 20 }).notNull().default("normal"),
   recordedAt: timestamp("recorded_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("iot_sensor_readings_status_chk", sql`${t.status} IN ('normal','warning','critical','error')`),
+]);
 
 
 export const iotAlerts = pgTable("iot_alerts", {
   id: serial("id").primaryKey(),
-  sensorId: varchar("sensor_id").notNull().references(() => iotSensors.id),
+  sensorId: varchar("sensor_id").notNull().references(() => iotSensors.id, { onDelete: "cascade" }),
   alertType: varchar("alert_type", { length: 20 }).notNull(),
   severity: varchar("severity", { length: 10 }).notNull(),
   message: text("message").notNull(),
   value: numericMoney("value"),
   threshold: numericMoney("threshold"),
   isResolved: boolean("is_resolved").notNull().default(false),
-  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedBy: integer("resolved_by").references(() => users.id, { onDelete: "set null" }),
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("iot_alerts_type_chk", sql`${t.alertType} IN ('above_max','below_min','offline','error')`),
+  check("iot_alerts_severity_chk", sql`${t.severity} IN ('low','medium','high','critical')`),
+]);
 
 
 export const insertIotSensorSchema = createInsertSchema(iotSensors).omit({ id: true, createdAt: true, lastReading: true, lastReadingAt: true } as never);
@@ -463,7 +494,9 @@ export const operatorPerformanceSummary = pgTable("operator_performance_summary"
   payrollDeduction: numericMoney("payroll_deduction").default(0), // UZS — defect uchun
   payrollSynced: boolean("payroll_synced").default(false), // Moliya ga o'tkazildimi
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("operator_perf_shift_type_chk", sql`${t.shiftType} IS NULL OR ${t.shiftType} IN ('day','night')`),
+]);
 
 export const insertOperatorPerformanceSummarySchema = createInsertSchema(operatorPerformanceSummary).omit({ id: true, createdAt: true } as never);
 export type OperatorPerformanceSummary = typeof operatorPerformanceSummary.$inferSelect;
@@ -492,7 +525,11 @@ export const pmSchedules = pgTable("pm_schedules", {
   actualHours: numericMoney("actual_hours"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("pm_schedules_status_chk", sql`${t.status} IN ('scheduled','in_progress','completed','overdue','cancelled')`),
+  check("pm_schedules_priority_chk", sql`${t.priority} IN ('low','medium','high','critical')`),
+  check("pm_schedules_interval_chk", sql`${t.intervalDays} > 0`),
+]);
 
 export const insertPmScheduleSchema = createInsertSchema(pmSchedules).omit({ id: true, createdAt: true } as never);
 export type PmSchedule = typeof pmSchedules.$inferSelect;

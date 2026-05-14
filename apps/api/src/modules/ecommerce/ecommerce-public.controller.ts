@@ -1,3 +1,8 @@
+/**
+ * @module ecommerce-public.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, Get, Post, Body, Param, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';

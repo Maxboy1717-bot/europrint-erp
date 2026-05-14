@@ -1,3 +1,8 @@
+/**
+ * @module PaymentPanel
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,11 +67,11 @@ export function PaymentPanel({
       <CardContent className="p-3 space-y-3">
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Jami:</span>
+            <span className="text-muted-foreground">{t("jami")}</span>
             <span className="font-medium">{formatCurrency(subtotal)}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Chegirma:</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{t("chegirma")}</span>
             <Input
               type="number"
               value={discountAmount}
@@ -86,8 +91,8 @@ export function PaymentPanel({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-medium">To'lov usuli</label>
-          <div className="grid grid-cols-2 gap-2">
+          <label className="text-xs font-medium">{t("tolovUsuli")}</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {Object.entries(paymentMethodLabels).map(([key, value]) => (
               <Button
                 key={key}
@@ -106,7 +111,7 @@ export function PaymentPanel({
 
         {paymentMethod === "cash" && (
           <div className="space-y-1 pt-1">
-            <label className="text-xs font-medium">Olingan naqd pul</label>
+            <label className="text-xs font-medium">{t("olinganNaqdPul")}</label>
             <Input
               type="number"
               value={cashAmount}
@@ -116,17 +121,17 @@ export function PaymentPanel({
               data-testid="input-cash-amount"
             />
             <div className="flex justify-between items-center pt-1">
-              <span className="text-xs text-muted-foreground">Qaytim:</span>
-              <span className="text-lg font-bold text-orange-600">{formatCurrency(changeAmount)}</span>
+              <span className="text-xs text-muted-foreground">{t("qaytim")}</span>
+              <span className="text-lg font-bold text-[var(--ep-primary)]">{formatCurrency(changeAmount)}</span>
             </div>
           </div>
         )}
 
         {paymentMethod === "mixed" && (
           <div className="space-y-2 pt-1 border-t mt-1">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] font-medium">Naqd</label>
+                <label className="text-[10px] font-medium">{t("naqd")}</label>
                 <Input
                   type="number"
                   value={cashAmount}
@@ -136,7 +141,7 @@ export function PaymentPanel({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-medium">Karta</label>
+                <label className="text-[10px] font-medium">{t("karta")}</label>
                 <Input
                   type="number"
                   value={cardAmount}
@@ -146,7 +151,7 @@ export function PaymentPanel({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-medium">O'tkazma</label>
+                <label className="text-[10px] font-medium">{t("otkazma")}</label>
                 <Input
                   type="number"
                   value={transferAmount}
@@ -156,8 +161,8 @@ export function PaymentPanel({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-medium text-orange-600">Qaytim</label>
-                <div className="h-8 flex items-center justify-end font-bold text-orange-600">
+                <label className="text-[10px] font-medium text-[var(--ep-primary)]">{t("qaytim1")}</label>
+                <div className="h-8 flex items-center justify-end font-bold text-[var(--ep-primary)]">
                   {formatCurrency(changeAmount)}
                 </div>
               </div>
@@ -166,11 +171,11 @@ export function PaymentPanel({
         )}
 
         <div className="space-y-1">
-          <label className="text-xs font-medium">Mijoz ismi</label>
+          <label className="text-xs font-medium">{t("mijozIsmi")}</label>
           <Input
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            placeholder="Ixtiyoriy..."
+            placeholder={t("ixtiyoriy")}
             className="h-8"
             data-testid="input-customer-name"
           />
@@ -183,9 +188,9 @@ export function PaymentPanel({
           data-testid="button-complete-sale"
         >
           {isPending ? (
-            <RefreshCw className="h-5 w-5 animate-spin" />
+            <RefreshCw className="h-4 w-4 animate-spin" />
           ) : (
-            <Check className="h-5 w-5 mr-2" />
+            <Check className="h-4 w-4 mr-2" />
           )}
           Sotishni yakunlash
         </Button>

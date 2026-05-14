@@ -1,3 +1,8 @@
+/**
+ * @module concurrency-conflict.exception
+ * @description Source module. See exports for details.
+ */
+
 import { ConflictException } from '@nestjs/common';
 
 export class ConcurrencyConflictException extends ConflictException {

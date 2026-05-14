@@ -1,8 +1,14 @@
+/**
+ * @module BusinessTripDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from '@/lib/i18n';
 
 interface BusinessTripForm {
   destination: string;
@@ -31,36 +37,37 @@ export function BusinessTripDialog({
   onSave,
   isPending
 }: BusinessTripDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof BusinessTripForm, value: string) => {
     onChange({ ...form, [field]: value });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Xizmat safari (K командировка)</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Xizmat safari (K командировка)</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="destination">Manzil</Label>
+          <div className="space-y-1">
+          <Label htmlFor="destination">{t("address")}</Label>
             <Input
               id="destination"
               value={form.destination}
               onChange={(e) => updateField("destination", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="purpose">Maqsad</Label>
+          <div className="space-y-1">
+          <Label htmlFor="purpose">{t("Maqsad")}</Label>
             <Textarea
               id="purpose"
               value={form.purpose}
               onChange={(e) => updateField("purpose", e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Boshlanish sanasi</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="startDate">{t("startDate")}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -68,8 +75,8 @@ export function BusinessTripDialog({
                 onChange={(e) => updateField("startDate", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">Tugash sanasi</Label>
+            <div className="space-y-1">
+          <Label htmlFor="endDate">{t("endDate")}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -78,9 +85,9 @@ export function BusinessTripDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-2">
-              <Label htmlFor="daily">Sutkalik</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="space-y-1">
+          <Label htmlFor="daily">{t("sutkalik")}</Label>
               <Input
                 id="daily"
                 type="number"
@@ -88,8 +95,8 @@ export function BusinessTripDialog({
                 onChange={(e) => updateField("dailyAllowance", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="transport">Transport</Label>
+            <div className="space-y-1">
+          <Label htmlFor="transport">{t("transport")}</Label>
               <Input
                 id="transport"
                 type="number"
@@ -97,8 +104,8 @@ export function BusinessTripDialog({
                 onChange={(e) => updateField("transportCost", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="hotel">Turar joy</Label>
+            <div className="space-y-1">
+          <Label htmlFor="hotel">{t("turarJoy")}</Label>
               <Input
                 id="hotel"
                 type="number"
@@ -109,7 +116,7 @@ export function BusinessTripDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

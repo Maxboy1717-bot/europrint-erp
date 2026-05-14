@@ -1,8 +1,13 @@
+/**
+ * @module EmployeeDialog
+ * @description React UI component.
+ */
+
 import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, getAuthHeaders } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -31,8 +36,11 @@ import { HouseholdSection } from "./hr/employee-dialog/HouseholdSection";
 import { OrgStructureSection } from "./hr/employee-dialog/OrgStructureSection";
 import { ProfileImageSection } from "./hr/employee-dialog/ProfileImageSection";
 import { useEmployeeMutation } from "./hr/employee-dialog/useEmployeeMutation";
+import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const isEdit = !!employee;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -40,16 +48,27 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   const [selectedOrgDepts, setSelectedOrgDepts] = useState<string[]>([]);
   const [orgSearchQuery, setOrgSearchQuery] = useState("");
 
+  // Modal ochilganda chaqiruvlar — yopiq bo'lsa hech narsa chaqirilmaydi (auth tekshirilmagan ham)
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ["/api/departments"],
+    enabled: open === true,
   });
 
   const { data: allPositions = [] } = useQuery<Position[]>({
     queryKey: ["/api/positions"],
+    enabled: open === true,
   });
 
   const { data: orgDepartments = [] } = useQuery<OrgDepartment[]>({
     queryKey: ["/api/org-departments"],
+    enabled: open === true,
+  });
+
+  // Edit rejimida: xodim allaqachon biriktirilgan funksiyalarni olamiz
+  // (rahbar bo'lgan + ishlovchi bo'lgan barcha funksiyalar)
+  const { data: assignedDeptsData } = useQuery<{ orgDepartmentIds: string[] }>({
+    queryKey: [`/api/employees/${employee?.id}/org-departments`],
+    enabled: open === true && !!employee?.id,
   });
 
   const form = useForm<EmployeeFormData>({
@@ -129,11 +148,16 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         longitude: employee.longitude?.toString() || "",
       });
       
-      if (orgDepartments.length > 0) {
-        const assignedDeptIds = orgDepartments
-          .filter(d => d.headUserId === employee.id)
-          .map(d => d.id);
-        setSelectedOrgDepts(assignedDeptIds);
+      // Xodim'ning barcha biriktirilgan funksiyalari (rahbar + ishlovchi)
+      // Backend'dan kelgan haqiqiy assignment'lar (employee_org_departments orqali)
+      if (Array.isArray(assignedDeptsData?.orgDepartmentIds)) {
+        setSelectedOrgDepts(assignedDeptsData.orgDepartmentIds);
+      } else if (orgDepartments.length > 0) {
+        // Fallback: backend assignedDeptsData kelmasa, faqat rahbar bo'lgan funksiyalar
+        const fallbackIds = orgDepartments
+          .filter(d => String(d.headUserId) === String(employee.id))
+          .map(d => String(d.id));
+        setSelectedOrgDepts(fallbackIds);
       }
     } else {
       form.reset({
@@ -167,27 +191,26 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       setSelectedOrgDepts([]);
       setOrgSearchQuery("");
     }
-  }, [open, employee, form, orgDepartments]);
+  }, [open, employee, form, orgDepartments, assignedDeptsData]);
 
   const handleAfterSubmit = async (empId: string) => {
+    // Profile image — FormData (Content-Type avtomatik), faqat Authorization header
     if (selectedFile) {
       const formData = new FormData();
       formData.append("image", selectedFile);
-      await fetch(`/api/employees/${empId}/profile-image`, {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        await apiRequest('POST', `/api/employees/${empId}/profile-image`);
+      } catch {
+        // Silently fail — asosiy xodim yaratilgan, rasm yuklash optional
+      }
     }
-    const orgRes = await fetch(`/api/employees/${empId}/assign-org-functions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orgDepartmentIds: selectedOrgDepts }),
-    });
+    // Org functions — JSON, Authorization header bilan
+    const orgRes = await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
     if (!orgRes.ok) {
       const orgError = await orgRes.json().catch(() => ({ error: "Funktsiyalarni saqlashda xatolik" }));
       toast({
         title: "Ogohlantirish",
-        description: orgError.error || "Tashkiliy funksiyalarni saqlashda xatolik",
+        description: orgError.message || orgError.error || "Tashkiliy funksiyalarni saqlashda xatolik",
         variant: "destructive",
       });
     }
@@ -205,9 +228,9 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Xodim ma'lumotlarini tahrirlash" : "Yangi xodim qo'shish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{isEdit ? "Xodim ma'lumotlarini tahrirlash" : "Yangi xodim qo'shish"}</DialogTitle>
           <DialogDescription>
             {isEdit ? "Xodim ma'lumotlarini o'zgartiring" : "Yangi xodim ma'lumotlarini kiriting"}
           </DialogDescription>
@@ -232,15 +255,15 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
             />
 
             <div className="space-y-8">
-              <section><h3 className="text-lg font-medium mb-4">Asosiy ma'lumotlar</h3><BasicInfoSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Bo'lim va Lavozim</h3><PositionSection form={form} departments={departments} positions={allPositions} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Shartnoma va Ish haqi</h3><ContractSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Shaxsiy ma'lumotlar</h3><PersonalInfoSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Uy-joy va Joylashuv</h3><HouseholdSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("asosiyMalumotlar")}</h3><BasicInfoSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("bolimVaLavozim")}</h3><PositionSection form={form} departments={departments} positions={allPositions} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("shartnomaVaIshHaqi")}</h3><ContractSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("shaxsiyMalumotlar")}</h3><PersonalInfoSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("uyJoyVaJoylashuv")}</h3><HouseholdSection form={form} /></section>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saqlanmoqda..." : "Saqlash"}
               </Button>

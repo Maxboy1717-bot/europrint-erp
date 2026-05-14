@@ -1,3 +1,8 @@
+/**
+ * @module alerts.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { notifications } from '@europrint/schemas';
 import { Result, safeCall } from '@common/result';
