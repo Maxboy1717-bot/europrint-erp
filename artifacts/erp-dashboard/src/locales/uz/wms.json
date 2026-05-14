@@ -68,5 +68,16 @@
   "col_current_stock": "Joriy Qoldiq",
   "col_last_movement": "Oxirgi Harakat",
   "col_days_idle": "Harakatsiz (kun)",
-  "col_estimated_value": "Taxminiy Qiymat"
+  "col_estimated_value": "Taxminiy Qiymat",
+  "dashboard9": "Dashboard 9",
+  "harakatQoshish": "Harakat qoshish",
+  "ichkiSorovlar": "Ichki sorovlar",
+  "ishlabChiqarish1": "Ishlab chiqarish 1",
+  "jamiMateriallar": "Jami materiallar",
+  "kamQolganlar": "Kam qolganlar",
+  "materialBalans1": "Material balans 1",
+  "tuganganlar": "Tuganganlar",
+  "umumiy": "Umumiy",
+  "umumiyQiymat": "Umumiy qiymat",
+  "xomAshyoZaxirasiVaIchki": "Xom ashyo zaxirasi va ichki"
 }

@@ -62,5 +62,10 @@
   "telegram.title": "Telegram бот",
   "telegram.token": "Токен бота",
   "telegram.chatId": "ID чата",
-  "website": "Веб-сайт"
+  "website": "Веб-сайт",
+  "gpt4oMini": "GPT-4o Mini",
+  "gptModel": "Модель GPT",
+  "ozbek": "Узбекский",
+  "prompt": "Промпт",
+  "toshkentShaharYashnobodTumani": "г. Ташкент, Яшнабадский район"
 }

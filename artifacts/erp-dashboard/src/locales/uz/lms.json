@@ -108,5 +108,18 @@
   "mentorship.mentor": "Mentor",
   "mentorship.mentee": "Shogird",
   "knowledgeBase.title": "Bilim bazasi",
-  "knowledgeBase.article": "Maqola"
+  "knowledgeBase.article": "Maqola",
+  "bilimlarBazasiniOchirish": "Bilimlar bazasini ochirish",
+  "dashboard9": "Dashboard 9",
+  "imtihonlarMavjudEmas": "Imtihonlar mavjud emas",
+  "kurslarKatalogi": "Kurslar katalogi",
+  "kursniOchirish": "Kursni ochirish",
+  "lmsMentorlik": "Lms mentorlik",
+  "mavjudImtihonlar": "Mavjud imtihonlar",
+  "mentee": "Mentee",
+  "oquvMarkazi": "Oquv markazi",
+  "ortachaBall1": "Ortacha ball 1",
+  "ushbuKursniOchirishniTasdiqlaysizmiBu": "Ushbu kursni ochirishni tasdiqlaysizmi bu",
+  "ushbuYozuvniOchirishniTasdiqlaysizmiBu": "Ushbu yozuvni ochirishni tasdiqlaysizmi bu",
+  "yakunlanganKurslar": "Yakunlangan kurslar"
 }

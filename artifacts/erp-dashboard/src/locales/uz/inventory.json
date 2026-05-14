@@ -2,13 +2,13 @@
   "newPlan": "Yangi reja",
   "scheduledFor": "Rejalashtirildi",
   "title": "Sarlavha",
-  "plans": "plans",
+  "plans": "Plans",
   "activeCount": "active Count",
-  "variances": "variances",
+  "variances": "Variances",
   "planNo": "Plan Yo'q",
   "systemQty": "system Qty",
   "actualQty": "actual Qty",
-  "difference": "difference",
-  "shortage": "shortage",
-  "surplus": "surplus"
+  "difference": "Difference",
+  "shortage": "Shortage",
+  "surplus": "Surplus"
 }

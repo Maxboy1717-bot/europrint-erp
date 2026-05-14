@@ -108,5 +108,18 @@
   "mentorship.mentor": "Наставник",
   "mentorship.mentee": "Подопечный",
   "knowledgeBase.title": "База знаний",
-  "knowledgeBase.article": "Статья"
+  "knowledgeBase.article": "Статья",
+  "bilimlarBazasiniOchirish": "Удалить базу знаний",
+  "dashboard9": "Дашборд 9",
+  "imtihonlarMavjudEmas": "Экзаменов нет",
+  "kurslarKatalogi": "Каталог курсов",
+  "kursniOchirish": "Удалить курс",
+  "lmsMentorlik": "LMS Наставничество",
+  "mavjudImtihonlar": "Имеющиеся экзамены",
+  "mentee": "Подопечный",
+  "oquvMarkazi": "Учебный центр",
+  "ortachaBall1": "Средний балл",
+  "ushbuKursniOchirishniTasdiqlaysizmiBu": "Подтверждаете удаление этого курса?",
+  "ushbuYozuvniOchirishniTasdiqlaysizmiBu": "Подтверждаете удаление этой записи?",
+  "yakunlanganKurslar": "Завершённые курсы"
 }

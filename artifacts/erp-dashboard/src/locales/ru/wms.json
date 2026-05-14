@@ -68,5 +68,16 @@
   "col_current_stock": "Текущий остаток",
   "col_last_movement": "Последнее движение",
   "col_days_idle": "Дней без движения",
-  "col_estimated_value": "Расчётная стоимость"
+  "col_estimated_value": "Расчётная стоимость",
+  "dashboard9": "Дашборд 9",
+  "harakatQoshish": "Добавить движение",
+  "ichkiSorovlar": "Внутренние запросы",
+  "ishlabChiqarish1": "Производство",
+  "jamiMateriallar": "Всего материалов",
+  "kamQolganlar": "Мало осталось",
+  "materialBalans1": "Баланс материалов",
+  "tuganganlar": "Завершённые",
+  "umumiy": "общий",
+  "umumiyQiymat": "Общая стоимость",
+  "xomAshyoZaxirasiVaIchki": "Запас сырья и внутренние"
 }

@@ -62,5 +62,10 @@
   "telegram.title": "Telegram bot",
   "telegram.token": "Bot tokeni",
   "telegram.chatId": "Chat ID",
-  "website": "Veb-sayt"
+  "website": "Veb-sayt",
+  "gpt4oMini": "Gpt 4o mini",
+  "gptModel": "Gpt model",
+  "ozbek": "Ozbek",
+  "prompt": "Prompt",
+  "toshkentShaharYashnobodTumani": "Toshkent shahar yashnobod tumani"
 }
