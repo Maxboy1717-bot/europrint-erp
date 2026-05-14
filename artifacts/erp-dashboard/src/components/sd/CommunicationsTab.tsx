@@ -373,7 +373,7 @@ export function CommunicationsTab({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-sm">{item.subject || item.notes || "Muloqot"}</span>
+                    <span className="font-medium text-sm">{String(item.subject || item.notes || "Muloqot")}</span>
                     <Badge variant="outline" className="text-[10px]">{typeLabel[item.type] || item.type}</Badge>
                     {item.direction && (
                       <Badge variant="outline" className="text-[10px]">
@@ -382,7 +382,7 @@ export function CommunicationsTab({
                     )}
                   </div>
                   {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
-                  {item.notes && item.notes !== item.subject && <p className="text-xs text-muted-foreground mt-1">{item.notes}</p>}
+                  {item.notes && item.notes !== item.subject ? <p className="text-xs text-muted-foreground mt-1">{String(item.notes)}</p> : null}
                   {item.employeeName && item.employeeName.trim() && (
                     <p className="text-[11px] text-muted-foreground mt-1">Xodim: {item.employeeName}</p>
                   )}
@@ -397,7 +397,7 @@ export function CommunicationsTab({
                   )}
                 </div>
                 <span className="text-[11px] text-muted-foreground shrink-0">
-                  {fmtDate(item.interaction_date || item.interactionDate || item.createdAt || item.created_at)}
+                  {fmtDate((item.interaction_date || item.interactionDate || item.createdAt || item.created_at) as string | null | undefined)}
                 </span>
               </div>
             </div>

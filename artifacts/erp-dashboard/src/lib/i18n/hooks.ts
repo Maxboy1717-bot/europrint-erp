@@ -28,8 +28,14 @@ export function useTranslation(module: TranslationModuleName = 'common'): UseTra
   const { language, setLanguage, t: tGlobal } = useLanguageContext();
 
   const t = useCallback(
-    (key: string, params?: Record<string, string | number>): string => {
-      return tGlobal(key, module, params);
+    (key: string, paramsOrFallback?: Record<string, string | number> | string): string => {
+      // Permit `t('key', 'fallback')` legacy pattern — fallback is used if key missing.
+      if (typeof paramsOrFallback === 'string') {
+        const value = tGlobal(key, module);
+        // tGlobal returns the key itself if translation is missing — detect & use fallback.
+        return value === key ? paramsOrFallback : value;
+      }
+      return tGlobal(key, module, paramsOrFallback);
     },
     [tGlobal, module],
   );

@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertTriangle, Clock, Package, Layers, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { WarehouseData, Lang, Translations } from "./warehouse-types";
+import { WarehouseData, Lang } from "./warehouse-types";
 import { apiRequest } from '@/lib/queryClient';
 
 interface LotRow {
@@ -57,9 +57,10 @@ const STATUS_CONF: Record<string, { label: string; icon: React.ComponentType<{ c
   defective:    { label: "Brakli",       icon: XCircle,      cls: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200" },
 };
 
-interface LotsTabProps { lang: Lang; t: Translations }
+interface LotsTabProps { lang: Lang; t: unknown }
 
-export function LotsTab({lang, t }: LotsTabProps) {
+export function LotsTab({lang, t: tRaw }: LotsTabProps) {
+  const t = tRaw as (key: string) => string;
   const { toast } = useToast();
   const [warehouseId, setWarehouseId] = useState("");
   const [statusFilter, setStatusFilter] = useState("");

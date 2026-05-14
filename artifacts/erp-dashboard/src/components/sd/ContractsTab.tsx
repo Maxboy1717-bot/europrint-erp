@@ -177,16 +177,16 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
                           Muddat: {fmtDate(expiresAt)}{isExpired ? " (o'tdi)" : isSoon ? " (yaqin)" : ""}
                         </span>
                       )}
-                      {d.notes && <span className="text-[11px] text-muted-foreground truncate">{d.notes}</span>}
+                      {d.notes ? <span className="text-[11px] text-muted-foreground truncate">{String(d.notes)}</span> : null}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  {(d.fileUrl || d.url) && (
+                  {(d.fileUrl || d.url) ? (
                     <Button variant="ghost" size="icon" asChild data-testid={`btn-view-doc-${d.id}`}>
-                      <a href={d.fileUrl || d.url} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" /></a>
+                      <a href={d.fileUrl || (d.url as string)} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" /></a>
                     </Button>
-                  )}
+                  ) : null}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="icon" data-testid={`btn-delete-doc-${d.id}`}>

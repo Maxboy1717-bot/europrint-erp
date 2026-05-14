@@ -11,7 +11,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationsPanel } from "../../pages/kanban/NotificationsPanel";
-import { useTranslation } from '@/lib/i18n';
 import {
   KanbanBoardType, KanbanColumn, KanbanTranslations,
   KanbanTemplate, RoleFilter, FilterState, ViewMode,
@@ -143,7 +142,7 @@ interface BoardHeaderProps {
 }
 
 export function BoardHeader({
-  t, templates, selectedBoardId, setSelectedBoardId,
+  t: tProp, templates, selectedBoardId, setSelectedBoardId,
   columns, createCardMutation, setQuickTaskType, setShowQuickTask,
   roleFilter, setRoleFilter, filters, setFilters,
   overdueCount, newCommentsCount, unreadCount,
@@ -151,7 +150,7 @@ export function BoardHeader({
   setShowRobots, setShowFlows, setShowReports, setShowTemplates,
   boards, setShowCreateBoard, hasActiveFilters, onDeleteBoard,
 }: BoardHeaderProps) {
-  const { t } = useTranslation("common");
+  const t = tProp as unknown as KanbanTranslations & ((key: string) => string);
   const clearFilters = () => setFilters(() => ({
     search: "", columnId: null, priority: null, assigneeId: null,
     overdue: false, hasNewComments: false, tagId: null, tagName: null,

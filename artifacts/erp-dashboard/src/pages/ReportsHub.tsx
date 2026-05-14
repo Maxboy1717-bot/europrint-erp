@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Database } from "lucide-react";
 import type { AiReportDefinition, AiReportRun, AiReportSubscription } from "@shared/schema";
-import { t, type DashboardData } from "./ReportsHubTypes";
+import { t, type DashboardData, type Translations } from "./ReportsHubTypes";
 import {
   StatsGrid,
   CategoryGrid,
@@ -30,7 +30,7 @@ export default function ReportsHub() {
   const { language } = useLanguage();
   const { toast } = useToast();
   const lang = language === "ru" ? "ru" : "uz";
-  const tr = t[lang];
+  const tr = (t as unknown as Record<string, Translations>)[lang];
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("categories");
@@ -51,7 +51,7 @@ export default function ReportsHub() {
   const { data: definitions, isLoading: definitionsLoading } = useQuery<AiReportDefinition[]>({
     queryKey: ["/api/reports-hub/definitions", { categoryId: selectedCategoryId }],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/reports-hub/definitions?categoryId=${selectedCategoryId}`);
+      const res = await apiRequest('GET', `/api/reports-hub/definitions?categoryId=${selectedCategoryId}`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch definitions");
       return res.json();
     },
