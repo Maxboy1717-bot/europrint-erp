@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest, getAuthHeaders } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export function useMESDashboard() {
   return useQuery({
@@ -37,12 +37,12 @@ export function useMESDowntimes(sessionId?: string) {
   return useQuery({
     queryKey: ["/api/mes/downtime-events", sessionId],
     queryFn: () =>
-      fetch(
+      apiRequest(
+        'GET',
         sessionId
           ? `/api/mes/downtime-events/${sessionId}`
           : "/api/mes/downtime-events",
-        { headers: getAuthHeaders() },
-      ).then((r) => (r.ok ? r.json() : Promise.reject(r))),
+      ),
     refetchInterval: 60000,
   });
 }

@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
-import { safeStorage } from "@/lib/safeStorage";
 import { Warehouse, Plus, RefreshCw, Settings, SquareStack } from "lucide-react";
 
 import { type RentalSummary, type RentalSettings } from "./WarehouseRentalTypes";
@@ -50,14 +49,7 @@ export default function WarehouseRental() {
   }>({
     queryKey: ["/api/warehouse-rental/records", statusFilter],
     queryFn: () =>
-      fetch(
-        `/api/warehouse-rental/records${statusFilter ? `?status=${statusFilter}` : ""}`,
-        {
-          headers: {
-            Authorization: `Bearer ${safeStorage.getItem("access_token")}`,
-          },
-        }
-      ).then((r) => r.json()),
+      apiRequest('GET', `/api/warehouse-rental/records${statusFilter ? `?status=${statusFilter}` : ""}`),
     enabled: !!isAuthenticated,
   });
 

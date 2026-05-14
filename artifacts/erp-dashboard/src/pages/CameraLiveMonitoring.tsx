@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Video, Activity, Play } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import type { Camera, CameraWithDetections, LiveDetection } from "./CameraLiveMonitoringTypes";
 import { HeaderControls, StatsCards } from "./CameraLiveMonitoringDialogs";
@@ -53,9 +53,7 @@ export default function CameraLiveMonitoring() {
       const url = selectedCamera !== "all"
         ? `/api/erp/cameras/live-detections?cameraId=${selectedCamera}`
         : "/api/erp/cameras/live-detections";
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch detections");
-      return response.json();
+      return await apiRequest<LiveDetection[]>('GET', url);
     },
     enabled: !!isAuthenticated,
     refetchInterval: autoRefresh ? 5000 : false,

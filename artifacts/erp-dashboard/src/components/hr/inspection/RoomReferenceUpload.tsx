@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Camera, Upload, X } from 'lucide-react';
+import { apiRequest, HttpError } from '@/lib/queryClient';
 
 import { useTranslation } from '@/lib/i18n';
 const FormSchema = z.object({
@@ -62,24 +63,16 @@ export function RoomReferenceUpload({open, roomCode, roomName, onClose, onSaved 
     if (!base64) { setSubmitError('Rasm tanlanmagan'); return; }
     setSubmitError(null);
     try {
-      const token = localStorage.getItem('access_token') ?? '';
-      const res = await fetch(`/api/hr/inspection/rooms/${roomCode}/reference-photo`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body:    JSON.stringify({
-          image_base64: base64,
-          room_name:    roomName,
-          description:  values.description || undefined,
-        }),
+      await apiRequest('POST', `/api/hr/inspection/rooms/${roomCode}/reference-photo`, {
+        image_base64: base64,
+        room_name:    roomName,
+        description:  values.description || undefined,
       });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({})) as { message?: string };
-        throw new Error(errBody.message ?? `Server xatosi: ${res.status}`);
-      }
       onSaved();
       handleClose();
     } catch (e: unknown) {
-      setSubmitError((e as Error)?.message ?? 'Yuklashda xatolik');
+      const msg = e instanceof HttpError ? e.message : (e as Error)?.message ?? 'Yuklashda xatolik';
+      setSubmitError(msg);
     }
   };
 

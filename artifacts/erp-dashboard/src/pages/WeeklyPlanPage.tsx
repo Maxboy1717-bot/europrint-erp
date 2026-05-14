@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { getAuthHeaders, apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { type WeeklyPlan, type PlanResponse, getMondayOfWeek, getWeekLabel, MANAGER_ROLES } from "./WeeklyPlanPageTypes";
 import { WeeklyPlanHeader, WeekNavigator, MyPlanSection, ManagerApprovalSection } from "./WeeklyPlanPageSections";
 
@@ -34,9 +34,7 @@ export default function WeeklyPlanPage() {
         : empId != null
         ? `/api/weekly-plans?employee_id=${empId}&week=${week}`
         : `/api/weekly-plans?week=${week}`;
-      const res = await fetch(url, { headers: getAuthHeaders() });
-      if (!res.ok) throw new Error("Yuklab bo'lmadi");
-      return res.json();
+      return await apiRequest<PlanResponse>('GET', url);
     },
   });
 
@@ -57,7 +55,7 @@ export default function WeeklyPlanPage() {
       if (!gsdTarget.trim()) throw new Error("GSD maqsad talab qilinadi");
       if (top5_tasks.length === 0) throw new Error("Kamida 1 ta vazifa kiriting");
 
-      const res = await apiRequest('POST', "/api/weekly-plans", {
+      return await apiRequest<{ updated?: boolean }>('POST', "/api/weekly-plans", {
         employee_id: user?.id,
         week,
         gsd_target: gsdTarget.trim(),
@@ -65,11 +63,6 @@ export default function WeeklyPlanPage() {
         success_factors: successFactors.trim() || undefined,
         resources_needed: resourcesNeeded.trim() || undefined,
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Saqlashda xatolik");
-      }
-      return res.json();
     },
     onSuccess: (data) => {
       toast({ title: data.updated ? "Reja yangilandi" : "Reja yuborildi", description: `${getWeekLabel(week)} hafta` });
@@ -83,9 +76,7 @@ export default function WeeklyPlanPage() {
 
   const approveMutation = useMutation({
     mutationFn: async (planId: number) => {
-      const res = await apiRequest('PATCH', `/api/weekly-plans/${planId}/approve`);
-      if (!res.ok) throw new Error("Tasdiqlashda xatolik");
-      return res.json();
+      return await apiRequest('PATCH', `/api/weekly-plans/${planId}/approve`);
     },
     onSuccess: () => {
       toast({ title: "Reja tasdiqlandi" });

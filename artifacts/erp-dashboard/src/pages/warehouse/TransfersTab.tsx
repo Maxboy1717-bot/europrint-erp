@@ -54,9 +54,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
       const params = new URLSearchParams();
       if (statusFilter) params.append("status", statusFilter);
       if (params.toString()) url += `?${params.toString()}`;
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch transfers");
-      return res.json();
+      return await apiRequest<TransferData[]>('GET', url);
     },
   });
 

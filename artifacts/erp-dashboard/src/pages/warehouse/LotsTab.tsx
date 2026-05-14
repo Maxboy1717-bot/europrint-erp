@@ -73,9 +73,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
     queryFn: async () => {
       if (!warehouseId) return { data: [], total: 0, fifoWarnings: 0, expiryWarnings: 0 };
       const url = `/api/warehouse/warehouses/${warehouseId}/lots${statusFilter ? `?status=${statusFilter}` : ""}`;
-      const r = await fetch(url, { credentials: "include" });
-      if (!r.ok) throw new Error("Lotlarni yuklashda xatolik");
-      return r.json();
+      return await apiRequest<LotsResponse>('GET', url);
     },
     enabled: !!warehouseId,
   });
@@ -83,9 +81,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editLot) return;
-      const r = await apiRequest('PATCH', `/api/warehouse/warehouses/${warehouseId}/lots/${editLot.id}`, editForm);
-      if (!r.ok) throw new Error("Yangilashda xatolik");
-      return r.json();
+      return await apiRequest('PATCH', `/api/warehouse/warehouses/${warehouseId}/lots/${editLot.id}`, editForm);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/warehouse/warehouses", warehouseId, "lots"] });

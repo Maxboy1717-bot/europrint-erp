@@ -81,9 +81,7 @@ export function QCStandardsTab() {
       const params = new URLSearchParams();
       if (filterType) params.append("type", filterType);
       const url = `/api/qc/standards${params.toString() ? `?${params.toString()}` : ""}`;
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch standards");
-      return res.json();
+      return await apiRequest<QcStandard[]>('GET', url);
     }
   });
 

@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import type { HrcSession, HrcQuestion, TestResults, TestState } from "./HRCapitalPublicTestTypes";
 import { getTestTypeConfig, API_BASE } from "./HRCapitalPublicTestTypes";
+import { apiRequest, HttpError } from "@/lib/queryClient";
 import {
   LoadingScreen, SubmittingScreen, ExpiredScreen, ErrorScreen,
   CompletedScreen, IntroScreen, ReplicationScreen,
@@ -26,8 +27,12 @@ export default function HRCapitalPublicTest() {
 
   useEffect(() => {
     if (!token) { setTestState("error"); setError("Token topilmadi"); return; }
-    fetch(`${API_BASE}/${token}`)
-      .then(r => r.json())
+    apiRequest<{
+      error?: string;
+      completed?: boolean;
+      session: HrcSession & { current_q_idx?: number; results?: TestResults; score?: number };
+      questions?: HrcQuestion[];
+    }>('GET', `${API_BASE}/${token}`)
       .then(data => {
         if (data.error) {
           if (data.error.includes("muddati")) { setTestState("expired"); return; }
@@ -35,7 +40,7 @@ export default function HRCapitalPublicTest() {
         }
         if (data.completed) {
           setSession(data.session);
-          setResults(data.session.results || { score: data.session.score });
+          setResults(data.session.results || ({ score: data.session.score } as TestResults));
           setTestState("completed");
           return;
         }
@@ -44,17 +49,24 @@ export default function HRCapitalPublicTest() {
         setCurrentIdx(data.session.current_q_idx ?? 0);
         setTestState("intro");
       })
-      .catch(() => { setError("Server bilan aloqa xatosi"); setTestState("error"); });
+      .catch((err: unknown) => {
+        if (err instanceof HttpError) {
+          setError(err.message);
+        } else {
+          setError("Server bilan aloqa xatosi");
+        }
+        setTestState("error");
+      });
   }, [token]);
 
   const saveAnswer = async (idx: number, answer: number): Promise<Record<number, number>> => {
     const newAnswers = { ...answers, [idx]: answer };
     setAnswers(newAnswers);
-    await fetch(`${API_BASE}/${token}/answer`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question_idx: idx, answer }),
-    });
+    try {
+      await apiRequest('POST', `${API_BASE}/${token}/answer`, { question_idx: idx, answer });
+    } catch {
+      // best-effort save; ignore errors
+    }
     return newAnswers;
   };
 
@@ -72,17 +84,13 @@ export default function HRCapitalPublicTest() {
     try {
       const body: { replication_text?: string } = {};
       if (session?.test_type === "replication") body.replication_text = replicationText;
-      const res = await fetch(`${API_BASE}/${token}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
+      const data = await apiRequest<TestResults & { error?: string }>('POST', `${API_BASE}/${token}/submit`, body);
       if (data.error) { setError(data.error); setTestState("error"); return; }
       setResults(data);
       setTestState("results");
-    } catch {
-      setError("Test yuborishda xatolik"); setTestState("error");
+    } catch (err) {
+      const msg = err instanceof HttpError ? err.message : "Test yuborishda xatolik";
+      setError(msg); setTestState("error");
     }
   };
 
