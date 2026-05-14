@@ -89,5 +89,6 @@
   "validate.stirLabel": "Метка ИНН",
   "validate.check": "Проверить",
   "validate.card": "Карта",
-  "validate.cardLabel": "Метка карты"
+  "validate.cardLabel": "Метка карты",
+  "dashboard9": "Дашборд 9"
 }

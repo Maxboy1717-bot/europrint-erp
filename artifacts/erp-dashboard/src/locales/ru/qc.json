@@ -70,5 +70,15 @@
   "supplierQc.passRate": "% прохождения",
   "supplierQc.score": "Балл",
   "supplierQc.grade": "Класс",
-  "supplierQc.trend": "Тренд"
+  "supplierQc.trend": "Тренд",
+  "berildi1": "Выдано",
+  "kategoriya1": "Категория",
+  "mahsulot": "Продукт",
+  "markaz": "Центр",
+  "mijoz": "Клиент",
+  "miqdor": "Количество",
+  "muddati1": "Срок",
+  "qabul": "Приём",
+  "sana1": "Дата",
+  "yoqotish": "Потеря"
 }

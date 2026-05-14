@@ -59,5 +59,6 @@
   "channelCyan": "Голубой (C)",
   "channelMagenta": "Пурпурный (M)",
   "channelYellow": "Жёлтый (Y)",
-  "channelBlack": "Чёрный (K)"
+  "channelBlack": "Чёрный (K)",
+  "qty1": "Кол-во"
 }

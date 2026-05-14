@@ -393,7 +393,7 @@
   "recencyLabel": "Давность (Recency)",
   "frequencyLabel": "Частота (Frequency)",
   "monetaryLabel": "Сумма (Monetary)",
-  "deal001": "deal-001",
+  "deal001": "сделка-001",
   "winRate1": "% выигранных сделок",
   "activityType.call": "Звонок",
   "activityType.meeting": "Встреча",
@@ -403,5 +403,18 @@
   "calendar.prevMonth": "Предыдущий месяц",
   "calendar.nextMonth": "Следующий месяц",
   "calendar.today": "Сегодня",
-  "calendar.morePlus": "+{n} ещё"
+  "calendar.morePlus": "+{n} ещё",
+  "bitimBosqichiniYangilash": "Обновить этап сделки",
+  "bitimId": "ID сделки",
+  "bitimniYopish": "Закрыть сделку",
+  "bosqichNomi": "Название этапа",
+  "bosqichTanlang": "Выберите этап",
+  "bosqichniYangilash": "Обновить этап",
+  "cohort": "Когорта",
+  "crmFaoliyatlar": "CRM Активности",
+  "dashboard9": "Дашборд 9",
+  "natija": "Результат",
+  "natijaniTanlang": "Выберите результат",
+  "yangiBosqich": "Новый этап",
+  "yopishSanasi": "Дата закрытия"
 }

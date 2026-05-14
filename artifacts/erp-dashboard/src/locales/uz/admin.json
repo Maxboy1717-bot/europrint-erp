@@ -85,9 +85,10 @@
   "validate.invalid": "Noto'g'ri",
   "validate.title": "Sarlavha",
   "validate.description": "Tavsif",
-  "validate.stir": "stir",
+  "validate.stir": "Stir",
   "validate.stirLabel": "Stir Yorliq",
-  "validate.check": "check",
-  "validate.card": "card",
-  "validate.cardLabel": "Card Yorliq"
+  "validate.check": "Check",
+  "validate.card": "Card",
+  "validate.cardLabel": "Card Yorliq",
+  "dashboard9": "Dashboard 9"
 }
