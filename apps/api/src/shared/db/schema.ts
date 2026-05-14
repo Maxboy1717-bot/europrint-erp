@@ -76,12 +76,16 @@ import { overtime_policy, employee_separation } from './schema-hr-overtime';
 
 const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
-// In test/CI environments DATABASE_URL is often unset — return a stub Pool
-// that throws only when used, so unit tests that don't actually hit the DB
+// In test/CI environments DATABASE_URL is often unset or empty — return a stub
+// Pool that throws only when used, so unit tests that don't actually hit the DB
 // can `import` from @shared/db without crashing at module-load time.
+//
+// NOTE: use `||` not `??` because GitHub Actions sets `DATABASE_URL` to an empty
+// string when the secret is missing; `??` would not fall through on `""`.
 const TEST_STUB_URL = 'postgres://stub:stub@localhost:5432/stub';
+const isTestEnv = process.env.NODE_ENV === 'test' || !!process.env.JEST_WORKER_ID || !!process.env.VITEST;
 const effectiveConnString = connectionString
-  ?? (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID ? TEST_STUB_URL : null);
+  || (isTestEnv ? TEST_STUB_URL : null);
 
 if (!effectiveConnString) {
   throw new InternalServerErrorException('DATABASE_URL environment variable is not set');
