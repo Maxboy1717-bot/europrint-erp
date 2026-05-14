@@ -18,10 +18,8 @@ import { Landmark, Plus } from "lucide-react";
 import type { BankAccount } from "./profile-types";
 import type { BankCardProps } from "./PersonalTabTypes";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from "@/lib/i18n";
 
 export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDialogOpen, setBankDialogOpen, bankForm, setBankForm, saveBankMutation, }: BankCardProps) {
-  const { t } = useTranslation("common");
   const accounts = Array.isArray(bankAccounts) ? bankAccounts : [];
 
   return (

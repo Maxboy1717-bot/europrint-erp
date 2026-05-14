@@ -78,6 +78,7 @@ interface ReportListProps {
 }
 
 export function ReportList({ filteredReports, selected, onSelect }: ReportListProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="lg:col-span-1 space-y-2 max-h-[80vh] overflow-y-auto pr-2">
       {filteredReports.map(r => (
@@ -120,6 +121,7 @@ interface ReportViewerProps {
 }
 
 export function ReportViewer({ selected, data, loading, error, onRefresh }: ReportViewerProps) {
+  const { t } = useTranslation("common");
   if (!selected) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-10 text-center">
@@ -214,6 +216,7 @@ interface FiltersBarProps {
 }
 
 export function FiltersBar({ search, onSearch, categoryFilter, onCategory }: FiltersBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex gap-3 mb-4 flex-wrap">
       <input

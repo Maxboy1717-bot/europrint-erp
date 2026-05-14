@@ -37,6 +37,7 @@ function CheckpointForm({
   onBomChange, onRoutingChange, onTechCardChange,
   comments, onCommentsChange, allChecked,
 }: CheckpointFormProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="space-y-3 rounded-md border p-4 bg-muted/30">
@@ -198,6 +199,7 @@ export function RejectDialog({
   returnTo, onReturnToChange,
   isPending, onConfirm,
 }: RejectDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
@@ -265,6 +267,7 @@ interface HistoryDialogProps {
 }
 
 export function HistoryDialog({ open, onOpenChange, selectedOrder }: HistoryDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">

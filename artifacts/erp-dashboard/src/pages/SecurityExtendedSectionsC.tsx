@@ -112,6 +112,7 @@ interface RatingSectionProps {
 }
 
 export function RatingSection({ violationsCount }: RatingSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">{t("xavfsizlikReytingiVaKpi")}</h2>

@@ -150,6 +150,7 @@ export function CreateFormCard({
   departments,
   positions,
 }: CreateFormCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

@@ -88,6 +88,7 @@ interface SalaryHistoryCardProps {
 }
 
 export function SalaryHistoryCard({ salaryHistory }: SalaryHistoryCardProps) {
+  const { t } = useTranslation("common");
   const chartData = (Array.isArray(salaryHistory) ? salaryHistory : []).slice(0, 12).reverse().map(h => ({
     date: h.effectiveDate ? h.effectiveDate.slice(0, 7) : "?",
     maosh: h.newSalary || 0,
@@ -130,6 +131,7 @@ interface BenchmarkCardProps {
 }
 
 export function BenchmarkCard({ loadingBenchmark, salaryBenchmark, baseSalary }: BenchmarkCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-salary-benchmark">
       <CardHeader>

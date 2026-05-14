@@ -10,6 +10,7 @@ import React from 'react';
 import { LanguageProvider, useLanguageContext } from '../context';
 import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY } from '../constants';
 import { safeStorage } from '@/lib/safeStorage';
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ function LanguageDisplay() {
 }
 
 function TranslationDisplay({ module = 'common' }: { module?: string }) {
+  const { t } = useTranslation("common");
   const { t } = useLanguageContext();
   return <div data-testid="translation">{t('save', module as never)}</div>;
 }

@@ -76,6 +76,7 @@ export function PpShiftsSection({ shifts, loading }: PpShiftsProps) {
 // ─── PP: Rush Orders ──────────────────────────────────────────────────────────
 interface PpRushProps { rushOrders: ProductionOrder[]; loading: boolean; }
 export function PpRushSection({ rushOrders, loading }: PpRushProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="pp-rush" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
@@ -168,6 +169,7 @@ export function PpDemandSection() {
 // ─── PP: OEE Monitor ──────────────────────────────────────────────────────────
 interface PpOeeProps { oeeData: OeeData | undefined; loading: boolean; }
 export function PpOeeSection({ oeeData, loading }: PpOeeProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="pp-oee" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">OEE Monitor (Real-time)</h2>

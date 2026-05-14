@@ -100,6 +100,7 @@ function RejectModal({
   onSubmit: (reason: string) => Promise<void>;
   t: (k: string) => string;
 }) {
+  const { t } = useTranslation("common");
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr]       = useState("");
@@ -157,6 +158,7 @@ function StatusTimeline({
   currentStatus: string;
   statusHistory?: StatusEvent[];
 }) {
+  const { t } = useTranslation("common");
   const isRejected  = currentStatus === "REJECTED" || currentStatus === "CANCELLED";
   const currentIdx  = TIMELINE_STEPS.indexOf(currentStatus);
 
@@ -256,7 +258,6 @@ function StatusTimeline({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function RequisitionDetail() {
-  const { t } = useTranslation("common");
   const [, navigate]            = useLocation();
   const [match, params]         = useRoute("/pos-monitor/requests/:id");
   const { t }                   = usePosI18n();

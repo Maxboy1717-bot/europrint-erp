@@ -53,6 +53,7 @@ type KpiSummaryProps = Pick<
 export function KpiSummaryCards({
   t, loadingAbc, loadingProgress, abcData, courseProgress, attendanceStats, getGradeColor,
 }: KpiSummaryProps) {
+  const { t } = useTranslation("common");
   if (loadingAbc || loadingProgress) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -126,6 +127,7 @@ export function KpiSummaryCards({
 type AbcChartSectionProps = Pick<PerformanceTabProps, "tCommon" | "abcData" | "metrics" | "getGradeColor">;
 
 export function AbcChartSection({ tCommon, abcData, metrics, getGradeColor }: AbcChartSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {abcData ? (
@@ -219,6 +221,7 @@ export function AbcChartSection({ tCommon, abcData, metrics, getGradeColor }: Ab
 type CourseStatsSectionProps = Pick<PerformanceTabProps, "courseProgress">;
 
 export function CourseStatsSection({ courseProgress }: CourseStatsSectionProps) {
+  const { t } = useTranslation("common");
   if (!courseProgress || courseProgress.length === 0) return null;
   const completed = (Array.isArray(courseProgress) ? courseProgress : []).filter(p => p.isCompleted).length;
   const completionPct = courseProgress.length > 0 ? Math.round((completed / courseProgress.length) * 100) : 0;

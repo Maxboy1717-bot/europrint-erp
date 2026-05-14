@@ -43,6 +43,7 @@ function getTypeCfg(type: string | null) {
 }
 
 function WarehouseCard({ wh }: { wh: Warehouse }) {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const cfg = getTypeCfg(wh.type);
   const maxQty = 1000; // for progress bar scaling
@@ -149,7 +150,6 @@ function WarehouseCard({ wh }: { wh: Warehouse }) {
 }
 
 export default function PosWarehouses() {
-  const { t } = useTranslation("common");
   const { t }         = usePosI18n();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading]       = useState(true);

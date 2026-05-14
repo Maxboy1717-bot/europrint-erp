@@ -37,6 +37,7 @@ interface Props {
 }
 
 function OperatorReportCard({ report }: { report: DailyReport }) {
+  const { t } = useTranslation("common");
   let productionData: Record<string, unknown> = {};
   try {
     if (report.tasks_completed) {

@@ -78,6 +78,7 @@ export function AddTenantDialog({ open, onOpenChange, newTenant, setNewTenant, i
   setNewTenant: React.Dispatch<React.SetStateAction<{ name: string; domain: string; plan: string; contactEmail: string; contactPhone: string }>>;
   isPending: boolean; onSubmit: () => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
@@ -113,6 +114,7 @@ export function EditModulesDialog({ editModulesDialog, modules, selectedModules,
   setSelectedModules: React.Dispatch<React.SetStateAction<string[]>>;
   isPending: boolean; onClose: () => void; onSave: () => void;
 }) {
+  const { t } = useTranslation("common");
   if (!editModulesDialog) return null;
   return (
     <Dialog open={!!editModulesDialog} onOpenChange={() => onClose()}>
@@ -143,6 +145,7 @@ export function AuditLogTab({ auditLogs, auditLoading, auditTotal, auditLimit, a
   onFilterChange: (key: keyof AuditFilters, value: string) => void; onResetFilters: () => void;
   onPageChange: (page: number) => void; onViewDetail: (log: AuditLogEntry) => void;
 }) {
+  const { t } = useTranslation("common");
   const hasFilters = !!(auditFilters.action || auditFilters.table || auditFilters.search || auditFilters.from || auditFilters.to || auditFilters.userId);
   return (
     <div className="space-y-4">
@@ -201,6 +204,7 @@ export function AuditLogTab({ auditLogs, auditLoading, auditTotal, auditLimit, a
 // ── Audit Detail Dialog ───────────────────────────────────────────────────────
 
 export function AuditDetailDialog({ log, onClose }: { log: AuditLogEntry | null; onClose: () => void }) {
+  const { t } = useTranslation("common");
   if (!log) return null;
   return (
     <Dialog open={!!log} onOpenChange={() => onClose()}>

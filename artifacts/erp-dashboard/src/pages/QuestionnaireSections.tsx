@@ -101,6 +101,7 @@ export function QuestionsSection({
   onDelete,
   isDeleting,
 }: QuestionsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
@@ -173,6 +174,7 @@ export function ResponsesSection({
   onDelete,
   isDeleting,
 }: ResponsesSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

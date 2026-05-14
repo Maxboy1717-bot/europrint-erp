@@ -83,6 +83,7 @@ interface OfflineHeaderBadgeProps {
 }
 
 export function OfflineHeaderBadge({ isOnline, pendingCount, syncStatus }: OfflineHeaderBadgeProps) {
+  const { t } = useTranslation("common");
   if (!isOnline) {
     return (
       <Badge variant="outline" className="flex items-center gap-1 border-amber-400 text-[var(--ep-yellow)] dark:text-amber-400 bg-amber-50 dark:bg-amber-950">

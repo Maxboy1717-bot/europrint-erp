@@ -84,6 +84,7 @@ export function VendorsTableCard({
   onEditClick,
   onDeleteClick,
 }: VendorsTableCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-none rounded-xl">
       <CardHeader>
@@ -156,6 +157,7 @@ interface VendorsTableProps {
 }
 
 function VendorsTable({ vendors, onEditClick, onDeleteClick }: VendorsTableProps) {
+  const { t } = useTranslation("common");
   const headCls =
     "bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6";
 

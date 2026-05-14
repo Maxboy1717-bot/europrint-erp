@@ -90,6 +90,7 @@ interface PaymentChartCardProps {
 
 /** Horizontal bar chart showing revenue broken down by payment method. */
 export function PaymentChartCard({ rows }: PaymentChartCardProps) {
+  const { t } = useTranslation("common");
   const data = buildPaymentChartData(rows);
   return (
     <Card>
@@ -126,6 +127,7 @@ interface DailySalesTableProps {
 
 /** Table listing every sale that occurred today. */
 export function DailySalesTable({ daily }: DailySalesTableProps) {
+  const { t } = useTranslation("common");
   const sales = Array.isArray(daily?.sales) ? daily!.sales : [];
   return (
     <Card>

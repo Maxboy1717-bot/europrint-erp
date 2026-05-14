@@ -169,6 +169,7 @@ interface PositionDeleteDialogProps {
 }
 
 export function PositionDeleteDialog({ deleteId, onOpenChange, onConfirm }: PositionDeleteDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <ConfirmDialog
       open={!!deleteId}
@@ -199,6 +200,7 @@ interface KpiTemplateDialogProps {
 export function KpiTemplateDialog({
   position, selectedTemplate, setSelectedTemplate, isPending, onClose, onAssign,
 }: KpiTemplateDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog
       open={!!position}

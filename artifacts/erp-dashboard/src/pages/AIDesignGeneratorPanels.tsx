@@ -52,6 +52,7 @@ export function AiCheckPanel({
   isVerifying: boolean;
   onVerify: (designId: string) => void;
 }) {
+  const { t } = useTranslation("common");
   const allChecks = ["spelling_uz", "spelling_ru", "spelling_en", "bleed", "cmyk", "logo_quality", "overall"];
   const checkMap: Record<string, AiCheckResult> = {};
   for (const c of checks) checkMap[c.check_type] = c;

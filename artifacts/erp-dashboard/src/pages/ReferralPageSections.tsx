@@ -61,6 +61,7 @@ interface MyReferralsTabProps {
 }
 
 export function MyReferralsTab({ referrals, isLoading, onAddOpen }: MyReferralsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-0">
@@ -133,6 +134,7 @@ interface AllReferralsTabProps {
 }
 
 export function AllReferralsTab({ referrals, isLoading, onEdit }: AllReferralsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-0">
@@ -201,6 +203,7 @@ interface BoomerangTabProps {
 }
 
 export function BoomerangTab({ alumni }: BoomerangTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

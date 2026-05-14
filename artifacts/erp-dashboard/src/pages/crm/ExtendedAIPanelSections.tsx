@@ -58,6 +58,7 @@ export function VoicePanel({callTranscript, onTranscriptChange, onAnalyze, loadi
 interface ChatPanelProps { chatMessage: string; onMessageChange: (v: string) => void; onSend: () => void; loading: boolean; chatResponse: { reply: string; intent: string; confidence: number } | null; }
 
 export function ChatPanel({ chatMessage, onMessageChange, onSend, loading, chatResponse }: ChatPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
       <h4 className="font-medium flex items-center gap-2"><MessageCircle className="h-4 w-4 text-primary" />{t("aiChatYordamchi")}</h4>
@@ -85,6 +86,7 @@ export function ChatPanel({ chatMessage, onMessageChange, onSend, loading, chatR
 interface ChurnPanelProps { onAnalyze: () => void; loading: boolean; churnData: { summary: { highRisk: number; mediumRisk: number; lowRisk: number }; atRiskCustomers: ChurnData[] } | null; }
 
 export function ChurnPanel({ onAnalyze, loading, churnData }: ChurnPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
       <h4 className="font-medium flex items-center gap-2"><UserMinus className="h-4 w-4 text-primary" />{t("churnTahlili")}</h4>
@@ -127,6 +129,7 @@ export function ChurnPanel({ onAnalyze, loading, churnData }: ChurnPanelProps) {
 interface AutoTasksPanelProps { onSuggest: () => void; onCreateAll: (tasks: AutoTask[]) => void; loading: boolean; suggestedTasks: AutoTask[]; }
 
 export function AutoTasksPanel({ onSuggest, onCreateAll, loading, suggestedTasks }: AutoTasksPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
       <h4 className="font-medium flex items-center gap-2"><ListChecks className="h-4 w-4 text-primary" />{t("avtomatikVazifalar")}</h4>
@@ -187,6 +190,7 @@ function SupervisorList({ items, color, icon, label, renderBadge }: {
 interface SupervisorPanelProps { onLoad: () => void; loading: boolean; supervisorData: SupervisorData | null; }
 
 export function SupervisorPanel({ onLoad, loading, supervisorData }: SupervisorPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
       <h4 className="font-medium flex items-center gap-2"><UserCog className="h-4 w-4 text-primary" />{"AI nazoratchi paneli"}</h4>

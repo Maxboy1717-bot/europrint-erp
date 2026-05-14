@@ -9,7 +9,6 @@ import { usePosI18n } from "../i18n/usePosI18n";
 import { reportsApi, stockApi, movementsApi } from "../api/pos-monitor.api";
 import { usePOSSocket } from "../hooks/usePOSSocket";
 import PosBarcodeScanner from "../components/PosBarcodeScanner";
-import { useTranslation } from '@/lib/i18n';
 
 interface KpiData { todayMovementsCount?: number; todayTotalAmount?: number; pendingApprovalCount?: number; lowStockCount?: number; }
 interface Movement { id: number; movementType: string; status: string; totalAmount?: number; createdAt: string; movementNumber?: string; }
@@ -42,7 +41,6 @@ const fmt  = (n: number) => new Intl.NumberFormat("uz-UZ").format(n);
 const fmtT = (d: string) => new Date(d).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
 
 export default function PosDashboard() {
-  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [kpi, setKpi]                   = useState<KpiData>({});

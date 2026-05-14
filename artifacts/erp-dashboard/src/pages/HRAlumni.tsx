@@ -63,6 +63,7 @@ function InviteDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [message, setMessage] = useState("");
 

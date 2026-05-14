@@ -166,6 +166,7 @@ function PinnedBanner({
   pinnedMessage: NonNullable<ChatLayoutMessagesProps["pinnedMessage"]>;
   onUnpin: () => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-2 px-4 py-1.5 bg-[var(--tg-header-bg)] border-b border-[var(--tg-border)] flex-shrink-0">
       <Pin className="w-3.5 h-3.5 text-[var(--tg-sidebar-active)] flex-shrink-0 rotate-45" />
@@ -205,6 +206,7 @@ function VideoCallPanel({
   onToggleMinimize: () => void;
   onToggleHeight: () => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div
       className="flex-shrink-0 border-t border-[var(--tg-border)] bg-[#0d1117] flex flex-col transition-all duration-200"
@@ -277,6 +279,7 @@ function EditIndicator({
   content: string;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="mx-3 mb-1 px-3 py-2 bg-[var(--tg-action-bar-bg)] border-l-2 border-[var(--tg-sidebar-active)] rounded-lg flex items-center justify-between shadow-sm">
       <div className="min-w-0">

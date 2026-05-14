@@ -10,7 +10,6 @@
 
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
-import { useTranslation } from '@/lib/i18n';
 
 interface MovementTypeConfig {
   value: string;
@@ -97,7 +96,6 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
 ];
 
 export default function PosMovementNew() {
-  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
 

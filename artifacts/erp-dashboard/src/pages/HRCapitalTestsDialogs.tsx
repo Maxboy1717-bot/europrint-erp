@@ -227,6 +227,7 @@ interface ResultDetailDialogProps {
 }
 
 export function ResultDetailDialog({ session, onClose }: ResultDetailDialogProps) {
+  const { t } = useTranslation("common");
   if (!session) return null;
 
   return (

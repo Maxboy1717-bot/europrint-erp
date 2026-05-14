@@ -109,6 +109,7 @@ interface ExitInterviewCardProps {
 }
 
 export function ExitInterviewCard({ oCase, showInterviewForm, onShowForm, formSlot }: ExitInterviewCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -167,6 +168,7 @@ interface EquipmentReturnCardProps {
 }
 
 export function EquipmentReturnCard({ oCase, equipmentItems, onMarkItem, isPending }: EquipmentReturnCardProps) {
+  const { t } = useTranslation("common");
   if (equipmentItems.length === 0) return null;
   return (
     <Card>

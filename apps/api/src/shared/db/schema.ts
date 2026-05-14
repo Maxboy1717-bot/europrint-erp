@@ -76,11 +76,18 @@ import { overtime_policy, employee_separation } from './schema-hr-overtime';
 
 const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
-if (!connectionString) {
+// In test/CI environments DATABASE_URL is often unset — return a stub Pool
+// that throws only when used, so unit tests that don't actually hit the DB
+// can `import` from @shared/db without crashing at module-load time.
+const TEST_STUB_URL = 'postgres://stub:stub@localhost:5432/stub';
+const effectiveConnString = connectionString
+  ?? (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID ? TEST_STUB_URL : null);
+
+if (!effectiveConnString) {
   throw new InternalServerErrorException('DATABASE_URL environment variable is not set');
 }
 
-export const pool = new Pool({ connectionString });
+export const pool = new Pool({ connectionString: effectiveConnString });
 export const db = drizzle(pool);
 
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';

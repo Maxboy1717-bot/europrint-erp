@@ -87,6 +87,7 @@ interface CreateRequestDialogProps {
 }
 
 export function CreateRequestDialog({ open, onOpenChange, form, onSubmit, isPending }: CreateRequestDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

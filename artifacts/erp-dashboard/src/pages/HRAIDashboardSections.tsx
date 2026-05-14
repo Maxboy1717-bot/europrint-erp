@@ -73,6 +73,7 @@ interface ProvidersBudgetSectionProps {
 }
 
 export function ProvidersBudgetSection({ budgetItems, providers }: ProvidersBudgetSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 mb-8 shadow-sm">
       <h2 className="text-lg font-semibold text-foreground mb-4">{t("provayderlarVaByudjet")}</h2>
@@ -141,6 +142,7 @@ interface TaskTypeGridProps {
 }
 
 export function TaskTypeGrid({ onSelectTask }: TaskTypeGridProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-foreground mb-4">{t("aiVazifalar")}</h2>
@@ -173,6 +175,7 @@ interface RecentTasksPanelProps {
 }
 
 export function RecentTasksPanel({ dashboard, getStatusBadge }: RecentTasksPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-foreground mb-4">{t("songgiNatijalar")}</h2>

@@ -148,6 +148,7 @@ export function DeleteQuestionAlert({
   onOpenChange,
   onConfirm,
 }: DeleteQuestionAlertProps) {
+  const { t } = useTranslation("common");
   return (
     <AlertDialog open={deleteId !== null} onOpenChange={open => !open && onOpenChange(false)}>
       <AlertDialogContent>

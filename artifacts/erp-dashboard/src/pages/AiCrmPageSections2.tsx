@@ -111,6 +111,7 @@ interface ActionsTabContentProps {
 }
 
 export function ActionsTabContent({ deals, dealsLoading, aiResults, actionPending, actionVariable, onGetAction }: ActionsTabContentProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>

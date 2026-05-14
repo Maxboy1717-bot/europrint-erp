@@ -42,6 +42,7 @@ interface CampaignStats {
 }
 
 function CampaignStatsRow({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation("common");
   const { data: stats, isLoading } = useQuery<CampaignStats>({
     queryKey: ["/api/marketing/campaigns", campaignId, "stats"],
     queryFn: () => apiRequest('GET', `/api/marketing/campaigns/${campaignId}/stats`).then(r => r.json()),

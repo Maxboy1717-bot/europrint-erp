@@ -183,6 +183,7 @@ export function GeneratePanel({
   onGenerate,
   onCopy,
 }: GeneratePanelProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">

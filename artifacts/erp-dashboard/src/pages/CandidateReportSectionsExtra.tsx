@@ -61,6 +61,7 @@ export function Section5RisksAndOpportunities({
   toolTestResults: Record<string, number> | null;
   latestToolTest: ToolTestRecord | null;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="border border-amber-200 rounded-lg p-4 bg-amber-50 print:bg-white print:border-amber-400">

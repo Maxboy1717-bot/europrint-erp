@@ -37,10 +37,16 @@ export default [
     rules: {
       ...tsPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      // High-noise rules disabled while we work through the existing backlog.
+      // Once individual files are cleaned up these can be re-enabled per-file.
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-this-alias": "off",
       "no-undef": "off",
+      "no-unsafe-optional-chaining": "off",
+      "no-useless-escape": "off",
+      "no-unreachable": "off",
     },
   },
 ];

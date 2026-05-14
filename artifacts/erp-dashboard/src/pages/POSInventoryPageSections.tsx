@@ -132,6 +132,7 @@ export function ProductsTab({
   onSearchChange,
   onAdjustProduct,
 }: ProductsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="products" className="m-0 p-4 space-y-3">
       <div className="relative max-w-sm">
@@ -217,6 +218,7 @@ interface LowStockTabProps {
 }
 
 export function LowStockTab({ lowStock, onAdjustProduct }: LowStockTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="low-stock" className="m-0 p-4">
       {lowStock.length === 0 ? (

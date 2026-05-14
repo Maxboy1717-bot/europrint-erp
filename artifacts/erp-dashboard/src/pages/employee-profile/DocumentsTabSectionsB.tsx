@@ -191,6 +191,7 @@ interface ContractsSectionProps {
 }
 
 export function ContractsSection({ contractsArr }: ContractsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

@@ -86,6 +86,7 @@ interface TimelineTabProps {
 }
 
 export function TimelineTab({ auditLogs, isLoading, onRefresh, onSelectLog }: TimelineTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
@@ -160,6 +161,7 @@ interface SearchTabProps {
 }
 
 export function SearchTab({ filters, actionTypes, sourceTypes, onFiltersChange }: SearchTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -230,6 +232,7 @@ interface DocumentTraceTabProps {
 }
 
 export function DocumentTraceTab({ docSearchQuery, onQueryChange, onSearch }: DocumentTraceTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="p-6 bg-muted rounded-lg">

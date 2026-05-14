@@ -170,6 +170,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
+  const { t } = useTranslation("common");
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
   if (collapsible === "none") {
@@ -265,6 +266,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
+  const { t } = useTranslation("common");
   const { toggleSidebar } = useSidebar()
 
   return (
@@ -287,6 +289,7 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
+  const { t } = useTranslation("common");
   const { toggleSidebar } = useSidebar()
 
   // Note: Tailwind v3.4 doesn't support "in-" selectors. So the rail won't work perfectly.

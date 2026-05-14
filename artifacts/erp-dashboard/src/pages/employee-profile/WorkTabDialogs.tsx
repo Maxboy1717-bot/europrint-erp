@@ -35,7 +35,6 @@ import { TrendingUp, Plus } from "lucide-react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { SalaryHistoryRecord, SalaryForm, TranslationFn } from "./WorkTabTypes";
 import { SalaryHistoryTable } from "./WorkTabTables";
-import { useTranslation } from "@/lib/i18n";
 
 interface SalarySectionProps {
   t: TranslationFn;
@@ -50,7 +49,6 @@ interface SalarySectionProps {
 }
 
 export function SalarySection({ t, tCommon, salaryDialogOpen, setSalaryDialogOpen, salaryForm, setSalaryForm, saveSalaryChangeMutation, loadingSalaryHistory, salaryHistory, }: SalarySectionProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">

@@ -103,6 +103,7 @@ interface MonthlyTrendSectionProps {
 }
 
 export function MonthlyTrendSection({ trendData }: MonthlyTrendSectionProps) {
+  const { t } = useTranslation("common");
   if (trendData.length === 0) return null;
   return (
     <Card>
@@ -150,6 +151,7 @@ interface StageBreakdownSectionProps {
 }
 
 export function StageBreakdownSection({ kpi }: StageBreakdownSectionProps) {
+  const { t } = useTranslation("common");
   const total = (Array.isArray(kpi.byStage) ? kpi.byStage : []).reduce(
     (a, b) => a + parseInt(b.count),
     0,

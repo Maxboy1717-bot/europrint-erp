@@ -41,6 +41,7 @@ export function CenteredBar({ value, color }: { value: number; color: string }) 
 // ─── Summary KPI Cards (top row) ──────────────────────────────────────────────
 
 export function HRCapitalSummaryCards({ profile }: { profile: HRCapitalProfile | null | undefined }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className={`border ${profile?.visotskiyCategory ? (VISOTSKIY_COLORS[profile.visotskiyCategory] || "") : ""}`}>
@@ -96,6 +97,7 @@ export function HRCapitalSummaryCards({ profile }: { profile: HRCapitalProfile |
 // ─── Profile read-only view ────────────────────────────────────────────────────
 
 export function HRCapitalProfileView({ profile }: { profile: HRCapitalProfile }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
@@ -147,6 +149,7 @@ export function HRCapitalProfileView({ profile }: { profile: HRCapitalProfile })
 // ─── Test History ──────────────────────────────────────────────────────────────
 
 export function HRCapitalTestHistory({ employeeId }: { employeeId: string }) {
+  const { t } = useTranslation("common");
   const { data } = useQuery<{ data: Record<string, unknown>[] }>({
     queryKey: ["/api/hr/hrc-tests/employee", employeeId, "results"],
     queryFn: async () => {

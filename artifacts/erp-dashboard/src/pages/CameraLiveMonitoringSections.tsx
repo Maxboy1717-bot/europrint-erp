@@ -140,6 +140,7 @@ interface GroupedTabProps {
 }
 
 export function GroupedTab({ groupedLoading, groupedData }: GroupedTabProps) {
+  const { t } = useTranslation("common");
   if (groupedLoading) {
     return (
       <div className="text-center py-24 bg-card rounded-lg border-none">
@@ -239,6 +240,7 @@ interface StreamTabProps {
 }
 
 export function StreamTab({ streamLoading, streamData }: StreamTabProps) {
+  const { t } = useTranslation("common");
   return (
     <CardContent>
       {streamLoading ? (

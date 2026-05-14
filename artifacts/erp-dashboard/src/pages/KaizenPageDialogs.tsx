@@ -21,6 +21,7 @@ import { useTranslation } from '@/lib/i18n';
 // ── SubmitForm ────────────────────────────────────────────────────────────────
 
 function SubmitForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState({ title: "", description: "", expectedImpact: "" });
 
@@ -91,6 +92,7 @@ function SubmitForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
 function StatusDialogBody({
   suggestion, onClose, onSuccess,
 }: { suggestion: KaizenSuggestion; onClose: () => void; onSuccess: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [newStatus, setNewStatus]           = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
@@ -204,6 +206,7 @@ interface KaizenStatusDialogProps {
 }
 
 export function KaizenStatusDialog({ target, onClose, onSuccess }: KaizenStatusDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={!!target} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent>

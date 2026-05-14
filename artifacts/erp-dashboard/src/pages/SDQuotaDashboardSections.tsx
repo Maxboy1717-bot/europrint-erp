@@ -141,6 +141,7 @@ export function KpiStatsRow({
   conversionRate,
   totalProposals,
 }: KpiStatsRowProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="bg-card border-none shadow-sm">
@@ -211,6 +212,7 @@ interface LeadStatusCardProps {
 }
 
 export function LeadStatusCard({ leadsByStatus }: LeadStatusCardProps) {
+  const { t } = useTranslation("common");
   const entries = Object.entries(leadsByStatus);
 
   return (
@@ -251,6 +253,7 @@ interface ProposalStatusCardProps {
 }
 
 export function ProposalStatusCard({ proposalsByStatus }: ProposalStatusCardProps) {
+  const { t } = useTranslation("common");
   const entries = Object.entries(proposalsByStatus);
 
   return (

@@ -214,6 +214,7 @@ export function RequestScreen({
   isPending,
   onBack,
 }: RequestScreenProps) {
+  const { t } = useTranslation("common");
   const cardStyle = makeCardStyle(isDark);
   const btnStyle = (v: "primary" | "danger" | "secondary") => makeBtnStyle(v, colors, isDark);
   const inputStyle = makeInputStyle(colors, isDark);

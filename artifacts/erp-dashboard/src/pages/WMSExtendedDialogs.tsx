@@ -70,6 +70,7 @@ interface InternalRequestDialogProps {
 }
 
 export function InternalRequestDialog({ open, onOpenChange, form, mutation }: InternalRequestDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

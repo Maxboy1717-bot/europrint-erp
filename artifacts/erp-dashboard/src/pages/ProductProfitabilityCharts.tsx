@@ -123,6 +123,7 @@ interface TopLossProps {
 }
 
 export function TopLossSection({ isLoading, topLoss, chartData }: TopLossProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-top-loss">
       <CardHeader>

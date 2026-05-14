@@ -131,6 +131,7 @@ export function MesOrdersAndDowntimes({
 // ─── Active Sessions Table ─────────────────────────────────────────────────────
 
 export function MesActiveSessionsTable({ activeSessions, sessLoad }: { activeSessions: Session[]; sessLoad: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <section>
       <div className="flex items-center justify-between mb-4">

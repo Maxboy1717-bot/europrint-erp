@@ -159,6 +159,7 @@ interface OnboardingSectionProps {
 }
 
 export function OnboardingSection({ tenants, onTenantChange }: OnboardingSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="onboarding" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("yangiZavodOnboarding")}</h2>
@@ -221,6 +222,7 @@ interface LicensingSectionProps {
 }
 
 export function LicensingSection({ tenants }: LicensingSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="licensing" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("tarifRejalariVaLitsenziyalar")}</h2>

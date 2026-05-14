@@ -177,6 +177,7 @@ interface ViewModeButtonsProps {
 }
 
 export function ViewModeButtons({ viewMode, onSetViewMode }: ViewModeButtonsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-2">
       <Button

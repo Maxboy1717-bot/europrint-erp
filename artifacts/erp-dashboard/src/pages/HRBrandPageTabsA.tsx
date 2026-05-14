@@ -76,6 +76,7 @@ interface ChannelsTabProps {
 }
 
 export function ChannelsTab({ brand, setBrand }: ChannelsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="channels">
       <Card>

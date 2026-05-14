@@ -280,6 +280,7 @@ interface DeleteReportDialogProps {
 }
 
 export function DeleteReportDialog({ deleteId, onOpenChange, onConfirm }: DeleteReportDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <ConfirmDialog
       open={!!deleteId}

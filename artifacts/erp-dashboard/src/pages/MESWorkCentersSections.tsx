@@ -78,6 +78,7 @@ interface EquipmentGridProps {
 export function EquipmentGrid({
   isLoading, equipmentList, onCreateSession, onNewSessionForStopped,
 }: EquipmentGridProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const pauseSessionMutation = useMutation({

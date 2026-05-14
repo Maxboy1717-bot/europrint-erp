@@ -64,6 +64,7 @@ interface LegacyStatsProps {
 }
 
 export function AnalyticsLegacyStats({ stats, statsLoading }: LegacyStatsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="hidden">
       {statsLoading ? (

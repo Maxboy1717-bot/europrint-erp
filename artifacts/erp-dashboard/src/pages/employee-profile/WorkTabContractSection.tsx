@@ -36,7 +36,6 @@ import { FileText, Plus } from "lucide-react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { EmploymentContract, ContractForm, TranslationFn } from "./WorkTabTypes";
 import { ContractCard } from "./WorkTabTables";
-import { useTranslation } from "@/lib/i18n";
 
 interface ContractSectionProps {
   t: TranslationFn;
@@ -51,7 +50,6 @@ interface ContractSectionProps {
 }
 
 export function ContractSection({ t, tCommon, contractDialogOpen, setContractDialogOpen, contractForm, setContractForm, saveContractMutation, loadingContracts, contracts, }: ContractSectionProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">

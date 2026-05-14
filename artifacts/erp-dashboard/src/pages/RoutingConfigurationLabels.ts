@@ -9,7 +9,6 @@ import type { CreateRoutingLabels } from "./RoutingConfigurationCreateDialog";
 import type { ManageOperationsLabels } from "./RoutingConfigurationManageDialog";
 import type { AddOperationLabels } from "./RoutingConfigurationDialogs";
 import type { RoutingCardLabels } from "./RoutingConfigurationCard";
-import { useTranslation } from "@/lib/i18n";
 
 type TFn = (key: string) => string;
 

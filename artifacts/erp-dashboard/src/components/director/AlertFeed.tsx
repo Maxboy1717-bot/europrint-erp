@@ -70,6 +70,7 @@ export function AlertFeed({ limit = 15 }: { limit?: number }) {
 }
 
 function AlertRow({ alert, onResolve }: { alert: AgentAlert; onResolve: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className={cn('rounded-lg p-3 transition-opacity', SEVERITY_TONE[alert.severity], alert.isRead && 'opacity-60')}>
       <div className="flex items-start gap-2">

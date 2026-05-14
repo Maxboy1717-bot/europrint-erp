@@ -56,6 +56,7 @@ interface PendingOrdersProps {
 }
 
 export function PendingOrdersList({ orders, onInspect }: PendingOrdersProps) {
+  const { t } = useTranslation("common");
   const safeOrders = Array.isArray(orders) ? orders : [];
   return (
     <div>
@@ -118,6 +119,7 @@ interface RecentInspectionsProps {
 }
 
 export function RecentInspectionsList({ inspections, completeMutation }: RecentInspectionsProps) {
+  const { t } = useTranslation("common");
   const safeInspections = Array.isArray(inspections) ? inspections : [];
   if (safeInspections.length === 0) return null;
 

@@ -9,7 +9,6 @@ import { usePosI18n } from "../i18n/usePosI18n";
 import { movementsApi } from "../api/pos-monitor.api";
 import { GlTab } from "../components/GlTab";
 import { StepsTab } from "../components/StepsTab";
-import { useTranslation } from '@/lib/i18n';
 
 interface MovLine {
   id: number; materialCardId: number; qty: number;
@@ -36,7 +35,6 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function PosMovementDetail() {
-  const { t } = useTranslation("common");
   const params        = useParams<{ id: string }>();
   const [, navigate]  = useLocation();
   const { t }         = usePosI18n();

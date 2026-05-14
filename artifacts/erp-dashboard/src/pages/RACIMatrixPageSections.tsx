@@ -129,6 +129,7 @@ interface BusinessStagesListProps {
 }
 
 export function BusinessStagesList({ stages }: BusinessStagesListProps) {
+  const { t } = useTranslation("common");
   if (stages.length === 0) {
     return (
       <div className="text-center py-12" data-testid="empty-stages">
@@ -193,6 +194,7 @@ interface CrisesListProps {
 }
 
 export function CrisesList({ crises }: CrisesListProps) {
+  const { t } = useTranslation("common");
   if (crises.length === 0) {
     return (
       <div className="text-center py-12" data-testid="empty-crises">

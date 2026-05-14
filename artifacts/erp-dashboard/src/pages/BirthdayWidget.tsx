@@ -20,6 +20,7 @@ const TODAY = new Date();
 interface BirthdayEmployee { id: number; full_name: string; department_name?: string; age?: number; birth_date?: string; next_birthday?: string; }
 
 function BirthdayBanner({ employees }: { employees: BirthdayEmployee[] }) {
+  const { t } = useTranslation("common");
   if (employees.length === 0) return null;
   return (
     <div className="rounded-xl p-4 text-white">

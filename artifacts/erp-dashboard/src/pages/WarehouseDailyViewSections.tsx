@@ -19,6 +19,7 @@ import {
 import type { DailyOrder, MaterialKit } from "./WarehouseDailyViewTypes";
 import { STATUS_COLORS } from "./WarehouseDailyViewTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface DateNavigatorProps {
   selectedDate: Date;
@@ -37,6 +38,7 @@ export function DateNavigator({
   selectedDate, dateLocale, showCalendar, setShowCalendar,
   onDateSelect, navigateDay, orders, totalKits, readyKits, t,
 }: DateNavigatorProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
       <div className="flex items-center gap-2">

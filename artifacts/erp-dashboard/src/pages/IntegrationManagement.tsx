@@ -43,6 +43,7 @@ const INTEGRATION_DESCRIPTIONS: Record<string, string> = {
 
 interface IntegrationItem { key: string; status: string; name: string; type: string; [key: string]: unknown }
 function IntegrationCard({ intg }: { intg: IntegrationItem }) {
+  const { t } = useTranslation("common");
   const Icon = INTEGRATION_ICONS[intg.key] || Zap;
   const isConnected = intg.status === "connected" || intg.status === "active";
   const isWarning = ["warning", "in_memory", "default", "default_key"].includes(intg.status);

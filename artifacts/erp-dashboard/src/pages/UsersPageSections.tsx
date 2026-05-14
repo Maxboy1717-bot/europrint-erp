@@ -72,6 +72,7 @@ interface UserListProps {
 export function UserList({
   isLoading, filtered, search, canManage, onRoleEdit, onDeactivate,
 }: UserListProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -169,6 +170,7 @@ interface PaginationProps {
 }
 
 export function UsersPagination({ page, pages, total, onPrev, onNext }: PaginationProps) {
+  const { t } = useTranslation("common");
   if (pages <= 1) return null;
   return (
     <div className="flex justify-center items-center gap-4 pt-2">

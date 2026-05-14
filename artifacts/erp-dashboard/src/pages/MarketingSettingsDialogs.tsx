@@ -107,6 +107,7 @@ export function CreateSettingDialog({
   onSubmit,
   isSubmitPending,
 }: CreateSettingDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>

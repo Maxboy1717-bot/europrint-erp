@@ -82,6 +82,7 @@ interface PpeDialogProps {
   mutation: UseMutationResult<unknown, unknown, Record<string, unknown>>;
 }
 export function PpeDialog({ open, onOpenChange, form, mutation }: PpeDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -128,6 +129,7 @@ interface TrainingDialogProps {
   mutation: UseMutationResult<unknown, unknown, Record<string, unknown>>;
 }
 export function TrainingDialog({ open, onOpenChange, form, mutation }: TrainingDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -163,6 +165,7 @@ interface ZoneDialogProps {
   mutation: UseMutationResult<unknown, unknown, Record<string, unknown>>;
 }
 export function ZoneDialog({ open, onOpenChange, form, mutation }: ZoneDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

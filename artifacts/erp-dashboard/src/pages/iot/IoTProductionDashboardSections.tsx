@@ -6,6 +6,7 @@
 import { Button } from "@/components/ui/button";
 import { Moon, Timer, Target, Clock, Barcode, User, XCircle, AlertTriangle } from "lucide-react";
 import { IotLang, ProductionSession } from "./iot-types";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Energy Saving Overlay ────────────────────────────────────────────────────
 export function EnergySavingOverlay({
@@ -15,6 +16,7 @@ export function EnergySavingOverlay({
   lang: IotLang;
   onDismiss: () => void;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <div
@@ -46,6 +48,7 @@ export function DashboardHeader({
   isSettingUp: boolean;
   formatTime: (s: number) => string;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <div className="bg-primary text-white p-4 sticky top-0 z-40">
@@ -103,6 +106,7 @@ export function OrderCard({
   setupTime: number;
   formatTime: (s: number) => string;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <div className="bg-card rounded-xl p-6 border border-border shadow-sm relative overflow-hidden">
@@ -169,6 +173,7 @@ export function MetricsCards({
   formatTime: (s: number) => string;
   formatEstimatedTime: (s: number) => string;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -204,6 +209,7 @@ export function ProgressSection({
   progressPercent: number;
   activeSession: ProductionSession | null;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
@@ -234,6 +240,7 @@ export function QcReminderBanner({
   activeSession: ProductionSession | null;
   onOpen: () => void;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <div

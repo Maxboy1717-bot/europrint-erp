@@ -46,6 +46,7 @@ interface TotalEvaluationsCardProps {
 }
 
 export function TotalEvaluationsCard({ total, isLoading }: TotalEvaluationsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-total-evaluations">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -72,6 +73,7 @@ interface TopPerformerCardProps {
 }
 
 export function TopPerformerCard({ topPerformer, isLoading, isError }: TopPerformerCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-top-performer">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -109,6 +111,7 @@ interface FairnessIndexCardProps {
 }
 
 export function FairnessIndexCard({ fairnessIndex, isLoading }: FairnessIndexCardProps) {
+  const { t } = useTranslation("common");
   const isFair = fairnessIndex <= 15;
   return (
     <Card data-testid="card-fairness-index">

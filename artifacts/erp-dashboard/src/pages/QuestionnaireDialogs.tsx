@@ -127,6 +127,7 @@ export function ViewResponseDialog({
   onUpdateStatus,
   isUpdating,
 }: ViewResponseDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={!!response} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-2xl p-6" data-testid="dialog-view-response">

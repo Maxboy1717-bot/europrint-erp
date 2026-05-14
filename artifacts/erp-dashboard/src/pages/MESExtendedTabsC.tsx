@@ -66,6 +66,7 @@ interface SmenaTabProps {
 
 /** Tab content: Smena O'tkazish Protokoli */
 export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
+  const { t } = useTranslation("common");
   const smenaStats = [
     { l: "Joriy smena ishlab chiqarishi", v: currentShift?.producedQty ?? "—", c: "text-primary"   },
     { l: "Brak miqdori",                  v: currentShift?.brakQty    ?? "—", c: "text-[var(--ep-red)]"   },

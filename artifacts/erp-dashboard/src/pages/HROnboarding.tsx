@@ -55,6 +55,7 @@ interface FolderItem {
 }
 
 function EmployeeFolderItems({ employee }: { employee: Employee }) {
+  const { t } = useTranslation("common");
   const { data: folderItems = [], isLoading } = useQuery<FolderItem[]>({
     queryKey: [`/api/org-structure/employees/${employee.id}/folder`],
     enabled: !!employee.id,

@@ -45,6 +45,7 @@ interface TabBarProps {
 }
 
 export function TabBar({ tab, onTabChange }: TabBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex gap-2">
       <Button
@@ -161,6 +162,7 @@ interface CrisisListProps {
 }
 
 export function CrisisList({ crises }: CrisisListProps) {
+  const { t } = useTranslation("common");
   if (crises.length === 0) {
     return (
       <Card>

@@ -25,7 +25,6 @@ export function LoadingScreen() {
 }
 
 export function SubmittingScreen() {
-  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
@@ -37,7 +36,6 @@ export function SubmittingScreen() {
 }
 
 export function ExpiredScreen() {
-  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="max-w-md w-full text-center">
@@ -52,6 +50,7 @@ export function ExpiredScreen() {
 }
 
 export function ErrorScreen({ error }: { error: string }) {
+  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="max-w-md w-full text-center">
@@ -66,6 +65,7 @@ export function ErrorScreen({ error }: { error: string }) {
 }
 
 export function CompletedScreen({ session }: { session: HrcSession | null }) {
+  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="max-w-md w-full text-center">
@@ -90,6 +90,7 @@ interface IntroScreenProps {
 }
 
 export function IntroScreen({ session, questions, testConfig, onStart }: IntroScreenProps) {
+  const { t } = useTranslation("common");
   const Icon = testConfig.icon;
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -162,6 +163,7 @@ interface ReplicationScreenProps {
 }
 
 export function ReplicationScreen({ questions, replicationText, setReplicationText, onSubmit }: ReplicationScreenProps) {
+  const { t } = useTranslation("common");
   const instruction = questions[0];
   return (
     <div className="min-h-screen p-4">

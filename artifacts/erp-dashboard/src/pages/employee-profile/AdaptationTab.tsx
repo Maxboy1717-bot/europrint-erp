@@ -70,6 +70,7 @@ function MentorCard({
   isHr?: boolean;
   onSaved?: () => void;
 }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [val, setVal] = useState("");
   const { toast } = useToast();

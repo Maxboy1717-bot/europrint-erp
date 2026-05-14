@@ -80,6 +80,7 @@ interface AuditTableProps {
 }
 
 export function AuditTable({ rows, isLoading, page, pages, total, onPageChange, onSelect }: AuditTableProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -161,6 +162,7 @@ export function AuditTable({ rows, isLoading, page, pages, total, onPageChange, 
 interface DetailModalProps { selected: AuditLogRow | null; onClose: () => void; }
 
 export function AuditDetailModal({ selected, onClose }: DetailModalProps) {
+  const { t } = useTranslation("common");
   if (!selected) return null;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>

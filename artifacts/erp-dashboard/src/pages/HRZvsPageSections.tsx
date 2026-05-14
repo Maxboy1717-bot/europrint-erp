@@ -96,6 +96,7 @@ interface ZvsCardProps {
 }
 
 export function ZvsCard({ r, onApprove, onReject }: ZvsCardProps) {
+  const { t } = useTranslation("common");
   const status   = r.status   ?? "pending";
   const priority = r.priority ?? "normal";
   const sc = STATUS_MAP[status]     ?? STATUS_MAP.pending;

@@ -135,6 +135,7 @@ interface SuccessScreenProps {
 }
 
 export function SuccessScreen({ documentNumber, selectedType, onNewChiqim, onGoToList }: SuccessScreenProps) {
+  const { t } = useTranslation("common");
   const typeInfo = MOVEMENT_TYPES.find(t => t.code === selectedType);
   return (
     <div className="pos-fade-in" style={{ maxWidth: 560, margin: "60px auto", textAlign: "center" }}>

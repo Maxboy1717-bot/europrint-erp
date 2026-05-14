@@ -110,6 +110,7 @@ interface ChurnSectionProps {
 }
 
 export function ChurnRescueSection({ churnRescue, loading, onRun }: ChurnSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <Button onClick={onRun} disabled={!!loading} className="w-full" data-testid="btn-run-churn">

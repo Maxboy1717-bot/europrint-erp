@@ -30,7 +30,6 @@ import {
   type ObserverWithUser,
 } from "../kanban-types";
 import { getAvatar, getName, initials } from "./MainTabContentTypes";
-import { useTranslation } from '@/lib/i18n';
 
 // ── Description ──────────────────────────────────────────────────────────────
 
@@ -41,7 +40,6 @@ interface DescriptionFieldProps {
 }
 
 export function DescriptionField({ card, onUpdate, t }: DescriptionFieldProps) {
-  const { t } = useTranslation("common");
   return (
     <div>
       <Label>{t.fields.description}</Label>

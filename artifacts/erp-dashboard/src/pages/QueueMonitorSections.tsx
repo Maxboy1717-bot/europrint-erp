@@ -38,6 +38,7 @@ interface QueueCardProps {
 }
 
 export function QueueCard({ name, stat, selected, onSelect }: QueueCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card
       className={`cursor-pointer transition-all border-2 ${
@@ -149,6 +150,7 @@ export function FailedJobsPanel({
   onRetry,
   onClearAll,
 }: FailedJobsPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

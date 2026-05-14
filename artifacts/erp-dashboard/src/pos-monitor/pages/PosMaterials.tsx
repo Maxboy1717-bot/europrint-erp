@@ -87,6 +87,7 @@ function StockBadge({ qty, unit }: { qty: number; unit: string | null }) {
 
 // ── Material card ─────────────────────────────────────────────────────────
 function MaterialCard({ mat, onClick, on360 }: { mat: MaterialRow; onClick: () => void; on360: () => void }) {
+  const { t } = useTranslation("common");
   const catCfg = getCatCfg(mat.category);
   const qty = parseFloat(mat.available_qty ?? "0");
   const price = parseFloat(mat.last_purchase_price ?? "0");
@@ -168,7 +169,6 @@ function MaterialCard({ mat, onClick, on360 }: { mat: MaterialRow; onClick: () =
 
 // ── Main page ─────────────────────────────────────────────────────────────
 export default function PosMaterials() {
-  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t }        = usePosI18n();
 

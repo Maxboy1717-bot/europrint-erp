@@ -104,6 +104,7 @@ export function AnalysisTabContent({
   t,
   tCommon,
 }: AnalysisTabContentProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">

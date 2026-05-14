@@ -6,7 +6,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { ledgerApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 interface InventoryItem {
   materialCardId: number;
@@ -169,7 +168,6 @@ function KpiCard({ label, value, color }: { label: string; value: string | numbe
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function PosMyInventory() {
-  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const [items, setItems]               = useState<InventoryItem[]>([]);
   const [loading, setLoading]           = useState(true);

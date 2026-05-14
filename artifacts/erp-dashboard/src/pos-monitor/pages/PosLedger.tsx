@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { ledgerApi, movementsApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 interface LedgerItem { id: number; materialCardId: number; materialName?: string; qty: number; unit?: string; issuedDate: string; returnDeadline?: string; status: string; }
 interface BalanceSummary { totalItems?: number; totalValue?: number; expiringSoon?: number; items?: LedgerItem[]; }
@@ -25,7 +24,6 @@ const MOV_TYPE_COLOR: Record<string, string> = {
 };
 
 export default function PosLedger() {
-  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [data, setData]       = useState<BalanceSummary>({});

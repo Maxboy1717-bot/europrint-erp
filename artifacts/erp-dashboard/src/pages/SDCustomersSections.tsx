@@ -48,6 +48,7 @@ interface StatsProps {
 }
 
 export function CustomerKpiCards({ total, segs, totalVal }: StatsProps) {
+  const { t } = useTranslation("common");
   // Migrated to EPKpiCard — flat module hues, 42px round icon tile,
   // animated count-up, stagger entrance (0/60/120/180/240ms).
   return (
@@ -110,6 +111,7 @@ export function CustomerFilterBar({
   statusFilter, setStatusFilter,
   hasFilters, onClear,
 }: FilterBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <div className="relative flex-1 min-w-[200px]">

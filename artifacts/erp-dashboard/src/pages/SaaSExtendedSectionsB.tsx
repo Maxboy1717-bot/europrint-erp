@@ -100,6 +100,7 @@ interface MonitoringSectionProps {
 }
 
 export function MonitoringSection({ platformStats, statsLoading, onRefresh }: MonitoringSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="monitoring" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
@@ -190,6 +191,7 @@ interface ErrorsSectionProps {
 }
 
 export function ErrorsSection({ errorLogsData, errorsLoading, onRefresh }: ErrorsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="errors" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">

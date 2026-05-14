@@ -146,6 +146,7 @@ export function CompletedActivitiesSection({
   completedActivities,
   t,
 }: CompletedActivitiesSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

@@ -91,6 +91,7 @@ interface UniformsTabProps {
 }
 
 export function UniformsTab({ ppeItems }: UniformsTabProps) {
+  const { t } = useTranslation("common");
   const items = Array.isArray(ppeItems) ? ppeItems : [];
   return (
     <TabsContent value="uniforms" className="mt-0 space-y-4">
@@ -145,6 +146,7 @@ interface OfficeTabProps {
 }
 
 export function OfficeTab({ equipment }: OfficeTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="office" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("ofisInventarNazorati")}</h2>
@@ -183,6 +185,7 @@ interface CleaningTabProps {
 }
 
 export function CleaningTab({ cleaningSchedule }: CleaningTabProps) {
+  const { t } = useTranslation("common");
   const schedule = Array.isArray(cleaningSchedule) ? cleaningSchedule : [];
   return (
     <TabsContent value="cleaning" className="mt-0 space-y-4">
@@ -255,6 +258,7 @@ interface BuildingTabProps {
 }
 
 export function BuildingTab({ equipment }: BuildingTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="building" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("binoVaInshootInventari")}</h2>

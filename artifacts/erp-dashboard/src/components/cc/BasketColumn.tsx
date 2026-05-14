@@ -106,6 +106,7 @@ export function BasketColumn({
 
 // ── Bitta hujjat kartasi (light) ─────────────────────────────────────
 function DocumentCard({ card, kind, onOpen }: { card: BasketCard; kind: BasketKind; onOpen: () => void }) {
+  const { t } = useTranslation("common");
   const qc = useQueryClient();
   const { toast } = useToast();
   const [pinModal, setPinModal] = useState<{ action: 'approve' | 'reject' | 'cancel'; open: boolean }>({

@@ -73,6 +73,7 @@ function FullCard({
   onApproved: () => void;
   t: (k: string) => string;
 }) {
+  const { t } = useTranslation("common");
   const [busy, setBusy]   = useState(false);
   const [err, setErr]     = useState("");
   const isFinance = getPosRole().includes("finance") || getPosRole().includes("admin");

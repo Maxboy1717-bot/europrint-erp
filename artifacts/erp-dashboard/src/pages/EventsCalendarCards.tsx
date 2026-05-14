@@ -141,6 +141,7 @@ export function AllEventsTableCard({
   onEdit,
   onDelete,
 }: AllEventsTableCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

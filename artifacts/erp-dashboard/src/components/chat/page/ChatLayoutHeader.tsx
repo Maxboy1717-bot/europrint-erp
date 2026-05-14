@@ -177,6 +177,7 @@ export function RoomHeader({activeRoom,
  * Slim banner shown below the header when the room has a pinned message.
  */
 export function PinnedBanner({ pinnedMessage, onUnpin }: PinnedBannerProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-2 px-4 py-1.5 bg-[var(--tg-header-bg)] border-b border-[var(--tg-border)] flex-shrink-0">
       <Pin className="w-3.5 h-3.5 text-[var(--tg-sidebar-active)] flex-shrink-0 rotate-45" />

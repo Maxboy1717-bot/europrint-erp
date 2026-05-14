@@ -103,6 +103,7 @@ interface DistributionProps {
 }
 
 export function DistributionSection({ isLoading, distributionData }: DistributionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-distribution">
       <CardHeader>

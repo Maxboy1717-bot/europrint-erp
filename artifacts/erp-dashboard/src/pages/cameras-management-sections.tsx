@@ -36,7 +36,6 @@ interface CameraStatsCardsProps {
 }
 
 export function CameraStatsCards({ total, active, t }: CameraStatsCardsProps) {
-  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="bg-card border-none rounded-lg p-5">
@@ -161,6 +160,7 @@ function CameraRow({
   onDelete,
   onToggleStatus,
 }: CameraRowProps) {
+  const { t } = useTranslation("common");
   const displayName = language === "uz" ? camera.name : (camera.nameRu ?? camera.name);
   const linkedCenter = workCenters?.find((wc) => wc.id === camera.workCenterId);
 
