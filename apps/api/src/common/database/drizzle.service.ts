@@ -9,11 +9,19 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Ok, Err, safeCall, Result, AppError } from '@common/result';
 
+// SECURITY: never use a hardcoded production-looking fallback URL. If the env
+// var is missing in real production, fail loudly. In test/CI we accept a stub
+// URL so module-load doesn't crash unit tests that mock the DB.
+const _dbUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+const _isTestEnv =
+  process.env.NODE_ENV === 'test' || !!process.env.JEST_WORKER_ID || !!process.env.VITEST;
+const _effectiveDbUrl = _dbUrl || (_isTestEnv ? 'postgres://stub:stub@localhost:5432/stub' : null);
+if (!_effectiveDbUrl) {
+  throw new Error('DATABASE_URL (or NEON_DATABASE_URL) environment variable is required');
+}
+
 const pool = new Pool({
-  connectionString:
-    process.env.NEON_DATABASE_URL ||
-    process.env.DATABASE_URL ||
-    'postgresql://postgres:password@helium:5432/heliumdb',
+  connectionString: _effectiveDbUrl,
   max: 10,
 });
 

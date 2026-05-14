@@ -107,7 +107,7 @@ export function RecentTransactionsPanel({ txs, isLoading }: { txs: RecentTx[]; i
               return (
                 <div key={tx.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors">
                   <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", isIn ? "bg-emerald-100" : isOut ? "bg-red-100" : "bg-blue-100")}>
-                    {isIn ? <TrendingUp className="w-3.5 h-3.5 text-[var(--ep-green)]" /> {t("isout")}<TrendingDown className="w-3.5 h-3.5 text-[var(--ep-red)]" /> : <ArrowRightLeft className="w-3.5 h-3.5 text-[var(--ep-blue)]" />}
+                    {isIn ? <TrendingUp className="w-3.5 h-3.5 text-[var(--ep-green)]" /> : isOut ? <TrendingDown className="w-3.5 h-3.5 text-[var(--ep-red)]" /> : <ArrowRightLeft className="w-3.5 h-3.5 text-[var(--ep-blue)]" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">{tx.materialName || "—"}</p>

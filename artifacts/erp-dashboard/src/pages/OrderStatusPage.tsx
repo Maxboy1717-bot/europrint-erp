@@ -103,7 +103,7 @@ export default function OrderStatusPage() {
     : (chainData as StatusChain)?.statuses ?? [];
 
   // Normalise transitions to Record<string,string[]>
-  {t("constTransitionsRecord")}<string, string[]> = Array.isArray(transitionsData)
+  const transitions: Record<string, string[]> = Array.isArray(transitionsData)
     ? Object.fromEntries((transitionsData as StatusTransition[]).map(t => [t.from, t.to]))
     : (transitionsData as Record<string, string[]>) ?? {};
 
