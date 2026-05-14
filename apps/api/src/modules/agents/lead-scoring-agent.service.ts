@@ -1,7 +1,7 @@
 /**
  * AGENT 2: CRM Lead Scoring + Customer 360
  */
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
@@ -58,7 +58,7 @@ export class LeadScoringAgentService {
         SELECT name, company_id FROM crm_leads WHERE id = ${leadId} LIMIT 1
       `);
       const lead = r.rows[0];
-      if (!lead) throw new Error('Lead topilmadi');
+      if (!lead) throw new NotFoundException('Lead topilmadi');
 
       const ai = await this.ai.callClaude({
         taskType: 'crm.email_template',

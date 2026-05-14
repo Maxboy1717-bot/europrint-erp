@@ -52,10 +52,8 @@ export class FinanceArService {
         else buckets[key].over_120 += amount;
         buckets[key].total_outstanding += amount;
       }
-      await this.repo.clearArAgingBuckets();
-      for (const b of Object.values(buckets)) {
-        await this.repo.insertArAgingBucket(b);
-      }
+      // Atomic: clear + reinsert in one transaction (was: delete + N inserts, partial-failure risk)
+      await this.repo.replaceArAgingBuckets(Object.values(buckets));
       return Object.keys(buckets).length;
     });
   }

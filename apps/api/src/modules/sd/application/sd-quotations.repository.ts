@@ -118,19 +118,27 @@ export class SdQuotationsRepository {
         throw new BadRequestException('Invalid or missing customer_id on quotation');
       }
       const advancePercent = Number(quotation['advance_percent'] ?? 30);
-      const insertedOrder = await execOne(sql`
-        INSERT INTO sales_orders
-          (order_number, status, company_id, total_amount, advance_required, advance_paid, advance_status, design_flag, sample_flag, created_by)
-        VALUES
-          (${orderNumber}, 'pending', ${companyId}, ${totalAmount}, ${advancePercent ?? 30}, '0', 'pending', false, false, 0)
-        RETURNING id, order_number, status, total_amount, created_at
-      `);
+      // Atomic: order INSERT + quotation status UPDATE must succeed together.
+      // Without tx: if UPDATE fails after INSERT, you get an orphaned order with the quotation
+      // still marked "not converted", leading to a duplicate-conversion attempt on retry.
+      const insertedOrder = await db.transaction(async (tx) => {
+        const orderRes = await tx.execute(sql`
+          INSERT INTO sales_orders
+            (order_number, status, company_id, total_amount, advance_required, advance_paid, advance_status, design_flag, sample_flag, created_by)
+          VALUES
+            (${orderNumber}, 'pending', ${companyId}, ${totalAmount}, ${advancePercent ?? 30}, '0', 'pending', false, false, 0)
+          RETURNING id, order_number, status, total_amount, created_at
+        `);
+        const order = (orderRes.rows?.[0] ?? null) as Row | null;
+        if (!order) return null;
+        await tx.execute(sql`
+          UPDATE sd_quotations
+          SET status = 'converted', order_id = ${order['id']}, updated_at = NOW()
+          WHERE id = ${id}
+        `);
+        return order;
+      });
       if (!insertedOrder) return { error: 'Failed to create sales order — DB insert returned no row' };
-      await exec(sql`
-        UPDATE sd_quotations
-        SET status = 'converted', order_id = ${insertedOrder['id']}, updated_at = NOW()
-        WHERE id = ${id}
-      `);
       return { order: insertedOrder };
       }, 'DB_ERROR');
   }

@@ -74,8 +74,14 @@ export class FinanceBudgetRepo {
 
   async saveBudget(budget: FinanceRow, lines: FinanceRow[]): Promise<Result<FinanceRow>> {
     try {
-      const savedBudget = await db.insert(budgets).values(budget as typeof budgets.$inferInsert).returning();
-      if (lines && lines.length > 0) await db.insert(budgetLines).values(lines as Array<typeof budgetLines.$inferInsert>);
+      // Atomic: budget header + lines must succeed together — partial budget = broken state
+      const savedBudget = await db.transaction(async (tx) => {
+        const inserted = await tx.insert(budgets).values(budget as typeof budgets.$inferInsert).returning();
+        if (lines && lines.length > 0) {
+          await tx.insert(budgetLines).values(lines as Array<typeof budgetLines.$inferInsert>);
+        }
+        return inserted;
+      });
       return Ok(savedBudget[0]);
     } catch (error: unknown) { this.logger.error(`Error saving budget: ${(error as Error).message}`); return Err((error as Error).message); }
   }

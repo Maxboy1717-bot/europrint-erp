@@ -49,9 +49,16 @@ export class SdLeadsService {
       if (!leadResult.ok) throw new Error(leadResult.error.message);
       const lead = leadResult.data;
       if (!lead) throw new NotFoundException(`Lead #${lid} topilmadi`);
-      const order = await this.repo.insertOrderFromLead((lead as Record<string, unknown>).customer_id, (lead as Record<string, unknown>).expected_amount, lid, notesVal);
-      await this.repo.markConverted(lid);
-      return { lead_id: lid, order };
+      // Atomic: order INSERT + lead status UPDATE in one tx (was: 2 separate writes,
+      // partial failure left orphan order + lead still re-convertible = duplicate orders)
+      const orderResult = await this.repo.convertLeadToOrderAtomic(
+        (lead as Record<string, unknown>).customer_id,
+        (lead as Record<string, unknown>).expected_amount,
+        lid,
+        notesVal,
+      );
+      if (!orderResult.ok) throw new Error(orderResult.error.message);
+      return { lead_id: lid, order: orderResult.data };
     });
   }
 

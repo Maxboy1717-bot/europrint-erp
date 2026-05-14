@@ -139,7 +139,7 @@ export class SdLeadsRepository {
   }
 
   async insertOrderFromLead(customer_id: unknown, expected_amount: unknown, lid: number, notes: unknown): Promise<Result<Row>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         INSERT INTO sales_orders (customer_id, total_amount, status, sd_lead_id, notes)
         VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
@@ -152,11 +152,41 @@ export class SdLeadsRepository {
   }
 
   async markConverted(lid: number): Promise<Result<void>>  {
-  try {  
+  try {
       await execSdLeadConvert(lid);  return Ok();  } catch (_e) {
     return Err(String(_e));
   }
 
+  }
+
+  /**
+   * Atomic lead-to-order conversion: inserts a sales_orders row AND marks the lead
+   * as 'converted' in a single transaction. Without this, a failure between the two
+   * writes leaves an orphaned order while the lead can be re-converted (duplicate orders).
+   */
+  async convertLeadToOrderAtomic(
+    customer_id: unknown,
+    expected_amount: unknown,
+    lid: number,
+    notes: unknown,
+  ): Promise<Result<Row>> {
+    try {
+      const order = await db.transaction(async (tx) => {
+        const res = await tx.execute(sql`
+          INSERT INTO sales_orders (customer_id, total_amount, status, sd_lead_id, notes)
+          VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
+          RETURNING *
+        `);
+        const inserted = (res.rows?.[0] ?? {}) as Row;
+        await tx.execute(sql`
+          UPDATE sd_leads SET status = 'converted', updated_at = NOW() WHERE id = ${lid}
+        `);
+        return inserted;
+      });
+      return Ok(order);
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   async addActivity(lid: number, type: unknown, subject: unknown, notes: unknown, employee_id: unknown): Promise<Result<Row>>  {

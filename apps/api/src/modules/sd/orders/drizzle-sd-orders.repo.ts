@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   advance-payment UPDATE that mutates balance_due_amount with
+ *   GREATEST(0, COALESCE(total_amount::numeric, 0) - ${amount}::numeric)
+ *   computed in-place, and the cancel() cross-table kanban_cards description
+ *   append (COALESCE(description, '') || E'\n[...]') filtered by
+ *   related_type/related_id polymorphic-reference shape.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module drizzle-sd-orders.repo
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
@@ -99,13 +108,20 @@ export class DrizzleSdOrdersRepository implements ISdOrdersRepository {
 
   async cancel(id: number): Promise<Result<void>> {
     try {
-      await runQuery(sql`
-        UPDATE kanban_cards SET
-          description = COALESCE(description, '') || E'\n[Buyurtma bekor qilindi]',
-          updated_at = NOW()
-        WHERE related_type = 'sales_order' AND related_id::text = ${id}::text AND deleted_at IS NULL
-      `);
-      await db.update(salesOrders).set({ overallStatus: 'CANCELLED', status: 'cancelled', deletedAt: _time.now() }).where(sql`id = ${id}`);
+      // Atomic: kanban description annotation + sales_orders soft-delete must succeed together.
+      // Without tx, a kanban-side failure would leave the order live but with a "cancelled" annotation
+      // on its board card (or vice versa: order soft-deleted but kanban still active).
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`
+          UPDATE kanban_cards SET
+            description = COALESCE(description, '') || E'\n[Buyurtma bekor qilindi]',
+            updated_at = NOW()
+          WHERE related_type = 'sales_order' AND related_id::text = ${id}::text AND deleted_at IS NULL
+        `);
+        await tx.update(salesOrders)
+          .set({ overallStatus: 'CANCELLED', status: 'cancelled', deletedAt: _time.now() })
+          .where(sql`id = ${id}`);
+      });
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error)?.message || "O'chirishda xatolik"); }
   }
