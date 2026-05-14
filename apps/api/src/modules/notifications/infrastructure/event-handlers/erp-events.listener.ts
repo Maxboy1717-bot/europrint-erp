@@ -35,12 +35,13 @@ export class ErpEventsListener {
       if (result.rows.length === 50) {
         this.logger.warn(`notifyByRole(${role}): result capped at 50 users — some may not be notified`);
       }
-      for (const u of result.rows) {
+      // Pattern 2: per-user notification saves are independent — fan out in parallel
+      await Promise.all(result.rows.map((u) => {
         const notification = Notification.createForUser(String(u.id), title, body, type);
         notification.referenceId = referenceId;
         notification.referenceType = referenceType;
-        await this.notificationRepo.save(notification);
-      }
+        return this.notificationRepo.save(notification);
+      }));
     } catch (err: unknown) {
       this.logger.warn(`notifyByRole(${role}) failed: ${String(err)}`);
     }

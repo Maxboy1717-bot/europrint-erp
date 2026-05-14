@@ -12,17 +12,14 @@
  *   6. Rad etsa → izoh majburiy + initiator'ga qaytadi
  *   7. Hammasi tasdiqlansa → status=archived
  *
- * Jadvallar:
- *   - hr_v2_documents          (asosiy hujjat)
- *   - document_workflow_routes (shablonlar: leave_request, advance, ...)
- *   - document_workflow_instances (har hujjat ishi xolati)
- *   - document_signatures      (fizik imzo tasdiqlash)
+ * Approve/reject decisions: see document-workflow-v2-decisions.service.ts (Rule 16).
  */
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
+import { DocumentWorkflowV2DecisionsService } from './document-workflow-v2-decisions.service';
 
 interface InitiateDocumentDto {
   employeeId: number;
@@ -33,22 +30,12 @@ interface InitiateDocumentDto {
   initiatorId: number;
 }
 
-interface WorkflowRoute {
-  id: number;
-  documentType: string;
-  name: string;
-  verticalSteps: string[];
-  horizontalSteps: string[];
-  approvalTimeoutHours: number;
-}
-
 @Injectable()
 export class DocumentWorkflowV2Service {
   private readonly logger = new Logger(DocumentWorkflowV2Service.name);
+  private readonly decisions = new DocumentWorkflowV2DecisionsService();
 
-  /**
-   * Hujjat workflow ro'yxati — qaysi turdagi hujjat qanday yo'l yuradi
-   */
+  /** Hujjat workflow ro'yxati — qaysi turdagi hujjat qanday yo'l yuradi */
   async listRoutes(): Promise<Result<unknown, AppError>> {
     return safeCall(async () => {
       const rows = await rawSql(sql`
@@ -75,48 +62,10 @@ export class DocumentWorkflowV2Service {
    */
   async initiateDocument(dto: InitiateDocumentDto): Promise<Result<unknown, AppError>> {
     return safeCall(async () => {
-      // 1. Route shabloni topish
-      const routeRows = await rawSql(sql`
-        SELECT id, vertical_steps, horizontal_steps
-        FROM document_workflow_routes
-        WHERE document_type = ${dto.documentType} AND is_active = true
-        LIMIT 1
-      `);
-      const route = dbRows(routeRows)[0];
-      if (!route) {
-        throw new BadRequestException(
-          `Hujjat turi "${dto.documentType}" uchun workflow shabloni topilmadi`,
-        );
-      }
-
-      // 2. hr_v2_documents'ga insert
-      const docRows = await rawSql(sql`
-        INSERT INTO hr_v2_documents (
-          employee_id, document_type, title, description, status, current_step, file_url, created_by, created_at
-        ) VALUES (
-          ${dto.employeeId}, ${dto.documentType}, ${dto.title}, ${dto.description ?? null},
-          'pending', 1, ${dto.fileUrl ?? null}, ${dto.initiatorId}, NOW()
-        )
-        RETURNING id
-      `);
-      const doc = dbRows(docRows)[0];
-      if (!doc) throw new Error('Hujjat yaratish bajarilmadi');
-      const docId = Number(doc['id']);
-
-      // 3. Workflow instance yaratish
-      const instRows = await rawSql(sql`
-        INSERT INTO document_workflow_instances (
-          document_id, document_type, initiator_id, current_step_index, status, started_at
-        ) VALUES (
-          ${docId}, ${dto.documentType}, ${dto.initiatorId}, 0, 'pending', NOW()
-        )
-        RETURNING id
-      `);
-      const inst = dbRows(instRows)[0];
-      const instId = Number(inst?.['id'] ?? 0);
-
+      await this.ensureRouteExists(dto.documentType);
+      const docId = await this.insertDocument(dto);
+      const instId = await this.insertWorkflowInstance(docId, dto);
       this.logger.log(`Document #${docId} workflow #${instId} initiated by user ${dto.initiatorId}`);
-
       return {
         documentId: docId,
         instanceId: instId,
@@ -127,143 +76,60 @@ export class DocumentWorkflowV2Service {
     });
   }
 
-  /**
-   * Tasdiqlash — keyingi bosqichga o'tish.
-   */
-  async approveStep(
-    instanceId: number,
-    approverId: number,
-    comment?: string,
-  ): Promise<Result<unknown, AppError>> {
-    return safeCall(async () => {
-      const instRows = await rawSql(sql`
-        SELECT i.id, i.document_id, i.document_type, i.current_step_index, i.status,
-               i.steps_history, r.vertical_steps
-        FROM document_workflow_instances i
-        LEFT JOIN document_workflow_routes r ON r.document_type = i.document_type
-        WHERE i.id = ${instanceId} AND i.status = 'pending'
-      `);
-      const inst = dbRows(instRows)[0];
-      if (!inst) throw new NotFoundException(`Workflow instance #${instanceId} topilmadi yoki yopilgan`);
-
-      const verticalSteps = Array.isArray(inst['vertical_steps']) ? inst['vertical_steps'] : [];
-      const currentIndex = Number(inst['current_step_index'] ?? 0);
-      const isLastStep = currentIndex >= verticalSteps.length - 1;
-
-      // History'ga qo'shish
-      const oldHistory = Array.isArray(inst['steps_history']) ? inst['steps_history'] : [];
-      const newHistory = [
-        ...oldHistory,
-        {
-          step: currentIndex,
-          stepName: verticalSteps[currentIndex] ?? 'unknown',
-          action: 'approved',
-          approverId,
-          comment: comment ?? null,
-          at: new Date().toISOString(),
-        },
-      ];
-
-      if (isLastStep) {
-        // Hammasi tasdiqlandi → arxivlash
-        await rawSql(sql`
-          UPDATE document_workflow_instances
-          SET status = 'approved',
-              steps_history = ${JSON.stringify(newHistory)}::jsonb,
-              completed_at = NOW(),
-              updated_at = NOW()
-          WHERE id = ${instanceId}
-        `);
-        await rawSql(sql`
-          UPDATE hr_v2_documents
-          SET status = 'approved', current_step = ${currentIndex + 1}, updated_at = NOW()
-          WHERE id = ${inst['document_id']}
-        `);
-        this.logger.log(`Document #${inst['document_id']} fully approved by user ${approverId}`);
-        return { documentId: inst['document_id'], status: 'approved', stepsCompleted: currentIndex + 1 };
-      } else {
-        // Keyingi bosqichga o'tish
-        await rawSql(sql`
-          UPDATE document_workflow_instances
-          SET current_step_index = ${currentIndex + 1},
-              steps_history = ${JSON.stringify(newHistory)}::jsonb,
-              updated_at = NOW()
-          WHERE id = ${instanceId}
-        `);
-        await rawSql(sql`
-          UPDATE hr_v2_documents
-          SET current_step = ${currentIndex + 2}, updated_at = NOW()
-          WHERE id = ${inst['document_id']}
-        `);
-        this.logger.log(`Document #${inst['document_id']} step ${currentIndex} → ${currentIndex + 1}`);
-        return {
-          documentId: inst['document_id'],
-          status: 'pending',
-          currentStepIndex: currentIndex + 1,
-          nextApproverRole: verticalSteps[currentIndex + 1],
-        };
-      }
-    });
+  private async ensureRouteExists(documentType: string): Promise<void> {
+    const routeRows = await rawSql(sql`
+      SELECT id, vertical_steps, horizontal_steps
+      FROM document_workflow_routes
+      WHERE document_type = ${documentType} AND is_active = true
+      LIMIT 1
+    `);
+    if (!dbRows(routeRows)[0]) {
+      throw new BadRequestException(
+        `Hujjat turi "${documentType}" uchun workflow shabloni topilmadi`,
+      );
+    }
   }
 
-  /**
-   * Rad etish — izoh MAJBURIY (Q82).
-   */
-  async rejectStep(
-    instanceId: number,
-    rejectedById: number,
-    reason: string,
-  ): Promise<Result<unknown, AppError>> {
-    return safeCall(async () => {
-      if (!reason || reason.trim().length < 10) {
-        throw new BadRequestException(
-          'Rad etish sababini kamida 10 belgi yozing (kim uchun ekanligini tushuntirib bering)',
-        );
-      }
-
-      const instRows = await rawSql(sql`
-        SELECT id, document_id, current_step_index, steps_history
-        FROM document_workflow_instances
-        WHERE id = ${instanceId} AND status = 'pending'
-      `);
-      const inst = dbRows(instRows)[0];
-      if (!inst) throw new NotFoundException(`Workflow #${instanceId} topilmadi`);
-
-      const oldHistory = Array.isArray(inst['steps_history']) ? inst['steps_history'] : [];
-      const newHistory = [
-        ...oldHistory,
-        {
-          step: inst['current_step_index'],
-          action: 'rejected',
-          rejectedById,
-          reason,
-          at: new Date().toISOString(),
-        },
-      ];
-
-      await rawSql(sql`
-        UPDATE document_workflow_instances
-        SET status = 'rejected',
-            rejection_reason = ${reason},
-            steps_history = ${JSON.stringify(newHistory)}::jsonb,
-            completed_at = NOW(),
-            updated_at = NOW()
-        WHERE id = ${instanceId}
-      `);
-      await rawSql(sql`
-        UPDATE hr_v2_documents
-        SET status = 'rejected', updated_at = NOW()
-        WHERE id = ${inst['document_id']}
-      `);
-
-      this.logger.log(`Document #${inst['document_id']} rejected by user ${rejectedById}: ${reason}`);
-      return { documentId: inst['document_id'], status: 'rejected', reason };
-    });
+  private async insertDocument(dto: InitiateDocumentDto): Promise<number> {
+    const docRows = await rawSql(sql`
+      INSERT INTO hr_v2_documents (
+        employee_id, document_type, title, description, status, current_step, file_url, created_by, created_at
+      ) VALUES (
+        ${dto.employeeId}, ${dto.documentType}, ${dto.title}, ${dto.description ?? null},
+        'pending', 1, ${dto.fileUrl ?? null}, ${dto.initiatorId}, NOW()
+      )
+      RETURNING id
+    `);
+    const doc = dbRows(docRows)[0];
+    // WHY: caller wraps this in safeCall which maps BadRequestException → BAD_REQUEST.
+    if (!doc) throw new BadRequestException('Hujjat yaratish bajarilmadi');
+    return Number(doc['id']);
   }
 
-  /**
-   * Xodim'ning faol hujjatlari (pending status'da).
-   */
+  private async insertWorkflowInstance(docId: number, dto: InitiateDocumentDto): Promise<number> {
+    const instRows = await rawSql(sql`
+      INSERT INTO document_workflow_instances (
+        document_id, document_type, initiator_id, current_step_index, status, started_at
+      ) VALUES (
+        ${docId}, ${dto.documentType}, ${dto.initiatorId}, 0, 'pending', NOW()
+      )
+      RETURNING id
+    `);
+    const inst = dbRows(instRows)[0];
+    return Number(inst?.['id'] ?? 0);
+  }
+
+  /** Tasdiqlash — delegated. */
+  approveStep(instanceId: number, approverId: number, comment?: string) {
+    return this.decisions.approveStep(instanceId, approverId, comment);
+  }
+
+  /** Rad etish — delegated. */
+  rejectStep(instanceId: number, rejectedById: number, reason: string) {
+    return this.decisions.rejectStep(instanceId, rejectedById, reason);
+  }
+
+  /** Xodim'ning faol hujjatlari (pending status'da). */
   async getEmployeeDocuments(employeeId: number): Promise<Result<unknown, AppError>> {
     return safeCall(async () => {
       const rows = await rawSql(sql`
@@ -282,9 +148,7 @@ export class DocumentWorkflowV2Service {
     });
   }
 
-  /**
-   * Approver'ning kutib turgan hujjatlari.
-   */
+  /** Approver'ning kutib turgan hujjatlari. */
   async getPendingApprovals(_approverId: number): Promise<Result<unknown, AppError>> {
     return safeCall(async () => {
       // NOTE: approver-role filtering against org-structure is deferred to a

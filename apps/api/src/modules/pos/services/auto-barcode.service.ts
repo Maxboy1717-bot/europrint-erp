@@ -49,8 +49,8 @@ export class AutoBarcodeService {
       const lines = linesR.data;
       if (lines.length === 0) return Ok({ created: 0 });
 
-      let created = 0;
-      for (const line of lines) {
+      // Pattern 2: per-line barcode inserts are independent — fan out in parallel
+      const insResults = await Promise.all(lines.map(async (line) => {
         const barcode = this.generateBarcode(line.materialCode, line.batchNumber);
         const insR = await this.repo.insertBarcode({
           movementId,
@@ -62,6 +62,10 @@ export class AutoBarcodeService {
           unit:           line.unit ?? null,
           barcode,
         });
+        return { line, barcode, insR };
+      }));
+      let created = 0;
+      for (const { line, barcode, insR } of insResults) {
         if (insR.ok) {
           created++;
           this.logger.log(`[AutoBarcode] ✅ ${barcode} → material ${line.materialCardId} (${line.quantity} ${line.unit ?? ''})`);

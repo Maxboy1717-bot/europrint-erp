@@ -42,75 +42,98 @@ export class CandidatesCompatService {
 
   async createCandidate(body: Record<string, unknown>){
     return safeCall(async () => {
+      const fields = this.parseCandidateFields(body);
+      if (!fields.first_name) throw new BadRequestException('Ism (fullName yoki first_name) majburiy');
+      return await this.insertCandidateWithFallback(fields);
+    });
+  }
+
+  private parseCandidateFields(body: Record<string, unknown>): {
+    fullName: string; vacancyId: number | null;
+    first_name: string; last_name: string;
+    email: unknown; phone: unknown; source: string; notes: unknown; status: unknown;
+  } {
     // Accept both camelCase (frontend) and snake_case (API direct) field names
     const fullName   = (body.fullName  as string) || (body.full_name  as string) || '';
     const vacancyRaw = body.vacancyId  ?? body.vacancy_id;
     const vacancyId  = vacancyRaw && String(vacancyRaw) !== 'none' ? si(vacancyRaw) || null : null;
+    const { first_name, last_name } = this.resolveName(body, fullName);
+    const source = this.normalizeSource(body.source);
+    return {
+      fullName, vacancyId, first_name, last_name,
+      email: body.email ?? null,
+      phone: body.phone ?? null,
+      source,
+      notes: body.notes ?? null,
+      status: body.status ?? 'new',
+    };
+  }
 
+  private resolveName(body: Record<string, unknown>, fullName: string): { first_name: string; last_name: string } {
     let first_name = (body.first_name as string) || '';
     let last_name  = (body.last_name  as string) || '';
-
     // Split fullName → first_name / last_name when individual fields not provided
     if ((!first_name || !last_name) && fullName.trim()) {
       const parts = fullName.trim().split(/\s+/);
       first_name = parts[0] ?? '';
       last_name  = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];
     }
+    return { first_name, last_name };
+  }
 
-    if (!first_name) throw new BadRequestException('Ism (fullName yoki first_name) majburiy');
-
-    const email  = body.email  ?? null;
-    const phone  = body.phone  ?? null;
-    const srcRaw = String(body.source ?? 'OTHER').toUpperCase();
+  private normalizeSource(raw: unknown): string {
+    const srcRaw = String(raw ?? 'OTHER').toUpperCase();
     const validSrc = ['HH_UZ','OLX_UZ','TELEGRAM','INSTAGRAM','FACEBOOK','LINKEDIN','REFERRAL','PRINT','WEBSITE','OTHER'];
-    const source = validSrc.includes(srcRaw) ? srcRaw : 'OTHER';
-    const notes  = body.notes  ?? null;
-    const status = body.status ?? 'new';
+    return validSrc.includes(srcRaw) ? srcRaw : 'OTHER';
+  }
 
-    // Step 1: insert candidate (handle tables with or without full_name column)
-    let candidateId: number | null = null;
+  private async insertCandidateWithFallback(f: {
+    fullName: string; vacancyId: number | null; first_name: string; last_name: string;
+    email: unknown; phone: unknown; source: string; notes: unknown; status: unknown;
+  }): Promise<Record<string, unknown> | undefined> {
     try {
       const r1 = await rawSql(sql`
         INSERT INTO candidates (first_name, last_name, full_name, email, phone, vacancy_id, source, status, notes)
-        VALUES (${first_name}, ${last_name}, ${fullName || null}, ${email}, ${phone}, ${vacancyId}, ${source}, ${status}, ${notes})
+        VALUES (${f.first_name}, ${f.last_name}, ${f.fullName || null}, ${f.email}, ${f.phone}, ${f.vacancyId}, ${f.source}, ${f.status}, ${f.notes})
         RETURNING id, first_name, last_name, full_name, status, created_at
       `);
       const created = dbRows(r1)[0];
-      candidateId = si(created?.id);
-      if (!candidateId) throw new Error('Candidate ID qaytarilmadi');
-
-      // Step 2: automatically create pipeline entry so candidate appears in Kanban
-      await rawSql(sql`
-        INSERT INTO hr_candidate_funnels (candidate_id, vacancy_id, funnel_stage, is_active, source, initial_screening_notes)
-        VALUES (${candidateId}, ${vacancyId}, 'NEW', true, ${source}, ${notes})
-        ON CONFLICT DO NOTHING
-      `);
-
+      const candidateId = si(created?.id);
+      // WHY: si() returns 0 for missing / non-numeric ids. Treat as success-without-funnel
+      // rather than throwing — caller still gets the row it inserted.
+      if (candidateId) await this.createFunnelEntry(candidateId, f.vacancyId, f.source, f.notes);
       return created;
     } catch (e: unknown) {
-      // Fallback: try without full_name column (older DB schema)
       const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes('full_name') && candidateId === null) {
-        const r2 = await rawSql(sql`
-          INSERT INTO candidates (first_name, last_name, email, phone, vacancy_id, source, status, notes)
-          VALUES (${first_name}, ${last_name}, ${email}, ${phone}, ${vacancyId}, ${source}, ${status}, ${notes})
-          RETURNING id, first_name, last_name, status, created_at
-        `);
-        const created2 = dbRows(r2)[0];
-        candidateId = si(created2?.id);
-        if (candidateId) {
-          await rawSql(sql`
-            INSERT INTO hr_candidate_funnels (candidate_id, vacancy_id, funnel_stage, is_active, source, initial_screening_notes)
-            VALUES (${candidateId}, ${vacancyId}, 'NEW', true, ${source}, ${notes})
-            ON CONFLICT DO NOTHING
-          `);
-        }
-        return created2;
-      }
+      if (msg.includes('full_name')) return await this.insertCandidateLegacy(f);
       throw e;
     }
+  }
 
-    });}
+  private async insertCandidateLegacy(f: {
+    vacancyId: number | null; first_name: string; last_name: string;
+    email: unknown; phone: unknown; source: string; notes: unknown; status: unknown;
+  }): Promise<Record<string, unknown> | undefined> {
+    // Fallback: try without full_name column (older DB schema)
+    const r2 = await rawSql(sql`
+      INSERT INTO candidates (first_name, last_name, email, phone, vacancy_id, source, status, notes)
+      VALUES (${f.first_name}, ${f.last_name}, ${f.email}, ${f.phone}, ${f.vacancyId}, ${f.source}, ${f.status}, ${f.notes})
+      RETURNING id, first_name, last_name, status, created_at
+    `);
+    const created2 = dbRows(r2)[0];
+    const candidateId = si(created2?.id);
+    if (candidateId) await this.createFunnelEntry(candidateId, f.vacancyId, f.source, f.notes);
+    return created2;
+  }
+
+  private async createFunnelEntry(candidateId: number, vacancyId: number | null, source: string, notes: unknown): Promise<void> {
+    // Automatically create pipeline entry so candidate appears in Kanban
+    await rawSql(sql`
+      INSERT INTO hr_candidate_funnels (candidate_id, vacancy_id, funnel_stage, is_active, source, initial_screening_notes)
+      VALUES (${candidateId}, ${vacancyId}, 'NEW', true, ${source}, ${notes})
+      ON CONFLICT DO NOTHING
+    `);
+  }
 
   async getCandidate(id: string){
     return safeCall(async () => {

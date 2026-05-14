@@ -5,6 +5,19 @@
  *   Har soat        — takrorlanuvchi hujjatlar (cron_expression bo'yicha)
  */
 
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: UPDATE...FROM join (`UPDATE cc_documents d ... FROM cc_document_templates t`),
+ *   computed interval arithmetic from a column value (`(t.inbox_sla_hours || ' hours')::interval`),
+ *   UPDATE...RETURNING multiple columns to drive notifications, dynamic UUID
+ *   array `${rejectedIds}::uuid[]` cast for `= ANY(...)` bulk filter, and
+ *   `NOW()` / `INTERVAL '48 hours'` server-side date arithmetic. Target tables
+ *   (cc_documents, cc_approvals, cc_delegations, cc_audit_trail,
+ *   cc_notifications, cc_document_templates) are not present in the Drizzle
+ *   schema barrel.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';
@@ -65,13 +78,12 @@ export class CcSlaCron {
       this.logger.warn(`Inbox SLA: ${r.rows.length} hujjat muddati o'tdi`);
       const gw = getCcGateway();
       if (!gw) this.logger.warn('CcGateway not initialized — WebSocket SLA notifications skipped');
-      for (const row of r.rows) {
-        // Audit
+      // Pattern 2: each row's audit + notification writes are independent — fan out in parallel
+      await Promise.all(r.rows.map(async (row) => {
         await runQuery(sql`
           INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
           VALUES (${row.id}, 'inbox_24h_overdue', NULL, '24 soat SLA muddati o''tdi')
         `);
-        // Notification
         if (row.basket_owner_user_id) {
           await this.pushNotification({
             userId:  row.basket_owner_user_id,
@@ -85,7 +97,6 @@ export class CcSlaCron {
           });
           gw?.emitToUser(row.basket_owner_user_id, 'inbox:overdue', { documentId: row.id });
         }
-        // Yuboruvchiga ham xabar
         await this.pushNotification({
           userId:  row.sender_user_id,
           docId:   row.id,
@@ -96,7 +107,7 @@ export class CcSlaCron {
           messageRu: 'Ваш документ не рассматривается более 24 часов.',
           priority: 'normal',
         });
-      }
+      }));
     }
   }
 
@@ -126,7 +137,8 @@ export class CcSlaCron {
         WHERE document_id = ANY(${rejectedIds}::uuid[]) AND state = 'pending'
       `);
 
-      for (const row of r.rows) {
+      // Pattern 2: per-row audit + notification writes fan out in parallel
+      await Promise.all(r.rows.map(async (row) => {
         await runQuery(sql`
           INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
           VALUES (${row.id}, 'auto_rejected_48h', NULL,
@@ -142,7 +154,7 @@ export class CcSlaCron {
           messageRu: 'Ваш документ не рассмотрен за 48 часов и автоматически отклонён системой.',
           priority:  'urgent',
         });
-      }
+      }));
     }
   }
 
@@ -161,13 +173,12 @@ export class CcSlaCron {
     `);
     if (r.rows.length > 0) {
       this.logger.warn(`Escalated: ${r.rows.length} approval`);
-      for (const row of r.rows) {
-        await runQuery(sql`
-          INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
-          VALUES (${row.document_id}, 'escalated', ${row.approver_user_id},
-                  ${`Step ${row.step_order} muddati o'tdi — eskalatsiya`})
-        `);
-      }
+      // Pattern 2: per-row audit inserts are independent — run in parallel
+      await Promise.all(r.rows.map((row) => runQuery(sql`
+        INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
+        VALUES (${row.document_id}, 'escalated', ${row.approver_user_id},
+                ${`Step ${row.step_order} muddati o'tdi — eskalatsiya`})
+      `)));
     }
   }
 

@@ -60,26 +60,24 @@ export class ForecastRecalcProcessor extends WorkerHost {
     let skipped = 0;
     let failed = 0;
 
-    for (const productId of productIds) {
+    // Pattern 2: forecasting is independent per product — parallelise to avoid N+1 latency
+    const outcomes = await Promise.all(productIds.map(async (productId): Promise<'success' | 'skipped' | 'failed'> => {
       const histRes = await this.persistSvc.loadHistory(productId, 52);
       if (!histRes.ok) {
         this.logger.warn(`[forecast] Tarix yuklash xato: ${productId} — ${histRes.error.message}`);
-        failed++;
-        continue;
+        return 'failed';
       }
 
       const history = histRes.data;
       if (history.length < MIN_HISTORY_POINTS) {
         this.logger.debug(`[forecast] Yetarli tarix yo'q: ${productId} (${history.length} ta, min=${MIN_HISTORY_POINTS})`);
-        skipped++;
-        continue;
+        return 'skipped';
       }
 
       const emaRes = await this.forecastSvc.forecastEma(history, horizon);
       if (!emaRes.ok) {
         this.logger.warn(`[forecast] EMA xato: ${productId} — ${emaRes.error.message}`);
-        failed++;
-        continue;
+        return 'failed';
       }
 
       const predictedQty = safeNum(emaRes.data.predicted[0]);
@@ -95,12 +93,15 @@ export class ForecastRecalcProcessor extends WorkerHost {
         metrics: emaRes.data.metrics,
       }]);
 
-      if (saveRes.ok) {
-        succeeded++;
-      } else {
-        this.logger.warn(`[forecast] Saqlash xato: ${productId} — ${saveRes.error.message}`);
-        failed++;
-      }
+      if (saveRes.ok) return 'success';
+      this.logger.warn(`[forecast] Saqlash xato: ${productId} — ${saveRes.error.message}`);
+      return 'failed';
+    }));
+
+    for (const outcome of outcomes) {
+      if (outcome === 'success') succeeded++;
+      else if (outcome === 'skipped') skipped++;
+      else failed++;
     }
 
     this.logger.log(

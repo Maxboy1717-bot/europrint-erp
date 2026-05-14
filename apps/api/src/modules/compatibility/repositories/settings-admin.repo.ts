@@ -12,6 +12,7 @@ import {
   adminFilters as filtersTable,
 } from '@shared/db/europrint-compat';
 import { eq } from 'drizzle-orm';
+import { safeCall } from '@common/result';
 
 type GuidelineInsert  = { title: string; content: string; category: string; isActive: boolean; createdBy?: string };
 type GuidelineUpdate  = Partial<GuidelineInsert> & { updatedAt: Date };
@@ -22,131 +23,87 @@ type SystemUpdate     = { companyName?: string; timezone?: string; language?: st
 
 @Injectable()
 export class SettingsAdminRepo {
-  async findAllGuidelines() {
-    try {
-      return await db.select().from(guidelinesTable).orderBy(guidelinesTable.createdAt);
-    } catch (e) {
-      throw new Error(`settings_admin.findAllGuidelines: ${String(e)}`);
-    }
+  findAllGuidelines() {
+    return safeCall(() => db.select().from(guidelinesTable).orderBy(guidelinesTable.createdAt), 'DB_ERROR');
   }
 
-  async insertGuideline(data: GuidelineInsert) {
-    try {
-      return await db.insert(guidelinesTable).values({
-        title:     data.title,
-        content:   data.content,
-        category:  data.category,
-        isActive:  data.isActive,
-        createdBy: data.createdBy ?? null,
-      }).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.insertGuideline: ${String(e)}`);
-    }
+  insertGuideline(data: GuidelineInsert) {
+    return safeCall(() => db.insert(guidelinesTable).values({
+      title:     data.title,
+      content:   data.content,
+      category:  data.category,
+      isActive:  data.isActive,
+      createdBy: data.createdBy ?? null,
+    }).returning(), 'DB_ERROR');
   }
 
-  async updateGuideline(id: string, data: GuidelineUpdate) {
-    try {
-      return await db.update(guidelinesTable).set({
-        title:     data.title,
-        content:   data.content,
-        category:  data.category,
-        isActive:  data.isActive,
-        createdBy: data.createdBy,
-        updatedAt: data.updatedAt,
-      }).where(eq(guidelinesTable.id, id)).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.updateGuideline: ${String(e)}`);
-    }
+  updateGuideline(id: string, data: GuidelineUpdate) {
+    return safeCall(() => db.update(guidelinesTable).set({
+      title:     data.title,
+      content:   data.content,
+      category:  data.category,
+      isActive:  data.isActive,
+      createdBy: data.createdBy,
+      updatedAt: data.updatedAt,
+    }).where(eq(guidelinesTable.id, id)).returning(), 'DB_ERROR');
   }
 
-  async deleteGuideline(id: string) {
-    try {
-      return await db.delete(guidelinesTable).where(eq(guidelinesTable.id, id)).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.deleteGuideline: ${String(e)}`);
-    }
+  deleteGuideline(id: string) {
+    return safeCall(() => db.delete(guidelinesTable).where(eq(guidelinesTable.id, id)).returning(), 'DB_ERROR');
   }
 
-  async getContactSettings() {
-    try {
-      return await db.select().from(contactTable);
-    } catch (e) {
-      throw new Error(`settings_admin.getContactSettings: ${String(e)}`);
-    }
+  getContactSettings() {
+    return safeCall(() => db.select().from(contactTable), 'DB_ERROR');
   }
 
-  async upsertContactSettings(data: ContactUpdate) {
-    try {
+  upsertContactSettings(data: ContactUpdate) {
+    return safeCall(async () => {
       const existing = await db.select().from(contactTable);
       if (existing.length === 0) {
         return await db.insert(contactTable).values({ id: 1, ...data }).returning();
       }
       return await db.update(contactTable).set(data).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.upsertContactSettings: ${String(e)}`);
-    }
+    }, 'DB_ERROR');
   }
 
-  async getSystemSettings() {
-    try {
-      return await db.select().from(sysTable);
-    } catch (e) {
-      throw new Error(`settings_admin.getSystemSettings: ${String(e)}`);
-    }
+  getSystemSettings() {
+    return safeCall(() => db.select().from(sysTable), 'DB_ERROR');
   }
 
-  async upsertSystemSettings(data: SystemUpdate) {
-    try {
+  upsertSystemSettings(data: SystemUpdate) {
+    return safeCall(async () => {
       const existing = await db.select().from(sysTable);
       if (existing.length === 0) {
         return await db.insert(sysTable).values({ id: 1, ...data }).returning();
       }
       return await db.update(sysTable).set(data).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.upsertSystemSettings: ${String(e)}`);
-    }
+    }, 'DB_ERROR');
   }
 
-  async findAllFilters() {
-    try {
-      return await db.select().from(filtersTable).orderBy(filtersTable.createdAt);
-    } catch (e) {
-      throw new Error(`settings_admin.findAllFilters: ${String(e)}`);
-    }
+  findAllFilters() {
+    return safeCall(() => db.select().from(filtersTable).orderBy(filtersTable.createdAt), 'DB_ERROR');
   }
 
-  async insertFilter(data: FilterInsert) {
-    try {
-      return await db.insert(filtersTable).values({
-        name:       data.name,
-        filterType: data.filterType,
-        config:     data.config,
-        isActive:   data.isActive,
-      }).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.insertFilter: ${String(e)}`);
-    }
+  insertFilter(data: FilterInsert) {
+    return safeCall(() => db.insert(filtersTable).values({
+      name:       data.name,
+      filterType: data.filterType,
+      config:     data.config,
+      isActive:   data.isActive,
+    }).returning(), 'DB_ERROR');
   }
 
-  async updateFilter(id: string, data: FilterUpdate) {
-    try {
-      return await db.update(filtersTable).set({
-        name:       data.name,
-        filterType: data.filterType,
-        config:     data.config,
-        isActive:   data.isActive,
-        updatedAt:  data.updatedAt,
-      }).where(eq(filtersTable.id, id)).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.updateFilter: ${String(e)}`);
-    }
+  updateFilter(id: string, data: FilterUpdate) {
+    return safeCall(() => db.update(filtersTable).set({
+      name:       data.name,
+      filterType: data.filterType,
+      config:     data.config,
+      isActive:   data.isActive,
+      updatedAt:  data.updatedAt,
+    }).where(eq(filtersTable.id, id)).returning(), 'DB_ERROR');
   }
 
-  async deleteFilter(id: string) {
-    try {
-      return await db.delete(filtersTable).where(eq(filtersTable.id, id)).returning();
-    } catch (e) {
-      throw new Error(`settings_admin.deleteFilter: ${String(e)}`);
-    }
+  deleteFilter(id: string) {
+    return safeCall(() => db.delete(filtersTable).where(eq(filtersTable.id, id)).returning(), 'DB_ERROR');
   }
 }
