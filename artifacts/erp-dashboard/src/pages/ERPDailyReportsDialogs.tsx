@@ -14,6 +14,7 @@ import { Plus } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { DailyReportFormValues } from "./ERPDailyReportsTypes";
 import { defaultDailyReportValues } from "./ERPDailyReportsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface ReportFormDialogProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function ReportFormDialog({
   workCenters,
   orders,
 }: ReportFormDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -46,7 +48,7 @@ export function ReportFormDialog({
           data-testid="button-add-report"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Hisobot qo'shish
+          {t("hisobotQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
@@ -55,13 +57,13 @@ export function ReportFormDialog({
             {isEditing ? "Hisobotni tahrirlash" : "Yangi kunlik hisobot"}
           </DialogTitle>
           <DialogDescription>
-            Smena oxirida ishlab chiqarish natijalarini kiriting
+            {t("smenaOxiridaIshlabChiqarishNatijalarini")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="reportDate">Sana</Label>
+              <Label htmlFor="reportDate">{t("date")}</Label>
               <Input
                 id="reportDate"
                 type="date"
@@ -73,14 +75,14 @@ export function ReportFormDialog({
               )}
             </div>
             <div>
-              <Label htmlFor="shift">Smena</Label>
+              <Label htmlFor="shift">{t("smena")}</Label>
               <Controller
                 control={form.control}
                 name="shift"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="shift" data-testid="select-shift" className="h-9">
-                      <SelectValue placeholder="Smena tanlang" />
+                      <SelectValue placeholder={t("smenaTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1-smena">1-smena</SelectItem>
@@ -98,14 +100,14 @@ export function ReportFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="userId">Xodim</Label>
+              <Label htmlFor="userId">{t("xodim1")}</Label>
               <Controller
                 control={form.control}
                 name="userId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="userId" data-testid="select-user" className="h-9">
-                      <SelectValue placeholder="Xodim tanlang" />
+                      <SelectValue placeholder={t("xodimTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Array.isArray(users) ? users : []).map((user) => (
@@ -122,14 +124,14 @@ export function ReportFormDialog({
               )}
             </div>
             <div>
-              <Label htmlFor="workCenterId">Ish markazi</Label>
+              <Label htmlFor="workCenterId">{t("ishMarkazi")}</Label>
               <Controller
                 control={form.control}
                 name="workCenterId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="workCenterId" data-testid="select-work-center" className="h-9">
-                      <SelectValue placeholder="Ish markazi tanlang" />
+                      <SelectValue placeholder={t("ishMarkaziTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Array.isArray(workCenters) ? workCenters : []).map((wc) => (
@@ -148,14 +150,14 @@ export function ReportFormDialog({
           </div>
 
           <div>
-            <Label htmlFor="productionOrderId">Buyurtma</Label>
+            <Label htmlFor="productionOrderId">{t("Buyurtma")}</Label>
             <Controller
               control={form.control}
               name="productionOrderId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="productionOrderId" data-testid="select-order" className="h-9">
-                    <SelectValue placeholder="Buyurtma tanlang" />
+                    <SelectValue placeholder={t("buyurtmaTanlang")} />
                   </SelectTrigger>
                   <SelectContent>
                     {(Array.isArray(orders) ? orders : []).map((order) => (
@@ -227,11 +229,11 @@ export function ReportFormDialog({
           </div>
 
           <div>
-            <Label htmlFor="downtimeReasonCode">To'xtash sababi</Label>
+            <Label htmlFor="downtimeReasonCode">{t("toxtashSababi")}</Label>
             <Input
               id="downtimeReasonCode"
               {...form.register("downtimeReasonCode")}
-              placeholder="Masalan: nosozlik, material yetishmasligi"
+              placeholder={t("masalanNosozlikMaterialYetishmasligi")}
               data-testid="input-downtime-reason"
             />
             {form.formState.errors.downtimeReasonCode && (
@@ -240,11 +242,11 @@ export function ReportFormDialog({
           </div>
 
           <div>
-            <Label htmlFor="comment">Izoh</Label>
+            <Label htmlFor="comment">{t("Izoh")}</Label>
             <Textarea
               id="comment"
               {...form.register("comment")}
-              placeholder="Qo'shimcha ma'lumotlar"
+              placeholder={t("qoshimchaMalumotlar")}
               data-testid="input-comment"
             />
             {form.formState.errors.comment && (
@@ -259,7 +261,7 @@ export function ReportFormDialog({
               onClick={() => onOpenChange(false)}
               data-testid="button-cancel"
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSaving} data-testid="button-save">
               {isSaving ? "Saqlanmoqda..." : "Saqlash"}
@@ -282,8 +284,8 @@ export function DeleteReportDialog({ deleteId, onOpenChange, onConfirm }: Delete
     <ConfirmDialog
       open={!!deleteId}
       onOpenChange={(v) => { if (!v) onOpenChange(false); }}
-      title="Hisobotni o'chirish"
-      description="Ushbu kunlik hisobotni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("hisobotniOchirish")}
+      description={t("ushbuKunlikHisobotniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       variant="destructive"
       onConfirm={onConfirm}

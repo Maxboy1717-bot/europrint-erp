@@ -10,6 +10,7 @@ import { TrendingUp, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const SKILLS_GAP_DATA = [
   { skill: "Mashina boshqarish (Gofrokarton)", required: 4, current: 3.2, employees: 8, status: "gap" },
@@ -23,12 +24,13 @@ const SKILLS_GAP_DATA = [
 ];
 
 export function SkillsGapTab() {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5" />Skills Gap Tahlili</CardTitle>
+        <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5" />{t("skillsGapTahlili")}</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="ep-table-scroll"><Table>

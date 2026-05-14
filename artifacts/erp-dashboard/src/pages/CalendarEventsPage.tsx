@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface CalendarEvent {
   id: string | number;
@@ -60,6 +61,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 const QUERY_KEY = ["/api/calendar-events"];
 
 export default function CalendarEventsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [typeFilter, setTypeFilter] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
@@ -112,12 +114,12 @@ export default function CalendarEventsPage() {
   return (
     <ModulePage
       module="hr"
-      title="Taqvim Tadbirlari"
+      title={t("taqvimTadbirlari")}
       icon={<Calendar className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-event">
           <Plus className="h-4 w-4 mr-2" />
-          Tadbir qo'shish
+          {t("tadbirQoshish")}
         </Button>
       }
     >
@@ -155,7 +157,7 @@ export default function CalendarEventsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Tadbirlar topilmadi</p>
+              <p className="text-muted-foreground">{t("tadbirlarTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -176,7 +178,7 @@ export default function CalendarEventsPage() {
                           {EVENT_TYPE_LABELS[eType] ?? eType}
                         </span>
                         {allDay && (
-                          <Badge variant="outline" className="text-xs">Butun kun</Badge>
+                          <Badge variant="outline" className="text-xs">{t("butunKun")}</Badge>
                         )}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-muted-foreground">
@@ -211,21 +213,21 @@ export default function CalendarEventsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi tadbir</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiTadbir")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Tadbir nomi *</Label>
+              <Label>{t("tadbirNomi1")}</Label>
               <Input
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="Tadbir nomi"
+                placeholder={t("tadbirNomi")}
                 data-testid="input-event-title"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Boshlanish *</Label>
+                <Label>{t("boshlanish2")}</Label>
                 <Input
                   type="datetime-local"
                   value={form.startDate}
@@ -234,7 +236,7 @@ export default function CalendarEventsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Tugash</Label>
+                <Label>{t("tugash")}</Label>
                 <Input
                   type="datetime-local"
                   value={form.endDate}
@@ -245,7 +247,7 @@ export default function CalendarEventsPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Tur</Label>
+                <Label>{t("tur")}</Label>
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                   value={form.eventType}
@@ -258,28 +260,28 @@ export default function CalendarEventsPage() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label>Joy</Label>
+                <Label>{t("joy")}</Label>
                 <Input
                   value={form.location}
                   onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                  placeholder="Tadbir joyi"
+                  placeholder={t("tadbirJoyi")}
                   data-testid="input-event-location"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Tavsif</Label>
+              <Label>{t("progress.description")}</Label>
               <Textarea
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 rows={2}
-                placeholder="Tadbir haqida..."
+                placeholder={t("tadbirHaqida")}
                 data-testid="input-event-description"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.title.trim()) createMutation.mutate(form); }}
               disabled={!form.title.trim() || createMutation.isPending}

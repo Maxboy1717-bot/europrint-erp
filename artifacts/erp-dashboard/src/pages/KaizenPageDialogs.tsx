@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Lightbulb } from "lucide-react";
 import type { KaizenSuggestion } from "./KaizenPageTypes";
 import { STATUS_CONFIG, STATUS_TRANSITIONS } from "./KaizenPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── SubmitForm ────────────────────────────────────────────────────────────────
 
@@ -45,38 +46,38 @@ function SubmitForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1">
-        <Label htmlFor="title">Sarlavha *</Label>
+        <Label htmlFor="title">{t("sarlavha")}</Label>
         <Input
           id="title"
           value={form.title}
           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-          placeholder="G'oya qisqa sarlavhasi"
+          placeholder={t("goyaQisqaSarlavhasi")}
           required
         />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="description">Tavsif *</Label>
+        <Label htmlFor="description">{t("tavsif")}</Label>
         <Textarea
           id="description"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          placeholder="G'oyani batafsil tushuntiring"
+          placeholder={t("goyaniBatafsilTushuntiring")}
           rows={4}
           required
         />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="impact">Kutilayotgan natija</Label>
+        <Label htmlFor="impact">{t("kutilayotganNatija1")}</Label>
         <Textarea
           id="impact"
           value={form.expectedImpact}
           onChange={(e) => setForm((f) => ({ ...f, expectedImpact: e.target.value }))}
-          placeholder="Qanday foydani kutmoqdasiz?"
+          placeholder={t("qandayFoydaniKutmoqdasiz")}
           rows={2}
         />
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onClose}>Bekor qilish</Button>
+        <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Topshirilmoqda..." : "Topshirish"}
         </Button>
@@ -113,14 +114,14 @@ function StatusDialogBody({
       <div className="p-3 bg-muted rounded-lg">
         <p className="font-medium text-sm">{suggestion.title}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Joriy holat: <strong>{STATUS_CONFIG[suggestion.status]?.label}</strong>
+          {t("joriyHolat")}<strong>{STATUS_CONFIG[suggestion.status]?.label}</strong>
         </p>
       </div>
       <div className="space-y-1">
-        <Label>Yangi holat</Label>
+        <Label>{t("yangiHolat1")}</Label>
         <Select value={newStatus} onValueChange={setNewStatus}>
           <SelectTrigger>
-            <SelectValue placeholder="Holat tanlang" />
+            <SelectValue placeholder={t("holatTanlang")} />
           </SelectTrigger>
           <SelectContent>
             {(Array.isArray(nextStatuses) ? nextStatuses : []).map((s) => (
@@ -131,28 +132,28 @@ function StatusDialogBody({
       </div>
       {newStatus === "rejected" && (
         <div className="space-y-1">
-          <Label>Rad etish sababi *</Label>
+          <Label>{t("radEtishSababi")}</Label>
           <Textarea
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            placeholder="Nima uchun rad etildi?"
+            placeholder={t("nimaUchunRadEtildi")}
             rows={3}
           />
         </div>
       )}
       {newStatus === "completed" && (
         <div className="space-y-1">
-          <Label>Natija o'lchovi</Label>
+          <Label>{t("natijaOlchovi")}</Label>
           <Textarea
             value={resultMeasured}
             onChange={(e) => setResultMeasured(e.target.value)}
-            placeholder="Natijalari qanday bo'ldi?"
+            placeholder={t("natijalariQandayBoldi")}
             rows={3}
           />
         </div>
       )}
       <DialogFooter>
-        <Button variant="outline" onClick={onClose}>Bekor qilish</Button>
+        <Button variant="outline" onClick={onClose}>{t("cancel")}</Button>
         <Button
           disabled={!newStatus || mutation.isPending || (newStatus === "rejected" && !rejectionReason)}
           onClick={() =>
@@ -179,12 +180,13 @@ interface KaizenSubmitDialogProps {
 }
 
 export function KaizenSubmitDialog({ open, onOpenChange, onSuccess }: KaizenSubmitDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Lightbulb className="w-5 h-5" /> Yangi G'oya Topshirish
+            <Lightbulb className="w-5 h-5" /> {t("yangiGoyaTopshirish")}
           </DialogTitle>
         </DialogHeader>
         <SubmitForm onClose={() => onOpenChange(false)} onSuccess={onSuccess} />
@@ -206,7 +208,7 @@ export function KaizenStatusDialog({ target, onClose, onSuccess }: KaizenStatusD
     <Dialog open={!!target} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Holat o'zgartirish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("holatOzgartirish")}</DialogTitle>
         </DialogHeader>
         {target && (
           <StatusDialogBody suggestion={target} onClose={onClose} onSuccess={onSuccess} />

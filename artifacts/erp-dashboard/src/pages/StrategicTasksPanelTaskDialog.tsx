@@ -26,6 +26,7 @@ import { UseFormReturn } from "react-hook-form";
 import type { StrategicCategory, InsertStrategicTask } from "@shared/schema";
 import { Plus } from "lucide-react";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS } from "./StrategicTasksPanelTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface TaskDialogProps {
   open: boolean;
@@ -44,17 +45,18 @@ export function TaskDialog({
   onSubmit,
   isPending,
 }: TaskDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button data-testid="button-add-task" onClick={() => form.reset()}>
           <Plus className="h-4 w-4 mr-2" />
-          Vazifa qo'shish
+          {t("vazifaQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi strategik vazifa</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiStrategikVazifa")}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -64,7 +66,7 @@ export function TaskDialog({
                 name="taskNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vazifa raqami</FormLabel>
+                    <FormLabel>{t("vazifaRaqami")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -81,11 +83,11 @@ export function TaskDialog({
                 name="categoryId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kategoriya</FormLabel>
+                    <FormLabel>{t("category")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger data-testid="select-task-category" className="h-9">
-                          <SelectValue placeholder="Tanlang" />
+                          <SelectValue placeholder={t("tanlang")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -108,7 +110,7 @@ export function TaskDialog({
                 <FormItem>
                   <FormLabel>Sarlavha (UZ)</FormLabel>
                   <FormControl>
-                    <Input {...field} data-testid="input-task-title" placeholder="Vazifa sarlavhasi" />
+                    <Input {...field} data-testid="input-task-title" placeholder={t("vazifaSarlavhasi")} />
                   </FormControl>
                 </FormItem>
               )}
@@ -132,9 +134,9 @@ export function TaskDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif</FormLabel>
+                  <FormLabel>{t("progress.description")}</FormLabel>
                   <FormControl>
-                    <Textarea {...field} value={field.value || ""} data-testid="input-task-description" placeholder="Batafsil tavsif" rows={3} />
+                    <Textarea {...field} value={field.value || ""} data-testid="input-task-description" placeholder={t("batafsilTavsif")} rows={3} />
                   </FormControl>
                 </FormItem>
               )}
@@ -146,7 +148,7 @@ export function TaskDialog({
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Muhimlik</FormLabel>
+                    <FormLabel>{t("priority")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-task-priority" className="h-9">
@@ -170,7 +172,7 @@ export function TaskDialog({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Holat</FormLabel>
+                    <FormLabel>{t("status28")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-task-status" className="h-9">
@@ -196,9 +198,9 @@ export function TaskDialog({
                 name="phase"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bosqich</FormLabel>
+                    <FormLabel>{t("milestone1")}</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value || ""} data-testid="input-task-phase" placeholder="Masalan: Q1, Q2" />
+                      <Input {...field} value={field.value || ""} data-testid="input-task-phase" placeholder={t("masalanQ1Q2")} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -209,9 +211,9 @@ export function TaskDialog({
                 name="targetModule"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Maqsadli modul</FormLabel>
+                    <FormLabel>{t("maqsadliModul")}</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value || ""} data-testid="input-task-module" placeholder="Masalan: HR, CRM" />
+                      <Input {...field} value={field.value || ""} data-testid="input-task-module" placeholder={t("masalanHrCrm")} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -224,7 +226,7 @@ export function TaskDialog({
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Boshlanish sanasi</FormLabel>
+                    <FormLabel>{t("startDate")}</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ""} type="date" data-testid="input-task-start-date" />
                     </FormControl>
@@ -237,7 +239,7 @@ export function TaskDialog({
                 name="targetDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Maqsad sanasi</FormLabel>
+                    <FormLabel>{t("maqsadSanasi")}</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ""} type="date" data-testid="input-task-target-date" />
                     </FormControl>
@@ -251,7 +253,7 @@ export function TaskDialog({
               name="estimatedHours"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Taxminiy soatlar</FormLabel>
+                  <FormLabel>{t("taxminiySoatlar1")}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -279,7 +281,7 @@ export function TaskDialog({
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="!mt-0">Avtomatlashtirilishi mumkin</FormLabel>
+                    <FormLabel className="!mt-0">{t("avtomatlashtirilishiMumkin")}</FormLabel>
                   </FormItem>
                 )}
               />
@@ -296,7 +298,7 @@ export function TaskDialog({
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="!mt-0">Sanoatga moslashuvchan</FormLabel>
+                    <FormLabel className="!mt-0">{t("sanoatgaMoslashuvchan")}</FormLabel>
                   </FormItem>
                 )}
               />
@@ -304,7 +306,7 @@ export function TaskDialog({
 
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" data-testid="button-save-task" disabled={isPending}>
                 {isPending ? "Saqlanmoqda..." : "Saqlash"}

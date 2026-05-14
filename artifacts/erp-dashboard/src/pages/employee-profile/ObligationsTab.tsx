@@ -11,6 +11,7 @@ import { CreditCard, DollarSign, AlertCircle, CheckCircle, RefreshCw } from "luc
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 interface CashAdvance {
   id: number;
@@ -35,6 +36,7 @@ function fmtMoney(v: string | number | null | undefined) {
 }
 
 export function ObligationsTab({ employeeId, cashAdvances = [], loadingCashAdvances }: Props) {
+  const { t } = useTranslation("common");
   const { data: loansData, isLoading: loadingLoans } = useQuery({
     queryKey: ["/api/finance/loans", employeeId],
     queryFn: async () => {
@@ -59,7 +61,7 @@ export function ObligationsTab({ employeeId, cashAdvances = [], loadingCashAdvan
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-5">
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -99,7 +101,7 @@ export function ObligationsTab({ employeeId, cashAdvances = [], loadingCashAdvan
           {!isLoading && advances.length === 0 && (
             <div className="text-center py-10 text-[13px] text-muted-foreground">
               <DollarSign className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">Avanslar yo'q</p>
+              <p className="text-sm">{t("avanslarYoq")}</p>
             </div>
           )}
           <div className="space-y-2">

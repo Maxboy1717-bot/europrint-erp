@@ -10,6 +10,7 @@ import { TrendingUp, AlertTriangle, CheckCircle2, BarChart3, RefreshCw } from "l
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ControlChartData {
   dataPoints: Array<{
@@ -45,6 +46,7 @@ interface ControlChartData {
 }
 
 export function QCSPCTab() {
+  const { t } = useTranslation("common");
   const { data, isLoading } = useQuery<ControlChartData>({
     queryKey: ["/api/qc/spc/control-chart"],
   });
@@ -61,7 +63,7 @@ export function QCSPCTab() {
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
-          SPC tahlili uchun yakuniy tekshiruv ma'lumotlari yetarli emas
+          {t("spcTahliliUchunYakuniyTekshiruv")}
         </CardContent>
       </Card>
     );
@@ -79,7 +81,7 @@ export function QCSPCTab() {
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
@@ -102,7 +104,7 @@ export function QCSPCTab() {
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">Nazorat tashqarisi</p>
+            <p className="text-sm text-muted-foreground">{t("nazoratTashqarisi")}</p>
             <p className={`text-2xl font-bold ${outOfControl.length > 0 ? "text-destructive" : "text-[var(--ep-green)]"}`}
                data-testid="spc-out-of-control">{outOfControl.length}</p>
           </CardHeader>
@@ -156,7 +158,7 @@ export function QCSPCTab() {
               <Badge variant={cpkColor}>{processCapability.cpk ?? "—"}</Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Baholash</span>
+              <span className="text-sm font-medium">{t("baholash")}</span>
               <span className="text-sm font-semibold">{processCapability.interpretation}</span>
             </div>
             <div className="pt-2 border-t text-xs text-muted-foreground">
@@ -196,7 +198,7 @@ export function QCSPCTab() {
         <Card>
           <CardContent className="py-4 flex items-center gap-2 text-[var(--ep-green)]">
             <CheckCircle2 className="w-5 h-5" />
-            <span className="text-sm font-medium">Barcha o'lchov nuqtalari nazorat chegarasida — jarayon barqaror</span>
+            <span className="text-sm font-medium">{t("barchaOlchovNuqtalariNazoratChegarasida")}</span>
           </CardContent>
         </Card>
       )}

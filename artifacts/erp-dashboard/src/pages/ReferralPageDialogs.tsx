@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Referral, AddForm, EditForm } from "./ReferralPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // AddReferralDialog
@@ -34,6 +35,7 @@ export function AddReferralDialog({
   isPending,
   onSubmit,
 }: AddReferralDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
@@ -42,16 +44,16 @@ export function AddReferralDialog({
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div>
-            <Label>To'liq ismi</Label>
+            <Label>{t("toliqIsmi")}</Label>
             <Input
               value={form.candidate_full_name}
               onChange={e => onFormChange(f => ({ ...f, candidate_full_name: e.target.value }))}
-              placeholder="Ism Familiya Otasining ismi"
+              placeholder={t("ismFamiliyaOtasiningIsmi")}
               className="mt-1"
             />
           </div>
           <div>
-            <Label>Telefon raqami</Label>
+            <Label>{t("telefonRaqami")}</Label>
             <Input
               value={form.candidate_phone}
               onChange={e => onFormChange(f => ({ ...f, candidate_phone: e.target.value }))}
@@ -60,17 +62,17 @@ export function AddReferralDialog({
             />
           </div>
           <div>
-            <Label>Qaysi lavozimga?</Label>
+            <Label>{t("qaysiLavozimga")}</Label>
             <Input
               value={form.position_title}
               onChange={e => onFormChange(f => ({ ...f, position_title: e.target.value }))}
-              placeholder="Lavozim nomi"
+              placeholder={t("lavozimNomi1")}
               className="mt-1"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button
             onClick={onSubmit}
             disabled={!form.candidate_full_name || !form.candidate_phone || !form.position_title || isPending}
@@ -113,28 +115,28 @@ export function EditReferralDialog({
         {editTarget && (
           <div className="space-y-4 py-2">
             <div>
-              <Label>Holat</Label>
+              <Label>{t("status28")}</Label>
               <Select value={editForm.status} onValueChange={v => onEditFormChange(f => ({ ...f, status: v }))}>
                 <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Kutilmoqda</SelectItem>
-                  <SelectItem value="interview">Intervyuda</SelectItem>
-                  <SelectItem value="hired">Qabul qilindi</SelectItem>
-                  <SelectItem value="rejected">Rad etildi</SelectItem>
+                  <SelectItem value="pending">{t("Kutilmoqda")}</SelectItem>
+                  <SelectItem value="interview">{t("intervyuda")}</SelectItem>
+                  <SelectItem value="hired">{t("qabulQilindi")}</SelectItem>
+                  <SelectItem value="rejected">{t("radEtildi")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {editForm.status === "hired" && (
               <>
                 <div>
-                  <Label>Bonus turi</Label>
+                  <Label>{t("bonusTuri")}</Label>
                   <Select value={editForm.bonus_type} onValueChange={v => onEditFormChange(f => ({ ...f, bonus_type: v }))}>
                     <SelectTrigger className="mt-1 h-9">
-                      <SelectValue placeholder="Bonus tanlang..." />
+                      <SelectValue placeholder={t("bonusTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="money">Pul bonusi</SelectItem>
-                      <SelectItem value="vacation">Ta'til kunlari</SelectItem>
+                      <SelectItem value="money">{t("pulBonusi")}</SelectItem>
+                      <SelectItem value="vacation">{t("tatilKunlari")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -154,7 +156,7 @@ export function EditReferralDialog({
                     checked={editForm.bonus_paid}
                     onChange={e => onEditFormChange(f => ({ ...f, bonus_paid: e.target.checked }))}
                   />
-                  <Label htmlFor="bp">Bonus to'landi</Label>
+                  <Label htmlFor="bp">{t("bonusTolandi")}</Label>
                 </div>
               </>
             )}
@@ -170,7 +172,7 @@ export function EditReferralDialog({
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button onClick={onSubmit} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

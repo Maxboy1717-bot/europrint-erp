@@ -61,9 +61,9 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField control={form.control} name="title" render={({ field }) => (
             <FormItem>
-              <FormLabel>Lead nomi *</FormLabel>
+              <FormLabel>{t("leadNomi")}</FormLabel>
               <FormControl>
-                <Input placeholder="Lead nomini kiriting" {...field} data-testid="input-lead-title" />
+                <Input placeholder={t("leadNominiKiriting")} {...field} data-testid="input-lead-title" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -72,18 +72,18 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
-                <FormLabel>Ism</FormLabel>
+                <FormLabel>{t("ism1")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ism" {...field} data-testid="input-lead-name" />
+                  <Input placeholder={t("ism1")} {...field} data-testid="input-lead-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="lastName" render={({ field }) => (
               <FormItem>
-                <FormLabel>Familiya</FormLabel>
+                <FormLabel>{t("familiya")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Familiya" {...field} data-testid="input-lead-lastname" />
+                  <Input placeholder={t("familiya")} {...field} data-testid="input-lead-lastname" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -92,9 +92,9 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
 
           <FormField control={form.control} name="companyTitle" render={({ field }) => (
             <FormItem>
-              <FormLabel>Kompaniya</FormLabel>
+              <FormLabel>{t("company")}</FormLabel>
               <FormControl>
-                <Input placeholder="Kompaniya nomi" {...field} data-testid="input-lead-company" />
+                <Input placeholder={t("kompaniyaNomi1")} {...field} data-testid="input-lead-company" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,21 +118,21 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
 
           <FormField control={form.control} name="sourceId" render={({ field }) => (
             <FormItem>
-              <FormLabel>Manba</FormLabel>
+              <FormLabel>{t("manba")}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger data-testid="select-lead-source" className="h-9">
-                    <SelectValue placeholder="Manbani tanlang" />
+                    <SelectValue placeholder={t("manbaniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="CALL">Telefon</SelectItem>
-                  <SelectItem value="WEB">Sayt</SelectItem>
+                  <SelectItem value="CALL">{t("phone")}</SelectItem>
+                  <SelectItem value="WEB">{t("sayt")}</SelectItem>
                   <SelectItem value="EMAIL">{t('email1')}</SelectItem>
-                  <SelectItem value="TELEGRAM">Telegram</SelectItem>
-                  <SelectItem value="REFERRAL">Tavsiya</SelectItem>
-                  <SelectItem value="PARTNER">Hamkor</SelectItem>
-                  <SelectItem value="OTHER">Boshqa</SelectItem>
+                  <SelectItem value="TELEGRAM">{t("telegram")}</SelectItem>
+                  <SelectItem value="REFERRAL">{t("tavsiya")}</SelectItem>
+                  <SelectItem value="PARTNER">{t("hamkor")}</SelectItem>
+                  <SelectItem value="OTHER">{t("boshqa")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -141,9 +141,9 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
 
           <FormField control={form.control} name="comments" render={({ field }) => (
             <FormItem>
-              <FormLabel>Izoh</FormLabel>
+              <FormLabel>{t("Izoh")}</FormLabel>
               <FormControl>
-                <Textarea placeholder="Qo'shimcha izoh..." {...field} data-testid="input-lead-comments" />
+                <Textarea placeholder={t("qoshimchaIzoh")} {...field} data-testid="input-lead-comments" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -156,7 +156,7 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
             </Button>
             <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-edit">
               <X className="h-4 w-4 mr-2" />
-              Bekor qilish
+              {t("cancel")}
             </Button>
           </div>
         </form>
@@ -168,18 +168,18 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">To'liq ism</p>
+          <p className="text-sm text-muted-foreground">{t("toliqIsm")}</p>
           <p className="font-medium">{([lead?.name, lead?.lastName]).filter(Boolean).join(" ") || "—"}</p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Kompaniya</p>
+          <p className="text-sm text-muted-foreground">{t("company")}</p>
           <p className="font-medium">{lead?.companyTitle || "—"}</p>
         </div>
       </div>
 
       {lead?.phones && lead.phones.length > 0 && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Telefon</p>
+          <p className="text-sm text-muted-foreground mb-1">{t("phone")}</p>
           <div className="space-y-1">
             {(Array.isArray(lead.phones) ? lead.phones : []).map((phone, idx) => (
               <div key={idx} className="flex items-center gap-2">
@@ -209,12 +209,12 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Manba</p>
+          <p className="text-sm text-muted-foreground">{t("manba")}</p>
           <p className="font-medium">{lead?.sourceId || "—"}</p>
         </div>
         {lead?.opportunity ? (
           <div>
-            <p className="text-sm text-muted-foreground">Summa</p>
+            <p className="text-sm text-muted-foreground">{t("summa")}</p>
             <p className="font-bold text-[var(--ep-green)]">{lead.opportunity.toLocaleString()} UZS</p>
           </div>
         ) : null}
@@ -222,7 +222,7 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
 
       {lead?.comments && (
         <div>
-          <p className="text-sm text-muted-foreground">Izoh</p>
+          <p className="text-sm text-muted-foreground">{t("Izoh")}</p>
           <p className="text-sm">{lead.comments}</p>
         </div>
       )}
@@ -230,11 +230,11 @@ export function LeadInfo({lead, isEditing, isPending, onSubmit, onCancel }: Lead
       <Separator />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div>
-          <p className="text-muted-foreground">Yaratilgan</p>
+          <p className="text-muted-foreground">{t("Yaratilgan")}</p>
           <p>{lead?.dateCreate && format(new Date(lead.dateCreate), "dd.MM.yyyy HH:mm")}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">O'zgartirilgan</p>
+          <p className="text-muted-foreground">{t("ozgartirilgan")}</p>
           <p>{lead?.dateModify && format(new Date(lead.dateModify), "dd.MM.yyyy HH:mm")}</p>
         </div>
       </div>

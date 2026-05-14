@@ -111,12 +111,12 @@ export default function CandidatesPage() {
   return (
     <ModulePage
       module="hr"
-      title="Nomzodlar"
+      title={t("nomzodlar")}
       icon={<UserPlus className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-add-candidate">
           <UserPlus className="h-4 w-4 mr-2" />
-          Nomzod qo'shish
+          {t("nomzodQoshish")}
         </Button>
       }
     >
@@ -124,7 +124,7 @@ export default function CandidatesPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Nomzod qidirish..."
+            placeholder={t("nomzodQidirish")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -212,15 +212,15 @@ export default function CandidatesPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi nomzod</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiNomzod")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Ism familya *</Label>
-              <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} placeholder="Ism Familya" data-testid="input-candidate-name" />
+              <Label>{t("ismFamilya1")}</Label>
+              <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} placeholder={t("ismFamilya")} data-testid="input-candidate-name" />
             </div>
             <div className="space-y-1.5">
-              <Label>Lavozim</Label>
+              <Label>{t("lavozim1")}</Label>
               <Input value={form.position} onChange={e => setForm(f => ({ ...f, position: e.target.value }))} placeholder={t('juniorDeveloper')} data-testid="input-candidate-position" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -229,12 +229,12 @@ export default function CandidatesPage() {
                 <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" data-testid="input-candidate-email" />
               </div>
               <div className="space-y-1.5">
-                <Label>Telefon</Label>
+                <Label>{t("phone")}</Label>
                 <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+998901234567" data-testid="input-candidate-phone" />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Holat</Label>
+              <Label>{t("status28")}</Label>
               <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
                 <SelectTrigger data-testid="select-candidate-status" className="h-9">
                   <SelectValue />
@@ -248,7 +248,7 @@ export default function CandidatesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.fullName.trim()) createMutation.mutate(form); }}
               disabled={!form.fullName.trim() || createMutation.isPending}
@@ -263,18 +263,18 @@ export default function CandidatesPage() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent data-testid="dialog-confirm-delete-candidate">
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Haqiqatan ham bu nomzodni o'chirmoqchimisiz?
+              {t("haqiqatanHamBuNomzodniOchirmoqchimisiz")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor</AlertDialogCancel>
+            <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
               data-testid="button-confirm-delete-candidate"
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

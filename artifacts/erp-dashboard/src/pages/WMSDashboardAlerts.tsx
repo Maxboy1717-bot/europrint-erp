@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, BoxesIcon, RefreshCw } from "lucide-react";
 import type { AlertData, TopMaterial } from "./WMSDashboardTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface AlertsCardProps {
   alerts: AlertData | undefined;
@@ -21,13 +22,14 @@ interface AlertsCardProps {
 }
 
 export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isChecking, onReserveStock }: AlertsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center justify-between">
           <span className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />
-            Diqqat talab qiluvchi
+            {t("diqqatTalabQiluvchi")}
           </span>
           <div className="flex items-center gap-2">
             {totalAlerts > 0 && <EPStatusPill tone="danger">{totalAlerts}</EPStatusPill>}
@@ -58,7 +60,7 @@ export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isCh
             )}
             {(alerts?.overdueTasks || 0) > 0 && (
               <div className="flex items-center justify-between p-2 rounded-md border border-red-200 bg-red-50">
-                <span className="text-sm">Muddati o'tgan rezervatsiyalar</span>
+                <span className="text-sm">{t("muddatiOtganRezervatsiyalar")}</span>
                 <EPStatusPill tone="danger">{alerts?.overdueTasks}</EPStatusPill>
               </div>
             )}
@@ -76,13 +78,13 @@ export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isCh
                     className="h-6 text-xs px-2"
                     onClick={() => onReserveStock({ materialId: m.id, urgent: true })}
                   >
-                    So'rov
+                    {t("sorov")}
                   </Button>
                 </div>
               </div>
             ))}
             {totalAlerts === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">Hozircha muammolar yo'q</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("hozirchaMuammolarYoq")}</p>
             )}
           </div>
         )}
@@ -135,7 +137,7 @@ export function TopMaterialsCard({ topMaterials, isLoading }: TopMaterialsCardPr
               );
             })}
             {(!topMaterials || topMaterials.length === 0) && (
-              <p className="text-sm text-muted-foreground text-center py-4">Material ma'lumotlari topilmadi</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("materialMalumotlariTopilmadi")}</p>
             )}
           </div>
         )}

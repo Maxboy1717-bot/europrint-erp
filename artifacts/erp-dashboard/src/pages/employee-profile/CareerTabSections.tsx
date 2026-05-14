@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Briefcase, TrendingUp, Target, ArrowRight, Users, Brain, History } from "lucide-react";
 import type { CareerData, CareerProfile } from "./CareerTabTypes";
 import { CROSS_TRAINING_LABELS, TRANSFER_TYPE_LABELS } from "./CareerTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface KpiCardsProps {
   careerData: CareerData | undefined;
@@ -16,13 +17,14 @@ interface KpiCardsProps {
 }
 
 export function CareerKpiCards({ careerData, profile }: KpiCardsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="from-blue-500/10 to-blue-600/10 border-blue-500/20">
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Joriy lavozimdagi vaqt</p>
+              <p className="text-xs text-muted-foreground">{t("joriyLavozimdagiVaqt")}</p>
               <p className="text-xl font-bold text-[var(--ep-blue)]">{careerData?.timeInPosition || "—"}</p>
             </div>
             <Briefcase className="h-6 w-6 text-[var(--ep-blue)]" />
@@ -48,13 +50,13 @@ export function CareerKpiCards({ careerData, profile }: KpiCardsProps) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Aralash tayyorlov</p>
+              <p className="text-xs text-muted-foreground">{t("aralashTayyorlov")}</p>
               {profile?.crossTrainingStatus ? (
                 <Badge className={`mt-1 ${CROSS_TRAINING_LABELS[profile.crossTrainingStatus]?.color}`}>
                   {CROSS_TRAINING_LABELS[profile.crossTrainingStatus]?.label}
                 </Badge>
               ) : (
-                <p className="text-sm text-muted-foreground mt-1">Belgilanmagan</p>
+                <p className="text-sm text-muted-foreground mt-1">{t("belgilanmagan1")}</p>
               )}
             </div>
             <TrendingUp className="h-6 w-6 text-[var(--ep-green)]" />
@@ -74,25 +76,25 @@ export function CareerProfileReadView({ profile, onEdit }: ProfileReadViewProps)
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <p className="text-sm text-muted-foreground">Keyingi tavsiya etilgan lavozim</p>
+        <p className="text-sm text-muted-foreground">{t("keyingiTavsiyaEtilganLavozim")}</p>
         <p className="font-medium flex items-center gap-2 mt-1">
           <ArrowRight className="h-4 w-4 text-primary" />
           {profile.nextRecommendedPosition || "Belgilanmagan"}
         </p>
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Vorislik rejasi</p>
+        <p className="text-sm text-muted-foreground">{t("vorislikRejasi")}</p>
         <p className="font-medium flex items-center gap-2 mt-1">
           <Users className="h-4 w-4 text-primary" />
           {profile.successionFor || "Belgilanmagan"}
         </p>
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Karera yo'nalishi</p>
+        <p className="text-sm text-muted-foreground">{t("kareraYonalishi")}</p>
         <p className="font-medium mt-1">{profile.careerPathDirection || "—"}</p>
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Aralash tayyorlov</p>
+        <p className="text-sm text-muted-foreground">{t("aralashTayyorlov")}</p>
         <div className="mt-1 flex items-center gap-2">
           {profile.crossTrainingStatus ? (
             <Badge className={CROSS_TRAINING_LABELS[profile.crossTrainingStatus]?.color}>
@@ -106,7 +108,7 @@ export function CareerProfileReadView({ profile, onEdit }: ProfileReadViewProps)
       </div>
       {profile.notes && (
         <div className="md:col-span-2">
-          <p className="text-sm text-muted-foreground">Eslatmalar</p>
+          <p className="text-sm text-muted-foreground">{t("eslatmalar")}</p>
           <p className="font-medium mt-1">{profile.notes}</p>
         </div>
       )}
@@ -122,9 +124,9 @@ export function CareerEmptyProfile({ onStart }: EmptyProfileProps) {
   return (
     <div className="text-center py-8">
       <Target className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-      <p className="text-muted-foreground">Karera profili to'ldirilmagan</p>
+      <p className="text-muted-foreground">{t("kareraProfiliToldirilmagan")}</p>
       <Button size="sm" className="mt-3" onClick={onStart} data-testid="button-start-career-edit">
-        To'ldirish
+        {t("toldirish")}
       </Button>
     </div>
   );
@@ -140,15 +142,15 @@ export function CareerAiCard({ aiRecommendedPosition }: AiCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="h-4 w-4" />
-          AI Karera Tavsiyasi
+          {t("aiKareraTavsiyasi")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="bg-primary/5 rounded-md p-4 border border-primary/20">
-          <p className="text-sm font-medium text-primary mb-2">Tavsiya etilgan keyingi qadam:</p>
+          <p className="text-sm font-medium text-primary mb-2">{t("tavsiyaEtilganKeyingiQadam")}</p>
           <p className="font-semibold">{aiRecommendedPosition || "Malaka oshirish kerak"}</p>
           <p className="text-xs text-muted-foreground mt-2">
-            Ushbu tavsiya xodimning joriy roli, ish staji va ko'nikmalariga asoslanib berildi.
+            {t("ushbuTavsiyaXodimningJoriyRoli")}
           </p>
         </div>
       </CardContent>
@@ -166,7 +168,7 @@ export function CareerTransferHistory({ transferHistory }: TransferHistoryProps)
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="h-5 w-5" />
-          Lavozim o'zgarishlari tarixi
+          {t("lavozimOzgarishlariTarixi")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -204,7 +206,7 @@ export function CareerTransferHistory({ transferHistory }: TransferHistoryProps)
         ) : (
           <div className="text-center py-6">
             <History className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">O'tkazma tarixi topilmadi</p>
+            <p className="text-sm text-muted-foreground">{t("otkazmaTarixiTopilmadi")}</p>
           </div>
         )}
       </CardContent>

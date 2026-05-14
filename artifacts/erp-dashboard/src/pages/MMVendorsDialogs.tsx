@@ -26,6 +26,7 @@ import { Form } from "@/components/ui/form";
 import type { UseFormReturn } from "react-hook-form";
 import type { Vendor, VendorFormData } from "./MMVendorsTypes";
 import { VendorFormFields } from "./MMVendorsFormFields";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Create dialog
@@ -46,6 +47,7 @@ export function CreateVendorDialog({
   isPending,
   onSubmit,
 }: CreateVendorDialogProps) {
+  const { t } = useTranslation("common");
   function handleCancel() {
     onOpenChange(false);
     form.reset();
@@ -55,8 +57,8 @@ export function CreateVendorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi yetkazuvchi qo'shish</DialogTitle>
-          <DialogDescription>Yetkazuvchi ma'lumotlarini kiriting</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiYetkazuvchiQoshish")}</DialogTitle>
+          <DialogDescription>{t("yetkazuvchiMalumotlariniKiriting")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -99,8 +101,8 @@ export function EditVendorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yetkazuvchini tahrirlash</DialogTitle>
-          <DialogDescription>Yetkazuvchi ma'lumotlarini o'zgartiring</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yetkazuvchiniTahrirlash")}</DialogTitle>
+          <DialogDescription>{t("yetkazuvchiMalumotlariniOzgartiring")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -143,14 +145,14 @@ export function DeleteVendorAlert({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Yetkazuvchini o'chirish</AlertDialogTitle>
+          <AlertDialogTitle>{t("yetkazuvchiniOchirish")}</AlertDialogTitle>
           <AlertDialogDescription>
             Haqiqatan ham "{vendor?.name}" yetkazuvchisini o'chirmoqchimisiz?
             Bu amalni qaytarib bo'lmaydi.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel data-testid="button-cancel-delete">Bekor qilish</AlertDialogCancel>
+          <AlertDialogCancel data-testid="button-cancel-delete">{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

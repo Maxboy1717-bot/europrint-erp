@@ -21,6 +21,7 @@ const DEFAULT_FORM: NewAccountForm = {
 };
 
 export default function ChartOfAccounts() {
+  const { t } = useTranslation("common");
   const { t: tCommon } = useTranslation('common');
   const { toast } = useToast();
 
@@ -113,8 +114,8 @@ export default function ChartOfAccounts() {
   return (
     <div data-testid="chart-of-accounts-page">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Sahifa</b></>}
-        title="Sahifa"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("page")}</b></>}
+        title={t("page")}
         onRefresh={refetch}
         onOpenCreate={() => setIsCreateDialogOpen(true)}
         createDialogSlot={createDialog}

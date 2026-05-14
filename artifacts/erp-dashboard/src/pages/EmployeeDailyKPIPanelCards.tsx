@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Users, Trophy, Scale, Target } from "lucide-react";
 import { getScoreColor } from "./EmployeeDailyKPIPanelTypes";
 import type { TopPerformer } from "./EmployeeDailyKPIPanelTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface AvgScoreCardProps {
   avgOverall: number;
@@ -13,10 +14,11 @@ interface AvgScoreCardProps {
 }
 
 export function AvgScoreCard({ avgOverall, isLoading }: AvgScoreCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-avg-score">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">O'rtacha Umumiy Ball</CardTitle>
+        <CardTitle className="text-sm font-medium">{t("ortachaUmumiyBall")}</CardTitle>
         <Target className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -47,7 +49,7 @@ export function TotalEvaluationsCard({ total, isLoading }: TotalEvaluationsCardP
   return (
     <Card data-testid="card-total-evaluations">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Bugungi Baholashlar</CardTitle>
+        <CardTitle className="text-sm font-medium">{t("bugungiBaholashlar")}</CardTitle>
         <Users className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -73,14 +75,14 @@ export function TopPerformerCard({ topPerformer, isLoading, isError }: TopPerfor
   return (
     <Card data-testid="card-top-performer">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Eng Yaxshi Xodim</CardTitle>
+        <CardTitle className="text-sm font-medium">{t("engYaxshiXodim")}</CardTitle>
         <Trophy className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <Skeleton className="h-8 w-32 rounded-lg" />
         ) : isError ? (
-          <p className="text-sm text-destructive">Xatolik yuz berdi</p>
+          <p className="text-sm text-destructive">{t("errorOccurred")}</p>
         ) : topPerformer ? (
           <>
             <div className="text-lg font-bold truncate" data-testid="text-top-performer-name">
@@ -94,7 +96,7 @@ export function TopPerformerCard({ topPerformer, isLoading, isError }: TopPerfor
             </p>
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>
+          <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>
         )}
       </CardContent>
     </Card>
@@ -111,7 +113,7 @@ export function FairnessIndexCard({ fairnessIndex, isLoading }: FairnessIndexCar
   return (
     <Card data-testid="card-fairness-index">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Adolatlilik Indeksi</CardTitle>
+        <CardTitle className="text-sm font-medium">{t("adolatlilikIndeksi")}</CardTitle>
         <Scale className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>

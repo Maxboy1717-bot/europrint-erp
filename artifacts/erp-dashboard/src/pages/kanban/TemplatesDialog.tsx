@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { format } from "date-fns";
 import type { KanbanColumn } from "@shared/schema";
 import { type T, type KanbanTemplate, PRIORITY_CONFIG } from "./kanban-types";
+import { useTranslation } from '@/lib/i18n';
 
 export function TemplatesDialog({
   open,
@@ -36,6 +37,7 @@ export function TemplatesDialog({
   columns: KanbanColumn[];
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -234,7 +236,7 @@ export function TemplatesDialog({
                       <TableHead>{t.templates.taskTitle}</TableHead>
                       <TableHead>{t.fields.priority}</TableHead>
                       <TableHead>{t.table.deadline}</TableHead>
-                      <TableHead className="text-right">Amallar</TableHead>
+                      <TableHead className="text-right">{t("Amallar")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -259,21 +261,21 @@ export function TemplatesDialog({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    aria-label="Tahrirlash"
+                                    aria-label={t("edit")}
                                     onClick={() => handleEdit(tpl)}
                                     data-testid={`button-edit-template-${tpl.id}`}
                                   >
                                     <Settings className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Tahrirlash</TooltipContent>
+                                <TooltipContent>{t("edit")}</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    aria-label="Qo'llash"
+                                    aria-label={t("qollash")}
                                     onClick={() => applyTemplateMutation.mutate(tpl.id)}
                                     disabled={!boardId || columns.length === 0 || applyTemplateMutation.isPending}
                                     data-testid={`button-apply-template-${tpl.id}`}
@@ -281,21 +283,21 @@ export function TemplatesDialog({
                                     <Zap className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Qo'llash</TooltipContent>
+                                <TooltipContent>{t("qollash")}</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    aria-label="O'chirish"
+                                    aria-label={t("delete")}
                                     onClick={() => setConfirmDeleteId(tpl.id)}
                                     data-testid={`button-delete-template-${tpl.id}`}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>O'chirish</TooltipContent>
+                                <TooltipContent>{t("delete")}</TooltipContent>
                               </Tooltip>
                             </div>
                           </TableCell>
@@ -323,7 +325,7 @@ export function TemplatesDialog({
                       <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Oldingi sahifa"
+                        aria-label={t("previousPageAria")}
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
                         data-testid="button-prev-page"
@@ -331,7 +333,7 @@ export function TemplatesDialog({
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Oldingi sahifa</TooltipContent>
+                    <TooltipContent>{t("previousPageAria")}</TooltipContent>
                   </Tooltip>
                   <span className="text-sm">{currentPage} / {totalPages}</span>
                   <Tooltip>
@@ -339,7 +341,7 @@ export function TemplatesDialog({
                       <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Keyingi sahifa"
+                        aria-label={t("nextPageAria")}
                         onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
                         data-testid="button-next-page"
@@ -347,7 +349,7 @@ export function TemplatesDialog({
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Keyingi sahifa</TooltipContent>
+                    <TooltipContent>{t("nextPageAria")}</TooltipContent>
                   </Tooltip>
                 </div>
               </div>
@@ -360,8 +362,8 @@ export function TemplatesDialog({
     <ConfirmDialog
       open={confirmDeleteId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-      title="Shablonni o'chirish"
-      description="Ushbu kanban shablonini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("shablonniOchirish")}
+      description={t("ushbuKanbanShabloniniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

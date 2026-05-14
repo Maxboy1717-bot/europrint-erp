@@ -38,12 +38,12 @@ export function RecordMovementDialog({open,
           data-testid="button-record-movement"
         >
           <PlusCircle className="h-4 w-4" />
-          Harakatni qayd etish
+          {t("harakatniQaydEtish")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Material harakatini qayd etish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("materialHarakatiniQaydEtish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="space-y-1">
@@ -57,20 +57,20 @@ export function RecordMovementDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mov-type">Harakat turi</Label>
+            <Label htmlFor="mov-type">{t("harakatTuri1")}</Label>
             <Select value={form.type} onValueChange={(v) => onFormChange((f) => ({ ...f, type: v }))}>
               <SelectTrigger id="mov-type" data-testid="select-movement-type" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="incoming">Kirim</SelectItem>
-                <SelectItem value="outgoing">Chiqim</SelectItem>
-                <SelectItem value="transfer">O'tkazma</SelectItem>
+                <SelectItem value="incoming">{t("kirim")}</SelectItem>
+                <SelectItem value="outgoing">{t("chiqim")}</SelectItem>
+                <SelectItem value="transfer">{t("otkazma")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mov-quantity">Miqdor</Label>
+            <Label htmlFor="mov-quantity">{t("quantity")}</Label>
             <Input
               id="mov-quantity"
               type="number"
@@ -82,10 +82,10 @@ export function RecordMovementDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mov-notes">Izoh</Label>
+            <Label htmlFor="mov-notes">{t("Izoh")}</Label>
             <Input
               id="mov-notes"
-              placeholder="Izoh..."
+              placeholder={t("izoh1")}
               value={form.notes}
               onChange={(e) => onFormChange((f) => ({ ...f, notes: e.target.value }))}
               data-testid="input-notes"

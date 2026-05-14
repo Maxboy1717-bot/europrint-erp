@@ -19,7 +19,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { EPErrorState, EPPageHeader, EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export default function Tests() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedTest, setSelectedTest] = useState<string | null>(null);
@@ -98,7 +100,7 @@ export default function Tests() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="error-state">
         <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-muted-foreground">Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+        <p className="text-muted-foreground">{t("malumotlarniYuklashdaXatolikYuzBerdi")}</p>
       </div>
     );
   }
@@ -107,8 +109,8 @@ export default function Tests() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="empty-state">
         <Package className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium">Hozircha ma'lumot yo'q</p>
-        <p className="text-sm text-muted-foreground">Yangi yozuv qo'shish uchun yuqoridagi tugmani bosing</p>
+        <p className="text-lg font-medium">{t("hozirchaMalumotYoq")}</p>
+        <p className="text-sm text-muted-foreground">{t("yangiYozuvQoshishUchunYuqoridagi")}</p>
       </div>
     );
   }
@@ -118,9 +120,9 @@ export default function Tests() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Test banki</b></>}
-        title="Test banki"
-        subtitle="Testlar va savollar boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("testBanki")}</b></>}
+        title={t("testBanki")}
+        subtitle={t("testlarVaSavollarBoshqaruvi")}
       />
         </div>
         <Button 
@@ -129,13 +131,13 @@ export default function Tests() {
           className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Test yaratish
+          {t("testYaratish1")}
         </Button>
       </div>
 
       <div className="bg-muted/40 p-4 rounded-lg">
         <SearchBar 
-          placeholder="Testlarni qidirish..."
+          placeholder={t("testlarniQidirish")}
           value={search}
           onChange={setSearch}
           className="bg-card border-border"
@@ -177,7 +179,7 @@ export default function Tests() {
                         data-testid={`action-view-test-${test.id}`}
                       >
                         <Eye className="w-4 h-4 mr-2" />
-                        Ko'rish
+                        {t("view")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
@@ -185,7 +187,7 @@ export default function Tests() {
                         data-testid={`action-delete-test-${test.id}`}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        O'chirish
+                        {t("delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -209,15 +211,15 @@ export default function Tests() {
                 {/* Real statistics from backend */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t text-sm">
                   <div className="text-center">
-                    <div className="text-muted-foreground text-xs mb-1">Savollar</div>
+                    <div className="text-muted-foreground text-xs mb-1">{t("questions")}</div>
                     <div className="font-medium">{test.questionCount || 0}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-muted-foreground text-xs mb-1">Urinishlar</div>
+                    <div className="text-muted-foreground text-xs mb-1">{t("urinishlar1")}</div>
                     <div className="font-medium">{test.attemptsCount || 0}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-muted-foreground text-xs mb-1">O'tish %</div>
+                    <div className="text-muted-foreground text-xs mb-1">{t("otish1")}</div>
                     <div className="font-medium">{test.passRate || 0}%</div>
                   </div>
                 </div>
@@ -228,7 +230,7 @@ export default function Tests() {
                   </Badge>
                   {test.randomizeQuestions && (
                     <EPStatusPill tone="neutral" className="text-xs">
-                      Aralash
+                      {t("aralash")}
                     </EPStatusPill>
                   )}
                 </div>
@@ -242,11 +244,11 @@ export default function Tests() {
                   data-testid={`button-view-test-${test.id}`}
                 >
                   <FileQuestion className="w-4 h-4 mr-2" />
-                  Savollar
+                  {t("questions")}
                 </Button>
                 <DeleteConfirmDialog
-                  title="Testni o'chirishni tasdiqlaysizmi?"
-                  description="Test va barcha savollar ham o'chiriladi. Bu amalni qaytarib bo'lmaydi."
+                  title={t("testniOchirishniTasdiqlaysizmi")}
+                  description={t("testVaBarchaSavollarHam")}
                   onConfirm={() => deleteTestMutation.mutate(test.id)}
                   isPending={deleteTestMutation.isPending}
                 />
@@ -261,8 +263,8 @@ export default function Tests() {
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={open => { if (!open) setConfirmDeleteId(null); }}
-        title="Testni o'chirish"
-        description="Ushbu test va barcha savollar ham o'chiriladi. Bu amalni qaytarib bo'lmaydi."
+        title={t("testniOchirish")}
+        description={t("ushbuTestVaBarchaSavollar")}
         confirmText="O'chirish" cancelText="Bekor qilish" variant="destructive"
         onConfirm={() => { if (confirmDeleteId) deleteTestMutation.mutate(confirmDeleteId); }}
       />

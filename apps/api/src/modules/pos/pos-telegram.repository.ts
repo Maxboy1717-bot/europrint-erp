@@ -4,6 +4,7 @@
  */
 
 import { TashkentTimeService } from '@common/time';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 const _time = new TashkentTimeService();
 
 import { Injectable } from '@nestjs/common';
@@ -11,7 +12,7 @@ import { posTelegramSessions, db, sql, eq, and } from '@workspace/db';
 import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await db.execute(q)).rows as Row[];
 };
 
@@ -28,6 +29,19 @@ export class PosTelegramRepository {
     return safeCall(async () => {
       const r = await exec(sql`SELECT telegram_id FROM users WHERE department_code = ${departmentCode} AND role IN ('department_manager', 'warehouse_manager') AND telegram_id IS NOT NULL AND is_active = TRUE`);
       return r as { telegram_id: unknown }[];
+      }, 'DB_ERROR');
+  }
+
+  /**
+   * Telegram chat IDs of all active admins. Used by sendAlert() for broadcast.
+   * Returns an empty array if no admins have linked telegram.
+   */
+  async getAdminChatIds(): Promise<Result<string[]>> {
+    return safeCall(async () => {
+      const r = await exec(sql`SELECT telegram_id FROM users WHERE role IN ('admin', 'super_admin', 'pos_admin') AND telegram_id IS NOT NULL AND is_active = TRUE`);
+      return (r as { telegram_id: unknown }[])
+        .map((row) => row.telegram_id != null ? String(row.telegram_id) : '')
+        .filter((id) => id.length > 0);
       }, 'DB_ERROR');
   }
 

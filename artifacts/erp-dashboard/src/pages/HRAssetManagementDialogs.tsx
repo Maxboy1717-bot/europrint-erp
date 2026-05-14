@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { useTranslation } from '@/lib/i18n';
 import {
   Asset, Employee, AssetForm, AssignForm,
   CATEGORY_LABELS, CONDITION_LABELS,
@@ -30,25 +31,26 @@ interface AddDialogProps {
 }
 
 export function AddAssetDialog({ open, onOpenChange, form, onFormChange, onSubmit, isPending }: AddDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi jihoz qo'shish</DialogTitle>
-          <DialogDescription>Kompaniya jihozi ma'lumotlarini kiriting</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiJihozQoshish")}</DialogTitle>
+          <DialogDescription>{t("kompaniyaJihoziMalumotlariniKiriting")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1.5">
-              <Label>Nomi *</Label>
+              <Label>{t("nomi")}</Label>
               <Input
                 value={form.name}
                 onChange={e => onFormChange({ ...form, name: e.target.value })}
-                placeholder="MacBook Pro 14"
+                placeholder={t("macbookPro14")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Tur</Label>
+              <Label>{t("tur")}</Label>
               <Select value={form.category} onValueChange={v => onFormChange({ ...form, category: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -59,7 +61,7 @@ export function AddAssetDialog({ open, onOpenChange, form, onFormChange, onSubmi
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Serial raqam</Label>
+              <Label>{t("serialRaqam")}</Label>
               <Input
                 value={form.serial_number}
                 onChange={e => onFormChange({ ...form, serial_number: e.target.value })}
@@ -67,7 +69,7 @@ export function AddAssetDialog({ open, onOpenChange, form, onFormChange, onSubmi
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Xarid sanasi</Label>
+              <Label>{t("xaridSanasi")}</Label>
               <Input
                 type="date"
                 value={form.purchase_date}
@@ -84,7 +86,7 @@ export function AddAssetDialog({ open, onOpenChange, form, onFormChange, onSubmi
               />
             </div>
             <div className="col-span-2 space-y-1.5">
-              <Label>Izoh</Label>
+              <Label>{t("Izoh")}</Label>
               <Textarea
                 value={form.notes}
                 onChange={e => onFormChange({ ...form, notes: e.target.value })}
@@ -94,7 +96,7 @@ export function AddAssetDialog({ open, onOpenChange, form, onFormChange, onSubmi
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSubmit} disabled={isPending || !form.name}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>
@@ -124,14 +126,14 @@ export function AssignDialog({ open, onOpenChange, asset, form, onFormChange, em
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Xodimga berish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("xodimgaBerish")}</DialogTitle>
           <DialogDescription>{asset?.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Xodim *</Label>
+            <Label>{t("xodim")}</Label>
             <Select value={form.employee_id} onValueChange={v => onFormChange({ ...form, employee_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("xodimniTanlang")} /></SelectTrigger>
               <SelectContent>
                 {(Array.isArray(employees) ? employees : []).map(e => (
                   <SelectItem key={e.id} value={e.id}>{e.full_name} ({e.employee_id})</SelectItem>
@@ -140,7 +142,7 @@ export function AssignDialog({ open, onOpenChange, asset, form, onFormChange, em
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Berish sanasi</Label>
+            <Label>{t("berishSanasi")}</Label>
             <Input
               type="date"
               value={form.assigned_date}
@@ -148,7 +150,7 @@ export function AssignDialog({ open, onOpenChange, asset, form, onFormChange, em
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Holat</Label>
+            <Label>{t("status28")}</Label>
             <Select value={form.condition_on_assign} onValueChange={v => onFormChange({ ...form, condition_on_assign: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -159,7 +161,7 @@ export function AssignDialog({ open, onOpenChange, asset, form, onFormChange, em
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Izoh</Label>
+            <Label>{t("Izoh")}</Label>
             <Textarea
               value={form.notes}
               onChange={e => onFormChange({ ...form, notes: e.target.value })}
@@ -168,7 +170,7 @@ export function AssignDialog({ open, onOpenChange, asset, form, onFormChange, em
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSubmit} disabled={isPending || !form.employee_id}>
             {isPending ? "..." : "Berish"}
           </Button>

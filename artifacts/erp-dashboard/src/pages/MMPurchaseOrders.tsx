@@ -24,6 +24,7 @@ import type { PurchaseOrder, Vendor, RawMaterial, PurchaseOrderItem } from "@sha
 import { z } from "zod";
 import { PageState } from "@/components/ui/page-state";
 import { EPPageHeader, EPErrorState } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 const poFormSchema = z.object({
   poNumber: z.string().optional().default(""),
   vendorId: z.string().min(1, "Yetkazib beruvchi kerak"),
@@ -46,6 +47,8 @@ interface PurchaseOrderWithItems extends PurchaseOrder {
 }
 
 export default function MMPurchaseOrders() {
+  const { t } = useTranslation("warehouse");
+  const { t: tCommon } = useTranslation("common");
   const { toast } = useToast();
   const [openDialog, setOpenDialog] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -93,7 +96,7 @@ export default function MMPurchaseOrders() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mm/purchase-orders"] });
-      toast({ description: "Xarid buyurtmasi yaratildi" });
+      toast({ description: t("mm.toastCreated") });
       setOpenDialog(false);
       form.reset({
         poNumber: "",
@@ -107,7 +110,7 @@ export default function MMPurchaseOrders() {
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        description: error.message || "Xatolik yuz berdi"
+        description: error.message || tCommon("errorOccurred")
       });
     },
   });
@@ -118,7 +121,7 @@ export default function MMPurchaseOrders() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mm/purchase-orders"] });
-      toast({ description: "Xarid buyurtmasi o'chirildi" });
+      toast({ description: t("mm.toastDeleted") });
     },
   });
 
@@ -140,15 +143,15 @@ export default function MMPurchaseOrders() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "draft":
-        return <Badge className="bg-muted/60 text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><FileText className="h-3 w-3" />Qoralama</Badge>;
+        return <Badge className="bg-muted/60 text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><FileText className="h-3 w-3" />{t("mm.statusDraft")}</Badge>;
       case "sent":
-        return <Badge className="bg-blue-100 text-blue-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><Truck className="h-3 w-3" />Yuborilgan</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><Truck className="h-3 w-3" />{t("mm.statusSent")}</Badge>;
       case "confirmed":
-        return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><Clock className="h-3 w-3" />Tasdiqlangan</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><Clock className="h-3 w-3" />{t("mm.statusConfirmed")}</Badge>;
       case "received":
-        return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><CheckCircle className="h-3 w-3" />Qabul qilingan</Badge>;
+        return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><CheckCircle className="h-3 w-3" />{t("mm.statusReceived")}</Badge>;
       case "cancelled":
-        return <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><XCircle className="h-3 w-3" />Bekor qilingan</Badge>;
+        return <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold gap-1"><XCircle className="h-3 w-3" />{t("mm.statusCancelled")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -191,20 +194,20 @@ export default function MMPurchaseOrders() {
   return (
     <div className="space-y-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Xarid Buyurtmalari</b></>}
-        title="Xarid Buyurtmalari"
-        subtitle="Xarid buyurtmalarini boshqarish"
+        breadcrumb={<>{tCommon("dashboard")} · <b className="text-foreground">{t("mm.purchaseOrdersTitle")}</b></>}
+        title={t("mm.purchaseOrdersTitle")}
+        subtitle={t("mm.purchaseOrdersSubtitle")}
         data-testid="text-mm-po-title"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
         {([
-          { id: "all", label: "Barchasi", icon: ShoppingBag, color: "text-muted-foreground" },
-          { id: "draft", label: "Qoralama", icon: FileText, color: "text-muted-foreground" },
-          { id: "sent", label: "Yuborilgan", icon: Truck, color: "text-[var(--ep-blue)]" },
-          { id: "confirmed", label: "Tasdiqlangan", icon: Clock, color: "text-[var(--ep-yellow)]" },
-          { id: "received", label: "Qabul qilingan", icon: CheckCircle, color: "text-[var(--ep-green)]" },
-          { id: "cancelled", label: "Bekor qilingan", icon: XCircle, color: "text-[var(--ep-red)]" },
+          { id: "all",       label: tCommon("all"),         icon: ShoppingBag, color: "text-muted-foreground" },
+          { id: "draft",     label: t("mm.statusDraft"),     icon: FileText,    color: "text-muted-foreground" },
+          { id: "sent",      label: t("mm.statusSent"),      icon: Truck,       color: "text-[var(--ep-blue)]" },
+          { id: "confirmed", label: t("mm.statusConfirmed"), icon: Clock,       color: "text-[var(--ep-yellow)]" },
+          { id: "received",  label: t("mm.statusReceived"),  icon: CheckCircle, color: "text-[var(--ep-green)]" },
+          { id: "cancelled", label: t("mm.statusCancelled"), icon: XCircle,     color: "text-[var(--ep-red)]" },
         ]).map((status) => (
           <div
             key={status.id}
@@ -225,7 +228,7 @@ export default function MMPurchaseOrders() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <Package className="h-5 w-5 text-primary" />
-            Xarid buyurtmalari ro'yxati
+            {t("mm.poListTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -237,21 +240,21 @@ export default function MMPurchaseOrders() {
             skeleton="table"
             skeletonRows={5}
             skeletonColumns={6}
-            errorTitle="Xarid buyurtmalari yuklanmadi"
-            errorMessage="Server bilan bog'lanishda xatolik."
+            errorTitle={t("mm.errorLoadTitle")}
+            errorMessage={t("mm.errorLoadMessage")}
             emptyIcon={Package}
-            emptyTitle="Xarid buyurtmalari topilmadi"
-            emptyDescription="Yangi xarid buyurtmasini yarating."
+            emptyTitle={t("mm.emptyTitle")}
+            emptyDescription={t("mm.emptyDescription")}
           >
             <div className="ep-table-scroll"><Table data-testid="purchase-orders-table">
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">PO raqami</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Yetkazuvchi</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Summa</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mm.poNumber")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mm.vendor")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mm.date")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("mm.amount")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mm.status")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("mm.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -285,7 +288,7 @@ export default function MMPurchaseOrders() {
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Buyurtma tafsilotlari</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("mm.viewTitle")}</DialogTitle>
             <DialogDescription>
               {viewOrder?.poNumber}
             </DialogDescription>
@@ -295,42 +298,42 @@ export default function MMPurchaseOrders() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">PO raqami</p>
+                  <p className="text-sm text-muted-foreground">{t("mm.poNumber")}</p>
                   <p className="font-medium" data-testid="view-po-number">{viewOrder.poNumber}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Yetkazib beruvchi</p>
+                  <p className="text-sm text-muted-foreground">{t("mm.vendor")}</p>
                   <p className="font-medium" data-testid="view-vendor">{getVendorName(viewOrder.vendorId)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Buyurtma sanasi</p>
+                  <p className="text-sm text-muted-foreground">{t("mm.orderDate")}</p>
                   <p className="font-medium" data-testid="view-order-date">{viewOrder.orderDate}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Yetkazish sanasi</p>
+                  <p className="text-sm text-muted-foreground">{t("mm.deliveryDate")}</p>
                   <p className="font-medium" data-testid="view-delivery-date">{viewOrder.deliveryDate || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Jami summa</p>
+                  <p className="text-sm text-muted-foreground">{t("mm.totalAmount")}</p>
                   <p className="font-medium" data-testid="view-total">{formatCurrency(Number(viewOrder.totalAmount), viewOrder.currency || undefined)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Holat</p>
+                  <p className="text-sm text-muted-foreground">{t("mm.status")}</p>
                   <div data-testid="view-status">{getStatusBadge(viewOrder.status)}</div>
                 </div>
               </div>
 
               {viewOrder.items && viewOrder.items.length > 0 && (
                 <div>
-                  <h4 className="font-semibold mb-2">Buyurtma elementlari</h4>
+                  <h4 className="font-semibold mb-2">{t("mm.orderItems")}</h4>
                   <div className="ep-table-scroll"><Table data-testid="view-items-table">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Xom ashyo</TableHead>
-                        <TableHead>Miqdor</TableHead>
-                        <TableHead>Birlik</TableHead>
-                        <TableHead>Narx</TableHead>
-                        <TableHead>Jami</TableHead>
+                        <TableHead>{t("mm.rawMaterial")}</TableHead>
+                        <TableHead>{t("mm.quantity")}</TableHead>
+                        <TableHead>{t("mm.unit")}</TableHead>
+                        <TableHead>{t("mm.price")}</TableHead>
+                        <TableHead>{t("mm.total")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -352,7 +355,7 @@ export default function MMPurchaseOrders() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
-              Yopish
+              {tCommon("close")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -361,10 +364,10 @@ export default function MMPurchaseOrders() {
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-        title="Xarid buyurtmasini o'chirish"
-        description="Ushbu xarid buyurtmasini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
+        title={t("mm.confirmDeleteTitle")}
+        description={t("mm.confirmDeleteDesc")}
+        confirmText={tCommon("delete")}
+        cancelText={tCommon("cancel")}
         variant="destructive"
         onConfirm={() => { if (confirmDeleteId) deletePO.mutate(confirmDeleteId); }}
       />

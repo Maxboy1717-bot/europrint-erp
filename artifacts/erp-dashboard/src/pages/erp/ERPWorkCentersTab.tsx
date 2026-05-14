@@ -119,7 +119,7 @@ export function ERPWorkCentersTab() {
                     <FormField control={form.control} name="name" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{tCommon('name')} <span className="text-destructive">*</span></FormLabel>
-                        <FormControl><Input {...field} placeholder="Asosiy liniya" data-testid="input-work-center-name" /></FormControl>
+                        <FormControl><Input {...field} placeholder={t("asosiyLiniya")} data-testid="input-work-center-name" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

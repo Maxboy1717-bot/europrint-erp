@@ -10,6 +10,7 @@ import { Star, CheckCircle, Package, AlertTriangle } from "lucide-react";
 import { fmtQty, fmtDate } from "@/components/wms/helpers";
 import { KpiCard } from "@/components/wms/tabs/KpiCard";
 import type { QualityData, MaterialBasic } from "@/components/wms/wms-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface QualityTabProps {
   quality: QualityData | null | undefined;
@@ -17,7 +18,8 @@ interface QualityTabProps {
 }
 
 export function QualityTab({ quality, basic }: QualityTabProps) {
-  if (!quality) return <div className="text-muted-foreground text-sm py-8 text-center">Sifat ma'lumotlari yo'q</div>;
+  const { t } = useTranslation("common");
+  if (!quality) return <div className="text-muted-foreground text-sm py-8 text-center">{t("sifatMalumotlariYoq")}</div>;
 
   const ratingColor = quality.overallRating === "A" ? "text-[var(--ep-green)]" : quality.overallRating === "B" ? "text-[var(--ep-blue)]" : "text-[var(--ep-yellow)]";
   const acceptanceRate = quality.acceptanceRate ?? 100;
@@ -34,10 +36,10 @@ export function QualityTab({ quality, basic }: QualityTabProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={Star} label="Sifat reytingi" value={quality.overallRating || "A"} color={ratingColor} />
-        <KpiCard icon={CheckCircle} label="Qabul darajasi" value={`${acceptanceRate}%`} color={acceptanceRate >= 90 ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]"} />
-        <KpiCard icon={Package} label="Jami partiyalar" value={String(totalBatches)} />
-        <KpiCard icon={AlertTriangle} label="Karantinda" value={String(quarantineBatches)} color={quarantineBatches > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
+        <KpiCard icon={Star} label={t("sifatReytingi")} value={quality.overallRating || "A"} color={ratingColor} />
+        <KpiCard icon={CheckCircle} label={t("qabulDarajasi")} value={`${acceptanceRate}%`} color={acceptanceRate >= 90 ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]"} />
+        <KpiCard icon={Package} label={t("jamiPartiyalar")} value={String(totalBatches)} />
+        <KpiCard icon={AlertTriangle} label={t("karantinda")} value={String(quarantineBatches)} color={quarantineBatches > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
       </div>
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Sifat ko'rsatkichlari (Radar)</CardTitle></CardHeader>
@@ -57,7 +59,7 @@ export function QualityTab({ quality, basic }: QualityTabProps) {
       </Card>
       {(quality.recentBatches || []).length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">So'nggi partiyalar</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("songgiPartiyalar")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

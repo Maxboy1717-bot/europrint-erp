@@ -24,38 +24,39 @@ interface DetailedStatsProps {
 }
 
 export function DetailedStatsCard({ attendanceStats, earlyDeparturesCount }: DetailedStatsProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Batafsil statistika</CardTitle>
+        <CardTitle className="text-base">{t("batafsilStatistika")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Kelgan kunlar</span>
+          <span className="text-muted-foreground text-sm">{t("kelganKunlar")}</span>
           <EPStatusPill tone="success">{attendanceStats.present}</EPStatusPill>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Kelmagan kunlar</span>
+          <span className="text-muted-foreground text-sm">{t("kelmaganKunlar")}</span>
           <EPStatusPill tone="danger">{attendanceStats.absent}</EPStatusPill>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Kechikkan kunlar</span>
+          <span className="text-muted-foreground text-sm">{t("kechikkanKunlar")}</span>
           <EPStatusPill tone="warning">{attendanceStats.late}</EPStatusPill>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Kasallik kunlari</span>
+          <span className="text-muted-foreground text-sm">{t("kasallikKunlari")}</span>
           <EPStatusPill tone="info">{attendanceStats.sick}</EPStatusPill>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Ta'til kunlari</span>
+          <span className="text-muted-foreground text-sm">{t("tatilKunlari")}</span>
           <Badge className="bg-purple-500">{attendanceStats.leave}</Badge>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Erta ketishlar</span>
+          <span className="text-muted-foreground text-sm">{t("ertaKetishlar")}</span>
           <Badge className="bg-orange-500">{earlyDeparturesCount}</Badge>
         </div>
         <div className="flex items-center justify-between border-t pt-4">
-          <span className="text-muted-foreground text-sm">Jami kechikish</span>
+          <span className="text-muted-foreground text-sm">{t("jamiKechikish")}</span>
           <Badge variant="outline">{attendanceStats.totalMinutesLate} min</Badge>
         </div>
       </CardContent>
@@ -72,18 +73,18 @@ export function EarlyDeparturesSection({ earlyDepartures }: { earlyDepartures: A
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LogOut className="h-5 w-5 text-[var(--ep-primary)]" />
-          Erta ketishlar tarixi
+          {t("ertaKetishlarTarixi")}
         </CardTitle>
-        <CardDescription>17:00 dan oldin ish joyini tark etgan kunlar</CardDescription>
+        <CardDescription>{t("k1700DanOldinIsh")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Sana</TableHead>
-              <TableHead>Kelish vaqti</TableHead>
-              <TableHead>Ketish vaqti</TableHead>
-              <TableHead>Izoh</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("kelishVaqti")}</TableHead>
+              <TableHead>{t("ketishVaqti")}</TableHead>
+              <TableHead>{t("Izoh")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -117,9 +118,9 @@ export function ShiftSwapsSection({ shiftSwaps, loadingShiftSwaps }: ShiftSwapsS
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ArrowLeftRight className="h-5 w-5 text-[var(--ep-cyan)]" />
-          Smena almashtirish tarixi
+          {t("smenaAlmashtirishTarixi")}
         </CardTitle>
-        <CardDescription>Smenani almashtirish so'rovlari</CardDescription>
+        <CardDescription>{t("smenaniAlmashtirishSorovlari")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loadingShiftSwaps ? (
@@ -128,11 +129,11 @@ export function ShiftSwapsSection({ shiftSwaps, loadingShiftSwaps }: ShiftSwapsS
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Asl smena</TableHead>
-                <TableHead>So'ralgan smena</TableHead>
-                <TableHead>Sabab</TableHead>
-                <TableHead>Holat</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("aslSmena")}</TableHead>
+                <TableHead>{t("soralganSmena")}</TableHead>
+                <TableHead>{t("sabab")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -162,7 +163,7 @@ export function ShiftSwapsSection({ shiftSwaps, loadingShiftSwaps }: ShiftSwapsS
           </Table></div>
         ) : (
           <p className="text-muted-foreground text-center py-8">
-            Smena almashtirish so'rovlari yo'q
+            {t("smenaAlmashtirishSorovlariYoq")}
           </p>
         )}
       </CardContent>
@@ -183,7 +184,7 @@ export function ZoneLogsSection({ zoneLogs, loadingZoneLogs }: ZoneLogsSectionPr
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5 text-[var(--ep-blue)]" />
-          Zona kirish-chiqish loglari
+          {t("zonaKirishChiqishLoglari")}
         </CardTitle>
         <CardDescription>
           Turniket/yuz tanish tizimi orqali qayd etilgan zona loglari (so'nggi 100 ta)
@@ -196,12 +197,12 @@ export function ZoneLogsSection({ zoneLogs, loadingZoneLogs }: ZoneLogsSectionPr
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Zona nomi</TableHead>
-                <TableHead>Kamera</TableHead>
-                <TableHead>Kirish vaqti</TableHead>
-                <TableHead>Chiqish vaqti</TableHead>
-                <TableHead>Davomiylik</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("zonaNomi")}</TableHead>
+                <TableHead>{t("camera")}</TableHead>
+                <TableHead>{t("kirishVaqti")}</TableHead>
+                <TableHead>{t("chiqishVaqti")}</TableHead>
+                <TableHead>{t("davomiylik")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,7 +226,7 @@ export function ZoneLogsSection({ zoneLogs, loadingZoneLogs }: ZoneLogsSectionPr
           </Table></div>
         ) : (
           <p className="text-muted-foreground text-center py-8" data-testid="text-zone-logs-empty">
-            Zona loglari mavjud emas
+            {t("zonaLoglariMavjudEmas")}
           </p>
         )}
       </CardContent>
@@ -248,19 +249,19 @@ export function AttendanceHistorySection({ attendanceData, tCommon }: Attendance
           <List className="h-5 w-5" />
           Davomat tarixi (jadval)
         </CardTitle>
-        <CardDescription>Oxirgi 20 ta davomat yozuvi</CardDescription>
+        <CardDescription>{t("oxirgi20TaDavomatYozuvi")}</CardDescription>
       </CardHeader>
       <CardContent>
         {attendanceData && attendanceData.length > 0 ? (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Kelish vaqti</TableHead>
-                <TableHead>Ketish vaqti</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead>Kechikish</TableHead>
-                <TableHead>Izoh</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("kelishVaqti")}</TableHead>
+                <TableHead>{t("ketishVaqti")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead>{t("kechikish")}</TableHead>
+                <TableHead>{t("Izoh")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -274,16 +275,16 @@ export function AttendanceHistorySection({ attendanceData, tCommon }: Attendance
                     ) : (record.checkOut || "-")}
                   </TableCell>
                   <TableCell>
-                    {record.status === "present" && <EPStatusPill tone="success">Keldi</EPStatusPill>}
-                    {record.status === "absent" && <EPStatusPill tone="danger">Kelmadi</EPStatusPill>}
-                    {record.status === "sick" && <EPStatusPill tone="info">Kasal</EPStatusPill>}
-                    {record.status === "leave" && <Badge className="bg-purple-500">Ta'til</Badge>}
+                    {record.status === "present" && <EPStatusPill tone="success">{t("keldi")}</EPStatusPill>}
+                    {record.status === "absent" && <EPStatusPill tone="danger">{t("kelmadi")}</EPStatusPill>}
+                    {record.status === "sick" && <EPStatusPill tone="info">{t("kasal")}</EPStatusPill>}
+                    {record.status === "leave" && <Badge className="bg-purple-500">{t("tatil")}</Badge>}
                   </TableCell>
                   <TableCell>
                     {record.isLate ? (
                       <EPStatusPill tone="warning">{record.minutesLate} min</EPStatusPill>
                     ) : record.status === "present" ? (
-                      <EPStatusPill tone="success">Vaqtida</EPStatusPill>
+                      <EPStatusPill tone="success">{t("vaqtida")}</EPStatusPill>
                     ) : "-"}
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate">{record.notes || "-"}</TableCell>

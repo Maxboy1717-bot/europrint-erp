@@ -10,6 +10,7 @@ import { TrendingDown, ArrowUpCircle, ArrowDownCircle, Settings2 } from "lucide-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { ChartDataPoint, MonthlyRow } from "./POSInventoryPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface ChartTabProps {
   chartData: ChartDataPoint[];
@@ -17,6 +18,7 @@ interface ChartTabProps {
 }
 
 export function ChartTab({ chartData, monthlyRows }: ChartTabProps) {
+  const { t } = useTranslation("common");
   const summaryCards = [
     { key: "in", label: "Umumiy kirim", icon: ArrowUpCircle, color: "text-[var(--ep-green)] bg-green-100" },
     { key: "sale", label: "Sotuv orqali", icon: TrendingDown, color: "text-[var(--ep-purple)] bg-purple-100" },
@@ -33,7 +35,7 @@ export function ChartTab({ chartData, monthlyRows }: ChartTabProps) {
         <CardContent>
           {chartData.length === 0 ? (
             <div className="flex items-center justify-center h-40 text-gray-400">
-              <p>Ma'lumot yo'q</p>
+              <p>{t("malumotYoq")}</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>

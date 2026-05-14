@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAuthHeaders } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Props {
   onRoomSelect: (room: ChatRoom) => void;
   onOpenSearch?: () => void;
@@ -76,7 +77,7 @@ function RoomItem({ room, isActive, onClick, hasBirthday, isOnline }: {
         )}
         {/* Birthday badge */}
         {hasBirthday && (
-          <span className="absolute -top-1 -right-1 text-[16px] leading-none" title="Bugun tug'ilgan kun! 🎂">
+          <span className="absolute -top-1 -right-1 text-[16px] leading-none" title={t("bugunTugilganKun")}>
             🎂
           </span>
         )}
@@ -131,6 +132,7 @@ function RoomItem({ room, isActive, onClick, hasBirthday, isOnline }: {
 type TabKey = "all" | "direct" | "group" | "channel";
 
 export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
+  const { t } = useTranslation("common");
   const rooms = useChatStore((s) => s.rooms);
   const activeRoomId = useChatStore((s) => s.activeRoomId);
   const onlineUserIds = useChatStore((s) => s.onlineUserIds);
@@ -250,7 +252,7 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
                 ref={searchInputRef}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Qidirish..."
+                placeholder={t("Qidirish...")}
                 className="w-full pl-9 pr-3 py-2 text-[15px] bg-[var(--tg-input-bg)] rounded-full outline-none border-0 ring-0 focus:outline-none focus:ring-0 focus:border-0 text-[var(--tg-text-primary)] placeholder:text-[var(--tg-text-placeholder)]"
                 style={{ boxShadow: "none" }}
               />
@@ -262,7 +264,7 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
             <a
               href="/"
               className="p-2 rounded-full text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)] transition-colors flex-shrink-0"
-              title="ERP ga qaytish"
+              title={t("erpGaQaytish1")}
             >
               <Menu className="w-[22px] h-[22px]" />
             </a>
@@ -273,7 +275,7 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
             >
               <div className="flex items-center gap-2 px-3 py-[7px] bg-[var(--tg-input-bg)] rounded-full">
                 <Search className="w-4 h-4 text-[var(--tg-text-placeholder)]" />
-                <span className="text-[15px] text-[var(--tg-text-placeholder)]">Qidirish</span>
+                <span className="text-[15px] text-[var(--tg-text-placeholder)]">{t("search")}</span>
               </div>
             </button>
 
@@ -281,14 +283,14 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
               <button
                 onClick={() => setDmOpen(true)}
                 className="p-2 rounded-full text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)] transition-colors"
-                title="Yangi xabar"
+                title={t("yangiXabar")}
               >
                 <MessageSquarePlus className="w-[20px] h-[20px]" />
               </button>
               <button
                 onClick={() => setCreateOpen(true)}
                 className="p-2 rounded-full text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)] transition-colors"
-                title="Guruh yaratish"
+                title={t("guruhYaratish")}
               >
                 <Plus className="w-[20px] h-[20px]" />
               </button>
@@ -338,19 +340,19 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
           {searching ? (
             <div className="flex items-center justify-center py-8 text-[var(--tg-text-secondary)] gap-2">
               <EPLoader className="w-5 h-5" />
-              <span className="text-[14px]">Qidirilmoqda...</span>
+              <span className="text-[14px]">{t("qidirilmoqda")}</span>
             </div>
           ) : searchResults.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-[var(--tg-text-secondary)]">
               <Search className="w-12 h-12 opacity-20" />
-              <p className="text-[14px]">Natija topilmadi</p>
+              <p className="text-[14px]">{t("noResults")}</p>
             </div>
           ) : (
             <div>
               {/* Rooms section */}
               {(Array.isArray(searchResults) ? searchResults : []).filter(r => r.type === "room").length > 0 && (
                 <>
-                  <p className="text-[12px] font-semibold text-[var(--tg-sidebar-active)] uppercase tracking-wider px-4 pt-3 pb-1">Chatlar</p>
+                  <p className="text-[12px] font-semibold text-[var(--tg-sidebar-active)] uppercase tracking-wider px-4 pt-3 pb-1">{t("chatlar")}</p>
                   {(Array.isArray(searchResults) ? searchResults : []).filter(r => r.type === "room").map((result) => (
                     <button
                       key={result.id}
@@ -369,7 +371,7 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
               {/* Messages section */}
               {(Array.isArray(searchResults) ? searchResults : []).filter(r => r.type === "message").length > 0 && (
                 <>
-                  <p className="text-[12px] font-semibold text-[var(--tg-sidebar-active)] uppercase tracking-wider px-4 pt-3 pb-1">Xabarlar</p>
+                  <p className="text-[12px] font-semibold text-[var(--tg-sidebar-active)] uppercase tracking-wider px-4 pt-3 pb-1">{t("xabarlar")}</p>
                   {(Array.isArray(searchResults) ? searchResults : []).filter(r => r.type === "message").map((result, i) => (
                     <button
                       key={result.id || i}
@@ -407,7 +409,7 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
                   onClick={() => setDmOpen(true)}
                   className="text-[14px] text-[var(--tg-sidebar-active)] hover:underline"
                 >
-                  Yangi chat boshlash
+                  {t("yangiChatBoshlash")}
                 </button>
               )}
             </div>

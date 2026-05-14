@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface MatchResult {
   id?: string | number;
@@ -53,6 +54,7 @@ const fmtAmount = (v?: number) =>
   v !== undefined ? Number(v).toLocaleString("uz-UZ") + " so'm" : "—";
 
 export default function ThreeWayMatchPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [showPerform, setShowPerform] = useState(false);
@@ -103,12 +105,12 @@ export default function ThreeWayMatchPage() {
   return (
     <ModulePage
       module="finance"
-      title="3-Tomonlama Solishtirish"
+      title={t("k3TomonlamaSolishtirish")}
       icon={<GitCompare className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowPerform(true)} data-testid="button-perform-match">
           <Play className="h-4 w-4 mr-2" />
-          Solishtirish
+          {t("solishtirish")}
         </Button>
       }
     >
@@ -116,7 +118,7 @@ export default function ThreeWayMatchPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Hisob-faktura yoki PO raqami..."
+            placeholder={t("hisobFakturaYokiPoRaqami")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -208,7 +210,7 @@ export default function ThreeWayMatchPage() {
       <Dialog open={showPerform} onOpenChange={setShowPerform}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi solishtirish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiSolishtirish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
@@ -217,7 +219,7 @@ export default function ThreeWayMatchPage() {
                 type="number"
                 value={form.poId}
                 onChange={e => setForm(f => ({ ...f, poId: e.target.value }))}
-                placeholder="Xarid buyurtmasi ID"
+                placeholder={t("xaridBuyurtmasiId")}
                 data-testid="input-match-po-id"
               />
             </div>
@@ -227,12 +229,12 @@ export default function ThreeWayMatchPage() {
                 type="number"
                 value={form.grId}
                 onChange={e => setForm(f => ({ ...f, grId: e.target.value }))}
-                placeholder="Tovar qabul qilish ID"
+                placeholder={t("tovarQabulQilishId")}
                 data-testid="input-match-gr-id"
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Hisob-faktura raqami *</Label>
+              <Label>{t("hisobFakturaRaqami")}</Label>
               <Input
                 value={form.vendorInvoiceId}
                 onChange={e => setForm(f => ({ ...f, vendorInvoiceId: e.target.value }))}
@@ -242,7 +244,7 @@ export default function ThreeWayMatchPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPerform(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowPerform(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (canSubmit) performMutation.mutate(form); }}
               disabled={!canSubmit || performMutation.isPending}

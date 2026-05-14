@@ -29,6 +29,7 @@ import {
 import { Link } from "wouter";
 import { apiRequest } from '@/lib/queryClient';
 import { EPPageHeader, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface EmployeeRating {
   id: string;
@@ -57,6 +58,7 @@ interface RatingsResponse {
 }
 
 export default function CameraEmployeeRatings() {
+  const { t } = useTranslation("common");
   const { isAuthenticated } = useAuth();
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
@@ -141,8 +143,8 @@ export default function CameraEmployeeRatings() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Xodimlar Reytingi</b></>}
-        title="Xodimlar Reytingi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimlarReytingi")}</b></>}
+        title={t("xodimlarReytingi")}
         subtitle={t.subtitle}
       />
         </div>
@@ -297,7 +299,7 @@ export default function CameraEmployeeRatings() {
                 <CardHeader className="bg-muted/40/50 py-4 px-6">
                   <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
                     <Trophy className="h-4 w-4 text-[var(--ep-yellow)]" />
-                    Top 3
+                    {t("top3")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">

@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface DocumentDetail {
   id: string;
   documentNumber: string;
@@ -48,6 +49,7 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation("common");
   const docQ = useQuery<DocumentDetail>({
     queryKey: [`/api/cc/baskets/${documentId}`],
     queryFn: () => apiRequest<DocumentDetail>("GET", `/api/cc/baskets/${documentId}`),
@@ -66,12 +68,12 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[88vh] p-0 flex flex-col">
         <DialogHeader className="p-4 border-b">
-          <DialogTitle className="sr-only">Hujjat tafsilotlari</DialogTitle>
+          <DialogTitle className="sr-only">{t("hujjatTafsilotlari")}</DialogTitle>
 
           {docQ.isLoading || !doc ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="animate-spin" size={14} />
-              Yuklanmoqda...
+              {t("Yuklanmoqda...")}
             </div>
           ) : (
             <>
@@ -83,7 +85,7 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
                      label={PRIORITY[doc.priority]?.uz ?? "Normal"} />
                 <Tag tone={STATE[doc.workflowState]?.tone ?? STATE.draft.tone}
                      label={STATE[doc.workflowState]?.uz ?? doc.workflowState} />
-                {doc.isInboxOverdue && <Tag tone="bg-red-50 text-[var(--ep-red)] border-red-200" label="⏰ Muddati o'tgan" />}
+                {doc.isInboxOverdue && <Tag tone="bg-red-50 text-[var(--ep-red)] border-red-200" label={t("muddatiOtgan1")} />}
               </div>
 
               <div className="text-base font-semibold leading-tight">{doc.subject}</div>
@@ -108,7 +110,7 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
               </Section>
 
               {bodyQ.data?.senderComment && (
-                <Section title="Yuboruvchi izohi">
+                <Section title={t("yuboruvchiIzohi")}>
                   <div className="bg-amber-50/50 border border-amber-200 text-amber-900 rounded-lg p-3 text-sm">
                     {bodyQ.data.senderComment}
                   </div>

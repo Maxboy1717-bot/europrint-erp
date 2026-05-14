@@ -26,7 +26,7 @@ function RoleBadge({ role }: { role: string }) {
   if (role === "OWNER") return (
     <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/50 text-[var(--ep-yellow)] dark:text-yellow-400 gap-1">
       <Crown className="w-2.5 h-2.5" />
-      Egasi
+      {t("egasi")}
     </Badge>
   );
   if (role === "ADMIN") return (
@@ -63,12 +63,12 @@ export function RoomInfoPanel({room, onClose }: Props) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 flex-shrink-0">
-        <h3 className="font-semibold text-sm">Ma'lumot</h3>
+        <h3 className="font-semibold text-sm">{t("info")}</h3>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowSettings(true)}
             className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Xona sozlamalari"
+            title={t("xonaSozlamalari")}
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -126,7 +126,7 @@ export function RoomInfoPanel({room, onClose }: Props) {
           <div className="h-full overflow-y-auto">
             <div className="flex items-center justify-between px-3 py-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                A'zolar
+                {t("azolar")}
               </p>
               <span className="text-xs text-muted-foreground">
                 {onlineCount} online · {members.length} jami
@@ -158,7 +158,7 @@ export function RoomInfoPanel({room, onClose }: Props) {
                 );
               })}
               {members.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-6">A'zolar yo'q</p>
+                <p className="text-sm text-muted-foreground text-center py-6">{t("azolarYoq")}</p>
               )}
             </div>
           </div>

@@ -3,10 +3,10 @@
   "givenQty": "Выданное количество",
   "returnButton": "Вернуть",
   "title": "Заголовок",
-  "totalValue": "Всего Value",
+  "totalValue": "Общая стоимость",
   "returnedQty": "Возвращённое количество",
-  "balance": "balance",
+  "balance": "Баланс",
   "noItems": "Нет элементов",
-  "hrWarning": "Hr Предупреждение",
-  "checklist": "checklist"
+  "hrWarning": "Предупреждение HR",
+  "checklist": "Чек-лист"
 }

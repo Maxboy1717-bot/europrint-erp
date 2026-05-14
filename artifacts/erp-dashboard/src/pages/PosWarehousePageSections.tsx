@@ -61,7 +61,7 @@ export function StockTab({isLoading,
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Material kod, nom yoki barcode..."
+            placeholder={t("materialKodNomYokiBarcode")}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-8"
@@ -70,10 +70,10 @@ export function StockTab({isLoading,
         <Select value={warehouseFilter} onValueChange={onWarehouseFilterChange}>
           <SelectTrigger className="w-44 h-9">
             <Building2 className="h-3.5 w-3.5 mr-1" />
-            <SelectValue placeholder="Ombor" />
+            <SelectValue placeholder={t("ombor")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barcha omborlar</SelectItem>
+            <SelectItem value="all">{t("barchaOmborlar")}</SelectItem>
             {warehouses.map((w) => (
               <SelectItem key={w.id} value={String(w.id)}>
                 {w.name}
@@ -83,10 +83,10 @@ export function StockTab({isLoading,
         </Select>
         <Select value={categoryFilter} onValueChange={onCategoryFilterChange}>
           <SelectTrigger className="w-36 h-9">
-            <SelectValue placeholder="Kategoriya" />
+            <SelectValue placeholder={t("category")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barcha</SelectItem>
+            <SelectItem value="all">{t("barcha")}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
@@ -106,26 +106,26 @@ export function StockTab({isLoading,
             <TableHeader>
               <TableRow>
                 <TableHead>{t('Material')}</TableHead>
-                <TableHead>Ombor</TableHead>
-                <TableHead className="text-right">Miqdor</TableHead>
+                <TableHead>{t("ombor")}</TableHead>
+                <TableHead className="text-right">{t("quantity")}</TableHead>
                 <TableHead className="text-right">Min/Max</TableHead>
-                <TableHead className="text-right">Narx</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead className="text-right">Amal</TableHead>
+                <TableHead className="text-right">{t("price")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead className="text-right">{t("amal")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">
-                    Yuklanmoqda...
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && stockItems.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">
-                    Hech narsa topilmadi
+                    {t("hechNarsaTopilmadi")}
                   </TableCell>
                 </TableRow>
               )}
@@ -166,7 +166,7 @@ export function StockTab({isLoading,
                       onClick={() => onQuickIssue(item)}
                     >
                       <ArrowUpDown className="h-3.5 w-3.5 mr-1" />
-                      Movement
+                      {t("movement")}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -191,23 +191,23 @@ export function AlertsTab({ alerts }: AlertsTabProps) {
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />
-          Stok ogohlantirishlari
+          {t("stokOgohlantirishlari")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {alerts.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">
-            Hech qanday ogohlantirish yo'q ✅
+            {t("hechQandayOgohlantirishYoq")}
           </p>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{"Material"}</TableHead>
-                <TableHead>Ombor</TableHead>
-                <TableHead className="text-right">Mavjud</TableHead>
-                <TableHead className="text-right">Min</TableHead>
-                <TableHead>Holat</TableHead>
+                <TableHead>{t("ombor")}</TableHead>
+                <TableHead className="text-right">{t("mavjud")}</TableHead>
+                <TableHead className="text-right">{t("min1")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -252,19 +252,19 @@ export function HistoryTab({ history }: HistoryTabProps) {
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <History className="h-4 w-4" />
-          Oxirgi 20 movement
+          {t("oxirgi20Movement")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tur</TableHead>
+              <TableHead>{t("tur")}</TableHead>
               <TableHead>{"Material"}</TableHead>
-              <TableHead className="text-right">Miqdor</TableHead>
-              <TableHead>Foydalanuvchi</TableHead>
-              <TableHead>Sabab</TableHead>
-              <TableHead className="text-right">Sana</TableHead>
+              <TableHead className="text-right">{t("quantity")}</TableHead>
+              <TableHead>{t("foydalanuvchi")}</TableHead>
+              <TableHead>{t("sabab")}</TableHead>
+              <TableHead className="text-right">{t("date")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

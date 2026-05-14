@@ -167,7 +167,7 @@ export default function PosMovementKirim() {
     <div className="pos-fade-in">
       {/* Topbar */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-        <button className="pos-btn pos-btn-ghost" style={{ padding: "6px 12px" }} onClick={() => urlWarehouseId ? navigate(`/pos-monitor/warehouses/${urlWarehouseId}`) : navigate("/pos-monitor/movements/new")}>← Orqaga</button>
+        <button className="pos-btn pos-btn-ghost" style={{ padding: "6px 12px" }} onClick={() => urlWarehouseId ? navigate(`/pos-monitor/warehouses/${urlWarehouseId}`) : navigate("/pos-monitor/movements/new")}>{t("orqaga")}</button>
         <div>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{kirimCfg.icon} {kirimCfg.title}</h2>
           <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>
@@ -180,7 +180,7 @@ export default function PosMovementKirim() {
       </div>
 
       {/* Banners */}
-      {offlineQueued && <div className="pos-offline-banner" style={{ background: "rgba(16,185,129,0.08)", borderColor: "rgba(16,185,129,0.3)", color: "var(--pos-success)", marginBottom: 16 }}>📡 Internet yo'q — harakat oflayn navbatga saqlandi.</div>}
+      {offlineQueued && <div className="pos-offline-banner" style={{ background: "rgba(16,185,129,0.08)", borderColor: "rgba(16,185,129,0.3)", color: "var(--pos-success)", marginBottom: 16 }}>{t("internetYoqHarakatOflaynNavbatga")}</div>}
       {globalError  && <div className="pos-offline-banner" style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "var(--pos-danger)", marginBottom: 16 }}>⚠️ {globalError}</div>}
 
       <StepIndicator current={step} />

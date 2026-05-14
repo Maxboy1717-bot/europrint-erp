@@ -9,9 +9,11 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { KpiCard, fmtMoney, fmtNum } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function GrowthTab({ growth }: { growth: SdGrowthData }) {
-  if (!growth) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
+  const { t } = useTranslation("common");
+  if (!growth) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
   const currentYear = new Date().getFullYear();
   const rate = growth.growthRate ?? 0;
@@ -32,7 +34,7 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
           gradient="" />
         <KpiCard icon={DollarSign} label={`${currentYear} (hozirgacha)`} value={fmtMoney(growth.thisYearTotal)}
           gradient="" />
-        <KpiCard icon={Target} label="Yil prognozi" value={fmtMoney(growth.projectedThisYear)}
+        <KpiCard icon={Target} label={t("yilPrognozi")} value={fmtMoney(growth.projectedThisYear)}
           sub={rate !== 0 ? `${rate >= 0 ? "+" : ""}${rate}% o'zgarish` : undefined}
           gradient="" />
       </div>
@@ -67,7 +69,7 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
         <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 overflow-hidden">
           <div className="px-4 py-3 border-b border-orange-200 dark:border-orange-800">
             <h3 className="text-sm font-semibold text-[var(--ep-primary)] dark:text-orange-400 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />Xavf signallari
+              <AlertTriangle className="h-4 w-4" />{t("xavfSignallari")}
             </h3>
           </div>
           <div className="p-4">

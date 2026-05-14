@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { type ScanResult, type HistoryEntry } from "./PosBarcPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── ScanPanel ────────────────────────────────────────────────────────────
 
@@ -40,13 +41,14 @@ export function ScanPanel({
   onCopy,
   onHistoryClick,
 }: ScanPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Search className="h-4 w-4" />
-            Barcode Skanerlash
+            {t("barcodeSkanerlash")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -57,7 +59,7 @@ export function ScanPanel({
                 value={scanInput}
                 onChange={e => onInputChange(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") onScan(); }}
-                placeholder="Barcode skanerlang yoki kiriting..."
+                placeholder={t("barcodeSkanerlangYokiKiriting")}
                 className="font-mono"
                 data-testid="input-barcode-scan"
               />
@@ -78,7 +80,7 @@ export function ScanPanel({
                   <Barcode className="h-4 w-4 text-muted-foreground" />
                   <span className="font-mono text-sm font-medium">{scanInput}</span>
                   {scanResult.cached && (
-                    <EPStatusPill tone="neutral" className="text-xs">Cache</EPStatusPill>
+                    <EPStatusPill tone="neutral" className="text-xs">{t("cache")}</EPStatusPill>
                   )}
                 </div>
                 <Button
@@ -101,7 +103,7 @@ export function ScanPanel({
                     <span className="font-medium text-sm">
                       {scanResult.material?.name ?? scanResult.materialCard?.name}
                     </span>
-                    <EPStatusPill tone="success" className="text-xs">Topildi</EPStatusPill>
+                    <EPStatusPill tone="success" className="text-xs">{t("topildi")}</EPStatusPill>
                   </div>
                   {(scanResult.material?.code ?? scanResult.materialCard?.code) && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -116,7 +118,7 @@ export function ScanPanel({
               ) : (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <EPStatusPill tone="danger" className="text-xs">Topilmadi</EPStatusPill>
+                    <EPStatusPill tone="danger" className="text-xs">{t("topilmadi")}</EPStatusPill>
                   </div>
                   {scanResult.aiSuggestion && (
                     <p className="text-xs text-muted-foreground">
@@ -133,7 +135,7 @@ export function ScanPanel({
       {history.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">So'nggi skanlar</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">{t("songgiSkanlar")}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
@@ -186,7 +188,7 @@ export function GeneratePanel({
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Wand2 className="h-4 w-4" />
-          EAN-13 Generatsiya
+          {t("ean13Generatsiya")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -201,7 +203,7 @@ export function GeneratePanel({
             data-testid="input-ean13-prefix"
           />
           <p className="text-xs text-muted-foreground">
-            GS1 algoritmiga asosan to'liq 13 raqamli EAN-13 generatsiya qilinadi
+            {t("gs1AlgoritmigaAsosanToliq13")}
           </p>
         </div>
 
@@ -219,7 +221,7 @@ export function GeneratePanel({
           <div className="rounded-lg border p-4 bg-muted/30 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Yaratilgan EAN-13</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("yaratilganEan13")}</p>
                 <p className="font-mono text-2xl font-bold tracking-widest">{genResult}</p>
               </div>
               <Button
@@ -260,7 +262,7 @@ export function GeneratePanel({
           <p className="font-medium text-foreground">EAN-13 haqida:</p>
           <p>• 13 raqamdan iborat xalqaro barcode standarti</p>
           <p>• Oxirgi raqam — tekshirish raqami (avtomatik hisoblanadi)</p>
-          <p>• 200-299 prefiksi — mahalliy ishlatish uchun</p>
+          <p>{t("k200299PrefiksiMahalliyIshlatish")}</p>
         </div>
       </CardContent>
     </Card>

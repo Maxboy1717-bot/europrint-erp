@@ -94,7 +94,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kompaniya nomi *</FormLabel>
+              <FormLabel>{t("kompaniyaNomi")}</FormLabel>
               <FormControl>
                 <Input {...field} data-testid="input-edit-title" />
               </FormControl>
@@ -108,9 +108,9 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
           name="industry"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Soha</FormLabel>
+              <FormLabel>{t("soha")}</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="IT, Qurilish, Savdo" data-testid="input-edit-industry" />
+                <Input {...field} placeholder={t("itQurilishSavdo")} data-testid="input-edit-industry" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -123,7 +123,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
             name="employees"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Xodimlar soni</FormLabel>
+                <FormLabel>{t("xodimlarSoni")}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -143,7 +143,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
             name="revenue"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Yillik daromad</FormLabel>
+                <FormLabel>{t("yillikDaromad")}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -171,7 +171,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
             });
             return (
               <FormItem>
-                <FormLabel>Telefon raqamlari</FormLabel>
+                <FormLabel>{t("telefonRaqamlari")}</FormLabel>
                 <FormControl>
                   <MultiFieldInput
                     value={(field.value || []).map((p: { id: string; value: string; type: string }) => p.value)}
@@ -192,7 +192,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
                       });
                       field.onChange(newPhones);
                     }}
-                    label="Telefon"
+                    label={t("phone")}
                     placeholder="+998 90 123 45 67"
                   />
                 </FormControl>
@@ -248,7 +248,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
           render={({ field }) => {
             return (
               <FormItem>
-                <FormLabel>Veb-saytlar</FormLabel>
+                <FormLabel>{t("vebSaytlar")}</FormLabel>
                 <FormControl>
                   <MultiFieldInput
                     value={(field.value || []).map((w: { id: string; value: string; type: string }) => w.value)}
@@ -261,7 +261,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
                       });
                       field.onChange(newWebsites);
                     }}
-                    label="Veb-sayt"
+                    label={t("vebSayt")}
                     placeholder="https://example.com"
                   />
                 </FormControl>
@@ -276,7 +276,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Manzil</FormLabel>
+              <FormLabel>{t("address")}</FormLabel>
               <FormControl>
                 <Input {...field} data-testid="input-edit-address" />
               </FormControl>
@@ -292,7 +292,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
           </Button>
           <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-edit">
             <X className="h-4 w-4 mr-2" />
-            Bekor qilish
+            {t("cancel")}
           </Button>
         </div>
       </form>

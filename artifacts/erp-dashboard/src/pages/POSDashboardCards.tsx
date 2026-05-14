@@ -7,6 +7,7 @@
 import { Receipt, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUZS, type DailySaleSummary } from "./POSDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -37,6 +38,7 @@ interface LowStockCardProps {
 
 /** Bugungi sotuvlar (sale count) card. */
 export function SaleCountCard({ loading, summary }: SaleCountCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-4">
@@ -45,7 +47,7 @@ export function SaleCountCard({ loading, summary }: SaleCountCardProps) {
             <Receipt className="h-5 w-5 text-[var(--ep-blue)]" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Bugungi sotuvlar</p>
+            <p className="text-sm text-gray-500">{t("bugungiSotuvlar")}</p>
             <p className="text-2xl font-bold">
               {loading ? "..." : (summary?.saleCount ?? 0)}
             </p>
@@ -66,7 +68,7 @@ export function RevenueCard({ loading, summary }: RevenueCardProps) {
             <DollarSign className="h-5 w-5 text-[var(--ep-green)]" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Bugungi daromad</p>
+            <p className="text-sm text-gray-500">{t("bugungiDaromad")}</p>
             <p className="text-lg font-bold">
               {loading ? "..." : formatUZS(summary?.totalRevenue ?? 0)}
             </p>
@@ -87,7 +89,7 @@ export function AvgSaleCard({ loading, summary }: AvgSaleCardProps) {
             <TrendingUp className="h-5 w-5 text-[var(--ep-purple)]" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">O'rtacha sotuv</p>
+            <p className="text-sm text-gray-500">{t("ortachaSotuv")}</p>
             <p className="text-lg font-bold">
               {loading ? "..." : formatUZS(summary?.avgSale ?? 0)}
             </p>
@@ -108,7 +110,7 @@ export function LowStockCard({ count }: LowStockCardProps) {
             <AlertTriangle className="h-5 w-5 text-[var(--ep-yellow)]" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Kam qoldiq</p>
+            <p className="text-sm text-gray-500">{t("kamQoldiq")}</p>
             <p className="text-2xl font-bold text-[var(--ep-red)]">{count}</p>
           </div>
         </div>

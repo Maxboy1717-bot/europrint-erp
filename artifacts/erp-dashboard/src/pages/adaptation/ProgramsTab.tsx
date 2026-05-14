@@ -28,8 +28,10 @@ import {
   DeleteConfirmDialog,
 } from "./ProgramsTabDialogs";
 import { ProgramsTable } from "./ProgramsTabTable";
+import { useTranslation } from '@/lib/i18n';
 
 export function ProgramsTab({ programs, departments, positions }: ProgramsTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<AdaptationProgram | null>(null);
@@ -196,7 +198,7 @@ export function ProgramsTab({ programs, departments, positions }: ProgramsTabPro
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Adaptatsiya dasturlari</CardTitle>
+            <CardTitle>{t("adaptatsiyaDasturlari")}</CardTitle>
             <CardDescription>1 kun, 1 hafta, 1 oy, 3 oy rejalar</CardDescription>
           </div>
           <div className="flex gap-2">

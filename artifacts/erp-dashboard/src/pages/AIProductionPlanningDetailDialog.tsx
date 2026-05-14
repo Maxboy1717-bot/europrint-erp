@@ -14,6 +14,7 @@ import { GanttChart } from "./AIProductionPlanningChart";
 import { StatusBadge } from "./AIProductionPlanningSections";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Decisions List ───────────────────────────────────────────────────────────
 function DecisionsList({ decisions, onAccept, isPending }: {
   decisions: AiDecision[] | undefined;
@@ -23,7 +24,7 @@ function DecisionsList({ decisions, onAccept, isPending }: {
   return (
     <div className="space-y-2">
       {(!decisions || decisions.length === 0) && (
-        <p className="text-sm text-muted-foreground text-center py-4">Log yozuvlari yo'q</p>
+        <p className="text-sm text-muted-foreground text-center py-4">{t("logYozuvlariYoq")}</p>
       )}
       {(Array.isArray(decisions) ? decisions : []).map((dec) => (
         <div
@@ -53,7 +54,7 @@ function DecisionsList({ decisions, onAccept, isPending }: {
               disabled={isPending}
               data-testid={`button-accept-decision-${dec.id}`}
             >
-              Qabul qilish
+              {t("receive")}
             </Button>
           )}
         </div>
@@ -85,6 +86,7 @@ export function PlanDetailDialog({
   batchGroups, onApprove, onReject, onExecute, onReschedule,
   onAcceptDecision, isRejectPending, isExecutePending, isAcceptDecisionPending,
 }: PlanDetailDialogProps) {
+  const { t } = useTranslation("common");
   if (!plan) return null;
 
   const metaStats = [
@@ -188,13 +190,13 @@ export function PlanDetailDialog({
                   <Badge className="text-xs no-default-hover-elevate">{g.count} buyurtma</Badge>
                 </div>
                 <div className="flex gap-4 text-xs text-muted-foreground">
-                  <span>Tejash: <strong className="text-[var(--ep-green)]">{g.changeoverReduction}</strong></span>
-                  <span>Energiya: <strong className="text-[var(--ep-blue)]">{g.estimatedEnergySaving}</strong></span>
+                  <span>{t("tejash")}<strong className="text-[var(--ep-green)]">{g.changeoverReduction}</strong></span>
+                  <span>{t("energiya")}<strong className="text-[var(--ep-blue)]">{g.estimatedEnergySaving}</strong></span>
                   <span>Jami: {Math.round(g.totalDuration / 60)} soat</span>
                 </div>
               </div>
             )) || (
-              <p className="text-sm text-muted-foreground text-center py-4">Yuklanmoqda...</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("Yuklanmoqda...")}</p>
             )}
           </div>
         )}
@@ -210,18 +212,18 @@ export function PlanDetailDialog({
 
         <DialogFooter className="flex-wrap gap-2 pt-4 border-t">
           <Button variant="outline" size="sm" onClick={() => printPlan(plan)} data-testid="button-print-plan">
-            <Printer className="h-4 w-4 mr-1" /> PDF chop etish
+            <Printer className="h-4 w-4 mr-1" /> {t("pdfChopEtish")}
           </Button>
           <Button variant="outline" size="sm" onClick={onReschedule} data-testid="button-reschedule">
-            <RotateCcw className="h-4 w-4 mr-1" /> Qayta rejalash
+            <RotateCcw className="h-4 w-4 mr-1" /> {t("qaytaRejalash")}
           </Button>
           {plan.status === "pending_review" && (
             <>
               <Button size="sm" onClick={onApprove} data-testid="button-approve-plan">
-                <CheckCircle className="h-4 w-4 mr-1" /> Tasdiqlash
+                <CheckCircle className="h-4 w-4 mr-1" /> {t("verify")}
               </Button>
               <Button variant="destructive" size="sm" onClick={onReject} disabled={isRejectPending} data-testid="button-reject-plan">
-                <XCircle className="h-4 w-4 mr-1" /> Rad etish
+                <XCircle className="h-4 w-4 mr-1" /> {t("reject")}
               </Button>
             </>
           )}

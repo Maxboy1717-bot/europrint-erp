@@ -8,10 +8,12 @@ import { CHECKLIST_ITEMS } from "./CandidateChecklist";
 import { SectionBlock } from "./CandidateReportDialogSections";
 import type { ReportData } from "./CandidateReportDialogTypes";
 import { TOOL_TRAIT_LABELS, MOTIVATION_LABELS, DECISION_INFO } from "./CandidateReportDialogTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Section 4: Checklist ─────────────────────────────────────────────────────
 
 export function Section4Checklist({ report }: { report: ReportData }) {
+  const { t } = useTranslation("common");
   const checklistData = report.checklist_data ?? {};
   return (
     <SectionBlock number={4} title="Tavsiyalar Tekshiruvi Natijalari (Cheklist)" icon={ClipboardCheck}>
@@ -51,7 +53,7 @@ export function Section5Decision({ report }: { report: ReportData }) {
   const decisionKey = report.final_decision ?? report.recommendation ?? null;
   const decisionInfo = decisionKey ? (DECISION_INFO[decisionKey] ?? null) : null;
   return (
-    <SectionBlock number={5} title="Yakuniy Tavsiya" icon={Star}>
+    <SectionBlock number={5} title={t("yakuniyTavsiya")} icon={Star}>
       {decisionInfo ? (
         <div className={`rounded-lg border-2 p-5 ${decisionInfo.bg} ${decisionInfo.border} print:bg-white`}>
           <div className="flex items-center gap-3 mb-2">
@@ -63,7 +65,7 @@ export function Section5Decision({ report }: { report: ReportData }) {
               <XCircle className="w-7 h-7 text-[var(--ep-red)]" />
             )}
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide">Yakuniy qaror</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide">{t("yakuniyQaror")}</p>
               <p className={`text-lg font-bold ${decisionInfo.color}`}>{decisionInfo.label}</p>
             </div>
           </div>
@@ -73,7 +75,7 @@ export function Section5Decision({ report }: { report: ReportData }) {
         </div>
       ) : (
         <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-          <p className="text-sm text-gray-400 italic">Yakuniy tavsiya kiritilmagan</p>
+          <p className="text-sm text-gray-400 italic">{t("yakuniyTavsiyaKiritilmagan")}</p>
         </div>
       )}
     </SectionBlock>
@@ -88,7 +90,7 @@ export function Section6Risks({ report }: { report: ReportData }) {
   const motivLevel = report.motivation_level ?? null;
 
   return (
-    <SectionBlock number={6} title="Xavf va Imkoniyatlar" icon={Shield}>
+    <SectionBlock number={6} title={t("xavfVaImkoniyatlar")} icon={Shield}>
       {report.final_notes_text && (() => {
         const xulosaLine = report.final_notes_text.split("\n").find(l => l.startsWith("Xulosa:"));
         return xulosaLine ? (
@@ -115,17 +117,17 @@ export function Section6Risks({ report }: { report: ReportData }) {
               )}
               {(Object.entries(toolTestResults) as [string, number][]).filter(([, v]) => Math.abs(v) >= 80).length === 0 &&
                (report.tool_test_score == null || report.tool_test_score >= -30) && (
-                <li className="text-gray-400 italic">Kompulsiv ko'rsatkichlar aniqlanmadi</li>
+                <li className="text-gray-400 italic">{t("kompulsivKorsatkichlarAniqlanmadi")}</li>
               )}
               {report.flow_direction === "outflow" && (
-                <li>• Chiquvchi oqim: nomzod asosan ketmoqchi</li>
+                <li>{t("chiquvchiOqimNomzodAsosanKetmoqchi")}</li>
               )}
               {motivLevel === 1 && (
                 <li>• Motivatsiya: faqat moddiy manfaat (Pul)</li>
               )}
             </ul>
           ) : (
-            <p className="text-xs text-gray-400 italic">Test ma'lumotlari yo'q</p>
+            <p className="text-xs text-gray-400 italic">{t("testMalumotlariYoq")}</p>
           )}
         </div>
         <div className="border border-green-200 rounded-lg p-3 bg-green-50 print:bg-white">
@@ -143,18 +145,18 @@ export function Section6Risks({ report }: { report: ReportData }) {
                 <li>• TOOL TEST umumiy ball yuqori: +{report.tool_test_score}</li>
               )}
               {report.flow_direction === "inflow" && (
-                <li>• Kiruvchi oqim: kompaniyaga kelmoqchi</li>
+                <li>{t("kiruvchiOqimKompaniyagaKelmoqchi")}</li>
               )}
               {motivLevel != null && motivLevel >= 3 && (
                 <li>• Motivatsiya: {MOTIVATION_LABELS[motivLevel]?.label} darajasi (yuqori)</li>
               )}
               {(Object.entries(toolTestResults) as [string, number][]).filter(([, v]) => v >= 30 && v < 80).length === 0 &&
                (report.tool_test_score == null || report.tool_test_score < 30) && (
-                <li className="text-gray-400 italic">Belgilangan kuchli tomonlar yo'q</li>
+                <li className="text-gray-400 italic">{t("belgilanganKuchliTomonlarYoq")}</li>
               )}
             </ul>
           ) : (
-            <p className="text-xs text-gray-400 italic">Test ma'lumotlari yo'q</p>
+            <p className="text-xs text-gray-400 italic">{t("testMalumotlariYoq")}</p>
           )}
         </div>
       </div>

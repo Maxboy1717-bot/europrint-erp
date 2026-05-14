@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { NewQuestion, QuestionnaireResponse } from "./QuestionnaireTypes";
 import { getStatusBadge } from "./QuestionnaireSections";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // AddQuestionDialog
@@ -42,16 +43,17 @@ export function AddQuestionDialog({
   onSave,
   isSaving,
 }: AddQuestionDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="dialog-add-question" className="p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi savol qo'shish</DialogTitle>
-          <DialogDescription>Telegram botda ko'rsatiladigan yangi savol qo'shing</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiSavolQoshish")}</DialogTitle>
+          <DialogDescription>{t("telegramBotdaKorsatiladiganYangiSavol")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="order">Tartib raqami</Label>
+            <Label htmlFor="order">{t("tartibRaqami")}</Label>
             <Input
               id="order"
               type="number"
@@ -70,7 +72,7 @@ export function AddQuestionDialog({
               onChange={(e) =>
                 onNewQuestionChange({ ...newQuestion, question: e.target.value })
               }
-              placeholder="Masalan: To'liq ismingiz"
+              placeholder={t("masalanToliqIsmingiz")}
               data-testid="input-question-uz"
             />
           </div>
@@ -93,7 +95,7 @@ export function AddQuestionDialog({
             onClick={() => onOpenChange(false)}
             data-testid="button-cancel"
           >
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             onClick={onSave}
@@ -129,7 +131,7 @@ export function ViewResponseDialog({
     <Dialog open={!!response} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-2xl p-6" data-testid="dialog-view-response">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Ariza tafsilotlari</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("arizaTafsilotlari")}</DialogTitle>
           <DialogDescription>
             {response?.fullName} - {response?.phone}
           </DialogDescription>
@@ -138,11 +140,11 @@ export function ViewResponseDialog({
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Holat</Label>
+                <Label>{t("status28")}</Label>
                 <div className="mt-2">{getStatusBadge(response.status)}</div>
               </div>
               <div>
-                <Label>Yuborilgan vaqt</Label>
+                <Label>{t("yuborilganVaqt")}</Label>
                 <p className="text-sm mt-2">
                   {new Date(response.createdAt).toLocaleString("uz-UZ")}
                 </p>
@@ -150,7 +152,7 @@ export function ViewResponseDialog({
             </div>
 
             <div className="space-y-3">
-              <Label>Javoblar</Label>
+              <Label>{t("javoblar1")}</Label>
               {(Array.isArray(response.responses) ? response.responses : []).map((r, idx) => (
                 <Card key={idx}>
                   <CardContent className="p-3">
@@ -162,7 +164,7 @@ export function ViewResponseDialog({
             </div>
 
             <div className="space-y-3">
-              <Label>Holat o'zgartirish</Label>
+              <Label>{t("holatOzgartirish")}</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Button
                   variant="outline"
@@ -172,7 +174,7 @@ export function ViewResponseDialog({
                   data-testid="button-status-pending"
                 >
                   <Clock className="w-4 h-4 mr-2" />
-                  Kutilmoqda
+                  {t("Kutilmoqda")}
                 </Button>
                 <Button
                   variant="outline"
@@ -182,7 +184,7 @@ export function ViewResponseDialog({
                   data-testid="button-status-in-review"
                 >
                   <Clock className="w-4 h-4 mr-2" />
-                  Ko'rib chiqilmoqda
+                  {t("koribChiqilmoqda")}
                 </Button>
                 <Button
                   variant="outline"
@@ -192,7 +194,7 @@ export function ViewResponseDialog({
                   data-testid="button-status-interviewed"
                 >
                   <Clock className="w-4 h-4 mr-2" />
-                  Intervyu qilindi
+                  {t("intervyuQilindi")}
                 </Button>
                 <Button
                   variant="outline"
@@ -202,7 +204,7 @@ export function ViewResponseDialog({
                   data-testid="button-status-approved"
                 >
                   <Check className="w-4 h-4 mr-2" />
-                  Tasdiqlangan
+                  {t("approved")}
                 </Button>
                 <Button
                   variant="outline"
@@ -213,7 +215,7 @@ export function ViewResponseDialog({
                   data-testid="button-status-hired"
                 >
                   <Check className="w-4 h-4 mr-2" />
-                  Ishga olindi
+                  {t("ishgaOlindi")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -223,7 +225,7 @@ export function ViewResponseDialog({
                   data-testid="button-status-not-hired"
                 >
                   <X className="w-4 h-4 mr-2" />
-                  Ishga olinmadi
+                  {t("ishgaOlinmadi")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -233,7 +235,7 @@ export function ViewResponseDialog({
                   data-testid="button-status-rejected"
                 >
                   <X className="w-4 h-4 mr-2" />
-                  Rad etilgan
+                  {t("rejected")}
                 </Button>
               </div>
             </div>

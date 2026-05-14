@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { UseMutationResult } from "@tanstack/react-query";
 import { AdminRoom, AuditLog, ACTION_LABELS } from "./ChatAdminPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Rooms Tab ────────────────────────────────────────────────────────────────
 export function RoomsSection({
@@ -32,7 +33,8 @@ export function RoomsSection({
   roomsLoading: boolean;
   filteredRooms: AdminRoom[];
   onSelectRoom: (room: AdminRoom) => void;
-  archiveMutation: UseMutationResult<unknown, Error, { roomId: string; archive: boolean }, unknown>;
+  archiveMutation: UseMutationResult<unknown, Error, {
+  const { t } = useTranslation("common"); roomId: string; archive: boolean }, unknown>;
 }) {
   return (
     <div className="flex-1 min-h-0 overflow-auto">
@@ -40,7 +42,7 @@ export function RoomsSection({
         <div className="relative max-w-xs">
           <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
           <Input
-            placeholder="Xona qidirish..."
+            placeholder={t("xonaQidirish")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-sm"
@@ -49,19 +51,19 @@ export function RoomsSection({
       </div>
       {roomsLoading ? (
         <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-          Yuklanmoqda...
+          {t("Yuklanmoqda...")}
         </div>
       ) : (
         <div className="ep-table-scroll"><Table>
           <TableHeader className="sticky top-0 z-10 bg-card">
             <TableRow>
-              <TableHead>Xona nomi</TableHead>
-              <TableHead>Tur</TableHead>
-              <TableHead className="text-center">A'zolar</TableHead>
-              <TableHead className="text-center">Xabarlar</TableHead>
-              <TableHead>Yaratilgan</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>Amal</TableHead>
+              <TableHead>{t("xonaNomi")}</TableHead>
+              <TableHead>{t("tur")}</TableHead>
+              <TableHead className="text-center">{t("azolar")}</TableHead>
+              <TableHead className="text-center">{t("xabarlar")}</TableHead>
+              <TableHead>{t("Yaratilgan")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("amal")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -96,11 +98,11 @@ export function RoomsSection({
                 <TableCell>
                   {room.is_archived ? (
                     <Badge variant="outline" className="text-xs text-[var(--ep-primary)] border-orange-500/40">
-                      Arxivda
+                      {t("arxivda")}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="text-xs text-[var(--ep-green)] border-green-500/40">
-                      Faol
+                      {t("active")}
                     </Badge>
                   )}
                 </TableCell>
@@ -112,7 +114,7 @@ export function RoomsSection({
                       onClick={() => onSelectRoom(room)}
                     >
                       <Users className="w-3 h-3" />
-                      A'zolar
+                      {t("azolar")}
                       <ChevronRight className="w-3 h-3" />
                     </Button>
                     <Button
@@ -122,9 +124,9 @@ export function RoomsSection({
                       disabled={archiveMutation.isPending}
                     >
                       {room.is_archived ? (
-                        <><ArchiveRestore className="w-3 h-3" /> Tiklash</>
+                        <><ArchiveRestore className="w-3 h-3" /> {t("restore")}</>
                       ) : (
-                        <><Archive className="w-3 h-3" /> Arxivlash</>
+                        <><Archive className="w-3 h-3" /> {t("archive")}</>
                       )}
                     </Button>
                   </div>
@@ -134,7 +136,7 @@ export function RoomsSection({
             {filteredRooms.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  Xonalar topilmadi
+                  {t("xonalarTopilmadi")}
                 </TableCell>
               </TableRow>
             )}
@@ -161,18 +163,18 @@ export function AuditSection({
     <div className="flex-1 min-h-0 overflow-auto">
       {auditLoading ? (
         <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-          Yuklanmoqda...
+          {t("Yuklanmoqda...")}
         </div>
       ) : (
         <>
           <div className="ep-table-scroll"><Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
-                <TableHead>Vaqt</TableHead>
-                <TableHead>Aktor</TableHead>
-                <TableHead>Harakat</TableHead>
-                <TableHead>Xona</TableHead>
-                <TableHead>Nishon</TableHead>
+                <TableHead>{t("time")}</TableHead>
+                <TableHead>{t("aktor")}</TableHead>
+                <TableHead>{t("harakat")}</TableHead>
+                <TableHead>{t("xona")}</TableHead>
+                <TableHead>{t("nishon")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -195,7 +197,7 @@ export function AuditSection({
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     <AlertTriangle className="w-5 h-5 mx-auto mb-2 opacity-40" />
-                    Audit log yozuvlari yo'q
+                    {t("auditLogYozuvlariYoq")}
                   </TableCell>
                 </TableRow>
               )}
@@ -208,7 +210,7 @@ export function AuditSection({
                 onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
                 disabled={auditPage <= 1}
               >
-                Oldingi
+                {t("previous")}
               </Button>
               <span className="text-sm text-muted-foreground">
                 {auditPage} / {auditData?.pages}
@@ -218,7 +220,7 @@ export function AuditSection({
                 onClick={() => setAuditPage((p) => p + 1)}
                 disabled={auditPage >= (auditData?.pages || 1)}
               >
-                Keyingi
+                {t("nextBtn")}
               </Button>
             </div>
           )}

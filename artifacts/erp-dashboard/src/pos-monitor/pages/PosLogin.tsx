@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import "../styles/pos-theme.css";
+import { useTranslation } from '@/lib/i18n';
 
 interface PosLoginResponse {
   token: string;
@@ -35,6 +36,7 @@ function GridParticles() {
 }
 
 export default function PosLogin() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [username, setUsername]     = useState("");
@@ -223,7 +225,7 @@ export default function PosLogin() {
         </form>
 
         <div style={{ textAlign: "center", marginTop: 24, fontSize: 11, color: "var(--pos-text-muted)", opacity: 0.6 }}>
-          POS Monitor v2.0 · EuroPrint ERP
+          {t("posMonitorV20Europrint")}
         </div>
       </div>
     </div>

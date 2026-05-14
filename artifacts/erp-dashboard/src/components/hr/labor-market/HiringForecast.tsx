@@ -4,6 +4,7 @@
  */
 
 import { Clock } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export interface EmployerMarket {
   competitors: Array<{
@@ -39,6 +40,7 @@ export function HiringForecast({
   cm: CandidateMarket;
   historical: HistoricalStats | null;
 }) {
+  const { t } = useTranslation("common");
   const candidateCount = Number(cm.candidate_count) || 0;
   const avgResponseDays = Number(cm.avg_response_days) || 0;
 
@@ -74,16 +76,16 @@ export function HiringForecast({
       {hasHistory && (
         <div className="text-[10px] text-muted-foreground flex flex-wrap gap-3 px-1">
           <span>
-            📊 Tarix: <b>{historical?.sample_size}</b> ta shunga o'xshash vakansiya
+            {t("tarix1")}<b>{historical?.sample_size}</b> {t("taShungaOxshashVakansiya")}
           </span>
           {historical?.avg_fill_days !== null && (
             <span>
-              ⏱ O'rtacha to'ldirish: <b>{historical?.avg_fill_days} kun</b>
+              {t("ortachaToldirish")}<b>{historical?.avg_fill_days} kun</b>
             </span>
           )}
           {historical?.avg_candidates_screened !== null && (
             <span>
-              👥 O'rtacha nomzodlar: <b>{historical?.avg_candidates_screened}</b>
+              {t("ortachaNomzodlar")}<b>{historical?.avg_candidates_screened}</b>
             </span>
           )}
         </div>

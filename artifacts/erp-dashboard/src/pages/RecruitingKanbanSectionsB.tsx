@@ -12,6 +12,7 @@ import {
 import { CandidateCard } from "@/components/recruiting/CandidateCard";
 import type { KanbanBoardProps } from "./RecruitingKanbanTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Kanban Board ─────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export function RecruitingKanbanBoard({
   setRoadmapEntry,
   setPortretVacancy,
 }: KanbanBoardProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex-1 overflow-x-auto">
       <div className="flex gap-3 pb-4 h-full min-w-max">
@@ -62,7 +64,7 @@ export function RecruitingKanbanBoard({
               )}
               <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
                 {isLoading && (
-                  <div className="text-xs text-muted-foreground text-center py-4">Yuklanmoqda...</div>
+                  <div className="text-xs text-muted-foreground text-center py-4">{t("Yuklanmoqda...")}</div>
                 )}
                 {byStage(stage.key).map(entry => (
                   <CandidateCard
@@ -85,7 +87,7 @@ export function RecruitingKanbanBoard({
                   />
                 ))}
                 {!isLoading && byStage(stage.key).length === 0 && (
-                  <div className="text-xs text-muted-foreground text-center py-4 opacity-50">Bo'sh</div>
+                  <div className="text-xs text-muted-foreground text-center py-4 opacity-50">{t("bosh")}</div>
                 )}
               </div>
             </div>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, ClipboardList } from "lucide-react";
 import { formatDate, formatCurrency, formatNumber } from "@/lib/format";
 import { InventoryCount, statusLabels, countTypeLabels, Warehouse } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MaterialInventoryTableProps {
   counts: InventoryCount[];
@@ -21,6 +22,7 @@ export function MaterialInventoryTable({
   warehouses,
   onViewLines
 }: MaterialInventoryTableProps) {
+  const { t } = useTranslation("common");
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "draft":
@@ -41,7 +43,7 @@ export function MaterialInventoryTable({
     return (
       <div className="text-center py-8 text-[13px] text-muted-foreground">
         <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p>Inventarizatsiya ma'lumotlari topilmadi</p>
+        <p>{t("inventarizatsiyaMalumotlariTopilmadi")}</p>
       </div>
     );
   }
@@ -51,14 +53,14 @@ export function MaterialInventoryTable({
       <div className="ep-table-scroll"><Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
-            <TableHead>Hisob №</TableHead>
-            <TableHead>Sana</TableHead>
-            <TableHead>Tur</TableHead>
-            <TableHead>Holat</TableHead>
-            <TableHead className="text-right">Jami elementlar</TableHead>
+            <TableHead>{t("hisob")}</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("tur")}</TableHead>
+            <TableHead>{t("status28")}</TableHead>
+            <TableHead className="text-right">{t("jamiElementlar")}</TableHead>
             <TableHead className="text-right">Jami qiymat (kitob)</TableHead>
-            <TableHead className="text-right">Farq qiymati</TableHead>
-            <TableHead className="text-right w-[100px]">Amallar</TableHead>
+            <TableHead className="text-right">{t("farqQiymati")}</TableHead>
+            <TableHead className="text-right w-[100px]">{t("Amallar")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

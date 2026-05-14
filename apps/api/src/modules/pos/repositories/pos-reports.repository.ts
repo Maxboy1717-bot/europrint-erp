@@ -4,12 +4,13 @@
  */
 
 import { sql, db } from '@workspace/db';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 import { Ok, Err, Result, safeCall } from '@common/result';
 
 import { Injectable } from '@nestjs/common';
 
 type Row = Record<string, unknown>;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
 
 @Injectable()
 export class PosReportsRepository {

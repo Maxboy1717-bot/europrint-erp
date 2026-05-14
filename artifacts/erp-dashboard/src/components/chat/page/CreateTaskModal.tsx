@@ -73,20 +73,20 @@ export function CreateTaskModal({message, open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckSquare className="w-4 h-4 text-primary" />
-            Xabardan Task Yaratish
+            {t("xabardanTaskYaratish")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {message && (
             <div className="bg-muted/30 rounded-lg px-3 py-2 text-xs text-muted-foreground border border-border/50">
-              <p className="font-medium text-foreground/80 mb-0.5">Asos xabar:</p>
+              <p className="font-medium text-foreground/80 mb-0.5">{t("asosXabar")}</p>
               <p className="line-clamp-2">{message.content}</p>
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-title" className="text-xs">Sarlavha *</Label>
+            <Label htmlFor="task-title" className="text-xs">{t("sarlavha")}</Label>
             <Input
               id="task-title"
               value={title}
@@ -97,11 +97,11 @@ export function CreateTaskModal({message, open, onClose }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Mas'ul xodim</Label>
+            <Label className="text-xs">{t("masulXodim")}</Label>
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Xodim qidirish..."
+              placeholder={t("xodimQidirish")}
               className="text-sm mb-1"
             />
             {search && filtered.length > 0 && (
@@ -134,7 +134,7 @@ export function CreateTaskModal({message, open, onClose }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-due" className="text-xs">Muddat</Label>
+            <Label htmlFor="task-due" className="text-xs">{t("muddat")}</Label>
             <Input
               id="task-due"
               type="date"
@@ -147,7 +147,7 @@ export function CreateTaskModal({message, open, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} className="text-sm">
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             onClick={handleCreate}

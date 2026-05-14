@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import { KpiCard } from "./KpiCard";
 import { fmtQty, fmtDate, type StorageInfo, type BasicInfo } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function StorageTab({ storage, basic }: { storage: StorageInfo; basic: BasicInfo }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -19,7 +21,7 @@ export function StorageTab({ storage, basic }: { storage: StorageInfo; basic: Ba
       </div>
       {(storage.expiringBatches || []).length > 0 ? (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Muddati yaqin partiyalar</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("muddatiYaqinPartiyalar")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50">
@@ -46,7 +48,7 @@ export function StorageTab({ storage, basic }: { storage: StorageInfo; basic: Ba
       ) : (
         <Card><CardContent className="py-8 text-center">
           <CheckCircle className="h-8 w-8 text-[var(--ep-green)] mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Muddati yaqin partiyalar yo'q</p>
+          <p className="text-sm text-muted-foreground">{t("muddatiYaqinPartiyalarYoq")}</p>
         </CardContent></Card>
       )}
     </div>

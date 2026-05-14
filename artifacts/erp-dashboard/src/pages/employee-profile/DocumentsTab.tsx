@@ -17,8 +17,10 @@ import {
 import { KPICards, EmployeeDocsSection, FileFolderSection, ContractsSection, HRDocsSection } from "./DocumentsTabSections";
 import { UploadDialog, AddDocDialog } from "./DocumentsTabDialogs";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 export function DocumentsTab({ employeeId }: DocumentsTabProps) {
+  const { t } = useTranslation("common");
   const { toast }           = useToast();
   const { hasRole }         = useAuth();
   const qc                  = useQueryClient();
@@ -175,16 +177,16 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
       <ConfirmDialog
         open={confirmDeleteFileId !== null}
         onOpenChange={open => { if (!open) setConfirmDeleteFileId(null); }}
-        title="Faylni o'chirish"
-        description="Ushbu faylni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("faylniOchirish")}
+        description={t("ushbuFaylniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish" cancelText="Bekor qilish" variant="destructive"
         onConfirm={() => { if (confirmDeleteFileId !== null) handleDelete(confirmDeleteFileId); }}
       />
       <ConfirmDialog
         open={confirmDeleteDocId !== null}
         onOpenChange={open => { if (!open) setConfirmDeleteDocId(null); }}
-        title="Hujjatni o'chirish"
-        description="Ushbu hujjatni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("hujjatniOchirish")}
+        description={t("ushbuHujjatniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish" cancelText="Bekor qilish" variant="destructive"
         onConfirm={() => { if (confirmDeleteDocId !== null) handleDeleteDoc(confirmDeleteDocId); }}
       />

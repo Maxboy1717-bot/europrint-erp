@@ -34,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const URL_TAB_MAP: Record<string, string> = {
   "/hr/onboarding": "onboarding",
@@ -58,6 +59,7 @@ const tabMeta: Record<string, TabMeta> = {
 };
 
 export default function HRExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "vacation");
 
@@ -245,7 +247,7 @@ export default function HRExtended() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
         <Users className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-base">HR — Kengaytirilgan Modullar</h1>
+        <h1 className="font-semibold text-base">{t("hrKengaytirilganModullar")}</h1>
         {pendingLeave.length > 0 && (
           <EPStatusPill tone="neutral" className="ml-2">{pendingLeave.length} so'rov kutmoqda</EPStatusPill>
         )}

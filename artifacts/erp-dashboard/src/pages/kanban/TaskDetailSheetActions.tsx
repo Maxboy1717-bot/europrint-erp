@@ -23,6 +23,7 @@ import {
   Paperclip, MessageSquare,
 } from "lucide-react";
 import { TONE, type ActionBtnProps, type TaskDetailSheetActionsProps } from "./TaskDetailSheetTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── ActionBtn ─────────────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ export function ActionBtn({
   label,
   "data-testid": testId,
 }: ActionBtnProps) {
+  const { t } = useTranslation("common");
   return (
     <button
       onClick={onClick}
@@ -96,7 +98,7 @@ export function TaskDetailSheetActions({
               disabled={isAcceptPending}
               tone="blue"
               icon={<Check className="h-3.5 w-3.5" />}
-              label="Qabul qilish"
+              label={t("receive")}
               data-testid="button-accept-task"
             />
           ) : (
@@ -105,7 +107,7 @@ export function TaskDetailSheetActions({
               disabled={isCompletePending}
               tone="violet"
               icon={<CheckCheck className="h-3.5 w-3.5" />}
-              label="Yakunlash"
+              label={t("finishBtn")}
               data-testid="button-complete-task"
             />
           )
@@ -116,7 +118,7 @@ export function TaskDetailSheetActions({
           onClick={() => onTabChange("chat")}
           tone="slate"
           icon={<MessageSquare className="h-3.5 w-3.5" />}
-          label="Izoh"
+          label={t("Izoh")}
         />
 
         {/* File shortcut */}
@@ -124,15 +126,15 @@ export function TaskDetailSheetActions({
           onClick={() => onTabChange("files")}
           tone="slate"
           icon={<Paperclip className="h-3.5 w-3.5" />}
-          label="Fayl"
+          label={t("fayl")}
         />
 
         <div className="flex-1" />
 
         {/* Delete */}
         <DeleteConfirmDialog
-          title="Vazifani o'chirish"
-          description="Bu amalni qaytarib bo'lmaydi. Vazifa butunlay o'chiriladi."
+          title={t("vazifaniOchirish")}
+          description={t("buAmalniQaytaribBolmaydiVazifa")}
           onConfirm={onDelete}
           isPending={false}
         >
@@ -150,23 +152,23 @@ export function TaskDetailSheetActions({
       <Dialog open={showCompleteDialog} onOpenChange={onCompleteDialogChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Vazifani yakunlash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("vazifaniYakunlash")}</DialogTitle>
             <DialogDescription>
-              Vazifa bajarilishi haqida qisqacha hisobot yozing
+              {t("vazifaBajarilishiHaqidaQisqachaHisobot")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <Textarea
               value={completionReport}
               onChange={e => onCompletionReportChange(e.target.value)}
-              placeholder="Bajarilgan ishlar haqida..."
+              placeholder={t("bajarilganIshlarHaqida")}
               className="min-h-[120px]"
               data-testid="input-completion-report"
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onCompleteDialogChange(false)}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={onConfirmComplete}
@@ -175,7 +177,7 @@ export function TaskDetailSheetActions({
               data-testid="button-confirm-complete"
             >
               <CheckCheck className="h-4 w-4 mr-1.5" />
-              Yakunlash
+              {t("finishBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

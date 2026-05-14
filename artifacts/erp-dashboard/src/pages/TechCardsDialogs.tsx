@@ -61,25 +61,25 @@ export function ViewCardDialog({open,
               {/* Meta grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg border">
-                  <p className="text-xs text-muted-foreground mb-1">Mahsulot turi</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t("mahsulotTuri")}</p>
                   <p className="font-medium" data-testid="text-view-product-type">
                     {card.productType}
                   </p>
                 </div>
                 <div className="p-3 rounded-lg border">
-                  <p className="text-xs text-muted-foreground mb-1">Format</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t("format")}</p>
                   <p className="font-medium" data-testid="text-view-format">
                     {card.formatA} x {card.formatB} mm
                   </p>
                 </div>
                 <div className="p-3 rounded-lg border">
-                  <p className="text-xs text-muted-foreground mb-1">Davomiylik</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t("davomiylik")}</p>
                   <p className="font-medium" data-testid="text-view-layers">
                     {card.totalDurationMinutes || 0} min
                   </p>
                 </div>
                 <div className="p-3 rounded-lg border">
-                  <p className="text-xs text-muted-foreground mb-1">Setup vaqti</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t("setupVaqti")}</p>
                   <p className="font-medium" data-testid="text-view-cycle">
                     {card.setupDurationMinutes || 0} min
                   </p>
@@ -91,7 +91,7 @@ export function ViewCardDialog({open,
                 <>
                   <Separator />
                   <div>
-                    <p className="text-sm font-medium mb-1">Izoh</p>
+                    <p className="text-sm font-medium mb-1">{t("Izoh")}</p>
                     <p
                       className="text-sm text-muted-foreground"
                       data-testid="text-view-notes"
@@ -141,7 +141,7 @@ export function ViewCardDialog({open,
                   data-testid="btn-modal-optimize"
                 >
                   <TrendingDown className="h-4 w-4 mr-1" />
-                  Optimallashtirish
+                  {t("optimallashtirish")}
                 </Button>
                 <Button
                   size="sm"
@@ -182,17 +182,17 @@ export function GenerateCardDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">AI Texnologik Karta Yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("aiTexnologikKartaYaratish")}</DialogTitle>
         </DialogHeader>
 
         {order && (
           <div className="space-y-4">
             <div className="bg-muted/50 p-3 rounded-md text-sm">
-              <p><strong>Buyurtma:</strong> {order.papkaNo}</p>
-              <p><strong>Mijoz:</strong> {order.mijozNomi}</p>
-              <p><strong>Mahsulot:</strong> {order.mahsulotNomi}</p>
-              <p><strong>Format:</strong> {order.formatA || "?"} x {order.formatB || "?"} mm</p>
-              <p><strong>Tiraj:</strong> {order.tiraj?.toLocaleString() || "?"} dona</p>
+              <p><strong>{t("buyurtma3")}</strong> {order.papkaNo}</p>
+              <p><strong>{t("mijoz")}</strong> {order.mijozNomi}</p>
+              <p><strong>{t("mahsulot")}</strong> {order.mahsulotNomi}</p>
+              <p><strong>{t("format1")}</strong> {order.formatA || "?"} x {order.formatB || "?"} mm</p>
+              <p><strong>{t("tiraj")}</strong> {order.tiraj?.toLocaleString() || "?"} dona</p>
             </div>
             <p className="text-sm text-muted-foreground">
               AI avtomatik ravishda format, qatlamlar soni, tsikl vaqti va material
@@ -203,7 +203,7 @@ export function GenerateCardDialog({
 
         <div className="flex justify-end gap-2 mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             onClick={() => order && onConfirm(order)}
@@ -213,12 +213,12 @@ export function GenerateCardDialog({
             {isLoading ? (
               <>
                 <EPLoader className="mr-2" />
-                Generatsiya...
+                {t("generatsiya1")}
               </>
             ) : (
               <>
                 <Zap className="h-4 w-4 mr-2" />
-                AI bilan yaratish
+                {t("aiBilanYaratish")}
               </>
             )}
           </Button>
@@ -250,7 +250,7 @@ export function OptimizeResultPanel({ result }: OptimizeResultPanelProps) {
             <p className="text-2xl font-bold" data-testid="text-opt-score">
               {result.optimizationScore}%
             </p>
-            <p className="text-sm text-muted-foreground">Samaradorlik bali</p>
+            <p className="text-sm text-muted-foreground">{t("samaradorlikBali")}</p>
           </div>
           <div className="text-center">
             <p
@@ -271,7 +271,7 @@ export function OptimizeResultPanel({ result }: OptimizeResultPanelProps) {
 
         {result.optimizationSuggestions.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Tavsiyalar:</p>
+            <p className="text-sm font-medium">{t("tavsiyalar")}</p>
             {(Array.isArray(result.optimizationSuggestions)
               ? result.optimizationSuggestions
               : []
@@ -289,7 +289,7 @@ export function OptimizeResultPanel({ result }: OptimizeResultPanelProps) {
           </div>
         ) : (
           <p className="text-sm text-[var(--ep-green)] dark:text-green-400">
-            Karta allaqachon optimallashtirilgan!
+            {t("kartaAllaqachonOptimallashtirilgan")}
           </p>
         )}
       </CardContent>

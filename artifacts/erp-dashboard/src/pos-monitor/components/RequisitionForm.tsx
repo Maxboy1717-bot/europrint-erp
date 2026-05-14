@@ -7,6 +7,7 @@ import { useState } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { requestsApi } from "../api/pos-monitor.api";
 import { WarehouseSelector } from "./WarehouseSelector";
+import { useTranslation } from '@/lib/i18n';
 
 interface RequisitionLine {
   materialCode: string;
@@ -113,8 +114,8 @@ export function RequisitionForm({ onSuccess, onCancel }: RequisitionFormProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {lines.map((line, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr 80px 80px auto", gap: 6, alignItems: "center" }}>
-                <input className="pos-input" placeholder="Kod" value={line.materialCode} onChange={e => updateLine(i, "materialCode", e.target.value)} />
-                <input className="pos-input" placeholder="Nomi" value={line.materialName} onChange={e => updateLine(i, "materialName", e.target.value)} />
+                <input className="pos-input" placeholder={t("code")} value={line.materialCode} onChange={e => updateLine(i, "materialCode", e.target.value)} />
+                <input className="pos-input" placeholder={t("name")} value={line.materialName} onChange={e => updateLine(i, "materialName", e.target.value)} />
                 <input className="pos-input" type="number" min={0.001} step={0.001} value={line.qty} onChange={e => updateLine(i, "qty", Number(e.target.value))} />
                 <input className="pos-input" placeholder="birlik" value={line.unit} onChange={e => updateLine(i, "unit", e.target.value)} />
                 {lines.length > 1 && (

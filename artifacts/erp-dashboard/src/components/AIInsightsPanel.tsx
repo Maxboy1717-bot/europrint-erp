@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Target, RefreshCw, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AiInsight } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 interface AIInsightsPanelProps {
   context: string;
@@ -20,6 +21,7 @@ interface AIInsightsPanelProps {
 }
 
 export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -122,7 +124,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
-            AI Tahlil va Bashorat
+            {t("aiTahlilVaBashorat")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -140,7 +142,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
-            AI Tahlil va Bashorat
+            {t("aiTahlilVaBashorat")}
             <Sparkles className="h-4 w-4 text-primary animate-pulse" />
           </CardTitle>
           <Button
@@ -152,12 +154,12 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
             {isGenerating ? (
               <>
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                Yaratilmoqda...
+                {t("yaratilmoqda")}
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Yangi tahlil
+                {t("yangiTahlil")}
               </>
             )}
           </Button>
@@ -168,11 +170,11 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
           <div className="text-center py-12">
             <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">
-              Hali AI tahlillar mavjud emas
+              {t("haliAiTahlillarMavjudEmas")}
             </p>
             <Button onClick={handleGenerate} disabled={isGenerating}>
               <Sparkles className="h-4 w-4 mr-2" />
-              Birinchi tahlilni yaratish
+              {t("birinchiTahlilniYaratish")}
             </Button>
           </div>
         ) : (
@@ -201,7 +203,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
                           </Badge>
                           {!insight.isRead && (
                             <Badge variant="default" className="text-xs">
-                              Yangi
+                              {t("yangi")}
                             </Badge>
                           )}
                         </div>
@@ -211,7 +213,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
                             variant="ghost"
                             onClick={() => markAsReadMutation.mutate(insight.id)}
                           >
-                            O'qilgan
+                            {t("oqilgan")}
                           </Button>
                         )}
                       </div>
@@ -222,7 +224,7 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
                         <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
                           <div className="flex items-center gap-2 mb-2">
                             <Target className="h-4 w-4 text-primary" />
-                            <span className="text-sm font-medium text-primary">Tavsiyalar:</span>
+                            <span className="text-sm font-medium text-primary">{t("tavsiyalar")}</span>
                           </div>
                           <ul className="space-y-1">
                             {(Array.isArray(insight.actionItems) ? insight.actionItems : []).map((item, idx) => (

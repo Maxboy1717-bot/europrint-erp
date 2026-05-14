@@ -1,6 +1,7 @@
 /** @module AIProductionPlanningChart @description Gantt chart component that renders a daily production timeline from PlanDataItem arrays. */
 
 import { PlanDataItem, GANTT_COLORS, GANTT_TOTAL_WIDTH, GANTT_ROW_H, GANTT_LABEL_W, GANTT_CHART_W } from "./AIProductionPlanningTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Time helper ──────────────────────────────────────────────────────────────
 function parseTime(t: string): number {
@@ -17,15 +18,16 @@ interface GanttChartProps {
 }
 
 export function GanttChart({ items }: GanttChartProps) {
+  const { t } = useTranslation("common");
   if (!items.length) {
-    return <p className="text-sm text-muted-foreground text-center py-8">Jadval bo'sh</p>;
+    return <p className="text-sm text-muted-foreground text-center py-8">{t("jadvalBosh")}</p>;
   }
 
   const machines = [...new Set((Array.isArray(items) ? items : []).map((i) => i.machineName))];
 
   return (
     <div className="overflow-x-auto rounded-lg border bg-muted/20 p-3" data-testid="gantt-chart">
-      <div className="text-xs font-semibold text-muted-foreground mb-2">Gantt chart — kunlik reja</div>
+      <div className="text-xs font-semibold text-muted-foreground mb-2">{t("ganttChartKunlikReja")}</div>
 
       {/* Hour markers */}
       <div className="flex ml-[140px] mb-1">

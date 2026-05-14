@@ -259,7 +259,7 @@ export function PageHeader({ onRefresh, onOpenCreate, createDialogSlot }: PageHe
               className="bg-card/10 border-white/30 text-white hover:bg-card/20"
               data-testid="button-export"
             >
-              Excel
+              {t("excel")}
             </Button>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw, CheckCircle, Plus, Users } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   type SecurityVisitor,
   type AttendanceRecord,
@@ -25,16 +26,17 @@ interface VisitorsSectionProps {
 }
 
 export function VisitorsSection({ visitors, visitorsLoading, activeVisitors, onRefetch, onAddVisitor }: VisitorsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-foreground">Mehmonlar Jurnali</h2>
+        <h2 className="text-xl font-bold text-foreground">{t("mehmonlarJurnali")}</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onRefetch} className="bg-muted/60 text-foreground hover:bg-muted border-none rounded-lg px-4 font-medium">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button size="sm" onClick={onAddVisitor} data-testid="button-add-visitor" className="bg-primary text-white rounded-lg px-5 py-2 text-sm font-semibold shadow-none">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />Mehmon Ro'yxatdan O'tkazish
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("mehmonRoyxatdanOtkazish")}
           </Button>
         </div>
       </div>
@@ -65,12 +67,12 @@ export function VisitorsSection({ visitors, visitorsLoading, activeVisitors, onR
             <TableBody>
               {visitorsLoading ? (
                 <TableRow className="border-none hover:bg-transparent">
-                  <TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell>
+                  <TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell>
                 </TableRow>
               ) : visitors.length === 0 ? (
                 <TableRow className="border-none hover:bg-transparent">
                   <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">
-                    <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />Bugun mehmon yo'q
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("bugunMehmonYoq")}
                   </TableCell>
                 </TableRow>
               ) : (Array.isArray(visitors) ? visitors : []).slice(0, 15).map((v: SecurityVisitor) => (
@@ -136,13 +138,13 @@ export function AttendanceSection({ attendanceRecords, attendanceLoading, dailyS
             <TableBody>
               {attendanceLoading ? (
                 <TableRow className="border-none hover:bg-transparent">
-                  <TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell>
+                  <TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell>
                 </TableRow>
               ) : !Array.isArray(attendanceRecords) || attendanceRecords.length === 0 ? (
                 <TableRow className="border-none hover:bg-transparent">
                   <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
                     <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-30 text-[var(--ep-green)]" />
-                    Bugungi davomat ma'lumotlari yo'q
+                    {t("bugungiDavomatMalumotlariYoq")}
                   </TableCell>
                 </TableRow>
               ) : (Array.isArray(attendanceRecords) ? attendanceRecords : []).slice(0, 15).map((r: AttendanceRecord, i: number) => {

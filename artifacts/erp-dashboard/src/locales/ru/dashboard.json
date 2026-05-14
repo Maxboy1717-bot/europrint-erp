@@ -58,13 +58,13 @@
   "scan": "Сканировать",
   "inward": "Поступление",
   "outward": "Выдача",
-  "transfer": "transfer",
-  "request": "request",
-  "todayMovements": "Today Движения",
-  "todayAmount": "today Amount",
-  "awaitingApproval": "awaiting Approval",
-  "lowStockAlerts": "low Stock Alerts",
-  "recentFeed": "recent Feed",
-  "warehouseMap": "Склад Map",
-  "myTasks": "my Tasks"
+  "transfer": "Перемещение",
+  "request": "Запрос",
+  "todayMovements": "Движения за сегодня",
+  "todayAmount": "Сумма за сегодня",
+  "awaitingApproval": "Ожидает утверждения",
+  "lowStockAlerts": "Низкий запас",
+  "recentFeed": "Последняя активность",
+  "warehouseMap": "Карта склада",
+  "myTasks": "Мои задачи"
 }

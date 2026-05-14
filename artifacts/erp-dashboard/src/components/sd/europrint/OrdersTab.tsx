@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, CheckCircle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import { 
   SdOrder, SdOrderTimeline, SdPayment,
   fmt, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, PAYMENT_STATUS_COLORS 
 } from "./types";
 
 export function OrdersTab() {
+  const { t } = useTranslation("common");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<SdOrder | null>(null);
   const { toast } = useToast();
@@ -68,15 +70,15 @@ export function OrdersTab() {
     <div className="flex gap-4 h-[calc(100vh-200px)]">
       <div className="w-80 flex flex-col gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger data-testid="select-order-status-filter" className="h-9"><SelectValue placeholder="Barcha holat" /></SelectTrigger>
+          <SelectTrigger data-testid="select-order-status-filter" className="h-9"><SelectValue placeholder={t("barchaHolat")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {Object.entries(ORDER_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
 
         <div className="flex-1 overflow-y-auto space-y-2">
-          {isLoading && <div className="text-sm text-muted-foreground p-2">Yuklanmoqda...</div>}
+          {isLoading && <div className="text-sm text-muted-foreground p-2">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(orders) ? orders : []).map((o: SdOrder) => (
             <div key={o.id} data-testid={`card-order-${o.id}`}
               className={`p-3 rounded-md border cursor-pointer hover-elevate ${selected?.id === o.id ? "bg-primary/5 border-primary/30" : ""}`}
@@ -92,7 +94,7 @@ export function OrdersTab() {
             </div>
           ))}
           {!isLoading && orders.length === 0 && (
-            <div className="text-sm text-center text-muted-foreground py-4">Buyurtmalar yo'q</div>
+            <div className="text-sm text-center text-muted-foreground py-4">{t("buyurtmalarYoq")}</div>
           )}
         </div>
       </div>
@@ -100,7 +102,7 @@ export function OrdersTab() {
       <div className="flex-1 overflow-y-auto">
         {!selected ? (
           <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-            Buyurtmani tanlang
+            {t("buyurtmaniTanlang")}
           </div>
         ) : (
           <div className="space-y-4">
@@ -119,11 +121,11 @@ export function OrdersTab() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
-                  <div><div className="text-xs text-muted-foreground">Jami</div>
+                  <div><div className="text-xs text-muted-foreground">{t("total")}</div>
                     <div className="font-bold">{fmt(detail?.totalAmount || selected.totalAmount)} so'm</div></div>
-                  <div><div className="text-xs text-muted-foreground">To'landi</div>
+                  <div><div className="text-xs text-muted-foreground">{t("tolandi1")}</div>
                     <div className="font-bold text-[var(--ep-green)]">{fmt(detail?.advancePaid || 0)} so'm</div></div>
-                  <div><div className="text-xs text-muted-foreground">Qoldiq</div>
+                  <div><div className="text-xs text-muted-foreground">{t("qoldiq")}</div>
                     <div className="font-bold text-[var(--ep-red)]">{fmt(detail?.balanceDue || 0)} so'm</div></div>
                 </div>
 
@@ -149,7 +151,7 @@ export function OrdersTab() {
             {detail?.timeline && (
               <Card>
                 <CardContent className="p-4 space-y-3">
-                  <h3 className="font-semibold text-sm">Tarix</h3>
+                  <h3 className="font-semibold text-sm">{t("tarix")}</h3>
                   <div className="space-y-3">
                     {(Array.isArray(detail.timeline) ? detail.timeline : []).map((t: SdOrderTimeline, i: number) => (
                       <div key={`k-${i}`} className="flex gap-3 text-sm">
@@ -170,7 +172,7 @@ export function OrdersTab() {
             {detail?.payments && detail.payments.length > 0 && (
               <Card>
                 <CardContent className="p-4 space-y-3">
-                  <h3 className="font-semibold text-sm">To'lovlar</h3>
+                  <h3 className="font-semibold text-sm">{t("tolovlar")}</h3>
                   {(Array.isArray(detail.payments) ? detail.payments : []).map((p: SdPayment) => (
                     <div key={p.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
                       <div>

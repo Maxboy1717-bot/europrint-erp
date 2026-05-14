@@ -16,8 +16,10 @@ import { apiRequest } from "@/lib/queryClient";
 import type { MonthlyReport, MonthlyReportTabProps } from "./MonthlyReportTabTypes";
 import { UZ_MONTHS, MONTHS } from "./MonthlyReportTabTypes";
 import { FullReportCard } from "./MonthlyReportTabSections";
+import { useTranslation } from '@/lib/i18n';
 
 export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
+  const { t } = useTranslation("common");
   const now = new Date();
   const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
@@ -140,7 +142,7 @@ export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
         <div>
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Oylik Shaxsiy Hisobot Kartasi
+            {t("oylikShaxsiyHisobotKartasi")}
           </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
             Barcha ko'rsatkichlar: davomat, KPI, jarima/mukofot, qarz, inventar
@@ -159,11 +161,11 @@ export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
           </Select>
           <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={!report} data-testid="button-download-report">
             <Download className="h-4 w-4 mr-2" />
-            Yuklab olish
+            {t("download")}
           </Button>
           <Button size="sm" variant="outline" onClick={handlePrint} disabled={!report} data-testid="button-print-report">
             <Printer className="h-4 w-4 mr-2" />
-            Chop etish
+            {t("print1")}
           </Button>
         </div>
       </div>
@@ -179,7 +181,7 @@ export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-[var(--ep-yellow)]" />
-            Hisobotni yuklashda xatolik yuz berdi
+            {t("hisobotniYuklashdaXatolikYuzBerdi")}
           </CardContent>
         </Card>
       ) : report?.employee ? (

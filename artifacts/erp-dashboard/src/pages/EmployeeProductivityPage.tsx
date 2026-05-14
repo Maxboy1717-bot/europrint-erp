@@ -12,6 +12,7 @@ import { TrendingUp, User } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Progress } from "@/components/ui/progress";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface EmployeeProductivity {
   id?: string | number;
@@ -41,12 +42,13 @@ const getScoreColor = (score: number) => {
 
 const getTrendBadge = (trend?: string) => {
   if (!trend) return null;
-  if (trend === "up")   return <EPStatusPill tone="success"      className="text-xs">↑ O'smoqda</EPStatusPill>;
-  if (trend === "down") return <EPStatusPill tone="danger"  className="text-xs">↓ Pasaymoqda</EPStatusPill>;
-  return <Badge variant="outline" className="text-xs">→ Barqaror</Badge>;
+  if (trend === "up")   return <EPStatusPill tone="success"      className="text-xs">{t("osmoqda")}</EPStatusPill>;
+  if (trend === "down") return <EPStatusPill tone="danger"  className="text-xs">{t("pasaymoqda1")}</EPStatusPill>;
+  return <Badge variant="outline" className="text-xs">{t("barqaror1")}</Badge>;
 };
 
 export default function EmployeeProductivityPage() {
+  const { t } = useTranslation("common");
   const { data: rawData, isLoading, isError, refetch } = useQuery<
     EmployeeProductivity[] | { data?: EmployeeProductivity[] }
   >({
@@ -66,7 +68,7 @@ export default function EmployeeProductivityPage() {
   return (
     <ModulePage
       module="hr"
-      title="Xodim Unumdorligi"
+      title={t("xodimUnumdorligi")}
       icon={<TrendingUp className="h-5 w-5" />}
     >
       <div className="space-y-3">
@@ -88,7 +90,7 @@ export default function EmployeeProductivityPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Unumdorlik ma'lumotlari yo'q</p>
+              <p className="text-muted-foreground">{t("unumdorlikMalumotlariYoq")}</p>
             </CardContent>
           </Card>
         ) : (

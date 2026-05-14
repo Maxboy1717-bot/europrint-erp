@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { requestsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ReqLine {
@@ -123,12 +124,12 @@ function RejectModal({
         </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ fontSize: 11, color: "var(--pos-text-muted)", display: "block", marginBottom: 4 }}>
-            Rad etish sababi *
+            {t("radEtishSababi")}
           </label>
           <textarea
             className="pos-input"
             rows={4}
-            placeholder="Sabab kiriting..."
+            placeholder={t("sababKiriting")}
             value={reason}
             onChange={e => setReason(e.target.value)}
             style={{ resize: "vertical" }}
@@ -245,7 +246,7 @@ function StatusTimeline({
             ✕
           </div>
           <div style={{ fontSize: 11, color: "var(--pos-danger)", fontWeight: 700 }}>
-            Rad etildi
+            {t("radEtildi")}
           </div>
         </div>
       )}
@@ -255,6 +256,7 @@ function StatusTimeline({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function RequisitionDetail() {
+  const { t } = useTranslation("common");
   const [, navigate]            = useLocation();
   const [match, params]         = useRoute("/pos-monitor/requests/:id");
   const { t }                   = usePosI18n();
@@ -439,7 +441,7 @@ export default function RequisitionDetail() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* ── Details card ────────────────────────────────────────────────── */}
         <div className="pos-card">
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>📄 So'rov ma'lumotlari</div>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>{t("sorovMalumotlari")}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
               <span style={{ color: "var(--pos-text-muted)" }}>{t("requests.priority")}</span>
@@ -449,13 +451,13 @@ export default function RequisitionDetail() {
             </div>
             {req.neededByDate && (
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                <span style={{ color: "var(--pos-text-muted)" }}>Kerak bo'lish sanasi</span>
+                <span style={{ color: "var(--pos-text-muted)" }}>{t("kerakBolishSanasi")}</span>
                 <span>{new Date(req.neededByDate).toLocaleDateString("uz-UZ")}</span>
               </div>
             )}
             {req.targetWarehouseName && (
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                <span style={{ color: "var(--pos-text-muted)" }}>Maqsad ombori</span>
+                <span style={{ color: "var(--pos-text-muted)" }}>{t("maqsadOmbori")}</span>
                 <span>{req.targetWarehouseName}</span>
               </div>
             )}
@@ -480,12 +482,12 @@ export default function RequisitionDetail() {
 
         {/* ── Action section ─────────────────────────────────────────────── */}
         <div className="pos-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>⚡ Amallar</div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{t("amallar")}</div>
 
           {canSubmit && (
             <div>
               <div style={{ fontSize: 13, color: "var(--pos-text-muted)", marginBottom: 10 }}>
-                So'rovni bo'lim menejeriga yuboring.
+                {t("sorovniBolimMenejerigaYuboring")}
               </div>
               <button
                 className="pos-btn pos-btn-primary"
@@ -519,7 +521,7 @@ export default function RequisitionDetail() {
           {canFulfill && (
             <div>
               <div style={{ fontSize: 13, color: "var(--pos-text-muted)", marginBottom: 10 }}>
-                Barcode skaner bilan materialni chiqarib bering.
+                {t("barcodeSkanerBilanMaterialniChiqarib")}
               </div>
               <button
                 className="pos-btn pos-btn-primary"
@@ -533,7 +535,7 @@ export default function RequisitionDetail() {
 
           {!canSubmit && !canApproveReject && !canFulfill && (
             <div style={{ fontSize: 13, color: "var(--pos-text-muted)", textAlign: "center", padding: "20px 0" }}>
-              Hozircha amal mavjud emas
+              {t("hozirchaAmalMavjudEmas")}
             </div>
           )}
         </div>
@@ -542,7 +544,7 @@ export default function RequisitionDetail() {
       {/* ── Materials table ────────────────────────────────────────────────── */}
       {req.lines && req.lines.length > 0 && (
         <div className="pos-card" style={{ marginTop: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>📋 Materiallar</div>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>{t("materiallar1")}</div>
           <div style={{ overflowX: "auto" }}>
             <table className="pos-table">
               <thead>
@@ -551,7 +553,7 @@ export default function RequisitionDetail() {
                   <th>{t("common.name")}</th>
                   <th>{t("common.qty")}</th>
                   <th>{t("common.unit")}</th>
-                  <th>Mavjud qoldiq</th>
+                  <th>{t("mavjudQoldiq")}</th>
                   <th>{t("common.notes")}</th>
                 </tr>
               </thead>
@@ -592,7 +594,7 @@ export default function RequisitionDetail() {
 
       {/* ── Status Timeline ───────────────────────────────────────────────── */}
       <div className="pos-card" style={{ marginTop: 16 }}>
-        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>🕐 Holat tarixi</div>
+        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{t("holatTarixi1")}</div>
         <StatusTimeline currentStatus={req.status} statusHistory={req.statusHistory} />
       </div>
 

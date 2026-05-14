@@ -12,12 +12,14 @@ import type {
   CandidateDetail, FunnelEntry, ToolTestRecord, ProductivityInterview,
 } from "./CandidateReportTypes";
 import { CATEGORY_LABELS } from "./CandidateReportTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   Section, Section1MainResults, Section2TestResults,
   Section3InterviewResults, Section4Conclusion, Section5RisksAndOpportunities,
 } from "./CandidateReportSections";
 
 export default function CandidateReport() {
+  const { t } = useTranslation("common");
   const params      = useParams<{ id: string }>();
   const candidateId = Number(params.id);
 
@@ -86,10 +88,10 @@ export default function CandidateReport() {
       <div className="flex justify-between items-center mb-6 print:hidden">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-foreground">Kandidat bo'yicha yakuniy hisobot</span>
+          <span className="font-semibold text-foreground">{t("kandidatBoyichaYakuniyHisobot")}</span>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => window.history.back()}>← Orqaga</Button>
+          <Button variant="outline" onClick={() => window.history.back()}>{t("orqaga")}</Button>
           <Button className="gap-2" onClick={() => window.print()}>
             <Printer className="w-4 h-4" />PDF / Chop etish
           </Button>
@@ -113,7 +115,7 @@ export default function CandidateReport() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-gray-500">Hisobot sanasi</p>
+            <p className="text-xs text-gray-500">{t("hisobotSanasi")}</p>
             <p className="font-semibold text-gray-800">{printDate}</p>
             <div className="mt-2">
               <span className={`text-sm font-bold px-3 py-1 rounded-full border-2 ${
@@ -129,7 +131,7 @@ export default function CandidateReport() {
         </div>
       </div>
 
-      <Section number={1} title="Asosiy Natijalar va Faktlar">
+      <Section number={1} title={t("asosiyNatijalarVaFaktlar")}>
         <Section1MainResults
           candidate={candidate}
           recInfo={recInfo}
@@ -138,11 +140,11 @@ export default function CandidateReport() {
         />
       </Section>
 
-      <Section number={2} title="Test Natijalari va Talqin">
+      <Section number={2} title={t("testNatijalariVaTalqin")}>
         <Section2TestResults latestToolTest={latestToolTest} toolTestResults={toolTestResults} />
       </Section>
 
-      <Section number={3} title="Tavsiyalar Tekshiruvi Natijalari">
+      <Section number={3} title={t("tavsiyalarTekshiruviNatijalari")}>
         <Section3InterviewResults latestInterview={latestInterview} />
       </Section>
 
@@ -150,12 +152,12 @@ export default function CandidateReport() {
         <Section4Conclusion recommendation={recommendation} />
       </Section>
 
-      <Section number={5} title="Xavf va Imkoniyatlar">
+      <Section number={5} title={t("xavfVaImkoniyatlar")}>
         <Section5RisksAndOpportunities toolTestResults={toolTestResults} latestToolTest={latestToolTest} />
       </Section>
 
       <div className="mt-8 pt-4 border-t border-gray-300 flex justify-between text-xs text-gray-400 print:mt-4">
-        <span>EuroPrint ERP — HR Capital Tizimi</span>
+        <span>{t("europrintErpHrCapitalTizimi")}</span>
         <span>Nomzod ID: {candidateId} | {printDate}</span>
       </div>
 

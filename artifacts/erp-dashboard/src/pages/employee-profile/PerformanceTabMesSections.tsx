@@ -12,6 +12,7 @@ import { AlertTriangle, Zap, Target, Activity, Pause, RotateCcw } from "lucide-r
 import { MiniProgressBar } from "./PerformanceTabSections";
 import type { MesSummary } from "./PerformanceTabTypes";
 import { REASON_LABELS } from "./PerformanceTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface MesSectionProps {
   mesSummary?: MesSummary | null;
@@ -19,6 +20,7 @@ interface MesSectionProps {
 }
 
 export function MesSection({ mesSummary, loadingMes }: MesSectionProps) {
+  const { t } = useTranslation("common");
   const hasMesData = !!(mesSummary && mesSummary.summary?.totalSessions > 0);
 
   return (
@@ -39,7 +41,7 @@ export function MesSection({ mesSummary, loadingMes }: MesSectionProps) {
         <Card>
           <CardContent className="py-10 flex flex-col items-center text-muted-foreground">
             <Activity className="h-10 w-10 mb-3 opacity-20" />
-            <p className="text-sm font-medium">Bu xodim uchun ishlab chiqarish sessiyalari topilmadi</p>
+            <p className="text-sm font-medium">{t("buXodimUchunIshlabChiqarish")}</p>
             <p className="text-xs mt-1 opacity-60 text-center max-w-sm">
               Xodim hali MES tizimida ishlab chiqarish sessiyasida qatnashmagan yoki
               uning ID raqami MES tizimidagi ID bilan mos kelmaydi.
@@ -64,7 +66,7 @@ function MesKpiCards({ mesSummary }: { mesSummary: MesSummary }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="border-emerald-500/20">
         <CardContent className="pt-4 pb-3">
-          <p className="text-xs text-muted-foreground">OEE o'rtacha</p>
+          <p className="text-xs text-muted-foreground">{t("oeeOrtacha")}</p>
           <p className={`text-2xl font-bold mt-1 ${summary.avgOee >= 75 ? "text-[var(--ep-green)]" : summary.avgOee >= 50 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {summary.avgOee}%
           </p>
@@ -77,7 +79,7 @@ function MesKpiCards({ mesSummary }: { mesSummary: MesSummary }) {
       </Card>
       <Card className="border-blue-500/20">
         <CardContent className="pt-4 pb-3">
-          <p className="text-xs text-muted-foreground">Brak foizi</p>
+          <p className="text-xs text-muted-foreground">{t("brakFoizi")}</p>
           <p className={`text-2xl font-bold mt-1 ${summary.defectPercent <= 2 ? "text-[var(--ep-green)]" : summary.defectPercent <= 5 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {summary.defectPercent}%
           </p>
@@ -86,7 +88,7 @@ function MesKpiCards({ mesSummary }: { mesSummary: MesSummary }) {
       </Card>
       <Card className="border-violet-500/20">
         <CardContent className="pt-4 pb-3">
-          <p className="text-xs text-muted-foreground">Ish vaqti nisbati</p>
+          <p className="text-xs text-muted-foreground">{t("ishVaqtiNisbati")}</p>
           <p className={`text-2xl font-bold mt-1 ${summary.workTimeRatio >= 80 ? "text-[var(--ep-green)]" : summary.workTimeRatio >= 60 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {summary.workTimeRatio}%
           </p>
@@ -99,7 +101,7 @@ function MesKpiCards({ mesSummary }: { mesSummary: MesSummary }) {
       </Card>
       <Card className="border-cyan-500/20">
         <CardContent className="pt-4 pb-3">
-          <p className="text-xs text-muted-foreground">Reja bajarish</p>
+          <p className="text-xs text-muted-foreground">{t("rejaBajarish")}</p>
           <p className={`text-2xl font-bold mt-1 ${summary.goalAchievement >= 95 ? "text-[var(--ep-green)]" : summary.goalAchievement >= 80 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {summary.goalAchievement}%
           </p>
@@ -120,7 +122,7 @@ function MesStatsRow({ mesSummary }: { mesSummary: MesSummary }) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-2 mb-2">
             <Zap className="h-4 w-4 text-muted-foreground" />
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ish vaqti</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("ishVaqti")}</p>
           </div>
           <p className="text-xl font-bold">{summary.totalRunningMinutes.toLocaleString()} min</p>
           <p className="text-xs text-muted-foreground">{Math.round(summary.totalRunningMinutes / 60)} soat</p>
@@ -130,7 +132,7 @@ function MesStatsRow({ mesSummary }: { mesSummary: MesSummary }) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-2 mb-2">
             <Pause className="h-4 w-4 text-muted-foreground" />
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">To'xtash vaqti</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("toxtashVaqti")}</p>
           </div>
           <p className="text-xl font-bold text-[var(--ep-primary)]">{summary.totalStoppedMinutes.toLocaleString()} min</p>
           <p className="text-xs text-muted-foreground">{summary.totalStoppages} marta to'xtagan</p>
@@ -140,7 +142,7 @@ function MesStatsRow({ mesSummary }: { mesSummary: MesSummary }) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-2 mb-2">
             <RotateCcw className="h-4 w-4 text-[var(--ep-primary)]" />
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ko'p uchraydigan sabab</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("kopUchraydiganSabab")}</p>
           </div>
           {mostFrequentReason ? (
             <>
@@ -150,7 +152,7 @@ function MesStatsRow({ mesSummary }: { mesSummary: MesSummary }) {
               <p className="text-xs text-muted-foreground">{mostFrequentReason.count} marta</p>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">To'xtash yo'q</p>
+            <p className="text-sm text-muted-foreground">{t("toxtashYoq")}</p>
           )}
         </CardContent>
       </Card>
@@ -192,7 +194,7 @@ function MesCharts({ mesSummary }: { mesSummary: MesSummary }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-4 w-4" />
-              To'xtash sabablari tahlili
+              {t("toxtashSabablariTahlili")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -225,7 +227,7 @@ function MesRecentStoppages({ mesSummary }: { mesSummary: MesSummary }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Pause className="h-4 w-4" />
-          So'nggi to'xtashlar tarixi
+          {t("songgiToxtashlarTarixi")}
         </CardTitle>
         <CardDescription>Oxirgi {mesSummary.recentStoppages.length} ta to'xtash hodisasi</CardDescription>
       </CardHeader>
@@ -234,9 +236,9 @@ function MesRecentStoppages({ mesSummary }: { mesSummary: MesSummary }) {
           <TableHeader>
             <TableRow>
               <TableHead>Sana/Vaqt</TableHead>
-              <TableHead>Sabab</TableHead>
-              <TableHead>Tavsif</TableHead>
-              <TableHead className="text-right">Davomiylik</TableHead>
+              <TableHead>{t("sabab")}</TableHead>
+              <TableHead>{t("progress.description")}</TableHead>
+              <TableHead className="text-right">{t("davomiylik")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

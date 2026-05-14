@@ -9,6 +9,7 @@ import { useAgentAlerts, type AgentAlert } from "@/hooks/useAgentAlerts";
 import { cn } from "@/lib/utils";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 const SEVERITY_ICON = {
   urgent:   <AlertTriangle className="h-4 w-4" />,
   critical: <AlertCircle   className="h-4 w-4" />,
@@ -31,6 +32,7 @@ const SEVERITY_TEXT = {
 };
 
 export function AlertFeed({ limit = 15 }: { limit?: number }) {
+  const { t } = useTranslation("common");
   const { alerts, unread, isLoading, refetch, markRead } = useAgentAlerts(limit);
 
   return (
@@ -38,7 +40,7 @@ export function AlertFeed({ limit = 15 }: { limit?: number }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-[var(--ep-blue)]" />
-          <h3 className="font-bold text-sm">Agent ogohlantirishlari</h3>
+          <h3 className="font-bold text-sm">{t("agentOgohlantirishlari")}</h3>
           {unread > 0 && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-[var(--ep-red)] text-xs font-bold">
               {unread} yangi
@@ -52,11 +54,11 @@ export function AlertFeed({ limit = 15 }: { limit?: number }) {
 
       {isLoading && alerts.length === 0 ? (
         <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-          <EPLoader className="mr-2" /> Yuklanmoqda...
+          <EPLoader className="mr-2" /> {t("Yuklanmoqda...")}
         </div>
       ) : alerts.length === 0 ? (
         <div className="text-center py-8 text-sm text-muted-foreground">
-          ✅ Hozircha ogohlantirish yo'q
+          {t("hozirchaOgohlantirishYoq")}
         </div>
       ) : (
         <div className="space-y-2 max-h-[480px] overflow-y-auto">
@@ -96,7 +98,7 @@ function AlertRow({ alert, onResolve }: { alert: AgentAlert; onResolve: () => vo
             ))
           ) : null}
           <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onResolve}>
-            <Check className="h-3 w-3 mr-1" /> Hal qildim
+            <Check className="h-3 w-3 mr-1" /> {t("halQildim")}
           </Button>
         </div>
       )}

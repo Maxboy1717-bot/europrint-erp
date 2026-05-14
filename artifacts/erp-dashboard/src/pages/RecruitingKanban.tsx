@@ -174,9 +174,9 @@ export default function RecruitingKanban() {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Yollash {t('kanban')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Yollash {t('kanban')}</b></>}
         title="Yollash {t('kanban')}"
-        subtitle="HR Capital 7-bosqich metodologiyasi · Vakansiya muddatiga asoslangan"
+        subtitle={t("hrCapital7BosqichMetodologiyasi")}
       />
         </div>
         <RecruitingHeaderActions

@@ -107,7 +107,7 @@ function configureAppMiddleware(app: NestFastifyApplication): void {
   const isReplitOrigin = (o: string) =>
     o.endsWith('.replit.dev') || o.endsWith('.repl.co') || o.endsWith('.replit.app');
   app.enableCors({
-    origin: (origin, cb) => {
+    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
       if (!origin) { cb(null, true); return; }
       if ((Array.isArray(origins) ? origins : []).some((a) => origin === a)) { cb(null, true); return; }
       if (isDev && isReplitOrigin(origin)) { cb(null, true); return; }

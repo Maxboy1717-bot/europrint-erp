@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { hexToRgba, scoreColor, SOURCE_LABELS, PRIORITY_CONFIG } from "./EntityCardTypes";
 import type { QuickScore } from "./EntityCardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ stageColor, source, entityId, onAddTask }: TopBarProps) {
+  const { t } = useTranslation("common");
   const sourceInfo = source ? SOURCE_LABELS[source.toUpperCase()] : null;
   return (
     <>
@@ -127,7 +129,7 @@ export function ProgressBar({ progressPct, stageColor }: { progressPct: number; 
     <div className="mb-2.5">
       <div className="flex items-center justify-between mb-1">
         <span className="text-[9px] font-medium uppercase tracking-wide" style={{ color: "#A0AEC0" }}>
-          Jarayon
+          {t("jarayon")}
         </span>
         <span className="text-[10px] font-bold tabular-nums" style={{ color: stageColor }}>
           {progressPct}%

@@ -16,12 +16,14 @@ import { Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface AssignAIExamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -125,21 +127,21 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">AI Imtixon Tayinlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("aiImtixonTayinlash")}</DialogTitle>
           <DialogDescription>
-            Xodimlarga AI tomonidan yaratilgan 35 savollik imtixonni tayinlang
+            {t("xodimlargaAiTomonidanYaratilgan35")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-          <Label htmlFor="deptFilter">Tashkiliy tuzilma bo'yicha filter</Label>
+          <Label htmlFor="deptFilter">{t("tashkiliyTuzilmaBoyichaFilter")}</Label>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger data-testid="select-org-structure-filter" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha tashkiliy tuzilma</SelectItem>
+                <SelectItem value="all">{t("barchaTashkiliyTuzilma")}</SelectItem>
                 {(Array.isArray(orgDepartments) ? orgDepartments : []).map(dept => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
@@ -172,7 +174,7 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-8 text-[13px] text-muted-foreground">
-                Xodimlar topilmadi
+                {t("xodimlarTopilmadi")}
               </div>
             ) : (
               <div className="space-y-2">
@@ -215,7 +217,7 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
               onClick={() => onOpenChange(false)}
               disabled={assignMutation.isPending}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button 
               type="submit" 

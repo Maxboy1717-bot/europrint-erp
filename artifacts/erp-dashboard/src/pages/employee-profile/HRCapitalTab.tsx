@@ -15,8 +15,10 @@ import type { HRCapitalProfile, HRCapitalTabProps, FormState } from "./HRCapital
 import { EMPTY_FORM, buildFormFromProfile } from "./HRCapitalTabTypes";
 import { HRCapitalSummaryCards, HRCapitalProfileView, HRCapitalTestHistory, VisotskiyInfoCard } from "./HRCapitalTabSections";
 import { HRCapitalEditForm } from "./HRCapitalTabDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export function HRCapitalTab({ employeeId }: HRCapitalTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -72,9 +74,9 @@ export function HRCapitalTab({ employeeId }: HRCapitalTabProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5" />
-              HR Kapital Ma'lumotlari
+              {t("hrKapitalMalumotlari")}
             </CardTitle>
-            <CardDescription>Visotskiy metodologiyasi va psixologik profil</CardDescription>
+            <CardDescription>{t("visotskiyMetodologiyasiVaPsixologikProfil")}</CardDescription>
           </div>
           <Button
             size="sm"
@@ -91,9 +93,9 @@ export function HRCapitalTab({ employeeId }: HRCapitalTabProps) {
             data-testid="button-edit-hr-capital"
           >
             {editing ? (
-              saveMutation.isPending ? "Saqlanmoqda..." : <><Check className="h-4 w-4 mr-1" />Saqlash</>
+              saveMutation.isPending ? "Saqlanmoqda..." : <><Check className="h-4 w-4 mr-1" />{t("Saqlash")}</>
             ) : (
-              <><Edit className="h-4 w-4 mr-1" />Tahrirlash</>
+              <><Edit className="h-4 w-4 mr-1" />{t("edit")}</>
             )}
           </Button>
         </CardHeader>
@@ -105,14 +107,14 @@ export function HRCapitalTab({ employeeId }: HRCapitalTabProps) {
           ) : (
             <div className="text-center py-8">
               <Brain className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">HR Kapital profili to'ldirilmagan</p>
+              <p className="text-muted-foreground">{t("hrKapitalProfiliToldirilmagan")}</p>
               <Button
                 size="sm"
                 className="mt-3"
                 onClick={() => setEditing(true)}
                 data-testid="button-start-hr-capital"
               >
-                To'ldirish
+                {t("toldirish")}
               </Button>
             </div>
           )}

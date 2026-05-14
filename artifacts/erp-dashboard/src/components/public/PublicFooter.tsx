@@ -28,7 +28,7 @@ export default function PublicFooter() {
             <div className="mb-6">
               <img 
                 src={logoImage} 
-                alt="EuroPrint Logo" 
+                alt={t("europrintLogo")} 
                 className="h-12 w-auto brightness-0 invert"
               />
             </div>
@@ -123,13 +123,13 @@ export default function PublicFooter() {
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.5)' }} data-testid="footer-link-telegram">
-              Telegram
+              {t("telegram")}
             </a>
             <a href="#" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.5)' }} data-testid="footer-link-instagram">
-              Instagram
+              {t("instagram")}
             </a>
             <a href="#" className="text-sm transition-colors duration-200 hover:text-white" style={{ color: 'rgba(255,255,255,0.5)' }} data-testid="footer-link-facebook">
-              Facebook
+              {t("facebook")}
             </a>
           </div>
         </div>

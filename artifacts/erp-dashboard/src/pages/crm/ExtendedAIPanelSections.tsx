@@ -22,8 +22,8 @@ export function VoicePanel({callTranscript, onTranscriptChange, onAnalyze, loadi
   const { t } = useTranslation('common');
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-      <h4 className="font-medium flex items-center gap-2"><Mic className="h-5 w-5 text-primary" />Qo'ng'iroq tahlili</h4>
-      <textarea className="w-full min-h-[100px] p-3 border rounded-lg text-sm resize-none" placeholder="Qo'ng'iroq matnini yoki qaydlarini kiriting..."
+      <h4 className="font-medium flex items-center gap-2"><Mic className="h-5 w-5 text-primary" />{t("qongiroqTahlili")}</h4>
+      <textarea className="w-full min-h-[100px] p-3 border rounded-lg text-sm resize-none" placeholder={t("qongiroqMatniniYokiQaydlariniKiriting")}
         value={callTranscript} onChange={(e) => onTranscriptChange(e.target.value)} data-testid="input-call-transcript" />
       <Button onClick={onAnalyze} disabled={loading} className="w-full" data-testid="btn-analyze-call">
         {loading ? <EPLoader className="mr-2" /> : <Play className="h-4 w-4 mr-2" />}Tahlil qilish
@@ -32,17 +32,17 @@ export function VoicePanel({callTranscript, onTranscriptChange, onAnalyze, loadi
         <div className="space-y-3 mt-4">
           <div className="flex items-center justify-between">
             <Badge className={getSentimentColor(callAnalysis.sentiment)}>{callAnalysis.sentiment}</Badge>
-            <div className="flex items-center gap-2"><span className="text-sm text-muted-foreground">Sifat:</span><span className="font-bold">{callAnalysis.callQuality}%</span></div>
+            <div className="flex items-center gap-2"><span className="text-sm text-muted-foreground">{t("sifat1")}</span><span className="font-bold">{callAnalysis.callQuality}%</span></div>
           </div>
           <p className="text-sm">{callAnalysis.summary}</p>
           {callAnalysis.keyPoints.length > 0 && (
-            <div><h5 className="text-xs font-medium mb-1">Muhim nuqtalar:</h5>
+            <div><h5 className="text-xs font-medium mb-1">{t("muhimNuqtalar")}</h5>
               <ul className="text-xs space-y-1">{(Array.isArray(callAnalysis.keyPoints) ? callAnalysis.keyPoints : []).map((p, i) => (
                 <li key={`k-${i}`} className="flex items-start gap-1"><span className="text-primary">•</span> {p}</li>))}</ul>
             </div>
           )}
           {callAnalysis.nextActions.length > 0 && (
-            <div><h5 className="text-xs font-medium mb-1">Keyingi harakatlar:</h5>
+            <div><h5 className="text-xs font-medium mb-1">{t("keyingiHarakatlar")}</h5>
               <ul className="text-xs space-y-1">{(Array.isArray(callAnalysis.nextActions) ? callAnalysis.nextActions : []).map((a, i) => (
                 <li key={`a-${i}`} className="flex items-start gap-1"><span className="text-[var(--ep-green)]">→</span> {a}</li>))}</ul>
             </div>
@@ -60,9 +60,9 @@ interface ChatPanelProps { chatMessage: string; onMessageChange: (v: string) => 
 export function ChatPanel({ chatMessage, onMessageChange, onSend, loading, chatResponse }: ChatPanelProps) {
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-      <h4 className="font-medium flex items-center gap-2"><MessageCircle className="h-4 w-4 text-primary" />AI Chat yordamchi</h4>
+      <h4 className="font-medium flex items-center gap-2"><MessageCircle className="h-4 w-4 text-primary" />{t("aiChatYordamchi")}</h4>
       <div className="flex gap-2">
-        <Input placeholder="Mijoz xabarini kiriting..." value={chatMessage} onChange={(e) => onMessageChange(e.target.value)} data-testid="input-chat-message" />
+        <Input placeholder={t("mijozXabariniKiriting")} value={chatMessage} onChange={(e) => onMessageChange(e.target.value)} data-testid="input-chat-message" />
         <Button onClick={onSend} disabled={loading} size="icon" data-testid="btn-send-chat">
           {loading ? <EPLoader /> : <Send className="h-4 w-4" />}
         </Button>
@@ -87,7 +87,7 @@ interface ChurnPanelProps { onAnalyze: () => void; loading: boolean; churnData: 
 export function ChurnPanel({ onAnalyze, loading, churnData }: ChurnPanelProps) {
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-      <h4 className="font-medium flex items-center gap-2"><UserMinus className="h-4 w-4 text-primary" />Churn tahlili</h4>
+      <h4 className="font-medium flex items-center gap-2"><UserMinus className="h-4 w-4 text-primary" />{t("churnTahlili")}</h4>
       <Button onClick={onAnalyze} disabled={loading} className="w-full" data-testid="btn-analyze-churn">
         {loading ? <EPLoader className="mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}Tahlil qilish
       </Button>
@@ -129,7 +129,7 @@ interface AutoTasksPanelProps { onSuggest: () => void; onCreateAll: (tasks: Auto
 export function AutoTasksPanel({ onSuggest, onCreateAll, loading, suggestedTasks }: AutoTasksPanelProps) {
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-      <h4 className="font-medium flex items-center gap-2"><ListChecks className="h-4 w-4 text-primary" />Avtomatik vazifalar</h4>
+      <h4 className="font-medium flex items-center gap-2"><ListChecks className="h-4 w-4 text-primary" />{t("avtomatikVazifalar")}</h4>
       <Button onClick={onSuggest} disabled={loading} className="w-full" data-testid="btn-suggest-tasks">
         {loading ? <EPLoader className="mr-2" /> : <Zap className="h-4 w-4 mr-2" />}Vazifa taklif qilish
       </Button>
@@ -149,7 +149,7 @@ export function AutoTasksPanel({ onSuggest, onCreateAll, loading, suggestedTasks
             </div>
           ))}
           <Button onClick={() => onCreateAll(suggestedTasks)} disabled={loading} className="w-full" data-testid="btn-create-all-tasks">
-            <Plus className="h-4 w-4 mr-2" />Barchasini yaratish
+            <Plus className="h-4 w-4 mr-2" />{t("barchasiniYaratish")}
           </Button>
         </div>
       )}
@@ -213,8 +213,8 @@ export function SupervisorPanel({ onLoad, loading, supervisorData }: SupervisorP
           {!supervisorData.slaViolations.length && !supervisorData.inactiveDeals.length && !supervisorData.hygieneIssues.length && (
             <div className="text-center py-4 text-[var(--ep-green)]">
               <TrendingUp className="h-8 w-8 mx-auto mb-2" />
-              <div className="text-sm font-medium">Barcha ko'rsatkichlar yaxshi!</div>
-              <div className="text-xs text-muted-foreground">Muammo topilmadi</div>
+              <div className="text-sm font-medium">{t("barchaKorsatkichlarYaxshi")}</div>
+              <div className="text-xs text-muted-foreground">{t("muammoTopilmadi")}</div>
             </div>
           )}
         </div>

@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import type { KanbanCard, TaskTag } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 import {
   TAG_COLORS,
   PRIORITY_CONFIG,
@@ -45,14 +46,15 @@ interface HiddenFieldsProps {
 }
 
 export function HiddenFieldsSection({ card, allCards, projects, deals, showHiddenFields, onToggleHiddenFields, onUpdate }: HiddenFieldsProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       <div className="pt-2 border-t">
         <Button variant="ghost" size="sm" onClick={onToggleHiddenFields} className="w-full justify-start text-muted-foreground" data-testid="button-toggle-hidden-fields">
           {showHiddenFields ? (
-            <><ChevronDown className="h-4 w-4 mr-2" />Kamroq ko'rsatish</>
+            <><ChevronDown className="h-4 w-4 mr-2" />{t("kamroqKorsatish")}</>
           ) : (
-            <><ChevronRight className="h-4 w-4 mr-2" />Yana ko'proq</>
+            <><ChevronRight className="h-4 w-4 mr-2" />{t("yanaKoproq")}</>
           )}
         </Button>
       </div>
@@ -60,9 +62,9 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
         <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center gap-2">
             <Folder className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Label className="min-w-[100px]">Ota vazifa</Label>
+            <Label className="min-w-[100px]">{t("otaVazifa")}</Label>
             <Select defaultValue={card.parentCardId || "none"} onValueChange={(v) => onUpdate({ parentCardId: v === "none" ? null : v })}>
-              <SelectTrigger data-testid="select-parent-task" className="flex-1 h-9"><SelectValue placeholder="Ota vazifa tanlang" /></SelectTrigger>
+              <SelectTrigger data-testid="select-parent-task" className="flex-1 h-9"><SelectValue placeholder={t("otaVazifaTanlang")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">-</SelectItem>
                 {(Array.isArray(allCards) ? allCards : []).filter(c => c.id !== card.id).map((c) => (
@@ -73,9 +75,9 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
           </div>
           <div className="flex items-center gap-2">
             <FolderKanban className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Label className="min-w-[100px]">Loyiha</Label>
+            <Label className="min-w-[100px]">{t("loyiha")}</Label>
             <Select defaultValue={card.projectId || "none"} onValueChange={(v) => onUpdate({ projectId: v === "none" ? null : v })}>
-              <SelectTrigger data-testid="select-project" className="flex-1 h-9"><SelectValue placeholder="Loyiha tanlang" /></SelectTrigger>
+              <SelectTrigger data-testid="select-project" className="flex-1 h-9"><SelectValue placeholder={t("loyihaTanlang")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">-</SelectItem>
                 {(Array.isArray(projects) ? projects : []).map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
@@ -89,7 +91,7 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
               if (v && v !== "none") { onUpdate({ relatedType: 'deal', relatedId: v }); }
               else { onUpdate({ relatedType: null, relatedId: null }); }
             }}>
-              <SelectTrigger data-testid="select-crm-deal" className="flex-1 h-9"><SelectValue placeholder="Bitim tanlang" /></SelectTrigger>
+              <SelectTrigger data-testid="select-crm-deal" className="flex-1 h-9"><SelectValue placeholder={t("bitimTanlang1")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">-</SelectItem>
                 {(Array.isArray(deals) ? deals : []).map((deal) => (<SelectItem key={deal.id} value={deal.id}>{deal.name} - {deal.amount?.toLocaleString()} so'm</SelectItem>))}
@@ -106,21 +108,21 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
           </div>
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Label className="min-w-[100px]">Boshlanish sanasi</Label>
+            <Label className="min-w-[100px]">{t("startDate")}</Label>
             <Input type="date" className="flex-1" defaultValue={card.startDate || ""} onChange={(e) => onUpdate({ startDate: e.target.value || null })} data-testid="input-start-date" />
           </div>
           <Separator className="my-2" />
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Label className="min-w-[100px]">Takrorlanish</Label>
+            <Label className="min-w-[100px]">{t("takrorlanish")}</Label>
             <Select defaultValue={card.recurrencePattern || "none"} onValueChange={(v) => onUpdate({ recurrencePattern: v === "none" ? null : v })}>
-              <SelectTrigger data-testid="select-recurrence-pattern" className="flex-1 h-9"><SelectValue placeholder="Yo'q" /></SelectTrigger>
+              <SelectTrigger data-testid="select-recurrence-pattern" className="flex-1 h-9"><SelectValue placeholder={t("no")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Yo'q</SelectItem>
-                <SelectItem value="daily">Har kuni</SelectItem>
-                <SelectItem value="weekly">Har hafta</SelectItem>
-                <SelectItem value="monthly">Har oy</SelectItem>
-                <SelectItem value="yearly">Har yil</SelectItem>
+                <SelectItem value="none">{t("no")}</SelectItem>
+                <SelectItem value="daily">{t("harKuni")}</SelectItem>
+                <SelectItem value="weekly">{t("harHafta")}</SelectItem>
+                <SelectItem value="monthly">{t("harOy")}</SelectItem>
+                <SelectItem value="yearly">{t("harYil")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -128,7 +130,7 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
             <>
               <div className="flex items-center gap-2">
                 <Hash className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <Label className="min-w-[100px]">Har necha</Label>
+                <Label className="min-w-[100px]">{t("harNecha")}</Label>
                 <Input type="number" min={1} className="flex-1" placeholder="1" defaultValue={card.recurrenceInterval || 1} onChange={(e) => onUpdate({ recurrenceInterval: parseInt(e.target.value) || 1 })} data-testid="input-recurrence-interval" />
                 <span className="text-sm text-muted-foreground">
                   {card.recurrencePattern === 'daily' ? 'kun' : card.recurrencePattern === 'weekly' ? 'hafta' : card.recurrencePattern === 'monthly' ? 'oy' : 'yil'}
@@ -136,7 +138,7 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
               </div>
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <Label className="min-w-[100px]">Tugash sanasi</Label>
+                <Label className="min-w-[100px]">{t("endDate")}</Label>
                 <Input type="date" className="flex-1" defaultValue={card.recurrenceEndDate || ""} onChange={(e) => onUpdate({ recurrenceEndDate: e.target.value || null })} data-testid="input-recurrence-end-date" />
               </div>
             </>
@@ -172,7 +174,7 @@ export function TagsField({ tags, newTagName, onNewTagNameChange, onAddTag, onRe
           ))}
         </div>
         <div className="flex gap-2 mt-2">
-          <Input value={newTagName} onChange={(e) => onNewTagNameChange(e.target.value)} placeholder="Yangi teg..." onKeyDown={(e) => e.key === "Enter" && newTagName.trim() && onAddTag(newTagName)} data-testid="input-new-tag" />
+          <Input value={newTagName} onChange={(e) => onNewTagNameChange(e.target.value)} placeholder={t("yangiTeg")} onKeyDown={(e) => e.key === "Enter" && newTagName.trim() && onAddTag(newTagName)} data-testid="input-new-tag" />
           <Button size="icon" onClick={() => newTagName.trim() && onAddTag(newTagName)} disabled={!newTagName.trim()}>
             <Plus className="h-4 w-4" />
           </Button>
@@ -196,7 +198,7 @@ export function TaskRatingSection({ taskRating, hoveredRating, onTaskRatingChang
     <div className="bg-muted/50 rounded-md p-3 space-y-2">
       <div className="flex items-center gap-2">
         <Star className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Vazifani baholash</span>
+        <span className="text-sm font-medium">{t("vazifaniBaholash")}</span>
       </div>
       <div className="flex items-center gap-1" data-testid="task-rating">
         {([1, 2, 3, 4, 5]).map((star) => (

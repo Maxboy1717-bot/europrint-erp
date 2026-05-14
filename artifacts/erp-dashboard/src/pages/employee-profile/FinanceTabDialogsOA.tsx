@@ -25,23 +25,24 @@ interface OvertimeDialogProps {
 }
 
 export function OvertimeDialog({ tCommon, open, onOpenChange, form, setForm, mutation }: OvertimeDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" data-testid="button-add-overtime">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi overtaym
+          {t("yangiOvertaym")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi overtaym qo'shish</DialogTitle>
-          <DialogDescription>Qo'shimcha ish vaqtini ro'yxatga olish</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiOvertaymQoshish")}</DialogTitle>
+          <DialogDescription>{t("qoshimchaIshVaqtiniRoyxatgaOlish")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Ish sanasi</Label>
+          <Label>{t("ishSanasi")}</Label>
               <Input
                 type="date"
                 value={form.workDate}
@@ -50,7 +51,7 @@ export function OvertimeDialog({ tCommon, open, onOpenChange, form, setForm, mut
               />
             </div>
             <div className="space-y-1">
-          <Label>Soatlar</Label>
+          <Label>{t("soatlar")}</Label>
               <Input
                 type="number"
                 step="0.5"
@@ -73,10 +74,10 @@ export function OvertimeDialog({ tCommon, open, onOpenChange, form, setForm, mut
               />
             </div>
             <div className="space-y-1">
-          <Label>Ko'paytirish koeffitsienti</Label>
+          <Label>{t("kopaytirishKoeffitsienti")}</Label>
               <Select value={form.multiplier} onValueChange={(value) => setForm({ ...form, multiplier: value })}>
                 <SelectTrigger data-testid="select-overtime-multiplier" className="h-9">
-                  <SelectValue placeholder="Koeffitsient" />
+                  <SelectValue placeholder={t("koeffitsient")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">1x</SelectItem>
@@ -87,11 +88,11 @@ export function OvertimeDialog({ tCommon, open, onOpenChange, form, setForm, mut
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Sabab</Label>
+          <Label>{t("sabab")}</Label>
             <Input
               value={form.reason}
               onChange={(e) => setForm({ ...form, reason: e.target.value })}
-              placeholder="Overtaym sababi..."
+              placeholder={t("overtaymSababi")}
               data-testid="input-overtime-reason"
             />
           </div>
@@ -129,18 +130,18 @@ export function CashAdvanceDialog({ tCommon, open, onOpenChange, form, setForm, 
       <DialogTrigger asChild>
         <Button size="sm" data-testid="button-add-cash-advance">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi avans
+          {t("yangiAvans")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi avans so'rovi</DialogTitle>
-          <DialogDescription>Avans so'rovini ro'yxatga olish</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiAvansSorovi")}</DialogTitle>
+          <DialogDescription>{t("avansSoroviniRoyxatgaOlish")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>So'rov sanasi</Label>
+          <Label>{t("sorovSanasi")}</Label>
               <Input
                 type="date"
                 value={form.requestDate}
@@ -160,25 +161,25 @@ export function CashAdvanceDialog({ tCommon, open, onOpenChange, form, setForm, 
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Sabab</Label>
+          <Label>{t("sabab")}</Label>
             <Input
               value={form.reason}
               onChange={(e) => setForm({ ...form, reason: e.target.value })}
-              placeholder="Avans sababi..."
+              placeholder={t("avansSababi")}
               data-testid="input-advance-reason"
             />
           </div>
           <div className="space-y-1">
-          <Label>Holat</Label>
+          <Label>{t("status28")}</Label>
             <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}>
               <SelectTrigger data-testid="select-advance-status" className="h-9">
-                <SelectValue placeholder="Holatni tanlang" />
+                <SelectValue placeholder={t("holatniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">Kutilmoqda</SelectItem>
-                <SelectItem value="approved">Tasdiqlangan</SelectItem>
-                <SelectItem value="rejected">Rad etilgan</SelectItem>
-                <SelectItem value="paid">To'langan</SelectItem>
+                <SelectItem value="pending">{t("Kutilmoqda")}</SelectItem>
+                <SelectItem value="approved">{t("approved")}</SelectItem>
+                <SelectItem value="rejected">{t("rejected")}</SelectItem>
+                <SelectItem value="paid">{t("tolangan")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

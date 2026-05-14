@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface TurnoverTabProps {
   resignationReasons: { reason: string; count: number; color: string }[];
@@ -19,15 +20,16 @@ interface TurnoverTabProps {
 }
 
 export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignations }: TurnoverTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
             <PieChartIcon className="h-4 w-4 text-[var(--ep-blue)]" />
-            Ketish Sabablari
+            {t("ketishSabablari")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -70,7 +72,7 @@ export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignation
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
             <Activity className="h-4 w-4 text-[var(--ep-purple)]" />
-            Oylik Trend
+            {t("oylikTrend")}
           </CardTitle>
         </CardHeader>
         <CardContent>

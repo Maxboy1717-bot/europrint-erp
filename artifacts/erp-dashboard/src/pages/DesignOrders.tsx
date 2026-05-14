@@ -164,9 +164,9 @@ export default function DesignOrders() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Dizayn Buyurtmalari</b></>}
-        title="Dizayn Buyurtmalari"
-        subtitle="Barcha dizayn buyurtmalarini boshqarish va kuzatish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("dizaynBuyurtmalari")}</b></>}
+        title={t("dizaynBuyurtmalari")}
+        subtitle={t("barchaDizaynBuyurtmalariniBoshqarishVa")}
       />
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -177,13 +177,13 @@ export default function DesignOrders() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold">Yangi Dizayn Buyurtmasi</DialogTitle>
-                <DialogDescription>Yangi dizayn buyurtmasini yaratish uchun ma'lumotlarni kiriting</DialogDescription>
+                <DialogTitle className="text-[18px] font-semibold">{t("yangiDizaynBuyurtmasi")}</DialogTitle>
+                <DialogDescription>{t("yangiDizaynBuyurtmasiniYaratishUchun")}</DialogDescription>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="clientName">Mijoz Ismi *</Label>
+                    <Label htmlFor="clientName">{t("mijozIsmi1")}</Label>
                     <Input id="clientName" {...form.register("clientName")} data-testid="input-client-name" />
                     {form.formState.errors.clientName && <p className="text-sm text-destructive mt-1">{form.formState.errors.clientName.message}</p>}
                   </div>
@@ -211,12 +211,12 @@ export default function DesignOrders() {
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger data-testid="select-product-type" className="h-9"><SelectValue placeholder={t('select')} /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="stakan">Stakan</SelectItem>
-                          <SelectItem value="quti">Quti</SelectItem>
-                          <SelectItem value="plakat">Plakat</SelectItem>
-                          <SelectItem value="qadoq">Qadoq</SelectItem>
-                          <SelectItem value="korrugirovanniy-quti">Korrugirovanniy Quti</SelectItem>
-                          <SelectItem value="tibbiy-qadoq">Tibbiy Qadoq</SelectItem>
+                          <SelectItem value="stakan">{t("stakan")}</SelectItem>
+                          <SelectItem value="quti">{t("quti")}</SelectItem>
+                          <SelectItem value="plakat">{t("plakat")}</SelectItem>
+                          <SelectItem value="qadoq">{t("qadoq")}</SelectItem>
+                          <SelectItem value="korrugirovanniy-quti">{t("korrugirovanniyQuti")}</SelectItem>
+                          <SelectItem value="tibbiy-qadoq">{t("tibbiyQadoq")}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
@@ -246,7 +246,7 @@ export default function DesignOrders() {
                 </div>
 
                 <div>
-                  <Label htmlFor="requirements">Maxsus Talablar</Label>
+                  <Label htmlFor="requirements">{t("maxsusTalablar")}</Label>
                   <Textarea id="requirements" {...form.register("requirements")} rows={3} data-testid="input-requirements" />
                 </div>
 
@@ -260,13 +260,13 @@ export default function DesignOrders() {
                           <SelectItem value="low">{t('low')}</SelectItem>
                           <SelectItem value="normal">{t('medium')}</SelectItem>
                           <SelectItem value="high">{t('high')}</SelectItem>
-                          <SelectItem value="urgent">Shoshilinch</SelectItem>
+                          <SelectItem value="urgent">{t("Shoshilinch")}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
                   </div>
                   <div>
-                    <Label htmlFor="deadline">Muddati</Label>
+                    <Label htmlFor="deadline">{t("muddati")}</Label>
                     <Input id="deadline" type="date" {...form.register("deadline")} data-testid="input-deadline" />
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export default function DesignOrders() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buyurtma raqami, mijoz yoki mahsulot nomi bo'yicha qidirish..."
+              placeholder={t("buyurtmaRaqamiMijozYokiMahsulot")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -326,7 +326,7 @@ export default function DesignOrders() {
                   <CardContent>
                   <div className="space-y-2 text-sm text-foreground">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Mahsulot:</span>
+                      <span className="text-muted-foreground">{t("mahsulot")}</span>
                       <span className="font-medium">{item.order.productName}</span>
                     </div>
                     <div className="flex justify-between">
@@ -335,7 +335,7 @@ export default function DesignOrders() {
                     </div>
                     {item.order.brandName && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Brend:</span>
+                        <span className="text-muted-foreground">{t("brend1")}</span>
                         <span>{item.order.brandName}</span>
                       </div>
                     )}
@@ -345,7 +345,7 @@ export default function DesignOrders() {
                     </div>
                     {item.designer && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Dizayner:</span>
+                        <span className="text-muted-foreground">{t("dizayner")}</span>
                         <span>{item.designer.fullName}</span>
                       </div>
                     )}
@@ -355,7 +355,7 @@ export default function DesignOrders() {
                     </div>
                     {item.order.deadline && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Muddat:</span>
+                        <span className="text-muted-foreground">{t("muddat1")}</span>
                         <span>{item.order.deadline}</span>
                       </div>
                     )}

@@ -23,6 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Users, Star, MessageSquare, Calendar } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { TranslationFn } from "./profile-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface OneOnOneRecord {
   id: number;
@@ -64,6 +65,7 @@ function StarRating({ value, max = 5 }: { value: number; max?: number }) {
 }
 
 export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
+  const { t } = useTranslation("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -131,7 +133,7 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Jami uchrashuvlar</p>
+                <p className="text-sm text-muted-foreground">{t("jamiUchrashuvlar")}</p>
                 <p className="text-3xl font-bold text-[var(--ep-blue)]">{totalMeetings}</p>
               </div>
               <Users className="h-8 w-8 text-[var(--ep-blue)]" />
@@ -143,7 +145,7 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Oxirgi uchrashuv</p>
+                <p className="text-sm text-muted-foreground">{t("oxirgiUchrashuv")}</p>
                 <p className="text-lg font-bold text-[var(--ep-purple)]">
                   {lastMeeting
                     ? new Date(lastMeeting.meetingDate).toLocaleDateString("uz-UZ")
@@ -159,7 +161,7 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">O'rtacha kayfiyat</p>
+                <p className="text-sm text-muted-foreground">{t("ortachaKayfiyat")}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-3xl font-bold text-[var(--ep-yellow)]">
                     {avgMood > 0 ? avgMood.toFixed(1) : "—"}
@@ -182,14 +184,14 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                1-on-1 Uchrashuvlar tarixi
+                {t("k1On1UchrashuvlarTarixi")}
               </CardTitle>
               <CardDescription>
-                Rahbar bilan individual uchrashuvlar va muhokama qilingan mavzular
+                {t("rahbarBilanIndividualUchrashuvlarVa")}
               </CardDescription>
             </div>
             <Button onClick={() => setDialogOpen(true)} size="sm">
-              Uchrashuv qo'shish
+              {t("uchrashuvQoshish")}
             </Button>
           </div>
         </CardHeader>
@@ -197,23 +199,23 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
           {list.length === 0 ? (
             <div className="flex flex-col items-center py-12 text-muted-foreground">
               <Users className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-lg font-medium">Uchrashuvlar qayd etilmagan</p>
+              <p className="text-lg font-medium">{t("uchrashuvlarQaydEtilmagan")}</p>
               <p className="text-sm opacity-60 mt-1 mb-4">
-                Birinchi 1-on-1 uchrashuv ma'lumotlarini kiriting
+                {t("birinchi1On1Uchrashuv")}
               </p>
               <Button onClick={() => setDialogOpen(true)} variant="outline">
-                Uchrashuv qo'shish
+                {t("uchrashuvQoshish")}
               </Button>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sana</TableHead>
-                  <TableHead>Rahbar</TableHead>
-                  <TableHead>Mavzular</TableHead>
-                  <TableHead>Vazifalar</TableHead>
-                  <TableHead>Kayfiyat</TableHead>
+                  <TableHead>{t("date")}</TableHead>
+                  <TableHead>{t("rahbar")}</TableHead>
+                  <TableHead>{t("mavzular")}</TableHead>
+                  <TableHead>{t("vazifalar")}</TableHead>
+                  <TableHead>{t("kayfiyat")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -271,12 +273,12 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
-              Yangi uchrashuv qo'shish
+              {t("yangiUchrashuvQoshish")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-date">Uchrashuv sanasi *</Label>
+              <Label htmlFor="meeting-date">{t("uchrashuvSanasi")}</Label>
               <Input
                 id="meeting-date"
                 type="date"
@@ -285,20 +287,20 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-topics">Muhokama qilingan mavzular</Label>
+              <Label htmlFor="meeting-topics">{t("muhokamaQilinganMavzular")}</Label>
               <Textarea
                 id="meeting-topics"
-                placeholder="Uchrashuv davomida muhokama qilingan asosiy mavzular..."
+                placeholder={t("uchrashuvDavomidaMuhokamaQilinganAsosiy")}
                 value={form.topics}
                 onChange={(e) => setForm({ ...form, topics: e.target.value })}
                 rows={3}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-action-items">Kelgusidagi vazifalar</Label>
+              <Label htmlFor="meeting-action-items">{t("kelgusidagiVazifalar")}</Label>
               <Textarea
                 id="meeting-action-items"
-                placeholder="Uchrashuv natijasida belgilangan vazifalar..."
+                placeholder={t("uchrashuvNatijasidaBelgilanganVazifalar")}
                 value={form.action_items}
                 onChange={(e) => setForm({ ...form, action_items: e.target.value })}
                 rows={2}
@@ -322,10 +324,10 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-notes">Qo'shimcha izohlar</Label>
+              <Label htmlFor="meeting-notes">{t("qoshimchaIzohlar1")}</Label>
               <Textarea
                 id="meeting-notes"
-                placeholder="Uchrashuv bo'yicha qo'shimcha eslatmalar..."
+                placeholder={t("uchrashuvBoyichaQoshimchaEslatmalar")}
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 rows={2}
@@ -340,7 +342,7 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
                 setForm(EMPTY_FORM);
               }}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={() => createMeetingMutation.mutate(form)}

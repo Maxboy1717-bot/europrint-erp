@@ -122,9 +122,9 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi dars qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiDarsQoshish")}</DialogTitle>
           <DialogDescription>
-            Modulga yangi dars qo'shish uchun ma'lumotlarni kiriting
+            {t("modulgaYangiDarsQoshishUchun")}
           </DialogDescription>
         </DialogHeader>
 
@@ -136,7 +136,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dars turi <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>{t("darsTuri")}<span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-lesson-type" className="h-9">
@@ -144,7 +144,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="text">Matn</SelectItem>
+                        <SelectItem value="text">{t("matn")}</SelectItem>
                         <SelectItem value="video">{t('video')}</SelectItem>
                         <SelectItem value="pdf">PDF</SelectItem>
                       </SelectContent>
@@ -176,7 +176,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                 <FormItem>
                   <FormLabel>Dars nomi (O'zbek) <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Kirish: Asosiy tushunchalar" data-testid="input-lesson-title" />
+                    <Input {...field} placeholder={t("kirishAsosiyTushunchalar")} data-testid="input-lesson-title" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -218,7 +218,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
 
             {lessonType === "pdf" && (
               <div className="space-y-2">
-                <FormLabel>PDF fayl yuklash <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>{t("pdfFaylYuklash")}<span className="text-destructive">*</span></FormLabel>
                 <div className="flex gap-2">
                   <Input
                     type="file"
@@ -250,7 +250,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                 <FormItem>
                   <FormLabel>Kontent (O'zbek) <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Dars mazmuni yoki tavsifi..." rows={4} data-testid="input-lesson-content" />
+                    <Textarea {...field} placeholder={t("darsMazmuniYokiTavsifi")} rows={4} data-testid="input-lesson-content" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -281,7 +281,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                 }}
                 disabled={createMutation.isPending}
               >
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-lesson">
                 {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}

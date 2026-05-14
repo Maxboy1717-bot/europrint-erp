@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Printer, Barcode, Search } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface BarcodeItem {
   id: number;
@@ -27,6 +28,7 @@ interface BarcodeItem {
 }
 
 export default function WarehouseBarcodeQueue() {
+  const { t } = useTranslation("common");
   const [items, setItems] = useState<BarcodeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -99,24 +101,24 @@ export default function WarehouseBarcodeQueue() {
         <Barcode className="h-8 w-8 text-[var(--ep-blue)]" />
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">BARKOD CHOP ETISH NAVBATI</div>
-          <h1 className="text-2xl font-bold">Auto-yaratilgan barkodlar</h1>
+          <h1 className="text-2xl font-bold">{t("autoYaratilganBarkodlar")}</h1>
           <p className="text-sm text-gray-500">EXTERNAL_IN harakatlari uchun avtomatik yaratilgan CODE128 barkodlari</p>
         </div>
-        <Button onClick={load} variant="outline">🔄 Yangilash</Button>
+        <Button onClick={load} variant="outline">{t("yangilash")}</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card><CardContent className="pt-6">
           <div className="text-3xl font-bold">{stats.total}</div>
-          <div className="text-xs text-gray-500">Jami barkodlar</div>
+          <div className="text-xs text-gray-500">{t("jamiBarkodlar")}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="text-3xl font-bold text-[var(--ep-yellow)]">{stats.queued}</div>
-          <div className="text-xs text-gray-500">Chop etishga kutmoqda</div>
+          <div className="text-xs text-gray-500">{t("chopEtishgaKutmoqda")}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="text-3xl font-bold text-[var(--ep-green)]">{stats.printed}</div>
-          <div className="text-xs text-gray-500">Chop etilgan</div>
+          <div className="text-xs text-gray-500">{t("chopEtilgan")}</div>
         </CardContent></Card>
       </div>
 
@@ -126,7 +128,7 @@ export default function WarehouseBarcodeQueue() {
             <div className="flex items-center gap-2 flex-1 min-w-[300px]">
               <Search className="h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Barkod yoki partiya qidirish..."
+                placeholder={t("barkodYokiPartiyaQidirish")}
                 value={search} onChange={e => setSearch(e.target.value)}
               />
             </div>
@@ -135,9 +137,9 @@ export default function WarehouseBarcodeQueue() {
               onChange={e => setStatusFilter(e.target.value)}
               className="px-3 py-2 border border-gray-200 rounded text-sm"
             >
-              <option value="all">Barchasi</option>
-              <option value="QUEUED">Kutmoqda</option>
-              <option value="PRINTED">Chop etilgan</option>
+              <option value="all">{t("Barchasi")}</option>
+              <option value="QUEUED">{t("kutmoqda1")}</option>
+              <option value="PRINTED">{t("chopEtilgan")}</option>
             </select>
             <Button
               onClick={printSelected}
@@ -151,11 +153,11 @@ export default function WarehouseBarcodeQueue() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-gray-500">⏳ Yuklanmoqda...</div>
+            <div className="p-10 text-center text-gray-500">{t("yuklanmoqda")}</div>
           ) : filtered.length === 0 ? (
             <div className="p-10 text-center text-gray-500">
               <Barcode className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              Barkodlar yo'q
+              {t("barkodlarYoq")}
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
@@ -168,13 +170,13 @@ export default function WarehouseBarcodeQueue() {
                       onChange={selectAll}
                     />
                   </TableHead>
-                  <TableHead>Barkod</TableHead>
-                  <TableHead>Turi</TableHead>
-                  <TableHead>Partiya</TableHead>
-                  <TableHead className="text-right">Miqdor</TableHead>
-                  <TableHead>Birlik</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>Yaratilgan</TableHead>
+                  <TableHead>{t("barkod")}</TableHead>
+                  <TableHead>{t("type")}</TableHead>
+                  <TableHead>{t("partiya1")}</TableHead>
+                  <TableHead className="text-right">{t("quantity")}</TableHead>
+                  <TableHead>{t("unit")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
+                  <TableHead>{t("Yaratilgan")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

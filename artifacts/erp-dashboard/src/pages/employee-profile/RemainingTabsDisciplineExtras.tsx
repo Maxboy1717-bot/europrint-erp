@@ -13,6 +13,7 @@ import { MessageSquareWarning, ClipboardX } from "lucide-react";
 import type { CustomerComplaint, AssessmentSkipRecord } from "./profile-types";
 import { COMPLAINT_TYPE_LABELS, SEVERITY_LABELS, STATUS_LABELS } from "./RemainingTabsTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // CustomerComplaintsCard
@@ -24,14 +25,15 @@ interface CustomerComplaintsCardProps {
 }
 
 export function CustomerComplaintsCard({ customerComplaints, loadingComplaints }: CustomerComplaintsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquareWarning className="h-5 w-5 text-[var(--ep-primary)]" />
-          Mijoz shikoyatlari
+          {t("mijozShikoyatlari")}
         </CardTitle>
-        <CardDescription>Ushbu xodim bilan bog'liq mijoz shikoyatlari</CardDescription>
+        <CardDescription>{t("ushbuXodimBilanBogliqMijoz")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loadingComplaints ? (
@@ -42,12 +44,12 @@ export function CustomerComplaintsCard({ customerComplaints, loadingComplaints }
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Mijoz</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>Darajasi</TableHead>
-                <TableHead>Holati</TableHead>
-                <TableHead>Tavsif</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("mijoz1")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("darajasi")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
+                <TableHead>{t("progress.description")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -82,8 +84,8 @@ export function CustomerComplaintsCard({ customerComplaints, loadingComplaints }
         ) : (
           <div className="flex flex-col items-center py-8 text-muted-foreground">
             <MessageSquareWarning className="h-8 w-8 mb-2 opacity-20" />
-            <p className="text-sm">Mijoz shikoyatlari topilmadi</p>
-            <p className="text-xs opacity-60 mt-1">Ushbu xodim bilan bog'liq shikoyat qayd etilmagan</p>
+            <p className="text-sm">{t("mijozShikoyatlariTopilmadi")}</p>
+            <p className="text-xs opacity-60 mt-1">{t("ushbuXodimBilanBogliqShikoyat")}</p>
           </div>
         )}
       </CardContent>
@@ -106,9 +108,9 @@ export function AssessmentSkipsCard({ assessmentSkips, loadingSkips }: Assessmen
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ClipboardX className="h-5 w-5 text-[var(--ep-red)]" />
-          Baholash o'tkazib yuborishlar
+          {t("baholashOtkazibYuborishlar")}
         </CardTitle>
-        <CardDescription>360° baholash va attestatsiyalarni o'tkazib yuborish qaydlari</CardDescription>
+        <CardDescription>{t("k360BaholashVaAttestatsiyalarniOtkazib")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loadingSkips ? (
@@ -119,11 +121,11 @@ export function AssessmentSkipsCard({ assessmentSkips, loadingSkips }: Assessmen
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Davr</TableHead>
-                <TableHead>Kutilgan sana</TableHead>
-                <TableHead>Sabab</TableHead>
-                <TableHead>Kim tomonidan</TableHead>
-                <TableHead>Holati</TableHead>
+                <TableHead>{t("period")}</TableHead>
+                <TableHead>{t("kutilganSana")}</TableHead>
+                <TableHead>{t("sabab")}</TableHead>
+                <TableHead>{t("kimTomonidan")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -147,9 +149,9 @@ export function AssessmentSkipsCard({ assessmentSkips, loadingSkips }: Assessmen
                   </TableCell>
                   <TableCell>
                     {skip.status === "unexcused" ? (
-                      <EPStatusPill tone="danger" className="text-xs">Uzrsiz</EPStatusPill>
+                      <EPStatusPill tone="danger" className="text-xs">{t("uzrsiz")}</EPStatusPill>
                     ) : (
-                      <EPStatusPill tone="neutral" className="text-xs">Uzrli</EPStatusPill>
+                      <EPStatusPill tone="neutral" className="text-xs">{t("uzrli")}</EPStatusPill>
                     )}
                   </TableCell>
                 </TableRow>
@@ -159,8 +161,8 @@ export function AssessmentSkipsCard({ assessmentSkips, loadingSkips }: Assessmen
         ) : (
           <div className="flex flex-col items-center py-8 text-muted-foreground">
             <ClipboardX className="h-8 w-8 mb-2 opacity-20" />
-            <p className="text-sm">Baholash o'tkazib yuborishlar topilmadi</p>
-            <p className="text-xs opacity-60 mt-1">Xodim barcha rejalashtirilgan baholashlarda qatnashgan</p>
+            <p className="text-sm">{t("baholashOtkazibYuborishlarTopilmadi")}</p>
+            <p className="text-xs opacity-60 mt-1">{t("xodimBarchaRejalashtirilganBaholashlardaQatnashgan")}</p>
           </div>
         )}
       </CardContent>

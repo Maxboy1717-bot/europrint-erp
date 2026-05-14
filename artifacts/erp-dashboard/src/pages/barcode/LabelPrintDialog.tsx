@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { BatchData } from "./barcode-types";
 import type { translations } from "./barcode-types";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 type TranslationType = typeof translations.uz;
 
@@ -54,6 +55,7 @@ export function LabelPrintDialog({
   lang,
   t,
 }: LabelPrintDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [format, setFormat] = useState<"ZPL" | "EPL" | "PDF">("ZPL");
   const [copies, setCopies] = useState(1);
@@ -140,7 +142,7 @@ export function LabelPrintDialog({
             </div>
             {batch.barcode && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Barcode:</span>
+                <span className="text-muted-foreground">{t("barcode")}</span>
                 <span className="font-mono text-xs">{batch.barcode}</span>
               </div>
             )}
@@ -163,13 +165,13 @@ export function LabelPrintDialog({
                   <SelectItem value="ZPL">
                     <div className="flex flex-col">
                       <span>ZPL</span>
-                      <span className="text-xs text-muted-foreground">Zebra printerlar</span>
+                      <span className="text-xs text-muted-foreground">{t("zebraPrinterlar")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EPL">
                     <div className="flex flex-col">
                       <span>EPL</span>
-                      <span className="text-xs text-muted-foreground">Eltron printerlar</span>
+                      <span className="text-xs text-muted-foreground">{t("eltronPrinterlar")}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="PDF">

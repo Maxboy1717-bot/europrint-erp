@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Camera, UserPlus, CheckCircle, XCircle, Video, VideoOff, Eye, AlertTriangle, RefreshCw } from 'lucide-react';
 import type { Employee, LivenessStatus, FaceRegTranslations } from './FaceRegistrationTypes';
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -50,6 +51,7 @@ export function CameraCaptureCard({
   canCaptureFace, showLivenessUI, isRegisterPending,
   onStartCamera, onStopCamera, onCaptureFace, onRegisterFace, onStartLiveness,
 }: CameraCaptureCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -119,7 +121,7 @@ export function CameraCaptureCard({
 
           {capturedImageUrl && (
             <div className="absolute bottom-2 right-2 w-20 h-20 rounded-lg overflow-hidden border-2 border-green-500">
-              <img src={capturedImageUrl} alt="Captured" className="w-full h-full object-cover" />
+              <img src={capturedImageUrl} alt={t("captured")} className="w-full h-full object-cover" />
             </div>
           )}
         </div>

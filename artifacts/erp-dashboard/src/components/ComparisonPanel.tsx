@@ -67,14 +67,14 @@ export function ComparisonPanel({title, data, metric, comparisonType }: Comparis
               variant={selectedView === "chart" ? "default" : "outline"}
               onClick={() => setSelectedView("chart")}
             >
-              Grafik
+              {t("grafik")}
             </Button>
             <Button
               size="sm"
               variant={selectedView === "table" ? "default" : "outline"}
               onClick={() => setSelectedView("table")}
             >
-              Jadval
+              {t("jadval")}
             </Button>
           </div>
         </div>
@@ -104,10 +104,10 @@ export function ComparisonPanel({title, data, metric, comparisonType }: Comparis
         ) : (
           <div className="space-y-2">
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm font-medium border-b pb-2">
-              <div>Nom</div>
+              <div>{t("nom")}</div>
               <div className="text-right">{labels.current}</div>
               <div className="text-right">{labels.previous}</div>
-              <div className="text-right">O'zgarish</div>
+              <div className="text-right">{t("ozgarish")}</div>
               <div className="text-right">{t('status1')}</div>
             </div>
             {(Array.isArray(data) ? data : []).map((item, index) => {
@@ -126,11 +126,11 @@ export function ComparisonPanel({title, data, metric, comparisonType }: Comparis
                   <div className="text-right">
                     {isPositive ? (
                       <Badge variant="default" className="bg-green-500/10 text-[var(--ep-green)] dark:text-green-400 border-green-500/20">
-                        Yaxshi
+                        {t("Yaxshi")}
                       </Badge>
                     ) : (
                       <Badge variant="default" className="bg-red-500/10 text-[var(--ep-red)] dark:text-red-400 border-red-500/20">
-                        Pasaygan
+                        {t("pasaygan")}
                       </Badge>
                     )}
                   </div>
@@ -166,7 +166,7 @@ export function ComparisonPanel({title, data, metric, comparisonType }: Comparis
                 100
               ).toFixed(1)}%
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Umumiy o'zgarish</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("umumiyOzgarish")}</div>
           </div>
         </div>
       </CardContent>

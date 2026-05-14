@@ -26,7 +26,7 @@ export function ProductionAnalysis({data, isLoading }: ProductionAnalysisProps) 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Samaradorlik ko'rsatkichlari
+              {t("samaradorlikKorsatkichlari")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -39,19 +39,19 @@ export function ProductionAnalysis({data, isLoading }: ProductionAnalysisProps) 
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span>O'rtacha ishlab chiqarish vaqti</span>
+                  <span>{t("ortachaIshlabChiqarishVaqti")}</span>
                   <span className="font-bold">{formatDays(data?.efficiencyMetrics?.averageCycleTime)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span>Uskunalar yuklanishi</span>
+                  <span>{t("uskunalarYuklanishi")}</span>
                   <span className="font-bold text-[var(--ep-blue)]">{formatPercent(data?.efficiencyMetrics?.machineUtilization)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span>Mehnat samaradorligi</span>
+                  <span>{t("mehnatSamaradorligi")}</span>
                   <span className="font-bold text-[var(--ep-green)]">{formatPercent(data?.efficiencyMetrics?.laborEfficiency)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span>Sifat ko'rsatkichi</span>
+                  <span>{t("sifatKorsatkichi")}</span>
                   <span className="font-bold text-[var(--ep-purple)]">{formatPercent(data?.efficiencyMetrics?.qualityRate)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg from-green-600/10 to-emerald-600/10 border border-green-500/30">
@@ -67,7 +67,7 @@ export function ProductionAnalysis({data, isLoading }: ProductionAnalysisProps) 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Xarajat tahlili
+              {t("xarajatTahlili")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -80,7 +80,7 @@ export function ProductionAnalysis({data, isLoading }: ProductionAnalysisProps) 
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <span className="font-medium">Jami daromad</span>
+                  <span className="font-medium">{t("jamiDaromad")}</span>
                   <span className="font-bold text-[var(--ep-green)]">{formatCurrency(data?.costAnalysis?.totalRevenue || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
@@ -88,19 +88,19 @@ export function ProductionAnalysis({data, isLoading }: ProductionAnalysisProps) 
                   <span className="font-medium">{formatCurrency(data?.costAnalysis?.materialCost || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span>Mehnat xarajatlari</span>
+                  <span>{t("mehnatXarajatlari")}</span>
                   <span className="font-medium">{formatCurrency(data?.costAnalysis?.laborCost || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span>Ustama xarajatlar</span>
+                  <span>{t("ustamaXarajatlar")}</span>
                   <span className="font-medium">{formatCurrency(data?.costAnalysis?.overheadCost || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                  <span className="font-medium">Jami tannarx</span>
+                  <span className="font-medium">{t("jamiTannarx")}</span>
                   <span className="font-bold text-[var(--ep-red)]">{formatCurrency(data?.costAnalysis?.totalProductionCost || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-[var(--ep-blue)] text-white">
-                  <span className="font-bold">Foyda marjasi</span>
+                  <span className="font-bold">{t("foydaMarjasi")}</span>
                   <span className="font-bold text-lg">{formatPercent(data?.costAnalysis?.profitMargin)}</span>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function ProductionAnalysis({data, isLoading }: ProductionAnalysisProps) 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Ishlab chiqarish va daromad tendensiyasi
+            {t("ishlabChiqarishVaDaromadTendensiyasi")}
           </CardTitle>
         </CardHeader>
         <CardContent>

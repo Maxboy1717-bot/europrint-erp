@@ -156,8 +156,8 @@ export default function QCModule() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Sifat Nazorati</b></>}
-        title="Sifat Nazorati"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("sifatNazorati")}</b></>}
+        title={t("sifatNazorati")}
         subtitle={t("qualityRate")}
       />
         </div>
@@ -280,8 +280,8 @@ export default function QCModule() {
       <ConfirmDialog
         open={confirmDeleteParamId !== null}
         onOpenChange={open => { if (!open) setConfirmDeleteParamId(null); }}
-        title="Parametrni o'chirish"
-        description="Ushbu sifat parametrini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("parametrniOchirish")}
+        description={t("ushbuSifatParametriniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

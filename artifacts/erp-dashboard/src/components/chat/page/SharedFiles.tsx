@@ -12,6 +12,7 @@ import { Download, Image, FileText, Grid3X3, List } from "lucide-react";
 import { format } from "date-fns";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface SharedFile {
   id: string;
   roomId: string;
@@ -40,6 +41,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function SharedFiles({ roomId }: Props) {
+  const { t } = useTranslation("common");
   const [filter, setFilter] = useState<FilterType>("all");
   const [view, setView] = useState<ViewMode>("grid");
 
@@ -99,7 +101,7 @@ export function SharedFiles({ roomId }: Props) {
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-24 gap-2 text-muted-foreground">
             <FileText className="w-8 h-8 opacity-30" />
-            <p className="text-xs">Fayllar yo'q</p>
+            <p className="text-xs">{t("fayllarYoq")}</p>
           </div>
         ) : view === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">

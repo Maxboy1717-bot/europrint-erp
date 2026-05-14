@@ -68,7 +68,7 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[pos-barcode.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
     const redisUrl = this.configService.get<string>('REDIS_URL');
-    if (!redisUrl) return Ok();
+    if (!redisUrl) return;
     const r = await safeCall(async () => {
       const { default: Redis } = await import('ioredis');
       this.redisClient = new Redis(redisUrl, {
@@ -83,7 +83,6 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn(`[POS Barcode] Redis ulanmadi — in-memory cache. Sabab: ${r.error.message}`);
       this.redisClient = null;
     }
-    return r;
   }
 
   async onModuleDestroy(): Promise<void> {

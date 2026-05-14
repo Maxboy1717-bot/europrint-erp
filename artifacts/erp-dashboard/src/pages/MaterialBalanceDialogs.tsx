@@ -55,14 +55,14 @@ export function AddMovementDialog({open,
             <Label htmlFor="mv-material">Material (kod yoki nom)</Label>
             <Input
               id="mv-material"
-              placeholder="Masalan: MAT-001"
+              placeholder={t("masalanMat001")}
               value={form.material}
               onChange={(e) => onChange({ material: e.target.value })}
               data-testid="input-movement-material"
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mv-quantity">Miqdor</Label>
+            <Label htmlFor="mv-quantity">{t("quantity")}</Label>
             <Input
               id="mv-quantity"
               type="number"
@@ -74,7 +74,7 @@ export function AddMovementDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="mv-type">Turi</Label>
+            <Label htmlFor="mv-type">{t("type")}</Label>
             <Select
               value={form.type}
               onValueChange={(v) => onChange({ type: v })}
@@ -83,8 +83,8 @@ export function AddMovementDialog({open,
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="kirim">Kirim</SelectItem>
-                <SelectItem value="chiqim">Chiqim</SelectItem>
+                <SelectItem value="kirim">{t("kirim")}</SelectItem>
+                <SelectItem value="chiqim">{t("chiqim")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

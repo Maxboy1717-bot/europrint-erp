@@ -57,10 +57,10 @@ function CreateOrderForm({ onClose, onSuccess }: { onClose: () => void; onSucces
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Label>Kategoriya *</Label>
+          <Label>{t("kategoriya")}</Label>
           <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
             <SelectTrigger>
-              <SelectValue placeholder="Kategoriya tanlang" />
+              <SelectValue placeholder={t("kategoriyaTanlang")} />
             </SelectTrigger>
             <SelectContent>
               {(Array.isArray(CATEGORIES) ? CATEGORIES : []).map((c) => (
@@ -70,7 +70,7 @@ function CreateOrderForm({ onClose, onSuccess }: { onClose: () => void; onSucces
           </Select>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="issuedDate">Chiqarilgan sana *</Label>
+          <Label htmlFor="issuedDate">{t("chiqarilganSana")}</Label>
           <Input
             id="issuedDate"
             type="date"
@@ -81,22 +81,22 @@ function CreateOrderForm({ onClose, onSuccess }: { onClose: () => void; onSucces
         </div>
       </div>
       <div className="space-y-1">
-        <Label htmlFor="title">Sarlavha *</Label>
+        <Label htmlFor="title">{t("sarlavha")}</Label>
         <Input
           id="title"
           value={form.title}
           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-          placeholder="Buyruq sarlavhasi"
+          placeholder={t("buyruqSarlavhasi")}
           required
         />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="content">Buyruq matni *</Label>
+        <Label htmlFor="content">{t("buyruqMatni")}</Label>
         <Textarea
           id="content"
           value={form.content}
           onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-          placeholder="To'liq buyruq matni"
+          placeholder={t("toliqBuyruqMatni")}
           rows={6}
           required
         />
@@ -106,14 +106,14 @@ function CreateOrderForm({ onClose, onSuccess }: { onClose: () => void; onSucces
         <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">Faol</SelectItem>
-            <SelectItem value="cancelled">Bekor qilingan</SelectItem>
-            <SelectItem value="expired">Muddati o'tgan</SelectItem>
+            <SelectItem value="active">{t("active")}</SelectItem>
+            <SelectItem value="cancelled">{t("cancelledDesc")}</SelectItem>
+            <SelectItem value="expired">{t("muddatiOtgan")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onClose}>Bekor qilish</Button>
+        <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
         </Button>
@@ -157,10 +157,10 @@ function OrderDetailContent({ orderId, onClose }: { orderId: number; onClose: ()
           </p>
         </>
       ) : (
-        <p className="text-muted-foreground">Buyruq topilmadi</p>
+        <p className="text-muted-foreground">{t("buyruqTopilmadi")}</p>
       )}
       <DialogFooter>
-        <Button variant="outline" onClick={onClose}>Yopish</Button>
+        <Button variant="outline" onClick={onClose}>{t("close2")}</Button>
       </DialogFooter>
     </div>
   );
@@ -181,7 +181,7 @@ export function CreateOrderDialog({open, onOpenChange, onSuccess }: CreateOrderD
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" /> Yangi Buyruq Qo'shish
+            <FileText className="w-5 h-5" /> {t("yangiBuyruqQoshish")}
           </DialogTitle>
         </DialogHeader>
         <CreateOrderForm
@@ -204,7 +204,7 @@ export function OrderDetailDialog({ viewId, onOpenChange }: OrderDetailDialogPro
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" /> Buyruq Tafsilotlari
+            <FileText className="w-5 h-5" /> {t("buyruqTafsilotlari")}
           </DialogTitle>
         </DialogHeader>
         {viewId !== null && (

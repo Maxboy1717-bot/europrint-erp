@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { HeartPulse, CheckCircle2, ShieldAlert } from "lucide-react";
 import { HealthCheckup } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface HealthSectionProps {
   healthCheckups: HealthCheckup[];
@@ -18,10 +19,11 @@ export function HealthSection({
   healthCheckups,
   healthStats,
 }: HealthSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Sog'liq Nazorati va Tibbiy Ko'rik</h2>
+        <h2 className="text-lg font-semibold">{t("sogliqNazoratiVaTibbiyKorik")}</h2>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
@@ -40,17 +42,17 @@ export function HealthSection({
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Bo'limlar bo'yicha ko'rik holati</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("bolimlarBoyichaKorikHolati")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Bo'lim</TableHead><TableHead>Jami xodim</TableHead>
-              <TableHead>O'tganlar</TableHead><TableHead>Oxirgi sana</TableHead>
-              <TableHead>Holati</TableHead>
+              <TableHead>{t("bolim1")}</TableHead><TableHead>{t("jamiXodim")}</TableHead>
+              <TableHead>{t("otganlar")}</TableHead><TableHead>{t("oxirgiSana")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {healthCheckups.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Tibbiy ko'rik ma'lumotlari yo'q</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("tibbiyKorikMalumotlariYoq")}</TableCell></TableRow>
               ) : (Array.isArray(healthCheckups) ? healthCheckups : []).map((h) => (
                 <TableRow key={h.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{h.departmentName}</TableCell>

@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardCheck, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 const SCORE_CRITERIA = [
   { key: "task_quality",    label: "Vazifalarni bajarish sifati" },
@@ -125,6 +126,7 @@ export function ProbationReviewDialog({
   candidateName,
   existingReview,
 }: Props) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -207,24 +209,24 @@ export function ProbationReviewDialog({
         <div className="px-6 py-4 space-y-5">
           {/* Kirish ma'lumotlari */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Kirish ma'lumotlari</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("kirishMalumotlari")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Xodim ismi</Label>
+                <Label className="text-xs mb-1 block">{t("xodimIsmi")}</Label>
                 <Input
                   value={employeeName}
                   onChange={e => setEmployeeName(e.target.value)}
                   className="text-sm h-8"
-                  placeholder="To'liq ism"
+                  placeholder={t("toliqIsm")}
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Lavozim</Label>
+                <Label className="text-xs mb-1 block">{t("lavozim1")}</Label>
                 <Input
                   value={positionName}
                   onChange={e => setPositionName(e.target.value)}
                   className="text-sm h-8"
-                  placeholder="Lavozim nomi"
+                  placeholder={t("lavozimNomi1")}
                 />
               </div>
               <div>
@@ -233,11 +235,11 @@ export function ProbationReviewDialog({
                   value={mentorName}
                   onChange={e => setMentorName(e.target.value)}
                   className="text-sm h-8"
-                  placeholder="Mentor ismi"
+                  placeholder={t("mentorIsmi")}
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Baholash sanasi</Label>
+                <Label className="text-xs mb-1 block">{t("baholashSanasi")}</Label>
                 <Input
                   type="date"
                   value={reviewDate}
@@ -270,32 +272,32 @@ export function ProbationReviewDialog({
 
           {/* Kuzatuvlar */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Kuzatuvlar</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("kuzatuvlar")}</p>
             <div>
-              <Label className="text-xs mb-1 block text-[var(--ep-green)]">✓ Kuchli tomonlar</Label>
+              <Label className="text-xs mb-1 block text-[var(--ep-green)]">{t("kuchliTomonlar")}</Label>
               <Textarea
                 value={observations.strengths}
                 onChange={e => setObservations(prev => ({ ...prev, strengths: e.target.value }))}
                 rows={2}
                 className="text-sm resize-none"
-                placeholder="Xodimning kuchli tomonlari..."
+                placeholder={t("xodimningKuchliTomonlari")}
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block text-[var(--ep-yellow)]">↗ Rivojlanish sohalari</Label>
+              <Label className="text-xs mb-1 block text-[var(--ep-yellow)]">{t("rivojlanishSohalari")}</Label>
               <Textarea
                 value={observations.improvements}
                 onChange={e => setObservations(prev => ({ ...prev, improvements: e.target.value }))}
                 rows={2}
                 className="text-sm resize-none"
-                placeholder="Rivojlantirish kerak bo'lgan sohalar..."
+                placeholder={t("rivojlantirishKerakBolganSohalar")}
               />
             </div>
           </div>
 
           {/* Qaror */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Qaror</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("qaror")}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {(Array.isArray(DECISIONS) ? DECISIONS : []).map(d => {
                 const Icon = d.icon;
@@ -327,13 +329,13 @@ export function ProbationReviewDialog({
               value={reviewerName}
               onChange={e => setReviewerName(e.target.value)}
               className="text-sm h-8"
-              placeholder="HR Menejer to'liq ismi..."
+              placeholder={t("hrMenejerToliqIsmi")}
             />
           </div>
         </div>
 
         <DialogFooter className="px-6 pb-5 pt-2 border-t gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || !decision}

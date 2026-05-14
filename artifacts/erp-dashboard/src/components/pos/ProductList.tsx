@@ -37,22 +37,22 @@ export function ProductList({
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Shtrix-kod</TableHead>
-              <TableHead>Nomi</TableHead>
-              <TableHead>Kategoriya</TableHead>
-              <TableHead className="text-right">Narxi</TableHead>
-              <TableHead className="text-right">Zaxira</TableHead>
-              <TableHead>Birlik</TableHead>
+              <TableHead>{t("shtrixKod")}</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("category")}</TableHead>
+              <TableHead className="text-right">{t("narxi")}</TableHead>
+              <TableHead className="text-right">{t("zaxira1")}</TableHead>
+              <TableHead>{t("unit")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">Yuklanmoqda...</TableCell>
+                <TableCell colSpan={6} className="text-center py-8">{t("Yuklanmoqda...")}</TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Mahsulotlar mavjud emas</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("mahsulotlarMavjudEmas")}</TableCell>
               </TableRow>
             ) : (
               (Array.isArray(products) ? products : []).map((p) => (

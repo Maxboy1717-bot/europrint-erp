@@ -15,8 +15,10 @@ import { RecordMovementDialog } from "./MaterialsAccountingDialogs";
 import { StatCards, MovementsCard } from "./MaterialsAccountingSections";
 import { OrderConsumptionCard, InventoryValuationCard } from "./MaterialsAccountingPanels";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function MaterialsAccounting() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -134,8 +136,8 @@ export default function MaterialsAccounting() {
             <div className="flex items-center gap-3">
               <Warehouse className="h-8 w-8" />
               <div>
-                <h1 className="text-2xl font-bold">Materiallar Hisobi</h1>
-                <p className="text-white/75 text-sm">Ombor buxgalteri - Material harakatlari va inventar</p>
+                <h1 className="text-2xl font-bold">{t("materiallarHisobi")}</h1>
+                <p className="text-white/75 text-sm">{t("omborBuxgalteriMaterialHarakatlariVa")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -154,7 +156,7 @@ export default function MaterialsAccounting() {
                 data-testid="button-refresh"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Yangilash
+                {t("refresh")}
               </Button>
             </div>
           </div>

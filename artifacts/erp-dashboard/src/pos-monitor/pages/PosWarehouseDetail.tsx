@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { warehousesApi, warehouseFeaturesApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface WarehouseEmployee {
   id: number; userId: number; username: string; fullName: string;
@@ -101,6 +102,7 @@ function fmtDate(iso: string | null | undefined): string {
 }
 
 export default function PosWarehouseDetail() {
+  const { t } = useTranslation("common");
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
@@ -202,36 +204,36 @@ export default function PosWarehouseDetail() {
             className="pos-btn"
             style={{ padding: "6px 12px", background: "#10B981", color: "#FFF", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13 }}
             onClick={() => navigate(`/pos-monitor/movements/new/kirim?warehouseId=${whId}`)}
-            title="Shu omborga yangi kirim"
+            title={t("shuOmborgaYangiKirim")}
           >
-            📥 + Kirim
+            {t("kirim1")}
           </button>
           <button
             className="pos-btn"
             style={{ padding: "6px 12px", background: "#F59E0B", color: "#FFF", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13 }}
             onClick={() => navigate(`/pos-monitor/movements/new/chiqim?fromWarehouseId=${whId}`)}
-            title="Shu ombordan yangi chiqim"
+            title={t("shuOmbordanYangiChiqim")}
           >
-            📤 + Chiqim
+            {t("chiqim1")}
           </button>
         </div>
 
         <div style={{ flex: 1 }} />
         <div className="pos-card" style={{ padding: "8px 16px", display: "inline-flex", gap: 20 }}>
           <div>
-            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>📦 Material turi</div>
+            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("materialTuri1")}</div>
             <div className="pos-mono" style={{ fontWeight: 700, color: "var(--pos-accent)" }}>{stock.length}</div>
           </div>
           <div>
-            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>📥 Kirim</div>
+            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("kirim2")}</div>
             <div className="pos-mono" style={{ fontWeight: 700, color: "#10B981" }}>{inflowMovements.length}</div>
           </div>
           <div>
-            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>📤 Chiqim</div>
+            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("chiqim2")}</div>
             <div className="pos-mono" style={{ fontWeight: 700, color: "#EF4444" }}>{outflowMovements.length}</div>
           </div>
           <div>
-            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>👥 Xodimlar</div>
+            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("xodimlar1")}</div>
             <div className="pos-mono" style={{ fontWeight: 700 }}>{employees.length}</div>
           </div>
         </div>
@@ -244,10 +246,10 @@ export default function PosWarehouseDetail() {
         <div className={`pos-tab ${tab === "outflow"    ? "active" : ""}`} onClick={() => setTab("outflow")}>📤 Chiqim ({outflowMovements.length})</div>
         <div className={`pos-tab ${tab === "quarantine" ? "active" : ""}`} onClick={() => setTab("quarantine")}>🔬 Karantin ({quarantineMovements.length})</div>
         <div className={`pos-tab ${tab === "employees"  ? "active" : ""}`} onClick={() => setTab("employees")}>👥 Xodimlar ({employees.length})</div>
-        <div className={`pos-tab ${tab === "bins"       ? "active" : ""}`} onClick={() => setTab("bins")}>🗂 Bin</div>
+        <div className={`pos-tab ${tab === "bins"       ? "active" : ""}`} onClick={() => setTab("bins")}>{t("bin")}</div>
       </div>
 
-      {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--pos-text-muted)" }}>⏳ Yuklanmoqda...</div>}
+      {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda")}</div>}
 
       {/* ─── STOK TAB — birlik bo'yicha guruhlangan ─── */}
       {!loading && tab === "stock" && (
@@ -258,7 +260,7 @@ export default function PosWarehouseDetail() {
               placeholder={t('common.materialQidirish')}
               value={search} onChange={e => setSearch(e.target.value)}
             />
-            <button className="pos-btn pos-btn-ghost" onClick={() => void loadData()}>🔄 Yangilash</button>
+            <button className="pos-btn pos-btn-ghost" onClick={() => void loadData()}>{t("yangilash")}</button>
           </div>
 
           {/* O'lchov birligi xulosa */}
@@ -282,7 +284,7 @@ export default function PosWarehouseDetail() {
             })}
             {stockByUnit.length === 0 && (
               <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 20, color: "var(--pos-text-muted)" }}>
-                Bu omborda materiallar yo'q
+                {t("buOmbordaMateriallarYoq")}
               </div>
             )}
           </div>
@@ -305,12 +307,12 @@ export default function PosWarehouseDetail() {
                     <thead>
                       <tr>
                         <th>{t('common.Material')}</th>
-                        <th>Kod</th>
-                        <th style={{ textAlign: "right" }}>Mavjud</th>
-                        <th style={{ textAlign: "right" }}>Band</th>
-                        <th style={{ textAlign: "right" }}>Jami</th>
-                        <th>Yangilangan</th>
-                        <th>Amallar</th>
+                        <th>{t("code")}</th>
+                        <th style={{ textAlign: "right" }}>{t("mavjud")}</th>
+                        <th style={{ textAlign: "right" }}>{t("band")}</th>
+                        <th style={{ textAlign: "right" }}>{t("total")}</th>
+                        <th>{t("updated")}</th>
+                        <th>{t("Amallar")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -341,7 +343,7 @@ export default function PosWarehouseDetail() {
                           <td>
                             <button className="pos-btn pos-btn-ghost" style={{ padding: "3px 8px", fontSize: 11 }}
                               onClick={() => navigate(`/pos-monitor/materials/360/${r.materialCardId}`)}
-                              title="Material 360°"
+                              title={t("material360")}
                             >🔭 360°</button>
                           </td>
                         </tr>
@@ -359,7 +361,7 @@ export default function PosWarehouseDetail() {
       {!loading && tab === "inflow" && (
         <MovementsTable
           movements={inflowMovements}
-          title="📥 Bu omborga KIRIMLAR"
+          title={t("buOmborgaKirimlar")}
           color="#10B981"
           onClick={(id) => navigate(`/pos-monitor/movements/${id}`)}
           emptyMessage="Bu omborga kirimlar yo'q"
@@ -370,7 +372,7 @@ export default function PosWarehouseDetail() {
       {!loading && tab === "outflow" && (
         <MovementsTable
           movements={outflowMovements}
-          title="📤 Bu ombordan CHIQIMLAR"
+          title={t("buOmbordanChiqimlar")}
           color="#EF4444"
           onClick={(id) => navigate(`/pos-monitor/movements/${id}`)}
           emptyMessage="Bu ombordan chiqimlar yo'q"
@@ -381,7 +383,7 @@ export default function PosWarehouseDetail() {
       {!loading && tab === "quarantine" && (
         <MovementsTable
           movements={quarantineMovements}
-          title="🔬 Karantin va QC kutmoqda"
+          title={t("karantinVaQcKutmoqda")}
           color="#F59E0B"
           onClick={(id) => navigate(`/pos-monitor/movements/${id}`)}
           emptyMessage="Karantinda hozir hech narsa yo'q"
@@ -396,17 +398,17 @@ export default function PosWarehouseDetail() {
           </div>
           {employees.length === 0 ? (
             <div style={{ textAlign: "center", padding: 40, color: "var(--pos-text-muted)" }}>
-              Hech kim biriktirilmagan
+              {t("hechKimBiriktirilmagan")}
             </div>
           ) : (
             <table className="pos-table" style={{ width: "100%" }}>
               <thead>
                 <tr>
-                  <th>Foydalanuvchi</th>
+                  <th>{t("foydalanuvchi")}</th>
                   <th>{t('common.login')}</th>
-                  <th>Rol</th>
-                  <th>Asosiy</th>
-                  <th>Biriktirilgan sana</th>
+                  <th>{t("role")}</th>
+                  <th>{t("primary")}</th>
+                  <th>{t("biriktirilganSana")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -471,11 +473,11 @@ function MovementsTable({ movements, title, color, onClick, emptyMessage }: {
           <table className="pos-table" style={{ width: "100%" }}>
             <thead>
               <tr>
-                <th>Hujjat raqami</th>
-                <th>Harakat turi</th>
-                <th>Holat</th>
-                <th style={{ textAlign: "right" }}>Summa</th>
-                <th>Sana</th>
+                <th>{t("hujjatRaqami")}</th>
+                <th>{t("harakatTuri1")}</th>
+                <th>{t("status28")}</th>
+                <th style={{ textAlign: "right" }}>{t("summa")}</th>
+                <th>{t("date")}</th>
               </tr>
             </thead>
             <tbody>

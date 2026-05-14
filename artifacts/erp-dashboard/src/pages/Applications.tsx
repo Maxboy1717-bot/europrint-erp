@@ -21,8 +21,10 @@ import { CreateFormCard } from "./ApplicationsSections";
 import { AuthErrorScreen, LoadingScreen, ErrorScreen } from "./ApplicationsStatus";
 import { TemplatesTable, ResponsesTable } from "./ApplicationsTable";
 import { ReviewDialog } from "./ApplicationsDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function Applications() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // Auth
@@ -183,14 +185,14 @@ export default function Applications() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div>
-        <h1 className="ep-h1">Arizalar</h1>
-        <p className="text-muted-foreground">Xodimlar uchun ariza shablonlarini yaratish va yuborilgan arizalarni ko'rish</p>
+        <h1 className="ep-h1">{t("arizalar")}</h1>
+        <p className="text-muted-foreground">{t("xodimlarUchunArizaShablonlariniYaratish")}</p>
       </div>
 
       <Tabs defaultValue="templates" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-1 sm:grid-cols-2">
-          <TabsTrigger value="templates" data-testid="tab-templates">Ariza shablonlari</TabsTrigger>
-          <TabsTrigger value="responses" data-testid="tab-responses">Yuborilgan arizalar</TabsTrigger>
+          <TabsTrigger value="templates" data-testid="tab-templates">{t("arizaShablonlari")}</TabsTrigger>
+          <TabsTrigger value="responses" data-testid="tab-responses">{t("yuborilganArizalar1")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="templates" className="space-y-4">
@@ -213,7 +215,7 @@ export default function Applications() {
           />
 
           <Card>
-            <CardHeader><CardTitle>Mavjud arizalar</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t("mavjudArizalar")}</CardTitle></CardHeader>
             <CardContent>
               <TemplatesTable
                 applications={applications}
@@ -230,8 +232,8 @@ export default function Applications() {
         <TabsContent value="responses" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Yuborilgan arizalar</CardTitle>
-              <CardDescription>Xodimlar tomonidan yuborilgan arizalarni ko'ring va tasdiqlang</CardDescription>
+              <CardTitle>{t("yuborilganArizalar1")}</CardTitle>
+              <CardDescription>{t("xodimlarTomonidanYuborilganArizalarniKoring")}</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsesTable

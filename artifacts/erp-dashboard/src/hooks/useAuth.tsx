@@ -11,6 +11,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { safeStorage } from '@/lib/safeStorage';
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 // Mirror backend ROLE_ALIASES so UI permissions consistently match server authorization
 const ROLE_ALIASES: Record<string, string> = {
@@ -70,6 +71,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation("common");
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isRefreshingRef = useRef(false);

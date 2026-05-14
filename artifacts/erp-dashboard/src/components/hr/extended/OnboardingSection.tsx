@@ -28,8 +28,8 @@ export function OnboardingSection({empLoading,
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Yangi Xodim Onboarding</h2>
-        <Button data-testid="button-add-onboarding"><Plus className="h-4 w-4 mr-2" />Onboarding Boshlash</Button>
+        <h2 className="text-lg font-semibold">{t("yangiXodimOnboarding")}</h2>
+        <Button data-testid="button-add-onboarding"><Plus className="h-4 w-4 mr-2" />{t("onboardingBoshlash")}</Button>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
@@ -45,21 +45,21 @@ export function OnboardingSection({empLoading,
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Onboarding Bosqichlari</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("onboardingBosqichlari")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Xodim</TableHead><TableHead>Lavozim</TableHead>
-              <TableHead>Ishga kirish sanasi</TableHead><TableHead>Bo'lim</TableHead>
-              <TableHead>Holati</TableHead>
+              <TableHead>{t("xodim1")}</TableHead><TableHead>{t("lavozim1")}</TableHead>
+              <TableHead>{t("ishgaKirishSanasi")}</TableHead><TableHead>{t("bolim1")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {empLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : newEmployees.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                    Faol onboarding jarayonlari mavjud emas
+                    {t("faolOnboardingJarayonlariMavjudEmas")}
                   </TableCell>
                 </TableRow>
               ) : (Array.isArray(newEmployees) ? newEmployees : []).map((emp: HREmployee) => (
@@ -68,7 +68,7 @@ export function OnboardingSection({empLoading,
                   <TableCell className="text-muted-foreground">{emp.positionName || emp.position || "—"}</TableCell>
                   <TableCell>{emp.hireDate ? new Date(emp.hireDate).toLocaleDateString("uz-UZ") : "—"}</TableCell>
                   <TableCell>{emp.departmentName || emp.department || "—"}</TableCell>
-                  <TableCell><Badge variant="secondary">Onboarding</Badge></TableCell>
+                  <TableCell><Badge variant="secondary">{t("onboarding")}</Badge></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -77,12 +77,12 @@ export function OnboardingSection({empLoading,
       </Card>
       {onboardingChecklists.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Onboarding Checklist Holati</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("onboardingChecklistHolati")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Xodim</TableHead>
-                <TableHead>Bajarilish</TableHead>
+                <TableHead>{t("xodim1")}</TableHead>
+                <TableHead>{t("progress5")}</TableHead>
                 <TableHead>{t('progress')}</TableHead>
                 <TableHead></TableHead>
               </TableRow></TableHeader>

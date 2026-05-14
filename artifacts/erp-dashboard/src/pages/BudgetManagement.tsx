@@ -191,8 +191,8 @@ export default function BudgetManagement() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Byudjet Boshqaruvi</b></>}
-        title="Byudjet Boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("byudjetBoshqaruvi")}</b></>}
+        title={t("byudjetBoshqaruvi")}
       />
             <div className="ml-4">{getStatusBadge(budgetDetail.status)}</div>
           </div>
@@ -231,8 +231,8 @@ export default function BudgetManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-8">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Byudjet Boshqaruvi</b></>}
-        title="Byudjet Boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("byudjetBoshqaruvi")}</b></>}
+        title={t("byudjetBoshqaruvi")}
       />
         <CreateBudgetDialog
           open={createDialogOpen}

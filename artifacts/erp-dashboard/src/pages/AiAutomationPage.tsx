@@ -14,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { EPErrorState, EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface AutomationStatus {
   todayAiOperations?: number;
@@ -39,6 +40,7 @@ const COVERAGE_COLOR = (pct: number) => {
 };
 
 export default function AiAutomationPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data, isLoading, isError, refetch } = useQuery<AutomationStatus>({
@@ -73,7 +75,7 @@ export default function AiAutomationPage() {
   return (
     <ModulePage
       module="ai"
-      title="AI Avtomatizatsiya"
+      title={t("aiAvtomatizatsiya")}
       icon={<Bot className="h-5 w-5" />}
       actions={
         <Button
@@ -101,7 +103,7 @@ export default function AiAutomationPage() {
                   {isLoading
                     ? <Skeleton className="h-7 w-12 mb-1 rounded-lg" />
                     : <p className="text-2xl font-bold">{data?.todayAiOperations ?? 0}</p>}
-                  <p className="text-xs text-muted-foreground">Bugungi AI operatsiyalar</p>
+                  <p className="text-xs text-muted-foreground">{t("bugungiAiOperatsiyalar")}</p>
                 </div>
               </div>
             </CardContent>
@@ -117,7 +119,7 @@ export default function AiAutomationPage() {
                   {isLoading
                     ? <Skeleton className="h-7 w-12 mb-1 rounded-lg" />
                     : <p className="text-2xl font-bold">{data?.pendingLeadScores ?? 0}</p>}
-                  <p className="text-xs text-muted-foreground">Bahosiz lidlar</p>
+                  <p className="text-xs text-muted-foreground">{t("bahosizLidlar")}</p>
                 </div>
               </div>
             </CardContent>
@@ -133,7 +135,7 @@ export default function AiAutomationPage() {
                   {isLoading
                     ? <Skeleton className="h-7 w-12 mb-1 rounded-lg" />
                     : <p className="text-2xl font-bold">{data?.pendingCandidateScreenings ?? 0}</p>}
-                  <p className="text-xs text-muted-foreground">Tekshirilmagan nomzodlar</p>
+                  <p className="text-xs text-muted-foreground">{t("tekshirilmaganNomzodlar")}</p>
                 </div>
               </div>
             </CardContent>
@@ -146,7 +148,7 @@ export default function AiAutomationPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Joriy AI ishlar
+                {t("joriyAiIshlar")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -157,7 +159,7 @@ export default function AiAutomationPage() {
               ) : runningJobs.length === 0 ? (
                 <div className="flex items-center gap-3 py-4 text-muted-foreground">
                   <CheckCircle className="h-5 w-5 text-[var(--ep-green)]" />
-                  <span className="text-sm">Hozir hech qanday AI ish ishlamayapti</span>
+                  <span className="text-sm">{t("hozirHechQandayAiIsh")}</span>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -165,7 +167,7 @@ export default function AiAutomationPage() {
                     <div key={job} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                       <EPLoader className="shrink-0" />
                       <span className="text-sm font-medium">{job}</span>
-                      <EPStatusPill tone="neutral" className="ml-auto text-xs">Ishlamoqda</EPStatusPill>
+                      <EPStatusPill tone="neutral" className="ml-auto text-xs">{t("ishlamoqda")}</EPStatusPill>
                     </div>
                   ))}
                 </div>
@@ -192,7 +194,7 @@ export default function AiAutomationPage() {
                   ))}
                 </div>
               ) : Object.keys(coverage).length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">Ma'lumot yo'q</p>
+                <p className="text-sm text-muted-foreground py-4">{t("malumotYoq")}</p>
               ) : (
                 <div className="space-y-4">
                   {Object.entries(coverage).map(([key, pctStr]) => {

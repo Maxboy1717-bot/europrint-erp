@@ -234,7 +234,7 @@ export default function DocumentWorkflowPage() {
           )}
           {isAdmin && (
             <TabsTrigger value="admin" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
-              ⚙️ Marshrutlash
+              {t("marshrutlash")}
             </TabsTrigger>
           )}
         </TabsList>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Zap, CheckCircle2, X, AlertTriangle } from "lucide-react";
 import { Lead, STAGE_CONFIG } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeadActionsProps {
   lead: Lead | null;
@@ -18,6 +19,7 @@ interface LeadActionsProps {
 }
 
 export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChange, isStagePending }: LeadActionsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       {/* Quick Actions */}
@@ -32,7 +34,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
                 data-testid="button-convert-lead"
               >
                 <Zap className="h-3.5 w-3.5 mr-1.5" />
-                Dealga o'tkazish
+                {t("dealgaOtkazish")}
               </Button>
               <Button
                 size="sm"
@@ -42,7 +44,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
                 data-testid="button-won-lead"
               >
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                Yutildi
+                {t("yutildi")}
               </Button>
               <Button
                 size="sm"
@@ -52,7 +54,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
                 data-testid="button-lost-lead"
               >
                 <X className="h-3.5 w-3.5 mr-1.5" />
-                Yo'qotildi
+                {t("yoqotildi")}
               </Button>
             </div>
           </CardContent>
@@ -64,7 +66,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2 text-[var(--ep-green)]">
               <CheckCircle2 className="h-4 w-4" />
-              <span className="font-semibold">Bu lid konvertatsiya qilingan!</span>
+              <span className="font-semibold">{t("buLidKonvertatsiyaQilingan")}</span>
             </div>
           </CardContent>
         </Card>
@@ -75,7 +77,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2 text-[var(--ep-red)]">
               <AlertTriangle className="h-5 w-5" />
-              <span className="font-semibold">Bu lid yo'qotilgan.</span>
+              <span className="font-semibold">{t("buLidYoqotilgan")}</span>
             </div>
           </CardContent>
         </Card>
@@ -86,7 +88,7 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <ArrowRight className="h-4 w-4" />
-            Bosqichni o'zgartirish
+            {t("bosqichniOzgartirish")}
           </CardTitle>
         </CardHeader>
         <CardContent>

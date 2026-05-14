@@ -25,6 +25,7 @@ import { DEADLINE_COLUMNS } from "@/components/kanban/types";
 
 import type { KanbanT } from "./KanbanBoardTypes";
 import type { useKanbanBoard } from "@/hooks/useKanbanBoard";
+import { useTranslation } from '@/lib/i18n';
 
 type BoardHook = ReturnType<typeof useKanbanBoard>;
 
@@ -43,6 +44,7 @@ export function EmptyBoardState({
   onQuickStart,
   onCreateBoard,
 }: EmptyBoardStateProps) {
+  const { t } = useTranslation("common");
   return (
     <div
       className="flex flex-col items-center justify-center text-center"
@@ -69,7 +71,7 @@ export function EmptyBoardState({
         {t.empty.selectBoard}
       </h3>
       <p style={{ fontSize: 13, color: "#A0AEC0", marginBottom: 28, maxWidth: 360 }}>
-        Birinchi doskangizni yarating yoki Europrint standart ustunlari bilan tez boshlang
+        {t("birinchiDoskangizniYaratingYokiEuroprint")}
       </p>
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
@@ -142,7 +144,7 @@ export function EmptyBoardState({
       </div>
 
       <p style={{ fontSize: 11, color: "#B0BEC5", marginTop: 16 }}>
-        Tezkor boshlash: Kiruvchi → Rejada → Jarayonda → Tekshiruvda → Bajarildi → Bekor qilindi
+        {t("tezkorBoshlashKiruvchiRejadaJarayonda")}
       </p>
     </div>
   );
@@ -311,7 +313,7 @@ export function BoardContent({
 
   return (
     <div className="flex items-center justify-center h-full text-muted-foreground">
-      <p>Bu ko'rinish hali tayyor emas</p>
+      <p>{t("buKorinishHaliTayyorEmas")}</p>
     </div>
   );
 }

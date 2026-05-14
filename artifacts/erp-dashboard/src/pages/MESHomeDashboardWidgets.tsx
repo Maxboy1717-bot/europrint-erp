@@ -17,6 +17,7 @@ import { Link } from "wouter";
 import type { Session, Downtime, ProductionOrder } from "./MESHomeDashboardTypes";
 import { oeeColor, statusInfo, fmt } from "./MESHomeDashboardTypes";
 import { SectionTitle } from "./MESHomeDashboardSections";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Orders + Downtimes row ────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ export function MesOrdersAndDowntimes({
   downtimes: Downtime[];
   dtLoad: boolean;
 }) {
+  const { t } = useTranslation("common");
   const recentDowntimes = (Array.isArray(downtimes) ? [...downtimes] : [])
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
     .slice(0, 6);
@@ -38,10 +40,10 @@ export function MesOrdersAndDowntimes({
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Package className="w-4 h-4 text-[var(--ep-purple)]" />
-              Faol buyurtmalar
+              {t("faolBuyurtmalar")}
             </CardTitle>
             <Button variant="ghost" size="sm" asChild className="h-7 text-xs">
-              <Link href="/production/orders">Barchasi <ChevronRight className="w-3 h-3 ml-0.5" /></Link>
+              <Link href="/production/orders">{t("Barchasi")}<ChevronRight className="w-3 h-3 ml-0.5" /></Link>
             </Button>
           </div>
         </CardHeader>
@@ -49,7 +51,7 @@ export function MesOrdersAndDowntimes({
           {inProgressOrders.length === 0 ? (
             <div className="text-center py-6 text-sm text-muted-foreground">
               <CheckCircle className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
-              Hozir faol buyurtma yo'q
+              {t("hozirFaolBuyurtmaYoq")}
             </div>
           ) : (
             <div className="space-y-2">
@@ -81,10 +83,10 @@ export function MesOrdersAndDowntimes({
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Clock className="w-4 h-4 text-[var(--ep-yellow)]" />
-              So'nggi to'xtashlar
+              {t("songgiToxtashlar")}
             </CardTitle>
             <Button variant="ghost" size="sm" asChild className="h-7 text-xs">
-              <Link href="/mes/downtimes">Barchasi <ChevronRight className="w-3 h-3 ml-0.5" /></Link>
+              <Link href="/mes/downtimes">{t("Barchasi")}<ChevronRight className="w-3 h-3 ml-0.5" /></Link>
             </Button>
           </div>
         </CardHeader>
@@ -94,7 +96,7 @@ export function MesOrdersAndDowntimes({
           ) : recentDowntimes.length === 0 ? (
             <div className="text-center py-6 text-sm text-muted-foreground">
               <CheckCircle className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
-              To'xtash qayd etilmagan
+              {t("toxtashQaydEtilmagan")}
             </div>
           ) : (
             <div className="space-y-2">
@@ -132,24 +134,24 @@ export function MesActiveSessionsTable({ activeSessions, sessLoad }: { activeSes
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <SectionTitle icon={Activity} title="Faol sessiyalar" sub="Ishlayotgan xodimlar" />
+        <SectionTitle icon={Activity} title={t("faolSessiyalar")} sub="Ishlayotgan xodimlar" />
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/mes/workers">Tayinlashlar <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+          <Link href="/mes/workers">{t("tayinlashlar")}<ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
         </Button>
       </div>
       {sessLoad ? (
         <Skeleton className="h-40 w-full rounded-lg" />
       ) : activeSessions.length === 0 ? (
-        <div className="text-center py-8 text-[13px] text-muted-foreground">Faol sessiya yo'q</div>
+        <div className="text-center py-8 text-[13px] text-muted-foreground">{t("faolSessiyaYoq")}</div>
       ) : (
         <div className="rounded-lg border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/50 text-left">
-                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground">Uskuna</th>
-                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground">Buyurtma</th>
-                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground">Holat</th>
-                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground text-right">Ish vaqti</th>
+                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground">{t("Uskuna")}</th>
+                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground">{t("Buyurtma")}</th>
+                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground">{t("status28")}</th>
+                <th className="px-4 py-2 text-xs font-semibold text-muted-foreground text-right">{t("ishVaqti")}</th>
                 <th className="px-4 py-2 text-xs font-semibold text-muted-foreground text-right">OEE</th>
               </tr>
             </thead>
@@ -190,6 +192,7 @@ export function MesActiveSessionsTable({ activeSessions, sessLoad }: { activeSes
 // ─── Quick Links ───────────────────────────────────────────────────────────────
 
 export function MesQuickLinks() {
+  const { t } = useTranslation("common");
   const links = [
     { label: "Ish markazlari", icon: Factory,      href: "/mes/work-centers",  color: "text-[var(--ep-blue)]" },
     { label: "Mahsulotlar",    icon: Package,       href: "/mes/products",       color: "text-[var(--ep-purple)]" },
@@ -201,7 +204,7 @@ export function MesQuickLinks() {
 
   return (
     <section>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Tezkor havolalar</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("tezkorHavolalar")}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {(Array.isArray(links) ? links : []).map(link => (
           <Link key={link.href} href={link.href}>

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { INCIDENT_TYPE_LABEL, type VisitorForm, type IncidentForm, type PPEForm } from "./SecurityDashboardTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ---------------------------------------------------------------------------
 // Visitor dialog
 // ---------------------------------------------------------------------------
@@ -26,43 +27,44 @@ interface VisitorDialogProps {
 }
 
 export function VisitorDialog({ open, onOpenChange, form, onChange, isPending, onSubmit }: VisitorDialogProps) {
+  const { t } = useTranslation("common");
   const disabled = isPending || !form.fullName || !form.purpose || !form.hostEmployeeName;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi Tashrif</DialogTitle>
-          <DialogDescription>Tashrifchini ro'yxatdan o'tkazing</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiTashrif")}</DialogTitle>
+          <DialogDescription>{t("tashrifchiniRoyxatdanOtkazing")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">To'liq ismi *</label>
+            <label className="text-sm font-medium">{t("toliqIsmi1")}</label>
             <Input value={form.fullName} onChange={e => onChange({ fullName: e.target.value })}
-              placeholder="Abdullayev Bobur" data-testid="input-visitor-name" />
+              placeholder={t("abdullayevBobur")} data-testid="input-visitor-name" />
           </div>
           <div>
-            <label className="text-sm font-medium">Kompaniya</label>
+            <label className="text-sm font-medium">{t("company")}</label>
             <Input value={form.company} onChange={e => onChange({ company: e.target.value })}
-              placeholder="Kompaniya nomi" data-testid="input-visitor-company" />
+              placeholder={t("kompaniyaNomi1")} data-testid="input-visitor-company" />
           </div>
           <div>
-            <label className="text-sm font-medium">Maqsad *</label>
+            <label className="text-sm font-medium">{t("maqsad")}</label>
             <Input value={form.purpose} onChange={e => onChange({ purpose: e.target.value })}
-              placeholder="Yig'ilish, auditorlik..." data-testid="input-visitor-purpose" />
+              placeholder={t("yigilishAuditorlik")} data-testid="input-visitor-purpose" />
           </div>
           <div>
-            <label className="text-sm font-medium">Mezboni *</label>
+            <label className="text-sm font-medium">{t("mezboni")}</label>
             <Input value={form.hostEmployeeName} onChange={e => onChange({ hostEmployeeName: e.target.value })}
-              placeholder="Qaysi xodimga keldi" data-testid="input-visitor-host" />
+              placeholder={t("qaysiXodimgaKeldi")} data-testid="input-visitor-host" />
           </div>
           <div>
-            <label className="text-sm font-medium">Nishon raqami</label>
+            <label className="text-sm font-medium">{t("nishonRaqami")}</label>
             <Input value={form.badgeNumber} onChange={e => onChange({ badgeNumber: e.target.value })}
               placeholder="V-001" data-testid="input-visitor-badge" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button disabled={disabled} data-testid="button-submit-visitor" onClick={onSubmit}>
             {isPending && <EPLoader className="w-4 h-4 mr-2" />}Qayd etish
           </Button>
@@ -87,12 +89,12 @@ export function IncidentDialog({ open, onOpenChange, form, onChange, onSubmit }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Hodisa Qayd Etish</DialogTitle>
-          <DialogDescription>Xavfsizlik hodisasini qayd eting</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("hodisaQaydEtish1")}</DialogTitle>
+          <DialogDescription>{t("xavfsizlikHodisasiniQaydEting")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Hodisa turi *</label>
+            <label className="text-sm font-medium">{t("hodisaTuri1")}</label>
             <Select value={form.type} onValueChange={v => onChange({ type: v })}>
               <SelectTrigger data-testid="select-incident-type" className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -103,35 +105,35 @@ export function IncidentDialog({ open, onOpenChange, form, onChange, onSubmit }:
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium">Tavsif *</label>
+            <label className="text-sm font-medium">{t("tavsif")}</label>
             <Textarea value={form.description} onChange={e => onChange({ description: e.target.value })}
-              placeholder="Hodisani batafsil tavsiflang" data-testid="input-incident-description" rows={3} />
+              placeholder={t("hodisaniBatafsilTavsiflang")} data-testid="input-incident-description" rows={3} />
           </div>
           <div>
-            <label className="text-sm font-medium">Joylasuv *</label>
+            <label className="text-sm font-medium">{t("joylasuv")}</label>
             <Input value={form.location} onChange={e => onChange({ location: e.target.value })}
-              placeholder="Ombor, Sex-1..." data-testid="input-incident-location" />
+              placeholder={t("omborSex1")} data-testid="input-incident-location" />
           </div>
           <div>
-            <label className="text-sm font-medium">Darajasi</label>
+            <label className="text-sm font-medium">{t("darajasi")}</label>
             <Select value={form.severity} onValueChange={v => onChange({ severity: v })}>
               <SelectTrigger data-testid="select-incident-severity" className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="high">Yuqori</SelectItem>
-                <SelectItem value="medium">O'rta</SelectItem>
-                <SelectItem value="low">Past</SelectItem>
+                <SelectItem value="high">{t("high")}</SelectItem>
+                <SelectItem value="medium">{t("medium")}</SelectItem>
+                <SelectItem value="low">{t("low")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium">Qayd etgan *</label>
+            <label className="text-sm font-medium">{t("qaydEtgan")}</label>
             <Input value={form.reportedBy} onChange={e => onChange({ reportedBy: e.target.value })}
-              placeholder="Kim xabar berdi" data-testid="input-incident-reporter" />
+              placeholder={t("kimXabarBerdi")} data-testid="input-incident-reporter" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
-          <Button onClick={onSubmit} data-testid="button-submit-incident">Qayd etish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
+          <Button onClick={onSubmit} data-testid="button-submit-incident">{t("qaydEtish")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -160,19 +162,19 @@ export function PPEDialog({ open, onOpenChange, form, onChange, onSubmit }: PPED
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">PPE Tekshiruvi</DialogTitle>
-          <DialogDescription>Xodim shaxsiy himoya vositalarini tekshiring</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("ppeTekshiruvi")}</DialogTitle>
+          <DialogDescription>{t("xodimShaxsiyHimoyaVositalariniTekshiring")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Xodim ismi *</label>
+            <label className="text-sm font-medium">{t("xodimIsmi1")}</label>
             <Input value={form.employeeName} onChange={e => onChange({ employeeName: e.target.value })}
-              placeholder="Ismi Familiyasi" data-testid="input-ppe-employee" />
+              placeholder={t("ismiFamiliyasi")} data-testid="input-ppe-employee" />
           </div>
           <div>
-            <label className="text-sm font-medium">Bo'lim *</label>
+            <label className="text-sm font-medium">{t("bolim2")}</label>
             <Input value={form.department} onChange={e => onChange({ department: e.target.value })}
-              placeholder="Ishlab chiqarish, Ombor..." data-testid="input-ppe-department" />
+              placeholder={t("ishlabChiqarishOmbor")} data-testid="input-ppe-department" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {PPE_ITEMS.map(item => (
@@ -185,14 +187,14 @@ export function PPEDialog({ open, onOpenChange, form, onChange, onSubmit }: PPED
             ))}
           </div>
           <div>
-            <label className="text-sm font-medium">Izoh</label>
+            <label className="text-sm font-medium">{t("Izoh")}</label>
             <Input value={form.notes} onChange={e => onChange({ notes: e.target.value })}
-              placeholder="Muammo bo'lsa yozing" data-testid="input-ppe-notes" />
+              placeholder={t("muammoBolsaYozing")} data-testid="input-ppe-notes" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
-          <Button onClick={onSubmit} data-testid="button-submit-ppe">Saqlash</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
+          <Button onClick={onSubmit} data-testid="button-submit-ppe">{t("Saqlash")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

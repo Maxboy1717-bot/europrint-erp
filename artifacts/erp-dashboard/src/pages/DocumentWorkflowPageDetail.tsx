@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
 import { WorkflowDoc, DocDetail, STATUS_COLORS, STATUS_LABEL_KEYS } from "./DocumentWorkflowPageTypes";
 import { DeadlineBadge, docTypeLabel } from "./DocumentWorkflowPageHelpers";
+import { useTranslation } from '@/lib/i18n';
 
 type TFn = (key: string) => string;
 
@@ -29,6 +30,7 @@ export function DocDetailTab({
   approveIsPending, rejectIsPending, t,
   onApproveNotesChange, onApprove, onRejectSubmit, onRejectReasonChange,
 }: DocDetailTabProps) {
+  const { t } = useTranslation("common");
   const doc = docDetail.document;
 
   return (
@@ -44,7 +46,7 @@ export function DocDetailTab({
                 <Badge className={`${STATUS_COLORS[doc?.status ?? ""] ?? "bg-muted"} text-white`}>
                   {doc?.status ? t(STATUS_LABEL_KEYS[doc.status] ?? doc.status) : "—"}
                 </Badge>
-                {doc?.is_immutable && <Badge className="bg-[var(--ep-purple)] text-white">🔒 O'zgarmas</Badge>}
+                {doc?.is_immutable && <Badge className="bg-[var(--ep-purple)] text-white">{t("ozgarmas")}</Badge>}
               </div>
             </CardTitle>
           </CardHeader>
@@ -95,8 +97,8 @@ export function DocDetailTab({
                   <div className="flex-1">
                     <div className="text-foreground text-sm font-medium flex items-center gap-2 flex-wrap">
                       {step.assignee_name || step.assignee_role || t("reviewer")}
-                      {step.status === "unassigned" && <Badge className="bg-[var(--ep-primary)] text-white text-xs">⚠ Tayinlanmagan</Badge>}
-                      {step.escalated_at && <Badge className="bg-red-900 text-white text-xs">🚨 Eskalatsiya qilindi</Badge>}
+                      {step.status === "unassigned" && <Badge className="bg-[var(--ep-primary)] text-white text-xs">{t("tayinlanmagan1")}</Badge>}
+                      {step.escalated_at && <Badge className="bg-red-900 text-white text-xs">{t("eskalatsiyaQilindi")}</Badge>}
                       {step.reminder_1_sent && !step.reminder_2_sent && <Badge className="bg-yellow-800 text-white text-xs">📨 1-eslatma</Badge>}
                       {step.reminder_2_sent && !step.escalated_at && <Badge className="bg-orange-800 text-white text-xs">📨📨 2-eslatma</Badge>}
                     </div>
@@ -144,7 +146,7 @@ export function DocDetailTab({
               ))}
               {(!docDetail.steps || docDetail.steps.length === 0) && (
                 <div className="text-muted-foreground text-sm text-center py-4">
-                  Tasdiqlash bosqichi yo'q — avtomatik tasdiqlangan
+                  {t("tasdiqlashBosqichiYoqAvtomatikTasdiqlangan")}
                 </div>
               )}
             </div>
@@ -155,7 +157,7 @@ export function DocDetailTab({
         {Array.isArray(docDetail.versions) && docDetail.versions.length > 0 && (
           <Card className="bg-card border-border md:col-span-2">
             <CardHeader>
-              <CardTitle className="text-foreground text-base">📜 Versiya tarixi</CardTitle>
+              <CardTitle className="text-foreground text-base">{t("versiyaTarixi")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">

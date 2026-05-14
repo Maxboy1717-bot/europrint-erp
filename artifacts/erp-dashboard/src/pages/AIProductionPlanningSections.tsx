@@ -8,12 +8,14 @@ import { Brain, Cpu, ShieldCheck, AlertTriangle, TrendingUp, ChevronRight } from
 import { AiPlan, DashboardData, getConfidenceColor, STATUS_MAP } from "./AIProductionPlanningTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── StatusBadge ──────────────────────────────────────────────────────────────
 interface StatusBadgeProps {
   status: string;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const { t } = useTranslation("common");
   const s = STATUS_MAP[status] ?? { label: status, cls: "bg-muted/60 text-foreground" };
   return (
     <Badge
@@ -85,7 +87,7 @@ export function PlansGrid({ plans, isLoading, isGenerating, onPlanClick, onGener
       <div className="bg-card rounded-lg p-12 text-center">
         <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
         <p className="text-muted-foreground mb-4" data-testid="text-no-plans">
-          Hali reja yaratilmagan
+          {t("haliRejaYaratilmagan")}
         </p>
         <Button onClick={onGenerate} disabled={isGenerating} data-testid="button-generate-first">
           {isGenerating ? (
@@ -114,18 +116,18 @@ export function PlansGrid({ plans, isLoading, isGenerating, onPlanClick, onGener
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Sana</span>
+              <span className="text-muted-foreground">{t("date")}</span>
               <span className="font-medium">{plan.planDate}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Buyurtmalar</span>
+              <span className="text-muted-foreground">{t("buyurtmalar")}</span>
               <span className="font-medium" data-testid={`text-orders-${plan.id}`}>
                 {plan.totalOrders ?? 0}
               </span>
             </div>
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-muted-foreground">Ishonch</span>
+                <span className="text-muted-foreground">{t("ishonch")}</span>
                 <span
                   className={cn("font-bold", getConfidenceColor(plan.confidenceScore))}
                   data-testid={`text-confidence-${plan.id}`}
@@ -139,12 +141,12 @@ export function PlansGrid({ plans, isLoading, isGenerating, onPlanClick, onGener
               {plan.autoApproved ? (
                 <div className="flex items-center gap-1 text-[var(--ep-green)] text-xs">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Avto-tasdiqlangan
+                  {t("avtoTasdiqlangan")}
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-[var(--ep-yellow)] text-xs">
                   <AlertTriangle className="h-3.5 w-3.5" />
-                  Qo'lda tasdiq kerak
+                  {t("qoldaTasdiqKerak")}
                 </div>
               )}
               <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
@@ -170,7 +172,7 @@ export function RecommendationsTab({ plans }: RecommendationsTabProps) {
         className="text-center py-12 text-[13px] text-muted-foreground"
         data-testid="text-no-recommendations"
       >
-        Tavsiyalar mavjud emas
+        {t("tavsiyalarMavjudEmas")}
       </div>
     );
   }

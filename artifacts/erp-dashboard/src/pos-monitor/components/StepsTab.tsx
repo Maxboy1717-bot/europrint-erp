@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { movementsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface Confirmation {
   id: number; movementId: number; step: string; userId: number;
@@ -62,6 +63,7 @@ function ConfirmCard({ c }: { c: Confirmation }) {
 }
 
 export function StepsTab({ movementId }: { movementId: number }) {
+  const { t } = useTranslation("common");
   const [confirmations, setConfirmations] = useState<Confirmation[]>([]);
   const [history,       setHistory]       = useState<HistEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,12 +82,12 @@ export function StepsTab({ movementId }: { movementId: number }) {
 
   useEffect(() => { void load(); }, [load]);
 
-  if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>;
+  if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda1")}</div>;
 
   return (
     <div className="pos-card">
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <div style={{ fontWeight: 600, fontSize: 15 }}>✅ Tasdiqlash bosqichlari</div>
+        <div style={{ fontWeight: 600, fontSize: 15 }}>{t("tasdiqlashBosqichlari")}</div>
         <div style={{ display: "flex", gap: 4 }}>
           <button className={`pos-btn ${view === "confirmations" ? "pos-btn-primary" : "pos-btn-ghost"}`} style={{ fontSize: 11, padding: "3px 10px" }} onClick={() => setView("confirmations")}>
             Imzolar ({confirmations.length})
@@ -99,13 +101,13 @@ export function StepsTab({ movementId }: { movementId: number }) {
 
       {view === "confirmations" && (
         confirmations.length === 0
-          ? <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Tasdiqlash yozuvlari mavjud emas</div>
+          ? <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>{t("tasdiqlashYozuvlariMavjudEmas")}</div>
           : confirmations.map(c => <ConfirmCard key={c.id} c={c} />)
       )}
 
       {view === "history" && (
         history.length === 0
-          ? <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>Holat o'zgarishlari mavjud emas</div>
+          ? <div style={{ textAlign: "center", padding: 24, color: "var(--pos-text-muted)", fontSize: 13 }}>{t("holatOzgarishlariMavjudEmas")}</div>
           : (
             <div className="pos-timeline">
               {history.map(h => (

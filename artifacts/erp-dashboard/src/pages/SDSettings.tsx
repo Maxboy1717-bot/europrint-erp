@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Settings, Save, RotateCcw } from "lucide-react";
 import { fmt } from "@/lib/sd-helpers";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const SETTING_GROUPS = [
   {
@@ -71,6 +72,7 @@ const SETTING_GROUPS = [
 ];
 
 export default function SDSettings() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -124,7 +126,7 @@ export default function SDSettings() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-        <div className="text-center py-12 text-[13px] text-muted-foreground">Yuklanmoqda...</div>
+        <div className="text-center py-12 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>
       </div>
     );
   }
@@ -134,9 +136,9 @@ export default function SDSettings() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">CRM & Sotuv Sozlamalari</b></>}
-        title="CRM & Sotuv Sozlamalari"
-        subtitle="Narx formulasi parametrlari — faqat super admin o'zgartiradi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("crmSotuvSozlamalari")}</b></>}
+        title={t("crmSotuvSozlamalari")}
+        subtitle={t("narxFormulasiParametrlariFaqatSuper")}
       />
         </div>
         <div className="flex gap-3">
@@ -147,7 +149,7 @@ export default function SDSettings() {
               data-testid="btn-reset-settings"
               className="rounded-lg border-border text-foreground hover:bg-muted gap-2"
             >
-              <RotateCcw className="w-4 h-4" />Bekor
+              <RotateCcw className="w-4 h-4" />{t("Bekor")}
             </Button>
           )}
           <Button
@@ -203,7 +205,7 @@ export default function SDSettings() {
                       />
                       {changed.has(field.key) && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold text-primary uppercase tracking-tighter">O'zgardi</span>
+                          <span className="text-[10px] font-bold text-primary uppercase tracking-tighter">{t("ozgardi")}</span>
                           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                         </div>
                       )}
@@ -211,7 +213,7 @@ export default function SDSettings() {
                     
                     {settings?.[field.key] !== undefined && changed.has(field.key) && (
                       <p className="text-[11px] font-medium text-muted-foreground mt-1">
-                        Avvalgi qiymat: <span className="text-foreground">{fmt(settings[field.key])} so'm</span>
+                        {t("avvalgiQiymat")}<span className="text-foreground">{fmt(settings[field.key])} so'm</span>
                       </p>
                     )}
                   </div>
@@ -225,19 +227,19 @@ export default function SDSettings() {
       <div className="p-6 bg-muted/40 rounded-xl border border-border/30 space-y-3">
         <div className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
           <div className="w-1 h-4 bg-primary rounded-full" />
-          Eslatma
+          {t("eslatma")}
         </div>
         <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <li className="text-xs text-muted-foreground leading-relaxed bg-card p-3 rounded-xl border border-border/20">
-            <span className="font-bold text-primary block mb-1">Mavjud ma'lumotlar:</span>
-            Sozlamalar o'zgarganda mavjud taklifnomalar va buyurtmalar ta'sirlanmaydi
+            <span className="font-bold text-primary block mb-1">{t("mavjudMalumotlar")}</span>
+            {t("sozlamalarOzgargandaMavjudTaklifnomalarVa")}
           </li>
           <li className="text-xs text-muted-foreground leading-relaxed bg-card p-3 rounded-xl border border-border/20">
-            <span className="font-bold text-primary block mb-1">Yangi hisob-kitoblar:</span>
-            Faqat yangi taklifnomalar yangi narxlar bilan hisoblanadi
+            <span className="font-bold text-primary block mb-1">{t("yangiHisobKitoblar")}</span>
+            {t("faqatYangiTaklifnomalarYangiNarxlar")}
           </li>
           <li className="text-xs text-muted-foreground leading-relaxed bg-card p-3 rounded-xl border border-border/20">
-            <span className="font-bold text-primary block mb-1">Xavfsizlik:</span>
+            <span className="font-bold text-primary block mb-1">{t("xavfsizlik1")}</span>
             Har bir o'zgarish tizimda logga yoziladi (kim, qachon, nimani)
           </li>
         </ul>

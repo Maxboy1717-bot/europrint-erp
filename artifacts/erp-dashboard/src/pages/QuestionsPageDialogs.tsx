@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslation } from '@/lib/i18n';
 import {
   DIFFICULTY_MAP,
   TYPE_LABELS,
@@ -51,26 +52,27 @@ export function CreateQuestionDialog({
   onSubmit,
   isSubmitPending,
 }: CreateQuestionDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi savol</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiSavol")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>Savol matni *</Label>
+            <Label>{t("savolMatni1")}</Label>
             <Textarea
               value={form.question_text}
               onChange={e => onFormChange({ ...form, question_text: e.target.value })}
-              placeholder="Savol..."
+              placeholder={t("savol1")}
               rows={3}
               data-testid="input-question-text"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label>Tur</Label>
+              <Label>{t("tur")}</Label>
               <select
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                 value={form.question_type}
@@ -83,7 +85,7 @@ export function CreateQuestionDialog({
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Qiyinlik</Label>
+              <Label>{t("qiyinlik")}</Label>
               <select
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                 value={form.difficulty}
@@ -96,7 +98,7 @@ export function CreateQuestionDialog({
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Ball</Label>
+              <Label>{t("ball")}</Label>
               <Input
                 type="number"
                 value={form.points}
@@ -107,7 +109,7 @@ export function CreateQuestionDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Test ID</Label>
+            <Label>{t("testId1")}</Label>
             <Input
               value={form.test_id}
               onChange={e => onFormChange({ ...form, test_id: e.target.value })}
@@ -118,7 +120,7 @@ export function CreateQuestionDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor
+            {t("Bekor")}
           </Button>
           <Button
             onClick={onSubmit}
@@ -150,18 +152,18 @@ export function DeleteQuestionAlert({
     <AlertDialog open={deleteId !== null} onOpenChange={open => !open && onOpenChange(false)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Savolni o'chirish</AlertDialogTitle>
+          <AlertDialogTitle>{t("savolniOchirish")}</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu savolni o'chirishni tasdiqlaysizmi?
+            {t("buSavolniOchirishniTasdiqlaysizmi")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Bekor</AlertDialogCancel>
+          <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-destructive-foreground"
             onClick={onConfirm}
           >
-            O'chirish
+            {t("delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -14,6 +14,7 @@ import type {
 } from "./analytics-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface AssessmentTabProps {
   difficultyData: DifficultyAnalysis | undefined;
@@ -34,55 +35,56 @@ export function AssessmentTab({
   itemAnalysis,
   COLORS,
 }: AssessmentTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'rtacha Qiyinlik</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("ortachaQiyinlik")}</CardTitle>
             <Target className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{difficultyData?.averageDifficulty || 0}%</div>
-            <p className="text-xs text-muted-foreground">To'g'ri javob berish foizi</p>
+            <p className="text-xs text-muted-foreground">{t("togriJavobBerishFoizi")}</p>
             <Progress value={difficultyData?.averageDifficulty || 0} className="h-2 mt-2" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Discriminatsiya</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("discriminatsiya")}</CardTitle>
             <TrendingUp className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{discriminationData?.averageDiscrimination || 0}%</div>
-            <p className="text-xs text-muted-foreground">O'rtacha farqlash indeksi</p>
+            <p className="text-xs text-muted-foreground">{t("ortachaFarqlashIndeksi")}</p>
             <Progress value={Math.abs(discriminationData?.averageDiscrimination || 0)} className="h-2 mt-2" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">KR-20 Ishonchlilik</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("kr20Ishonchlilik")}</CardTitle>
             <Award className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reliabilityData?.averageReliability || 0}%</div>
-            <p className="text-xs text-muted-foreground">Test ichki izchilligi</p>
+            <p className="text-xs text-muted-foreground">{t("testIchkiIzchilligi")}</p>
             <Progress value={reliabilityData?.averageReliability || 0} className="h-2 mt-2" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jami Savollar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("jamiSavollar")}</CardTitle>
             <BookOpen className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{itemAnalysis?.totalQuestions || 0}</div>
-            <p className="text-xs text-muted-foreground">Tahlil qilingan savollar</p>
+            <p className="text-xs text-muted-foreground">{t("tahlilQilinganSavollar")}</p>
             <p className="text-xs text-muted-foreground mt-1">
               {itemAnalysis?.totalAttempts || 0} urinish
             </p>
@@ -94,13 +96,13 @@ export function AssessmentTab({
         <Card>
           <CardHeader>
             <CardTitle>📊 Savol Qiyinligi (p-value)</CardTitle>
-            <CardDescription>Eng oson va eng qiyin savollar</CardDescription>
+            <CardDescription>{t("engOsonVaEngQiyin")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {difficultyData ? (
               <>
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-[var(--ep-green)]">✅ Eng Oson Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-green)]">{t("engOsonSavollar")}</h4>
                   {difficultyData.easiest?.slice(0, 3).map((q: QuestionAnalysisItem, idx: number) => (
                     <div key={q.questionId} className="flex items-center justify-between p-2 rounded border">
                       <div className="flex-1 min-w-0">
@@ -113,11 +115,11 @@ export function AssessmentTab({
                         {q.pValue}%
                       </Badge>
                     </div>
-                  )) || <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>}
+                  )) || <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-[var(--ep-red)]">❌ Eng Qiyin Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-red)]">{t("engQiyinSavollar")}</h4>
                   {difficultyData.hardest?.slice(0, 3).map((q: QuestionAnalysisItem) => (
                     <div key={q.questionId} className="flex items-center justify-between p-2 rounded border">
                       <div className="flex-1 min-w-0">
@@ -130,7 +132,7 @@ export function AssessmentTab({
                         {q.pValue}%
                       </Badge>
                     </div>
-                  )) || <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>}
+                  )) || <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>}
                 </div>
 
                 {itemAnalysis?.difficultyDistribution && (
@@ -159,7 +161,7 @@ export function AssessmentTab({
               </>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot yuklanmoqda...
+                {t("malumotYuklanmoqda")}
               </div>
             )}
           </CardContent>
@@ -167,14 +169,14 @@ export function AssessmentTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>🎯 Discriminatsiya Indeksi</CardTitle>
+            <CardTitle>{t("discriminatsiyaIndeksi")}</CardTitle>
             <CardDescription>Savol farqlash qobiliyati (top 27% vs bottom 27%)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {discriminationData ? (
               <>
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-[var(--ep-green)]">⭐ Eng Yaxshi Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-green)]">{t("engYaxshiSavollar")}</h4>
                   {discriminationData.best?.slice(0, 3).map((q: DiscriminationItem) => (
                     <div key={q.questionId} className="space-y-1 p-2 rounded border">
                       <div className="flex items-center justify-between">
@@ -186,11 +188,11 @@ export function AssessmentTab({
                         <span>Bottom 27%: {q.bottomCorrect}%</span>
                       </div>
                     </div>
-                  )) || <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>}
+                  )) || <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-[var(--ep-red)]">⚠️ Eng Zaif Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-red)]">{t("engZaifSavollar")}</h4>
                   {discriminationData.worst?.slice(0, 3).map((q: DiscriminationItem) => (
                     <div key={q.questionId} className="space-y-1 p-2 rounded border">
                       <div className="flex items-center justify-between">
@@ -204,7 +206,7 @@ export function AssessmentTab({
                         <span>Bottom 27%: {q.bottomCorrect}%</span>
                       </div>
                     </div>
-                  )) || <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>}
+                  )) || <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>}
                 </div>
 
                 <div className="glass-chart">
@@ -226,7 +228,7 @@ export function AssessmentTab({
               </>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot yuklanmoqda...
+                {t("malumotYuklanmoqda")}
               </div>
             )}
           </CardContent>
@@ -235,8 +237,8 @@ export function AssessmentTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🔬 KR-20 Ishonchlilik Analizi</CardTitle>
-          <CardDescription>Har bir test uchun ichki izchillik koeffitsienti</CardDescription>
+          <CardTitle>{t("kr20IshonchlilikAnalizi")}</CardTitle>
+          <CardDescription>{t("harBirTestUchunIchki")}</CardDescription>
         </CardHeader>
         <CardContent>
           {reliabilityData?.tests && reliabilityData.tests.length > 0 ? (
@@ -287,7 +289,7 @@ export function AssessmentTab({
             </>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Test ma'lumotlari topilmadi
+              {t("testMalumotlariTopilmadi")}
             </div>
           )}
         </CardContent>

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ApplicationQuestion, Department, Position } from "./ApplicationsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Question builder row ─────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ interface QuestionRowProps {
 }
 
 export function QuestionRow({ question: q, index, onUpdate, onRemove }: QuestionRowProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="p-4">
       <div className="space-y-3">
@@ -65,8 +67,8 @@ export function QuestionRow({ question: q, index, onUpdate, onRemove }: Question
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="text">Matn</SelectItem>
-              <SelectItem value="choice">Ko'p tanlovli</SelectItem>
+              <SelectItem value="text">{t("matn")}</SelectItem>
+              <SelectItem value="choice">{t("kopTanlovli")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -77,7 +79,7 @@ export function QuestionRow({ question: q, index, onUpdate, onRemove }: Question
               onChange={(e) => onUpdate(q.id, "required", e.target.checked)}
               data-testid={`checkbox-question-required-${index}`}
             />
-            <span className="text-sm">Majburiy</span>
+            <span className="text-sm">{t("majburiy")}</span>
           </label>
         </div>
 
@@ -151,8 +153,8 @@ export function CreateFormCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Yangi ariza shablon</CardTitle>
-        <CardDescription>Xodimlar to'ldiradigan ariza shablonini yarating</CardDescription>
+        <CardTitle>{t("yangiArizaShablon")}</CardTitle>
+        <CardDescription>{t("xodimlarToldiradiganArizaShabloniniYarating")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -163,7 +165,7 @@ export function CreateFormCard({
                 id="title"
                 value={title}
                 onChange={(e) => onTitleChange(e.target.value)}
-                placeholder="Masalan: Ta'til arizasi"
+                placeholder={t("masalanTatilArizasi")}
                 data-testid="input-application-title"
               />
             </div>
@@ -186,7 +188,7 @@ export function CreateFormCard({
                 id="description"
                 value={description}
                 onChange={(e) => onDescriptionChange(e.target.value)}
-                placeholder="Ariza haqida qisqacha ma'lumot..."
+                placeholder={t("arizaHaqidaQisqachaMalumot")}
                 rows={3}
                 data-testid="textarea-application-description"
               />
@@ -212,10 +214,10 @@ export function CreateFormCard({
                 onValueChange={(val) => onDepartmentChange(val === "all" ? "" : val)}
               >
                 <SelectTrigger data-testid="select-department" className="h-9">
-                  <SelectValue placeholder="Bo'limni tanlang" />
+                  <SelectValue placeholder={t("bolimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barcha bo'limlar</SelectItem>
+                  <SelectItem value="all">{t("barchaBolimlar")}</SelectItem>
                   {(Array.isArray(departments) ? departments : []).map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -231,10 +233,10 @@ export function CreateFormCard({
                 onValueChange={(val) => onPositionChange(val === "all" ? "" : val)}
               >
                 <SelectTrigger data-testid="select-position" className="h-9">
-                  <SelectValue placeholder="Lavozimni tanlang" />
+                  <SelectValue placeholder={t("lavozimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barcha lavozimlar</SelectItem>
+                  <SelectItem value="all">{t("barchaLavozimlar")}</SelectItem>
                   {(Array.isArray(positions) ? positions : []).map((pos) => (
                     <SelectItem key={pos.id} value={pos.id}>
                       {pos.name}
@@ -250,7 +252,7 @@ export function CreateFormCard({
                 type="number"
                 min="0"
                 step="1"
-                placeholder="Masalan: 3 ish kuni"
+                placeholder={t("masalan3IshKuni")}
                 value={dueDays}
                 onChange={(e) =>
                   onDueDaysChange(e.target.value ? parseInt(e.target.value) : "")
@@ -262,7 +264,7 @@ export function CreateFormCard({
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>Savollar *</Label>
+              <Label>{t("savollar")}</Label>
               <Button
                 type="button"
                 onClick={onAddQuestion}
@@ -270,7 +272,7 @@ export function CreateFormCard({
                 data-testid="button-add-question"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Savol qo'shish
+                {t("savolQoshish")}
               </Button>
             </div>
 

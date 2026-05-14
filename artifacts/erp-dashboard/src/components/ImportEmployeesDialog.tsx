@@ -19,6 +19,7 @@ import { Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslation } from '@/lib/i18n';
 
 interface ImportEmployeesDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ export function ImportEmployeesDialog({
   open,
   onOpenChange,
 }: ImportEmployeesDialogProps) {
+  const { t } = useTranslation("common");
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
 
@@ -123,9 +125,9 @@ export function ImportEmployeesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Xodimlarni import qilish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("xodimlarniImportQilish")}</DialogTitle>
           <DialogDescription>
-            Excel yoki CSV fayl orqali xodimlarni ommaviy import qilish
+            {t("excelYokiCsvFaylOrqali")}
           </DialogDescription>
         </DialogHeader>
 
@@ -133,7 +135,7 @@ export function ImportEmployeesDialog({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Shablon faylni yuklab olib, ma'lumotlarni to'ldiring va yuklang
+              {t("shablonFaylniYuklabOlibMalumotlarni")}
             </AlertDescription>
           </Alert>
 
@@ -144,11 +146,11 @@ export function ImportEmployeesDialog({
             data-testid="button-download-template"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            Shablon faylni yuklab olish
+            {t("shablonFaylniYuklabOlish")}
           </Button>
 
           <div className="space-y-1">
-          <Label htmlFor="file">Fayl tanlash</Label>
+          <Label htmlFor="file">{t("faylTanlash")}</Label>
             <Input
               id="file"
               type="file"
@@ -170,7 +172,7 @@ export function ImportEmployeesDialog({
               disabled={uploadMutation.isPending}
               data-testid="button-cancel-import"
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={handleUpload}

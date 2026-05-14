@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, AlertTriangle } from "lucide-react";
 import { AttendanceRecord, DisciplineRecord } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface AttendanceDisciplineTablesProps {
   attendance: AttendanceRecord[];
@@ -27,6 +28,7 @@ export function AttendanceDisciplineTables({
   onOpenAttendanceDialog,
   onOpenDisciplineDialog,
 }: AttendanceDisciplineTablesProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Attendance Table */}
@@ -35,21 +37,21 @@ export function AttendanceDisciplineTables({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              <CardTitle>Davomat</CardTitle>
+              <CardTitle>{t("davomat")}</CardTitle>
             </div>
             <Button size="sm" onClick={onOpenAttendanceDialog} data-testid="button-add-attendance">
-              Davomat qo'shish
+              {t("davomatQoshish")}
             </Button>
           </div>
-          <CardDescription>Oxirgi davomat yozuvlari</CardDescription>
+          <CardDescription>{t("oxirgiDavomatYozuvlari")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead>Izoh</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead>{t("Izoh")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -68,7 +70,7 @@ export function AttendanceDisciplineTables({
               {attendance.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
-                    Ma'lumot topilmadi
+                    {t("noData")}
                   </TableCell>
                 </TableRow>
               )}
@@ -83,21 +85,21 @@ export function AttendanceDisciplineTables({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              <CardTitle>Intizom</CardTitle>
+              <CardTitle>{t("intizom")}</CardTitle>
             </div>
             <Button size="sm" variant="outline" onClick={onOpenDisciplineDialog} data-testid="button-add-discipline">
-              Intizom yozuvi
+              {t("intizomYozuvi")}
             </Button>
           </div>
-          <CardDescription>Rag'bat va choralar</CardDescription>
+          <CardDescription>{t("ragbatVaChoralar")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>Tavsif</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("progress.description")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -116,7 +118,7 @@ export function AttendanceDisciplineTables({
               {discipline.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
-                    Ma'lumot topilmadi
+                    {t("noData")}
                   </TableCell>
                 </TableRow>
               )}

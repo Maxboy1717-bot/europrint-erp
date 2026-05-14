@@ -28,6 +28,7 @@ import { WarehouseHub12StockOpsTab } from "./WarehouseHub12StockOpsTab";
 import { WarehouseHub12MiddleTabs } from "./WarehouseHub12MiddleTabs";
 import { WarehouseHub12ReportsTab } from "./WarehouseHub12ReportsTab";
 import { EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── 9 ta standart ombor — DB'da seed bo'lmasa ham frontend ishlaydi ─────
 const DEFAULT_WAREHOUSES: WarehouseRow[] = [
@@ -43,6 +44,7 @@ const DEFAULT_WAREHOUSES: WarehouseRow[] = [
 ];
 
 export default function WarehouseHub12() {
+  const { t } = useTranslation("common");
   const params = useParams<{ code?: string }>();
   const [, navigate] = useLocation();
   const [activeLayer, setActiveLayer] = useState<LayerKey>("stock");
@@ -188,8 +190,8 @@ export default function WarehouseHub12() {
       <div className="p-6">
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground mb-4">Omborlarni yuklashda xatolik</p>
-            <Button onClick={() => refetchWarehouses()}>Qayta urinish</Button>
+            <p className="text-muted-foreground mb-4">{t("omborlarniYuklashdaXatolik")}</p>
+            <Button onClick={() => refetchWarehouses()}>{t("qaytaUrinish")}</Button>
           </CardContent>
         </Card>
       </div>
@@ -202,11 +204,11 @@ export default function WarehouseHub12() {
       <div className="space-y-6">
         <div className="mb-6">
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Ombor Boshqaruvi</b></>}
-        title="Ombor Boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("omborBoshqaruvi1")}</b></>}
+        title={t("omborBoshqaruvi1")}
       />
           <p className="text-sm text-muted-foreground mt-1">
-            9 ta ombor — har biri o'ziga xos funksiyalar va 12 qatlamli boshqaruv. POS Monitor avtomatik sinxronlashadi.
+            {t("k9TaOmborHarBiri")}
           </p>
         </div>
 
@@ -224,7 +226,7 @@ export default function WarehouseHub12() {
         </div>
         {warehouses.length === 0 && (
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            Omborlar bazada hali seed qilinmagan — statik shablon bilan ishlayapti. Migratsiya qo'llanilgach, real ma'lumotlar tortiladi.
+            {t("omborlarBazadaHaliSeedQilinmagan")}
           </p>
         )}
       </div>

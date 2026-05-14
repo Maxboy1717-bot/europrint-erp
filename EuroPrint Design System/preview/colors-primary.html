@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700,initial-scale=1"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg1);color:var(--fg1);font-family:var(--font-sans);}
+  .wrap{padding:18px 22px;}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .sw{border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--bg2);}
+  .chip{height:78px;display:flex;align-items:flex-end;padding:8px 10px;color:#fff;font-family:var(--font-mono);font-size:10.5px;font-weight:500;}
+  .meta{padding:8px 10px;display:flex;flex-direction:column;gap:2px;}
+  .meta b{font-size:12px;font-weight:600;}
+  .meta span{font-size:10.5px;color:var(--fg2);font-family:var(--font-mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#FF902F">#FF902F</div><div class="meta"><b>Primary</b><span>--ep-primary</span></div></div>
+    <div class="sw"><div class="chip" style="background:#F07F1B">#F07F1B</div><div class="meta"><b>Primary Dark</b><span>--ep-primary-dark</span></div></div>
+    <div class="sw"><div class="chip" style="background:#FF5D2E">#FF5D2E</div><div class="meta"><b>Primary Alt</b><span>site / older</span></div></div>
+    <div class="sw"><div class="chip" style="background:#FFE3C9;color:#F07F1B">soft</div><div class="meta"><b>Primary Soft</b><span>rgba(255,144,47,.10)</span></div></div>
+  </div>
+</div>
+</body>
+</html>

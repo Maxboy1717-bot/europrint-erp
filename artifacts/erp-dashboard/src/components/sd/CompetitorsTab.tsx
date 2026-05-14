@@ -21,8 +21,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Target, BarChart2, Trophy, Plus, Trash2, Swords } from "lucide-react";
 import { KpiCard } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function CompetitorsTab({ customerId, competitors }: { customerId: number; competitors: SdCompetitorsData }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
@@ -61,18 +63,18 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
     low: { label: "Past", cls: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200" },
   };
 
-  if (!competitors) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
+  if (!competitors) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
   const items = competitors.list || (Array.isArray(competitors) ? competitors : []);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <KpiCard icon={Swords} label="Raqobatchilar" value={String(items.length)}
+        <KpiCard icon={Swords} label={t("raqobatchilar")} value={String(items.length)}
           gradient="" />
-        <KpiCard icon={BarChart2} label="Raqobat ulushi" value={`${Math.round(competitors.totalCompetitorShare || 0)}%`}
+        <KpiCard icon={BarChart2} label={t("raqobatUlushi")} value={`${Math.round(competitors.totalCompetitorShare || 0)}%`}
           gradient="" />
-        <KpiCard icon={Trophy} label="Bizning ulush" value={`${Math.round(competitors.ourShare || 100)}%`} color="text-[var(--ep-green)]"
+        <KpiCard icon={Trophy} label={t("bizningUlush")} value={`${Math.round(competitors.ourShare || 100)}%`} color="text-[var(--ep-green)]"
           gradient="" />
       </div>
 
@@ -81,21 +83,21 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
           <DialogTrigger asChild>
             <Button size="sm" className="bg-primary text-white border-0"
               data-testid="btn-add-competitor">
-              <Plus className="h-4 w-4 mr-1" />Raqobatchi qo'shish
+              <Plus className="h-4 w-4 mr-1" />{t("raqobatchiQoshish")}
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Raqobatchi qo'shish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("raqobatchiQoshish")}</DialogTitle></DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-3">
                 <FormField control={form.control} name="competitorName" render={({ field }) => (
-                  <FormItem><FormLabel>Kompaniya nomi *</FormLabel>
+                  <FormItem><FormLabel>{t("kompaniyaNomi")}</FormLabel>
                     <FormControl><Input {...field} data-testid="input-competitor-name" /></FormControl>
                     <FormMessage /></FormItem>
                 )} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FormField control={form.control} name="productType" render={({ field }) => (
-                    <FormItem><FormLabel>Mahsulot turi</FormLabel>
+                    <FormItem><FormLabel>{t("mahsulotTuri")}</FormLabel>
                       <FormControl><Input {...field} /></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="estimatedSharePercent" render={({ field }) => (
@@ -104,23 +106,23 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
                   )} />
                 </div>
                 <FormField control={form.control} name="winBackPotential" render={({ field }) => (
-                  <FormItem><FormLabel>Qaytarish imkoni</FormLabel>
+                  <FormItem><FormLabel>{t("qaytarishImkoni")}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="high">Yuqori</SelectItem>
-                        <SelectItem value="medium">O'rta</SelectItem>
-                        <SelectItem value="low">Past</SelectItem>
+                        <SelectItem value="high">{t("high")}</SelectItem>
+                        <SelectItem value="medium">{t("medium")}</SelectItem>
+                        <SelectItem value="low">{t("low")}</SelectItem>
                       </SelectContent>
                     </Select></FormItem>
                 )} />
                 <FormField control={form.control} name="notes" render={({ field }) => (
-                  <FormItem><FormLabel>Izoh</FormLabel>
+                  <FormItem><FormLabel>{t("Izoh")}</FormLabel>
                     <FormControl><Textarea {...field} rows={2} /></FormControl></FormItem>
                 )} />
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>Bekor</Button>
-                  <Button type="submit" disabled={addMutation.isPending}>Saqlash</Button>
+                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>{t("Bekor")}</Button>
+                  <Button type="submit" disabled={addMutation.isPending}>{t("Saqlash")}</Button>
                 </div>
               </form>
             </Form>
@@ -132,7 +134,7 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
         {items.length === 0 ? (
           <div className="rounded-xl border bg-card py-10 text-center text-muted-foreground text-sm">
             <Swords className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            Raqobatchi ma'lumoti yo'q
+            {t("raqobatchiMalumotiYoq")}
           </div>
         ) : items.map((c) => {
           const potKey = c.win_back_potential || c.winBackPotential;
@@ -166,8 +168,8 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-        title="Raqobatchi ma'lumotini o'chirish"
-        description="Ushbu raqobatchi yozuvini o'chirishni tasdiqlaysizmi?"
+        title={t("raqobatchiMalumotiniOchirish")}
+        description={t("ushbuRaqobatchiYozuviniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

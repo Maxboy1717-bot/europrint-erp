@@ -6,6 +6,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { barcodeApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 declare class BarcodeDetector {
   constructor(options?: { formats: string[] });
@@ -163,7 +164,7 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
                 className="pos-input"
                 value={manualInput}
                 onChange={e => setManualInput(e.target.value)}
-                placeholder="Barcode yozing..."
+                placeholder={t("barcodeYozing")}
                 autoFocus
               />
               <button type="submit" className="pos-btn pos-btn-primary" disabled={scanning}>
@@ -189,7 +190,7 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
               {!cameraActive && !cameraError && (
                 <div style={{ textAlign: "center", color: "var(--pos-text-muted)", fontSize: 13 }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
-                  <div>Kamera tayyor emas</div>
+                  <div>{t("kameraTayyorEmas")}</div>
                 </div>
               )}
               {cameraActive && (
@@ -211,11 +212,11 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
             <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
               {!cameraActive ? (
                 <button className="pos-btn pos-btn-primary" style={{ flex: 1 }} onClick={() => void startCamera()}>
-                  📷 Kamerani yoqish
+                  {t("kameraniYoqish")}
                 </button>
               ) : (
                 <button className="pos-btn pos-btn-ghost" style={{ flex: 1 }} onClick={stopCamera}>
-                  ⏹ Kamerani o'chirish
+                  {t("kameraniOchirish")}
                 </button>
               )}
             </div>
@@ -240,7 +241,7 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
             )}
             {!lastResult.found && (
               <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 4 }}>
-                Barcode: <span className="pos-mono">{lastResult.barcode}</span>
+                {t("barcode")}<span className="pos-mono">{lastResult.barcode}</span>
               </div>
             )}
           </div>

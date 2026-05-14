@@ -25,8 +25,10 @@ import {
 } from "./HRMapSections";
 import { LeftPanel } from "./HRMapDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function HRMap() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>("markers");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
@@ -87,7 +89,7 @@ export default function HRMap() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">Xodimlar Geoxaritasi</h1>
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("xodimlarGeoxaritasi")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Europrint zavodi • 40.5556°N, 70.9280°E • {validEmployees.length} xodim xaritada
           </p>
@@ -102,7 +104,7 @@ export default function HRMap() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold">{stats?.total?.employees || 0}</div>
-                <div className="text-xs text-muted-foreground">Jami xodimlar</div>
+                <div className="text-xs text-muted-foreground">{t("jamiXodimlar1")}</div>
               </div>
               <Users className="h-8 w-8 text-muted-foreground/30" />
             </div>
@@ -113,7 +115,7 @@ export default function HRMap() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-green)]">{validEmployees.length}</div>
-                <div className="text-xs text-muted-foreground">Koordinatalar bilan</div>
+                <div className="text-xs text-muted-foreground">{t("koordinatalarBilan")}</div>
               </div>
               <MapPin className="h-8 w-8 text-muted-foreground/30" />
             </div>
@@ -126,7 +128,7 @@ export default function HRMap() {
                 <div className="text-2xl font-bold text-[var(--ep-blue)]">
                   {(transportData?.groups?.length ?? 0) || 0}
                 </div>
-                <div className="text-xs text-muted-foreground">Transport guruhlari</div>
+                <div className="text-xs text-muted-foreground">{t("transportGuruhlari")}</div>
               </div>
               <Bus className="h-8 w-8 text-muted-foreground/30" />
             </div>
@@ -154,8 +156,8 @@ export default function HRMap() {
               <div className="h-[620px] flex items-center justify-center">
                 <EmptyState
                   icon={MapPinOff}
-                  title="Koordinatalar yo'q"
-                  description="Xodimlar uy manzillari kiritilmagan"
+                  title={t("koordinatalarYoq")}
+                  description={t("xodimlarUyManzillariKiritilmagan")}
                 />
               </div>
             ) : (
@@ -167,7 +169,7 @@ export default function HRMap() {
               >
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">{t("openstreetmap")}</a>'
                 />
                 <MapCenterController center={factoryCenter} />
 
@@ -175,8 +177,8 @@ export default function HRMap() {
                 <Marker position={factoryCenter} icon={factoryIcon} data-testid="marker-factory">
                   <Popup>
                     <div className="space-y-1 min-w-[180px]">
-                      <div className="font-bold text-base">Europrint Zavodi</div>
-                      <div className="text-sm text-gray-600">Qo'qon, O'zbekiston</div>
+                      <div className="font-bold text-base">{t("europrintZavodi")}</div>
+                      <div className="text-sm text-gray-600">{t("qoqonOzbekiston")}</div>
                       <div className="text-xs text-gray-500">40.5556°N, 70.9280°E</div>
                     </div>
                   </Popup>

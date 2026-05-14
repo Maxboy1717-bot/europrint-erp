@@ -115,12 +115,12 @@ export default function PosRequestsPage() {
   return (
     <ModulePage
       module="pos"
-      title="Material So'rovlar"
+      title={t("materialSorovlar")}
       icon={<PackageSearch className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-request">
           <Plus className="h-4 w-4 mr-2" />
-          So'rov yuborish
+          {t("sorovYuborish")}
         </Button>
       }
     >
@@ -217,21 +217,21 @@ export default function PosRequestsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Material so'rovi</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("materialSorovi")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Material nomi *</Label>
+              <Label>{t("materialNomi2")}</Label>
               <Input
                 value={form.material_name}
                 onChange={e => setForm(f => ({ ...f, material_name: e.target.value }))}
-                placeholder="Material nomi"
+                placeholder={t("materialNomi")}
                 data-testid="input-request-material"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Miqdor</Label>
+                <Label>{t("quantity")}</Label>
                 <Input
                   type="number"
                   value={form.quantity}
@@ -241,7 +241,7 @@ export default function PosRequestsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Birlik</Label>
+                <Label>{t("unit")}</Label>
                 <Input
                   value={form.unit}
                   onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
@@ -250,42 +250,42 @@ export default function PosRequestsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Muhimlik</Label>
+                <Label>{t("priority")}</Label>
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                   value={form.priority}
                   onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
                   data-testid="select-request-priority"
                 >
-                  <option value="low">Past</option>
-                  <option value="normal">O'rtacha</option>
-                  <option value="high">Yuqori</option>
-                  <option value="urgent">Shoshilinch</option>
+                  <option value="low">{t("low")}</option>
+                  <option value="normal">{t("average")}</option>
+                  <option value="high">{t("high")}</option>
+                  <option value="urgent">{t("Shoshilinch")}</option>
                 </select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Bo'lim</Label>
+              <Label>{t("bolim1")}</Label>
               <Input
                 value={form.department}
                 onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-                placeholder="Bo'lim nomi"
+                placeholder={t("bolimNomi")}
                 data-testid="input-request-dept"
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Izoh</Label>
+              <Label>{t("Izoh")}</Label>
               <Textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Qo'shimcha izoh..."
+                placeholder={t("qoshimchaIzoh")}
                 rows={2}
                 data-testid="input-request-notes"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.material_name.trim()) createMutation.mutate(form); }}
               disabled={!form.material_name.trim() || createMutation.isPending}

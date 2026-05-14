@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export interface TestQuestion {
   id: string;
@@ -42,6 +43,7 @@ const difficultyLabels = {
 };
 
 export function TestQuestionCard({ question, onEdit, onDelete }: TestQuestionCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid={`card-question-${question.id}`}>
       <CardHeader className="space-y-3">
@@ -83,7 +85,7 @@ export function TestQuestionCard({ question, onEdit, onDelete }: TestQuestionCar
       {question.options && question.options.length > 0 && (
         <CardContent>
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Javob variantlari:</p>
+            <p className="text-sm text-muted-foreground">{t("javobVariantlari")}</p>
             <ul className="space-y-1 text-sm">
               {(Array.isArray(question.options) ? question.options : []).map((option, index) => (
                 <li key={`k-${index}`} className="flex items-start gap-2">

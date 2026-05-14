@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, CheckCircle, XCircle, Tablet, Key, Clock, Award, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface Certificate {
   id: number;
@@ -78,6 +79,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, employeeCreatedAt, certificates, loadingCertificates }: TechAccessTabProps) {
+  const { t } = useTranslation("common");
   const allowedModules = MODULE_PERMISSIONS[employeeRole] || MODULE_PERMISSIONS["employee"];
   const hasIoTAccess = IOT_ROLES.includes(employeeRole);
 
@@ -95,14 +97,14 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="from-blue-500/10 to-blue-600/10 border-blue-500/20">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Tizim roli</p>
+                <p className="text-xs text-muted-foreground">{t("tizimRoli")}</p>
                 <p className="text-lg font-bold text-[var(--ep-blue)] mt-1">
                   {ROLE_LABELS[employeeRole] || employeeRole}
                 </p>
@@ -116,16 +118,16 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">IoT Planshet kirish</p>
+                <p className="text-xs text-muted-foreground">{t("iotPlanshetKirish")}</p>
                 {hasIoTAccess ? (
                   <div className="flex items-center gap-1 mt-1">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
-                    <span className="font-bold text-[var(--ep-green)]">Ruxsat bor</span>
+                    <span className="font-bold text-[var(--ep-green)]">{t("ruxsatBor")}</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 mt-1">
                     <XCircle className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-bold text-muted-foreground">Ruxsat yo'q</span>
+                    <span className="font-bold text-muted-foreground">{t("ruxsatYoq")}</span>
                   </div>
                 )}
               </div>
@@ -138,7 +140,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Ochiq modullar</p>
+                <p className="text-xs text-muted-foreground">{t("ochiqModullar")}</p>
                 <p className="text-2xl font-bold text-[var(--ep-purple)]">{allowedModules.length}</p>
                 <p className="text-xs text-muted-foreground">{ALL_MODULES.length} dan</p>
                 {employeeHireDate && (
@@ -162,9 +164,9 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Modul kirish matritsasi
+            {t("modulKirishMatritsasi")}
           </CardTitle>
-          <CardDescription>Rol asosidagi tizim ruxsatlari</CardDescription>
+          <CardDescription>{t("rolAsosidagiTizimRuxsatlari")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -200,7 +202,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5" />
-              Sertifikatdan avtomatik uskuna ruxsatlari
+              {t("sertifikatdanAvtomatikUskunaRuxsatlari")}
             </CardTitle>
             <CardDescription>LMS sertifikatlariga asoslanib aniqlangan uskuna ruxsatlari</CardDescription>
           </CardHeader>
@@ -222,7 +224,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
               <div className="text-center py-8">
                 <Award className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                 <p className="text-muted-foreground">
-                  Maxsus uskuna ruxsatlarini talab qiluvchi sertifikatlar aniqlanmadi
+                  {t("maxsusUskunaRuxsatlariniTalabQiluvchi")}
                 </p>
               </div>
             )}

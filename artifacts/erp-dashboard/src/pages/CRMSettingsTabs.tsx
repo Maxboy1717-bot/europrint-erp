@@ -46,12 +46,14 @@ import {
   ENTITY_TYPES,
 } from "./CRMSettingsTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // SortableFieldRow
 // ---------------------------------------------------------------------------
 
 export function SortableFieldRow({ field, onEdit, onDelete }: SortableFieldRowProps) {
+  const { t } = useTranslation("common");
   const {
     attributes,
     listeners,
@@ -99,7 +101,7 @@ export function SortableFieldRow({ field, onEdit, onDelete }: SortableFieldRowPr
         {field.isRequired ? (
           <EPStatusPill tone="neutral">Ha</EPStatusPill>
         ) : (
-          <span className="text-muted-foreground">Yo'q</span>
+          <span className="text-muted-foreground">{t("no")}</span>
         )}
       </TableCell>
       <TableCell>
@@ -167,14 +169,14 @@ export function CustomFieldsTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Maxsus maydonlar</h2>
+          <h2 className="text-xl font-semibold">{t("maxsusMaydonlar")}</h2>
           <p className="text-sm text-muted-foreground">
-            CRM elementlari uchun qo'shimcha maydonlar
+            {t("crmElementlariUchunQoshimchaMaydonlar")}
           </p>
         </div>
         <Button onClick={onAdd} data-testid="button-add-field">
           <Plus className="h-4 w-4 mr-2" />
-          Maydon qo'shish
+          {t("maydonQoshish")}
         </Button>
       </div>
 
@@ -208,7 +210,7 @@ export function CustomFieldsTab({
         <Card>
           <CardContent className="py-12 text-center">
             <Settings className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Hozircha maxsus maydonlar yo'q</p>
+            <p className="text-muted-foreground">{t("hozirchaMaxsusMaydonlarYoq")}</p>
             <Button
               variant="outline"
               className="mt-4 gap-2"
@@ -216,7 +218,7 @@ export function CustomFieldsTab({
               data-testid="button-add-first-field"
             >
               <Plus className="h-4 w-4" />
-              Birinchi maydonni qo'shing
+              {t("birinchiMaydonniQoshing")}
             </Button>
           </CardContent>
         </Card>
@@ -231,12 +233,12 @@ export function CustomFieldsTab({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10"></TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Tur</TableHead>
-                  <TableHead>Majburiy</TableHead>
-                  <TableHead>Ko'rinadi</TableHead>
-                  <TableHead>Tartib</TableHead>
-                  <TableHead className="w-24">Amallar</TableHead>
+                  <TableHead>{t("nom")}</TableHead>
+                  <TableHead>{t("tur")}</TableHead>
+                  <TableHead>{t("majburiy")}</TableHead>
+                  <TableHead>{t("korinadi")}</TableHead>
+                  <TableHead>{t("tartib")}</TableHead>
+                  <TableHead className="w-24">{t("Amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

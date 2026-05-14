@@ -159,9 +159,9 @@ export default function LogisticsDashboard() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Logistika va Transport</b></>}
-        title="Logistika va Transport"
-        subtitle="Transport parki · Yetkazish · Yoqilg'i · Texnik xizmat"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("logistikaVaTransport")}</b></>}
+        title={t("logistikaVaTransport")}
+        subtitle={t("transportParkiYetkazishYoqilgiTexnik")}
         actions={
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
@@ -196,7 +196,7 @@ export default function LogisticsDashboard() {
         <div className="p-4 bg-amber-100/20 border-l-4 border-amber-500 rounded-none flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-[var(--ep-yellow)] shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-foreground">Yaqin TA muddati!</p>
+            <p className="text-sm font-bold text-foreground">{t("yaqinTaMuddati")}</p>
             <p className="text-xs text-muted-foreground">
               {(Array.isArray(urgentMaintenance) ? urgentMaintenance : []).map(v => v.plateNumber).join(", ")} — 30 kun ichida texnik xizmat kerak
             </p>
@@ -206,12 +206,12 @@ export default function LogisticsDashboard() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-muted/60 p-1 rounded-lg flex-wrap gap-1">
-          <TabsTrigger value="vehicles" data-testid="tab-vehicles" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">Transport Parki</TabsTrigger>
-          <TabsTrigger value="deliveries" data-testid="tab-deliveries" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">Yetkazishlar</TabsTrigger>
-          <TabsTrigger value="fuel" data-testid="tab-fuel" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">Yoqilg'i</TabsTrigger>
-          <TabsTrigger value="maintenance" data-testid="tab-maintenance" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">TA Tarixi</TabsTrigger>
-          <TabsTrigger value="gps" data-testid="tab-gps" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">GPS Monitoring</TabsTrigger>
-          <TabsTrigger value="drivers" data-testid="tab-drivers" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">Haydovchi Xarajat</TabsTrigger>
+          <TabsTrigger value="vehicles" data-testid="tab-vehicles" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("transportParki")}</TabsTrigger>
+          <TabsTrigger value="deliveries" data-testid="tab-deliveries" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("yetkazishlar")}</TabsTrigger>
+          <TabsTrigger value="fuel" data-testid="tab-fuel" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("yoqilgi")}</TabsTrigger>
+          <TabsTrigger value="maintenance" data-testid="tab-maintenance" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("taTarixi")}</TabsTrigger>
+          <TabsTrigger value="gps" data-testid="tab-gps" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("gpsMonitoring")}</TabsTrigger>
+          <TabsTrigger value="drivers" data-testid="tab-drivers" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("haydovchiXarajat")}</TabsTrigger>
           <TabsTrigger value="invoices" data-testid="tab-invoices" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t('vendorFakturalar')}</TabsTrigger>
         </TabsList>
 

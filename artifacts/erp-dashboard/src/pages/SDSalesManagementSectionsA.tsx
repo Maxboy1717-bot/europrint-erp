@@ -13,6 +13,7 @@ import {
   RefreshCw, CheckCircle, Clock, AlertTriangle, DollarSign,
 } from "lucide-react";
 import { Invoice, ForecastHistory, statusVariant, statusLabel } from "./SDSalesManagementTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // InvoicesSection
@@ -33,6 +34,7 @@ export function InvoicesSection({
   paidInvoices,
   overdueInvoices,
 }: InvoicesSectionProps) {
+  const { t } = useTranslation("common");
   const kpis = [
     { label: "Jami hisob-faktura", value: invoices.length, icon: FileText, color: "text-primary" },
     { label: "To'liq to'langan", value: paidInvoices, icon: CheckCircle, color: "text-[var(--ep-green)]" },
@@ -73,20 +75,20 @@ export function InvoicesSection({
           ) : invoices.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="font-medium">Hisob-fakturalar mavjud emas</p>
-              <p className="text-sm mt-1 opacity-70">Buyurtmalar yetkazilganda avtomatik yaratiladi</p>
+              <p className="font-medium">{t("hisobFakturalarMavjudEmas")}</p>
+              <p className="text-sm mt-1 opacity-70">{t("buyurtmalarYetkazilgandaAvtomatikYaratiladi")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Faktura №</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Mijoz</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Muddat</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Summa</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">To'langan</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("faktura2")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mijoz1")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("date")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("muddat")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("summa")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tolangan")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -137,8 +139,8 @@ export function ForecastSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-xl font-bold text-foreground">AI Savdo Prognozi</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Mashinali o'rganish asosida kelajakdagi savdo prognozi</p>
+          <h2 className="text-xl font-bold text-foreground">{t("aiSavdoPrognozi")}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("mashinaliOrganishAsosidaKelajakdagiSavdo")}</p>
         </div>
         <Button
           onClick={onGenerate}
@@ -154,11 +156,11 @@ export function ForecastSection({
       {forecastAccuracy && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-card rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Model Aniqligi</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("modelAniqligi")}</p>
             <p className="text-4xl font-bold text-primary">{forecastAccuracy.accuracy?.toFixed(1) || "—"}%</p>
           </div>
           <div className="bg-card rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami Prognozlar</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("jamiPrognozlar")}</p>
             <p className="text-4xl font-bold text-foreground">{forecastAccuracy.totalForecasts || 0}</p>
           </div>
         </div>
@@ -168,7 +170,7 @@ export function ForecastSection({
         <CardHeader>
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <Clock className="w-4 h-4 text-primary" />
-            Prognoz Tarixi
+            {t("prognozTarixi")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -179,18 +181,18 @@ export function ForecastSection({
           ) : forecastHistory.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="font-medium">Prognoz tarixi yo'q</p>
-              <p className="text-sm mt-1 opacity-70">Yuqoridagi tugmani bosib AI prognoz yarating</p>
+              <p className="font-medium">{t("prognozTarixiYoq")}</p>
+              <p className="text-sm mt-1 opacity-70">{t("yuqoridagiTugmaniBosibAiPrognoz")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Davr</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tur</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Prognoz daromad</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Prognoz birliklar</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Aniqlik</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("period")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tur")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("prognozDaromad")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("prognozBirliklar")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("aniqlik")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

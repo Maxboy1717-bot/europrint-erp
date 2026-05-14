@@ -79,7 +79,7 @@ export function DashboardOverviewTab({
           </div>
           <Link to="/coordination">
             <button className="text-xs text-primary underline underline-offset-2 hover:opacity-70 transition-opacity">
-              Tasdiqlash navbati →
+              {t("tasdiqlashNavbati")}
             </button>
           </Link>
         </div>
@@ -114,7 +114,7 @@ export function DashboardOverviewTab({
                 <p className="text-[11px] leading-snug opacity-80">{step.event}</p>
                 {isActive && (
                   <span className="text-[10px] font-semibold bg-current/10 rounded px-1.5 py-0.5 mt-1 w-fit">
-                    Faol
+                    {t("active")}
                   </span>
                 )}
               </div>

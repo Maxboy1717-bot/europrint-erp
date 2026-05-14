@@ -22,7 +22,7 @@ export class GetProductionOrderByIdHandler
       const rows = await db
         .select()
         .from(production_orders)
-        .where(eq(production_orders.id, query.id))
+        .where(eq(production_orders.id, String(query.id)))
         .limit(1);
 
       const row = rows[0];

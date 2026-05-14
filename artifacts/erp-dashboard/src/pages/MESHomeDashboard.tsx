@@ -78,11 +78,11 @@ export default function MESHomeDashboard() {
             </div>
           )}
           <Button variant="outline" size="sm" onClick={refreshAll} data-testid="button-refresh-mes">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> {t("refresh")}
           </Button>
           <Button size="sm" asChild data-testid="button-orders-report">
             <Link href="/production/orders">
-              <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Hisobot
+              <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> {t("report")}
             </Link>
           </Button>
         </div>

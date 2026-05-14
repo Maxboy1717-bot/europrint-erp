@@ -23,6 +23,7 @@ import {
 import type { GoodsReceipt, PurchaseOrder, ThreeWayMatchResult, VendorInvoice } from "./SupplyChainDashboardTypes";
 import { INVOICE_NEXT_STATUS, STATUS_COLORS, STATUS_LABELS } from "./SupplyChainDashboardTypes";
 import { MatchResultPanel, MatchStatusIcon } from "./SupplyChainDashboardDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export { AlertsSection } from "./SupplyChainDashboardDialogs";
 
@@ -37,6 +38,7 @@ export function SummaryCards({
   vendorInvoices: VendorInvoice[];
   pendingMatchCount: number;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
       <Card>
@@ -45,7 +47,7 @@ export function SummaryCards({
             <ShoppingCart className="h-5 w-5 text-[var(--ep-blue)]" />
             <div>
               <div className="text-2xl font-bold">{pendingPOs.length}</div>
-              <div className="text-xs text-muted-foreground">Kutilayotgan PO</div>
+              <div className="text-xs text-muted-foreground">{t("kutilayotganPo")}</div>
             </div>
           </div>
         </CardContent>
@@ -56,7 +58,7 @@ export function SummaryCards({
             <Package className="h-5 w-5 text-[var(--ep-green)]" />
             <div>
               <div className="text-2xl font-bold">{goodsReceipts.length}</div>
-              <div className="text-xs text-muted-foreground">Jami GRN</div>
+              <div className="text-xs text-muted-foreground">{t("jamiGrn")}</div>
             </div>
           </div>
         </CardContent>
@@ -67,7 +69,7 @@ export function SummaryCards({
             <FileText className="h-5 w-5 text-[var(--ep-purple)]" />
             <div>
               <div className="text-2xl font-bold">{vendorInvoices.length}</div>
-              <div className="text-xs text-muted-foreground">Jami Faktura</div>
+              <div className="text-xs text-muted-foreground">{t("jamiFaktura")}</div>
             </div>
           </div>
         </CardContent>
@@ -78,7 +80,7 @@ export function SummaryCards({
             <AlertTriangle className="h-5 w-5 text-[var(--ep-primary)]" />
             <div>
               <div className="text-2xl font-bold">{pendingMatchCount}</div>
-              <div className="text-xs text-muted-foreground">Match kutmoqda</div>
+              <div className="text-xs text-muted-foreground">{t("matchKutmoqda")}</div>
             </div>
           </div>
         </CardContent>
@@ -99,11 +101,11 @@ export function POColumn({ pendingPOs, loading }: { pendingPOs: PurchaseOrder[];
       </CardHeader>
       <CardContent className="space-y-2 max-h-[480px] overflow-y-auto">
         {loading ? (
-          <div className="text-center text-muted-foreground text-sm py-6">Yuklanmoqda...</div>
+          <div className="text-center text-muted-foreground text-sm py-6">{t("Yuklanmoqda...")}</div>
         ) : pendingPOs.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-6">
             <Truck className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            Kutilayotgan yetkazib berish yo'q
+            {t("kutilayotganYetkazibBerishYoq")}
           </div>
         ) : (
           (Array.isArray(pendingPOs) ? pendingPOs : []).map((po) => (
@@ -116,7 +118,7 @@ export function POColumn({ pendingPOs, loading }: { pendingPOs: PurchaseOrder[];
               </div>
               <div className="text-muted-foreground">{po.vendor_name}</div>
               <div className="flex justify-between text-xs">
-                <span>Jami: <strong>{formatCurrency(Number(po.total_amount), po.currency || "UZS")}</strong></span>
+                <span>{t("jami")}<strong>{formatCurrency(Number(po.total_amount), po.currency || "UZS")}</strong></span>
                 <span className="text-[var(--ep-primary)]">Qoldi: {formatCurrency(Number(po.pending_amount), po.currency || "UZS")}</span>
               </div>
               {po.delivery_date && (
@@ -147,11 +149,11 @@ export function GRNColumn({ goodsReceipts, loading }: { goodsReceipts: GoodsRece
       </CardHeader>
       <CardContent className="space-y-2 max-h-[480px] overflow-y-auto">
         {loading ? (
-          <div className="text-center text-muted-foreground text-sm py-6">Yuklanmoqda...</div>
+          <div className="text-center text-muted-foreground text-sm py-6">{t("Yuklanmoqda...")}</div>
         ) : goodsReceipts.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-6">
             <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            Qabul aktlari yo'q
+            {t("qabulAktlariYoq")}
           </div>
         ) : (
           (Array.isArray(goodsReceipts) ? goodsReceipts : []).map((gr) => (
@@ -198,11 +200,11 @@ export function InvoiceColumn({
       </CardHeader>
       <CardContent className="space-y-2 max-h-[480px] overflow-y-auto">
         {loading ? (
-          <div className="text-center text-muted-foreground text-sm py-6">Yuklanmoqda...</div>
+          <div className="text-center text-muted-foreground text-sm py-6">{t("Yuklanmoqda...")}</div>
         ) : vendorInvoices.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-6">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            Fakturalar yo'q
+            {t("fakturalarYoq")}
           </div>
         ) : (
           (Array.isArray(vendorInvoices) ? vendorInvoices : []).map((inv) => {
@@ -218,7 +220,7 @@ export function InvoiceColumn({
                 </div>
                 <div className="text-muted-foreground">{inv.vendorName}</div>
                 <div className="flex justify-between text-xs">
-                  <span>Jami: <strong>{formatCurrency(Number(inv.totalAmount), inv.currency || "UZS")}</strong></span>
+                  <span>{t("jami")}<strong>{formatCurrency(Number(inv.totalAmount), inv.currency || "UZS")}</strong></span>
                   {inv.dueDate && <span className="text-[var(--ep-primary)]">Muddat: {inv.dueDate}</span>}
                 </div>
                 <div className="flex items-center justify-between mt-1">

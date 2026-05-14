@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MarketHeatBadge, HEAT_OPTIONS } from "./MarketHeatBadge";
 import type { EmployerMarket } from "./HiringForecast";
+import { useTranslation } from '@/lib/i18n';
 
 interface Competitor {
   company: string;
@@ -24,6 +25,7 @@ interface EmployerMarketSectionProps {
 }
 
 export function EmployerMarketSection({ employerMarket, setEmployerMarket }: EmployerMarketSectionProps) {
+  const { t } = useTranslation("common");
   function addCompetitor() {
     setEmployerMarket(prev => ({
       ...prev,
@@ -55,10 +57,10 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <Building2 className="w-4 h-4 text-indigo-400" />
-          Ish beruvchilar bozori
+          {t("ishBeruvchilarBozori")}
         </h3>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Bozor holati:</span>
+          <span className="text-xs text-muted-foreground">{t("bozorHolati")}</span>
           <div className="flex gap-1">
             {(Array.isArray(HEAT_OPTIONS) ? HEAT_OPTIONS : []).map(h => (
               <button
@@ -106,20 +108,20 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <Label className="text-[10px] mb-0.5 block">Kompaniya nomi</Label>
+                <Label className="text-[10px] mb-0.5 block">{t("kompaniyaNomi1")}</Label>
                 <Input
                   className="h-7 text-xs"
-                  placeholder="Kompaniya..."
+                  placeholder={t("kompaniya1")}
                   value={comp.company}
                   onChange={e => updateCompetitor(i, "company", e.target.value)}
                   data-testid={`input-competitor-company-${i}`}
                 />
               </div>
               <div>
-                <Label className="text-[10px] mb-0.5 block">Kanallar</Label>
+                <Label className="text-[10px] mb-0.5 block">{t("kanallar")}</Label>
                 <Input
                   className="h-7 text-xs"
-                  placeholder="hh.uz, Telegram..."
+                  placeholder={t("hhUzTelegram")}
                   value={comp.channels}
                   onChange={e => updateCompetitor(i, "channels", e.target.value)}
                 />
@@ -146,10 +148,10 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
               </div>
             </div>
             <div>
-              <Label className="text-[10px] mb-0.5 block">Imtiyozlar</Label>
+              <Label className="text-[10px] mb-0.5 block">{t("imtiyozlar")}</Label>
               <Input
                 className="h-7 text-xs"
-                placeholder="DMS, bonuslar, masofaviy ish..."
+                placeholder={t("dmsBonuslarMasofaviyIsh")}
                 value={comp.benefits}
                 onChange={e => updateCompetitor(i, "benefits", e.target.value)}
               />
@@ -165,7 +167,7 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
           data-testid="btn-add-competitor"
         >
           <Plus className="w-3.5 h-3.5" />
-          Raqobatchi qo'shish
+          {t("raqobatchiQoshish")}
         </Button>
       </div>
     </section>

@@ -17,17 +17,19 @@ import { Brain, AlertTriangle, TrendingUp, TrendingDown, FileText, CheckCircle2 
 import type { BudgetVariance, InvoiceClassification } from "./AIFinancePageTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Badge helpers ─────────────────────────────────────────────────────────────
 
 function trendBadge(t: string) {
-  if (t === "IMPROVING")  return <Badge variant="success">Yaxshilanmoqda</Badge>;
-  if (t === "WORSENING")  return <Badge variant="error">Yomonlashmoqda</Badge>;
-  return                         <Badge variant="info">Barqaror</Badge>;
+  if (t === "IMPROVING")  return <Badge variant="success">{t("yaxshilanmoqda")}</Badge>;
+  if (t === "WORSENING")  return <Badge variant="error">{t("yomonlashmoqda")}</Badge>;
+  return                         <Badge variant="info">{t("barqaror")}</Badge>;
 }
 
 // ─── BudgetVarianceTab ────────────────────────────────────────────────────────
 
 export function BudgetVarianceTab() {
+  const { t } = useTranslation("common");
   const [form, setForm] = useState({ category: "", budgeted: "", actual: "", context: "" });
   const [result, setResult] = useState<BudgetVariance | null>(null);
 
@@ -55,17 +57,17 @@ export function BudgetVarianceTab() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Byudjet og'ishini kiriting — AI sabablari va tuzatish choralarini tavsiya qiladi
+        {t("byudjetOgishiniKiritingAiSabablari")}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="col-span-2 space-y-1.5">
-            <Label>Kategoriya</Label>
+            <Label>{t("category")}</Label>
             <Input
               value={form.category}
               onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-              placeholder="Masalan: Marketing xarajatlari, Ishlab chiqarish..."
+              placeholder={t("masalanMarketingXarajatlariIshlabChiqarish")}
             />
           </div>
           <div className="space-y-1.5">
@@ -101,7 +103,7 @@ export function BudgetVarianceTab() {
             <Input
               value={form.context}
               onChange={e => setForm(p => ({ ...p, context: e.target.value }))}
-              placeholder="Masalan: Yangi kampaniya boshlandi, xomashyo narxi oshdi..."
+              placeholder={t("masalanYangiKampaniyaBoshlandiXomashyo")}
             />
           </div>
         </div>
@@ -112,31 +114,31 @@ export function BudgetVarianceTab() {
           disabled={mutation.isPending || !form.category || !form.budgeted || !form.actual}
         >
           {mutation.isPending
-            ? <><EPLoader className="mr-2" />Tahlil qilinmoqda...</>
-            : <><Brain className="h-4 w-4 mr-2" />AI Tahlili</>}
+            ? <><EPLoader className="mr-2" />{t("tahlilQilinmoqda")}</>
+            : <><Brain className="h-4 w-4 mr-2" />{t("aiTahlili")}</>}
         </Button>
       </form>
 
       {mutation.isError && (
-        <p className="text-sm text-[var(--ep-red)] text-center">Xatolik yuz berdi. Qayta urinib ko'ring.</p>
+        <p className="text-sm text-[var(--ep-red)] text-center">{t("error.generic")}</p>
       )}
 
       {result && (
         <Card className="border-primary/20">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Tahlil Natijasi</CardTitle>
+              <CardTitle className="text-base">{t("tahlilNatijasi")}</CardTitle>
               <div className="flex items-center gap-2">
                 {trendBadge(result.trend)}
                 {result.isAcceptable
-                  ? <Badge variant="success">Qabul qilinadi</Badge>
-                  : <Badge variant="error">Muhim og'ish</Badge>}
+                  ? <Badge variant="success">{t("qabulQilinadi")}</Badge>
+                  : <Badge variant="error">{t("muhimOgish")}</Badge>}
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 p-2 rounded-md bg-muted/40">
-              <span className="text-sm text-muted-foreground">Og'ish foizi:</span>
+              <span className="text-sm text-muted-foreground">{t("ogishFoizi")}</span>
               <span className={`font-bold text-sm ${Math.abs(result.variancePercent) > 15 ? "text-[var(--ep-red)]" : "text-[var(--ep-yellow)]"}`}>
                 {result.variancePercent > 0 ? "+" : ""}{result.variancePercent}%
               </span>
@@ -144,7 +146,7 @@ export function BudgetVarianceTab() {
             {result.mainCauses.length > 0 && (
               <div>
                 <h5 className="text-xs font-medium mb-1.5 flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3 text-[var(--ep-yellow)]" /> Asosiy sabablari
+                  <AlertTriangle className="h-3 w-3 text-[var(--ep-yellow)]" /> {t("asosiySabablari")}
                 </h5>
                 {result.mainCauses.map((c, i) => (
                   <p key={i} className="text-sm text-muted-foreground ml-4">• {c}</p>
@@ -154,7 +156,7 @@ export function BudgetVarianceTab() {
             {result.correctionActions.length > 0 && (
               <div>
                 <h5 className="text-xs font-medium mb-1.5 flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-[var(--ep-green)]" /> Tuzatish choralari
+                  <CheckCircle2 className="h-3 w-3 text-[var(--ep-green)]" /> {t("tuzatishChoralari")}
                 </h5>
                 {result.correctionActions.map((a, i) => (
                   <p key={i} className="text-sm text-muted-foreground ml-4">• {a}</p>
@@ -171,6 +173,7 @@ export function BudgetVarianceTab() {
 // ─── InvoiceTab ───────────────────────────────────────────────────────────────
 
 export function InvoiceTab() {
+  const { t } = useTranslation("common");
   const [form, setForm] = useState({ description: "", amount: "", vendor: "" });
   const [result, setResult] = useState<InvoiceClassification | null>(null);
 
@@ -193,7 +196,7 @@ export function InvoiceTab() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Faktura ma'lumotlarini kiriting — AI kategoriya va soliq kodini aniqlaydi
+        {t("fakturaMalumotlariniKiritingAiKategoriya")}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -202,15 +205,15 @@ export function InvoiceTab() {
           <Input
             value={form.vendor}
             onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))}
-            placeholder="Masalan: Qog'oz zavodi, IT kompaniya..."
+            placeholder={t("masalanQogozZavodiItKompaniya")}
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Tavsif</Label>
+          <Label>{t("progress.description")}</Label>
           <Input
             value={form.description}
             onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-            placeholder="Faktura tavsifi yoki mahsulot nomi..."
+            placeholder={t("fakturaTavsifiYokiMahsulotNomi")}
           />
         </div>
         <div className="space-y-1.5">
@@ -228,37 +231,37 @@ export function InvoiceTab() {
           disabled={mutation.isPending || !form.description || !form.vendor}
         >
           {mutation.isPending
-            ? <><EPLoader className="mr-2" />Tasniflanmoqda...</>
-            : <><FileText className="h-4 w-4 mr-2" />Fakturani Tasnifla</>}
+            ? <><EPLoader className="mr-2" />{t("tasniflanmoqda")}</>
+            : <><FileText className="h-4 w-4 mr-2" />{t("fakturaniTasnifla")}</>}
         </Button>
       </form>
 
       {mutation.isError && (
-        <p className="text-sm text-[var(--ep-red)] text-center">Xatolik yuz berdi.</p>
+        <p className="text-sm text-[var(--ep-red)] text-center">{t("xatolikYuzBerdi")}</p>
       )}
 
       {result && (
         <Card className="border-primary/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Tasnif Natijasi</CardTitle>
+            <CardTitle className="text-base">{t("tasnifNatijasi")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                  <p className="text-xs text-muted-foreground mb-0.5">Kategoriya</p>
+                  <p className="text-xs text-muted-foreground mb-0.5">{t("category")}</p>
                   <p className="font-medium text-sm">{result.category}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                  <p className="text-xs text-muted-foreground mb-0.5">Subkategoriya</p>
+                  <p className="text-xs text-muted-foreground mb-0.5">{t("subkategoriya")}</p>
                   <p className="font-medium text-sm">{result.subcategory || "—"}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                  <p className="text-xs text-muted-foreground mb-0.5">Soliq kodi</p>
+                  <p className="text-xs text-muted-foreground mb-0.5">{t("soliqKodi")}</p>
                   <p className="font-medium text-sm">{result.taxCode || "—"}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                  <p className="text-xs text-muted-foreground mb-0.5">Ishonchlilik</p>
+                  <p className="text-xs text-muted-foreground mb-0.5">{t("ishonchlilik")}</p>
                   <p className="font-medium text-sm">{result.confidence}%</p>
                 </div>
               </div>

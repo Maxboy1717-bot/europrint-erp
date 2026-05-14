@@ -97,7 +97,7 @@ export default function ProductProfitability() {
             <div className="flex items-center gap-3">
               <BarChart3 className="h-8 w-8" />
               <div>
-                <h1 className="text-2xl font-bold">Mahsulot Rentabelligi</h1>
+                <h1 className="text-2xl font-bold">{t("mahsulotRentabelligi")}</h1>
                 <p className="text-white/75 text-sm">{t('productProfitabilityAnalysis')}</p>
               </div>
             </div>
@@ -122,7 +122,7 @@ export default function ProductProfitability() {
                 data-testid="button-recalculate"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${recalculateMutation.isPending ? "animate-spin" : ""}`} />
-                Qayta hisoblash
+                {t("qaytaHisoblash")}
               </Button>
               <Popover>
                 <PopoverTrigger asChild>

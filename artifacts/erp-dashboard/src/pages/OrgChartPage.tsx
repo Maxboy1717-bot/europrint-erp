@@ -243,7 +243,7 @@ export default function OrgChartPage() {
     return (
       <ModulePage
         module="hr"
-        title="Tashkiliy Tuzilma"
+        title={t("tashkiliyTuzilma1")}
         icon={<Building2 className="h-5 w-5" />}
         actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
@@ -265,7 +265,7 @@ export default function OrgChartPage() {
   return (
     <ModulePage
       module="hr"
-      title="Tashkiliy Tuzilma"
+      title={t("tashkiliyTuzilma1")}
       icon={<Building2 className="h-5 w-5" />}
       actions={
         <div className="flex items-center gap-2 flex-wrap">
@@ -319,7 +319,7 @@ export default function OrgChartPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Jami bo'limlar</p>
+            <p className="text-sm text-muted-foreground">{t("jamiBolimlar")}</p>
             <p className="text-2xl font-bold" data-testid="text-total-departments">
               {stats?.totalDepartments || 0}
             </p>
@@ -327,7 +327,7 @@ export default function OrgChartPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Jami xodimlar</p>
+            <p className="text-sm text-muted-foreground">{t("jamiXodimlar1")}</p>
             <p className="text-2xl font-bold" data-testid="text-total-employees">
               {stats?.totalEmployees || 0}
             </p>
@@ -335,7 +335,7 @@ export default function OrgChartPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Maksimal chuqurlik</p>
+            <p className="text-sm text-muted-foreground">{t("maksimalChuqurlik")}</p>
             <p className="text-2xl font-bold" data-testid="text-max-depth">
               {stats?.maxDepth || 0}
             </p>
@@ -347,7 +347,7 @@ export default function OrgChartPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            Bo'limlar daraxti
+            {t("bolimlarDaraxti")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -355,7 +355,7 @@ export default function OrgChartPage() {
             <div className="text-center py-12" data-testid="empty-state">
               <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                Tashkiliy tuzilma mavjud emas
+                {t("tashkiliyTuzilmaMavjudEmas")}
               </p>
             </div>
           ) : (

@@ -11,8 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import type { EntityType } from "./crm-types";
 import type { LeadScoringV2, NBAResult, AutoFillData, ChurnRescue, AITab } from "./AIAnalysisPanelTypes";
 import { ScoringV2Section, NBASection, AutoFillSection, ChurnRescueSection } from "./AIAnalysisPanelSections";
+import { useTranslation } from '@/lib/i18n';
 
 export function AIAnalysisPanel({ entityType, entityId }: { entityType: EntityType; entityId: number }) {
+  const { t } = useTranslation("common");
   const [scoringV2, setScoringV2] = useState<LeadScoringV2 | null>(null);
   const [nba, setNba] = useState<NBAResult | null>(null);
   const [autoFillData, setAutoFillData] = useState<AutoFillData | null>(null);
@@ -137,7 +139,7 @@ export function AIAnalysisPanel({ entityType, entityId }: { entityType: EntityTy
           data-testid="btn-ai-scoring-tab"
         >
           <Target className="h-4 w-4 mr-1" />
-          Scoring 2.0
+          {t("scoring20")}
         </Button>
         <Button
           variant={activeAITab === "nba" ? "default" : "outline"}
@@ -156,7 +158,7 @@ export function AIAnalysisPanel({ entityType, entityId }: { entityType: EntityTy
             data-testid="btn-ai-autofill-tab"
           >
             <Edit className="h-4 w-4 mr-1" />
-            Auto-Fill
+            {t("autoFill")}
           </Button>
         )}
         <Button
@@ -166,7 +168,7 @@ export function AIAnalysisPanel({ entityType, entityId }: { entityType: EntityTy
           data-testid="btn-ai-churn-tab"
         >
           <AlertTriangle className="h-4 w-4 mr-1" />
-          Xavf
+          {t("xavf")}
         </Button>
       </div>
 
@@ -177,7 +179,7 @@ export function AIAnalysisPanel({ entityType, entityId }: { entityType: EntityTy
 
       {activeAITab === "scoring" && entityType === "deals" && (
         <div className="text-center py-4 text-muted-foreground text-sm">
-          Scoring 2.0 faqat lidlar uchun mavjud. Bitimlar uchun "NBA" tabini ishlating.
+          {t("scoring20FaqatLidlar")}
         </div>
       )}
 

@@ -23,6 +23,7 @@ import { Plus } from "lucide-react";
 import { TaskEditor, CheckpointEditor } from "./ProgramsTabSections";
 import type { ProgramFormState, DepartmentItem, PositionItem } from "./ProgramsTabTypes";
 import type { AdaptationProgram } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 interface ProgramFormDialogProps {
   open: boolean;
@@ -49,12 +50,13 @@ export function ProgramFormDialog({
   onSubmit,
   onOpenNew,
 }: ProgramFormDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button data-testid="button-add-program" onClick={onOpenNew}>
           <Plus className="w-4 h-4 mr-2" />
-          Yangi dastur
+          {t("yangiDastur")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
@@ -116,7 +118,7 @@ export function ProgramFormDialog({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="duration">
-                Davomiyligi <span className="text-destructive">*</span>
+                {t("davomiyligi")}<span className="text-destructive">*</span>
               </Label>
               <Input
                 id="duration"
@@ -129,28 +131,28 @@ export function ProgramFormDialog({
             </div>
             <div>
               <Label>
-                Turi <span className="text-destructive">*</span>
+                {t("type")}<span className="text-destructive">*</span>
               </Label>
               <Select value={form.durationType} onValueChange={v => setField("durationType", v)}>
                 <SelectTrigger data-testid="select-duration-type" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="day">Kun</SelectItem>
-                  <SelectItem value="week">Hafta</SelectItem>
+                  <SelectItem value="day">{t("kun")}</SelectItem>
+                  <SelectItem value="week">{t("hafta")}</SelectItem>
                   <SelectItem value="month">Oy</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Holat</Label>
+              <Label>{t("status28")}</Label>
               <Select value={form.status} onValueChange={v => setField("status", v)}>
                 <SelectTrigger data-testid="select-status" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Faol</SelectItem>
-                  <SelectItem value="archived">Arxivlangan</SelectItem>
+                  <SelectItem value="active">{t("active")}</SelectItem>
+                  <SelectItem value="archived">{t("archived")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -162,10 +164,10 @@ export function ProgramFormDialog({
               <Label>Bo'lim (ixtiyoriy)</Label>
               <Select value={form.departmentId} onValueChange={v => setField("departmentId", v)}>
                 <SelectTrigger data-testid="select-department" className="h-9">
-                  <SelectValue placeholder="Barcha bo'limlar" />
+                  <SelectValue placeholder={t("barchaBolimlar")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barcha bo'limlar</SelectItem>
+                  <SelectItem value="all">{t("barchaBolimlar")}</SelectItem>
                   {(Array.isArray(departments) ? departments : []).map((dept: DepartmentItem) => (
                     <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
                   ))}
@@ -176,10 +178,10 @@ export function ProgramFormDialog({
               <Label>Lavozim (ixtiyoriy)</Label>
               <Select value={form.positionId} onValueChange={v => setField("positionId", v)}>
                 <SelectTrigger data-testid="select-position" className="h-9">
-                  <SelectValue placeholder="Barcha lavozimlar" />
+                  <SelectValue placeholder={t("barchaLavozimlar")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barcha lavozimlar</SelectItem>
+                  <SelectItem value="all">{t("barchaLavozimlar")}</SelectItem>
                   {(Array.isArray(positions) ? positions : []).map((pos: PositionItem) => (
                     <SelectItem key={pos.id} value={pos.id}>{pos.name}</SelectItem>
                   ))}
@@ -211,7 +213,7 @@ export function ProgramFormDialog({
               className="rounded"
               data-testid="checkbox-mentor-required"
             />
-            <Label htmlFor="mentorRequired">Mentor talab qilinadi</Label>
+            <Label htmlFor="mentorRequired">{t("mentorTalabQilinadi")}</Label>
           </div>
 
           <DialogFooter>

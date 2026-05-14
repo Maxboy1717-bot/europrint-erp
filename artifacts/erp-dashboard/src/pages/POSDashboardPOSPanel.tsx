@@ -14,6 +14,7 @@ import {
   ScanBarcode, Search, Plus, Minus, Trash2, ShoppingCart,
   Package, AlertTriangle, RefreshCw, Receipt, X,
 } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   PAYMENT_METHODS,
   formatUZS,
@@ -62,6 +63,7 @@ export function POSPanel({
   discountAmount, setDiscountAmount, paymentMethod, setPaymentMethod, isPending,
   onScan, onAddToCart, onUpdateQty, onRemoveFromCart, onClearCart, onCheckout,
 }: POSPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex h-full gap-0">
       {/* ---- Left: product search + grid ---------------------------------- */}
@@ -72,7 +74,7 @@ export function POSPanel({
               <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 ref={barcodeRef}
-                placeholder="Barcode skanerlash yoki kiriting..."
+                placeholder={t("barcodeSkanerlashYokiKiriting")}
                 value={barcodeInput}
                 onChange={e => setBarcodeInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") onScan(barcodeInput); }}
@@ -97,15 +99,15 @@ export function POSPanel({
         <div className="flex-1 overflow-y-auto p-4">
           {isProductsLoading ? (
             <div className="flex items-center justify-center h-40 text-gray-400">
-              <RefreshCw className="h-6 w-6 animate-spin mr-2" />Yuklanmoqda...
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />{t("Yuklanmoqda...")}
             </div>
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-gray-400">
               <Package className="h-12 w-12 mb-2" />
-              <p>Mahsulot topilmadi</p>
+              <p>{t("mahsulotTopilmadi")}</p>
               {!isOnline && (
                 <p className="text-xs text-[var(--ep-yellow)] mt-1">
-                  Oflayn — keshdan ko'rsatilmoqda
+                  {t("oflaynKeshdanKorsatilmoqda")}
                 </p>
               )}
             </div>
@@ -165,7 +167,7 @@ export function POSPanel({
             <div className="flex flex-col items-center justify-center h-40 text-gray-400 p-4">
               <ShoppingCart className="h-10 w-10 mb-2" />
               <p className="text-sm text-center">
-                Barcode skanerlang yoki mahsulot tanlang
+                {t("barcodeSkanerlangYokiMahsulotTanlang")}
               </p>
             </div>
           ) : (
@@ -224,7 +226,7 @@ export function POSPanel({
                 <span>{formatUZS(cartTotal)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 flex-shrink-0">Chegirma</span>
+                <span className="text-sm text-gray-500 flex-shrink-0">{t("chegirma1")}</span>
                 <Input
                   type="number"
                   value={discountAmount || ""}
@@ -235,7 +237,7 @@ export function POSPanel({
               </div>
               <Separator />
               <div className="flex justify-between font-bold text-lg">
-                <span>Umumiy</span>
+                <span>{t("umumiy")}</span>
                 <span className="text-[var(--ep-green)]">{formatUZS(finalTotal)}</span>
               </div>
             </div>

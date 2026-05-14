@@ -33,15 +33,15 @@ export function getMoveTypeBadge(moveType: string) {
     case "in":
     case "receipt":
     case "kirim":
-      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">Kirim</Badge>;
+      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{t("kirim")}</Badge>;
     case "out":
     case "issue":
     case "chiqim":
-      return <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-500/40">Chiqim</Badge>;
+      return <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-500/40">{t("chiqim")}</Badge>;
     case "transfer":
-      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">O'tkazma</Badge>;
+      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">{t("otkazma")}</Badge>;
     case "adjustment":
-      return <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/40">Tuzatish</Badge>;
+      return <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/40">{t("tuzatish")}</Badge>;
     default:
       return <Badge variant="outline">{moveType}</Badge>;
   }
@@ -74,7 +74,7 @@ export function StatCards({
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card data-testid="card-total-inventory">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Jami Inventar Qiymati</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("jamiInventarQiymati")}</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -106,7 +106,7 @@ export function StatCards({
               <div className="text-2xl font-bold text-[var(--ep-primary)]">
                 {formatCurrency(monthlyConsumed)}
               </div>
-              <p className="text-xs text-muted-foreground">Chiqim operatsiyalari</p>
+              <p className="text-xs text-muted-foreground">{t("chiqimOperatsiyalari")}</p>
             </>
           )}
         </CardContent>
@@ -125,7 +125,7 @@ export function StatCards({
               <div className="text-2xl font-bold text-[var(--ep-green)]">
                 {formatCurrency(monthlyReceived)}
               </div>
-              <p className="text-xs text-muted-foreground">Kirim operatsiyalari</p>
+              <p className="text-xs text-muted-foreground">{t("kirimOperatsiyalari")}</p>
             </>
           )}
         </CardContent>
@@ -133,7 +133,7 @@ export function StatCards({
 
       <Card data-testid="card-turnover">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Aylanma Tezligi</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("aylanmaTezligi")}</CardTitle>
           <TrendingUp className="h-4 w-4 text-[var(--ep-blue)]" />
         </CardHeader>
         <CardContent>
@@ -142,7 +142,7 @@ export function StatCards({
           ) : (
             <>
               <div className="text-2xl font-bold text-[var(--ep-blue)]">{turnoverRate}x</div>
-              <p className="text-xs text-muted-foreground">Yillik aylanma koeffitsienti</p>
+              <p className="text-xs text-muted-foreground">{t("yillikAylanmaKoeffitsienti")}</p>
             </>
           )}
         </CardContent>
@@ -177,14 +177,14 @@ export function MovementsCard({ movements, movementsLoading, startDate, endDate,
           <div>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Material Harakatlari
+              {t("materialHarakatlari")}
             </CardTitle>
-            <CardDescription>Kirim va chiqim operatsiyalari</CardDescription>
+            <CardDescription>{t("kirimVaChiqimOperatsiyalari")}</CardDescription>
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Boshlanish sanasi</Label>
+              <Label className="text-xs">{t("startDate")}</Label>
               <Input
                 type="date"
                 value={startDate}
@@ -194,7 +194,7 @@ export function MovementsCard({ movements, movementsLoading, startDate, endDate,
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Tugash sanasi</Label>
+              <Label className="text-xs">{t("endDate")}</Label>
               <Input
                 type="date"
                 value={endDate}
@@ -204,25 +204,25 @@ export function MovementsCard({ movements, movementsLoading, startDate, endDate,
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Harakat turi</Label>
+              <Label className="text-xs">{t("harakatTuri1")}</Label>
               <Select value={moveTypeFilter} onValueChange={onMoveTypeChange}>
                 <SelectTrigger className="w-32 h-9" data-testid="select-move-type">
-                  <SelectValue placeholder="Barchasi" />
+                  <SelectValue placeholder={t("Barchasi")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barchasi</SelectItem>
-                  <SelectItem value="in">Kirim</SelectItem>
-                  <SelectItem value="out">Chiqim</SelectItem>
-                  <SelectItem value="transfer">O'tkazma</SelectItem>
+                  <SelectItem value="all">{t("Barchasi")}</SelectItem>
+                  <SelectItem value="in">{t("kirim")}</SelectItem>
+                  <SelectItem value="out">{t("chiqim")}</SelectItem>
+                  <SelectItem value="transfer">{t("otkazma")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Button variant="outline" size="sm" onClick={onApplyFilters} data-testid="button-apply-filter">
               <Filter className="h-4 w-4 mr-1" />
-              Qo'llash
+              {t("qollash")}
             </Button>
             <Button variant="ghost" size="sm" onClick={onClearFilters} data-testid="button-clear-filter">
-              Tozalash
+              {t("tozalash")}
             </Button>
           </div>
         </div>
@@ -237,23 +237,23 @@ export function MovementsCard({ movements, movementsLoading, startDate, endDate,
         ) : movements.length === 0 ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
             <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Hozircha material harakatlari yo'q</p>
+            <p>{t("hozirchaMaterialHarakatlariYoq")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sana</TableHead>
-                  <TableHead>Hujjat №</TableHead>
+                  <TableHead>{t("date")}</TableHead>
+                  <TableHead>{t("hujjat1")}</TableHead>
                   <TableHead>{t('materialKodi2')}</TableHead>
-                  <TableHead>Material Nomi</TableHead>
-                  <TableHead>Turi</TableHead>
-                  <TableHead className="text-right">Miqdor</TableHead>
-                  <TableHead className="text-right">Narx</TableHead>
-                  <TableHead className="text-right">Jami</TableHead>
-                  <TableHead>Partiya</TableHead>
-                  <TableHead>Referans</TableHead>
+                  <TableHead>{t("materialNomi1")}</TableHead>
+                  <TableHead>{t("type")}</TableHead>
+                  <TableHead className="text-right">{t("quantity")}</TableHead>
+                  <TableHead className="text-right">{t("price")}</TableHead>
+                  <TableHead className="text-right">{t("total")}</TableHead>
+                  <TableHead>{t("partiya1")}</TableHead>
+                  <TableHead>{t("referans")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

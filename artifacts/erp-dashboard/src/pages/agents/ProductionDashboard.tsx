@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface MonitorRes { delayed: number; atRisk: number }
 interface OeeRes { availability: number; performance: number; quality: number; oee: number }
 interface BottleneckRes { machineId: string; queueSize: number }
 
 export default function ProductionDashboard() {
+  const { t } = useTranslation("common");
   const monitor = useQuery<MonitorRes>({
     queryKey: ['/api/agents/production/monitor'],
     queryFn: () => apiRequest<MonitorRes>('GET', '/api/agents/production/monitor'),
@@ -36,18 +38,18 @@ export default function ProductionDashboard() {
         <div className="flex items-center gap-3">
           <Factory className="h-7 w-7 text-[var(--ep-yellow)]" />
           <div>
-            <h1 className="text-2xl font-bold">Ishlab chiqarish AI</h1>
-            <p className="text-sm text-muted-foreground">Buyurtmalar real-time + OEE + bottleneck</p>
+            <h1 className="text-2xl font-bold">{t("ishlabChiqarishAi")}</h1>
+            <p className="text-sm text-muted-foreground">{t("buyurtmalarRealTimeOeeBottleneck")}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => { monitor.refetch(); oee.refetch(); bottleneck.refetch(); }}>
-          <RefreshCw className="h-4 w-4 mr-1.5" /> Yangilash
+          <RefreshCw className="h-4 w-4 mr-1.5" /> {t("refresh")}
         </Button>
       </header>
 
       {/* Asosiy KPI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiBox label="Kechikkan buyurtmalar" value={monitor.data?.delayed ?? 0} tone={monitor.data && monitor.data.delayed > 0 ? 'red' : 'green'} icon={<AlertTriangle className="h-4 w-4" />} loading={monitor.isLoading} />
+        <KpiBox label={t("kechikkanBuyurtmalar")} value={monitor.data?.delayed ?? 0} tone={monitor.data && monitor.data.delayed > 0 ? 'red' : 'green'} icon={<AlertTriangle className="h-4 w-4" />} loading={monitor.isLoading} />
         <KpiBox label="Xavf ostidagi (2 kun)"  value={monitor.data?.atRisk ?? 0}  tone={monitor.data && monitor.data.atRisk > 0 ? 'amber' : 'green'} icon={<Activity className="h-5 w-5" />}      loading={monitor.isLoading} />
         <KpiBox label="OEE (%)"                value={`${Math.round((oee.data?.oee ?? 0) * 100)}%`} tone={(oee.data?.oee ?? 0) >= 0.65 ? 'green' : 'amber'} icon={<Factory className="h-5 w-5" />} loading={oee.isLoading} />
       </div>
@@ -70,7 +72,7 @@ export default function ProductionDashboard() {
             <div key={col} className="border rounded-lg p-3 bg-slate-50 min-h-[200px]">
               <div className="font-semibold text-xs uppercase tracking-wider mb-2">{col}</div>
               <div className="text-xs text-muted-foreground italic text-center mt-8">
-                MES integratsiya kelgach buyurtmalar shu yerda ko'rinadi
+                {t("mesIntegratsiyaKelgachBuyurtmalarShu")}
               </div>
             </div>
           ))}
@@ -91,7 +93,7 @@ export default function ProductionDashboard() {
             </div>
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground">Hozirgi bottleneck yo'q</div>
+          <div className="text-sm text-muted-foreground">{t("hozirgiBottleneckYoq")}</div>
         )}
       </Card>
     </div>

@@ -182,7 +182,7 @@ export default function IoTDashboard() {
       <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">IoT {t('dashboard1')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">IoT {t('dashboard1')}</b></>}
         title="IoT {t('dashboard1')}"
         subtitle={t('systemDesc')}
       />

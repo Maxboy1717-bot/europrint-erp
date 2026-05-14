@@ -11,6 +11,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Building2, Megaphone, Star, Plus, X } from "lucide-react";
 import { BrandData, CHANNEL_LABELS, CHANNEL_PLACEHOLDERS } from "./HRBrandPageTypes";
 import { CharCounter } from "./HRBrandPageHelpers";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Tab 1 — Kompaniya Taqdimoti
@@ -22,6 +23,7 @@ interface PresentationTabProps {
 }
 
 export function PresentationTab({ brand, setBrand }: PresentationTabProps) {
+  const { t } = useTranslation("common");
   const fields = [
     { key: "goal" as const, label: "Maqsad (Goal)", placeholder: "Kompaniyaning asosiy maqsadini kiriting..." },
     { key: "values" as const, label: "Qadriyatlar (Values)", placeholder: "Kompaniya qadriyatlarini kiriting..." },
@@ -34,7 +36,7 @@ export function PresentationTab({ brand, setBrand }: PresentationTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-[var(--ep-blue)]" />
-            Kompaniya Taqdimoti
+            {t("kompaniyaTaqdimoti")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -80,7 +82,7 @@ export function ChannelsTab({ brand, setBrand }: ChannelsTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Megaphone className="w-5 h-5 text-[var(--ep-purple)]" />
-            Kanal Kontent Shablonlari
+            {t("kanalKontentShablonlari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -129,7 +131,7 @@ export function BenefitsTab({ brand, newBenefit, setNewBenefit, onAdd, onRemove 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Star className="w-5 h-5 text-[var(--ep-yellow)]" />
-            Kompaniya Afzalliklari
+            {t("kompaniyaAfzalliklari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -150,13 +152,13 @@ export function BenefitsTab({ brand, newBenefit, setNewBenefit, onAdd, onRemove 
             />
             <Button onClick={onAdd} variant="outline" className="gap-1">
               <Plus className="w-4 h-4" />
-              Qo'shish
+              {t("add")}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2 min-h-[60px] p-3 border rounded-md bg-gray-50">
             {brand.benefits.length === 0 && (
               <span className="text-sm text-gray-400 self-center">
-                Hali afzalliklar qo'shilmagan
+                {t("haliAfzalliklarQoshilmagan")}
               </span>
             )}
             {(Array.isArray(brand.benefits) ? brand.benefits : []).map((benefit, i) => (

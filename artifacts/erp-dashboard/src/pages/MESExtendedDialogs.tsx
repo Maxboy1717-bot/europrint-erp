@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { type MESMachine, type MaintFormValues } from "./MESExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -33,20 +34,21 @@ export function MaintenanceDialog({
   isPending,
   onSubmit,
 }: MaintenanceDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Texnik Xizmat So'rovi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("texnikXizmatSorovi")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* Machine selector */}
           <div className="space-y-1">
-          <Label>Stanoq</Label>
+          <Label>{t("stanoq")}</Label>
             <Select onValueChange={v => form.setValue("machineId", v)}>
               <SelectTrigger data-testid="select-machine" className="h-9">
-                <SelectValue placeholder="Stanoq tanlang" />
+                <SelectValue placeholder={t("stanoqTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(machines) ? machines : []).map((m: MESMachine) => (
@@ -60,7 +62,7 @@ export function MaintenanceDialog({
 
           {/* Issue description */}
           <div className="space-y-1">
-          <Label>Muammo tavsifi</Label>
+          <Label>{t("muammoTavsifi1")}</Label>
             <Input
               {...form.register("issue")}
               data-testid="input-maintenance-issue"
@@ -69,25 +71,25 @@ export function MaintenanceDialog({
 
           {/* Priority selector */}
           <div className="space-y-1">
-          <Label>Ustuvorlik</Label>
+          <Label>{t("ustuvorlik")}</Label>
             <Select defaultValue="medium" onValueChange={v => form.setValue("priority", v)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Past</SelectItem>
-                <SelectItem value="medium">O'rta</SelectItem>
-                <SelectItem value="high">Kritik</SelectItem>
+                <SelectItem value="low">{t("low")}</SelectItem>
+                <SelectItem value="medium">{t("medium")}</SelectItem>
+                <SelectItem value="high">{t("kritik")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <DialogFooter>
             <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Bekor
+              {t("Bekor")}
             </Button>
             <Button type="submit" disabled={isPending}>
-              Yuborish
+              {t("submitBtn")}
             </Button>
           </DialogFooter>
         </form>

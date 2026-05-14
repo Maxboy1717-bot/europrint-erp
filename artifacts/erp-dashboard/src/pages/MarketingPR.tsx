@@ -75,28 +75,28 @@ export default function MarketingPR() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-pr">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing {t('prMedia')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Marketing {t('prMedia')}</b></>}
         title="Marketing {t('prMedia')}"
       />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-pr">
               <Plus className="h-4 w-4" />
-              Yangi PR
+              {t("yangiPr")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg bg-card border-none p-6">
             <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "PR faoliyatni tahrirlash" : "Yangi PR Faoliyat"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Sarlavha *</Label><Input className="bg-background border-border" data-testid="input-pr-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Tavsif</Label><Textarea className="bg-background border-border" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sarlavha")}</Label><Input className="bg-background border-border" data-testid="input-pr-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("progress.description")}</Label><Textarea className="bg-background border-border" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Turi *</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Holat</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("turi")}</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("status28")}</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
               </div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">{t('mediaOav')}</Label><Input className="bg-background border-border" value={form.media} onChange={(e) => setForm({ ...form, media: e.target.value })} placeholder="Gazeta, TV, Online..." /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t('mediaOav')}</Label><Input className="bg-background border-border" value={form.media} onChange={(e) => setForm({ ...form, media: e.target.value })} placeholder={t("gazetaTvOnline")} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Sana</Label><Input className="bg-background border-border" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("date")}</Label><Input className="bg-background border-border" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
                 <div className="space-y-1.5"><Label className="text-muted-foreground">Havola (URL)</Label><Input className="bg-background border-border" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://..." /></div>
               </div>
               <Button onClick={handleSubmit} disabled={!form.title || !form.type || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-pr">{editId ? "Saqlash" : "Yaratish"}</Button>
@@ -106,7 +106,7 @@ export default function MarketingPR() {
       </div>
 
       {activities?.length === 0 ? (
-        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">Hozircha PR faoliyatlar yo'q</CardContent></Card>
+        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">{t("hozirchaPrFaoliyatlarYoq")}</CardContent></Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {activities?.map((a) => (
@@ -142,8 +142,8 @@ export default function MarketingPR() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="PR faoliyatni o'chirish"
-        description="Ushbu PR faoliyatni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("prFaoliyatniOchirish")}
+        description={t("ushbuPrFaoliyatniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

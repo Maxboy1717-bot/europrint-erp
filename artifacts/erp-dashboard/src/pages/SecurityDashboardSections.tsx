@@ -13,6 +13,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import type { AttendanceRecord, Visitor } from "./SecurityDashboardTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 /** Shared table-header cell class used across all security tables. */
 const TH = "bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6";
 
@@ -26,28 +27,29 @@ interface AttendanceTabProps {
 }
 
 export function AttendanceTab({ records, isLoading }: AttendanceTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="overview" className="space-y-4 mt-6">
       <div className="bg-card rounded-xl p-6">
         <div className="flex items-center gap-2 mb-6">
           <ScanLine className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-bold text-foreground">Bugungi Kirish Jurnali</h2>
+          <h2 className="text-xl font-bold text-foreground">{t("bugungiKirishJurnali")}</h2>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center py-8"><EPLoader className="w-6 h-6" /></div>
         ) : !records?.length ? (
-          <div className="text-center py-8 text-[13px] text-muted-foreground">Bugun kirish jurnali yo'q</div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground">{t("bugunKirishJurnaliYoq")}</div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="border-none hover:bg-transparent">
-                <TableHead className={`${TH} rounded-l-lg`}>Xodim</TableHead>
-                <TableHead className={TH}>Turi</TableHead>
-                <TableHead className={TH}>Vaqt</TableHead>
-                <TableHead className={TH}>Usul</TableHead>
-                <TableHead className={TH}>Joy</TableHead>
-                <TableHead className={`${TH} rounded-r-lg`}>Holat</TableHead>
+                <TableHead className={`${TH} rounded-l-lg`}>{t("xodim1")}</TableHead>
+                <TableHead className={TH}>{t("type")}</TableHead>
+                <TableHead className={TH}>{t("time")}</TableHead>
+                <TableHead className={TH}>{t("usul")}</TableHead>
+                <TableHead className={TH}>{t("joy")}</TableHead>
+                <TableHead className={`${TH} rounded-r-lg`}>{t("status28")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,11 +82,11 @@ export function AttendanceTab({ records, isLoading }: AttendanceTabProps) {
                     <TableCell className="px-6">
                       {r.isAnomaly ? (
                         <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none">
-                          <AlertTriangle className="w-3 h-3 mr-1" />Anomaliya
+                          <AlertTriangle className="w-3 h-3 mr-1" />{t("anomaliya")}
                         </Badge>
                       ) : (
                         <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none">
-                          <CheckCircle className="w-3 h-3 mr-1" />Normal
+                          <CheckCircle className="w-3 h-3 mr-1" />{t("normal")}
                         </Badge>
                       )}
                     </TableCell>
@@ -118,29 +120,29 @@ export function VisitorsTab({ visitors, isLoading, onAdd, onExit, exitPending }:
         <div className="flex items-center justify-between flex-wrap gap-2 mb-6">
           <div>
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Eye className="w-5 h-5 text-primary" />Tashrifchilar
+              <Eye className="w-5 h-5 text-primary" />{t("tashrifchilar")}
             </h2>
-            <p className="text-sm text-muted-foreground">Hozirda zavodda bo'lgan tashrifchilar</p>
+            <p className="text-sm text-muted-foreground">{t("hozirdaZavoddaBolganTashrifchilar")}</p>
           </div>
           <Button onClick={onAdd} data-testid="button-add-visitor">
-            <Plus className="w-4 h-4 mr-2" />Yangi Tashrif
+            <Plus className="w-4 h-4 mr-2" />{t("yangiTashrif")}
           </Button>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center py-8"><EPLoader className="w-6 h-6" /></div>
         ) : !visitors.length ? (
-          <div className="text-center py-8 text-[13px] text-muted-foreground">Tashrifchilar yo'q</div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground">{t("tashrifchilarYoq")}</div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="border-none hover:bg-transparent">
-                <TableHead className={`${TH} rounded-l-lg`}>Ismi</TableHead>
-                <TableHead className={TH}>Kompaniya</TableHead>
-                <TableHead className={TH}>Maqsad</TableHead>
-                <TableHead className={TH}>Mezboni</TableHead>
-                <TableHead className={TH}>Kirdi</TableHead>
-                <TableHead className={TH}>Holat</TableHead>
+                <TableHead className={`${TH} rounded-l-lg`}>{t("ismi")}</TableHead>
+                <TableHead className={TH}>{t("company")}</TableHead>
+                <TableHead className={TH}>{t("Maqsad")}</TableHead>
+                <TableHead className={TH}>{t("mezboni1")}</TableHead>
+                <TableHead className={TH}>{t("kirdi")}</TableHead>
+                <TableHead className={TH}>{t("status28")}</TableHead>
                 <TableHead className={`${TH} rounded-r-lg`}></TableHead>
               </TableRow>
             </TableHeader>
@@ -165,7 +167,7 @@ export function VisitorsTab({ visitors, isLoading, onAdd, onExit, exitPending }:
                         data-testid={`button-exit-visitor-${v.id}`}
                         onClick={() => onExit(v.id)}
                         disabled={exitPending}>
-                        <LogOut className="w-3 h-3 mr-1" />Chiqdi
+                        <LogOut className="w-3 h-3 mr-1" />{t("chiqdi")}
                       </Button>
                     )}
                   </TableCell>

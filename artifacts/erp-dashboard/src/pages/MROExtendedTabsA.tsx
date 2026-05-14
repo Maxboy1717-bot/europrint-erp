@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, RefreshCw, AlertTriangle, CheckCircle, Zap, Flame, Droplets, Wind, type LucideIcon } from "lucide-react";
 import { PMUpcomingPanel } from "./MROExtendedPanels";
 import type { MROEquipment, MRORequest, MROItem, MROStats, UtilityReading } from "./MROExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---- PreventiveTab ----
 
@@ -23,16 +24,17 @@ interface PreventiveTabProps {
 }
 
 export function PreventiveTab({ requests, equipment, stats, reqLoading, pendingReqs, onAddRequest, onAddEquip, onRefresh }: PreventiveTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="preventive" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Profilaktik Texnik Xizmat</h2>
+        <h2 className="text-lg font-semibold">{t("profilaktikTexnikXizmat")}</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onRefresh}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button size="sm" onClick={onAddRequest} data-testid="button-add-maintenance">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />So'rov Yaratish
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("sorovYaratish")}
           </Button>
         </div>
       </div>
@@ -54,23 +56,23 @@ export function PreventiveTab({ requests, equipment, stats, reqLoading, pendingR
       )}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-          <CardTitle className="text-base">Texnik Xizmat So'rovlari</CardTitle>
+          <CardTitle className="text-base">{t("texnikXizmatSorovlari")}</CardTitle>
           <Button variant="outline" size="sm" onClick={onAddEquip}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />Jihoz Qo'shish
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("jihozQoshish")}
           </Button>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Tur</TableHead><TableHead>Tavsif</TableHead>
-              <TableHead>Ustuvorlik</TableHead><TableHead>Mas'ul</TableHead><TableHead>Holati</TableHead>
+              <TableHead>{t("tur")}</TableHead><TableHead>{t("progress.description")}</TableHead>
+              <TableHead>{t("ustuvorlik")}</TableHead><TableHead>{t("masul")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {reqLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : requests.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-[var(--ep-green)]" />So'rovlar yo'q
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-[var(--ep-green)]" />{t("sorovlarYoq")}
                 </TableCell></TableRow>
               ) : (Array.isArray(requests) ? requests : []).slice(0, 10).map((r) => (
                 <TableRow key={r.id} data-testid={`row-request-${r.id}`} className="hover:bg-muted/40 transition-colors">
@@ -110,9 +112,9 @@ export function SparePartsTab({ items, itemsLoading, lowStockItems, onAddItem }:
   return (
     <TabsContent value="spareparts" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">MRO Ehtiyot Qismlar</h2>
+        <h2 className="text-lg font-semibold">{t("mroEhtiyotQismlar")}</h2>
         <Button size="sm" onClick={onAddItem} data-testid="button-add-spare">
-          <Plus className="h-3.5 w-3.5 mr-1.5" />Kirim Qilish
+          <Plus className="h-3.5 w-3.5 mr-1.5" />{t("kirimQilish")}
         </Button>
       </div>
       {lowStockItems.length > 0 && (
@@ -125,15 +127,15 @@ export function SparePartsTab({ items, itemsLoading, lowStockItems, onAddItem }:
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Kod</TableHead><TableHead>Nomi</TableHead>
-              <TableHead>Toifa</TableHead><TableHead>Miqdor</TableHead>
-              <TableHead>Min</TableHead><TableHead>Joylashuvi</TableHead><TableHead>Holati</TableHead>
+              <TableHead>{t("code")}</TableHead><TableHead>{t("name")}</TableHead>
+              <TableHead>{t("toifa")}</TableHead><TableHead>{t("quantity")}</TableHead>
+              <TableHead>{t("min1")}</TableHead><TableHead>{t("joylashuvi")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {itemsLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : items.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">Materiallar yo'q</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">{t("materiallarYoq")}</TableCell></TableRow>
               ) : (Array.isArray(items) ? items : []).slice(0, 15).map((item) => {
                 const isLow = Number(item.quantity) <= Number(item.minQty || 5);
                 return (
@@ -167,7 +169,7 @@ interface UtilitiesTabProps {
 export function UtilitiesTab({ stats, utilityReadings, utilityReadingsLoading }: UtilitiesTabProps) {
   return (
     <TabsContent value="utilities" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Kommunal Xizmatlar Monitoring</h2>
+      <h2 className="text-lg font-semibold">{t("kommunalXizmatlarMonitoring")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Elektr (bugungi)", v: stats?.electricityToday ?? "—", unit: "kWh", c: "text-[var(--ep-yellow)]" },
@@ -203,7 +205,7 @@ export function UtilitiesTab({ stats, utilityReadings, utilityReadingsLoading }:
             </div>
           ) : !utilityReadings || utilityReadings.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-6" data-testid="text-no-utility-readings">
-              Kommunal o'qish ma'lumotlari mavjud emas
+              {t("kommunalOqishMalumotlariMavjudEmas")}
             </div>
           ) : (
             <div className="space-y-3">

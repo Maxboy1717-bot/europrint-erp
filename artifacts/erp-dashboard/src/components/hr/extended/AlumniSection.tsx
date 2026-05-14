@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users, CheckCircle2, FileText } from "lucide-react";
 import { AlumniRecord } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface AlumniSectionProps {
   alumniList: AlumniRecord[];
@@ -18,10 +19,11 @@ export function AlumniSection({
   alumniList,
   alumniStats,
 }: AlumniSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Alumni — Sobiq Xodimlar</h2>
+        <h2 className="text-lg font-semibold">{t("alumniSobiqXodimlar")}</h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
@@ -39,17 +41,17 @@ export function AlumniSection({
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Sobiq xodimlar ro'yxati</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("sobiqXodimlarRoyxati")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>F.I.SH.</TableHead><TableHead>Oxirgi lavozim</TableHead>
-              <TableHead>Bo'shatilgan sana</TableHead><TableHead>Hozirgi ish joyi</TableHead>
-              <TableHead>Holati</TableHead>
+              <TableHead>F.I.SH.</TableHead><TableHead>{t("oxirgiLavozim")}</TableHead>
+              <TableHead>{t("boshatilganSana")}</TableHead><TableHead>{t("hozirgiIshJoyi")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {alumniList.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Alumni ma'lumotlari yo'q</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("alumniMalumotlariYoq")}</TableCell></TableRow>
               ) : (Array.isArray(alumniList) ? alumniList : []).map((al) => (
                 <TableRow key={al.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{al.fullName}</TableCell>
@@ -57,7 +59,7 @@ export function AlumniSection({
                   <TableCell>{al.exitDate || "—"}</TableCell>
                   <TableCell>{al.currentEmployer || "—"}</TableCell>
                   <TableCell>
-                    {al.isReturned ? <Badge className="bg-green-100 text-[var(--ep-green)] hover:bg-green-100">Qaytgan</Badge> : <Badge variant="outline">Alumni</Badge>}
+                    {al.isReturned ? <Badge className="bg-green-100 text-[var(--ep-green)] hover:bg-green-100">{t("qaytgan")}</Badge> : <Badge variant="outline">{t("alumni")}</Badge>}
                   </TableCell>
                 </TableRow>
               ))}

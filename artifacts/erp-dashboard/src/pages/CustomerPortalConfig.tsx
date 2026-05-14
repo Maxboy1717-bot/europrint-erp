@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EPPageHeader, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const BASE_URL = window.location.origin;
 
@@ -166,46 +167,47 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export default function CustomerPortalConfig() {
+  const { t } = useTranslation("common");
   const [selectedEndpoint, setSelectedEndpoint] = useState(WEBHOOK_ENDPOINTS[0]);
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Mijozlar sayti integratsiyasi</b></>}
-        title="Mijozlar sayti integratsiyasi"
-        subtitle="Veb-sayt va tashqi tizimlarni ERP CRM moduliga ulash sozlamalari"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("mijozlarSaytiIntegratsiyasi")}</b></>}
+        title={t("mijozlarSaytiIntegratsiyasi")}
+        subtitle={t("vebSaytVaTashqiTizimlarni")}
       />
 
       {/* Status */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Globe className="w-4 h-4" />Server manzili</div>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Globe className="w-4 h-4" />{t("serverManzili")}</div>
             <div className="font-mono text-sm truncate">{BASE_URL}</div>
-            <Badge className="mt-2 bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Faol</Badge>
+            <Badge className="mt-2 bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />{t("active")}</Badge>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Shield className="w-4 h-4" />Webhook xavfsizlik</div>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Shield className="w-4 h-4" />{t("webhookXavfsizlik")}</div>
             <EPStatusPill tone="danger" className="mt-1">CRM_WEBHOOK_SECRET kerak</EPStatusPill>
-            <p className="text-xs text-muted-foreground mt-1.5">Replit Secrets orqali sozlang</p>
+            <p className="text-xs text-muted-foreground mt-1.5">{t("replitSecretsOrqaliSozlang")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Webhook className="w-4 h-4" />Webhook endpointlar</div>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Webhook className="w-4 h-4" />{t("webhookEndpointlar")}</div>
             <div className="text-3xl font-bold">{WEBHOOK_ENDPOINTS.length}</div>
-            <div className="text-xs text-muted-foreground">forma, qo'ng'iroq, telegram, kuzatish</div>
+            <div className="text-xs text-muted-foreground">{t("formaQongiroqTelegramKuzatish")}</div>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="endpoints">
         <TabsList>
-          <TabsTrigger value="endpoints" data-testid="tab-endpoints"><Webhook className="w-3.5 h-3.5 mr-1.5" />Webhook endpointlar</TabsTrigger>
-          <TabsTrigger value="code" data-testid="tab-code"><Code2 className="w-3.5 h-3.5 mr-1.5" />JavaScript kodi</TabsTrigger>
-          <TabsTrigger value="security" data-testid="tab-security"><Shield className="w-3.5 h-3.5 mr-1.5" />Xavfsizlik</TabsTrigger>
+          <TabsTrigger value="endpoints" data-testid="tab-endpoints"><Webhook className="w-3.5 h-3.5 mr-1.5" />{t("webhookEndpointlar")}</TabsTrigger>
+          <TabsTrigger value="code" data-testid="tab-code"><Code2 className="w-3.5 h-3.5 mr-1.5" />{t("javascriptKodi")}</TabsTrigger>
+          <TabsTrigger value="security" data-testid="tab-security"><Shield className="w-3.5 h-3.5 mr-1.5" />{t("xavfsizlik")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="endpoints" className="space-y-4 mt-4">
@@ -271,8 +273,8 @@ export default function CustomerPortalConfig() {
         <TabsContent value="code" className="mt-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Veb-saytga integratsiya kodi</CardTitle>
-              <CardDescription>Bu kodni veb-saytingizga qo'shing</CardDescription>
+              <CardTitle className="text-base">{t("vebSaytgaIntegratsiyaKodi")}</CardTitle>
+              <CardDescription>{t("buKodniVebSaytingizgaQoshing")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="relative">
@@ -285,7 +287,7 @@ export default function CustomerPortalConfig() {
               </div>
               <div className="mt-4 p-3 rounded-md bg-yellow-500/10 border border-yellow-200 dark:border-yellow-800">
                 <p className="text-xs text-[var(--ep-yellow)] dark:text-yellow-400">
-                  <strong>Muhim:</strong> HMAC imzoni server tomonida hisoblang. JavaScript frontendda secret kalitni ochiq saqlash xavfli!
+                  <strong>{t("muhim")}</strong> {t("hmacImzoniServerTomonidaHisoblang")}
                 </p>
               </div>
             </CardContent>
@@ -295,7 +297,7 @@ export default function CustomerPortalConfig() {
         <TabsContent value="security" className="mt-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Xavfsizlik sozlamalari</CardTitle>
+              <CardTitle className="text-base">{t("xavfsizlikSozlamalari")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="space-y-1">
@@ -310,12 +312,12 @@ export default function CustomerPortalConfig() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  <code className="bg-muted px-1 rounded">CRM_WEBHOOK_SECRET</code> env o'zgaruvchisini Replit Secrets orqali sozlang
+                  <code className="bg-muted px-1 rounded">CRM_WEBHOOK_SECRET</code> {t("envOzgaruvchisiniReplitSecretsOrqali")}
                 </p>
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-sm font-medium">Xavfsizlik protokoli</h4>
+                <h4 className="text-sm font-medium">{t("xavfsizlikProtokoli")}</h4>
                 {([
                   "Har bir so'rovda HMAC SHA-256 imzo tekshiriladi",
                   "Timestamp 5 daqiqadan eski so'rovlar rad etiladi",

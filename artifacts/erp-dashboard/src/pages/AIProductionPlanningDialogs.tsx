@@ -35,11 +35,11 @@ export function OverrideDialog({open, onOpenChange, planNumber, reason, onReason
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-primary" /> Rejani Tasdiqlash
+            <ShieldCheck className="h-5 w-5 text-primary" /> {t("rejaniTasdiqlash")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Reja: <strong>{planNumber}</strong></p>
+          <p className="text-sm text-muted-foreground">{t("reja1")}<strong>{planNumber}</strong></p>
           <div className="p-3 bg-amber-50 rounded-md text-xs text-[var(--ep-yellow)]">
             Super admin override: sabab kiritish majburiy (kamida 10 belgi). Log yoziladi.
           </div>
@@ -47,7 +47,7 @@ export function OverrideDialog({open, onOpenChange, planNumber, reason, onReason
             <Label>Override sababi (majburiy)</Label>
             <Textarea
               className="mt-1"
-              placeholder="Nima uchun bu reja qo'lda tasdiqlanmoqda?..."
+              placeholder={t("nimaUchunBuRejaQolda")}
               value={reason}
               onChange={(e) => onReasonChange(e.target.value)}
               rows={3}
@@ -57,7 +57,7 @@ export function OverrideDialog({open, onOpenChange, planNumber, reason, onReason
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             onClick={onConfirm}
             disabled={isPending || reason.trim().length < 10}
@@ -93,24 +93,24 @@ export function RescheduleDialog({ open, onOpenChange, reason, onReasonChange, r
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <RotateCcw className="h-4 w-4 text-[var(--ep-blue)]" /> Qayta Rejalash — Dynamic Reschedule
+            <RotateCcw className="h-4 w-4 text-[var(--ep-blue)]" /> {t("qaytaRejalashDynamicReschedule")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="p-3 bg-blue-50 rounded-md text-xs text-[var(--ep-blue)]">
-            Reja qayta rejalashtiriladi: barcha buyurtmalar 2 soat kechiktiriladi. Log yoziladi va Telegram yuboriladi.
+            {t("rejaQaytaRejalashtiriladiBarchaBuyurtmalar")}
           </div>
           <div>
-            <Label>Sabab turi</Label>
+            <Label>{t("sababTuri")}</Label>
             <Select value={rescheduleType} onValueChange={(v) => onTypeChange(v as RescheduleType)}>
               <SelectTrigger className="mt-1 h-9" data-testid="select-reschedule-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="machine_stop">Mashina to'xtashi</SelectItem>
+                <SelectItem value="machine_stop">{t("mashinaToxtashi")}</SelectItem>
                 <SelectItem value="material_shortage">{t('materialYetishmovchi')}</SelectItem>
-                <SelectItem value="priority_change">Ustuvorlik o'zgarishi</SelectItem>
-                <SelectItem value="manual">Qo'lda o'zgartirish</SelectItem>
+                <SelectItem value="priority_change">{t("ustuvorlikOzgarishi")}</SelectItem>
+                <SelectItem value="manual">{t("qoldaOzgartirish")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -118,7 +118,7 @@ export function RescheduleDialog({ open, onOpenChange, reason, onReasonChange, r
             <Label>Sabab (kamida 5 belgi)</Label>
             <Textarea
               className="mt-1"
-              placeholder="Qayta rejalash sababi..."
+              placeholder={t("qaytaRejalashSababi")}
               value={reason}
               onChange={(e) => onReasonChange(e.target.value)}
               rows={2}
@@ -127,7 +127,7 @@ export function RescheduleDialog({ open, onOpenChange, reason, onReasonChange, r
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             onClick={onConfirm}
             disabled={isPending || reason.trim().length < 5}
@@ -165,28 +165,28 @@ export function BlockMaterialDialog({ open, onOpenChange, orderId, material, rea
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[var(--ep-yellow)]">
-            <AlertCircle className="h-4 w-4" /> Material yetishmovchi — PP bloklash
+            <AlertCircle className="h-4 w-4" /> {t("materialYetishmovchiPpBloklash")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="p-3 bg-amber-50 rounded-md text-xs text-[var(--ep-yellow)]">
-            Buyurtma <strong>{t('blockedByMaterial')}</strong> holatiga o'tkaziladi. MM ga avtomatik xarid talabi yuboriladi va managerga Telegram signal jo'natiladi.
+            {t("Buyurtma")}<strong>{t('blockedByMaterial')}</strong> {t("holatigaOtkaziladiMmGaAvtomatik")}
           </div>
           <div>
-            <Label>Buyurtma ID</Label>
-            <Input className="mt-1" placeholder="papkaOrder ID yoki papka raqami" value={orderId} onChange={(e) => onOrderIdChange(e.target.value)} data-testid="input-block-order-id" />
+            <Label>{t("buyurtmaId")}</Label>
+            <Input className="mt-1" placeholder={t("papkaorderIdYokiPapkaRaqami")} value={orderId} onChange={(e) => onOrderIdChange(e.target.value)} data-testid="input-block-order-id" />
           </div>
           <div>
-            <Label>Yetishmayotgan material nomi</Label>
+            <Label>{t("yetishmayotganMaterialNomi")}</Label>
             <Input className="mt-1" placeholder="masalan: gofrokarton, PP lenta..." value={material} onChange={(e) => onMaterialChange(e.target.value)} data-testid="input-block-material" />
           </div>
           <div>
             <Label>Sabab (ixtiyoriy)</Label>
-            <Input className="mt-1" placeholder="Ko'rsatilmagan" value={reason} onChange={(e) => onReasonChange(e.target.value)} data-testid="input-block-reason" />
+            <Input className="mt-1" placeholder={t("korsatilmagan")} value={reason} onChange={(e) => onReasonChange(e.target.value)} data-testid="input-block-reason" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             className="bg-[var(--ep-yellow)] text-white"
             onClick={onConfirm}
@@ -221,12 +221,12 @@ export function ConfigDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">AI Rejalashtirish Sozlamalari</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("aiRejalashtirishSozlamalari")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-sm font-medium">Avto-tasdiqlash chegarasi</label>
+              <label className="text-sm font-medium">{t("avtoTasdiqlashChegarasi")}</label>
               <span
                 className={cn("text-lg font-bold", getConfidenceColor(threshold))}
                 data-testid="text-config-threshold"

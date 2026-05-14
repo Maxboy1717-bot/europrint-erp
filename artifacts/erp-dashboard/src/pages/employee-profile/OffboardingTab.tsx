@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { OffboardingCase } from "./OffboardingTabTypes";
 import { ExitInterviewForm } from "./OffboardingTabDialogs";
+import { useTranslation } from '@/lib/i18n';
 import {
   CaseOverviewCard,
   ExitInterviewCard,
@@ -20,6 +21,7 @@ import {
 } from "./OffboardingTabSections";
 
 export function OffboardingTab({ employeeId }: { employeeId: string }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showInterviewForm, setShowInterviewForm] = useState(false);
@@ -80,8 +82,8 @@ export function OffboardingTab({ employeeId }: { employeeId: string }) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
         <UserX className="h-14 w-14 opacity-10" />
-        <p className="text-sm">Offboarding jarayoni topilmadi</p>
-        <p className="text-xs text-muted-foreground/60">Bu xodim uchun hali offboarding boshlangmagan</p>
+        <p className="text-sm">{t("offboardingJarayoniTopilmadi")}</p>
+        <p className="text-xs text-muted-foreground/60">{t("buXodimUchunHaliOffboarding")}</p>
       </div>
     );
   }
@@ -132,7 +134,7 @@ export function OffboardingTab({ employeeId }: { employeeId: string }) {
           disabled={finalizeCase.isPending}
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />
-          Offboardingni Finallashtirish
+          {t("offboardingniFinallashtirish")}
         </Button>
       )}
 
@@ -140,7 +142,7 @@ export function OffboardingTab({ employeeId }: { employeeId: string }) {
         <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-900/10 p-3 text-sm">
           <ShieldAlert className="h-4 w-4 text-[var(--ep-primary)] shrink-0" />
           <span className="text-[var(--ep-primary)] dark:text-orange-400">
-            Finalashtirish bloklangan — suhbatni to'liq to'ldiring
+            {t("finalashtirishBloklanganSuhbatniToliqToldiring")}
           </span>
         </div>
       )}

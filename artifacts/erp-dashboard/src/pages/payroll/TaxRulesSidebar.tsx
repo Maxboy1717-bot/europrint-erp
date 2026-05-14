@@ -22,11 +22,12 @@ interface TaxRulesSidebarProps {
 }
 
 export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRulesSidebarProps) {
+  const { t } = useTranslation("common");
   const { t: tFinance } = useTranslation('finance');
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-6">
       <Card>
         <CardHeader>
@@ -83,9 +84,9 @@ export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRules
               {tFinance('importantNotes')}
             </h4>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-xs">
-              <li>INPS va JSHD yalpi ish haqidan hisoblanadi</li>
-              <li>Minimal ish haqi kafolati faol bo'lsa, sof ish haqi min. darajadan kam bo'lmaydi</li>
-              <li>Avans va qarzlar sof ish haqidan ushlab qolinadi</li>
+              <li>{t("inpsVaJshdYalpiIsh")}</li>
+              <li>{t("minimalIshHaqiKafolatiFaol")}</li>
+              <li>{t("avansVaQarzlarSofIsh")}</li>
             </ul>
           </div>
 
@@ -117,16 +118,16 @@ export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRules
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-start gap-3 p-2 rounded bg-blue-500/10">
-            <EPStatusPill tone="info">Ishbay</EPStatusPill>
-            <p className="text-xs text-muted-foreground">O'zgarmas oylik maosh. Belgilangan summa oylik sifatida to'lanadi.</p>
+            <EPStatusPill tone="info">{t("ishbay")}</EPStatusPill>
+            <p className="text-xs text-muted-foreground">{t("ozgarmasOylikMaoshBelgilanganSumma")}</p>
           </div>
           <div className="flex items-start gap-3 p-2 rounded bg-purple-500/10">
-            <Badge className="bg-[var(--ep-purple)] text-white shrink-0">Vaqtbay</Badge>
-            <p className="text-xs text-muted-foreground">Soatlik to'lov. Ishlagan soatlar × soatlik stavka.</p>
+            <Badge className="bg-[var(--ep-purple)] text-white shrink-0">{t("vaqtbay")}</Badge>
+            <p className="text-xs text-muted-foreground">{t("soatlikTolovIshlaganSoatlarSoatlik")}</p>
           </div>
           <div className="flex items-start gap-3 p-2 rounded bg-green-500/10">
-            <EPStatusPill tone="success">Donabay</EPStatusPill>
-            <p className="text-xs text-muted-foreground">Mahsulot bo'yicha to'lov. Ishlab chiqarilgan birliklar × birlik narxi.</p>
+            <EPStatusPill tone="success">{t("donabay")}</EPStatusPill>
+            <p className="text-xs text-muted-foreground">{t("mahsulotBoyichaTolovIshlabChiqarilgan")}</p>
           </div>
         </CardContent>
       </Card>

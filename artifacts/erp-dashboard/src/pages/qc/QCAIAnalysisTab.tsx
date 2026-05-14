@@ -37,14 +37,15 @@ const categoryLabels: Record<string, string> = {
 
 function getRiskBadge(riskLevel: string | undefined) {
   switch (riskLevel) {
-    case "low": return <Badge variant="success">Past</Badge>;
-    case "medium": return <Badge variant="warning">O'rta</Badge>;
-    case "high": return <Badge variant="error">Yuqori</Badge>;
+    case "low": return <Badge variant="success">{t("low")}</Badge>;
+    case "medium": return <Badge variant="warning">{t("medium")}</Badge>;
+    case "high": return <Badge variant="error">{t("high")}</Badge>;
     default: return <EPStatusPill tone="neutral">{riskLevel || "—"}</EPStatusPill>;
   }
 }
 
 export function QCAIAnalysisTab() {
+  const { t } = useTranslation("common");
   const { t: tCommon } = useTranslation('common');
 
   const { data: testsData, isLoading: testsLoading } = useQuery<QcMaterialTest[]>({
@@ -60,15 +61,15 @@ export function QCAIAnalysisTab() {
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5" />
-            AI Tahlili natijalari
+            {t("aiTahliliNatijalari")}
           </CardTitle>
-          <CardDescription>Sifat testlari bo'yicha sun'iy intellekt tahlili</CardDescription>
+          <CardDescription>{t("sifatTestlariBoyichaSuniyIntellekt")}</CardDescription>
         </CardHeader>
         <CardContent>
           {testsLoading ? (
@@ -133,7 +134,7 @@ export function QCAIAnalysisTab() {
       <Card>
         <CardHeader>
           <CardTitle>{tCommon('total')}</CardTitle>
-          <CardDescription>Umumiy sifat ko'rsatkichlari</CardDescription>
+          <CardDescription>{t("umumiySifatKorsatkichlari")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

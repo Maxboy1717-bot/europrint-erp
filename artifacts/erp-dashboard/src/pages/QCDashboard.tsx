@@ -15,10 +15,12 @@ import { Link } from "wouter";
 
 import type { QcStats, QcFlowData, QcBrak, QcReclamation, QcSupplierQuality } from "./QCDashboardTypes";
 import { KpiSection, QcFlowSection, AttentionSection, SummarySection } from "./QCDashboardSections";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function QCDashboard() {
+  const { t } = useTranslation("common");
   const { data: stats,    isLoading: sLoad  } = useQuery<QcStats>            ({ queryKey: ["/api/qc/dashboard/stats"] });
   const { data: flow,     isLoading: fLoad  } = useQuery<QcFlowData>         ({ queryKey: ["/api/qc/dashboard/flow"] });
   const { data: braks,    isLoading: bLoad  } = useQuery<QcBrak[]>           ({ queryKey: ["/api/qc/braks"] });
@@ -38,9 +40,9 @@ export default function QCDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">QC — Sifat Nazorati</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("qcSifatNazorati")}</h1>
           <p className="text-sm text-muted-foreground">
-            4 ta QC oqimi | Sifat bo'limi boshlig'ining kunlik ko'rinishi
+            {t("k4TaQcOqimiSifat")}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -82,16 +84,16 @@ export default function QCDashboard() {
       {/* Tezkor harakatlar */}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild>
-          <Link href="/qc-module">QC Moduli <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+          <Link href="/qc-module">{t("qcModuli")}<ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/qc-extended">QC Extended <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+          <Link href="/qc-extended">{t("qcExtended")}<ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/qc-final">Final Inspeksiya <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+          <Link href="/qc-final">{t("finalInspeksiya")}<ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/qc-approval">Tasdiqlash <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+          <Link href="/qc-approval">{t("verify")}<ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
         </Button>
       </div>
 

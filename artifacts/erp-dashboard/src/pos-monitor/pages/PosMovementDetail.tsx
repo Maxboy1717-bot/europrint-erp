@@ -9,6 +9,7 @@ import { usePosI18n } from "../i18n/usePosI18n";
 import { movementsApi } from "../api/pos-monitor.api";
 import { GlTab } from "../components/GlTab";
 import { StepsTab } from "../components/StepsTab";
+import { useTranslation } from '@/lib/i18n';
 
 interface MovLine {
   id: number; materialCardId: number; qty: number;
@@ -35,6 +36,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function PosMovementDetail() {
+  const { t } = useTranslation("common");
   const params        = useParams<{ id: string }>();
   const [, navigate]  = useLocation();
   const { t }         = usePosI18n();
@@ -69,7 +71,7 @@ export default function PosMovementDetail() {
   }
 
   if (loading) return <div style={{ textAlign: "center", padding: 60, color: "var(--pos-text-muted)" }}>{t("common.loading")}</div>;
-  if (!movement) return <div style={{ textAlign: "center", padding: 60, color: "var(--pos-danger)" }}>Harakat topilmadi</div>;
+  if (!movement) return <div style={{ textAlign: "center", padding: 60, color: "var(--pos-danger)" }}>{t("harakatTopilmadi")}</div>;
 
   const steps   = STATUS_STEPS[movement.movementType] ?? ["draft", "pending", "completed"];
   const stepIdx = steps.indexOf(movement.status);
@@ -86,18 +88,18 @@ export default function PosMovementDetail() {
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 8 }}>
           {movement.status === "draft" && (
-            <button className="pos-btn pos-btn-primary" disabled={acting} onClick={() => void doAction("pending")}>🚀 Yuborish</button>
+            <button className="pos-btn pos-btn-primary" disabled={acting} onClick={() => void doAction("pending")}>{t("yuborish")}</button>
           )}
           {movement.status === "pending" && (
             <>
-              <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doAction("approved")}>✅ Tasdiqlash</button>
-              <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doAction("cancelled")}>✕ Rad etish</button>
+              <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doAction("approved")}>{t("tasdiqlash")}</button>
+              <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doAction("cancelled")}>{t("radEtish1")}</button>
             </>
           )}
           {movement.status === "qc_pending" && (
             <>
-              <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doAction("qc_approved")}>✅ QC Qabul</button>
-              <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doAction("qc_rework")}>⟲ Qayta ishlash</button>
+              <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doAction("qc_approved")}>{t("qcQabul")}</button>
+              <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doAction("qc_rework")}>{t("qaytaIshlash")}</button>
             </>
           )}
           <a className="pos-btn pos-btn-ghost" href={movementsApi.getPdf(movement.id)} target="_blank" rel="noreferrer" style={{ fontSize: 12, padding: "6px 12px" }}>
@@ -115,9 +117,9 @@ export default function PosMovementDetail() {
 
       {/* Tabs */}
       <div className="pos-tabs">
-        <div className={`pos-tab ${tab === "details" ? "active" : ""}`} onClick={() => setTab("details")}>📋 Tafsilot</div>
-        <div className={`pos-tab ${tab === "steps"   ? "active" : ""}`} onClick={() => setTab("steps")}>✅ Tasdiqlash bosqichlari</div>
-        <div className={`pos-tab ${tab === "gl"      ? "active" : ""}`} onClick={() => setTab("gl")}>📊 GL Posting</div>
+        <div className={`pos-tab ${tab === "details" ? "active" : ""}`} onClick={() => setTab("details")}>{t("tafsilot1")}</div>
+        <div className={`pos-tab ${tab === "steps"   ? "active" : ""}`} onClick={() => setTab("steps")}>{t("tasdiqlashBosqichlari")}</div>
+        <div className={`pos-tab ${tab === "gl"      ? "active" : ""}`} onClick={() => setTab("gl")}>{t("glPosting")}</div>
       </div>
 
       {tab === "details" && (
@@ -125,7 +127,7 @@ export default function PosMovementDetail() {
           <div className="pos-card">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>Harakat turi</div>
+                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("harakatTuri1")}</div>
                 <span className="pos-badge pos-badge-blue">{t(`movType.${movement.movementType}`)}</span>
               </div>
               <div>
@@ -133,11 +135,11 @@ export default function PosMovementDetail() {
                 <span className={`pos-badge ${STATUS_BADGE[movement.status] ?? "pos-badge-gray"}`}>{t(`status.${movement.status}`)}</span>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>Kimdan ombor</div>
+                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("kimdanOmbor")}</div>
                 <div style={{ fontWeight: 500 }}>{movement.fromWarehouseId ?? "—"}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>Qayerga ombor</div>
+                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("qayergaOmbor")}</div>
                 <div style={{ fontWeight: 500 }}>{movement.toWarehouseId ?? "—"}</div>
               </div>
               <div>
@@ -145,7 +147,7 @@ export default function PosMovementDetail() {
                 <div className="pos-mono">{movement.supplierDoc ?? "—"}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>Yaratilgan sana</div>
+                <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("createdAt")}</div>
                 <div style={{ fontSize: 13 }}>{new Date(movement.createdAt).toLocaleString("uz-UZ")}</div>
               </div>
             </div>
@@ -155,7 +157,7 @@ export default function PosMovementDetail() {
             </div>
             <table className="pos-table">
               <thead>
-                <tr><th>{t('common.materialId')}</th><th>Miqdor</th><th>Birlik narxi</th><th>Jami</th><th>Lot</th><th>Muddat</th></tr>
+                <tr><th>{t('common.materialId')}</th><th>{t("quantity")}</th><th>{t("birlikNarxi")}</th><th>{t("total")}</th><th>{t("lot")}</th><th>{t("muddat")}</th></tr>
               </thead>
               <tbody>
                 {(Array.isArray(movement.lines) ? movement.lines : []).map(line => (
@@ -172,7 +174,7 @@ export default function PosMovementDetail() {
                 ))}
               </tbody>
             </table>
-            {!(movement.lines ?? []).length && <div style={{ textAlign: "center", padding: 16, color: "var(--pos-text-muted)" }}>Qatorlar yo'q</div>}
+            {!(movement.lines ?? []).length && <div style={{ textAlign: "center", padding: 16, color: "var(--pos-text-muted)" }}>{t("qatorlarYoq")}</div>}
           </div>
 
           <div>
@@ -184,7 +186,7 @@ export default function PosMovementDetail() {
             </div>
             {history.length > 0 && (
               <div className="pos-card">
-                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--pos-text-muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Holat tarixi</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--pos-text-muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{t("holatTarixi")}</div>
                 <div className="pos-timeline">
                   {history.map(h => (
                     <div key={h.id} className="pos-timeline-item">

@@ -15,8 +15,10 @@ import { formatShortCurrency, getWeeklyDateRange } from "./daily-kpi/types";
 import { WeeklyTrendChart } from "./daily-kpi/WeeklyTrendChart";
 import { AIInsightsSection } from "./daily-kpi/AIInsightsSection";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function DailyKPIDashboard() {
+  const { t } = useTranslation("common");
   const { dateFrom, dateTo } = getWeeklyDateRange();
 
   const { data: todayMetrics, isLoading: todayLoading, refetch: refetchToday, isError } = useQuery<DailyMetrics>({ queryKey: ["/api/finance-extended/daily-metrics/today"] });
@@ -49,11 +51,11 @@ export default function DailyKPIDashboard() {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <BarChart3 className="h-8 w-8" />
-              <div><h1 className="text-2xl font-bold">Kunlik Moliya KPI</h1><p className="text-white/75 text-sm">Kunlik moliyaviy ko'rsatkichlar paneli</p></div>
+              <div><h1 className="text-2xl font-bold">{t("kunlikMoliyaKpi")}</h1><p className="text-white/75 text-sm">{t("kunlikMoliyaviyKorsatkichlarPaneli")}</p></div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="bg-white/10 border-white/30 text-white">{new Date().toLocaleDateString("uz-UZ", { weekday: "long", day: "numeric", month: "long" })}</Badge>
-              <Button size="sm" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20" onClick={() => refetchToday()} data-testid="button-refresh-metrics"><RefreshCw className="h-4 w-4 mr-1" />Yangilash</Button>
+              <Button size="sm" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20" onClick={() => refetchToday()} data-testid="button-refresh-metrics"><RefreshCw className="h-4 w-4 mr-1" />{t("refresh")}</Button>
             </div>
           </div>
         </div>
@@ -75,7 +77,7 @@ export default function DailyKPIDashboard() {
                       {card.trend !== undefined && card.trend !== 0 ? (
                         <>{card.trend > 0 ? <ArrowUpRight className="inline h-3 w-3" /> : <ArrowDownRight className="inline h-3 w-3" />}{" "}{Math.abs(card.trend).toFixed(1)}% kechagi kundan</>
                       ) : card.isNetCash ? (
-                        netCashPositive ? <><ArrowUpRight className="inline h-3 w-3" /> Ijobiy oqim</> : <><ArrowDownRight className="inline h-3 w-3" /> Salbiy oqim</>
+                        netCashPositive ? <><ArrowUpRight className="inline h-3 w-3" /> {t("ijobiyOqim")}</> : <><ArrowDownRight className="inline h-3 w-3" /> {t("salbiyOqim")}</>
                       ) : (
                         <>{i === 2 && <ArrowDownRight className="inline h-3 w-3" />} {card.fallback}</>
                       )}
@@ -90,7 +92,7 @@ export default function DailyKPIDashboard() {
         <div className="grid gap-6 lg:grid-cols-3">
           <WeeklyTrendChart chartData={chartData} isLoading={weeklyLoading} />
           <Card data-testid="card-quick-actions">
-            <CardHeader><CardTitle className="flex items-center gap-2"><PlusCircle className="h-4 w-4 text-primary" />Tezkor amallar</CardTitle><CardDescription>Tez-tez ishlatiladigan funksiyalar</CardDescription></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><PlusCircle className="h-4 w-4 text-primary" />{t("tezkorAmallar")}</CardTitle><CardDescription>{t("tezTezIshlatiladiganFunksiyalar")}</CardDescription></CardHeader>
             <CardContent className="space-y-3">
               {([
                 { href: "/accounting/income-expense", icon: TrendingUp, label: "Yangi kirim qo'shish", variant: "default" as const, testId: "button-new-income" },
@@ -112,16 +114,16 @@ export default function DailyKPIDashboard() {
         {todayMetrics && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {todayMetrics.totalReceivables !== undefined && (
-              <Card data-testid="card-receivables"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Debitorlik qarzi</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{formatShortCurrency(todayMetrics.totalReceivables)}</div>{todayMetrics.overdueReceivables !== undefined && todayMetrics.overdueReceivables > 0 && <p className="text-xs text-[var(--ep-red)] mt-1">Muddati o'tgan: {formatShortCurrency(todayMetrics.overdueReceivables)}</p>}</CardContent></Card>
+              <Card data-testid="card-receivables"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("debitorlikQarzi")}</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{formatShortCurrency(todayMetrics.totalReceivables)}</div>{todayMetrics.overdueReceivables !== undefined && todayMetrics.overdueReceivables > 0 && <p className="text-xs text-[var(--ep-red)] mt-1">Muddati o'tgan: {formatShortCurrency(todayMetrics.overdueReceivables)}</p>}</CardContent></Card>
             )}
             {todayMetrics.totalPayables !== undefined && (
-              <Card data-testid="card-payables"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Kreditorlik qarzi</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{formatShortCurrency(todayMetrics.totalPayables)}</div>{todayMetrics.overduePayables !== undefined && todayMetrics.overduePayables > 0 && <p className="text-xs text-[var(--ep-red)] mt-1">Muddati o'tgan: {formatShortCurrency(todayMetrics.overduePayables)}</p>}</CardContent></Card>
+              <Card data-testid="card-payables"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("kreditorlikQarzi")}</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{formatShortCurrency(todayMetrics.totalPayables)}</div>{todayMetrics.overduePayables !== undefined && todayMetrics.overduePayables > 0 && <p className="text-xs text-[var(--ep-red)] mt-1">Muddati o'tgan: {formatShortCurrency(todayMetrics.overduePayables)}</p>}</CardContent></Card>
             )}
             {todayMetrics.newOrdersCount !== undefined && (
-              <Card data-testid="card-new-orders"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Bugungi buyurtmalar</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{todayMetrics.newOrdersCount} ta</div>{todayMetrics.newOrdersValue !== undefined && <p className="text-xs text-muted-foreground mt-1">{formatShortCurrency(todayMetrics.newOrdersValue)} qiymatida</p>}</CardContent></Card>
+              <Card data-testid="card-new-orders"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("bugungiBuyurtmalar")}</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{todayMetrics.newOrdersCount} ta</div>{todayMetrics.newOrdersValue !== undefined && <p className="text-xs text-muted-foreground mt-1">{formatShortCurrency(todayMetrics.newOrdersValue)} qiymatida</p>}</CardContent></Card>
             )}
             {todayMetrics.inventoryValue !== undefined && (
-              <Card data-testid="card-inventory-value"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Inventar qiymati</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{formatShortCurrency(todayMetrics.inventoryValue)}</div><p className="text-xs text-muted-foreground mt-1">Umumiy ombor qiymati</p></CardContent></Card>
+              <Card data-testid="card-inventory-value"><CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("inventarQiymati")}</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{formatShortCurrency(todayMetrics.inventoryValue)}</div><p className="text-xs text-muted-foreground mt-1">{t("umumiyOmborQiymati")}</p></CardContent></Card>
             )}
           </div>
         )}

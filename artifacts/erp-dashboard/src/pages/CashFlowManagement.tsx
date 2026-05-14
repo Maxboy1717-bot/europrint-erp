@@ -107,8 +107,8 @@ export default function CashFlowManagement() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="cashflow-management">
       <div className="flex items-center justify-between mb-8">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Naqd Pul Oqimi</b></>}
-        title="Naqd Pul Oqimi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("naqdPulOqimi")}</b></>}
+        title={t("naqdPulOqimi")}
       />
         <CreateTransactionDialog
           open={dialogOpen}

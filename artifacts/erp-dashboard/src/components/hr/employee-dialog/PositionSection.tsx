@@ -6,6 +6,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormSectionProps, Department, Position } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface PositionSectionProps extends FormSectionProps {
   departments: Department[];
@@ -13,6 +14,7 @@ interface PositionSectionProps extends FormSectionProps {
 }
 
 export function PositionSection({ form, departments, positions }: PositionSectionProps) {
+  const { t } = useTranslation("common");
   const watchedDepartmentId = form.watch("departmentId");
   const filteredPositions = watchedDepartmentId
     ? (Array.isArray(positions) ? positions : []).filter(p => !p.departmentId || p.departmentId === watchedDepartmentId)
@@ -25,11 +27,11 @@ export function PositionSection({ form, departments, positions }: PositionSectio
         name="departmentId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Bo'lim</FormLabel>
+            <FormLabel>{t("bolim1")}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger data-testid="select-department" className="h-9">
-                  <SelectValue placeholder="Bo'limni tanlang" />
+                  <SelectValue placeholder={t("bolimniTanlang")} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -49,11 +51,11 @@ export function PositionSection({ form, departments, positions }: PositionSectio
         name="positionId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Lavozim</FormLabel>
+            <FormLabel>{t("lavozim1")}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger data-testid="select-position" className="h-9">
-                  <SelectValue placeholder="Lavozimni tanlang" />
+                  <SelectValue placeholder={t("lavozimniTanlang")} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

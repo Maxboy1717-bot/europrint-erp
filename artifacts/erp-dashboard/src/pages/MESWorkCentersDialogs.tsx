@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WcFormState, SessionFormState } from "./MESWorkCentersTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Create Work Center Dialog ────────────────────────────────────────────────
 
@@ -23,23 +24,24 @@ interface CreateWCDialogProps {
 export function CreateWCDialog({
   open, onOpenChange, form, onChange, onSubmit, isPending,
 }: CreateWCDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Ish markazi yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("ishMarkaziYaratish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1">
-          <Label>Nomi</Label>
+          <Label>{t("name")}</Label>
             <Input
               value={form.name}
               onChange={e => onChange({ name: e.target.value })}
-              placeholder="Ish markazi nomi"
+              placeholder={t("ishMarkaziNomi")}
             />
           </div>
           <div className="space-y-1">
-          <Label>Kodi</Label>
+          <Label>{t("kodi")}</Label>
             <Input
               value={form.code}
               onChange={e => onChange({ code: e.target.value })}
@@ -47,14 +49,14 @@ export function CreateWCDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>Turi</Label>
+          <Label>{t("type")}</Label>
             <Select value={form.type} onValueChange={v => onChange({ type: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="machine">Mashina</SelectItem>
-                <SelectItem value="manual">Qo'lda</SelectItem>
-                <SelectItem value="assembly">Yig'ish</SelectItem>
-                <SelectItem value="quality">Sifat nazorat</SelectItem>
+                <SelectItem value="machine">{t("mashina")}</SelectItem>
+                <SelectItem value="manual">{t("qolda")}</SelectItem>
+                <SelectItem value="assembly">{t("yigish")}</SelectItem>
+                <SelectItem value="quality">{t("sifatNazorat")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -70,10 +72,10 @@ export function CreateWCDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={isPending || !form.name}>
-            Yaratish
+            {t("Yaratish")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -99,11 +101,11 @@ export function CreateSessionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi sessiya yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiSessiyaYaratish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1">
-          <Label>Uskuna ID</Label>
+          <Label>{t("uskunaId")}</Label>
             <Input
               value={form.equipmentId}
               onChange={e => onChange({ equipmentId: e.target.value })}
@@ -111,7 +113,7 @@ export function CreateSessionDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>Maqsadli miqdor</Label>
+          <Label>{t("maqsadliMiqdor")}</Label>
             <Input
               type="number"
               value={form.targetQuantity}
@@ -120,7 +122,7 @@ export function CreateSessionDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>Buyurtma raqami</Label>
+          <Label>{t("buyurtmaRaqami")}</Label>
             <Input
               value={form.orderNumber}
               onChange={e => onChange({ orderNumber: e.target.value })}
@@ -130,10 +132,10 @@ export function CreateSessionDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={isPending || !form.equipmentId}>
-            Yaratish
+            {t("Yaratish")}
           </Button>
         </DialogFooter>
       </DialogContent>

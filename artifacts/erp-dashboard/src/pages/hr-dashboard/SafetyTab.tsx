@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertTriangle, ShieldAlert, Brain, Flame, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface SafetySummary {
   incidentsThisMonth: number;
@@ -31,6 +32,7 @@ interface SafetyTabProps {
 }
 
 export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
+  const { t } = useTranslation("common");
   const kpis = [
     { label: "Bu oydagi hodisalar", value: safetySummary?.incidentsThisMonth ?? "—", Icon: AlertTriangle, accent: "text-[var(--ep-red)]", bg: "bg-red-50" },
     { label: "PPE Compliance", value: safetySummary?.ppeCompliancePercent !== undefined ? `${safetySummary.ppeCompliancePercent}%` : "—", Icon: ShieldAlert, accent: "text-[var(--ep-green)]", bg: "bg-green-50" },
@@ -40,7 +42,7 @@ export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {(Array.isArray(kpis) ? kpis : []).map((item, i) => (
@@ -56,7 +58,7 @@ export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-[var(--ep-red)]" />
-            So'nggi Xavfsizlik Hodisalari
+            {t("songgiXavfsizlikHodisalari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -73,7 +75,7 @@ export function SafetyTab({ safetySummary, incidents }: SafetyTabProps) {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-sm">
                     <CheckCircle2 className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                    Xavfsizlik hodisalari qayd etilmagan
+                    {t("xavfsizlikHodisalariQaydEtilmagan")}
                   </TableCell>
                 </TableRow>
               ) : (Array.isArray(incidents) ? incidents : []).slice(0, 10).map((inc, idx) => (

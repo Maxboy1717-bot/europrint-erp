@@ -10,8 +10,10 @@
  */
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import { useTranslation } from '@/lib/i18n';
 
 export function SidebarProfile() {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const [tab, setTab] = useState<'personal' | 'all'>('personal');
 
@@ -55,7 +57,7 @@ export function SidebarProfile() {
           }`}
           onClick={() => setTab('personal')}
         >
-          Shaxsiy
+          {t("shaxsiy")}
         </button>
         <button
           className={`flex-1 py-2 px-1 text-xs font-medium rounded-full transition ${
@@ -65,7 +67,7 @@ export function SidebarProfile() {
           }`}
           onClick={() => setTab('all')}
         >
-          Hammasi
+          {t("hammasi")}
         </button>
       </div>
     </div>

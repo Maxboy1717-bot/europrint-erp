@@ -16,6 +16,7 @@ import type { z } from "zod";
 import type { mroItemFormSchema, mroRequestFormSchema, MroItem } from "./MRODashboardTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 type ItemFormValues    = z.infer<typeof mroItemFormSchema>;
 type RequestFormValues = z.infer<typeof mroRequestFormSchema>;
 
@@ -29,6 +30,7 @@ interface CreateItemDialogProps {
 }
 
 export function CreateItemDialog({ open, onOpenChange, form, onSubmit, isPending }: CreateItemDialogProps) {
+  const { t } = useTranslation("common");
   const { register, handleSubmit, setValue, watch, formState: { errors } } = form;
 
   return (
@@ -36,31 +38,31 @@ export function CreateItemDialog({ open, onOpenChange, form, onSubmit, isPending
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1">
           <Plus className="w-4 h-4" />
-          Buyum qo'shish
+          {t("buyumQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi MRO Buyum</DialogTitle>
-          <DialogDescription>Yangi xo'jalik buyumini qo'shing</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiMroBuyum")}</DialogTitle>
+          <DialogDescription>{t("yangiXojalikBuyuminiQoshing")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label>Kod *</Label>
+              <Label>{t("kod1")}</Label>
               <Input {...register("itemCode")} placeholder="MRO-001" />
               {errors.itemCode && <p className="text-xs text-destructive">{errors.itemCode.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label>Birlik *</Label>
+              <Label>{t("birlik")}</Label>
               <Input {...register("unit")} placeholder="dona" />
               {errors.unit && <p className="text-xs text-destructive">{errors.unit.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label>Nomi *</Label>
-            <Input {...register("name")} placeholder="Buyum nomi" />
+            <Label>{t("nomi")}</Label>
+            <Input {...register("name")} placeholder={t("buyumNomi")} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
@@ -70,20 +72,20 @@ export function CreateItemDialog({ open, onOpenChange, form, onSubmit, isPending
           </div>
 
           <div className="space-y-1">
-            <Label>Kategoriya *</Label>
+            <Label>{t("kategoriya")}</Label>
             <Select value={watch("category")} onValueChange={(v) => setValue("category", v)}>
               <SelectTrigger>
-                <SelectValue placeholder="Kategoriya tanlang" />
+                <SelectValue placeholder={t("kategoriyaTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cleaning">Tozalash</SelectItem>
-                <SelectItem value="maintenance">Ta'mirlash</SelectItem>
-                <SelectItem value="office">Ofis</SelectItem>
-                <SelectItem value="safety">Xavfsizlik</SelectItem>
+                <SelectItem value="cleaning">{t("tozalash")}</SelectItem>
+                <SelectItem value="maintenance">{t("tamirlash")}</SelectItem>
+                <SelectItem value="office">{t("ofis")}</SelectItem>
+                <SelectItem value="safety">{t("xavfsizlik")}</SelectItem>
                 <SelectItem value="ppe">PPE / Forma</SelectItem>
-                <SelectItem value="electrical">Elektr</SelectItem>
-                <SelectItem value="plumbing">Sanitariya</SelectItem>
-                <SelectItem value="other">Boshqa</SelectItem>
+                <SelectItem value="electrical">{t("elektr")}</SelectItem>
+                <SelectItem value="plumbing">{t("sanitariya")}</SelectItem>
+                <SelectItem value="other">{t("boshqa")}</SelectItem>
               </SelectContent>
             </Select>
             {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
@@ -91,24 +93,24 @@ export function CreateItemDialog({ open, onOpenChange, form, onSubmit, isPending
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
-              <Label>Joriy zaxira</Label>
+              <Label>{t("joriyZaxira")}</Label>
               <Input {...register("currentStock")} type="number" min="0" />
               {errors.currentStock && <p className="text-xs text-destructive">{errors.currentStock.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label>Min zaxira</Label>
+              <Label>{t("minZaxira")}</Label>
               <Input {...register("minStock")} type="number" min="0" />
               {errors.minStock && <p className="text-xs text-destructive">{errors.minStock.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label>Narx</Label>
+              <Label>{t("price")}</Label>
               <Input {...register("unitCost")} type="number" min="0" />
               {errors.unitCost && <p className="text-xs text-destructive">{errors.unitCost.message}</p>}
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <EPLoader className="mr-2" />}
               Saqlash
@@ -138,20 +140,20 @@ export function CreateRequestDialog({ open, onOpenChange, form, onSubmit, isPend
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="gap-1">
           <Plus className="w-4 h-4" />
-          So'rov yaratish
+          {t("sorovYaratish1")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi MRO So'rov</DialogTitle>
-          <DialogDescription>Xo'jalik buyumiga so'rov yuboring</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiMroSorov")}</DialogTitle>
+          <DialogDescription>{t("xojalikBuyumigaSorovYuboring")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-            <Label>Buyum *</Label>
+            <Label>{t("buyum")}</Label>
             <Select value={watch("itemId")} onValueChange={(v) => setValue("itemId", v)}>
               <SelectTrigger>
-                <SelectValue placeholder="Buyum tanlang" />
+                <SelectValue placeholder={t("buyumTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(items) ? items : []).map(item => (
@@ -165,25 +167,25 @@ export function CreateRequestDialog({ open, onOpenChange, form, onSubmit, isPend
           </div>
 
           <div className="space-y-1">
-            <Label>Miqdor *</Label>
+            <Label>{t("miqdor1")}</Label>
             <Input {...register("requestedQuantity")} type="number" min="0.01" step="0.01" />
             {errors.requestedQuantity && <p className="text-xs text-destructive">{errors.requestedQuantity.message}</p>}
           </div>
 
           <div className="space-y-1">
-            <Label>Maqsad *</Label>
-            <Input {...register("purpose")} placeholder="Foydalanish maqsadi" />
+            <Label>{t("maqsad")}</Label>
+            <Input {...register("purpose")} placeholder={t("foydalanishMaqsadi")} />
             {errors.purpose && <p className="text-xs text-destructive">{errors.purpose.message}</p>}
           </div>
 
           <div className="space-y-1">
-            <Label>Bo'lim *</Label>
-            <Input {...register("department")} placeholder="Bo'lim nomi" />
+            <Label>{t("bolim2")}</Label>
+            <Input {...register("department")} placeholder={t("bolimNomi")} />
             {errors.department && <p className="text-xs text-destructive">{errors.department.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <EPLoader className="mr-2" />}
               Yuborish

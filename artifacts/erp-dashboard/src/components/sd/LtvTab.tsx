@@ -7,6 +7,7 @@ import { SdLtvData, SdOrdersData } from "./sd-types";
 import { DollarSign, TrendingUp, BarChart2, Calendar, Target, AlertTriangle, Zap, Brain } from "lucide-react";
 import { KpiCard, fmtMoney, fmtDate } from "./helpers";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from '@/lib/i18n';
 
 interface PredictiveData {
   churnRisk: number;
@@ -17,7 +18,8 @@ interface PredictiveData {
 }
 
 export function LtvTab({ ltv, orders, predictive }: { ltv: SdLtvData; orders: SdOrdersData; predictive?: PredictiveData }) {
-  if (!ltv) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
+  const { t } = useTranslation("common");
+  if (!ltv) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
   // Field names: backend sends avgMonthlyRevenue & lifetimeMonths (not averageMonthlyRevenue & customerLifetimeMonths)
   const totalRevenue = ltv.totalRevenueAllTime ?? ltv.lifetimeValue ?? 0;
@@ -50,14 +52,14 @@ export function LtvTab({ ltv, orders, predictive }: { ltv: SdLtvData; orders: Sd
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <KpiCard icon={DollarSign} label="Jami daromad" value={fmtMoney(totalRevenue)}
+        <KpiCard icon={DollarSign} label={t("jamiDaromad")} value={fmtMoney(totalRevenue)}
           gradient="" />
-        <KpiCard icon={TrendingUp} label="Taxminiy marja" value={fmtMoney(totalMargin)}
+        <KpiCard icon={TrendingUp} label={t("taxminiyMarja")} value={fmtMoney(totalMargin)}
           sub={marginRate > 0 ? `${marginRate}%` : undefined}
           gradient="" />
-        <KpiCard icon={BarChart2} label="O'rtacha oylik" value={fmtMoney(avgMonthly)}
+        <KpiCard icon={BarChart2} label={t("ortachaOylik")} value={fmtMoney(avgMonthly)}
           gradient="" />
-        <KpiCard icon={Calendar} label="Mijozlik davri" value={`${months} oy`}
+        <KpiCard icon={Calendar} label={t("mijozlikDavri")} value={`${months} oy`}
           gradient="" />
         <KpiCard icon={Target} label="LTV (hozirgi)" value={fmtMoney(ltvValue)}
           gradient="" />
@@ -95,17 +97,17 @@ export function LtvTab({ ltv, orders, predictive }: { ltv: SdLtvData; orders: Sd
         {/* Profitability */}
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">Daromadlilik tahlili</h3>
+            <h3 className="text-sm font-semibold">{t("daromadlilikTahlili")}</h3>
           </div>
           <div className="p-4 space-y-3">
-            <Row label="Jami daromad" value={fmtMoney(totalRevenue)} />
+            <Row label={t("jamiDaromad")} value={fmtMoney(totalRevenue)} />
             <Row label={`Taxminiy marja${marginRate > 0 ? ` (${marginRate}%)` : ""}`} value={fmtMoney(totalMargin)} cls="text-[var(--ep-green)]" />
             <div className="border-t pt-3 space-y-2">
-              <Row label="Jalb xarajati" value={fmtMoney(acqCost)} />
+              <Row label={t("jalbXarajati")} value={fmtMoney(acqCost)} />
               <Row label="Xizmat/oy" value={fmtMoney(svcCost)} />
             </div>
             <div className="border-t pt-3 flex justify-between items-center">
-              <span className="font-semibold text-sm">Sof foyda</span>
+              <span className="font-semibold text-sm">{t("sofFoyda")}</span>
               <span className={`font-bold text-lg ${Number(netProfit) >= 0 ? "text-[var(--ep-green)]" : "text-destructive"}`}>
                 {fmtMoney(netProfit)}
               </span>
@@ -116,21 +118,21 @@ export function LtvTab({ ltv, orders, predictive }: { ltv: SdLtvData; orders: Sd
         {/* Comparison + Timeline */}
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">Taqqoslama va vaqt chizig'i</h3>
+            <h3 className="text-sm font-semibold">{t("taqqoslamaVaVaqtChizigi")}</h3>
           </div>
           <div className="p-4 space-y-4">
             {isVsAvgDefined && (
               <div className="p-4 rounded-xl bg-muted/50 text-center">
-                <p className="text-xs text-muted-foreground mb-1.5">Kompaniya o'rtachasidan</p>
+                <p className="text-xs text-muted-foreground mb-1.5">{t("kompaniyaOrtachasidan")}</p>
                 <p className={`text-4xl font-bold ${vsAvg >= 0 ? "text-[var(--ep-green)]" : "text-destructive"}`}>
                   {vsAvg >= 0 ? "+" : ""}{vsAvg}%
                 </p>
               </div>
             )}
             <div className="space-y-2.5">
-              <Row label="Birinchi buyurtma" value={fmtDate(firstDate)} />
-              <Row label="So'nggi buyurtma" value={fmtDate(lastDate)} />
-              <Row label="Jami buyurtmalar" value={`${ordersTotal} ta`} />
+              <Row label={t("birinchiBuyurtma")} value={fmtDate(firstDate)} />
+              <Row label={t("songgiBuyurtma")} value={fmtDate(lastDate)} />
+              <Row label={t("jamiBuyurtmalar")} value={`${ordersTotal} ta`} />
               <Row label="LTV (24 oylik prognoz)" value={fmtMoney(ltvForecast24)} cls="text-[var(--ep-blue)] font-bold" />
             </div>
           </div>

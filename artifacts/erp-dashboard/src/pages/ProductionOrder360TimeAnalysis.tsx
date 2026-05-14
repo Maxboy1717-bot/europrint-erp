@@ -5,6 +5,7 @@
 
 import { AlertTriangle, Clock, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from '@/lib/i18n';
 
 function fmt(n: number | null | undefined, d = 0) {
   if (n == null) return "—";
@@ -75,25 +76,26 @@ export default function ProductionOrder360TimeAnalysis({
   totalDowntimeMins,
   leadTimeDays,
 }: ProductionOrder360TimeAnalysisProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={Zap} label="Ishlash vaqti" value={fmtTime(totalRunningSeconds)} color="text-[var(--ep-green)]" />
-        <KpiCard icon={Clock} label="To'xtash vaqti" value={fmtTime(totalStoppedSeconds)} color="text-[var(--ep-yellow)]" />
-        <KpiCard icon={AlertTriangle} label="Rejalashtirilmagan to'xtash" value={`${totalDowntimeMins} daq`} color="text-[var(--ep-red)]" />
+        <KpiCard icon={Zap} label={t("ishlashVaqti")} value={fmtTime(totalRunningSeconds)} color="text-[var(--ep-green)]" />
+        <KpiCard icon={Clock} label={t("toxtashVaqti")} value={fmtTime(totalStoppedSeconds)} color="text-[var(--ep-yellow)]" />
+        <KpiCard icon={AlertTriangle} label={t("rejalashtirilmaganToxtash")} value={`${totalDowntimeMins} daq`} color="text-[var(--ep-red)]" />
       </div>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">Sana rejasi vs haqiqati</CardTitle>
+          <CardTitle className="text-sm font-semibold">{t("sanaRejasiVsHaqiqati")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-0 divide-y">
-          <InfoRow label="Reja boshlanish" value={plannedStartDate} />
-          <InfoRow label="Reja tugash" value={plannedEndDate} />
-          <InfoRow label="Haqiqiy boshlanish" value={actualStartDate} />
-          <InfoRow label="Haqiqiy tugash" value={actualEndDate} />
+          <InfoRow label={t("rejaBoshlanish")} value={plannedStartDate} />
+          <InfoRow label={t("rejaTugash")} value={plannedEndDate} />
+          <InfoRow label={t("haqiqiyBoshlanish")} value={actualStartDate} />
+          <InfoRow label={t("haqiqiyTugash")} value={actualEndDate} />
           {leadTimeDays != null && (
-            <InfoRow label="Umumiy davr" value={`${leadTimeDays} kun`} />
+            <InfoRow label={t("umumiyDavr")} value={`${leadTimeDays} kun`} />
           )}
         </CardContent>
       </Card>
@@ -101,7 +103,7 @@ export default function ProductionOrder360TimeAnalysis({
       {(downtimes?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">To'xtash hodisalari</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t("toxtashHodisalari")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {downtimes?.map((dt, i) => (

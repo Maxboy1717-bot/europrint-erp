@@ -15,6 +15,7 @@ import {
   type Printer, type GlLog, type AuditEntry, type SyncStatus,
 } from "../components/PosAdminSections";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 type AdminSection = "warehouses" | "categories" | "units" | "suppliers" | "terminals" | "printers" | "glMapping" | "auditLog";
 
@@ -47,6 +48,7 @@ const SECTIONS: { key: AdminSection; icon: string; labelKey: string }[] = [
 ];
 
 export default function PosAdmin() {
+  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const [section, setSection] = useState<AdminSection>("warehouses");
 

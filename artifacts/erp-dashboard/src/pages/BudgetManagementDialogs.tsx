@@ -55,7 +55,7 @@ export function CreateBudgetDialog({
                 <FormItem>
                   <FormLabel className="text-muted-foreground">{tCommon("name")}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Masalan: 2024 Yillik Operatsion Byudjet" data-testid="input-budget-name" className="bg-background border-border text-foreground" />
+                    <Input {...field} placeholder={t("masalan2024YillikOperatsionByudjet")} data-testid="input-budget-name" className="bg-background border-border text-foreground" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -88,9 +88,9 @@ export function CreateBudgetDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-card border-none">
-                        <SelectItem value="annual">Yillik</SelectItem>
-                        <SelectItem value="quarterly">Choraklik</SelectItem>
-                        <SelectItem value="monthly">Oylik</SelectItem>
+                        <SelectItem value="annual">{t("yearly")}</SelectItem>
+                        <SelectItem value="quarterly">{t("choraklik")}</SelectItem>
+                        <SelectItem value="monthly">{t("monthly")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

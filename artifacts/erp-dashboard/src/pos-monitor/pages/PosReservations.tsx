@@ -75,7 +75,7 @@ export default function PosReservations() {
           <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>BRON QILINGAN STOK</div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{t('reservationPanel')}</h1>
           <p style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>
-            Buyurtma yoki ishlab chiqarish uchun band qilingan materiallar
+            {t("buyurtmaYokiIshlabChiqarishUchun")}
           </p>
         </div>
         <button onClick={load} style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
@@ -96,23 +96,23 @@ export default function PosReservations() {
 
       <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>⏳ Yuklanmoqda...</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>{t("yuklanmoqda")}</div>
         ) : items.length === 0 ? (
           <div style={{ padding: 60, textAlign: "center", color: "#9CA3AF" }}>
             <div style={{ fontSize: 48 }}>🔓</div>
-            <div style={{ marginTop: 8 }}>Bron qilingan stok yo'q</div>
+            <div style={{ marginTop: 8 }}>{t("bronQilinganStokYoq")}</div>
           </div>
         ) : (
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead style={{ background: "#F9FAFB" }}>
               <tr>
                 <th style={th}>{t('Material')}</th>
-                <th style={th}>Ombor</th>
-                <th style={{ ...th, textAlign: "right" }}>Bron miqdor</th>
-                <th style={th}>Birlik</th>
-                <th style={th}>Maqsad</th>
+                <th style={th}>{t("ombor")}</th>
+                <th style={{ ...th, textAlign: "right" }}>{t("bronMiqdor")}</th>
+                <th style={th}>{t("unit")}</th>
+                <th style={th}>{t("Maqsad")}</th>
                 <th style={th}>{t('status26')}</th>
-                <th style={th}>Tugaydi</th>
+                <th style={th}>{t("tugaydi")}</th>
               </tr>
             </thead>
             <tbody>

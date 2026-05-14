@@ -17,6 +17,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Lesson } from "./LessonPlayerTypes";
 import { getLessonIcon } from "./LessonPlayerSectionsA";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // LessonContentArea props
@@ -43,13 +44,14 @@ export function LessonContentArea({
   onMarkComplete,
   onNextLesson,
 }: LessonContentAreaProps) {
+  const { t } = useTranslation("common");
   if (!activeLesson) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">Dars tanlang</h2>
-          <p className="text-muted-foreground">Chap paneldan darsni bosing</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{t("darsTanlang")}</h2>
+          <p className="text-muted-foreground">{t("chapPaneldanDarsniBosing")}</p>
         </div>
       </div>
     );
@@ -70,7 +72,7 @@ export function LessonContentArea({
             {isCompleted && (
               <Badge className="bg-green-100 text-[var(--ep-green)] text-xs border-0">
                 <CheckCircle className="h-3 w-3 mr-1" />
-                Bajarilgan
+                {t("bajarilgan")}
               </Badge>
             )}
           </div>
@@ -84,12 +86,12 @@ export function LessonContentArea({
               className="bg-primary text-white gap-2"
             >
               <CheckCircle className="h-4 w-4" />
-              Bajarildi deb belgilash
+              {t("bajarildiDebBelgilash")}
             </Button>
           )}
           {nextLesson && (
             <Button variant="outline" onClick={onNextLesson}>
-              Keyingi dars
+              {t("keyingiDars")}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}
@@ -115,7 +117,7 @@ export function LessonContentArea({
                   }
                   onEnded={onMarkComplete}
                 >
-                  Brauzeringiz video formatini qo'llab-quvvatlamaydi.
+                  {t("brauzeringizVideoFormatiniQollabQuvvatlamaydi")}
                 </video>
               </div>
             )}
@@ -142,7 +144,7 @@ export function LessonContentArea({
                 }
               >
                 <Download className="h-4 w-4 mr-2" />
-                PDF yuklab olish
+                {t("pdfYuklabOlish")}
               </Button>
             </div>
           )}
@@ -155,7 +157,7 @@ export function LessonContentArea({
                 <div className="text-center">
                   <Play className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                   <p className="text-muted-foreground text-sm">
-                    Video fayli yuklanmagan
+                    {t("videoFayliYuklanmagan")}
                   </p>
                 </div>
               </div>
@@ -180,7 +182,7 @@ export function LessonContentArea({
             activeLesson.type === "text" && (
               <div className="text-center py-16">
                 <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Mazmun hali qo'shilmagan</p>
+                <p className="text-muted-foreground">{t("mazmunHaliQoshilmagan")}</p>
               </div>
             )}
 
@@ -198,7 +200,7 @@ export function LessonContentArea({
             ) : (
               <div className="flex items-center gap-2 text-[var(--ep-green)]">
                 <CheckCircle className="h-4 w-4" />
-                <span className="font-medium">Bajarilgan</span>
+                <span className="font-medium">{t("bajarilgan")}</span>
               </div>
             )}
             {nextLesson && (

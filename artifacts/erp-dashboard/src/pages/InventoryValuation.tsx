@@ -38,9 +38,11 @@ import { CreateCountDialog } from "@/components/wms/valuation/CreateCountDialog"
 import { CreateAssetDialog } from "@/components/wms/valuation/CreateAssetDialog";
 import { useInventoryValuationMutations } from "@/components/wms/valuation/useInventoryValuationMutations";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 
 export default function InventoryValuation() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("material");
   const [searchQuery, setSearchQuery] = useState("");
@@ -143,8 +145,8 @@ export default function InventoryValuation() {
             <div className="flex items-center gap-3">
               <ClipboardList className="h-8 w-8" />
               <div>
-                <h1 className="text-2xl font-bold" data-testid="text-page-title">Inventarizatsiya</h1>
-                <p className="text-white/75 text-sm">Material va asosiy vositalar inventarizatsiyasi</p>
+                <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("inventarizatsiya")}</h1>
+                <p className="text-white/75 text-sm">{t("materialVaAsosiyVositalarInventarizatsiyasi")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -155,7 +157,7 @@ export default function InventoryValuation() {
                 data-testid="button-refresh"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Yangilash
+                {t("refresh")}
               </Button>
             </div>
           </div>
@@ -174,11 +176,11 @@ export default function InventoryValuation() {
           <TabsList className="grid w-full max-w-md grid-cols-1 sm:grid-cols-2">
             <TabsTrigger value="material" data-testid="tab-material-inventory">
               <Package className="h-4 w-4 mr-2" />
-              Material Inventarizatsiyasi
+              {t("materialInventarizatsiyasi")}
             </TabsTrigger>
             <TabsTrigger value="asset" data-testid="tab-asset-inventory">
               <Building2 className="h-4 w-4 mr-2" />
-              Aktiv Inventarizatsiyasi
+              {t("aktivInventarizatsiyasi")}
             </TabsTrigger>
           </TabsList>
 
@@ -186,12 +188,12 @@ export default function InventoryValuation() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-1 flex-wrap">
                 <div>
-                  <CardTitle>Inventarizatsiya Hisoblari</CardTitle>
-                  <CardDescription>Material va mahsulotlar sanovi</CardDescription>
+                  <CardTitle>{t("inventarizatsiyaHisoblari")}</CardTitle>
+                  <CardDescription>{t("materialVaMahsulotlarSanovi")}</CardDescription>
                 </div>
                 <Button onClick={() => setIsCreateDialogOpen(true)} data-testid="button-create-count">
                   <Plus className="h-4 w-4 mr-1" />
-                  Yangi Inventarizatsiya
+                  {t("yangiInventarizatsiya")}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -237,12 +239,12 @@ export default function InventoryValuation() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-1 flex-wrap">
                 <div>
-                  <CardTitle>Asosiy vositalar</CardTitle>
-                  <CardDescription>Korxona aktivlari va ularning holati</CardDescription>
+                  <CardTitle>{t("asosiyVositalar")}</CardTitle>
+                  <CardDescription>{t("korxonaAktivlariVaUlarningHolati")}</CardDescription>
                 </div>
                 <Button onClick={() => setIsCreateAssetDialogOpen(true)} data-testid="button-create-asset">
                   <Plus className="h-4 w-4 mr-1" />
-                  Yangi Aktiv
+                  {t("yangiAktiv")}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">

@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Target } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Objective {
   id: number;
@@ -32,6 +33,7 @@ interface Objective {
 }
 
 export default function OkrPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -75,13 +77,13 @@ export default function OkrPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "on_track":
-        return <EPStatusPill tone="success">Rejalashtirilgan</EPStatusPill>;
+        return <EPStatusPill tone="success">{t("rejalashtirilgan")}</EPStatusPill>;
       case "at_risk":
-        return <Badge className="bg-amber-100 text-amber-800">Xavfli</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">{t("xavfli")}</Badge>;
       case "behind":
-        return <EPStatusPill tone="danger">Orqada</EPStatusPill>;
+        return <EPStatusPill tone="danger">{t("orqada")}</EPStatusPill>;
       case "completed":
-        return <EPStatusPill tone="info">Bajarildi</EPStatusPill>;
+        return <EPStatusPill tone="info">{t("Bajarildi")}</EPStatusPill>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -92,32 +94,32 @@ export default function OkrPage() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">OKR — Maqsadlar va asosiy natijalar</h1>
+        <h1 className="text-2xl font-bold">{t("okrMaqsadlarVaAsosiyNatijalar")}</h1>
         <Button onClick={() => setIsDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Yangi maqsad
+          {t("yangiMaqsad")}
         </Button>
       </div>
 
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+            <div className="p-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : list.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Target className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>Hech qanday maqsad topilmadi</p>
+              <p>{t("hechQandayMaqsadTopilmadi")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Maqsad</TableHead>
-                  <TableHead>Mas'ul</TableHead>
-                  <TableHead>Chorak</TableHead>
-                  <TableHead>Muddat</TableHead>
-                  <TableHead>Bajarilish</TableHead>
-                  <TableHead>Holat</TableHead>
+                  <TableHead>{t("Maqsad")}</TableHead>
+                  <TableHead>{t("masul")}</TableHead>
+                  <TableHead>{t("chorak")}</TableHead>
+                  <TableHead>{t("muddat")}</TableHead>
+                  <TableHead>{t("progress5")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -154,19 +156,19 @@ export default function OkrPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi maqsad qo'shish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiMaqsadQoshish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Sarlavha</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Maqsad sarlavhasi" />
+              <Label>{t("progress.title")}</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("maqsadSarlavhasi")} />
             </div>
             <div>
-              <Label>Tavsif</Label>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Batafsil tavsif" rows={3} />
+              <Label>{t("progress.description")}</Label>
+              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("batafsilTavsif")} rows={3} />
             </div>
             <div>
-              <Label>Chorak</Label>
+              <Label>{t("chorak")}</Label>
               <Select value={quarter} onValueChange={setQuarter}>
                 <SelectTrigger>
                   <SelectValue />
@@ -180,12 +182,12 @@ export default function OkrPage() {
               </Select>
             </div>
             <div>
-              <Label>Tugash sanasi</Label>
+              <Label>{t("endDate")}</Label>
               <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={resetForm}>Bekor qilish</Button>
-              <Button onClick={handleSave} disabled={createMutation.isPending}>Saqlash</Button>
+              <Button variant="outline" onClick={resetForm}>{t("cancel")}</Button>
+              <Button onClick={handleSave} disabled={createMutation.isPending}>{t("Saqlash")}</Button>
             </div>
           </div>
         </DialogContent>

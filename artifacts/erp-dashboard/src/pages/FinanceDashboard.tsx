@@ -209,7 +209,7 @@ export default function FinanceDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Moliya {t('dashboard1')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Moliya {t('dashboard1')}</b></>}
         title="Moliya {t('dashboard1')}"
       />
           <p className="text-muted-foreground mt-1">{t('financialReport')}</p>

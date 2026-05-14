@@ -98,7 +98,7 @@ export default function WarehouseQCReview() {
         <ShieldCheck className="h-8 w-8 text-[var(--ep-blue)]" />
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">QC INSPEKTOR</div>
-          <h1 className="text-2xl font-bold">Sifat nazorati — Ko'rib chiqish</h1>
+          <h1 className="text-2xl font-bold">{t("sifatNazoratiKoribChiqish")}</h1>
           <p className="text-sm text-gray-500">QC qarori kutayotgan materiallar — QABUL / REWORK / CHIQARISH</p>
         </div>
         <Button onClick={load} variant="outline">🔄</Button>
@@ -113,11 +113,11 @@ export default function WarehouseQCReview() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 max-h-[70vh] overflow-y-auto">
-            {loading && <div className="p-6 text-center text-gray-500">⏳ Yuklanmoqda...</div>}
+            {loading && <div className="p-6 text-center text-gray-500">{t("yuklanmoqda")}</div>}
             {!loading && items.length === 0 && (
               <div className="p-6 text-center text-gray-400">
                 <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-50 text-emerald-400" />
-                QC kutayotgan hech narsa yo'q
+                {t("qcKutayotganHechNarsaYoq")}
               </div>
             )}
             {!loading && items.map(it => (
@@ -153,8 +153,8 @@ export default function WarehouseQCReview() {
             <Card>
               <CardContent className="pt-12 pb-12 text-center text-gray-400">
                 <Eye className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <div className="font-semibold">Movement tanlang</div>
-                <div className="text-sm mt-1">Chap menyudan QC kutayotgan movementlardan birini bosing</div>
+                <div className="font-semibold">{t("movementTanlang")}</div>
+                <div className="text-sm mt-1">{t("chapMenyudanQcKutayotganMovementlardan")}</div>
               </CardContent>
             </Card>
           ) : (
@@ -170,7 +170,7 @@ export default function WarehouseQCReview() {
                       <div className="text-sm text-gray-500 mt-1">{selected.supplierName ?? "—"}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-gray-500">Karantinda</div>
+                      <div className="text-xs text-gray-500">{t("karantinda")}</div>
                       <div className="font-bold">
                         {selected.hoursInQuarantine >= 48 ? "🔴" : selected.hoursInQuarantine >= 24 ? "🟡" : "🟢"}
                         {" "}
@@ -182,19 +182,19 @@ export default function WarehouseQCReview() {
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div>
-                      <div className="text-xs text-gray-500">Shartnoma</div>
+                      <div className="text-xs text-gray-500">{t("shartnoma1")}</div>
                       <div className="font-mono">{selected.contractNumber ?? "—"}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500">Miqdor</div>
+                      <div className="text-xs text-gray-500">{t("quantity")}</div>
                       <div className="font-mono">{selected.quantity ?? "—"}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500">Yaratilgan</div>
+                      <div className="text-xs text-gray-500">{t("Yaratilgan")}</div>
                       <div>{new Date(selected.createdAt).toLocaleString("uz-UZ")}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500">Holat</div>
+                      <div className="text-xs text-gray-500">{t("status28")}</div>
                       <Badge className={STATUS_COLORS[selected.status]}>{selected.status}</Badge>
                     </div>
                   </div>
@@ -209,15 +209,15 @@ export default function WarehouseQCReview() {
                 <CardContent className="p-0">
                   {linesLoading && <div className="p-4 text-center text-sm text-gray-500">⏳</div>}
                   {!linesLoading && lines.length === 0 && (
-                    <div className="p-4 text-center text-sm text-gray-400">Qatorlar yo'q</div>
+                    <div className="p-4 text-center text-sm text-gray-400">{t("qatorlarYoq")}</div>
                   )}
                   {!linesLoading && lines.length > 0 && (
                     <div className="ep-table-scroll"><Table>
                       <TableHeader className="sticky top-0 z-10 bg-card">
                         <TableRow>
                           <TableHead>{t('Material')}</TableHead>
-                          <TableHead className="text-right">Miqdor</TableHead>
-                          <TableHead>Birlik</TableHead>
+                          <TableHead className="text-right">{t("quantity")}</TableHead>
+                          <TableHead>{t("unit")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -269,7 +269,7 @@ export default function WarehouseQCReview() {
                     <textarea
                       value={qcNote}
                       onChange={e => setQcNote(e.target.value)}
-                      placeholder="Tekshiruv natijasi, sabab, qo'shimcha izoh..."
+                      placeholder={t("tekshiruvNatijasiSababQoshimchaIzoh")}
                       className="w-full p-2 border border-gray-200 rounded text-sm"
                       rows={3}
                     />
@@ -283,22 +283,22 @@ export default function WarehouseQCReview() {
                         <ul className="mt-1 space-y-0.5 ml-3 list-disc">
                           {decision === "QABUL" && (
                             <>
-                              <li>Material RM-MAIN omborga avtomatik ko'chiriladi</li>
-                              <li>Status: APPROVED → COMPLETED</li>
+                              <li>{t("materialRmMainOmborgaAvtomatik")}</li>
+                              <li>{t("statusApprovedCompleted")}</li>
                               <li>GL posting avtomatik yaratiladi</li>
                             </>
                           )}
                           {decision === "REWORK" && (
                             <>
                               <li>MES moduliga signal yuboriladi</li>
-                              <li>Ishlab chiqarish qayta ishlash uchun navbatga qo'shiladi</li>
+                              <li>{t("ishlabChiqarishQaytaIshlashUchun")}</li>
                             </>
                           )}
                           {decision === "CHIQARISH" && (
                             <>
                               <li>{t('statusRejected')}</li>
-                              <li>Ta'minotchiga qaytarish hujjati yaratiladi</li>
-                              <li>Moliya bo'limga xabar boradi</li>
+                              <li>{t("taminotchigaQaytarishHujjatiYaratiladi")}</li>
+                              <li>{t("moliyaBolimgaXabarBoradi")}</li>
                             </>
                           )}
                         </ul>

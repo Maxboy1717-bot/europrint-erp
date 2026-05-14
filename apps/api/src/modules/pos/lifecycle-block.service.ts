@@ -51,7 +51,7 @@ export class LifecycleBlockService implements OnModuleInit, OnModuleDestroy {
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[lifecycle-block.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
     const redisUrl = this.config.get<string>('REDIS_URL');
-    if (!redisUrl) return Ok();
+    if (!redisUrl) return;
     const r = await safeCall(async () => {
       const { default: Redis } = await import('ioredis');
       this.redisClient = new Redis(redisUrl, {
@@ -62,7 +62,6 @@ export class LifecycleBlockService implements OnModuleInit, OnModuleDestroy {
       await (this.redisClient)?.connect?.();
     });
     if (!r.ok) this.redisClient = null;
-    return r;
   }
 
   async onModuleDestroy(): Promise<void> {

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DealCard } from "./DealCard";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface Deal {
   id: number;
@@ -42,6 +43,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
+  const { t } = useTranslation("common");
   const { setNodeRef, isOver } = useDroppable({
     id: stage.stageId,
     data: {
@@ -107,7 +109,7 @@ export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
 
           {deals.length === 0 && (
             <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-              Bo'sh
+              {t("bosh")}
             </div>
           )}
         </ScrollArea>

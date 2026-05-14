@@ -96,7 +96,7 @@ export default function RACIMatrixPage() {
     return (
       <ModulePage
         module="hr"
-        title="RACI Matritsasi va Krizis Boshqaruvi"
+        title={t("raciMatritsasiVaKrizisBoshqaruvi")}
         icon={<Grid3X3 className="h-5 w-5" />}
         actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
@@ -118,13 +118,13 @@ export default function RACIMatrixPage() {
   return (
     <ModulePage
       module="hr"
-      title="RACI Matritsasi va Krizis Boshqaruvi"
+      title={t("raciMatritsasiVaKrizisBoshqaruvi")}
       icon={<Grid3X3 className="h-5 w-5" />}
       actions={
         activeTab === "raci" ? (
           <Button data-testid="button-add-task" onClick={handleAddTask}>
             <Plus className="h-4 w-4 mr-2" />
-            Vazifa qo'shish
+            {t("vazifaQoshish")}
           </Button>
         ) : undefined
       }
@@ -133,15 +133,15 @@ export default function RACIMatrixPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="raci" data-testid="tab-raci">
             <Grid3X3 className="h-4 w-4 mr-2" />
-            RACI Matritsasi
+            {t("raciMatritsasi")}
           </TabsTrigger>
           <TabsTrigger value="stages" data-testid="tab-stages">
             <TrendingUp className="h-4 w-4 mr-2" />
-            Biznes Bosqichlar
+            {t("biznesBosqichlar")}
           </TabsTrigger>
           <TabsTrigger value="crises" data-testid="tab-crises">
             <AlertTriangle className="h-4 w-4 mr-2" />
-            Krizislar
+            {t("krizislar")}
           </TabsTrigger>
         </TabsList>
 

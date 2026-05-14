@@ -17,13 +17,15 @@ import type { FraudRisk } from "./AIFinancePageTypes";
 import { riskColor } from "./AIFinancePageTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 function riskBadge(s: string) {
-  if (s === "HIGH")   return <Badge variant="error">Yuqori xavf</Badge>;
-  if (s === "MEDIUM") return <Badge variant="warning">O'rta xavf</Badge>;
-  return                     <Badge variant="success">Past xavf</Badge>;
+  if (s === "HIGH")   return <Badge variant="error">{t("yuqoriXavf")}</Badge>;
+  if (s === "MEDIUM") return <Badge variant="warning">{t("ortaXavf")}</Badge>;
+  return                     <Badge variant="success">{t("pastXavf")}</Badge>;
 }
 
 export function FraudTab() {
+  const { t } = useTranslation("common");
   const [fields, setFields] = useState({
     amount: "",
     vendor: "",
@@ -53,7 +55,7 @@ export function FraudTab() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Shubhali tranzaksiyani tekshiring — AI fraud belgilarini aniqlaydi
+        {t("shubhaliTranzaksiyaniTekshiringAiFraud")}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -63,32 +65,32 @@ export function FraudTab() {
             <Input type="number" value={fields.amount} onChange={e => setFields(p => ({ ...p, amount: e.target.value }))} placeholder="0" />
           </div>
           <div className="space-y-1.5">
-            <Label>To'lov usuli</Label>
-            <Input value={fields.paymentMethod} onChange={e => setFields(p => ({ ...p, paymentMethod: e.target.value }))} placeholder="Naqd, bank, karta..." />
+            <Label>{t("tolovUsuli")}</Label>
+            <Input value={fields.paymentMethod} onChange={e => setFields(p => ({ ...p, paymentMethod: e.target.value }))} placeholder={t("naqdBankKarta")} />
           </div>
           <div className="col-span-2 space-y-1.5">
             <Label>Yetkazuvchi / Kontragent</Label>
-            <Input value={fields.vendor} onChange={e => setFields(p => ({ ...p, vendor: e.target.value }))} placeholder="Kompaniya yoki shaxs nomi" />
+            <Input value={fields.vendor} onChange={e => setFields(p => ({ ...p, vendor: e.target.value }))} placeholder={t("kompaniyaYokiShaxsNomi")} />
           </div>
           <div className="col-span-2 space-y-1.5">
-            <Label>Tavsif</Label>
-            <Input value={fields.description} onChange={e => setFields(p => ({ ...p, description: e.target.value }))} placeholder="Tranzaksiya maqsadi yoki sharh..." />
+            <Label>{t("progress.description")}</Label>
+            <Input value={fields.description} onChange={e => setFields(p => ({ ...p, description: e.target.value }))} placeholder={t("tranzaksiyaMaqsadiYokiSharh")} />
           </div>
           <div className="space-y-1.5">
-            <Label>Sana</Label>
+            <Label>{t("date")}</Label>
             <Input type="date" value={fields.invoiceDate} onChange={e => setFields(p => ({ ...p, invoiceDate: e.target.value }))} />
           </div>
         </div>
 
         <Button type="submit" className="w-full" disabled={mutation.isPending}>
           {mutation.isPending
-            ? <><EPLoader className="mr-2" />Tekshirilmoqda...</>
-            : <><ShieldAlert className="h-4 w-4 mr-2" />Fraud Xavfini Baholash</>}
+            ? <><EPLoader className="mr-2" />{t("tekshirilmoqda")}</>
+            : <><ShieldAlert className="h-4 w-4 mr-2" />{t("fraudXavfiniBaholash")}</>}
         </Button>
       </form>
 
       {mutation.isError && (
-        <p className="text-sm text-[var(--ep-red)] text-center">Xatolik yuz berdi.</p>
+        <p className="text-sm text-[var(--ep-red)] text-center">{t("xatolikYuzBerdi")}</p>
       )}
 
       {result && (
@@ -97,7 +99,7 @@ export function FraudTab() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <ShieldAlert className={`h-5 w-5 ${result.riskLevel === "HIGH" ? "text-[var(--ep-red)]" : result.riskLevel === "MEDIUM" ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"}`} />
-                Fraud Baholash Natijasi
+                {t("fraudBaholashNatijasi")}
               </CardTitle>
               {riskBadge(result.riskLevel)}
             </div>
@@ -105,7 +107,7 @@ export function FraudTab() {
           <CardContent className="space-y-3">
             <div>
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-muted-foreground">Xavf darajasi</span>
+                <span className="text-muted-foreground">{t("xavfDarajasi")}</span>
                 <span className="font-bold">{result.riskScore}/100</span>
               </div>
               <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted">
@@ -115,7 +117,7 @@ export function FraudTab() {
             {result.redFlags.length > 0 && (
               <div className="space-y-1.5">
                 <h5 className="text-xs font-medium text-[var(--ep-red)] flex items-center gap-1">
-                  <XCircle className="h-3 w-3" /> Qizil bayroqlar
+                  <XCircle className="h-3 w-3" /> {t("qizilBayroqlar")}
                 </h5>
                 {result.redFlags.map((f, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -128,7 +130,7 @@ export function FraudTab() {
             {result.redFlags.length === 0 && result.riskLevel === "LOW" && (
               <div className="flex items-center gap-2 text-[var(--ep-green)] text-sm">
                 <CheckCircle2 className="h-4 w-4" />
-                <span>Shubhali belgilar aniqlanmadi</span>
+                <span>{t("shubhaliBelgilarAniqlanmadi")}</span>
               </div>
             )}
           </CardContent>

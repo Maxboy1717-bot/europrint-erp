@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import { CustomField, FieldFormState, FIELD_TYPES } from "./CRMSettingsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // FieldDialog props
@@ -58,6 +59,7 @@ export function FieldDialog({
   onCancel,
   isSaving,
 }: FieldDialogProps) {
+  const { t } = useTranslation("common");
   const isSelectType = ["select", "multiselect"].includes(fieldForm.fieldType);
 
   return (
@@ -70,13 +72,13 @@ export function FieldDialog({
         <div className="space-y-4 py-4">
           {/* Label (Uzbek) */}
           <div className="space-y-1">
-          <Label>Maydon nomi</Label>
+          <Label>{t("maydonNomi")}</Label>
             <Input
               value={fieldForm.fieldLabel}
               onChange={(e) =>
                 onFieldFormChange({ ...fieldForm, fieldLabel: e.target.value })
               }
-              placeholder="Maydon nomini kiriting"
+              placeholder={t("maydonNominiKiriting")}
               data-testid="input-field-label"
             />
           </div>
@@ -96,7 +98,7 @@ export function FieldDialog({
 
           {/* Field type */}
           <div className="space-y-1">
-          <Label>Maydon turi</Label>
+          <Label>{t("maydonTuri")}</Label>
             <Select
               value={fieldForm.fieldType}
               onValueChange={(v) =>
@@ -122,7 +124,7 @@ export function FieldDialog({
           {/* Select options */}
           {isSelectType && (
             <div className="space-y-1">
-          <Label>Variantlar</Label>
+          <Label>{t("variantlar")}</Label>
               <div className="space-y-2">
                 {(Array.isArray(fieldForm.options) ? fieldForm.options : []).map(
                   (opt, index) => (
@@ -143,7 +145,7 @@ export function FieldDialog({
                   <Input
                     value={newOption}
                     onChange={(e) => onNewOptionChange(e.target.value)}
-                    placeholder="Yangi variant"
+                    placeholder={t("yangiVariant")}
                     onKeyDown={(e) => e.key === "Enter" && onAddOption()}
                     data-testid="input-new-option"
                   />
@@ -161,7 +163,7 @@ export function FieldDialog({
 
           {/* Required toggle */}
           <div className="flex items-center justify-between">
-            <Label>Majburiy maydon</Label>
+            <Label>Required</Label>
             <Switch
               checked={fieldForm.isRequired}
               onCheckedChange={(v) =>
@@ -173,7 +175,7 @@ export function FieldDialog({
 
           {/* Visible toggle */}
           <div className="flex items-center justify-between">
-            <Label>Ko'rinadi</Label>
+            <Label>{t("korinadi")}</Label>
             <Switch
               checked={fieldForm.isVisible}
               onCheckedChange={(v) =>
@@ -190,7 +192,7 @@ export function FieldDialog({
             onClick={onCancel}
             data-testid="button-field-cancel"
           >
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             onClick={onSave}

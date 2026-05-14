@@ -34,7 +34,7 @@ export function ModuleHealthGrid() {
 
       {q.isLoading ? (
         <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-          <EPLoader className="mr-2" /> Yuklanmoqda...
+          <EPLoader className="mr-2" /> {t("Yuklanmoqda...")}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">

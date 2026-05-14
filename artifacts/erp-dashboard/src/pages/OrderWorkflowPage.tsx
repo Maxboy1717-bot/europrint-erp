@@ -108,7 +108,7 @@ function SagaTracker({ detail }: { detail: SagaDetail }) {
           <div className="flex justify-between mb-1.5">
             <span className="text-[13px] font-semibold text-foreground">{t.name}</span>
             {t.isBottleneck && (
-              <span className="text-[11px] text-destructive">⚠ Bottleneck</span>
+              <span className="text-[11px] text-destructive">{t("bottleneck")}</span>
             )}
           </div>
           <ProgressBar pct={t.progressPct} color={trackColors[i] ?? '#60a5fa'} />
@@ -187,15 +187,15 @@ export default function OrderWorkflowPage() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-[22px] font-bold text-foreground">{t('orderToCashWorkflow')}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Buyurtma jarayonini kuzatish</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("buyurtmaJarayoniniKuzatish")}</p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={filterStatus || "all"} onValueChange={(v) => setFilter(v === "all" ? "" : v)}>
               <SelectTrigger className="w-48 h-9 text-[13px]">
-                <SelectValue placeholder="Barcha holatlar" />
+                <SelectValue placeholder={t("barchaHolatlar")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha holatlar</SelectItem>
+                <SelectItem value="all">{t("barchaHolatlar")}</SelectItem>
                 {allStatuses.map((s) => (
                   <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
@@ -203,7 +203,7 @@ export default function OrderWorkflowPage() {
             </Select>
             <Button size="sm" onClick={fetchOrders} disabled={loading}>
               <RefreshCw className={cn('h-4 w-4 mr-1.5', loading && 'animate-spin')} />
-              Yangilash
+              {t("refresh")}
             </Button>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function OrderWorkflowPage() {
 
         {/* Loading */}
         {loading && (
-          <div className="text-center py-12 text-muted-foreground text-sm">Yuklanmoqda...</div>
+          <div className="text-center py-12 text-muted-foreground text-sm">{t("Yuklanmoqda...")}</div>
         )}
 
         {/* Kanban board */}
@@ -299,15 +299,15 @@ export default function OrderWorkflowPage() {
 
                 {/* Saga tracker */}
                 <div>
-                  <p className="text-[12px] text-muted-foreground mb-2">Parallel Saga Tracker</p>
+                  <p className="text-[12px] text-muted-foreground mb-2">{t("parallelSagaTracker")}</p>
                   <SagaTracker detail={selected} />
                 </div>
 
                 {/* Payment plan */}
                 <div>
-                  <p className="text-[12px] text-muted-foreground mb-2">To'lov rejasi</p>
+                  <p className="text-[12px] text-muted-foreground mb-2">{t("tolovRejasi")}</p>
                   {(selected.paymentPlan ?? []).length === 0 ? (
-                    <p className="text-[13px] text-muted-foreground">Hali to'lov rejasi yo'q</p>
+                    <p className="text-[13px] text-muted-foreground">{t("haliTolovRejasiYoq")}</p>
                   ) : (
                     <div className="flex flex-col gap-1.5">
                       {(Array.isArray(selected.paymentPlan) ? selected.paymentPlan : []).map((p) => (
@@ -331,7 +331,7 @@ export default function OrderWorkflowPage() {
 
                 {/* Status history */}
                 <div>
-                  <p className="text-[12px] text-muted-foreground mb-2">Holat tarixi</p>
+                  <p className="text-[12px] text-muted-foreground mb-2">{t("holatTarixi")}</p>
                   <div className="flex flex-col gap-1.5 max-h-44 overflow-auto">
                     {(Array.isArray(selected.statusHistory) ? selected.statusHistory : []).map((h) => (
                       <div

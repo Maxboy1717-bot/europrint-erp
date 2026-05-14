@@ -10,8 +10,10 @@ import { formatCurrency } from "@/lib/format";
 import { AlertTriangle, CheckCircle, Clock, Info, RefreshCw, TrendingUp, XCircle } from "lucide-react";
 import type { ThreeWayMatchResult, VendorInvoice } from "./SupplyChainDashboardTypes";
 import { STATUS_COLORS, STATUS_LABELS } from "./SupplyChainDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 export function MatchStatusIcon({ status }: { status: string }) {
+  const { t } = useTranslation("common");
   if (status === "full_match") return <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />;
   if (status === "partial_match") return <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />;
   if (status === "unmatched") return <Clock className="h-4 w-4 text-gray-400" />;
@@ -37,33 +39,33 @@ export function MatchResultPanel({ result }: { result: ThreeWayMatchResult }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
         <div className="bg-white rounded p-2 border text-center">
-          <div className="text-gray-500">PO Jami</div>
+          <div className="text-gray-500">{t("poJami")}</div>
           <div className="font-medium">{formatCurrency(result.poTotal, "UZS")}</div>
         </div>
         <div className="bg-white rounded p-2 border text-center">
-          <div className="text-gray-500">GRN Jami</div>
+          <div className="text-gray-500">{t("grnJami")}</div>
           <div className="font-medium">{formatCurrency(result.grTotal, "UZS")}</div>
         </div>
         <div className="bg-white rounded p-2 border text-center">
-          <div className="text-gray-500">Faktura Jami</div>
+          <div className="text-gray-500">{t("fakturaJami")}</div>
           <div className="font-medium">{formatCurrency(result.invoiceTotal, "UZS")}</div>
         </div>
       </div>
 
       <div className="flex gap-4 text-xs">
-        <span>Narx farqi: <strong className={result.priceVariance > 2 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}>{result.priceVariance.toFixed(2)}%</strong></span>
-        <span>Tolerans: <strong>±{result.tolerance}%</strong></span>
+        <span>{t("narxFarqi1")}<strong className={result.priceVariance > 2 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}>{result.priceVariance.toFixed(2)}%</strong></span>
+        <span>{t("tolerans")}<strong>±{result.tolerance}%</strong></span>
       </div>
 
       <div className="flex gap-4 text-xs">
-        <span>Miqdor: <strong className={result.quantityMatch ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}>{result.quantityMatch ? "Mos" : "Mos emas"}</strong></span>
-        <span>Miqdor farqi: <strong className={result.quantityVariance > 2 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}>{result.quantityVariance.toFixed(2)}%</strong></span>
+        <span>{t("miqdor")}<strong className={result.quantityMatch ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}>{result.quantityMatch ? "Mos" : "Mos emas"}</strong></span>
+        <span>{t("miqdorFarqi")}<strong className={result.quantityVariance > 2 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}>{result.quantityVariance.toFixed(2)}%</strong></span>
       </div>
 
       {result.deviations.length > 0 && (
         <div className="space-y-1">
           <div className="text-xs font-medium text-[var(--ep-red)] flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> Header farqlar:
+            <AlertTriangle className="h-3 w-3" /> {t("headerFarqlar")}
           </div>
           {(Array.isArray(result.deviations) ? result.deviations : [])
             .filter(d => d.field.includes("header") || d.field.includes("summa"))
@@ -86,7 +88,7 @@ export function MatchResultPanel({ result }: { result: ThreeWayMatchResult }) {
             <div key={`k-${i}`} className="text-xs bg-orange-50 border border-orange-100 rounded px-2 py-1">
               <span className="font-semibold text-[var(--ep-primary)]">{d.lineRef}</span>{" "}
               <span className="text-gray-500">— {d.field}:</span>{" "}
-              Kutilgan: <strong>{d.expected.toFixed(2)}</strong> → Haqiqiy: <strong>{d.actual.toFixed(2)}</strong>{" "}
+              Kutilgan: <strong>{d.expected.toFixed(2)}</strong> {t("haqiqiy")}<strong>{d.actual.toFixed(2)}</strong>{" "}
               <span className="text-[var(--ep-primary)]">({d.deviation.toFixed(2)}%)</span>
             </div>
           ))}

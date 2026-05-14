@@ -97,7 +97,7 @@ export default function FinanceVariance() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t("variance.title")}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("variance.title")}</b></>}
         title={t("variance.title")}
         subtitle={t("variance.subtitle")}
       />

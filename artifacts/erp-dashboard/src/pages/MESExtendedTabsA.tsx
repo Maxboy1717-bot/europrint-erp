@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle } from "lucide-react";
 import { type MESMachine, type DowntimeReason } from "./MESExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── OEE Tab ─────────────────────────────────────────────────────────────────
 
@@ -16,29 +17,30 @@ interface OeeTabProps {
 
 /** Tab content: OEE — Uskunalar samaradorligi monitoringi */
 export function OeeTab({ machines, isLoading }: OeeTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="oee" className="mt-0 space-y-4">
       <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        OEE — Uskunalar samaradorligi monitoringi
+        {t("oeeUskunalarSamaradorligiMonitoringi")}
       </p>
       <Card>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Stanoq</TableHead>
+                <TableHead>{t("stanoq")}</TableHead>
                 <TableHead>OEE</TableHead>
-                <TableHead>Mavjudlik</TableHead>
-                <TableHead>Unumdorlik</TableHead>
-                <TableHead>Sifat</TableHead>
-                <TableHead>Holati</TableHead>
+                <TableHead>{t("Mavjudlik")}</TableHead>
+                <TableHead>{t("Unumdorlik")}</TableHead>
+                <TableHead>{t("Sifat")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">
-                    Yuklanmoqda...
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -103,7 +105,7 @@ export function ReasonsTab({ downtimeReasons }: ReasonsTabProps) {
 
   return (
     <TabsContent value="reasons" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">To'xtash Sabablar Logi</h2>
+      <h2 className="text-lg font-semibold">{t("toxtashSabablarLogi")}</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Reasons table */}
@@ -112,9 +114,9 @@ export function ReasonsTab({ downtimeReasons }: ReasonsTabProps) {
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sabab</TableHead>
-                  <TableHead>Tur</TableHead>
-                  <TableHead>Muddat</TableHead>
+                  <TableHead>{t("sabab")}</TableHead>
+                  <TableHead>{t("tur")}</TableHead>
+                  <TableHead>{t("muddat")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -122,7 +124,7 @@ export function ReasonsTab({ downtimeReasons }: ReasonsTabProps) {
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-6 text-[13px] text-muted-foreground">
                       <AlertTriangle className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                      To'xtash sabablar yo'q
+                      {t("toxtashSabablarYoq")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -146,12 +148,12 @@ export function ReasonsTab({ downtimeReasons }: ReasonsTabProps) {
         {/* Analysis card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Sabab tahlili</CardTitle>
+            <CardTitle className="text-base">{t("sababTahlili")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {reasons.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-sm">
-                To'xtash sabablari qayd etilmagan
+                {t("toxtashSabablariQaydEtilmagan")}
               </div>
             ) : (
               reasons.slice(0, 4).map((r: DowntimeReason, i: number) => {

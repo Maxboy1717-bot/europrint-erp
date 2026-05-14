@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PortretData } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StepDemographicsProps {
   portret: PortretData;
@@ -17,12 +18,13 @@ interface StepDemographicsProps {
 }
 
 export function StepDemographics({ portret, onChange }: StepDemographicsProps) {
+  const { t } = useTranslation("common");
   const p = onChange;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">Blok B: Demografik talablar</h3>
+        <h3 className="font-semibold text-sm text-primary">{t("blokBDemografikTalablar")}</h3>
         <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
       </div>
 
@@ -44,13 +46,13 @@ export function StepDemographics({ portret, onChange }: StepDemographicsProps) {
           />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">8. Jins</Label>
+          <Label className="text-xs mb-1 block">{t("k8Jins")}</Label>
           <Select value={portret.gender ?? "any"} onValueChange={v => p("gender")(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="any">Muhim emas</SelectItem>
-              <SelectItem value="male">Erkak</SelectItem>
-              <SelectItem value="female">Ayol</SelectItem>
+              <SelectItem value="any">{t("muhimEmas")}</SelectItem>
+              <SelectItem value="male">{t("erkak")}</SelectItem>
+              <SelectItem value="female">{t("ayol")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -59,18 +61,18 @@ export function StepDemographics({ portret, onChange }: StepDemographicsProps) {
       <div>
         <Label className="text-xs mb-1 block">9. Oilaviy holat (izoh, ixtiyoriy)</Label>
         <Input
-          placeholder="Masalan: uylanganlar afzal, muhim emas, farzandlilari uchun moslashtirilgan..."
+          placeholder={t("masalanUylanganlarAfzalMuhimEmas")}
           value={portret.family_status ?? ""}
           onChange={e => p("family_status")(e.target.value)}
         />
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">10. Ta'lim darajasi</Label>
+        <Label className="text-xs mb-1 block">{t("k10TalimDarajasi")}</Label>
         <Select value={portret.education_req ?? "higher"} onValueChange={v => p("education_req")(v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="any">Muhim emas</SelectItem>
+            <SelectItem value="any">{t("muhimEmas")}</SelectItem>
             <SelectItem value="secondary">O'rta (maktab)</SelectItem>
             <SelectItem value="vocational">O'rta maxsus (kollej/texnikum)</SelectItem>
             <SelectItem value="higher">Oliy (bakalavr)</SelectItem>

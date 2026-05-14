@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import type { QcStats, QcBrak, QcReclamation, QcSupplierQuality } from "./QCDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── AttentionSection ─────────────────────────────────────────────────────────
 
@@ -30,10 +31,11 @@ interface AttentionSectionProps {
 export function AttentionSection({
   recs, brakList, suppliers, rLoad, bLoad, suLoad,
 }: AttentionSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <section>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-        E'tibor kerak
+        {t("etiborKerak")}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -42,7 +44,7 @@ export function AttentionSection({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-[var(--ep-yellow)]" />
-              Ochiq reklamatsiyalar
+              {t("ochiqReklamatsiyalar")}
               <Badge variant="outline" className="ml-auto text-xs">
                 {(Array.isArray(recs) ? recs : []).filter(r => r.status === "new").length}
               </Badge>
@@ -54,7 +56,7 @@ export function AttentionSection({
                 {[1, 2, 3].map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}
               </div>
             ) : recs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Reklamatsiya yo'q</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("reklamatsiyaYoq")}</p>
             ) : (
               <div className="space-y-2">
                 {recs.slice(0, 5).map(r => (
@@ -86,7 +88,7 @@ export function AttentionSection({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <TrendingDown className="w-4 h-4 text-[var(--ep-red)]" />
-              Brak sabablari
+              {t("brakSabablari")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -95,7 +97,7 @@ export function AttentionSection({
                 {[1, 2, 3].map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}
               </div>
             ) : brakList.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Brak topilmadi</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("brakTopilmadi")}</p>
             ) : (
               <div className="space-y-2">
                 {brakList.slice(0, 5).map((b, i) => (
@@ -116,7 +118,7 @@ export function AttentionSection({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Truck className="w-4 h-4 text-[var(--ep-purple)]" />
-              Yetkazuvchi sifati
+              {t("yetkazuvchiSifati")}
               <Badge variant="outline" className="ml-auto text-xs">{suppliers.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -126,7 +128,7 @@ export function AttentionSection({
                 {[1, 2, 3].map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}
               </div>
             ) : suppliers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Ma'lumot yo'q</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("malumotYoq")}</p>
             ) : (
               <div className="space-y-2">
                 {suppliers.slice(0, 5).map(s => (
@@ -191,7 +193,7 @@ export function SummarySection({ stats, loading }: SummarySectionProps) {
   return (
     <section>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-        Sifat ko'rsatkichlari
+        {t("sifatKorsatkichlari")}
       </p>
       <Card>
         <CardContent className="p-5">

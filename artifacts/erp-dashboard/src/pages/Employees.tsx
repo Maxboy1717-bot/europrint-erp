@@ -191,9 +191,9 @@ export default function Employees() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <EPPageHeader
-        breadcrumb={<>Dashboard · HR · <b className="text-foreground">Xodimlar</b></>}
+        breadcrumb={<>{tCommon("dashboard")} · HR · <b className="text-foreground">{t("employees")}</b></>}
         title={t("employees")}
-        subtitle="Kompaniya xodimlari va ularning asosiy ma'lumotlari"
+        subtitle={t("employeesSubtitle")}
         actions={
           <>
             <Button
@@ -223,28 +223,28 @@ export default function Employees() {
       ) : !employeesError && (
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <EPKpiCard
-            label="Jami xodimlar"
+            label={t("kpi.totalEmployees")}
             value={stats.total}
             icon={Users}
             iconBg="hr"
             enterDelayMs={0}
           />
           <EPKpiCard
-            label="Faol"
+            label={t("departments.active")}
             value={stats.active}
             icon={UserCheck}
             iconBg="var(--ep-green)"
             enterDelayMs={60}
           />
           <EPKpiCard
-            label="Yangi bu oy"
+            label={t("kpi.newThisMonth")}
             value={stats.newThisMonth}
             icon={UserPlus}
             iconBg="primary"
             enterDelayMs={120}
           />
           <EPKpiCard
-            label="Nofaol"
+            label={t("departments.inactive")}
             value={stats.inactive}
             icon={UserX}
             iconBg="var(--ep-muted)"
@@ -294,7 +294,7 @@ export default function Employees() {
             )}
 
             <span className="ep-caption ml-auto">
-              {total.toLocaleString()} ta xodim
+              {t("kpi.totalEmployeesCount", { n: total.toLocaleString() })}
             </span>
           </div>
 
@@ -304,11 +304,11 @@ export default function Employees() {
           ) : transformedEmployees.length === 0 ? (
             <EPEmptyState
               icon={Users}
-              title={search || departmentFilter !== "all" ? "Hech narsa topilmadi" : "Hali xodim yo'q"}
+              title={search || departmentFilter !== "all" ? t("departments.emptySearchTitle") : t("emptyEmployeesTitle")}
               description={
                 search || departmentFilter !== "all"
-                  ? "Qidiruv yoki filterni o'zgartirib ko'ring."
-                  : "Birinchi xodimni qo'shing yoki Excel orqali import qiling."
+                  ? t("emptyEmployeesSearchDesc")
+                  : t("emptyEmployeesDesc")
               }
               action={
                 !search && departmentFilter === "all" && (
@@ -319,14 +319,14 @@ export default function Employees() {
                       className="gap-1.5"
                     >
                       <Upload className="h-4 w-4" />
-                      Excel import
+                      {t("excelImport")}
                     </Button>
                     <Button
                       onClick={() => setEmployeeDialog({ open: true })}
                       className="ep-btn-primary-shimmer gap-1.5"
                     >
                       <Plus className="h-4 w-4" />
-                      Yangi xodim qo'shish
+                      {t("addEmployee")}
                     </Button>
                   </div>
                 )

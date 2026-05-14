@@ -196,7 +196,7 @@ export class KanbanReportsController {
     (overdue as Record<string, unknown>[]).forEach(c => ws3.addRow(c));
     ws3.getRow(1).font = { bold: true };
 
-    const buf = await wb.xlsx.writeBuffer() as Buffer;
+    const buf = await wb.xlsx.writeBuffer() as unknown as Buffer;
     res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.header('Content-Disposition', 'attachment; filename="kanban-report.xlsx"');
     return res.send(buf);

@@ -22,16 +22,16 @@ export function TechMaterialsSection({techCards, loading }: TechMaterialsProps) 
   return (
     <TabsContent value="tech-materials" className="mt-0 space-y-4">
       <h2 className="text-2xl font-light tracking-tight text-foreground mb-4">
-        Material <span className="font-bold text-primary">Muqobili</span>
+        {t("Material")}<span className="font-bold text-primary">{t("muqobili")}</span>
       </h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Texnologik kartalar" value={loading ? "..." : techCards.length} sub="Jami kartalar" />
-        <StatCard label="Faol kartalar" value="—" />
-        <StatCard label="Shu oyda qo'shildi" value="—" />
-        <StatCard label="Kutilayotgan" value="—" color="text-[var(--ep-yellow)]" />
+        <StatCard label={t("texnologikKartalar1")} value={loading ? "..." : techCards.length} sub="Jami kartalar" />
+        <StatCard label={t("faolKartalar")} value="—" />
+        <StatCard label={t("shuOydaQoshildi")} value="—" />
+        <StatCard label={t("kutilayotgan")} value="—" color="text-[var(--ep-yellow)]" />
       </div>
       <Card className="bg-card rounded-lg border-none shadow-none">
-        <CardHeader><CardTitle className="text-[14px] font-semibold text-foreground">Texnologik kartalar ro'yxati</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-[14px] font-semibold text-foreground">{t("texnologikKartalarRoyxati")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-3">
@@ -41,17 +41,17 @@ export function TechMaterialsSection({techCards, loading }: TechMaterialsProps) 
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Karta №</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Mahsulot nomi</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("karta1")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mahsulotNomi")}</TableHead>
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('Material')}</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Qatlamlar</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holati</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("qatlamlar")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("holati")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {techCards.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Ma'lumot kiritilmagan</TableCell>
+                    <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("malumotKiritilmagan")}</TableCell>
                   </TableRow>
                 ) : (
                   (Array.isArray(techCards) ? techCards : []).map((card, i) => (
@@ -82,23 +82,24 @@ export function TechMaterialsSection({techCards, loading }: TechMaterialsProps) 
 
 // ─── Tech: Stanoq Tanlash ─────────────────────────────────────────────────────
 export function TechMachinesSection() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tech-machines" className="mt-0 band-y-4 space-y-4">
-      <h2 className="text-lg font-semibold">Stanoq Tanlash Wizard</h2>
+      <h2 className="text-lg font-semibold">{t("stanoqTanlashWizard")}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle className="text-base">Buyurtma parametrlari</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("buyurtmaParametrlari")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([{l:"Hajm (mm)", p:"1000x700"},{l:"Tiraj (dona)",p:"5000"},{l:"Bo'yoqlar soni",p:"4"},{l:"Laminatsiya",p:"Yo'q"}]).map(f => (
               <div key={f.l} className="space-y-1"><Label className="text-sm">{f.l}</Label><Input defaultValue={f.p} /></div>
             ))}
             <Button className="w-full mt-2 gap-2" data-testid="button-find-machine">
-              <Cpu className="h-4 w-4" />Stanoq Tanlash
+              <Cpu className="h-4 w-4" />{t("stanoqTanlash")}
             </Button>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Mos stanoqlar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("mosStanoqlar")}</CardTitle></CardHeader>
           <CardContent><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>
         </Card>
       </div>
@@ -108,23 +109,24 @@ export function TechMachinesSection() {
 
 // ─── Tech: Vaqt va Tannarx ────────────────────────────────────────────────────
 export function TechTimeSection() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tech-time" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Vaqt va Tannarx Kalkulyator</h2>
+      <h2 className="text-lg font-semibold">{t("vaqtVaTannarxKalkulyator")}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle className="text-base">Kalkulyatsiya</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("kalkulyatsiya")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([{l:"Buyurtma raqami",p:""},{l:"Tiraj",p:""},{l:"Stanoq",p:""},{l:"Bo'yoqlar",p:""}]).map(f => (
               <div key={f.l} className="space-y-1"><Label className="text-sm">{f.l}</Label><Input defaultValue={f.p} /></div>
             ))}
             <Button className="w-full gap-2" data-testid="button-calc-time">
-              <Calculator className="h-4 w-4" />Hisoblash
+              <Calculator className="h-4 w-4" />{t("calculate")}
             </Button>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Natija</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("natija")}</CardTitle></CardHeader>
           <CardContent><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>
         </Card>
       </div>
@@ -134,16 +136,17 @@ export function TechTimeSection() {
 
 // ─── Tech: Xarajat Optimizatsiya ──────────────────────────────────────────────
 export function TechCostSection() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tech-cost" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">AI Xarajat Optimizatsiya</h2>
+      <h2 className="text-lg font-semibold">{t("aiXarajatOptimizatsiya")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Potensial tejash" value="—" color="text-[var(--ep-green)]" sub="Joriy oy uchun" />
-        <StatCard label="Tasdiqlangan tavsiyalar" value="—" sub="Oxirgi 30 kunda" />
-        <StatCard label="Tejangan summa" value="—" color="text-[var(--ep-green)]" />
+        <StatCard label={t("potensialTejash")} value="—" color="text-[var(--ep-green)]" sub="Joriy oy uchun" />
+        <StatCard label={t("tasdiqlanganTavsiyalar")} value="—" sub="Oxirgi 30 kunda" />
+        <StatCard label={t("tejanganSumma")} value="—" color="text-[var(--ep-green)]" />
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">AI Tavsiyalar</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("aiTavsiyalar")}</CardTitle></CardHeader>
         <CardContent><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>
       </Card>
     </TabsContent>
@@ -152,21 +155,22 @@ export function TechCostSection() {
 
 // ─── Tech: Mijoz Talablari ────────────────────────────────────────────────────
 export function TechClientsSection() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tech-clients" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Mijoz Maxsus Talablar</h2>
-        <Button data-testid="button-add-req"><Plus className="h-4 w-4 mr-2" />Qo'shish</Button>
+        <h2 className="text-lg font-semibold">{t("mijozMaxsusTalablar")}</h2>
+        <Button data-testid="button-add-req"><Plus className="h-4 w-4 mr-2" />{t("add")}</Button>
       </div>
       <Card>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Mijoz</TableHead><TableHead>Talab turi</TableHead>
-              <TableHead>Tavsif</TableHead><TableHead>Holati</TableHead>
+              <TableHead>{t("mijoz1")}</TableHead><TableHead>{t("talabTuri")}</TableHead>
+              <TableHead>{t("progress.description")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">Ma'lumot kiritilmagan</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">{t("malumotKiritilmagan")}</TableCell></TableRow>
             </TableBody>
           </Table></div>
         </CardContent>
@@ -177,18 +181,19 @@ export function TechClientsSection() {
 
 // ─── Tech: O'zgarishlar Tarixi ────────────────────────────────────────────────
 export function TechHistorySection() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tech-history" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Texnik Karta O'zgarishlar Tarixi</h2>
+      <h2 className="text-lg font-semibold">{t("texnikKartaOzgarishlarTarixi")}</h2>
       <Card>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Sana</TableHead><TableHead>Hujjat</TableHead>
-              <TableHead>O'zgarish</TableHead><TableHead>Muallif</TableHead><TableHead>Versiya</TableHead>
+              <TableHead>{t("date")}</TableHead><TableHead>{t("hujjat")}</TableHead>
+              <TableHead>{t("ozgarish")}</TableHead><TableHead>{t("muallif")}</TableHead><TableHead>{t("version")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Ma'lumot kiritilmagan</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("malumotKiritilmagan")}</TableCell></TableRow>
             </TableBody>
           </Table></div>
         </CardContent>
@@ -202,11 +207,11 @@ export function TechParallelSection() {
   const { t } = useTranslation('common');
   return (
     <TabsContent value="tech-parallel" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Parallel Buyurtmalar Boshqaruvi</h2>
+      <h2 className="text-lg font-semibold">{t("parallelBuyurtmalarBoshqaruvi")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Faol buyurtmalar" value="—" />
-        <StatCard label="Konflikt" value="—" color="text-[var(--ep-red)]" />
-        <StatCard label="Optimallashtirish mumkin" value="—" color="text-[var(--ep-green)]" />
+        <StatCard label={t("faolBuyurtmalar")} value="—" />
+        <StatCard label={t("konflikt")} value="—" color="text-[var(--ep-red)]" />
+        <StatCard label={t("optimallashtirishMumkin")} value="—" color="text-[var(--ep-green)]" />
       </div>
       <Card>
         <CardHeader><CardTitle className="text-base">{t('buyurtmalarGantt')}</CardTitle></CardHeader>

@@ -50,7 +50,7 @@ function getStatusBadge(status: string) {
     case "open":
       return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{"Open1"}</Badge>;
     case "closed":
-      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">Closed</Badge>;
+      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">{t("closed")}</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -254,7 +254,7 @@ export default function PeriodClosing() {
                 <>
                   <strong>{selectedPeriod.fiscalYear} yil {getMonthName(selectedPeriod.month)}</strong> davrini yopmoqchimisiz?
                   <br /><br />
-                  Diqqat: Yopilgan davrda yangi yozuvlar qo'shish mumkin bo'lmaydi.
+                  {t("diqqatYopilganDavrdaYangiYozuvlar")}
                 </>
               )}
             </DialogDescription>

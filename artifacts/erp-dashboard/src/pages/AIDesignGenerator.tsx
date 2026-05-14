@@ -20,8 +20,10 @@ import {
   STATUS_COLORS, STATUS_LABELS,
 } from "./AIDesignGeneratorTypes";
 import { EPErrorState, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function AIDesignGenerator() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [customPrompt, setCustomPrompt] = useState("");
@@ -123,15 +125,15 @@ export default function AIDesignGenerator() {
         {/* ─── Header ──────────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="ep-h1 text-foreground" data-testid="text-page-title">AI Dizayn Generator</h1>
-            <p className="text-muted-foreground mt-1">GPT-4o + Gemini 2.5 Flash bilan professional dizaynlar yarating</p>
+            <h1 className="ep-h1 text-foreground" data-testid="text-page-title">{t("aiDizaynGenerator")}</h1>
+            <p className="text-muted-foreground mt-1">{t("gpt4oGemini25")}</p>
           </div>
           {dashboardData && (
             <div className="flex gap-3 flex-wrap">
-              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">Jami buyurtmalar</div><div className="text-xl font-bold text-foreground">{dashboardData.totalOrders}</div></Card>
-              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">Tasdiq kutmoqda</div><div className="text-xl font-bold text-[var(--ep-yellow)]">{dashboardData.pendingApproval}</div></Card>
-              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">Muammo topilgan</div><div className="text-xl font-bold text-[var(--ep-red)]">{dashboardData.failedChecks}</div></Card>
-              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">Eskirgan asbob</div><div className="text-xl font-bold text-[var(--ep-primary)]">{dashboardData.wornTooling}</div></Card>
+              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">{t("jamiBuyurtmalar")}</div><div className="text-xl font-bold text-foreground">{dashboardData.totalOrders}</div></Card>
+              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">{t("tasdiqKutmoqda")}</div><div className="text-xl font-bold text-[var(--ep-yellow)]">{dashboardData.pendingApproval}</div></Card>
+              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">{t("muammoTopilgan")}</div><div className="text-xl font-bold text-[var(--ep-red)]">{dashboardData.failedChecks}</div></Card>
+              <Card className="px-4 py-2"><div className="text-xs text-muted-foreground">{t("eskirganAsbob")}</div><div className="text-xl font-bold text-[var(--ep-primary)]">{dashboardData.wornTooling}</div></Card>
             </div>
           )}
         </div>
@@ -139,22 +141,22 @@ export default function AIDesignGenerator() {
         {/* ─── Tabs ────────────────────────────────────────────────────────── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList data-testid="tabs-main">
-            <TabsTrigger value="generate" data-testid="tab-generate"><Sparkles className="h-4 w-4 mr-1" />Generatsiya</TabsTrigger>
+            <TabsTrigger value="generate" data-testid="tab-generate"><Sparkles className="h-4 w-4 mr-1" />{t("generatsiya")}</TabsTrigger>
             <TabsTrigger value="results" data-testid="tab-results"><Eye className="h-4 w-4 mr-1" />Natijalar ({generatedDesigns.length})</TabsTrigger>
-            <TabsTrigger value="tooling" data-testid="tab-tooling"><Wrench className="h-4 w-4 mr-1" />Asboblar</TabsTrigger>
-            <TabsTrigger value="history" data-testid="tab-history"><History className="h-4 w-4 mr-1" />Revision tarixi</TabsTrigger>
+            <TabsTrigger value="tooling" data-testid="tab-tooling"><Wrench className="h-4 w-4 mr-1" />{t("asboblar")}</TabsTrigger>
+            <TabsTrigger value="history" data-testid="tab-history"><History className="h-4 w-4 mr-1" />{t("revisionTarixi")}</TabsTrigger>
           </TabsList>
 
           {/* ─── Generatsiya tab ─────────────────────────────────────────── */}
           <TabsContent value="generate" className="space-y-4 mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="lg:col-span-1">
-                <CardHeader><CardTitle className="text-base">Sozlamalar</CardTitle><CardDescription>Dizayn parametrlari</CardDescription></CardHeader>
+                <CardHeader><CardTitle className="text-base">{t("settings")}</CardTitle><CardDescription>{t("dizaynParametrlari")}</CardDescription></CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label>Buyurtma *</Label>
+                    <Label>{t("buyurtma2")}</Label>
                     <Select value={selectedOrderId} onValueChange={setSelectedOrderId}>
-                      <SelectTrigger data-testid="select-order" className="h-9"><SelectValue placeholder="Buyurtmani tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-order" className="h-9"><SelectValue placeholder={t("buyurtmaniTanlang")} /></SelectTrigger>
                       <SelectContent>
                         {(Array.isArray(activeOrders) ? activeOrders : []).map((o) => (
                           <SelectItem key={o.order.id} value={o.order.id}>{o.order.orderNumber} — {o.order.productName}</SelectItem>
@@ -164,14 +166,14 @@ export default function AIDesignGenerator() {
                   </div>
                   {selectedOrder && (
                     <div className="p-3 bg-muted rounded-md space-y-2">
-                      <div className="text-xs font-medium text-muted-foreground">Tanlangan buyurtma:</div>
+                      <div className="text-xs font-medium text-muted-foreground">{t("tanlanganBuyurtma")}</div>
                       <div className="text-sm font-semibold">{selectedOrder.order.productName}</div>
                       <div className="text-xs text-muted-foreground">{selectedOrder.order.clientName}</div>
                       <StatusChain current={selectedOrder.order.status} />
                     </div>
                   )}
                   <div>
-                    <Label>Dizaynlar soni</Label>
+                    <Label>{t("dizaynlarSoni")}</Label>
                     <Select value={String(count)} onValueChange={(v) => setCount(parseInt(v))}>
                       <SelectTrigger data-testid="select-count" className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>{([1, 2, 3, 4, 5]).map((n) => <SelectItem key={n} value={String(n)}>{n} ta</SelectItem>)}</SelectContent>
@@ -179,10 +181,10 @@ export default function AIDesignGenerator() {
                   </div>
                   <div>
                     <Label>Maxsus Prompt (ixtiyoriy)</Label>
-                    <Textarea placeholder="Ranglar, stil, maxsus talablar..." value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)} rows={4} data-testid="textarea-prompt" />
+                    <Textarea placeholder={t("ranglarStilMaxsusTalablar")} value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)} rows={4} data-testid="textarea-prompt" />
                   </div>
                   <Button onClick={handleGenerate} disabled={!selectedOrderId || generateMutation.isPending} className="w-full" data-testid="button-generate">
-                    {generateMutation.isPending ? <><EPLoader className="mr-2" />Yaratilmoqda...</> : <><Sparkles className="mr-2 h-4 w-4" />AI Dizayn Yaratish</>}
+                    {generateMutation.isPending ? <><EPLoader className="mr-2" />{t("yaratilmoqda")}</> : <><Sparkles className="mr-2 h-4 w-4" />{t("aiDizaynYaratish")}</>}
                   </Button>
                   <div className="text-xs text-muted-foreground text-center">{templates.length} ta brend shablon mavjud</div>
                 </CardContent>
@@ -190,8 +192,8 @@ export default function AIDesignGenerator() {
 
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2"><ClipboardList className="h-4 w-4" />Dizayn Holat Zanjiri</CardTitle>
-                  <CardDescription>8 bosqichli tasdiqlash jarayoni</CardDescription>
+                  <CardTitle className="text-base flex items-center gap-2"><ClipboardList className="h-4 w-4" />{t("dizaynHolatZanjiri")}</CardTitle>
+                  <CardDescription>{t("k8BosqichliTasdiqlashJarayoni")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -212,7 +214,7 @@ export default function AIDesignGenerator() {
                     ))}
                   </div>
                   <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/20 rounded-md border border-green-200 dark:border-green-800">
-                    <div className="text-xs text-[var(--ep-green)] dark:text-green-400 font-medium">Approved → pending_tech trigger</div>
+                    <div className="text-xs text-[var(--ep-green)] dark:text-green-400 font-medium">{t("approvedPendingTechTrigger")}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">Dizayn tasdiqlanganda papkaOrders.status = "pending_tech" ga o'zgaradi — texnolog moduli avtomatik signal oladi</div>
                   </div>
                 </CardContent>
@@ -242,9 +244,9 @@ export default function AIDesignGenerator() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <CardTitle className="text-base flex items-center gap-2"><History className="h-4 w-4" />Revision Tarixi</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2"><History className="h-4 w-4" />{t("revisionTarixi1")}</CardTitle>
                   <Select value={revisionsOrderId || ""} onValueChange={setRevisionsOrderId}>
-                    <SelectTrigger className="w-64 h-9" data-testid="select-revision-order"><SelectValue placeholder="Buyurtmani tanlang" /></SelectTrigger>
+                    <SelectTrigger className="w-64 h-9" data-testid="select-revision-order"><SelectValue placeholder={t("buyurtmaniTanlang")} /></SelectTrigger>
                     <SelectContent>
                       {(Array.isArray(orders) ? orders : []).map((o) => (
                         <SelectItem key={o.order.id} value={o.order.id}>{o.order.orderNumber} — {o.order.productName}</SelectItem>
@@ -257,10 +259,10 @@ export default function AIDesignGenerator() {
                 {!revisionsOrderId ? (
                   <div className="py-12 text-center text-muted-foreground">
                     <History className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">Revision tarixini ko'rish uchun buyurtmani tanlang</p>
+                    <p className="text-sm">{t("revisionTarixiniKorishUchunBuyurtmani")}</p>
                   </div>
                 ) : revisions.length === 0 ? (
-                  <div className="py-12 text-center text-muted-foreground"><p className="text-sm">Hali revision yozuvi yo'q</p></div>
+                  <div className="py-12 text-center text-muted-foreground"><p className="text-sm">{t("haliRevisionYozuviYoq")}</p></div>
                 ) : (
                   <div className="space-y-3">
                     {(Array.isArray(revisions) ? revisions : []).map((rev) => (

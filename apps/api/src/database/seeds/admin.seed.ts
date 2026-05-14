@@ -8,11 +8,12 @@ import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD;
-if (!ADMIN_PASSWORD) {
+const RAW_ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD;
+if (!RAW_ADMIN_PASSWORD) {
   throw new Error("ADMIN_SEED_PASSWORD muhit o'zgaruvchisi o'rnatilmagan.\n" +
     "Ishga tushirish: ADMIN_SEED_PASSWORD='...' pnpm --filter @europrint/api run seed");
 }
+const ADMIN_PASSWORD: string = RAW_ADMIN_PASSWORD;
 const ADMIN_ROLE = 'super_admin';
 const ADMIN_EMAIL = 'admin@europrint.uz';
 const BCRYPT_ROUNDS = 12;

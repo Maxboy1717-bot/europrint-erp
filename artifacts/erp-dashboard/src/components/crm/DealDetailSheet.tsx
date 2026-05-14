@@ -40,6 +40,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Pencil, Save, X, Building2, User, Calendar, DollarSign } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 type Deal = {
   id: number;
@@ -91,6 +92,7 @@ const dealFormSchema = z.object({
 type DealFormValues = z.infer<typeof dealFormSchema>;
 
 export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps) {
+  const { t } = useTranslation("common");
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
@@ -191,7 +193,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
 
         {isLoading ? (
           <div className="py-8 text-center text-muted-foreground">
-            Yuklanmoqda...
+            {t("Yuklanmoqda...")}
           </div>
         ) : isEditing ? (
           <Form {...form}>
@@ -201,7 +203,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kelishuv nomi *</FormLabel>
+                    <FormLabel>{t("kelishuvNomi")}</FormLabel>
                     <FormControl>
                       <Input {...field} data-testid="input-deal-title" />
                     </FormControl>
@@ -216,7 +218,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                   name="opportunity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Summa *</FormLabel>
+                      <FormLabel>{t("summa1")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -257,18 +259,18 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                 name="companyId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kompaniya</FormLabel>
+                    <FormLabel>{t("company")}</FormLabel>
                     <Select
                       value={field.value?.toString() || "none"}
                       onValueChange={(val) => field.onChange(val === "none" ? null : Number(val))}
                     >
                       <FormControl>
                         <SelectTrigger data-testid="select-deal-company" className="h-9">
-                          <SelectValue placeholder="Kompaniya tanlang" />
+                          <SelectValue placeholder={t("kompaniyaTanlang")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">Hech biri</SelectItem>
+                        <SelectItem value="none">{t("none")}</SelectItem>
                         {(Array.isArray(companies) ? companies : []).map((company) => (
                           <SelectItem key={company.id} value={company.id.toString()}>
                             {company.title}
@@ -287,7 +289,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                   name="beginDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Boshlanish sanasi</FormLabel>
+                      <FormLabel>{t("startDate")}</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} data-testid="input-deal-begin-date" />
                       </FormControl>
@@ -301,7 +303,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                   name="closeDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Yopilish sanasi</FormLabel>
+                      <FormLabel>{t("yopilishSanasi")}</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} data-testid="input-deal-close-date" />
                       </FormControl>
@@ -316,7 +318,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                 name="comments"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Izohlar</FormLabel>
+                    <FormLabel>{t("notes")}</FormLabel>
                     <FormControl>
                       <Textarea {...field} rows={3} data-testid="input-deal-comments" />
                     </FormControl>
@@ -330,7 +332,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                 name="additionalInfo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Qo'shimcha ma'lumot</FormLabel>
+                    <FormLabel>{t("qoshimchaMalumot1")}</FormLabel>
                     <FormControl>
                       <Textarea {...field} rows={3} data-testid="input-deal-additional-info" />
                     </FormControl>
@@ -347,7 +349,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
                   data-testid="button-cancel-edit"
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Bekor qilish
+                  {t("cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -365,7 +367,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Summa:</span>
+                <span className="text-muted-foreground">{t("summa2")}</span>
                 <span className="font-semibold text-[var(--ep-green)]">
                   {deal?.opportunity.toLocaleString()} {deal?.currencyId}
                 </span>
@@ -373,7 +375,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
 
               {deal?.probability !== undefined && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Ehtimollik:</span>
+                  <span className="text-muted-foreground">{t("ehtimollik")}</span>
                   <Badge variant="secondary">{deal.probability}%</Badge>
                 </div>
               )}
@@ -381,7 +383,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
               {linkedCompany && (
                 <div className="flex items-center gap-2 text-sm">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Kompaniya:</span>
+                  <span className="text-muted-foreground">{t("kompaniya")}</span>
                   <span className="font-medium">{linkedCompany.title}</span>
                 </div>
               )}
@@ -389,7 +391,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
               {deal?.beginDate && (
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Boshlanish:</span>
+                  <span className="text-muted-foreground">{t("boshlanish1")}</span>
                   <span>{format(new Date(deal.beginDate), "dd.MM.yyyy")}</span>
                 </div>
               )}
@@ -397,7 +399,7 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
               {deal?.closeDate && (
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Yopilish:</span>
+                  <span className="text-muted-foreground">{t("yopilish")}</span>
                   <span>{format(new Date(deal.closeDate), "dd.MM.yyyy")}</span>
                 </div>
               )}
@@ -407,14 +409,14 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
 
             {deal?.comments && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground">Izohlar</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("notes")}</h4>
                 <p className="text-sm whitespace-pre-wrap">{deal.comments}</p>
               </div>
             )}
 
             {deal?.additionalInfo && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground">Qo'shimcha ma'lumot</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("qoshimchaMalumot1")}</h4>
                 <p className="text-sm whitespace-pre-wrap">{deal.additionalInfo}</p>
               </div>
             )}
@@ -422,10 +424,10 @@ export function DealDetailSheet({ dealId, open, onClose }: DealDetailSheetProps)
             <Separator />
 
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Ma'lumot</h4>
+              <h4 className="text-sm font-medium text-muted-foreground">{t("info")}</h4>
               <div className="flex items-center gap-2 text-sm">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Mas'ul:</span>
+                <span className="text-muted-foreground">{t("masul1")}</span>
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
                     <AvatarFallback className="text-xs">

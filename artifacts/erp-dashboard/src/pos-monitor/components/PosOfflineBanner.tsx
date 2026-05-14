@@ -5,6 +5,7 @@
 
 import { usePosI18n } from "../i18n/usePosI18n";
 import { useOfflineSync, type QueueItem } from "../hooks/useOfflineSync";
+import { useTranslation } from '@/lib/i18n';
 
 // Re-export the legacy type so other files don't break
 export type { QueueItem as OfflineQueueItem };
@@ -66,6 +67,7 @@ export async function idbEnqueue(input: {
 }
 
 export default function PosOfflineBanner() {
+  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const {
     isOnline,
@@ -158,7 +160,7 @@ export default function PosOfflineBanner() {
               style={{ padding: "2px 10px", fontSize: 11, flexShrink: 0 }}
               onClick={() => void syncNow()}
             >
-              Hozir sinxronlash
+              {t("hozirSinxronlash")}
             </button>
           )}
 
@@ -186,7 +188,7 @@ export default function PosOfflineBanner() {
             style={{ padding: "2px 10px", fontSize: 11, color: "var(--pos-danger)" }}
             onClick={() => void clearFailed()}
           >
-            Tozalash
+            {t("tozalash")}
           </button>
         </div>
       )}
@@ -196,13 +198,13 @@ export default function PosOfflineBanner() {
         <div className="pos-modal-overlay">
           <div className="pos-modal" style={{ maxWidth: 420 }}>
             <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>
-              ⚠️ Server vs Mening versiyam
+              {t("serverVsMeningVersiyam")}
             </div>
             <div style={{ fontSize: 13, color: "var(--pos-text-muted)", marginBottom: 6 }}>
-              Server versiyasi bilan to'qnashuv yuz berdi. Qaysi versiyani saqlashni tanlang:
+              {t("serverVersiyasiBilanToqnashuvYuz")}
             </div>
             <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 16 }}>
-              Tur: <strong>{firstConflict.type}</strong> &nbsp;·&nbsp;
+              {t("tur1")}<strong>{firstConflict.type}</strong> &nbsp;·&nbsp;
               Sana: <strong>{new Date(firstConflict.ts).toLocaleString("uz-UZ")}</strong>
               {conflicts.length > 1 && (
                 <span style={{ marginLeft: 8 }}>
@@ -217,14 +219,14 @@ export default function PosOfflineBanner() {
                 style={{ flex: 1 }}
                 onClick={() => void resolveConflict(firstConflict, true)}
               >
-                🌐 Server versiyasi
+                {t("serverVersiyasi")}
               </button>
               <button
                 className="pos-btn pos-btn-primary"
                 style={{ flex: 1 }}
                 onClick={() => void resolveConflict(firstConflict, false)}
               >
-                💾 Mening versiyam
+                {t("meningVersiyam")}
               </button>
             </div>
           </div>

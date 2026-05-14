@@ -27,8 +27,10 @@ import { VendorDialog } from "./MMExtendedDialogs";
 import { CheckBotTab, SupplierPortalTab, GoodsReceiptsTab, CreditorTab } from "./MMExtendedTabs";
 import { TransportTab, GPSTab, FuelTab, DriversTab, ScheduleTab, RoutesTab } from "./MMExtendedFleetTabs";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function MMExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "checkbot");
 
@@ -119,8 +121,8 @@ export default function MMExtended() {
       <div className="px-6 py-4 flex items-center gap-3">
         <Truck className="h-6 w-6 text-primary" />
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Ta'minot va Logistika</b></>}
-        title="Ta'minot va Logistika"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("taminotVaLogistika")}</b></>}
+        title={t("taminotVaLogistika")}
       />
         {pendingPO.length > 0 && (
           <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold border-none ml-2">
@@ -145,13 +147,13 @@ export default function MMExtended() {
           {/* Vendors */}
           <TabsContent value="vendors" className="mt-0 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Yetkazuvchilar Ro'yxati</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("yetkazuvchilarRoyxati")}</h2>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => refetchVendors()} className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none">
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
                 </Button>
                 <Button size="sm" onClick={() => setShowVendorDialog(true)} data-testid="button-add-vendor" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />Yetkazuvchi Qo'shish
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />{t("yetkazuvchiQoshish")}
                 </Button>
               </div>
             </div>
@@ -179,10 +181,10 @@ export default function MMExtended() {
                   </TableHeader>
                   <TableBody>
                     {vendorsLoading ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
                     ) : vendors.length === 0 ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                        <Building2 className="h-8 w-8 mx-auto mb-2 opacity-30" />Yetkazuvchilar yo'q
+                        <Building2 className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("yetkazuvchilarYoq")}
                       </TableCell></TableRow>
                     ) : (Array.isArray(vendors) ? vendors : []).slice(0, 15).map((v: MMVendor) => (
                       <TableRow key={v.id} data-testid={`row-vendor-${v.id}`} className="hover:bg-muted/40 transition-colors border-none">
@@ -213,9 +215,9 @@ export default function MMExtended() {
           {/* Purchase Orders */}
           <TabsContent value="po" className="mt-0 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Xarid Buyurtmalari</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("xaridBuyurtmalari")}</h2>
               <Button variant="outline" size="sm" onClick={() => refetchPO()} className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none">
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
               </Button>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -243,10 +245,10 @@ export default function MMExtended() {
                   </TableHeader>
                   <TableBody>
                     {poLoading ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
                     ) : purchaseOrders.length === 0 ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                        <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-30" />Xarid buyurtmalari yo'q
+                        <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("xaridBuyurtmalariYoq")}
                       </TableCell></TableRow>
                     ) : safeOrders.slice(0, 15).map((po: PurchaseOrder) => (
                       <TableRow key={po.id} data-testid={`row-po-${po.id}`} className="hover:bg-muted/40 transition-colors border-none">

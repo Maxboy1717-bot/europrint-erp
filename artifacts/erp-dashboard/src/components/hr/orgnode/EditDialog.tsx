@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface EditDialogProps {
   node: NodeDetail;
@@ -28,6 +29,7 @@ interface EditDialogProps {
 export function EditDialog({
   node, open, onClose, onSuccess,
 }: EditDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState({
     name: node.name,
@@ -65,7 +67,7 @@ export function EditDialog({
             <Input value={form.nameRu} onChange={(e) => setForm((f) => ({ ...f, nameRu: e.target.value }))} />
           </div>
           <div>
-            <Label>Turi</Label>
+            <Label>{t("type")}</Label>
             <Select value={form.nodeType} onValueChange={(v) => setForm((f) => ({ ...f, nodeType: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -76,7 +78,7 @@ export function EditDialog({
             </Select>
           </div>
           <div>
-            <Label>Rang</Label>
+            <Label>{t("rang")}</Label>
             <div className="flex items-center gap-2">
               <input type="color" value={form.color}
                 onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
@@ -97,13 +99,13 @@ export function EditDialog({
               placeholder="ЦКП (RU)..." />
           </div>
           <div className="col-span-2">
-            <Label>Tavsif</Label>
+            <Label>{t("progress.description")}</Label>
             <Input value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button onClick={() => mutation.mutate()} disabled={!form.name || mutation.isPending}>
             {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

@@ -99,7 +99,7 @@ export default function CrpPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('crp_title')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('crp_title')}</b></>}
         title={t('crp_title')}
         subtitle={t('crp_description')}
         icon={<Factory className="w-6 h-6"

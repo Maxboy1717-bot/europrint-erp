@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Warehouse } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CreateCountDialogProps {
   isOpen: boolean;
@@ -35,18 +36,19 @@ export function CreateCountDialog({
   onSubmit,
   isPending
 }: CreateCountDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi Inventarizatsiya</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiInventarizatsiya")}</DialogTitle>
           <DialogDescription>
-            Material va mahsulotlar sanovini boshlash uchun ma'lumotlarni kiriting
+            {t("materialVaMahsulotlarSanoviniBoshlash")}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label htmlFor="countDate">Sana *</Label>
+          <Label htmlFor="countDate">{t("sana")}</Label>
             <Input 
               id="countDate" 
               type="date" 
@@ -56,13 +58,13 @@ export function CreateCountDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="warehouse">Omborxona *</Label>
+          <Label htmlFor="warehouse">{t("omborxona")}</Label>
             <Select 
               value={form.warehouseId} 
               onValueChange={(value) => setForm({ ...form, warehouseId: value })}
             >
               <SelectTrigger id="warehouse" data-testid="select-warehouse" className="h-9">
-                <SelectValue placeholder="Omborni tanlang" />
+                <SelectValue placeholder={t("omborniTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(warehouses) ? warehouses : []).map(wh => (
@@ -72,7 +74,7 @@ export function CreateCountDialog({
             </Select>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="countType">Hisoblash turi *</Label>
+          <Label htmlFor="countType">{t("hisoblashTuri")}</Label>
             <Select 
               value={form.countType} 
               onValueChange={(value) => setForm({ ...form, countType: value })}
@@ -81,17 +83,17 @@ export function CreateCountDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="full">To'liq</SelectItem>
-                <SelectItem value="cycle">Davriy</SelectItem>
-                <SelectItem value="spot">Spot</SelectItem>
+                <SelectItem value="full">{t("toliq")}</SelectItem>
+                <SelectItem value="cycle">{t("davriy")}</SelectItem>
+                <SelectItem value="spot">{t("spot")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="notes">Izoh</Label>
+          <Label htmlFor="notes">{t("Izoh")}</Label>
             <Textarea 
               id="notes" 
-              placeholder="Qo'shimcha ma'lumotlar..." 
+              placeholder={t("qoshimchaMalumotlar1")} 
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               data-testid="input-count-notes"
@@ -100,7 +102,7 @@ export function CreateCountDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button 
             onClick={onSubmit}

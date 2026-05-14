@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRightLeft, Clock, Send, CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import type { QuotationWithItems } from "./SDQuotationsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Status badge helper (local to this component)
@@ -21,37 +22,37 @@ function getStatusBadge(status: string) {
     case "draft":
       return (
         <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <Clock className="h-3 w-3 mr-1" />Qoralama
+          <Clock className="h-3 w-3 mr-1" />{t("draft")}
         </Badge>
       );
     case "sent":
       return (
         <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <Send className="h-3 w-3 mr-1" />Yuborilgan
+          <Send className="h-3 w-3 mr-1" />{t("yuborilgan")}
         </Badge>
       );
     case "accepted":
       return (
         <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <CheckCircle className="h-3 w-3 mr-1" />Qabul qilindi
+          <CheckCircle className="h-3 w-3 mr-1" />{t("qabulQilindi")}
         </Badge>
       );
     case "rejected":
       return (
         <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <XCircle className="h-3 w-3 mr-1" />Rad etildi
+          <XCircle className="h-3 w-3 mr-1" />{t("radEtildi")}
         </Badge>
       );
     case "expired":
       return (
         <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <AlertCircle className="h-3 w-3 mr-1" />Muddati o'tgan
+          <AlertCircle className="h-3 w-3 mr-1" />{t("muddatiOtgan")}
         </Badge>
       );
     case "converted":
       return (
         <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <RefreshCw className="h-3 w-3 mr-1" />Aylantirilgan
+          <RefreshCw className="h-3 w-3 mr-1" />{t("aylantirilgan")}
         </Badge>
       );
     default:
@@ -86,11 +87,12 @@ export function QuotationDetailSheet({
   isConvertPending,
   onConvertToOrder,
 }: QuotationDetailSheetProps) {
+  const { t } = useTranslation("common");
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto p-6">
         <SheetHeader>
-          <SheetTitle>Taklif tafsilotlari</SheetTitle>
+          <SheetTitle>{t("taklifTafsilotlari")}</SheetTitle>
           <SheetDescription>{quotation?.quotationNumber}</SheetDescription>
         </SheetHeader>
 
@@ -98,50 +100,50 @@ export function QuotationDetailSheet({
           <div className="space-y-6 mt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Mijoz</p>
+                <p className="text-sm text-muted-foreground">{t("mijoz1")}</p>
                 <p className="font-medium">{quotation.customerName}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Holat</p>
+                <p className="text-sm text-muted-foreground">{t("status28")}</p>
                 <div>{getStatusBadge(quotation.status)}</div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Taklif sanasi</p>
+                <p className="text-sm text-muted-foreground">{t("taklifSanasi")}</p>
                 <p className="font-medium">{quotation.quotationDate}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Amal qilish muddati</p>
+                <p className="text-sm text-muted-foreground">{t("amalQilishMuddati")}</p>
                 <p className="font-medium">{quotation.validUntil}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Valyuta</p>
+                <p className="text-sm text-muted-foreground">{t("valyuta")}</p>
                 <p className="font-medium">{quotation.currency}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">To'lov shartlari</p>
+                <p className="text-sm text-muted-foreground">{t("tolovShartlari")}</p>
                 <p className="font-medium">{quotation.paymentTerms || "-"}</p>
               </div>
             </div>
 
             {quotation.notes && (
               <div>
-                <p className="text-sm text-muted-foreground">Izohlar</p>
+                <p className="text-sm text-muted-foreground">{t("notes")}</p>
                 <p className="font-medium">{quotation.notes}</p>
               </div>
             )}
 
             {quotation.items && quotation.items.length > 0 && (
               <div>
-                <h4 className="font-medium mb-2">Mahsulotlar</h4>
+                <h4 className="font-medium mb-2">{t("mahsulotlar")}</h4>
                 <div className="border rounded-md">
                   <div className="ep-table-scroll"><Table>
                     <TableHeader className="sticky top-0 z-10 bg-card">
                       <TableRow>
-                        <TableHead>Mahsulot</TableHead>
-                        <TableHead className="text-right">Miqdor</TableHead>
-                        <TableHead className="text-right">Narx</TableHead>
-                        <TableHead className="text-right">Chegirma</TableHead>
-                        <TableHead className="text-right">Jami</TableHead>
+                        <TableHead>{t("Mahsulot")}</TableHead>
+                        <TableHead className="text-right">{t("quantity")}</TableHead>
+                        <TableHead className="text-right">{t("price")}</TableHead>
+                        <TableHead className="text-right">{t("chegirma1")}</TableHead>
+                        <TableHead className="text-right">{t("total")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -168,7 +170,7 @@ export function QuotationDetailSheet({
 
             <div className="border-t pt-4">
               <div className="flex justify-between items-center">
-                <p className="text-lg font-medium">Jami summa</p>
+                <p className="text-lg font-medium">{t("jamiSumma")}</p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(quotation.totalValue, quotation.currency)}
                 </p>
@@ -190,7 +192,7 @@ export function QuotationDetailSheet({
             {quotation.convertedToOrderId && (
               <div className="bg-muted p-4 rounded-md">
                 <p className="text-sm text-muted-foreground">
-                  Bu taklif buyurtmaga aylantirilgan
+                  {t("buTaklifBuyurtmagaAylantirilgan")}
                 </p>
                 <p className="font-medium">Buyurtma ID: {quotation.convertedToOrderId}</p>
               </div>

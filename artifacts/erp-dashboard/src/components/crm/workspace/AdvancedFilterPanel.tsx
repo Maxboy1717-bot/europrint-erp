@@ -16,6 +16,7 @@ import {
 import { X, RefreshCw } from "lucide-react";
 import { DEFAULT_ADVANCED_FILTERS, EntityType, Stage } from "@/pages/crm/crm-types";
 import { AdvancedFilterPanelProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function AdvancedFilterPanel({
   filters,
@@ -24,13 +25,14 @@ export function AdvancedFilterPanel({
   activeEntity,
   stages,
 }: AdvancedFilterPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-muted/40 border-b border-border px-4 py-4 animate-in slide-in-from-top duration-200">
       <div className="max-w-screen-2xl mx-auto flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <X className="h-4 w-4 cursor-pointer" onClick={onClose} />
-            Kengaytirilgan filtrlar
+            {t("kengaytirilganFiltrlar")}
           </h3>
           <Button
             variant="ghost"
@@ -39,7 +41,7 @@ export function AdvancedFilterPanel({
             className="text-xs h-7 gap-1"
           >
             <RefreshCw className="h-3 w-3" />
-            Filtrlarni tozalash
+            {t("filtrlarniTozalash")}
           </Button>
         </div>
 
@@ -74,7 +76,7 @@ export function AdvancedFilterPanel({
             activeEntity === "invoices") && (
             <div className="space-y-1.5">
               <Label className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
-                Bosqich
+                {t("milestone1")}
               </Label>
               <Select
                 value={filters.stageId || "all"}
@@ -83,10 +85,10 @@ export function AdvancedFilterPanel({
                 }
               >
                 <SelectTrigger className="h-9 bg-card">
-                  <SelectValue placeholder="Hammasi" />
+                  <SelectValue placeholder={t("hammasi")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barcha bosqichlar</SelectItem>
+                  <SelectItem value="all">{t("barchaBosqichlar")}</SelectItem>
                   {(Array.isArray(stages) ? stages : []).map((s) => (
                     <SelectItem key={s.stageId} value={s.stageId}>
                       {s.name}

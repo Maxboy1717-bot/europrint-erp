@@ -10,6 +10,7 @@ import {
   CheckCircle2, XCircle, Clock, Wrench, Gauge, ChevronRight,
 } from "lucide-react";
 import type { DailyStats, AdaptationRiskEmployee, AiPipeline, ModuleLink } from "./HRDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // V2LiveKpiRow
@@ -27,6 +28,7 @@ export function V2LiveKpiRow({
   blockedCount, adaptationAtRiskCount, activePipCount,
   activeSurveyCount, activeOffboardingCount,
 }: V2LiveKpiRowProps) {
+  const { t } = useTranslation("common");
   const widgets = [
     { label: "Bloklangan",  value: blockedCount,           icon: Lock,         accent: blockedCount > 0 ? "text-[var(--ep-red)]"    : "text-[var(--ep-green)]",  bg: blockedCount > 0 ? "bg-red-500/10"    : "bg-green-500/10",  desc: blockedCount > 0 ? "Faol bloklash" : "Bloklash yo'q" },
     { label: "Xavf ostida", value: adaptationAtRiskCount,  icon: Flame,        accent: "text-[var(--ep-yellow)]",                                          bg: "bg-amber-500/10",                                        desc: "Moslashuv balli < 3.0" },
@@ -65,10 +67,10 @@ export function AiPipelineCard({ pipeline }: { pipeline: AiPipeline }) {
     <div className="bg-card rounded-xl border border-border/40 p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-foreground flex items-center gap-2">
-          <span className="text-lg">🤖</span> AI Intervyu Pipeline
+          <span className="text-lg">🤖</span> {t("aiIntervyuPipeline")}
         </h3>
         <a href="/ai-hr/interviews" className="text-xs text-primary hover:underline flex items-center gap-1">
-          Barchasi <ChevronRight className="w-3 h-3" />
+          {t("Barchasi")}<ChevronRight className="w-3 h-3" />
         </a>
       </div>
       <div className="flex gap-3">
@@ -83,7 +85,7 @@ export function AiPipelineCard({ pipeline }: { pipeline: AiPipeline }) {
         ))}
       </div>
       {(pipeline.pending + pipeline.active + pipeline.completed) === 0 && (
-        <p className="text-xs text-muted-foreground/60 text-center mt-3">AI intervyu sessiyalari yo'q</p>
+        <p className="text-xs text-muted-foreground/60 text-center mt-3">{t("aiIntervyuSessiyalariYoq")}</p>
       )}
     </div>
   );
@@ -112,7 +114,7 @@ export function DailyReportsCard({ dailyStats, operatorReportsToday, operatorTot
           <span className="text-lg">📋</span> Kunlik Hisobotlar (bugun)
         </h3>
         <a href="/hr/daily-reports" className="text-xs text-primary hover:underline flex items-center gap-1">
-          Barchasi <ChevronRight className="w-3 h-3" />
+          {t("Barchasi")}<ChevronRight className="w-3 h-3" />
         </a>
       </div>
       <div className="flex gap-3 mb-3">
@@ -128,7 +130,7 @@ export function DailyReportsCard({ dailyStats, operatorReportsToday, operatorTot
         <div className="border-t border-border pt-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-xs text-[var(--ep-blue)]">
             <Wrench className="w-3.5 h-3.5" />
-            <span className="font-medium">Operatorlar:</span>
+            <span className="font-medium">{t("operatorlar")}</span>
             <span className="font-bold">{operatorReportsToday}/{operatorTotal}</span>
           </div>
           {dailyStats?.stats?.avg_operator_oee && (
@@ -218,7 +220,7 @@ export function AdaptationAtRiskList({ atRiskEmps, adaptationAtRiskCount }: { at
 export function ModuleLinksGrid({ modules }: { modules: ModuleLink[] }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Modullar</h3>
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("modullar")}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {modules.map((mod) => (
           <a

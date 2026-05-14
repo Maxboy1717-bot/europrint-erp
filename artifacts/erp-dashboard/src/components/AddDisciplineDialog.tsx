@@ -16,6 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 ;
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface AddDisciplineDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,6 +24,7 @@ interface AddDisciplineDialogProps {
 }
 
 export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplineDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     userId: userId || "",
@@ -82,19 +84,19 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Intizom yozuvi qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("intizomYozuviQoshish")}</DialogTitle>
           <DialogDescription>
-            Xodimga ogohlantirish, jazo yoki mukofot berish
+            {t("xodimgaOgohlantirishJazoYokiMukofot")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!userId && (
             <div className="space-y-1">
-          <Label htmlFor="userId">Xodim *</Label>
+          <Label htmlFor="userId">{t("xodim")}</Label>
               <Select value={formData.userId} onValueChange={(value) => setFormData({ ...formData, userId: value })}>
                 <SelectTrigger data-testid="select-employee" className="h-9">
-                  <SelectValue placeholder="Xodimni tanlang" />
+                  <SelectValue placeholder={t("xodimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(employees) ? employees : []).map(emp => (
@@ -109,15 +111,15 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="type">Turi *</Label>
+          <Label htmlFor="type">{t("turi")}</Label>
               <Select value={formData.type} onValueChange={(value: string) => setFormData({ ...formData, type: value as "warning" | "penalty" | "reward" })}>
                 <SelectTrigger data-testid="select-type" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="warning">Ogohlantirish</SelectItem>
-                  <SelectItem value="penalty">Jazo</SelectItem>
-                  <SelectItem value="reward">Mukofot</SelectItem>
+                  <SelectItem value="warning">{t("warning")}</SelectItem>
+                  <SelectItem value="penalty">{t("jazo")}</SelectItem>
+                  <SelectItem value="reward">{t("mukofot")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -143,7 +145,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
           <Label htmlFor="reason">Sabab (O'zbek) *</Label>
             <Textarea
               id="reason"
-              placeholder="Sabab va tafsilot..."
+              placeholder={t("sababVaTafsilot")}
               value={formData.reason}
               onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
               rows={3}
@@ -165,7 +167,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="givenBy">Kim berdi *</Label>
+          <Label htmlFor="givenBy">{t("kimBerdi")}</Label>
             <Select value={formData.givenBy} onValueChange={(value) => setFormData({ ...formData, givenBy: value })}>
               <SelectTrigger data-testid="select-given-by" className="h-9">
                 <SelectValue placeholder="HR/Admin tanlang" />
@@ -188,7 +190,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
               onClick={() => onOpenChange(false)}
               disabled={createMutation.isPending}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button 
               type="submit" 

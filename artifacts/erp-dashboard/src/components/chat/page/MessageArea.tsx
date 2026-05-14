@@ -11,6 +11,7 @@ import { MessageBubble } from "./MessageBubble";
 import { TypingIndicator } from "./TypingIndicator";
 import { formatDateSeparator } from "./ChatUtils";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from '@/lib/i18n';
 
 interface GroupedMsgs {
   date: string;
@@ -35,6 +36,7 @@ const EMPTY_TYPING = new Set<string>();
 export function MessageArea({
   roomId, canPin, onEdit, onDelete, onReply, onReact, onThread, onForward, onPin,
 }: Props) {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const messages = useChatStore((s) => s.messages[roomId] ?? EMPTY_MESSAGES);
   const typingUsers = useChatStore((s) => s.typingUsers[roomId] ?? EMPTY_TYPING);
@@ -92,8 +94,8 @@ export function MessageArea({
         <div className="flex flex-col items-center gap-3 bg-[var(--tg-date-pill)] border border-black/[0.06] rounded-lg px-8 py-6 shadow-sm backdrop-blur-sm">
           <span className="text-5xl">💬</span>
           <div className="text-center">
-            <p className="text-[15px] font-semibold text-[var(--tg-text-primary)]">Xabarlar yo'q</p>
-            <p className="text-[13px] text-[var(--tg-text-secondary)] mt-1">Birinchi xabarni yuboring!</p>
+            <p className="text-[15px] font-semibold text-[var(--tg-text-primary)]">{t("xabarlarYoq")}</p>
+            <p className="text-[13px] text-[var(--tg-text-secondary)] mt-1">{t("birinchiXabarniYuboring")}</p>
           </div>
         </div>
       </div>

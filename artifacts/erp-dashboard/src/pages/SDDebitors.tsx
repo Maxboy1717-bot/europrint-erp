@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/sd-helpers";
 import { AlertCircle, RefreshCw, Send, FileText, Search, Download } from "lucide-react";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Debitor {
   id?: string;
@@ -36,6 +37,7 @@ interface Debitor {
 }
 
 export default function SDDebitors() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [reminderOpen, setReminderOpen] = useState<Debitor | null>(null);
@@ -94,15 +96,15 @@ export default function SDDebitors() {
           </div>
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Debitorlar Nazorati</b></>}
-        title="Debitorlar Nazorati"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("debitorlarNazorati")}</b></>}
+        title={t("debitorlarNazorati")}
         subtitle="Muddati o'tgan to'lovlar va qarzdorlik tahlili (Aging Report)"
       />
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="bg-card rounded-lg p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami qarzdorlik</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiQarzdorlik")}</p>
             <p className="text-3xl font-bold tracking-tight text-foreground mt-1">{fmt(totalDebts)} so'm</p>
           </div>
           <div className="bg-red-50 rounded-lg p-4">
@@ -118,14 +120,14 @@ export default function SDDebitors() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Mijoz qidirish..."
+            placeholder={t("mijozQidirish")}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
         <Button variant="outline" size="sm" onClick={() => {
           const rows = (Array.isArray(filtered) ? filtered : []).map(d =>
@@ -137,7 +139,7 @@ export default function SDDebitors() {
           URL.revokeObjectURL(url);
         }}>
           <Download className="h-4 w-4 mr-2" />
-          CSV yuklab olish
+          {t("csvYuklabOlish")}
         </Button>
       </div>
 
@@ -146,27 +148,27 @@ export default function SDDebitors() {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">Mijoz</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">Jami</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("mijoz1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("total")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">0-30 kun</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">31-60 kun</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">61-90 kun</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)] py-3 px-4 text-right">90+ kun</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">Holat</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">Amallar</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">{t("status28")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-12 text-muted-foreground bg-transparent">
-                    Yuklanmoqda...
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-12 text-muted-foreground bg-transparent">
-                    Debitorlar topilmadi
+                    {t("debitorlarTopilmadi")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -202,7 +204,7 @@ export default function SDDebitors() {
                           onClick={() => { setReminderOpen(d); setReminderNote(""); }}
                         >
                           <Send className="h-3 w-3 mr-1" />
-                          Eslatma
+                          {t("eslatma")}
                         </Button>
                         <Button
                           size="sm"
@@ -212,7 +214,7 @@ export default function SDDebitors() {
                           disabled={createInvoiceMutation.isPending}
                         >
                           <FileText className="h-3 w-3 mr-1" />
-                          Faktura
+                          {t("faktura")}
                         </Button>
                       </div>
                     </TableCell>
@@ -228,14 +230,14 @@ export default function SDDebitors() {
       <Dialog open={!!reminderOpen} onOpenChange={(o) => { if (!o) setReminderOpen(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">To'lov eslatmasi yuborish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("tolovEslatmasiYuborish")}</DialogTitle>
           </DialogHeader>
           {reminderOpen && (
             <div className="space-y-4">
               <Card>
                 <CardContent className="pt-4 pb-3">
                   <p className="font-medium">{reminderOpen.customerName || reminderOpen.company}</p>
-                  <p className="text-sm text-muted-foreground">Jami qarzdorlik: <span className="font-semibold text-[var(--ep-red)]">{fmt(reminderOpen.total ?? 0)} so'm</span></p>
+                  <p className="text-sm text-muted-foreground">{t("jamiQarzdorlik1")}<span className="font-semibold text-[var(--ep-red)]">{fmt(reminderOpen.total ?? 0)} so'm</span></p>
                   {(reminderOpen["90+"] ?? 0) > 0 && (
                     <p className="text-xs text-[var(--ep-red)] mt-1">⚠ 90+ kunlik qarzdorlik: {fmt(reminderOpen["90+"] ?? 0)} so'm</p>
                   )}
@@ -246,19 +248,19 @@ export default function SDDebitors() {
                 <Input
                   value={reminderNote}
                   onChange={e => setReminderNote(e.target.value)}
-                  placeholder="Qo'shimcha eslatma matni..."
+                  placeholder={t("qoshimchaEslatmaMatni")}
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReminderOpen(null)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setReminderOpen(null)}>{t("cancel")}</Button>
             <Button
               onClick={() => reminderOpen && sendReminderMutation.mutate(reminderOpen)}
               disabled={sendReminderMutation.isPending}
             >
               <Send className="h-4 w-4 mr-2" />
-              Eslatma yuborish
+              {t("eslatmaYuborish")}
             </Button>
           </DialogFooter>
         </DialogContent>

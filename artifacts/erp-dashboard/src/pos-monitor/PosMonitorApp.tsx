@@ -7,6 +7,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import "./styles/pos-theme.css";
 import { initTelegramWebApp, isTelegramWebApp } from "./lib/telegram";
+import { useTranslation } from '@/lib/i18n';
 
 const PosLogin         = lazy(() => import("./pages/PosLogin"));
 const PosDashboard     = lazy(() => import("./pages/PosDashboard"));
@@ -38,6 +39,7 @@ const PosQCReview      = lazy(() => import("./pages/PosQCReview"));
 const PosLayout        = lazy(() => import("./layout/PosLayout"));
 
 function PosLoader() {
+  const { t } = useTranslation("common");
   return (
     <div style={{
       minHeight: "100vh", background: "#F8FAFC", display: "flex", alignItems: "center", justifyContent: "center",
@@ -45,7 +47,7 @@ function PosLoader() {
     }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12, animation: "pos-pulse 1s infinite" }}>📦</div>
-        <div style={{ fontWeight: 600 }}>POS Monitor yuklanmoqda...</div>
+        <div style={{ fontWeight: 600 }}>{t("posMonitorYuklanmoqda")}</div>
       </div>
     </div>
   );
@@ -96,7 +98,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
         flexDirection: "column", gap: 14, background: "var(--pos-bg)",
       }}>
         <div style={{ fontSize: 48, opacity: 0.6 }}>🚫</div>
-        <div style={{ color: "var(--pos-danger)", fontWeight: 700, fontSize: 16 }}>Admin panelga kirish taqiqlangan</div>
+        <div style={{ color: "var(--pos-danger)", fontWeight: 700, fontSize: 16 }}>{t("adminPanelgaKirishTaqiqlangan")}</div>
         <div style={{ color: "var(--pos-text-muted)", fontSize: 13 }}>Bu sahifaga faqat {[...POS_ADMIN_ROLES].join(", ")} rollari kira oladi</div>
       </div>
     );
@@ -115,6 +117,7 @@ function WithLayout({ children }: { children: React.ReactNode }) {
 }
 
 export default function PosMonitorApp() {
+  const { t } = useTranslation("common");
   useEffect(() => {
     initTelegramWebApp();
     // Apply Telegram dark/light theme to the POS UI if running inside TG

@@ -154,8 +154,8 @@ export default function CapacityPlanning() {
           </div>
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Quvvatlarni Rejalashtirish</b></>}
-        title="Quvvatlarni Rejalashtirish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("quvvatlarniRejalashtirish")}</b></>}
+        title={t("quvvatlarniRejalashtirish")}
         subtitle={t("capacityPlanningDesc")}
       />
           </div>

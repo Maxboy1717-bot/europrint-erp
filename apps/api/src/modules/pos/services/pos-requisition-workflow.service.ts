@@ -27,10 +27,9 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, AppError, safeCall } from '@common/result';
 
-import {
-  posMaterialRequests, posMaterialRequestLines,
-  db, eq,
-} from '@workspace/db';
+import { posMaterialRequests, posMaterialRequestLines } from '@workspace/db';
+import { db } from '@shared/db';
+import { eq } from 'drizzle-orm';
 
 import { PosMovementService }           from './pos-movement.service';
 import { PosNotificationsService }      from './pos-notifications.service';

@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { movementsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface Movement {
   id: number;
@@ -22,6 +23,7 @@ interface Movement {
 const QC_STATUS_ORDER = ["qc_pending", "karantin"];
 
 export default function PosQCReview() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [movements, setMovements] = useState<Movement[]>([]);

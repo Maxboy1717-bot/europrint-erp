@@ -37,8 +37,10 @@ import { OrgStructureSection } from "./hr/employee-dialog/OrgStructureSection";
 import { ProfileImageSection } from "./hr/employee-dialog/ProfileImageSection";
 import { useEmployeeMutation } from "./hr/employee-dialog/useEmployeeMutation";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const isEdit = !!employee;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -253,15 +255,15 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
             />
 
             <div className="space-y-8">
-              <section><h3 className="text-lg font-medium mb-4">Asosiy ma'lumotlar</h3><BasicInfoSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Bo'lim va Lavozim</h3><PositionSection form={form} departments={departments} positions={allPositions} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Shartnoma va Ish haqi</h3><ContractSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Shaxsiy ma'lumotlar</h3><PersonalInfoSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">Uy-joy va Joylashuv</h3><HouseholdSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("asosiyMalumotlar")}</h3><BasicInfoSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("bolimVaLavozim")}</h3><PositionSection form={form} departments={departments} positions={allPositions} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("shartnomaVaIshHaqi")}</h3><ContractSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("shaxsiyMalumotlar")}</h3><PersonalInfoSection form={form} /></section>
+              <section><h3 className="text-lg font-medium mb-4">{t("uyJoyVaJoylashuv")}</h3><HouseholdSection form={form} /></section>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saqlanmoqda..." : "Saqlash"}
               </Button>

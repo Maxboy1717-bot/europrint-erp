@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Star, Award, BookOpen, Target, Zap } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Achievement {
   id: string | number;
   title?: string;
@@ -44,6 +45,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function AchievementsPage() {
+  const { t } = useTranslation("common");
   const { data: rawData, isLoading, isError, refetch } = useQuery<Achievement[] | { data?: Achievement[]; achievements?: Achievement[] }>({
     queryKey: ["/api/achievements"],
     queryFn: async () => {
@@ -65,7 +67,7 @@ export default function AchievementsPage() {
   return (
     <ModulePage
       module="hr"
-      title="Yutuqlar"
+      title={t("yutuqlar")}
       icon={<Trophy className="h-5 w-5" />}
     >
       <div className="space-y-6">
@@ -75,13 +77,13 @@ export default function AchievementsPage() {
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-primary">{achievements.length}</p>
-                <p className="text-xs text-muted-foreground mt-1">Jami yutuqlar</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("jamiYutuqlar")}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-[var(--ep-yellow)]">{totalPoints}</p>
-                <p className="text-xs text-muted-foreground mt-1">Jami ball</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("jamiBall")}</p>
               </CardContent>
             </Card>
             <Card className="col-span-2 sm:col-span-1">
@@ -89,7 +91,7 @@ export default function AchievementsPage() {
                 <p className="text-2xl font-bold text-[var(--ep-green)]">
                   {new Set(achievements.map(a => a.category ?? a.type ?? "default")).size}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Toifalar</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("toifalar")}</p>
               </CardContent>
             </Card>
           </div>
@@ -117,9 +119,9 @@ export default function AchievementsPage() {
           <Card>
             <CardContent className="py-16 text-center">
               <Award className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-lg mb-1">Hali yutuqlar yo'q</p>
+              <p className="text-muted-foreground text-lg mb-1">{t("haliYutuqlarYoq")}</p>
               <p className="text-xs text-muted-foreground">
-                Kurslarni tugatib, KPI maqsadlariga ering va yutuqlar qozonin
+                {t("kurslarniTugatibKpiMaqsadlarigaEring")}
               </p>
             </CardContent>
           </Card>

@@ -80,7 +80,6 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         total_bonuses: data.totalBonuses  != null ? String(data.totalBonuses)  : (data.bonus != null ? String(data.bonus) : undefined),
         other_bonuses: data.otherBonuses  != null ? String(data.otherBonuses)  : (data.other_bonuses != null ? String(data.other_bonuses) : undefined),
         salary_period_end: data.paymentDate != null ? String(data.paymentDate) : undefined,
-        notes:         data.notes         != null ? String(data.notes)         : undefined,
         updated_at:    _time.now(),
       }).where(eq(salary_history.id, parseInt(id, 10))).returning();
       return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};

@@ -78,7 +78,7 @@ export default function PosSyncPage() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('posSync.title', 'POS Sinxronizatsiya')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('posSync.title', 'POS Sinxronizatsiya')}</b></>}
         title={t('posSync.title', 'POS Sinxronizatsiya')}
         subtitle={t('posSync.description', 'Terminallar holati va offline tranzaksiyalar')}
         actions={

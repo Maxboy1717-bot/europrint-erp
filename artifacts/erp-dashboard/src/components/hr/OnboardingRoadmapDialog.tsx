@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Map, Printer, ChevronRight, User, Calendar, BookOpen, CheckCircle2, ClipboardList } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface Employee {
   id: number | string;
@@ -135,6 +136,7 @@ export function OnboardingRoadmapDialog({
   candidateName,
   vacancyTitle,
 }: OnboardingRoadmapDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<"form" | "result">("form");
@@ -215,34 +217,34 @@ export function OnboardingRoadmapDialog({
             {existingRoadmap?.roadmap_data && (
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2 text-xs text-emerald-400 flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                Bu nomzod uchun yo'l xaritasi avval yaratilgan. Yangisini yaratish eski ma'lumotni yangilaydi.
+                {t("buNomzodUchunYolXaritasi")}
                 <Button
                   size="sm"
                   variant="outline"
                   className="ml-auto h-6 text-[10px] border-emerald-500/40 text-emerald-400"
                   onClick={() => setStep("result")}
                 >
-                  Ko'rish
+                  {t("view")}
                 </Button>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Lavozim nomi *</Label>
+                <Label className="text-xs">{t("lavozimNomi")}</Label>
                 <Input
                   value={form.lavozim_nomi}
                   onChange={e => setForm(f => ({ ...f, lavozim_nomi: e.target.value }))}
-                  placeholder="masalan: Marketing menejeri"
+                  placeholder={t("masalanMarketingMenejeri")}
                   className="h-8 text-sm mt-1"
                 />
               </div>
               <div>
-                <Label className="text-xs">Bo'linma</Label>
+                <Label className="text-xs">{t("bolinma")}</Label>
                 <Input
                   value={form.bolim}
                   onChange={e => setForm(f => ({ ...f, bolim: e.target.value }))}
-                  placeholder="masalan: Marketing bo'limi"
+                  placeholder={t("masalanMarketingBolimi")}
                   className="h-8 text-sm mt-1"
                 />
               </div>
@@ -250,13 +252,13 @@ export function OnboardingRoadmapDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Nastavnik</Label>
+                <Label className="text-xs">{t("nastavnik")}</Label>
                 <Select
                   value={form.nastavnik_id}
                   onValueChange={v => setForm(f => ({ ...f, nastavnik_id: v }))}
                 >
                   <SelectTrigger className="h-9 text-sm mt-1">
-                    <SelectValue placeholder="Nastavnik tanlang" />
+                    <SelectValue placeholder={t("nastavnikTanlang")} />
                   </SelectTrigger>
                   <SelectContent>
                     {employees.slice(0, 50).map(emp => {
@@ -269,7 +271,7 @@ export function OnboardingRoadmapDialog({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Kirish sanasi *</Label>
+                <Label className="text-xs">{t("kirishSanasi")}</Label>
                 <Input
                   type="date"
                   value={form.kirish_sanasi}
@@ -326,7 +328,7 @@ export function OnboardingRoadmapDialog({
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={onClose}>Bekor</Button>
+              <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
               <Button
                 onClick={handleGenerate}
                 disabled={saveMutation.isPending}
@@ -355,11 +357,11 @@ export function OnboardingRoadmapDialog({
                   <div className="mt-3 flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <User className="h-3.5 w-3.5" />
-                      <span>Nastavnik: <strong className="text-foreground">{roadmapToShow.nastavnik_name}</strong></span>
+                      <span>{t("nastavnik1")}<strong className="text-foreground">{roadmapToShow.nastavnik_name}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
-                      <span>Kirish sanasi: <strong className="text-foreground">
+                      <span>{t("kirishSanasi1")}<strong className="text-foreground">
                         {roadmapToShow.kirish_sanasi ? new Date(roadmapToShow.kirish_sanasi).toLocaleDateString("uz-UZ") : "—"}
                       </strong></span>
                     </div>
@@ -370,7 +372,7 @@ export function OnboardingRoadmapDialog({
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <BookOpen className="h-4 w-4 text-[var(--ep-blue)]" />
-                      <h3 className="font-semibold text-sm">O'qiladigan materiallar</h3>
+                      <h3 className="font-semibold text-sm">{t("oqiladiganMateriallar")}</h3>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {(Array.isArray(roadmapToShow.reglamentlar) ? roadmapToShow.reglamentlar : []).map((r, i) => (
@@ -423,7 +425,7 @@ export function OnboardingRoadmapDialog({
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)]" />
-                    <h3 className="font-semibold text-sm">Yakuniy Chek-list</h3>
+                    <h3 className="font-semibold text-sm">{t("yakuniyChekList")}</h3>
                   </div>
                   <div className="space-y-1.5">
                     {(Array.isArray(roadmapToShow.final_checkpoints) ? roadmapToShow.final_checkpoints : []).map((cp, i) => (
@@ -437,18 +439,18 @@ export function OnboardingRoadmapDialog({
 
                 <DialogFooter className="print:hidden">
                   <Button variant="outline" onClick={() => setStep("form")}>
-                    Tahrirlash
+                    {t("edit")}
                   </Button>
                   <Button variant="outline" onClick={handlePrint} className="gap-2">
                     <Printer className="h-4 w-4" />
-                    Chop etish
+                    {t("print1")}
                   </Button>
-                  <Button onClick={onClose}>Yopish</Button>
+                  <Button onClick={onClose}>{t("close2")}</Button>
                 </DialogFooter>
               </>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                Yo'l xaritasi hali yaratilmagan
+                {t("yolXaritasiHaliYaratilmagan")}
               </div>
             )}
           </div>

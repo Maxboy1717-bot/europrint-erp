@@ -16,6 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 ;
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface AddAttendanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,6 +24,7 @@ interface AddAttendanceDialogProps {
 }
 
 export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanceDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     userId: userId || "",
@@ -90,19 +92,19 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Davomat qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("davomatQoshish")}</DialogTitle>
           <DialogDescription>
-            Xodim davomatini qayd qilish
+            {t("xodimDavomatiniQaydQilish")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!userId && (
             <div className="space-y-1">
-          <Label htmlFor="userId">Xodim *</Label>
+          <Label htmlFor="userId">{t("xodim")}</Label>
               <Select value={formData.userId} onValueChange={(value) => setFormData({ ...formData, userId: value })}>
                 <SelectTrigger data-testid="select-employee" className="h-9">
-                  <SelectValue placeholder="Xodimni tanlang" />
+                  <SelectValue placeholder={t("xodimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(employees) ? employees : []).map(emp => (
@@ -117,7 +119,7 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="date">Sana *</Label>
+          <Label htmlFor="date">{t("sana")}</Label>
               <Input
                 id="date"
                 type="date"
@@ -131,16 +133,16 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="status">Holat *</Label>
+          <Label htmlFor="status">{t("holat")}</Label>
               <Select value={formData.status} onValueChange={(value: string) => setFormData({ ...formData, status: value as "present" | "absent" | "leave" | "sick" })}>
                 <SelectTrigger data-testid="select-status" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="present">Keldi</SelectItem>
-                  <SelectItem value="absent">Kelmadi</SelectItem>
-                  <SelectItem value="leave">Ta'til</SelectItem>
-                  <SelectItem value="sick">Kasallik</SelectItem>
+                  <SelectItem value="present">{t("keldi")}</SelectItem>
+                  <SelectItem value="absent">{t("kelmadi")}</SelectItem>
+                  <SelectItem value="leave">{t("tatil")}</SelectItem>
+                  <SelectItem value="sick">{t("kasallik")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -205,10 +207,10 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="notes">Izoh</Label>
+          <Label htmlFor="notes">{t("Izoh")}</Label>
             <Textarea
               id="notes"
-              placeholder="Qo'shimcha ma'lumot..."
+              placeholder={t("qoshimchaMalumot")}
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={3}
@@ -223,7 +225,7 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
               onClick={() => onOpenChange(false)}
               disabled={createMutation.isPending}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={createMutation.isPending || !formData.userId} data-testid="button-submit">
               {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}

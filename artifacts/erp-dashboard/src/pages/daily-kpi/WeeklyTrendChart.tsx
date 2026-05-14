@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/format";
 import { formatShortCurrency } from "./types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface WeeklyTrendChartProps {
   chartData: { date: string; daromad: number; xarajat: number; pulOqimi: number }[];
@@ -18,16 +19,17 @@ interface WeeklyTrendChartProps {
 }
 
 export function WeeklyTrendChart({ chartData, isLoading }: WeeklyTrendChartProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <Card className="lg:col-span-2" data-testid="card-weekly-trend">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LineChart className="h-4 w-4 text-primary" />
-          Haftalik Trend
+          {t("haftalikTrend")}
         </CardTitle>
-        <CardDescription>So'nggi 7 kunlik daromad va xarajat tendensiyasi</CardDescription>
+        <CardDescription>{t("songgi7KunlikDaromadVa")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -69,7 +71,7 @@ export function WeeklyTrendChart({ chartData, isLoading }: WeeklyTrendChartProps
         ) : (
           <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
             <LineChart className="h-12 w-12 mb-4 opacity-40" />
-            <p>Haftalik ma'lumotlar mavjud emas</p>
+            <p>{t("haftalikMalumotlarMavjudEmas")}</p>
           </div>
         )}
       </CardContent>

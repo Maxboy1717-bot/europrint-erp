@@ -17,8 +17,10 @@ import {
 } from "./ERPDailyReportsTypes";
 import { FiltersCard, ReportsTableCard } from "./ERPDailyReportsSections";
 import { ReportFormDialog, DeleteReportDialog } from "./ERPDailyReportsDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ERPDailyReports() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<DailyReport | null>(null);
@@ -111,8 +113,8 @@ export default function ERPDailyReports() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-daily-reports">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="ep-h1" data-testid="text-page-title">Kunlik hisobotlar</h1>
-          <p className="text-muted-foreground">Smena oxirida ishlab chiqarish hisobotlari</p>
+          <h1 className="ep-h1" data-testid="text-page-title">{t("kunlikHisobotlar1")}</h1>
+          <p className="text-muted-foreground">{t("smenaOxiridaIshlabChiqarishHisobotlari")}</p>
         </div>
         <ReportFormDialog
           isOpen={isDialogOpen}

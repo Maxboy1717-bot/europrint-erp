@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface SupplierRating {
   supplierId: string;
   supplierName: string;
@@ -21,37 +22,38 @@ interface SupplierRating {
 }
 
 export function QCSupplierQualityTab() {
+  const { t } = useTranslation("common");
   const { data: supplierRatings, isLoading: suppliersLoading } = useQuery<SupplierRating[]>({
     queryKey: ["/api/qc/supplier-quality/ratings"],
   });
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Star className="w-5 h-5" />
-          Yetkazuvchi sifat reytingi
+          {t("yetkazuvchiSifatReytingi1")}
         </CardTitle>
-        <CardDescription>Har yetkazuvchi bo'yicha material sifat ko'rsatkichlari</CardDescription>
+        <CardDescription>{t("harYetkazuvchiBoyichaMaterialSifat")}</CardDescription>
       </CardHeader>
       <CardContent>
         {suppliersLoading ? (
           <div className="flex justify-center py-8"><EPLoader className="w-6 h-6" /></div>
         ) : !supplierRatings?.length ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
-            Supplier ma'lumotlari yo'q. Material testlari qo'shilgandan keyin avtomatik hisoblanadi.
+            {t("supplierMalumotlariYoqMaterialTestlari")}
           </div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Yetkazuvchi</TableHead>
-                <TableHead>Yetkazma soni</TableHead>
-                <TableHead>O'tish foizi</TableHead>
-                <TableHead>Sifat bali</TableHead>
-                <TableHead>Reyting</TableHead>
+                <TableHead>{t("yetkazuvchi")}</TableHead>
+                <TableHead>{t("yetkazmaSoni")}</TableHead>
+                <TableHead>{t("otishFoizi2")}</TableHead>
+                <TableHead>{t("sifatBali")}</TableHead>
+                <TableHead>{t("reyting")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

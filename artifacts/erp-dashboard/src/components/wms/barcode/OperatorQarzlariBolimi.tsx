@@ -13,8 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { User, CheckCircle2, RotateCcw } from "lucide-react";
 import { OperatorDebt } from "./types";
 import { statusRangi, statusNomi } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function OperatorQarzlariBolimi() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data: qarzlar, isLoading } = useQuery<OperatorDebt[]>({
@@ -45,7 +47,7 @@ export function OperatorQarzlariBolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {!qarzlar || qarzlar.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Qarzlar yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("qarzlarYoq")}</p>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(qarzlar) ? qarzlar : []).map((item: OperatorDebt) => (
@@ -70,7 +72,7 @@ export function OperatorQarzlariBolimi() {
                     disabled={halQilishMutation.isPending}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Yopish
+                    {t("close2")}
                   </Button>
                   <Button
                     data-testid={`button-debt-deduct-${item.balance.id}`}
@@ -80,7 +82,7 @@ export function OperatorQarzlariBolimi() {
                     disabled={halQilishMutation.isPending}
                     className="flex-1"
                   >
-                    Ushlab qolish
+                    {t("ushlabQolish")}
                   </Button>
                 </div>
               </div>

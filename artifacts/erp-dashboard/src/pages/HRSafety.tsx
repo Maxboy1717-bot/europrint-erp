@@ -22,8 +22,10 @@ import {
 } from "./HRSafetyTypes";
 import { IncidentDialog, PpeDialog, TrainingDialog, ZoneDialog } from "./HRSafetyDialogs";
 import { SafetySummaryCards, IncidentsSection, PpeSection, TrainingsSection, ZonesSection } from "./HRSafetySections";
+import { useTranslation } from '@/lib/i18n';
 
 export default function HRSafety() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [subTab, setSubTab] = useState<SubTab>("incidents");
@@ -129,7 +131,7 @@ export default function HRSafety() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ShieldAlert className="h-5 w-5 text-[var(--ep-blue)]" />
-          <h1 className="font-semibold text-base">HR — Xavfsizlik va Sog'liqni Saqlash</h1>
+          <h1 className="font-semibold text-base">{t("hrXavfsizlikVaSogliqniSaqlash")}</h1>
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" data-testid="button-export-safety-pdf"
@@ -140,12 +142,12 @@ export default function HRSafety() {
                 a.href = url; a.download = "safety-report.pdf"; a.click();
                 URL.revokeObjectURL(url);
               }).catch(() => toast({ title: "PDF yaratishda xatolik", variant: "destructive" }))}>
-            <FileText className="h-3.5 w-3.5 mr-1.5" />PDF Hisobot
+            <FileText className="h-3.5 w-3.5 mr-1.5" />{t("pdfHisobot")}
           </Button>
-          {subTab === "incidents" && <Button size="sm" onClick={() => setShowIncident(true)} data-testid="button-add-incident"><Plus className="h-3.5 w-3.5 mr-1.5" />Hodisa Qo'shish</Button>}
-          {subTab === "ppe"       && <Button size="sm" onClick={() => setShowPpe(true)} data-testid="button-add-ppe"><Plus className="h-3.5 w-3.5 mr-1.5" />PPE Qo'shish</Button>}
-          {subTab === "trainings" && <Button size="sm" onClick={() => setShowTraining(true)} data-testid="button-add-training"><Plus className="h-3.5 w-3.5 mr-1.5" />Trening Qo'shish</Button>}
-          {subTab === "zones"     && <Button size="sm" onClick={() => setShowZone(true)} data-testid="button-add-zone"><Plus className="h-3.5 w-3.5 mr-1.5" />Zona Qo'shish</Button>}
+          {subTab === "incidents" && <Button size="sm" onClick={() => setShowIncident(true)} data-testid="button-add-incident"><Plus className="h-3.5 w-3.5 mr-1.5" />{t("hodisaQoshish")}</Button>}
+          {subTab === "ppe"       && <Button size="sm" onClick={() => setShowPpe(true)} data-testid="button-add-ppe"><Plus className="h-3.5 w-3.5 mr-1.5" />{t("ppeQoshish")}</Button>}
+          {subTab === "trainings" && <Button size="sm" onClick={() => setShowTraining(true)} data-testid="button-add-training"><Plus className="h-3.5 w-3.5 mr-1.5" />{t("treningQoshish")}</Button>}
+          {subTab === "zones"     && <Button size="sm" onClick={() => setShowZone(true)} data-testid="button-add-zone"><Plus className="h-3.5 w-3.5 mr-1.5" />{t("zonaQoshish")}</Button>}
         </div>
       </div>
 
@@ -154,10 +156,10 @@ export default function HRSafety() {
 
         <Tabs value={subTab} onValueChange={(v) => setSubTab(v as SubTab)}>
           <TabsList>
-            <TabsTrigger value="incidents">Hodisalar</TabsTrigger>
+            <TabsTrigger value="incidents">{t("hodisalar")}</TabsTrigger>
             <TabsTrigger value="ppe">PPE</TabsTrigger>
-            <TabsTrigger value="trainings">Treninglar</TabsTrigger>
-            <TabsTrigger value="zones">Xavfli Zonalar</TabsTrigger>
+            <TabsTrigger value="trainings">{t("treninglar")}</TabsTrigger>
+            <TabsTrigger value="zones">{t("xavfliZonalar")}</TabsTrigger>
           </TabsList>
           <TabsContent value="incidents" className="mt-4">
             <IncidentsSection incidents={incidents} loading={loadingIncidents} onDeleteRequest={setConfirmDeleteId} />
@@ -182,8 +184,8 @@ export default function HRSafety() {
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-        title="Hodisani o'chirish"
-        description="Ushbu xavfsizlik hodisasini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("hodisaniOchirish")}
+        description={t("ushbuXavfsizlikHodisasiniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

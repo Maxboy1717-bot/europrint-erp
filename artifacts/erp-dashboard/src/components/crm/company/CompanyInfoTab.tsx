@@ -6,12 +6,14 @@
 import { Users, Phone, Mail, Globe, MapPin, TrendingUp, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Company, formatAmount } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CompanyInfoTabProps {
   company: Company;
 }
 
 export function CompanyInfoTab({ company }: CompanyInfoTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4 mt-4">
       <div className="space-y-3">
@@ -43,7 +45,7 @@ export function CompanyInfoTab({ company }: CompanyInfoTabProps) {
 
       {(company.phones?.length > 0 || company.emails?.length > 0 || company.websites?.length > 0) && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Bog'lanish</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{t("boglanish")}</h3>
           {company.phones?.map((p, i) => (
             <div key={`k-${i}`} className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
@@ -76,11 +78,11 @@ export function CompanyInfoTab({ company }: CompanyInfoTabProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pt-2 border-t">
         <div>
-          <div className="text-muted-foreground">Yaratilgan</div>
+          <div className="text-muted-foreground">{t("Yaratilgan")}</div>
           <div>{new Date(company.dateCreate).toLocaleDateString("uz-UZ")}</div>
         </div>
         <div>
-          <div className="text-muted-foreground">O'zgartirilgan</div>
+          <div className="text-muted-foreground">{t("ozgartirilgan")}</div>
           <div>{new Date(company.dateModify).toLocaleDateString("uz-UZ")}</div>
         </div>
       </div>

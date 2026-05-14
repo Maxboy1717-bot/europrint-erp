@@ -17,6 +17,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Loader2, FileText, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 type Step = 1 | 2 | 3 | 4;
 
 interface Template {
@@ -42,6 +43,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
   onOpenChange: (open: boolean) => void;
   onCreated: (documentId: string) => void;
 }) {
+  const { t } = useTranslation("common");
   const qc = useQueryClient();
   const { toast } = useToast();
   const [step, setStep]               = useState<Step>(1);
@@ -132,7 +134,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles size={16} className="text-[var(--ep-yellow)]" />
-            Yangi hujjat
+            {t("yangiHujjat")}
           </DialogTitle>
           <DialogDescription>Qadam {step}/4</DialogDescription>
         </DialogHeader>
@@ -143,7 +145,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
             {tmplsQ.isLoading ? (
               <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
                 <Loader2 className="animate-spin mr-2" size={16} />
-                Shablonlar yuklanmoqda...
+                {t("shablonlarYuklanmoqda")}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto">
@@ -198,7 +200,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
                   <Textarea
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
-                    placeholder="Javobingizni yozing..."
+                    placeholder={t("javobingizniYozing")}
                     className="min-h-[80px]"
                   />
                 )}
@@ -211,7 +213,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
         {step === 3 && (
           <div className="space-y-3 py-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Mavzu</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("mavzu")}</label>
               <Input value={reviewSubject} disabled />
             </div>
             <div>
@@ -231,7 +233,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
         {step === 4 && (
           <div className="space-y-3 py-4">
             <div className="text-sm text-muted-foreground">
-              Hujjatni rasmiy yuborish uchun PIN kodingizni kiriting:
+              {t("hujjatniRasmiyYuborishUchunPin")}
             </div>
             <Input
               type="password" maxLength={8} autoFocus
@@ -245,7 +247,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
         <DialogFooter>
           {step > 1 && step < 4 && (
             <Button variant="outline" onClick={() => setStep((step - 1) as Step)}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Orqaga
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t("back")}
             </Button>
           )}
           {step === 1 && (
@@ -253,7 +255,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
               onClick={() => tmplId && startAi.mutate(tmplId)}
               disabled={!tmplId || startAi.isPending}
             >
-              Davom etish <ArrowRight className="h-4 w-4 ml-1" />
+              {t("proceed")}<ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           )}
           {step === 2 && (
@@ -261,12 +263,12 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
               onClick={() => sendAnswer.mutate(answer)}
               disabled={!answer || sendAnswer.isPending}
             >
-              Javobni yuborish <ArrowRight className="h-4 w-4 ml-1" />
+              {t("javobniYuborish")}<ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           )}
           {step === 3 && (
             <Button onClick={() => setStep(4)}>
-              Imzolashga o'tish <ArrowRight className="h-4 w-4 ml-1" />
+              {t("imzolashgaOtish")}<ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           )}
           {step === 4 && (
@@ -276,7 +278,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
               disabled={!/^\d{4,8}$/.test(pin) || sendDoc.isPending}
               className="bg-emerald-600 hover:bg-[var(--ep-green)]/90"
             >
-              Yuborish
+              {t("submitBtn")}
             </Button>
           )}
         </DialogFooter>

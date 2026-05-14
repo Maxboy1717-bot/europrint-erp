@@ -34,17 +34,17 @@ export function SummaryCards({costings, isLoading }: SummaryCardsProps) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card data-testid="card-total-costings">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Jami Hisoblangan</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("jamiHisoblangan")}</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           {isLoading ? <Skeleton className="h-8 w-20 rounded-lg" /> : <div className="text-2xl font-bold">{totalCostings}</div>}
-          <p className="text-xs text-muted-foreground">Buyurtmalar tannarxi</p>
+          <p className="text-xs text-muted-foreground">{t("buyurtmalarTannarxi")}</p>
         </CardContent>
       </Card>
       <Card data-testid="card-avg-margin">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">O'rtacha Marja</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("ortachaMarja")}</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -55,12 +55,12 @@ export function SummaryCards({costings, isLoading }: SummaryCardsProps) {
               {avgMargin.toFixed(1)}%
             </div>
           )}
-          <p className="text-xs text-muted-foreground">Foyda marjasi</p>
+          <p className="text-xs text-muted-foreground">{t("foydaMarjasi")}</p>
         </CardContent>
       </Card>
       <Card data-testid="card-most-profitable">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Eng Foydali</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("engFoydali")}</CardTitle>
           <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
         </CardHeader>
         <CardContent>
@@ -80,7 +80,7 @@ export function SummaryCards({costings, isLoading }: SummaryCardsProps) {
       </Card>
       <Card data-testid="card-most-loss">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Eng Zararli</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("engZararli")}</CardTitle>
           <TrendingDown className="h-4 w-4 text-[var(--ep-red)]" />
         </CardHeader>
         <CardContent>
@@ -115,16 +115,16 @@ export function CostingsTable({ costings, isLoading, statusFilter, onStatusFilte
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle>Buyurtma Tannarxlari</CardTitle>
+        <CardTitle>{t("buyurtmaTannarxlari")}</CardTitle>
         <Select value={statusFilter} onValueChange={onStatusFilterChange}>
           <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="select-status-filter">
-            <SelectValue placeholder="Status bo'yicha" />
+            <SelectValue placeholder={t("statusBoyicha")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barchasi</SelectItem>
-            <SelectItem value="draft">Qoralama</SelectItem>
-            <SelectItem value="calculated">Hisoblangan</SelectItem>
-            <SelectItem value="approved">Tasdiqlangan</SelectItem>
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
+            <SelectItem value="draft">{t("draft")}</SelectItem>
+            <SelectItem value="calculated">{t("hisoblangan")}</SelectItem>
+            <SelectItem value="approved">{t("approved")}</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -136,22 +136,22 @@ export function CostingsTable({ costings, isLoading, statusFilter, onStatusFilte
         ) : costings.length === 0 ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
             <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Hali buyurtma tannarxi mavjud emas</p>
+            <p>{t("haliBuyurtmaTannarxiMavjudEmas")}</p>
           </div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Buyurtma</TableHead>
+                <TableHead>{t("Buyurtma")}</TableHead>
                 <TableHead className="text-right">{"Material"}</TableHead>
-                <TableHead className="text-right">Mehnat</TableHead>
-                <TableHead className="text-right">Ustama</TableHead>
-                <TableHead className="text-right">Energiya</TableHead>
-                <TableHead className="text-right">Isrof</TableHead>
-                <TableHead className="text-right">Jami Xarajat</TableHead>
-                <TableHead className="text-right">Sotish Narxi</TableHead>
-                <TableHead className="text-right">Yalpi Foyda</TableHead>
-                <TableHead className="text-right">Marja %</TableHead>
+                <TableHead className="text-right">{t("mehnat")}</TableHead>
+                <TableHead className="text-right">{t("ustama")}</TableHead>
+                <TableHead className="text-right">{t("energiya1")}</TableHead>
+                <TableHead className="text-right">{t("isrof")}</TableHead>
+                <TableHead className="text-right">{t("jamiXarajat1")}</TableHead>
+                <TableHead className="text-right">{t("sotishNarxi")}</TableHead>
+                <TableHead className="text-right">{t("yalpiFoyda1")}</TableHead>
+                <TableHead className="text-right">{t("marja")}</TableHead>
                 <TableHead>{"Holat"}</TableHead>
               </TableRow>
             </TableHeader>
@@ -203,20 +203,20 @@ export function TopRankings({ topProfitable, topLoss, onRowClick }: TopRankingsP
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-[var(--ep-green)]" />
-            Top 10 Foydali Buyurtmalar
+            {t("top10FoydaliBuyurtmalar")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {topProfitable.length === 0 ? (
-            <div className="text-center py-4 text-[13px] text-muted-foreground"><p>Ma'lumot mavjud emas</p></div>
+            <div className="text-center py-4 text-[13px] text-muted-foreground"><p>{t("malumotMavjudEmas")}</p></div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>#</TableHead>
-                  <TableHead>Buyurtma</TableHead>
-                  <TableHead className="text-right">Yalpi Foyda</TableHead>
-                  <TableHead className="text-right">Marja %</TableHead>
+                  <TableHead>{t("Buyurtma")}</TableHead>
+                  <TableHead className="text-right">{t("yalpiFoyda1")}</TableHead>
+                  <TableHead className="text-right">{t("marja")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -243,20 +243,20 @@ export function TopRankings({ topProfitable, topLoss, onRowClick }: TopRankingsP
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingDown className="h-5 w-5 text-[var(--ep-red)]" />
-            Top 10 Zararli Buyurtmalar
+            {t("top10ZararliBuyurtmalar")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {topLoss.length === 0 ? (
-            <div className="text-center py-4 text-[13px] text-muted-foreground"><p>Ma'lumot mavjud emas</p></div>
+            <div className="text-center py-4 text-[13px] text-muted-foreground"><p>{t("malumotMavjudEmas")}</p></div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>#</TableHead>
-                  <TableHead>Buyurtma</TableHead>
-                  <TableHead className="text-right">Yalpi Zarar</TableHead>
-                  <TableHead className="text-right">Marja %</TableHead>
+                  <TableHead>{t("Buyurtma")}</TableHead>
+                  <TableHead className="text-right">{t("yalpiZarar")}</TableHead>
+                  <TableHead className="text-right">{t("marja")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -289,11 +289,11 @@ interface StatusBadgeProps {
 export function StatusBadge({ status }: StatusBadgeProps) {
   switch (status) {
     case "draft":
-      return <Badge variant="outline" className="bg-muted text-muted-foreground">Qoralama</Badge>;
+      return <Badge variant="outline" className="bg-muted text-muted-foreground">{t("draft")}</Badge>;
     case "calculated":
-      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">Hisoblangan</Badge>;
+      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">{t("hisoblangan")}</Badge>;
     case "approved":
-      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">Tasdiqlangan</Badge>;
+      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{t("approved")}</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }

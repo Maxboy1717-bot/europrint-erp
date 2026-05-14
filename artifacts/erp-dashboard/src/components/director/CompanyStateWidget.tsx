@@ -16,6 +16,7 @@ import type { CompanyStateCurrent, CompanyStateHistory } from "./types";
 import { apiRequest } from '@/lib/queryClient';
 
 export function CompanyStateWidget() {
+  const { t } = useTranslation("common");
   const { t: td } = useTranslation("director");
   const { data: currentState, isLoading: currentLoad, isError: currentError, refetch: refetchCurrent } = useQuery<CompanyStateCurrent>({
     queryKey: ["/api/company-state/current"],
@@ -65,9 +66,9 @@ export function CompanyStateWidget() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
-            <span className="text-sm text-[var(--ep-red)]">Kompaniya holati yuklanmadi</span>
+            <span className="text-sm text-[var(--ep-red)]">{t("kompaniyaHolatiYuklanmadi")}</span>
             <Button size="sm" variant="outline" onClick={() => refetchCurrent()}>
-              <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Qayta yuklash
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t("qaytaYuklash")}
             </Button>
           </div>
         </CardContent>
@@ -127,18 +128,18 @@ export function CompanyStateWidget() {
             <div className="rounded-xl bg-muted/40 p-4 text-center" data-testid="state-retention">
               <div className="flex items-center justify-center gap-1 mb-1">
                 {retentionPct >= 95 ? <TrendingUp className="w-4 h-4 text-[var(--ep-green)]" /> : <TrendingDown className="w-4 h-4 text-[var(--ep-red)]" />}
-                <span className="text-xs text-muted-foreground">Xodimlar</span>
+                <span className="text-xs text-muted-foreground">{t("xodimlar")}</span>
               </div>
               <p className="text-2xl font-bold text-foreground">{retentionPct.toFixed(1)}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Xodim Saqlash</p>
-              <p className="text-[10px] text-muted-foreground">Maqsad: ≥95%</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("xodimSaqlash")}</p>
+              <p className="text-[10px] text-muted-foreground">{t("maqsad95")}</p>
             </div>
             <div className="rounded-xl bg-muted/40 p-4" data-testid="state-history">
               <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
                 {td("stateHistory", { days: "30" })}
               </p>
               {history.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Tarix yo'q</p>
+                <p className="text-xs text-muted-foreground italic">{t("tarixYoq")}</p>
               ) : (
                 <div className="space-y-1">
                   {history.slice(-5).map((h, i) => {

@@ -26,6 +26,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface HealthCheckup {
   id: string;
@@ -76,47 +77,47 @@ function NewCheckupDialog({ open, onClose }: { open: boolean; onClose: () => voi
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Tibbiy Ko'rik Rejalashtirish</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiTibbiyKorikRejalashtirish")}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-1">
           <div>
-            <Label>Bo'lim nomi *</Label>
-            <Input value={form.departmentName} onChange={e => f("departmentName", e.target.value)} placeholder="Bo'lim nomi" className="mt-1" />
+            <Label>{t("bolimNomi1")}</Label>
+            <Input value={form.departmentName} onChange={e => f("departmentName", e.target.value)} placeholder={t("bolimNomi")} className="mt-1" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Ko'rik sanasi *</Label>
+              <Label>{t("korikSanasi")}</Label>
               <Input type="date" value={form.checkupDate} onChange={e => f("checkupDate", e.target.value)} className="mt-1" />
             </div>
             <div>
-              <Label>Keyingi ko'rik</Label>
+              <Label>{t("keyingiKorik")}</Label>
               <Input type="date" value={form.nextCheckupDate} onChange={e => f("nextCheckupDate", e.target.value)} className="mt-1" />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Xodimlar soni</Label>
+              <Label>{t("xodimlarSoni")}</Label>
               <Input type="number" min={1} value={form.totalEmployees} onChange={e => f("totalEmployees", e.target.value)} placeholder="0" className="mt-1" />
             </div>
             <div>
-              <Label>Ko'rik turi</Label>
+              <Label>{t("korikTuri")}</Label>
               <Select value={form.checkupType} onValueChange={v => f("checkupType", v)}>
                 <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="annual">Yillik</SelectItem>
-                  <SelectItem value="quarterly">Choraklik</SelectItem>
-                  <SelectItem value="special">Maxsus</SelectItem>
-                  <SelectItem value="pre_employment">Ishga kirish</SelectItem>
+                  <SelectItem value="annual">{t("yearly")}</SelectItem>
+                  <SelectItem value="quarterly">{t("choraklik")}</SelectItem>
+                  <SelectItem value="special">{t("maxsus")}</SelectItem>
+                  <SelectItem value="pre_employment">{t("ishgaKirish")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div>
-            <Label>Izoh</Label>
-            <Input value={form.notes} onChange={e => f("notes", e.target.value)} placeholder="Qo'shimcha ma'lumot" className="mt-1" />
+            <Label>{t("Izoh")}</Label>
+            <Input value={form.notes} onChange={e => f("notes", e.target.value)} placeholder={t("qoshimchaMalumot1")} className="mt-1" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             onClick={() => create.mutate()}
             disabled={!form.departmentName || !form.checkupDate || create.isPending}
@@ -130,6 +131,7 @@ function NewCheckupDialog({ open, onClose }: { open: boolean; onClose: () => voi
 }
 
 export default function HRHealthMonitoring() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [newOpen, setNewOpen] = useState(false);
@@ -159,11 +161,11 @@ export default function HRHealthMonitoring() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Activity className="h-4 w-4 text-[var(--ep-blue)]" />
-          <h1 className="font-semibold text-base">HR — Sog'liq Monitoringi</h1>
+          <h1 className="font-semibold text-base">{t("hrSogliqMonitoringi")}</h1>
           <EPStatusPill tone="neutral">{all.length} ko'rik</EPStatusPill>
         </div>
         <Button size="sm" onClick={() => setNewOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" />Yangi ko'rik
+          <Plus className="h-3.5 w-3.5 mr-1" />{t("yangiKorik")}
         </Button>
       </div>
 
@@ -177,7 +179,7 @@ export default function HRHealthMonitoring() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-blue)]">{all.length}</div>
-                <div className="text-xs text-muted-foreground">Jami ko'riklar</div>
+                <div className="text-xs text-muted-foreground">{t("jamiKoriklar")}</div>
               </div>
             </CardContent>
           </Card>
@@ -188,7 +190,7 @@ export default function HRHealthMonitoring() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-green)]">{completedCount}</div>
-                <div className="text-xs text-muted-foreground">Yakunlangan</div>
+                <div className="text-xs text-muted-foreground">{t("yakunlangan")}</div>
               </div>
             </CardContent>
           </Card>
@@ -199,14 +201,14 @@ export default function HRHealthMonitoring() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-red)]">{overdueCount}</div>
-                <div className="text-xs text-muted-foreground">Muddati o'tgan</div>
+                <div className="text-xs text-muted-foreground">{t("muddatiOtgan")}</div>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">Qamrov</span>
+                <span className="text-xs text-muted-foreground">{t("qamrov")}</span>
                 <span className="text-sm font-bold text-[var(--ep-purple)]">{coveragePct}%</span>
               </div>
               <Progress value={coveragePct} className="h-1.5" />
@@ -220,7 +222,7 @@ export default function HRHealthMonitoring() {
           <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Bo'lim yoki tur qidiring..."
+              placeholder={t("bolimYokiTurQidiring")}
               className="pl-8 h-9 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -228,15 +230,15 @@ export default function HRHealthMonitoring() {
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Holat" />
+              <SelectValue placeholder={t("status28")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barcha holatlar</SelectItem>
-              <SelectItem value="scheduled">Rejalashtirilgan</SelectItem>
-              <SelectItem value="in_progress">Jarayonda</SelectItem>
-              <SelectItem value="completed">Yakunlangan</SelectItem>
-              <SelectItem value="overdue">Muddati o'tgan</SelectItem>
-              <SelectItem value="cancelled">Bekor qilingan</SelectItem>
+              <SelectItem value="all">{t("barchaHolatlar")}</SelectItem>
+              <SelectItem value="scheduled">{t("rejalashtirilgan")}</SelectItem>
+              <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
+              <SelectItem value="completed">{t("yakunlangan")}</SelectItem>
+              <SelectItem value="overdue">{t("muddatiOtgan")}</SelectItem>
+              <SelectItem value="cancelled">{t("cancelledDesc")}</SelectItem>
             </SelectContent>
           </Select>
           {filtered.length !== all.length && (
@@ -250,20 +252,20 @@ export default function HRHealthMonitoring() {
             <div className="ep-table-scroll"><Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Bo'lim</TableHead>
-                  <TableHead>Tur</TableHead>
-                  <TableHead>Ko'rik sanasi</TableHead>
-                  <TableHead>Xodimlar</TableHead>
-                  <TableHead>Ko'rilganlar</TableHead>
-                  <TableHead>Keyingi ko'rik</TableHead>
-                  <TableHead>Holat</TableHead>
+                  <TableHead>{t("bolim1")}</TableHead>
+                  <TableHead>{t("tur")}</TableHead>
+                  <TableHead>{t("korikSanasi1")}</TableHead>
+                  <TableHead>{t("xodimlar")}</TableHead>
+                  <TableHead>{t("korilganlar")}</TableHead>
+                  <TableHead>{t("keyingiKorik")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">
-                      Yuklanmoqda...
+                      {t("Yuklanmoqda...")}
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (

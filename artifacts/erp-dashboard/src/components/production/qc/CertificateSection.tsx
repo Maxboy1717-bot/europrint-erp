@@ -10,8 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Award, RefreshCw, FileText, CheckCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from '@/lib/i18n';
 
 export function CertificateSection() {
+  const { t } = useTranslation("common");
   const { data: certList = [], isLoading: certLoading, refetch: refetchCerts } = useQuery<Record<string, unknown>[]>({
     queryKey: ["/api/qc/certificates"],
     enabled: true,
@@ -21,15 +23,15 @@ export function CertificateSection() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Mahsulot Sertifikatlari</h2>
-          <p className="text-sm text-muted-foreground">Sifat va muvofiqlik sertifikatlari reestri</p>
+          <h2 className="text-lg font-semibold">{t("mahsulotSertifikatlari")}</h2>
+          <p className="text-sm text-muted-foreground">{t("sifatVaMuvofiqlikSertifikatlariReestri")}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetchCerts()} data-testid="button-refresh-certs">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button data-testid="button-add-cert">
-            Sertifikat Yuklash
+            {t("sertifikatYuklash")}
           </Button>
         </div>
       </div>
@@ -56,19 +58,19 @@ export function CertificateSection() {
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Sertifikat nomi</TableHead>
-              <TableHead>Turi</TableHead>
-              <TableHead>Berilgan sana</TableHead>
-              <TableHead>Amal qilish muddati</TableHead>
-              <TableHead>Holati</TableHead>
-              <TableHead>Fayl</TableHead>
+              <TableHead>{t("sertifikatNomi")}</TableHead>
+              <TableHead>{t("type")}</TableHead>
+              <TableHead>{t("berilganSana")}</TableHead>
+              <TableHead>{t("amalQilishMuddati")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
+              <TableHead>{t("fayl")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {certLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : certList.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <Award className="h-8 w-8 mx-auto mb-2 opacity-30" />Sertifikatlar topilmadi
+                  <Award className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("sertifikatlarTopilmadi")}
                 </TableCell></TableRow>
               ) : (Array.isArray(certList) ? certList : []).map((c, i) => (
                 <TableRow key={`k-${i}`} data-testid={`row-cert-${i}`} className="hover:bg-muted/40 transition-colors">

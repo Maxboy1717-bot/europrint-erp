@@ -340,8 +340,8 @@ export function ERPDowntimeTab() {
     <ConfirmDialog
       open={confirmDeleteId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-      title="Nosozlik yozuvini o'chirish"
-      description="Ushbu nosozlik yozuvini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("nosozlikYozuviniOchirish")}
+      description={t("ushbuNosozlikYozuviniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

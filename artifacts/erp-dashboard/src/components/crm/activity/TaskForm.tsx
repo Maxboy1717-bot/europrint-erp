@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PRIORITY_OPTIONS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface TaskFormProps {
   entityType: string;
@@ -24,6 +25,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ entityType, entityId, onActivityCreated }: TaskFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [taskForm, setTaskForm] = useState({
     title: "",
@@ -59,14 +61,14 @@ export function TaskForm({ entityType, entityId, onActivityCreated }: TaskFormPr
   return (
     <div className="space-y-3 p-4">
       <Input
-        placeholder="Vazifa nomi"
+        placeholder={t("vazifaNomi")}
         value={taskForm.title}
         onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
         data-testid="input-task-title"
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div>
-          <Label className="text-xs text-muted-foreground">Muddat</Label>
+          <Label className="text-xs text-muted-foreground">{t("muddat")}</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-full justify-start gap-2" data-testid="button-task-due-date">
@@ -84,7 +86,7 @@ export function TaskForm({ entityType, entityId, onActivityCreated }: TaskFormPr
           </Popover>
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">Muhimlik</Label>
+          <Label className="text-xs text-muted-foreground">{t("priority")}</Label>
           <Select
             value={taskForm.priority}
             onValueChange={(value) => setTaskForm((prev) => ({ ...prev, priority: value }))}
@@ -109,7 +111,7 @@ export function TaskForm({ entityType, entityId, onActivityCreated }: TaskFormPr
         data-testid="button-save-task"
       >
         <Plus className="h-4 w-4 mr-2" />
-        Vazifa yaratish
+        {t("vazifaYaratish")}
       </Button>
     </div>
   );

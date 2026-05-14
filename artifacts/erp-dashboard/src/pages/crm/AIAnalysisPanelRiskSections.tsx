@@ -9,6 +9,7 @@ import { AlertTriangle, Zap, Edit, Save } from "lucide-react";
 import type { AutoFillData, ChurnRescue } from "./AIAnalysisPanelTypes";
 import { getRiskColor } from "./AIAnalysisPanelTypes";
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── AutoFill Section ───────────────────────────────────────────────────────
 
@@ -20,51 +21,52 @@ interface AutoFillSectionProps {
 }
 
 export function AutoFillSection({ autoFillData, loading, onRun, onApply }: AutoFillSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <Button onClick={onRun} disabled={!!loading} className="w-full" data-testid="btn-run-autofill">
         {loading === "autofill" ? (
-          <><EPLoader className="mr-2" />Tahlil qilinmoqda...</>
+          <><EPLoader className="mr-2" />{t("tahlilQilinmoqda")}</>
         ) : (
-          <><Edit className="h-4 w-4 mr-2" />AI bilan to'ldirish</>
+          <><Edit className="h-4 w-4 mr-2" />{t("aiBilanToldirish")}</>
         )}
       </Button>
 
       {autoFillData && (
         <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Topilgan ma'lumotlar</span>
+            <span className="text-sm font-medium">{t("topilganMalumotlar")}</span>
             <Badge variant="outline">{autoFillData.confidence}% ishonch</Badge>
           </div>
 
           <div className="space-y-2">
             {autoFillData.companyTitle && (
               <div className="flex items-center justify-between p-2 bg-background rounded">
-                <span className="text-xs text-muted-foreground">Kompaniya</span>
+                <span className="text-xs text-muted-foreground">{t("company")}</span>
                 <span className="font-medium text-sm">{autoFillData.companyTitle}</span>
               </div>
             )}
             {autoFillData.industry && (
               <div className="flex items-center justify-between p-2 bg-background rounded">
-                <span className="text-xs text-muted-foreground">Sanoat</span>
+                <span className="text-xs text-muted-foreground">{t("sanoat")}</span>
                 <span className="font-medium text-sm">{autoFillData.industry}</span>
               </div>
             )}
             {autoFillData.segment && (
               <div className="flex items-center justify-between p-2 bg-background rounded">
-                <span className="text-xs text-muted-foreground">Segment</span>
+                <span className="text-xs text-muted-foreground">{t("segment")}</span>
                 <EPStatusPill tone="neutral">{autoFillData.segment}</EPStatusPill>
               </div>
             )}
             {autoFillData.budget && (
               <div className="flex items-center justify-between p-2 bg-background rounded">
-                <span className="text-xs text-muted-foreground">Byudjet</span>
+                <span className="text-xs text-muted-foreground">{t("byudjet")}</span>
                 <span className="font-medium text-sm">{autoFillData.budget}</span>
               </div>
             )}
             {autoFillData.timeline && (
               <div className="flex items-center justify-between p-2 bg-background rounded">
-                <span className="text-xs text-muted-foreground">Muddat</span>
+                <span className="text-xs text-muted-foreground">{t("muddat")}</span>
                 <span className="font-medium text-sm">{autoFillData.timeline}</span>
               </div>
             )}
@@ -72,7 +74,7 @@ export function AutoFillSection({ autoFillData, loading, onRun, onApply }: AutoF
 
           {autoFillData.needs && autoFillData.needs.length > 0 && (
             <div>
-              <div className="text-xs font-medium mb-1">Ehtiyojlar:</div>
+              <div className="text-xs font-medium mb-1">{t("ehtiyojlar")}</div>
               <div className="flex flex-wrap gap-1">
                 {(Array.isArray(autoFillData.needs) ? autoFillData.needs : []).map((n, i) => (
                   <Badge key={`k-${i}`} variant="secondary" className="text-xs">{n}</Badge>
@@ -88,9 +90,9 @@ export function AutoFillSection({ autoFillData, loading, onRun, onApply }: AutoF
             data-testid="btn-apply-autofill"
           >
             {loading === "applyAutofill" ? (
-              <><EPLoader className="mr-2" />Qo'llanmoqda...</>
+              <><EPLoader className="mr-2" />{t("qollanmoqda")}</>
             ) : (
-              <><Save className="h-4 w-4 mr-2" />Maydonlarni yangilash</>
+              <><Save className="h-4 w-4 mr-2" />{t("maydonlarniYangilash")}</>
             )}
           </Button>
         </div>
@@ -112,9 +114,9 @@ export function ChurnRescueSection({ churnRescue, loading, onRun }: ChurnSection
     <div className="space-y-4">
       <Button onClick={onRun} disabled={!!loading} className="w-full" data-testid="btn-run-churn">
         {loading === "churn" ? (
-          <><EPLoader className="mr-2" />Tahlil qilinmoqda...</>
+          <><EPLoader className="mr-2" />{t("tahlilQilinmoqda")}</>
         ) : (
-          <><AlertTriangle className="h-4 w-4 mr-2" />Churn xavfi tahlili</>
+          <><AlertTriangle className="h-4 w-4 mr-2" />{t("churnXavfiTahlili")}</>
         )}
       </Button>
 
@@ -134,7 +136,7 @@ export function ChurnRescueSection({ churnRescue, loading, onRun }: ChurnSection
             <div>
               <div className="text-xs font-medium mb-2 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3 text-[var(--ep-red)]" />
-                Xavf omillari
+                {t("xavfOmillari")}
               </div>
               <ul className="space-y-1">
                 {(Array.isArray(churnRescue.riskFactors) ? churnRescue.riskFactors : []).map((f, i) => (
@@ -149,7 +151,7 @@ export function ChurnRescueSection({ churnRescue, loading, onRun }: ChurnSection
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="text-xs font-medium mb-2 flex items-center gap-1 text-[var(--ep-blue)] dark:text-blue-400">
               <Zap className="h-3 w-3" />
-              Qutqarish stsenariysi
+              {t("qutqarishStsenariysi")}
             </div>
             <div className="space-y-2">
               {(Array.isArray(churnRescue.rescueScenario.actions) ? churnRescue.rescueScenario.actions : []).map((a, i) => (
@@ -172,7 +174,7 @@ export function ChurnRescueSection({ churnRescue, loading, onRun }: ChurnSection
 
           {churnRescue.retentionOffer && (
             <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="text-xs font-medium text-[var(--ep-green)] dark:text-green-400">Taklif qilinadigan bonus:</div>
+              <div className="text-xs font-medium text-[var(--ep-green)] dark:text-green-400">{t("taklifQilinadiganBonus")}</div>
               <div className="text-sm font-medium mt-1">{churnRescue.retentionOffer}</div>
             </div>
           )}

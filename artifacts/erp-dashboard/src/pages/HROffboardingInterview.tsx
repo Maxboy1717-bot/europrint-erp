@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { EXIT_QUESTIONS } from "./HROffboardingTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   answers: Record<string, string>;
@@ -27,9 +28,10 @@ export function ExitInterviewForm({
   onCancel,
   isSaving,
 }: Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="rounded-lg border border-border/50 p-3 space-y-3 bg-muted/20">
-      <p className="text-sm font-semibold">Chiqish suhbati — 4 ta savol</p>
+      <p className="text-sm font-semibold">{t("chiqishSuhbati4TaSavol")}</p>
 
       {EXIT_QUESTIONS.map(q => (
         <div key={q.key} className="space-y-1">
@@ -40,7 +42,7 @@ export function ExitInterviewForm({
 
           {q.type === "text" && (
             <Textarea
-              placeholder="Javobingizni kiriting..."
+              placeholder={t("javobingizniKiriting")}
               className="text-sm min-h-[60px] resize-none"
               value={answers[q.key] ?? ""}
               onChange={e => onAnswerChange(q.key, e.target.value)}
@@ -56,11 +58,11 @@ export function ExitInterviewForm({
                 <SelectValue placeholder="Baho (1-5)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">1 — Juda yomon</SelectItem>
-                <SelectItem value="2">2 — Yomon</SelectItem>
-                <SelectItem value="3">3 — O'rtacha</SelectItem>
-                <SelectItem value="4">4 — Yaxshi</SelectItem>
-                <SelectItem value="5">5 — A'lo</SelectItem>
+                <SelectItem value="1">{t("k1JudaYomon1")}</SelectItem>
+                <SelectItem value="2">{t("k2Yomon1")}</SelectItem>
+                <SelectItem value="3">{t("k3Ortacha1")}</SelectItem>
+                <SelectItem value="4">{t("k4Yaxshi1")}</SelectItem>
+                <SelectItem value="5">{t("k5Alo1")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -71,12 +73,12 @@ export function ExitInterviewForm({
               onValueChange={v => onAnswerChange(q.key, v)}
             >
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Javobni tanlang" />
+                <SelectValue placeholder={t("javobniTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="yes">Ha, tavsiya qilaman</SelectItem>
-                <SelectItem value="maybe">Balki</SelectItem>
-                <SelectItem value="no">Yo'q</SelectItem>
+                <SelectItem value="maybe">{t("balki")}</SelectItem>
+                <SelectItem value="no">{t("no")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -90,10 +92,10 @@ export function ExitInterviewForm({
           onClick={onSave}
           disabled={isSaving}
         >
-          Saqlash
+          {t("Saqlash")}
         </Button>
         <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onCancel}>
-          Bekor
+          {t("Bekor")}
         </Button>
       </div>
     </div>

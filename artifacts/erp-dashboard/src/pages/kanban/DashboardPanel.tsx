@@ -14,6 +14,7 @@ import {
 import { type T, type TeamMetrics, type TaskStats } from "./kanban-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 type OverdueInboxData = {
   count: number;
@@ -30,6 +31,7 @@ type OverdueInboxData = {
 };
 
 export function DashboardPanel({ t }: { t: typeof T.uz }) {
+  const { t } = useTranslation("common");
   const { data: metrics, isLoading: metricsLoading } = useQuery<TeamMetrics>({
     queryKey: ['/api/kanban/dashboard/team-metrics'],
   });
@@ -74,7 +76,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="p-4 space-y-6" data-testid="dashboard-panel">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <Card className="p-4" data-testid="metric-total-tasks">
@@ -84,7 +86,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
             </div>
             <div>
               <p className="text-3xl font-bold">{taskStats?.summary?.totalTasks || metrics?.totalTasks || 0}</p>
-              <p className="text-sm text-muted-foreground">Jami</p>
+              <p className="text-sm text-muted-foreground">{t("total")}</p>
             </div>
           </div>
         </Card>
@@ -96,7 +98,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
             </div>
             <div>
               <p className="text-3xl font-bold text-[var(--ep-green)]">{taskStats?.summary?.completedTasks || 0}</p>
-              <p className="text-sm text-muted-foreground">Bajarildi</p>
+              <p className="text-sm text-muted-foreground">{t("Bajarildi")}</p>
             </div>
           </div>
         </Card>
@@ -108,7 +110,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
             </div>
             <div>
               <p className="text-3xl font-bold text-[var(--ep-red)]">{taskStats?.summary?.overdueTasks || metrics?.overdueTasks || 0}</p>
-              <p className="text-sm text-muted-foreground">Kechikkan</p>
+              <p className="text-sm text-muted-foreground">{t("kechikkan")}</p>
             </div>
           </div>
         </Card>
@@ -120,7 +122,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
             </div>
             <div>
               <p className="text-3xl font-bold">{taskStats?.summary?.acceptedNotCompleted || 0}</p>
-              <p className="text-sm text-muted-foreground">Jarayonda</p>
+              <p className="text-sm text-muted-foreground">{t("inProgress")}</p>
             </div>
           </div>
         </Card>
@@ -132,7 +134,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
             </div>
             <div>
               <p className="text-3xl font-bold text-[var(--ep-blue)]">{taskStats?.summary?.telegramTasks || 0}</p>
-              <p className="text-sm text-muted-foreground">Telegram</p>
+              <p className="text-sm text-muted-foreground">{t("telegram")}</p>
             </div>
           </div>
         </Card>
@@ -144,7 +146,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
             </div>
             <div>
               <p className="text-3xl font-bold text-[var(--ep-green)]">{taskStats?.summary?.completionRate || 0}%</p>
-              <p className="text-sm text-muted-foreground">Bajarilish</p>
+              <p className="text-sm text-muted-foreground">{t("progress5")}</p>
             </div>
           </div>
         </Card>
@@ -156,7 +158,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
             </div>
             <div>
               <p className="text-3xl font-bold text-[var(--ep-purple)]">{taskStats?.summary?.avgCompletionDays || 0}</p>
-              <p className="text-sm text-muted-foreground">O'rtacha kun</p>
+              <p className="text-sm text-muted-foreground">{t("ortachaKun")}</p>
             </div>
           </div>
         </Card>
@@ -210,7 +212,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
         <Card className="p-4">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Haftalik trend
+            {t("haftalikTrend1")}
           </h3>
           <div className="space-y-3">
             {taskStats?.weeklyTrend?.map((day) => (
@@ -235,11 +237,11 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
           <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded bg-blue-500" />
-              <span>Yaratilgan</span>
+              <span>{t("Yaratilgan")}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded bg-green-500" />
-              <span>Bajarilgan</span>
+              <span>{t("bajarilgan")}</span>
             </div>
           </div>
         </Card>
@@ -247,7 +249,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
         <Card className="p-4">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Xodimlar samaradorligi
+            {t("xodimlarSamaradorligi")}
           </h3>
           <div className="space-y-3 max-h-[300px] overflow-auto">
             {taskStats?.employeeStats?.slice(0, 10).map((emp) => {
@@ -277,7 +279,7 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
               );
             })}
             {(!taskStats?.employeeStats || taskStats.employeeStats.length === 0) && (
-              <p className="text-sm text-muted-foreground text-center py-4">Ma'lumot mavjud emas</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("malumotMavjudEmas")}</p>
             )}
           </div>
         </Card>
@@ -287,16 +289,16 @@ export function DashboardPanel({ t }: { t: typeof T.uz }) {
         <div className="flex items-center justify-between">
           <h3 className="font-semibold flex items-center gap-2">
             <Timer className="h-5 w-5" />
-            Vaqt kuzatuvi
+            {t("vaqtKuzatuvi")}
           </h3>
           <div className="flex items-center gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold">{taskStats?.timeTracking?.totalTrackedHours || 0}</p>
-              <p className="text-xs text-muted-foreground">Jami soat</p>
+              <p className="text-xs text-muted-foreground">{t("jamiSoat")}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold">{formatMinutes(metrics?.todayTimeMinutes || 0)}</p>
-              <p className="text-xs text-muted-foreground">Bugun</p>
+              <p className="text-xs text-muted-foreground">{t("today")}</p>
             </div>
           </div>
         </div>

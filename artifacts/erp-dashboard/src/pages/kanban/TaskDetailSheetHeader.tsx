@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Flag, Check, CheckCheck, X } from "lucide-react";
 import { format } from "date-fns";
 import { UZBEK_MONTHS } from "./kanban-types";
+import { useTranslation } from '@/lib/i18n';
 import {
   PRIORITY_DARK,
   initials,
@@ -33,6 +34,7 @@ export function TaskDetailSheetHeader({
   isTracking,
   ownerName,
 }: TaskDetailSheetHeaderProps) {
+  const { t } = useTranslation("common");
   const priority = (card.priority ?? "normal") as keyof typeof PRIORITY_DARK;
   const pBadge   = PRIORITY_DARK[priority] ?? PRIORITY_DARK.normal;
 
@@ -67,14 +69,14 @@ export function TaskDetailSheetHeader({
           {/* Accepted badge */}
           {isAccepted && (
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--ep-green)] bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-              <Check style={{ width: 9, height: 9 }} />Qabul qilindi
+              <Check style={{ width: 9, height: 9 }} />{t("qabulQilindi")}
             </span>
           )}
 
           {/* Completed badge */}
           {isCompleted && (
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-full px-2 py-0.5">
-              <CheckCheck style={{ width: 9, height: 9 }} />Bajarildi
+              <CheckCheck style={{ width: 9, height: 9 }} />{t("Bajarildi")}
             </span>
           )}
 
@@ -88,7 +90,7 @@ export function TaskDetailSheetHeader({
                   display: "inline-block",
                 }}
               />
-              Vaqt ketmoqda
+              {t("vaqtKetmoqda")}
             </span>
           )}
         </div>

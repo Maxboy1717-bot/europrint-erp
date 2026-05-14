@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 // Re-export for convenience
 export { ProgramFormDialog } from "./ProgramsTabFormDialog";
@@ -39,19 +40,20 @@ export function TemplatesDialog({
   onOpenChange,
   onUseTemplate,
 }: TemplatesDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" data-testid="button-templates">
           <Star className="w-4 h-4 mr-2" />
-          Shablonlar
+          {t("shablonlar")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Tayyor shablonlarni tanlang</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("tayyorShablonlarniTanlang")}</DialogTitle>
           <DialogDescription>
-            Quyidagi shablonlardan birini tanlang va o'zingizga moslashtiring
+            {t("quyidagiShablonlardanBiriniTanlangVa")}
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -62,7 +64,7 @@ export function TemplatesDialog({
             data-testid="template-1-day"
           >
             <div className="font-semibold">1 kunlik</div>
-            <div className="text-xs text-muted-foreground">Kirish va tanishish</div>
+            <div className="text-xs text-muted-foreground">{t("kirishVaTanishish")}</div>
           </Button>
           <Button
             variant="outline"
@@ -71,7 +73,7 @@ export function TemplatesDialog({
             data-testid="template-1-week"
           >
             <div className="font-semibold">1 haftalik</div>
-            <div className="text-xs text-muted-foreground">Asosiy jarayonlar</div>
+            <div className="text-xs text-muted-foreground">{t("asosiyJarayonlar")}</div>
           </Button>
           <Button
             variant="outline"
@@ -80,7 +82,7 @@ export function TemplatesDialog({
             data-testid="template-1-month"
           >
             <div className="font-semibold">1 oylik</div>
-            <div className="text-xs text-muted-foreground">To'liq adaptatsiya</div>
+            <div className="text-xs text-muted-foreground">{t("toliqAdaptatsiya")}</div>
           </Button>
           <Button
             variant="outline"
@@ -89,7 +91,7 @@ export function TemplatesDialog({
             data-testid="template-3-month"
           >
             <div className="font-semibold">3 oylik</div>
-            <div className="text-xs text-muted-foreground">Keng qamrovli dastur</div>
+            <div className="text-xs text-muted-foreground">{t("kengQamrovliDastur")}</div>
           </Button>
         </div>
       </DialogContent>
@@ -116,15 +118,15 @@ export function DeleteConfirmDialog({
     <AlertDialog open={!!deleteId} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Dasturni o'chirish</AlertDialogTitle>
+          <AlertDialogTitle>{t("dasturniOchirish")}</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu dasturni o'chirishni istaysizmi? Bu amal bekor qilinmaydi.
+            {t("buDasturniOchirishniIstaysizmiBu")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} data-testid="button-confirm-delete">
-            O'chirish
+            {t("delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

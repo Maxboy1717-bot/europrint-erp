@@ -84,9 +84,9 @@ export default function CameraLiveMonitoring() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Jonli Kamera Monitoring</b></>}
-        title="Jonli Kamera Monitoring"
-        subtitle="Real-time xodim aniqlash va kuzatuv tizimi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("jonliKameraMonitoring")}</b></>}
+        title={t("jonliKameraMonitoring")}
+        subtitle={t("realTimeXodimAniqlashVa")}
       />
           </div>
           <HeaderControls
@@ -109,13 +109,13 @@ export default function CameraLiveMonitoring() {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <TabsList className="bg-muted/40 p-1 rounded-lg" data-testid="tabs-view-mode">
               <TabsTrigger value="video" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-video">
-                <Play className="h-4 w-4 mr-2" />Jonli Video
+                <Play className="h-4 w-4 mr-2" />{t("jonliVideo")}
               </TabsTrigger>
               <TabsTrigger value="grouped" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-grouped">
-                <Video className="h-4 w-4 mr-2" />Kameralar bo'yicha
+                <Video className="h-4 w-4 mr-2" />{t("kameralarBoyicha")}
               </TabsTrigger>
               <TabsTrigger value="stream" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-stream">
-                <Activity className="h-4 w-4 mr-2" />Jonli oqim
+                <Activity className="h-4 w-4 mr-2" />{t("jonliOqim")}
               </TabsTrigger>
             </TabsList>
 
@@ -133,10 +133,10 @@ export default function CameraLiveMonitoring() {
             {activeTab === "stream" && (
               <Select value={selectedCamera} onValueChange={setSelectedCamera}>
                 <SelectTrigger className="w-64 bg-background border-border rounded-lg h-9" data-testid="select-camera">
-                  <SelectValue placeholder="Kamerani tanlang" />
+                  <SelectValue placeholder={t("kameraniTanlang")} />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  <SelectItem value="all">Barcha kameralar</SelectItem>
+                  <SelectItem value="all">{t("barchaKameralar")}</SelectItem>
                   {groupedData?.map((item) => (
                     <SelectItem key={item.camera.id} value={item.camera.id}>{item.camera.name}</SelectItem>
                   ))}
@@ -163,7 +163,7 @@ export default function CameraLiveMonitoring() {
           <TabsContent value="stream">
             <Card>
               <CardHeader>
-                <CardTitle>Jonli Aniqlashlar Oqimi</CardTitle>
+                <CardTitle>{t("jonliAniqlashlarOqimi")}</CardTitle>
                 <CardDescription>
                   {selectedCamera === "all"
                     ? "Barcha kameralardan kelayotgan aniqlashlar"

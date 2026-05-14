@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 /**
  * @module IQScaleChart
  * @description React UI component.
@@ -76,6 +77,7 @@ interface IQScaleChartProps {
 }
 
 export function IQScaleChart({ iq, compact = false }: IQScaleChartProps) {
+  const { t } = useTranslation("common");
   if (iq === null || iq === undefined) {
     return (
       <span className="text-xs text-muted-foreground italic">IQ ball kiritilmagan</span>
@@ -100,7 +102,7 @@ export function IQScaleChart({ iq, compact = false }: IQScaleChartProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">IQ Ball</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("iqBall")}</span>
         <div className="flex items-center gap-2">
           <span className={`text-xl font-bold ${level.color}`}>{iq}</span>
           <span className={`text-xs px-2 py-0.5 rounded-full ${level.bgColor}/15 ${level.color} border border-current/20 font-medium`}>

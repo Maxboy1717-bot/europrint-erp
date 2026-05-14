@@ -12,6 +12,7 @@ import { formatMsgTime } from "./ChatUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { getChatApiBase } from "@/lib/apiBase";
 import { safeStorage } from '@/lib/safeStorage';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   rootMessage: ChatMessage;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function ThreadPanel({ rootMessage, onClose }: Props) {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const threadMessages = useChatStore((s) => s.threadMessages[rootMessage.id] ?? []);
   const setThreadMessages = useChatStore((s) => s.setThreadMessages);
@@ -77,7 +79,7 @@ export function ThreadPanel({ rootMessage, onClose }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 flex-shrink-0">
         <div>
-          <h3 className="text-sm font-semibold">Thread</h3>
+          <h3 className="text-sm font-semibold">{t("thread")}</h3>
           <p className="text-xs text-muted-foreground">{threadMessages.length} javob</p>
         </div>
         <button
@@ -135,7 +137,7 @@ export function ThreadPanel({ rootMessage, onClose }: Props) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Thread javob..."
+            placeholder={t("threadJavob")}
             rows={1}
             className="flex-1 resize-none rounded-lg border border-border/60 bg-muted/30 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary/40 max-h-[80px] overflow-y-auto"
             style={{ minHeight: "34px" }}

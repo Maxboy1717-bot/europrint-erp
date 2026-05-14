@@ -3,20 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import {
-Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Patch,
-  Put,
-  Query,
-  UseGuards,
-  UseInterceptors,
-  Logger,
-  InternalServerErrorException, UsePipes,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, InternalServerErrorException, Logger, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';

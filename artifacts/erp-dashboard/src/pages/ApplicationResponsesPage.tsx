@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Search } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface ApplicationResponse {
   id: string | number;
   application_id?: string | number;
@@ -51,6 +52,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 export default function ApplicationResponsesPage() {
+  const { t } = useTranslation("common");
   const [applicationId, setApplicationId] = useState("");
   const [searched, setSearched]           = useState("");
 
@@ -75,7 +77,7 @@ export default function ApplicationResponsesPage() {
   return (
     <ModulePage
       module="hr"
-      title="Ariza Javoblari"
+      title={t("arizaJavoblari")}
       icon={<MessageSquare className="h-5 w-5" />}
     >
       <div className="space-y-4">
@@ -83,7 +85,7 @@ export default function ApplicationResponsesPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Ariza ID..."
+              placeholder={t("arizaId")}
               value={applicationId}
               onChange={e => setApplicationId(e.target.value)}
               onKeyDown={e => e.key === "Enter" && setSearched(applicationId)}
@@ -92,11 +94,11 @@ export default function ApplicationResponsesPage() {
             />
           </div>
           <Button onClick={() => setSearched(applicationId)} data-testid="button-search">
-            Qidirish
+            {t("search")}
           </Button>
           {searched && (
             <Button variant="outline" onClick={() => { setSearched(""); setApplicationId(""); }}>
-              Tozalash
+              {t("tozalash")}
             </Button>
           )}
         </div>

@@ -25,9 +25,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
       status:        lead.getStatus(),
       contact_email: lead.getEmail?.() ?? undefined,
       contact_phone: lead.getPhone?.() ?? undefined,
-      contact_name:  lead.getFirstName && lead.getLastName
-                       ? `${lead.getFirstName()} ${lead.getLastName()}`.trim()
-                       : undefined,
+      contact_name:  `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
       source:        lead.getSource?.() ?? undefined,
       notes:         lead.getNotes?.() ?? undefined,
       manager_id:    lead.getAssignedTo?.() ?? undefined,
@@ -87,9 +85,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
       status:        lead.getStatus(),
       contact_email: lead.getEmail?.() ?? undefined,
       contact_phone: lead.getPhone?.() ?? undefined,
-      contact_name:  lead.getFirstName && lead.getLastName
-                       ? `${lead.getFirstName()} ${lead.getLastName()}`.trim()
-                       : undefined,
+      contact_name:  `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
       source:        lead.getSource?.() ?? undefined,
       notes:         lead.getNotes?.() ?? undefined,
       manager_id:    lead.getAssignedTo?.() ?? undefined,

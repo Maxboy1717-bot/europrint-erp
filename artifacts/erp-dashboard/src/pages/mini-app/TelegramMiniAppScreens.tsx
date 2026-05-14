@@ -10,6 +10,7 @@ import type {
 } from "./TelegramMiniAppTypes";
 import { PRIORITY_COLORS } from "./TelegramMiniAppTypes";
 import { AppLayout, StatusBadge, EmptyState } from "./TelegramMiniAppHelpers";
+import { useTranslation } from '@/lib/i18n';
 
 // Re-export action screens so callers only need one import path
 export { ApprovalDetailScreen, RequestScreen } from "./TelegramMiniAppActions";
@@ -46,13 +47,14 @@ export function HistoryScreen({
   historyItems,
   onBack,
 }: HistoryScreenProps) {
+  const { t } = useTranslation("common");
   const cardStyle = makeCardStyle(isDark);
 
   return (
     <AppLayout
       screen={screen}
       onBack={onBack}
-      title="Harakatlar tarixi"
+      title={t("harakatlarTarixi")}
       colors={colors}
       isDark={isDark}
       user={user}
@@ -123,7 +125,7 @@ export function ApprovalsScreen({
     <AppLayout
       screen={screen}
       onBack={onBack}
-      title="Kutilayotgan so'rovlar"
+      title={t("kutilayotganSorovlar")}
       colors={colors}
       isDark={isDark}
       user={user}

@@ -22,6 +22,7 @@ import { useTranslation } from "@/lib/i18n";
 // ---------------------------------------------------------------------------
 
 export function LearningTab({ tCommon, loadingCertificates, loadingProgress, certificatesData, courseProgress, skillGapData, loadingSkillGap, mentorshipData, loadingMentorship, }: LearningTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       {loadingCertificates || loadingProgress ? (
@@ -41,7 +42,7 @@ export function LearningTab({ tCommon, loadingCertificates, loadingProgress, cer
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Kurslar</p>
+                    <p className="text-sm text-muted-foreground">{t("kurslar")}</p>
                     <p className="text-3xl font-bold text-[var(--ep-blue)]">{courseProgress?.length || 0}</p>
                   </div>
                   <BookOpen className="h-8 w-8 text-[var(--ep-blue)]" />
@@ -53,7 +54,7 @@ export function LearningTab({ tCommon, loadingCertificates, loadingProgress, cer
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Sertifikatlar</p>
+                    <p className="text-sm text-muted-foreground">{t("sertifikatlar")}</p>
                     <p className="text-3xl font-bold text-[var(--ep-green)]">{certificatesData?.length || 0}</p>
                   </div>
                   <Award className="h-8 w-8 text-[var(--ep-green)]" />
@@ -65,7 +66,7 @@ export function LearningTab({ tCommon, loadingCertificates, loadingProgress, cer
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">O'rtacha ball</p>
+                    <p className="text-sm text-muted-foreground">{t("ortachaBall1")}</p>
                     <p className="text-3xl font-bold text-[var(--ep-purple)]">
                       {certificatesData && certificatesData.length > 0
                         ? Math.round(
@@ -87,9 +88,9 @@ export function LearningTab({ tCommon, loadingCertificates, loadingProgress, cer
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
-                  Kurs taraqqiyoti
+                  {t("kursTaraqqiyoti")}
                 </CardTitle>
-                <CardDescription>Davom etayotgan va tugatilgan kurslar</CardDescription>
+                <CardDescription>{t("davomEtayotganVaTugatilganKurslar")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -104,7 +105,7 @@ export function LearningTab({ tCommon, loadingCertificates, loadingProgress, cer
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-medium">{progress.course?.title || "Kurs"}</h4>
                             {progress.isCompleted ? (
-                              <EPStatusPill tone="success">Tugatildi</EPStatusPill>
+                              <EPStatusPill tone="success">{t("tugatildi")}</EPStatusPill>
                             ) : (
                               <Badge variant="outline">{progressPercent}%</Badge>
                             )}
@@ -132,21 +133,21 @@ export function LearningTab({ tCommon, loadingCertificates, loadingProgress, cer
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5" />
-                Sertifikatlar
+                {t("sertifikatlar")}
               </CardTitle>
-              <CardDescription>Olingan sertifikatlar va ularning holati</CardDescription>
+              <CardDescription>{t("olinganSertifikatlarVaUlarningHolati")}</CardDescription>
             </CardHeader>
             <CardContent>
               {certificatesData && certificatesData.length > 0 ? (
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Sertifikat nomi</TableHead>
-                      <TableHead>Beruvchi</TableHead>
-                      <TableHead>Berilgan sana</TableHead>
-                      <TableHead>Amal qilish</TableHead>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Ball</TableHead>
+                      <TableHead>{t("sertifikatNomi")}</TableHead>
+                      <TableHead>{t("beruvchi")}</TableHead>
+                      <TableHead>{t("berilganSana")}</TableHead>
+                      <TableHead>{t("amalQilish")}</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
+                      <TableHead>{t("ball")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -172,9 +173,9 @@ export function LearningTab({ tCommon, loadingCertificates, loadingProgress, cer
                           </TableCell>
                           <TableCell>
                             {isExpired ? (
-                              <EPStatusPill tone="danger">Muddati o'tgan</EPStatusPill>
+                              <EPStatusPill tone="danger">{t("muddatiOtgan")}</EPStatusPill>
                             ) : (
-                              <EPStatusPill tone="success">Amalda</EPStatusPill>
+                              <EPStatusPill tone="success">{t("amalda")}</EPStatusPill>
                             )}
                           </TableCell>
                           <TableCell>

@@ -17,8 +17,10 @@ import { translations } from "./EmployeeTrackingReportTypes";
 import { StatCards, ChartSection, formatDuration } from "./EmployeeTrackingReportSections";
 import { AttendanceTable } from "./EmployeeTrackingReportTable";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function EmployeeTrackingReport() {
+  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<Language>("uz");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
@@ -108,8 +110,8 @@ export default function EmployeeTrackingReport() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Xodimlar Kuzatuvi</b></>}
-        title="Xodimlar Kuzatuvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimlarKuzatuvi")}</b></>}
+        title={t("xodimlarKuzatuvi")}
         subtitle={t.subtitle}
       />
         </div>

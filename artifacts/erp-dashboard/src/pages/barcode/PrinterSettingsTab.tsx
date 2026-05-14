@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { translations } from "./barcode-types";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 type TranslationType = typeof translations.uz;
 
@@ -41,6 +42,7 @@ interface PrinterSettingsTabProps {
 }
 
 export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const [form, setForm] = useState({
@@ -184,8 +186,8 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ZPL">ZPL — Zebra ZPL II</SelectItem>
-                  <SelectItem value="EPL">EPL — Eltron EPL2</SelectItem>
+                  <SelectItem value="ZPL">{t("zplZebraZplIi")}</SelectItem>
+                  <SelectItem value="EPL">{t("eplEltronEpl2")}</SelectItem>
                   <SelectItem value="PDF">PDF</SelectItem>
                 </SelectContent>
               </Select>

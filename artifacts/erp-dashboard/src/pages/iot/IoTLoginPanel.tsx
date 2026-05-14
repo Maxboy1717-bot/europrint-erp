@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { User, Languages } from "lucide-react";
 import { IotLang } from "./iot-types";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface IoTLoginPanelProps {
   lang: IotLang;
@@ -22,6 +23,7 @@ interface IoTLoginPanelProps {
 }
 
 export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, workerPassword, setWorkerPassword, handleLogin }: IoTLoginPanelProps) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
 
   return (
@@ -32,8 +34,8 @@ export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, work
             <User className="h-10 w-10 text-primary" />
           </div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Operator Kirishi</b></>}
-        title="Operator Kirishi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("operatorKirishi")}</b></>}
+        title={t("operatorKirishi")}
         subtitle={t("Tabel raqami va parol bilan kiring", "Войдите с табельным номером и паролем")}
       />
         </CardHeader>

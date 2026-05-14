@@ -15,6 +15,7 @@ import {
 import { BookOpen, Search, ChevronRight, ChevronDown } from "lucide-react";
 import { safeArray } from "@/lib/queryClient";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface GLAccount {
   id?: string | number;
@@ -78,6 +79,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function GLChartOfAccounts() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(["asset", "liability", "equity", "revenue", "expense"])
@@ -121,7 +123,7 @@ export default function GLChartOfAccounts() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BookOpen className="h-5 w-5 text-primary" />
-          <h1 className="font-semibold text-base">GL Hisoblar Jadvali</h1>
+          <h1 className="font-semibold text-base">{t("glHisoblarJadvali")}</h1>
           <EPStatusPill tone="neutral">{accounts.length} hisob</EPStatusPill>
         </div>
         <div className="flex gap-2">
@@ -129,7 +131,7 @@ export default function GLChartOfAccounts() {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               className="pl-8 h-9 text-sm"
-              placeholder="Kod yoki nom..."
+              placeholder={t("kodYokiNom")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               data-testid="input-gl-search"
@@ -144,7 +146,7 @@ export default function GLChartOfAccounts() {
               )
             }
           >
-            Barchasini yoy
+            {t("barchasiniYoy")}
           </Button>
         </div>
       </div>
@@ -182,10 +184,10 @@ export default function GLChartOfAccounts() {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead className="w-20">Kod</TableHead>
+                      <TableHead className="w-20">{t("code")}</TableHead>
                       <TableHead>Nomi (UZ)</TableHead>
                       <TableHead>Nomi (RU)</TableHead>
-                      <TableHead>Tur</TableHead>
+                      <TableHead>{t("tur")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

@@ -21,9 +21,11 @@ interface KpiSnapshot {
   overdueDebt:          number;
   absentToday:          number;
   ccInboxOverdue:       number;
+  ordersDelayed:        number;
+  ordersDelayedAmount:  number;
 }
 
-interface DailyBriefing {
+export interface DailyBriefing {
   date:    string;
   kpi:     KpiSnapshot;
   alerts:  Array<{ severity: string; title: string; message: string }>;
@@ -98,6 +100,8 @@ export class DirectorAgentService {
       overdueDebt:          Number(debtR.rows[0]?.amt ?? 0),
       absentToday:          Number(absR.rows[0]?.c ?? 0),
       ccInboxOverdue:       Number(ccR.rows[0]?.c ?? 0),
+      ordersDelayed:        Number(dealsR.rows[0]?.c ?? 0),
+      ordersDelayedAmount:  Number(dealsR.rows[0]?.amt ?? 0),
     };
   }
 

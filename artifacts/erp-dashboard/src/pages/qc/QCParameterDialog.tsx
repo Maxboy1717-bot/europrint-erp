@@ -67,6 +67,7 @@ interface QCParameterDialogProps {
 }
 
 export function QCParameterDialog({ open, onClose, category, editingParameter }: QCParameterDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { showUndoToast } = useUndoDelete();
   const { t: tCommon } = useTranslation('common');
@@ -247,7 +248,7 @@ export function QCParameterDialog({ open, onClose, category, editingParameter }:
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"

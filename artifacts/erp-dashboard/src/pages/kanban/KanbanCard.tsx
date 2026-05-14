@@ -11,6 +11,7 @@ import {
   getDeadlineCategory, formatDeadlineUzbek,
 } from "./kanban-types";
 import { getProp } from "./kanban-utils";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Priority config ────────────────────────────────────────────────────────
 const PRIORITY: Record<string, { accent: string; label: string; labelColor: string; labelBg: string }> = {
@@ -174,7 +175,7 @@ export function SortableTaskCard({
             </span>
             <div className="flex items-center gap-1.5">
               {hasActiveTimer && (
-                <span title="Vaqt kuzatilmoqda" style={{ color: "#10B981", display: "flex", alignItems: "center" }}>
+                <span title={t("vaqtKuzatilmoqda")} style={{ color: "#10B981", display: "flex", alignItems: "center" }}>
                   <Clock style={{ width: 10, height: 10 }} />
                 </span>
               )}
@@ -300,7 +301,7 @@ export function SortableTaskCard({
               <div
                 className="flex items-center gap-1 shrink-0"
                 style={{ color: "#CBD5E1", fontSize: 10 }}
-                title="Tayinlanmagan"
+                title={t("tayinlanmagan")}
               >
                 <User style={{ width: 12, height: 12 }} />
               </div>
@@ -316,6 +317,7 @@ export function SortableTaskCard({
 // Drag overlay
 // ─────────────────────────────────────────────────────────────────────────────
 export function CardOverlay({ card }: { card: CardWithOwner }) {
+  const { t } = useTranslation("common");
   const p = PRIORITY[(card.priority ?? "normal")] ?? PRIORITY.normal;
   return (
     <div style={{

@@ -136,7 +136,7 @@ export default function ImpositionCalculator() {
                   />
                   <div className="flex gap-1">
                     <Input
-                      className="h-7 text-xs w-10" placeholder="Qty"
+                      className="h-7 text-xs w-10" placeholder={t("qty1")}
                       value={p.quantity} onChange={e => updateRow(i, "quantity", e.target.value)}
                     />
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => removeRow(i)}>

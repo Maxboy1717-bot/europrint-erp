@@ -72,19 +72,19 @@ export default function AIAgentsPage() {
           <p className="text-xs text-muted-foreground mb-3">{agent.description}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
             <div>
-              <span className="text-muted-foreground">Modul:</span>
+              <span className="text-muted-foreground">{t("modul")}</span>
               <span className="ml-1 font-medium">{agent.module}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Muvaffaqiyat:</span>
+              <span className="text-muted-foreground">{t("muvaffaqiyat")}</span>
               <span className="ml-1 font-medium text-[var(--ep-green)]">{agent.successCount}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Xatolar:</span>
+              <span className="text-muted-foreground">{t("xatolar")}</span>
               <span className="ml-1 font-medium text-[var(--ep-red)]">{agent.errorCount}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Oxirgi:</span>
+              <span className="text-muted-foreground">{t("oxirgi")}</span>
               <span className="ml-1 font-medium">{agent.lastRunAt ? new Date(agent.lastRunAt).toLocaleString() : "—"}</span>
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function AIAgentsPage() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('agents.title', 'AI Agentlar')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('agents.title', 'AI Agentlar')}</b></>}
         title={t('agents.title', 'AI Agentlar')}
         subtitle={t('agents.description', '6 ta AI agent: planning, sales-copilot, prepress, mes-monitor, supplier-rating, fraud-detect')}
       />

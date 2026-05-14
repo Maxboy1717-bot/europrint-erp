@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileText } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   type HrDocument,
   STATUS_CONFIG, DOC_TYPE_LABELS,
@@ -17,26 +18,27 @@ interface HRDocsSectionProps {
 }
 
 export function HRDocsSection({ hrDocsArr }: HRDocsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-[var(--ep-purple)]" />
-          Hujjatlar oqimi
+          {t("hujjatlarOqimi")}
         </CardTitle>
-        <CardDescription>Xodim tomonidan yaratilgan barcha hujjatlar</CardDescription>
+        <CardDescription>{t("xodimTomonidanYaratilganBarchaHujjatlar")}</CardDescription>
       </CardHeader>
       <CardContent>
         {hrDocsArr.length > 0 ? (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Hujjat №</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>Sarlavha</TableHead>
-                <TableHead>Sana</TableHead>
-                <TableHead>Tasdiqlash</TableHead>
-                <TableHead>Holati</TableHead>
+                <TableHead>{t("hujjat1")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("progress.title")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("verify")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,9 +79,9 @@ export function HRDocsSection({ hrDocsArr }: HRDocsSectionProps) {
         ) : (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <FileText className="h-10 w-10 mb-3 opacity-20" />
-            <p className="text-sm">Hujjatlar topilmadi</p>
+            <p className="text-sm">{t("hujjatlarTopilmadi")}</p>
             <p className="text-xs opacity-60 mt-1">
-              Hujjatlar oqimi orqali yaratilgan hujjatlar yo'q
+              {t("hujjatlarOqimiOrqaliYaratilganHujjatlar")}
             </p>
           </div>
         )}

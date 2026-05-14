@@ -53,11 +53,11 @@ export function TemplatesTable({applications,
       <div className="ep-table-scroll"><Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Ariza nomi</TableHead>
-            <TableHead>Savollar soni</TableHead>
+            <TableHead>{t("arizaNomi")}</TableHead>
+            <TableHead>{t("savollarSoni")}</TableHead>
             <TableHead>{t('status6')}</TableHead>
-            <TableHead>Yaratilgan sana</TableHead>
-            <TableHead className="text-right">Amallar</TableHead>
+            <TableHead>{t("createdAt")}</TableHead>
+            <TableHead className="text-right">{t("Amallar")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -75,8 +75,8 @@ export function TemplatesTable({applications,
               </TableCell>
               <TableCell className="text-right">
                 <DeleteConfirmDialog
-                  title="Arizani o'chirishni tasdiqlaysizmi?"
-                  description="Ariza va unga bog'liq barcha ma'lumotlar o'chiriladi."
+                  title={t("arizaniOchirishniTasdiqlaysizmi")}
+                  description={t("arizaVaUngaBogliqBarcha")}
                   onConfirm={() => onDelete(app.id)}
                   isPending={isDeletePending}
                 />
@@ -101,22 +101,22 @@ interface ResponsesTableProps {
 export function ResponsesTable({ responses, applications, isLoading, onReview, }: ResponsesTableProps) {
   const { t } = useTranslation('common');
   if (isLoading) {
-    return <p className="text-muted-foreground">Yuklanmoqda...</p>;
+    return <p className="text-muted-foreground">{t("Yuklanmoqda...")}</p>;
   }
 
   if (responses.length === 0) {
-    return <p className="text-muted-foreground">Hozircha ariza yo'q</p>;
+    return <p className="text-muted-foreground">{t("hozirchaArizaYoq")}</p>;
   }
 
   return (
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Xodim ID</TableHead>
-          <TableHead>Ariza</TableHead>
+          <TableHead>{t("xodimId")}</TableHead>
+          <TableHead>{t("ariza")}</TableHead>
           <TableHead>{t('status5')}</TableHead>
-          <TableHead>Yuborilgan sana</TableHead>
-          <TableHead className="text-right">Amallar</TableHead>
+          <TableHead>{t("yuborilganSana")}</TableHead>
+          <TableHead className="text-right">{t("Amallar")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

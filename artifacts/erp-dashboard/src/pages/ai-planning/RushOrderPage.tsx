@@ -98,10 +98,10 @@ export default function RushOrderPage() {
                     <span className="text-sm text-muted-foreground">— {r.customerName}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                    <span>Talab: <strong>{r.requestedDate}</strong></span>
-                    <span>Standart: <strong>{r.standardLeadDays} kun</strong></span>
-                    <span>Tezkor: <strong>{r.rushLeadDays} kun</strong></span>
-                    <span>Surcharge: <strong>+{r.rushSurchargePct}%</strong></span>
+                    <span>{t("talab")}<strong>{r.requestedDate}</strong></span>
+                    <span>{t("standart1")}<strong>{r.standardLeadDays} kun</strong></span>
+                    <span>{t("tezkor")}<strong>{r.rushLeadDays} kun</strong></span>
+                    <span>{t("surcharge")}<strong>+{r.rushSurchargePct}%</strong></span>
                   </div>
                   <Badge variant="outline" className={
                     `mt-2 text-xs ${

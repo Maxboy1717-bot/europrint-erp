@@ -82,8 +82,8 @@ export default function LMSDashboard() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between mb-6">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">O'quv Markazi</b></>}
-        title="O'quv Markazi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("oquvMarkazi")}</b></>}
+        title={t("oquvMarkazi")}
       />
         <div className="flex items-center gap-2">
           {(["uz", "ru"] as const).map(lang => (
@@ -200,13 +200,13 @@ export default function LMSDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
             <Card className="bg-card border-border shadow-none">
               <CardContent className="pt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Yakunlangan kurslar</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("yakunlanganKurslar")}</p>
                 <p className="text-3xl font-bold text-foreground">{myProgress?.completedCourses ?? 0} / {myProgress?.totalCourses ?? 0}</p>
               </CardContent>
             </Card>
             <Card className="bg-card border-border shadow-none">
               <CardContent className="pt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">O'rtacha ball</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("ortachaBall1")}</p>
                 <p className="text-3xl font-bold text-primary">{myProgress?.averageScore ?? 0}%</p>
               </CardContent>
             </Card>
@@ -218,7 +218,7 @@ export default function LMSDashboard() {
             </Card>
           </div>
           <Card className="bg-card border-border shadow-none">
-            <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" />Mavjud imtihonlar</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" />{t("mavjudImtihonlar")}</CardTitle></CardHeader>
             <CardContent>
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
@@ -230,7 +230,7 @@ export default function LMSDashboard() {
                 </TableHeader>
                 <TableBody>
                   {!Array.isArray(lmsExams) || lmsExams.length === 0
-                    ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Imtihonlar mavjud emas</TableCell></TableRow>
+                    ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("imtihonlarMavjudEmas")}</TableCell></TableRow>
                     : (Array.isArray(lmsExams) ? lmsExams : []).map((exam, idx) => (
                       <TableRow key={exam.id} data-testid={`row-exam-${exam.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium">{idx + 1}</TableCell>

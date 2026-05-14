@@ -36,8 +36,10 @@ import { EmployeeTabContent } from "./camera-heatmap-employee";
 import { ZoneTabContent }     from "./camera-heatmap-zone";
 import { apiRequest } from '@/lib/queryClient';
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function CameraHeatmap() {
+  const { t } = useTranslation("common");
   const { isAuthenticated } = useAuth();
 
   const [language, setLanguage]                         = useState<Language>("uz");
@@ -140,8 +142,8 @@ export default function CameraHeatmap() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Issiqlik Xaritasi</b></>}
-        title="Issiqlik Xaritasi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("issiqlikXaritasi")}</b></>}
+        title={t("issiqlikXaritasi")}
         subtitle={t.subtitle}
       />
         </div>

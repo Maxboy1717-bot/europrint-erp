@@ -7,12 +7,12 @@ import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
 import { qcBraks, qcReclamations } from '@europrint/schemas';
-import { eq, isNull, count, desc, sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IDefectsRepository, BrakRow, ReclamationRow } from './i-defects.repo';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

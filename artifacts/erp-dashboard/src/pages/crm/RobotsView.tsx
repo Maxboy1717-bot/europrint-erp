@@ -26,8 +26,10 @@ import { robotFormSchema, DEFAULT_ROBOT_FORM } from "./RobotsViewTypes";
 import { RobotCard } from "./RobotsViewSections";
 import { RobotFormDialog } from "./RobotsViewDialog";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function RobotsView({ robots, isLoading }: RobotsViewProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingRobot, setEditingRobot] = useState<Robot | null>(null);
@@ -133,21 +135,21 @@ export function RobotsView({ robots, isLoading }: RobotsViewProps) {
         <div className="flex items-center gap-2">
           <Select value={entityFilter} onValueChange={setEntityFilter}>
             <SelectTrigger className="w-40 h-9" data-testid="select-entity-filter">
-              <SelectValue placeholder="Barchasi" />
+              <SelectValue placeholder={t("Barchasi")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              <SelectItem value="leads">Lidlar</SelectItem>
-              <SelectItem value="deals">Bitimlar</SelectItem>
-              <SelectItem value="contacts">Kontaktlar</SelectItem>
-              <SelectItem value="companies">Kompaniyalar</SelectItem>
+              <SelectItem value="all">{t("Barchasi")}</SelectItem>
+              <SelectItem value="leads">{t("lidlar")}</SelectItem>
+              <SelectItem value="deals">{t("bitimlar")}</SelectItem>
+              <SelectItem value="contacts">{t("kontaktlar")}</SelectItem>
+              <SelectItem value="companies">{t("kompaniyalar")}</SelectItem>
             </SelectContent>
           </Select>
           <EPStatusPill tone="neutral">{filteredRobots.length} ta robot</EPStatusPill>
         </div>
         <Button onClick={() => setShowCreateModal(true)} data-testid="button-new-robot">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi robot
+          {t("yangiRobot")}
         </Button>
       </div>
 
@@ -155,15 +157,15 @@ export function RobotsView({ robots, isLoading }: RobotsViewProps) {
         {filteredRobots.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Bot className="h-12 w-12 mb-4 opacity-50" />
-            <p className="font-medium">Robotlar topilmadi</p>
-            <p className="text-sm">Avtomatlashtirish qoidalarini bu yerda boshqaring</p>
+            <p className="font-medium">{t("robotlarTopilmadi")}</p>
+            <p className="text-sm">{t("avtomatlashtirishQoidalariniBuYerdaBoshqaring")}</p>
             <Button
               onClick={() => setShowCreateModal(true)}
               className="mt-4"
               data-testid="button-create-first-robot"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Birinchi robotni yaratish
+              {t("birinchiRobotniYaratish")}
             </Button>
           </div>
         ) : (
@@ -191,8 +193,8 @@ export function RobotsView({ robots, isLoading }: RobotsViewProps) {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Robotni o'chirish"
-        description="Ushbu CRM robotni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("robotniOchirish")}
+        description={t("ushbuCrmRobotniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => {

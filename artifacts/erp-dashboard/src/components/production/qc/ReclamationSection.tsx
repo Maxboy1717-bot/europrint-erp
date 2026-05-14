@@ -30,8 +30,10 @@ const ReclamationSchema = z.object({
 });
 type ReclamationData = z.infer<typeof ReclamationSchema>;
 import { QCReclamation } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function ReclamationSection() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showRecDialog, setShowRecDialog] = useState(false);
   const [searchQ, setSearchQ] = useState("");
@@ -53,11 +55,11 @@ export function ReclamationSection() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Mijoz Reklamatsiyalari</h2>
-          <p className="text-sm text-muted-foreground">Mijozlardan kelgan shikoyatlarni boshqarish</p>
+          <h2 className="text-lg font-semibold">{t("mijozReklamatsiyalari")}</h2>
+          <p className="text-sm text-muted-foreground">{t("mijozlardanKelganShikoyatlarniBoshqarish")}</p>
         </div>
         <Button onClick={() => setShowRecDialog(true)} data-testid="button-add-complaint">
-          <Plus className="h-4 w-4 mr-2" />Reklamatsiya Yaratish
+          <Plus className="h-4 w-4 mr-2" />{t("reklamatsiyaYaratish")}
         </Button>
       </div>
 
@@ -79,25 +81,25 @@ export function ReclamationSection() {
         <CardHeader className="pb-3">
           <div className="relative max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Mijoz yoki muammo bo'yicha qidirish..." className="pl-8" value={searchQ} onChange={e => setSearchQ(e.target.value)} data-testid="input-complaint-search" />
+            <Input placeholder={t("mijozYokiMuammoBoyichaQidirish")} className="pl-8" value={searchQ} onChange={e => setSearchQ(e.target.value)} data-testid="input-complaint-search" />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Mijoz</TableHead>
-              <TableHead>Muammo turi</TableHead>
-              <TableHead>Daraja</TableHead>
-              <TableHead>Holati</TableHead>
-              <TableHead>Muddat</TableHead>
-              <TableHead>Sana</TableHead>
+              <TableHead>{t("mijoz1")}</TableHead>
+              <TableHead>{t("muammoTuri")}</TableHead>
+              <TableHead>{t("daraja")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
+              <TableHead>{t("muddat")}</TableHead>
+              <TableHead>{t("date")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {rLoad ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : recList.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />Reklamatsiyalar topilmadi
+                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("reklamatsiyalarTopilmadi")}
                 </TableCell></TableRow>
               ) : (Array.isArray(recList) ? recList : []).filter((r: QCReclamation) => !searchQ || r.clientName?.toLowerCase().includes(searchQ.toLowerCase()) || r.issue?.toLowerCase().includes(searchQ.toLowerCase())).map((r: QCReclamation) => (
                 <TableRow key={r.id} data-testid={`row-complaint-${r.id}`} className="hover:bg-muted/40 transition-colors">
@@ -118,23 +120,23 @@ export function ReclamationSection() {
 
       <Dialog open={showRecDialog} onOpenChange={setShowRecDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Reklamatsiya</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiReklamatsiya")}</DialogTitle></DialogHeader>
           <form onSubmit={recForm.handleSubmit(d => createRec.mutate(d))} className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Mijoz nomi</Label>
-              <Input {...recForm.register("clientName")} placeholder="MChJ EuroInvest..." data-testid="input-complaint-client" />
+              <Label>{t("mijozNomi")}</Label>
+              <Input {...recForm.register("clientName")} placeholder={t("mchjEuroinvest")} data-testid="input-complaint-client" />
               {recForm.formState.errors.clientName && <p className="text-xs text-destructive">{recForm.formState.errors.clientName.message}</p>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Muammo turi</Label>
+                <Label>{t("muammoTuri")}</Label>
                 <Select onValueChange={v => recForm.setValue("issueType", v)} defaultValue="other">
                   <SelectTrigger data-testid="select-complaint-type" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="quality">Sifat nuqsoni</SelectItem>
-                    <SelectItem value="quantity">Kamomad</SelectItem>
-                    <SelectItem value="delivery">Yetkazib berish kechikishi</SelectItem>
-                    <SelectItem value="other">Boshqa</SelectItem>
+                    <SelectItem value="quality">{t("sifatNuqsoni")}</SelectItem>
+                    <SelectItem value="quantity">{t("kamomad")}</SelectItem>
+                    <SelectItem value="delivery">{t("yetkazibBerishKechikishi")}</SelectItem>
+                    <SelectItem value="other">{t("boshqa")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -144,12 +146,12 @@ export function ReclamationSection() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Batafsil tavsifi</Label>
-              <Textarea {...recForm.register("description")} placeholder="Muammo tafsilotlarini yozing..." data-testid="input-complaint-desc" />
+              <Label>{t("batafsilTavsifi")}</Label>
+              <Textarea {...recForm.register("description")} placeholder={t("muammoTafsilotlariniYozing")} data-testid="input-complaint-desc" />
               {recForm.formState.errors.description && <p className="text-xs text-destructive">{recForm.formState.errors.description.message}</p>}
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowRecDialog(false)}>Bekor</Button>
+              <Button type="button" variant="outline" onClick={() => setShowRecDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createRec.isPending} data-testid="button-save-complaint">
                 {createRec.isPending ? "Yuborilmoqda..." : "Yaratish"}
               </Button>

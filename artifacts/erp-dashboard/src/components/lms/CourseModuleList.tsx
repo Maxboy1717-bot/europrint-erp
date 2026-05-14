@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Plus, Trash2, GripVertical, Video, FileText } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   Accordion,
   AccordionContent,
@@ -51,27 +52,28 @@ export function CourseModuleList({
   onDeleteModule,
   onDeleteLesson,
 }: CourseModuleListProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
         <div>
-          <CardTitle>Modullar va Darslar</CardTitle>
-          <CardDescription>Kurs tarkibini boshqaring</CardDescription>
+          <CardTitle>{t("modullarVaDarslar")}</CardTitle>
+          <CardDescription>{t("kursTarkibiniBoshqaring")}</CardDescription>
         </div>
         <Button onClick={onAddModule} data-testid="button-add-module">
           <Plus className="w-4 h-4 mr-2" />
-          Modul qo'shish
+          {t("modulQoshish")}
         </Button>
       </CardHeader>
       <CardContent>
         {modules.length === 0 ? (
           <div className="text-center py-12">
             <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Modullar mavjud emas</h3>
-            <p className="text-muted-foreground mb-4">Kursga birinchi modulni qo'shing</p>
+            <h3 className="text-lg font-medium mb-2">{t("modullarMavjudEmas")}</h3>
+            <p className="text-muted-foreground mb-4">{t("kursgaBirinchiModulniQoshing")}</p>
             <Button onClick={onAddModule}>
               <Plus className="w-4 h-4 mr-2" />
-              Modul qo'shish
+              {t("modulQoshish")}
             </Button>
           </div>
         ) : (
@@ -98,7 +100,7 @@ export function CourseModuleList({
                           data-testid={`button-add-lesson-${module.id}`}
                         >
                           <Plus className="w-3 h-3 mr-1" />
-                          Dars qo'shish
+                          {t("darsQoshish")}
                         </Button>
                         <Button
                           size="sm"
@@ -145,7 +147,7 @@ export function CourseModuleList({
                       </div>
                     ) : (
                       <div className="text-center py-8 border rounded-md bg-muted/30">
-                        <p className="text-sm text-muted-foreground">Bu modulda hali darslar yo'q</p>
+                        <p className="text-sm text-muted-foreground">{t("buModuldaHaliDarslarYoq")}</p>
                       </div>
                     )}
                   </div>

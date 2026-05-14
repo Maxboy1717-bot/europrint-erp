@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { warehouseIcons, warehouseColors } from "@/components/wms/hub/helpers";
 import type { WarehouseRow } from "@/hooks/useWarehousePosSync";
+import { useTranslation } from "@/lib/i18n";
 
 import { EPLoader } from "@/components/ep";
 // ─── 12 qatlam ta'rifi ─────────────────────────────────────────────────────
@@ -217,6 +218,7 @@ export function getTypeConfig(code: string): WarehouseTypeConfig {
 
 // ─── Ombor grid'idagi har bir karta ────────────────────────────────────────
 export function WarehouseGridCard({ wh, onOpen }: { wh: WarehouseRow; onOpen: () => void }) {
+  const { t } = useTranslation("warehouse");
   const cfg = getTypeConfig(wh.code);
   const Icon = warehouseIcons[wh.code] ?? Boxes;
   const gradient = warehouseColors[wh.code] ?? "";
@@ -231,20 +233,20 @@ export function WarehouseGridCard({ wh, onOpen }: { wh: WarehouseRow; onOpen: ()
         <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${gradient} text-white`}>
           <Icon className="h-6 w-6" />
         </div>
-        <Badge className={`${cfg.accentColor} text-white text-[10px]`}>{cfg.typeBadge}</Badge>
+        <Badge className={`${cfg.accentColor} text-white text-[10px]`}>{t(cfg.typeBadge)}</Badge>
       </div>
       <div className="mt-3">
         <div className="font-bold text-foreground">{wh.name}</div>
         <div className="text-xs text-muted-foreground mt-0.5">{wh.code}</div>
       </div>
-      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{cfg.description}</p>
+      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{t(cfg.description)}</p>
       <div className="mt-3 flex flex-wrap gap-1">
         {cfg.specialFeatures.slice(0, 2).map(f => (
-          <span key={f} className="text-[10px] bg-muted/60 px-1.5 py-0.5 rounded-full text-muted-foreground">{f}</span>
+          <span key={f} className="text-[10px] bg-muted/60 px-1.5 py-0.5 rounded-full text-muted-foreground">{t(f)}</span>
         ))}
       </div>
       <div className="mt-3 text-xs text-primary group-hover:underline font-medium">
-        Ochish ({cfg.featuredTabs.length} ustuvor qatlam) &rarr;
+        {t("hub.openWithLayers", { n: String(cfg.featuredTabs.length) })} &rarr;
       </div>
     </button>
   );
@@ -263,6 +265,7 @@ interface WarehouseHeaderProps {
 export function WarehouseHub12Header({
   activeWarehouse, cfg, kpis, isSyncing, onNavigate, onSyncToPos,
 }: WarehouseHeaderProps) {
+  const { t } = useTranslation("warehouse");
   const Icon = warehouseIcons[activeWarehouse.code] ?? Boxes;
   const gradient = warehouseColors[activeWarehouse.code] ?? "";
 
@@ -287,23 +290,23 @@ export function WarehouseHub12Header({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold text-foreground">{activeWarehouse.name}</h1>
-            <Badge className={`${cfg.accentColor} text-white`}>{cfg.typeBadge}</Badge>
+            <Badge className={`${cfg.accentColor} text-white`}>{t(cfg.typeBadge)}</Badge>
           </div>
           <div className="text-xs text-muted-foreground mt-0.5">
             {activeWarehouse.code} · {activeWarehouse.type}
             {activeWarehouse.address && ` · ${activeWarehouse.address}`}
           </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{cfg.description}</p>
+          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{t(cfg.description)}</p>
         </div>
         <div className="flex gap-2 shrink-0">
           <Button onClick={() => onNavigate(`/wms/kirim-new?warehouseId=${activeWarehouse.id}`)}
             className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white" data-testid="button-yangi-kirim">
-            <Truck className="h-4 w-4 mr-2" />Yangi Kirim
+            <Truck className="h-4 w-4 mr-2" />{t("hub.newReceipt")}
           </Button>
           <Button onClick={() => onSyncToPos(activeWarehouse.id)} disabled={isSyncing}
             variant="outline" data-testid="button-sync-pos-header">
             {isSyncing ? <EPLoader className="mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            POS Sync
+            {t("hub.posSync")}
           </Button>
         </div>
       </div>
@@ -312,7 +315,7 @@ export function WarehouseHub12Header({
       <div className="flex flex-wrap gap-1.5 mb-4 ml-[4.5rem]">
         {cfg.specialFeatures.map(f => (
           <span key={f} className="text-[11px] bg-muted/60 px-2 py-0.5 rounded-full text-muted-foreground border border-border">
-            {f}
+            {t(f)}
           </span>
         ))}
       </div>
@@ -326,7 +329,7 @@ export function WarehouseHub12Header({
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <KpiIcon className={`h-4 w-4 ${cfg.kpiColors[i]}`} />
-                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="text-xs text-muted-foreground">{t(label)}</p>
                 </div>
                 <p className={`text-2xl font-bold ${i === 1 && kpis.lowStock > 0 ? "text-[var(--ep-primary)]" : i === 2 && kpis.outOfStock > 0 ? "text-[var(--ep-red)]" : ""}`}>
                   {kpiValues[i]}

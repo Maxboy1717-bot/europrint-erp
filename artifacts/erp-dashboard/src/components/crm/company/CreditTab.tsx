@@ -81,7 +81,7 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
         <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] mt-0.5 shrink-0" />
           <div className="text-sm">
-            <div className="font-medium text-[var(--ep-yellow)]">Tasdiqlash kutilmoqda</div>
+            <div className="font-medium text-[var(--ep-yellow)]">{t("tasdiqlashKutilmoqda")}</div>
             <div className="text-[var(--ep-yellow)] text-xs mt-1">
               {formatAmount(pendingApproval.currentLimit)} → {formatAmount(pendingApproval.requestedLimit)} UZS (+{pendingApproval.increasePercent}%) — Director tasdiqlashi kerak
             </div>
@@ -93,25 +93,25 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="p-3 rounded-lg border">
-              <div className="text-xs text-muted-foreground mb-1">Kredit limiti</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("kreditLimiti")}</div>
               <div className="font-semibold text-sm" data-testid="text-credit-limit">
                 {formatAmount(creditData.creditLimit)} UZS
               </div>
             </div>
             <div className="p-3 rounded-lg border">
-              <div className="text-xs text-muted-foreground mb-1">Mavjud kredit</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("mavjudKredit")}</div>
               <div className="font-semibold text-sm text-[var(--ep-green)]" data-testid="text-available-credit">
                 {formatAmount(creditData.availableCredit)} UZS
               </div>
             </div>
             <div className="p-3 rounded-lg border">
-              <div className="text-xs text-muted-foreground mb-1">Joriy qarz</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("joriyQarz")}</div>
               <div className={`font-semibold text-sm ${parseFloat(creditData.currentBalance) > 0 ? 'text-[var(--ep-primary)]' : ''}`} data-testid="text-current-balance">
                 {formatAmount(creditData.currentBalance)} UZS
               </div>
             </div>
             <div className="p-3 rounded-lg border">
-              <div className="text-xs text-muted-foreground mb-1">To'lov muddati</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("tolovMuddati")}</div>
               <div className="font-semibold text-sm">{creditData.paymentTermsDays} kun</div>
             </div>
           </div>
@@ -124,7 +124,7 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
               </Badge>
             </div>
             {creditData.blockedForCredit && (
-              <Badge variant="destructive">Bloklangan</Badge>
+              <Badge variant="destructive">{t("bloklangan")}</Badge>
             )}
           </div>
 
@@ -135,14 +135,14 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
             data-testid="button-edit-credit"
           >
             <CreditCard className="h-4 w-4 mr-2" />
-            Kredit limitini o'zgartirish
+            {t("kreditLimitiniOzgartirish")}
           </Button>
         </div>
       ) : (
         <div className="space-y-3">
           <div className="text-center text-muted-foreground py-4">
             <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Kredit limiti belgilanmagan</p>
+            <p className="text-sm">{t("kreditLimitiBelgilanmagan")}</p>
           </div>
           <Button
             variant="outline"
@@ -152,7 +152,7 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
             data-testid="button-set-credit"
           >
             <CreditCard className="h-4 w-4 mr-2" />
-            Kredit limitini belgilash
+            {t("kreditLimitiniBelgilash")}
           </Button>
         </div>
       )}
@@ -161,12 +161,12 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
       <Dialog open={showCreditDialog} onOpenChange={setShowCreditDialog}>
         <DialogContent data-testid="dialog-credit-limit" className="p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Kredit limitini o'zgartirish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("kreditLimitiniOzgartirish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {creditData && (
               <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <span>Joriy limit:</span>
+                <span>{t("joriyLimit")}</span>
                 <span className="font-medium text-foreground">{formatAmount(creditData.creditLimit)} UZS</span>
               </div>
             )}
@@ -197,18 +197,18 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
               )}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Izoh</label>
+              <label className="text-sm font-medium">{t("Izoh")}</label>
               <Input
                 value={creditNotes}
                 onChange={(e) => setCreditNotes(e.target.value)}
-                placeholder="O'zgartirish sababi"
+                placeholder={t("ozgartirishSababi")}
                 data-testid="input-credit-notes"
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreditDialog(false)}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={handleCreditLimitSave}

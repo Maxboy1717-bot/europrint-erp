@@ -34,6 +34,7 @@ import { ProposalsInvoicesSection } from "./DetailSheetProposals";
 import { Customer360Section } from "./DetailSheetCustomer360";
 import { HistoryTab, AITab } from "./DetailSheetTabs";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function DetailSheet({
   entityId,
@@ -42,6 +43,7 @@ export function DetailSheet({
   onClose,
   stages,
 }: DetailSheetProps) {
+  const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState("umumiy");
   const { toast } = useToast();
 
@@ -209,7 +211,7 @@ export function DetailSheet({
                   className="text-xs data-[state=active]:bg-blue-500 data-[state=active]:text-white"
                   data-testid="tab-detail-general"
                 >
-                  <FileText className="h-3.5 w-3.5 mr-1" />Umumiy
+                  <FileText className="h-3.5 w-3.5 mr-1" />{t("umumiy")}
                 </TabsTrigger>
                 {entityType === "deals" && (
                   <TabsTrigger
@@ -217,7 +219,7 @@ export function DetailSheet({
                     className="text-xs data-[state=active]:bg-blue-500 data-[state=active]:text-white"
                     data-testid="tab-detail-products"
                   >
-                    <Package className="h-3.5 w-3.5 mr-1" />Takliflar
+                    <Package className="h-3.5 w-3.5 mr-1" />{t("takliflar")}
                   </TabsTrigger>
                 )}
                 {(entityType === "contacts" || entityType === "companies") && (
@@ -226,7 +228,7 @@ export function DetailSheet({
                     className="text-xs data-[state=active]:bg-purple-500 data-[state=active]:text-white"
                     data-testid="tab-detail-360"
                   >
-                    <TrendingUp className="h-3.5 w-3.5 mr-1" />Mijoz 360°
+                    <TrendingUp className="h-3.5 w-3.5 mr-1" />{t("mijoz360")}
                   </TabsTrigger>
                 )}
                 <TabsTrigger
@@ -234,14 +236,14 @@ export function DetailSheet({
                   className="text-xs data-[state=active]:bg-blue-500 data-[state=active]:text-white"
                   data-testid="tab-detail-history"
                 >
-                  <History className="h-3.5 w-3.5 mr-1" />Tarix
+                  <History className="h-3.5 w-3.5 mr-1" />{t("tarix")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="ai"
                   className="text-xs data-[state=active]:bg-violet-500 data-[state=active]:text-white"
                   data-testid="tab-detail-ai"
                 >
-                  <Sparkles className="h-3.5 w-3.5 mr-1" />AI Tahlil
+                  <Sparkles className="h-3.5 w-3.5 mr-1" />{t("aiTahlil")}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -288,7 +290,7 @@ export function DetailSheet({
           </Tabs>
 
           <div className="border-t p-4 flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose}>Yopish</Button>
+            <Button variant="outline" onClick={onClose}>{t("close2")}</Button>
           </div>
         </div>
       </SheetContent>

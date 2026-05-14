@@ -29,7 +29,7 @@ export function ContractsTab({ contracts, employeeMap, loading }: ContractsTabPr
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <Card>
       <CardHeader>
         <CardTitle>{tFinance('contracts')}</CardTitle>

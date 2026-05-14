@@ -36,14 +36,14 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
       <DialogTrigger asChild>
         <Button variant="outline" data-testid="button-presets">
           <Star className="w-4 h-4 mr-2" />
-          Tayyor shablonlar
+          {t("tayyorShablonlar")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Tayyor shablonlarni tanlang</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("tayyorShablonlarniTanlang")}</DialogTitle>
           <DialogDescription>
-            Quyidagi shablonlardan birini tanlang - savollar avtomatik qo'shiladi
+            {t("quyidagiShablonlardanBiriniTanlangSavollar")}
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -53,7 +53,7 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
             onClick={() => onUsePreset("reception")}
             data-testid="preset-reception"
           >
-            <div className="font-semibold">Qabulxona</div>
+            <div className="font-semibold">{t("qabulxona")}</div>
             <div className="text-xs text-muted-foreground">5 ta savol</div>
           </Button>
           <Button
@@ -71,7 +71,7 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
             onClick={() => onUsePreset("developer")}
             data-testid="preset-developer"
           >
-            <div className="font-semibold">Dasturchi</div>
+            <div className="font-semibold">{t("dasturchi")}</div>
             <div className="text-xs text-muted-foreground">5 ta savol</div>
           </Button>
           <Button
@@ -80,7 +80,7 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
             onClick={() => onUsePreset("sales")}
             data-testid="preset-sales"
           >
-            <div className="font-semibold">Sotuvchi</div>
+            <div className="font-semibold">{t("sotuvchi")}</div>
             <div className="text-xs text-muted-foreground">5 ta savol</div>
           </Button>
         </div>
@@ -117,7 +117,7 @@ export function TemplateDialog({
       <DialogTrigger asChild>
         <Button onClick={onOpenNew} data-testid="button-add-template">
           <Plus className="w-4 h-4 mr-2" />
-          Yangi shablon
+          {t("yangiShablon")}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -158,10 +158,10 @@ export function TemplateDialog({
               onValueChange={(value) => form.setValue("positionId", value)}
             >
               <SelectTrigger data-testid="select-position" className="h-9">
-                <SelectValue placeholder="Lavozim tanlang" />
+                <SelectValue placeholder={t("lavozimTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Barcha lavozimlar uchun</SelectItem>
+                <SelectItem value="none">{t("barchaLavozimlarUchun")}</SelectItem>
                 {(Array.isArray(positions) ? positions : []).map((p: Position) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}
@@ -205,7 +205,7 @@ export function QuestionDialog({
       <DialogTrigger asChild>
         <Button onClick={onOpenNew} data-testid="button-add-question">
           <Plus className="w-4 h-4 mr-2" />
-          Savol qo'shish
+          {t("savolQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -231,7 +231,7 @@ export function QuestionDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="questionType">Savol turi <span className="text-destructive">*</span></Label>
+              <Label htmlFor="questionType">{t("savolTuri1")}<span className="text-destructive">*</span></Label>
               <Select
                 value={form.watch("questionType")}
                 onValueChange={(value) => form.setValue("questionType", value)}
@@ -240,14 +240,14 @@ export function QuestionDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="text">Matn</SelectItem>
+                  <SelectItem value="text">{t("matn")}</SelectItem>
                   <SelectItem value="yes_no">Ha/Yo'q</SelectItem>
-                  <SelectItem value="multiple_choice">Ko'p variantli</SelectItem>
+                  <SelectItem value="multiple_choice">{t("kopVariantli")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="order">Tartib raqami <span className="text-destructive">*</span></Label>
+              <Label htmlFor="order">{t("tartibRaqami")}<span className="text-destructive">*</span></Label>
               <Input
                 type="number"
                 id="order"
@@ -267,7 +267,7 @@ export function QuestionDialog({
               className="rounded"
               data-testid="checkbox-required"
             />
-            <Label htmlFor="isRequired">Majburiy savol</Label>
+            <Label htmlFor="isRequired">{t("majburiySavol")}</Label>
           </div>
           <DialogFooter>
             <Button type="submit" data-testid="button-submit-question">

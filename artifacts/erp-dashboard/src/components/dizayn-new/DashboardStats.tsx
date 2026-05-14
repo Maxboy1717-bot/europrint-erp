@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUpRight, ArrowDownRight, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -323,13 +324,14 @@ export function DashboardStatsRedesign({
   stats,
   onActionClick,
 }: DashboardStatsRedesignProps) {
+  const { t } = useTranslation("common");
   const cards = buildStats(stats);
 
   return (
     <div
       className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
       role="region"
-      aria-label="KPI ko'rsatkichlari"
+      aria-label={t("kpiKorsatkichlari")}
     >
       {(Array.isArray(cards) ? cards : []).map((stat) => (
         <StatCard

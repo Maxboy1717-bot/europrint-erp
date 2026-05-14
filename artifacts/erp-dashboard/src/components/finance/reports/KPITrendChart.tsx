@@ -9,6 +9,7 @@ import { Target } from "lucide-react";
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from "recharts";
 import { formatPercent, formatRatio } from "./helpers";
 import { KPIDashboard } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface KPITrendChartProps {
   data: KPIDashboard | undefined;
@@ -16,12 +17,13 @@ interface KPITrendChartProps {
 }
 
 export function KPITrendChart({ data, isLoading }: KPITrendChartProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-kpi-trend">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5" />
-          KPI Trendlari
+          {t("kpiTrendlari")}
         </CardTitle>
       </CardHeader>
       <CardContent>

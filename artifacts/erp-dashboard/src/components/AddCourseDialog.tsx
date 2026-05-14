@@ -17,6 +17,7 @@ import { CourseSettingsForm } from "./lms/CourseSettingsForm";
 import { MentorForm } from "./lms/MentorForm";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Course {
   id: string;
   code: string;
@@ -39,6 +40,7 @@ interface AddCourseDialogProps {
 }
 
 export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const isEditMode = !!course;
   const [showMentorForm, setShowMentorForm] = useState(false);
@@ -240,7 +242,7 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
               onClick={() => onOpenChange(false)}
               disabled={createMutation.isPending}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit">
               {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}

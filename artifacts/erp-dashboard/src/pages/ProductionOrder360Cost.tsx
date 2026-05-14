@@ -74,10 +74,10 @@ export default function ProductionOrder360Cost({plannedCost,
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <KpiCard icon={Coins} label="Reja tannarx" value={fmtMoney(plannedCost)} color="text-muted-foreground" />
+        <KpiCard icon={Coins} label={t("rejaTannarx")} value={fmtMoney(plannedCost)} color="text-muted-foreground" />
         <KpiCard
           icon={v > 0 ? TrendingUp : TrendingDown}
-          label="Haqiqiy tannarx"
+          label={t("haqiqiyTannarx")}
           value={fmtMoney(actualCost)}
           color={v > 0 ? "text-[var(--ep-red)]" : v < 0 ? "text-[var(--ep-green)]" : "text-muted-foreground"}
         />
@@ -85,13 +85,13 @@ export default function ProductionOrder360Cost({plannedCost,
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">Tannarx tahlili</CardTitle>
+          <CardTitle className="text-sm font-semibold">{t("tannarxTahlili")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-0 divide-y">
-          <InfoRow label="Reja tannarx" value={fmtMoney(plannedCost)} />
-          <InfoRow label="Haqiqiy tannarx" value={fmtMoney(actualCost)} />
+          <InfoRow label={t("rejaTannarx")} value={fmtMoney(plannedCost)} />
+          <InfoRow label={t("haqiqiyTannarx")} value={fmtMoney(actualCost)} />
           <InfoRow
-            label="Og'ish"
+            label={t("ogish")}
             value={
               <span className={v > 0 ? "text-[var(--ep-red)]" : v < 0 ? "text-[var(--ep-green)]" : ""}>
                 {v > 0 ? "+" : ""}
@@ -108,7 +108,7 @@ export default function ProductionOrder360Cost({plannedCost,
       {(components?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Material xarajatlar tafsiloti</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t("materialXarajatlarTafsiloti")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

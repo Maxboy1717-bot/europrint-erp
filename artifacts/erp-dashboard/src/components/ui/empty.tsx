@@ -6,8 +6,10 @@
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { useTranslation } from '@/lib/i18n';
 
 function Empty({ className, ...props }: React.ComponentProps<"div">) {
+  const { t } = useTranslation("common");
   return (
     <div
       data-slot="empty"
@@ -52,7 +54,7 @@ function EmptyMedia({
   className,
   variant = "default",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
+}: React.ComponentProps<"div"> {t("variantprops")}<typeof emptyMediaVariants>) {
   return (
     <div
       data-slot="empty-icon"

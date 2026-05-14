@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ViewMode, QuickFilter } from "@/pages/crm/crm-types";
 import { CRMFilterBarProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 const VIEW_MODES: {
   value: ViewMode;
@@ -65,6 +66,7 @@ export function CRMFilterBar({
   selectedItemsCount,
   onDeleteSelected,
 }: CRMFilterBarProps) {
+  const { t } = useTranslation("common");
   const visibleModes = supportsKanban
     ? VIEW_MODES
     : VIEW_MODES.filter((m) => m.value !== "kanban");
@@ -167,7 +169,7 @@ export function CRMFilterBar({
           style={{ color: "#94a3b8" }}
         />
         <Input
-          placeholder="Qidirish..."
+          placeholder={t("Qidirish...")}
           className="pl-9 h-9 text-[13px] border-0 rounded-xl"
           style={{
             background: "rgba(255,255,255,0.8)",
@@ -202,7 +204,7 @@ export function CRMFilterBar({
           }}
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          Filtrlar
+          {t("filtrlar")}
           <AnimatePresence>
             {activeFilterCount > 0 && (
               <motion.span

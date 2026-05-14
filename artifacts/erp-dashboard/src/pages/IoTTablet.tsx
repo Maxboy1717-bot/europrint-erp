@@ -12,8 +12,10 @@ import { IoTChecklistModal } from "./iot/IoTChecklistModal";
 import { IoTCompletionReport } from "./iot/IoTCompletionReport";
 import { IoTProductionDashboard } from "./iot/IoTProductionDashboard";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function IoTTablet() {
+  const { t } = useTranslation("common");
   const iot = useIoTTablet();
 
   if (!iot.isLoggedIn) {
@@ -60,7 +62,7 @@ export default function IoTTablet() {
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => iot.refetch()} className="sr-only" aria-label="Yangilash">
+      <Button variant="ghost" size="sm" onClick={() => iot.refetch()} className="sr-only" aria-label={t("refresh")}>
         <RefreshCw className="h-4 w-4" />
       </Button>
       <IoTProductionDashboard

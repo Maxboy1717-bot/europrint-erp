@@ -27,8 +27,10 @@ import {
   ACTION_ICONS,
 } from "./SDOverviewDashboardTypes";
 import { EPPageHeader, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function SDOverviewDashboard() {
+  const { t } = useTranslation("common");
   const { data: overview, isLoading, isError, refetch } = useQuery<OverviewDashboardData>({
     queryKey: ["/api/sd/dashboard/overview"],
   });
@@ -63,19 +65,19 @@ export default function SDOverviewDashboard() {
           </div>
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Umumiy Ko'rinish</b></>}
-        title="Umumiy Ko'rinish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("umumiyKorinish")}</b></>}
+        title={t("umumiyKorinish")}
         subtitle="Savdo tizimining barcha ko'rsatkichlari (Real-time)"
       />
           </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="bg-card rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Oylik buyurtmalar</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("oylikBuyurtmalar")}</p>
             <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{overview?.monthlyOrders || 0} ta</p>
           </div>
           <div className="bg-card rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Oylik tushum</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("oylikTushum")}</p>
             <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{fmt(overview?.monthlyCollected || 0)}</p>
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -112,7 +114,7 @@ export default function SDOverviewDashboard() {
               <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  Muhim harakatlar
+                  {t("muhimHarakatlar")}
                 </h2>
                 <div className="flex items-center gap-2">
                   <EPStatusPill tone="neutral" className="no-default-hover-elevate">
@@ -152,15 +154,15 @@ export default function SDOverviewDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-[var(--ep-red)]">{fmt(managerActions.overduePayments?.amount || 0)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Muddati o'tgan qarz</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("muddatiOtganQarz")}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-[var(--ep-yellow)]">{managerActions.delayedOrders?.total || 0} ta</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Kechikkan buyurtma</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("kechikkanBuyurtma")}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-[var(--ep-blue)]">{managerActions.pendingProposals?.total || 0} ta</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Kutilayotgan taklif</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("kutilayotganTaklif")}</p>
                 </div>
               </div>
             </div>
@@ -171,7 +173,7 @@ export default function SDOverviewDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <CheckSquare className="w-4 h-4 text-primary" />
-                Bugungi faoliyatlar
+                {t("bugungiFaoliyatlar")}
               </h2>
               <div className="flex items-center gap-2">
                 <EPStatusPill tone="neutral" className="no-default-hover-elevate">{(Array.isArray(todayActivities) ? todayActivities : []).filter(a => !a.isDone).length} aktiv</EPStatusPill>
@@ -179,7 +181,7 @@ export default function SDOverviewDashboard() {
               </div>
             </div>
             {todayActivities.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Bugun uchun faoliyat rejalashtirilmagan</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("bugunUchunFaoliyatRejalashtirilmagan")}</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {(Array.isArray(todayActivities) ? todayActivities : []).slice(0, 6).map(act => {
@@ -234,7 +236,7 @@ export default function SDOverviewDashboard() {
             <div className="bg-card rounded-xl p-6">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-4">
                 <PieChart className="w-4 h-4 text-primary" />
-                Konversiya tahlili
+                {t("konversiyaTahlili")}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

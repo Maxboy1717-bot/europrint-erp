@@ -19,8 +19,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AlertTriangle, CheckCircle, XCircle, Clock, Plus, Star, ShieldAlert } from "lucide-react";
 import { KpiCard, ComplaintStatusBadge, fmtDate } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function ComplaintsTab({ customerId, complaints }: { customerId: number; complaints: SdComplaintsData }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -60,7 +62,7 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
     complaint: "Shikoyat",
   };
 
-  if (!complaints) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
+  if (!complaints) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
   const items = complaints.recent || (Array.isArray(complaints) ? complaints : []);
   const totalCount = complaints.totalCount ?? items.length;
@@ -70,14 +72,14 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={ShieldAlert} label="Jami" value={String(totalCount)}
+        <KpiCard icon={ShieldAlert} label={t("total")} value={String(totalCount)}
           gradient="" />
-        <KpiCard icon={CheckCircle} label="Hal qilingan" value={String(resolvedCount)} color="text-[var(--ep-green)]"
+        <KpiCard icon={CheckCircle} label={t("halQilingan")} value={String(resolvedCount)} color="text-[var(--ep-green)]"
           gradient="" />
-        <KpiCard icon={XCircle} label="Ochiq" value={String(openCount)}
+        <KpiCard icon={XCircle} label={t("ochiq")} value={String(openCount)}
           color={openCount > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}
           gradient="" />
-        <KpiCard icon={Clock} label="O'rtacha hal vaqti" value={`${complaints.averageResolutionDays || 0} kun`}
+        <KpiCard icon={Clock} label={t("ortachaHalVaqti")} value={`${complaints.averageResolutionDays || 0} kun`}
           gradient="" />
       </div>
 
@@ -86,15 +88,15 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
           <DialogTrigger asChild>
             <Button size="sm" className="bg-primary text-white border-0"
               data-testid="btn-add-complaint">
-              <Plus className="h-4 w-4 mr-1" />Shikoyat qo'shish
+              <Plus className="h-4 w-4 mr-1" />{t("shikoyatQoshish")}
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Shikoyat qo'shish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("shikoyatQoshish")}</DialogTitle></DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-3">
                 <FormField control={form.control} name="type" render={({ field }) => (
-                  <FormItem><FormLabel>Shikoyat turi</FormLabel>
+                  <FormItem><FormLabel>{t("shikoyatTuri")}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl><SelectTrigger data-testid="select-complaint-type" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
@@ -103,24 +105,24 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
                     </Select></FormItem>
                 )} />
                 <FormField control={form.control} name="responsibleDepartment" render={({ field }) => (
-                  <FormItem><FormLabel>Mas'ul bo'lim</FormLabel>
+                  <FormItem><FormLabel>{t("masulBolim")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("tanlang")} /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="production">Ishlab chiqarish</SelectItem>
-                        <SelectItem value="logistics">Logistika</SelectItem>
-                        <SelectItem value="sales">Savdo</SelectItem>
+                        <SelectItem value="production">{t("ishlabChiqarish2")}</SelectItem>
+                        <SelectItem value="logistics">{t("logistika")}</SelectItem>
+                        <SelectItem value="sales">{t("savdo")}</SelectItem>
                       </SelectContent>
                     </Select></FormItem>
                 )} />
                 <FormField control={form.control} name="description" render={({ field }) => (
-                  <FormItem><FormLabel>Tavsif *</FormLabel>
+                  <FormItem><FormLabel>{t("tavsif")}</FormLabel>
                     <FormControl><Textarea {...field} rows={4} data-testid="textarea-complaint" /></FormControl>
                     <FormMessage /></FormItem>
                 )} />
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>Bekor</Button>
-                  <Button type="submit" disabled={addMutation.isPending}>Saqlash</Button>
+                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>{t("Bekor")}</Button>
+                  <Button type="submit" disabled={addMutation.isPending}>{t("Saqlash")}</Button>
                 </div>
               </form>
             </Form>
@@ -132,7 +134,7 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
         {items.length === 0 ? (
           <div className="rounded-xl border bg-card py-10 text-center text-muted-foreground text-sm">
             <ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            Shikoyatlar yo'q
+            {t("shikoyatlarYoq")}
           </div>
         ) : items.map((c) => (
           <div key={c.id} className="rounded-xl border bg-card p-4 hover:shadow-sm transition-shadow">
@@ -162,7 +164,7 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
                 {(c.status === "new" || c.status === "in_progress" || c.status === "open") && (
                   <Button size="sm" variant="outline" className="text-xs"
                     onClick={() => resolveMutation.mutate({ cid: c.id, data: { resolution: "Hal qilindi" } })}>
-                    <CheckCircle className="h-3 w-3 mr-1" />Hal qilindi
+                    <CheckCircle className="h-3 w-3 mr-1" />{t("halQilindi")}
                   </Button>
                 )}
               </div>

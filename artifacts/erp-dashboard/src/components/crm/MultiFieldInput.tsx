@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface MultiFieldInputProps {
   value: string[];
@@ -19,10 +20,12 @@ interface MultiFieldInputProps {
 export function MultiFieldInput({
   value = [],
   onChange,
-  placeholder = "Qo'shish...",
+  placeholder,
   type = "text",
   label,
 }: MultiFieldInputProps) {
+  const { t } = useTranslation("common");
+  const resolvedPlaceholder = placeholder ?? t("qoshish");
   const [newValue, setNewValue] = useState("");
 
   const handleAdd = () => {
@@ -81,7 +84,7 @@ export function MultiFieldInput({
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             className="flex-1"
             data-testid="input-multifield-new"
           />

@@ -30,7 +30,7 @@ export function KaizenCard({suggestion, onStatusChange }: KaizenCardProps) {
           onClick={() => onStatusChange(suggestion)}
           className="text-xs text-muted-foreground hover:text-foreground border rounded px-2 py-0.5 shrink-0"
         >
-          Holat
+          {t("status28")}
         </button>
       </div>
       <p className="text-xs text-muted-foreground line-clamp-2">{suggestion.description}</p>
@@ -135,7 +135,7 @@ export function KaizenKanbanBoard({ suggestions, onStatusChange }: KaizenKanbanB
             <div className="space-y-3">
               {colItems.length === 0 ? (
                 <div className="border border-dashed rounded-lg p-4 text-center text-xs text-muted-foreground">
-                  G'oyalar yo'q
+                  {t("goyalarYoq")}
                 </div>
               ) : (
                 (Array.isArray(colItems) ? colItems : []).map((s) => (
@@ -163,7 +163,7 @@ export function KaizenFilteredGrid({ suggestions, onStatusChange }: KaizenFilter
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="col-span-3 text-center py-12 text-muted-foreground">
           <Lightbulb className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Hozircha g'oyalar yo'q</p>
+          <p>{t("hozirchaGoyalarYoq")}</p>
         </div>
       </div>
     );

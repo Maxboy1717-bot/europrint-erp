@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Layers } from "lucide-react";
 import type { IoTSensor, IoTAlert, PredictionData } from "./IoTExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 export function PredictiveTabContent({
   predictions,
@@ -15,8 +16,9 @@ export function PredictiveTabContent({
   predictions?: PredictionData[];
   dashLoading: boolean;
 }) {
+  const { t } = useTranslation("common");
   if (dashLoading) {
-    return <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>;
+    return <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
   }
 
   if (!predictions || predictions.length === 0) {
@@ -24,8 +26,8 @@ export function PredictiveTabContent({
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
           <Brain className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <div className="font-medium">AI Predictive Engine</div>
-          <div className="text-sm mt-1">Sensor ma'lumotlari yig'ilgandan so'ng bashoratlar paydo bo'ladi</div>
+          <div className="font-medium">{t("aiPredictiveEngine")}</div>
+          <div className="text-sm mt-1">{t("sensorMalumotlariYigilgandanSongBashoratlar")}</div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             {([
               { l: "Model aniqligi",            v: "—", c: "text-[var(--ep-green)]" },
@@ -101,15 +103,15 @@ export function DigitalTwinTabContent({
 }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Digital Twin — Virtual Zavod</h2>
+      <h2 className="text-lg font-semibold">{t("digitalTwinVirtualZavod")}</h2>
       <Card>
         <CardContent className="pt-4">
           <div className="h-64 bg-muted/30 rounded-md border border-dashed flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <Layers className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <div className="text-sm font-medium">3D Digital Twin Vizualizatsiya</div>
+              <div className="text-sm font-medium">{t("k3dDigitalTwinVizualizatsiya")}</div>
               <div className="text-xs mt-1">Three.js / BIM integratsiya tayyorlanmoqda</div>
-              <div className="text-xs mt-0.5 text-muted-foreground/70">Real vaqtda sensor ma'lumotlari bilan yangilanadi</div>
+              <div className="text-xs mt-0.5 text-muted-foreground/70">{t("realVaqtdaSensorMalumotlariBilan")}</div>
             </div>
           </div>
         </CardContent>

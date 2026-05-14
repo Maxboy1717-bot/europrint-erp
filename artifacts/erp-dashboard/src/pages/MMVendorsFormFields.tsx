@@ -81,9 +81,9 @@ export function VendorFormFields({form,
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nomi *</FormLabel>
+              <FormLabel>{t("nomi")}</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Yetkazuvchi nomi" data-testid={`${idPrefix}-vendor-name`} />
+                <Input {...field} placeholder={t("yetkazuvchiNomi")} data-testid={`${idPrefix}-vendor-name`} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,9 +112,9 @@ export function VendorFormFields({form,
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Manzil</FormLabel>
+            <FormLabel>{t("address")}</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Manzil" data-testid={`${idPrefix}-vendor-address`} />
+              <Input {...field} placeholder={t("address")} data-testid={`${idPrefix}-vendor-address`} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -128,7 +128,7 @@ export function VendorFormFields({form,
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Telefon</FormLabel>
+              <FormLabel>{t("phone")}</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="+998 90 123 45 67" data-testid={`${idPrefix}-vendor-phone`} />
               </FormControl>
@@ -171,11 +171,11 @@ export function VendorFormFields({form,
           name="paymentTerms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>To'lov shartlari</FormLabel>
+              <FormLabel>{t("tolovShartlari")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
                   <SelectTrigger data-testid={`${idPrefix}-payment-terms`} className="h-9">
-                    <SelectValue placeholder="Tanlang" />
+                    <SelectValue placeholder={t("tanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -199,11 +199,11 @@ export function VendorFormFields({form,
           name="currency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Valyuta</FormLabel>
+              <FormLabel>{t("valyuta")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value ?? "UZS"}>
                 <FormControl>
                   <SelectTrigger data-testid={`${idPrefix}-currency`} className="h-9">
-                    <SelectValue placeholder="Valyuta" />
+                    <SelectValue placeholder={t("valyuta")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -226,7 +226,7 @@ export function VendorFormFields({form,
             render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base">Holat</FormLabel>
+                  <FormLabel className="text-base">{t("status28")}</FormLabel>
                 </div>
                 <FormControl>
                   <Switch
@@ -244,7 +244,7 @@ export function VendorFormFields({form,
       {/* Footer buttons */}
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} data-testid={cancelTestId}>
-          Bekor qilish
+          {t("cancel")}
         </Button>
         <Button type="submit" disabled={isPending} data-testid={submitTestId}>
           {isPending ? "Saqlanmoqda..." : "Saqlash"}

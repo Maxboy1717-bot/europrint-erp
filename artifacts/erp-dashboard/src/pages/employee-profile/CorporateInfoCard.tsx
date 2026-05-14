@@ -84,19 +84,19 @@ export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Settings className="h-4 w-4 text-muted-foreground" />
-          Korporativ ma'lumotlar
+          {t("korporativMalumotlar")}
         </CardTitle>
         {isHr && !editing && (
           <Button variant="outline" size="sm" onClick={startEdit}>
             <Edit className="h-3.5 w-3.5 mr-1.5" />
-            Tahrirlash
+            {t("edit")}
           </Button>
         )}
         {editing && (
           <div className="flex gap-2">
             <Button size="sm" onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending}>
               <Check className="h-3.5 w-3.5 mr-1.5" />
-              Saqlash
+              {t("Saqlash")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
               <X className="h-3.5 w-3.5" />
@@ -108,7 +108,7 @@ export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
         {editing ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs">Korporativ telefon</Label>
+              <Label className="text-xs">{t("korporativTelefon")}</Label>
               <Input
                 value={form.corporate_phone ?? ""}
                 onChange={(e) => setForm({ ...form, corporate_phone: e.target.value || null })}
@@ -135,14 +135,14 @@ export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
             </div>
             <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Mashina operatori</Label>
+                <Label className="text-xs">{t("mashinaOperatori")}</Label>
                 <Switch
                   checked={form.is_machine_operator ?? false}
                   onCheckedChange={(v) => setForm({ ...form, is_machine_operator: v })}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-xs text-destructive">ERP kirishini bloklash</Label>
+                <Label className="text-xs text-destructive">{t("erpKirishiniBloklash")}</Label>
                 <Switch
                   checked={form.block_erp_access ?? false}
                   onCheckedChange={(v) => setForm({ ...form, block_erp_access: v })}
@@ -154,7 +154,7 @@ export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-muted-foreground">Korp. tel:</span>
+              <span className="text-muted-foreground">{t("korpTel")}</span>
               <span className="font-medium">{data?.corporate_phone ?? "—"}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -164,18 +164,18 @@ export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-muted-foreground">Saqlanish:</span>
+              <span className="text-muted-foreground">{t("saqlanish")}</span>
               <span className="font-medium">{data?.retention_years ?? 3} yil</span>
             </div>
             <div className="flex items-center gap-3">
               {data?.is_machine_operator && (
-                <EPStatusPill tone="neutral">Mashina operatori</EPStatusPill>
+                <EPStatusPill tone="neutral">{t("mashinaOperatori")}</EPStatusPill>
               )}
               {data?.block_erp_access && (
                 <EPStatusPill tone="danger">ERP bloklangan</EPStatusPill>
               )}
               {!data?.is_machine_operator && !data?.block_erp_access && (
-                <span className="text-muted-foreground text-xs">Standart kirish</span>
+                <span className="text-muted-foreground text-xs">{t("standartKirish")}</span>
               )}
             </div>
           </div>

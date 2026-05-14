@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RefreshCw, Trophy } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { type MESLeaderboard } from "./MESExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface GamificationTabProps {
 
 /** Tab content: Operator Gamifikatsiya va Reyting */
 export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps) {
+  const { t } = useTranslation("common");
   const board = Array.isArray(leaderboard) ? leaderboard : [];
   const avgQuality = board.length > 0
     ? (board.reduce((s: number, o: MESLeaderboard) => s + Number(o.quality || o.qualityRate || 0), 0) / board.length).toFixed(1)
@@ -32,7 +34,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
   return (
     <TabsContent value="gamification" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Operator Gamifikatsiya va Reyting</h2>
+        <h2 className="text-lg font-semibold">{t("operatorGamifikatsiyaVaReyting")}</h2>
         <Button
           variant="outline"
           size="sm"
@@ -40,7 +42,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
             queryClient.invalidateQueries({ queryKey: ["/api/mes/gamification/leaderboard"] })
           }
         >
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
 
@@ -56,21 +58,21 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
               <div className="text-2xl font-bold text-[var(--ep-yellow)] mt-1">
                 {Number(board[0]?.score || board[0]?.points || 0)} ball
               </div>
-              <Badge className="mt-2">Oyning eng yaxshi operatori</Badge>
+              <Badge className="mt-2">{t("oyningEngYaxshiOperatori")}</Badge>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="text-2xl font-bold text-primary">{totalTasks}</div>
-              <div className="text-sm text-muted-foreground">Jami bajarilgan vazifalar</div>
+              <div className="text-sm text-muted-foreground">{t("jamiBajarilganVazifalar")}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="text-2xl font-bold text-[var(--ep-green)]">{avgQuality}%</div>
-              <div className="text-sm text-muted-foreground">O'rtacha sifat ko'rsatkichi</div>
+              <div className="text-sm text-muted-foreground">{t("ortachaSifatKorsatkichi")}</div>
             </CardContent>
           </Card>
         </div>
@@ -79,31 +81,31 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
       {/* Leaderboard table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Operator reytingi</CardTitle>
+          <CardTitle className="text-base">{t("operatorReytingi")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">O'rin</TableHead>
-                <TableHead>Operator</TableHead>
-                <TableHead>Ball</TableHead>
-                <TableHead>Vazifalar</TableHead>
-                <TableHead>Sifat</TableHead>
+                <TableHead className="w-12">{t("orin")}</TableHead>
+                <TableHead>{t("Operator")}</TableHead>
+                <TableHead>{t("ball")}</TableHead>
+                <TableHead>{t("vazifalar")}</TableHead>
+                <TableHead>{t("Sifat")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">
-                    Yuklanmoqda...
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : board.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
                     <Trophy className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    Reyting ma'lumoti yo'q
+                    {t("reytingMalumotiYoq")}
                   </TableCell>
                 </TableRow>
               ) : (

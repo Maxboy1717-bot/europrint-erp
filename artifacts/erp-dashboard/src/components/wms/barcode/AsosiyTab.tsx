@@ -22,8 +22,10 @@ import {
 import { EPErrorState } from "@/components/ep";
 import { statusRangi, statusNomi, harakatTuriNomi } from "./helpers";
 import { RecentMovement } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function AsosiyTab() {
+  const { t } = useTranslation("common");
   const [skanKod, setSkanKod] = useState("");
   const { toast } = useToast();
 
@@ -92,7 +94,7 @@ export function AsosiyTab() {
           <div className="flex gap-2">
             <Input
               data-testid="input-barcode-scan"
-              placeholder="Barcode skanerlang yoki kiriting..."
+              placeholder={t("barcodeSkanerlangYokiKiriting")}
               value={skanKod}
               onChange={(e) => setSkanKod(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSkan()}
@@ -100,7 +102,7 @@ export function AsosiyTab() {
             />
             <Button data-testid="button-scan" onClick={handleSkan} disabled={skanMutation.isPending}>
               <ScanBarcode className="h-4 w-4 mr-1" />
-              Skan
+              {t("skan")}
             </Button>
           </div>
           {skanMutation.data && (
@@ -112,10 +114,10 @@ export function AsosiyTab() {
                 </Badge>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-sm">
-                <div><span className="text-muted-foreground">Barcode:</span> {skanMutation.data.barcode?.barcodeId}</div>
-                <div><span className="text-muted-foreground">Miqdor:</span> {skanMutation.data.barcode?.remainingQuantity} {skanMutation.data.barcode?.uom}</div>
-                <div><span className="text-muted-foreground">Lot:</span> {skanMutation.data.barcode?.lotNumber || "—"}</div>
-                <div><span className="text-muted-foreground">Joylashuv:</span> {skanMutation.data.barcode?.currentLocation || "—"}</div>
+                <div><span className="text-muted-foreground">{t("barcode")}</span> {skanMutation.data.barcode?.barcodeId}</div>
+                <div><span className="text-muted-foreground">{t("miqdor")}</span> {skanMutation.data.barcode?.remainingQuantity} {skanMutation.data.barcode?.uom}</div>
+                <div><span className="text-muted-foreground">{t("lot1")}</span> {skanMutation.data.barcode?.lotNumber || "—"}</div>
+                <div><span className="text-muted-foreground">{t("joylashuv")}</span> {skanMutation.data.barcode?.currentLocation || "—"}</div>
               </div>
             </div>
           )}
@@ -129,7 +131,7 @@ export function AsosiyTab() {
               <Boxes className="h-4 w-4 text-[var(--ep-green)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">Mavjud</div>
+              <div className="text-xs text-muted-foreground">{t("mavjud")}</div>
               <div className="text-lg font-bold" data-testid="text-available-count">{d.barcodes.available}</div>
             </div>
           </CardContent>
@@ -153,7 +155,7 @@ export function AsosiyTab() {
               <ClipboardCheck className="h-5 w-5 text-[var(--ep-blue)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">Picking topshiriqlari</div>
+              <div className="text-xs text-muted-foreground">{t("pickingTopshiriqlari")}</div>
               <div className="text-lg font-bold" data-testid="text-picking-count">{d.pickingTasks.pending}</div>
             </div>
           </CardContent>
@@ -165,7 +167,7 @@ export function AsosiyTab() {
               <FileWarning className="h-5 w-5 text-[var(--ep-red)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">Operator qarzlari</div>
+              <div className="text-xs text-muted-foreground">{t("operatorQarzlari")}</div>
               <div className="text-lg font-bold" data-testid="text-debt-count">{d.operatorDebts.count}</div>
             </div>
           </CardContent>
@@ -175,19 +177,19 @@ export function AsosiyTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <Card>
           <CardContent className="p-2 text-center">
-            <div className="text-xs text-muted-foreground">Jami barcode</div>
+            <div className="text-xs text-muted-foreground">{t("jamiBarcode")}</div>
             <div className="text-lg font-bold" data-testid="text-total-barcodes">{d.barcodes.total}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-2 text-center">
-            <div className="text-xs text-muted-foreground">Bugun chiqish</div>
+            <div className="text-xs text-muted-foreground">{t("bugunChiqish")}</div>
             <div className="text-lg font-bold" data-testid="text-exit-today">{d.exitControl.todayTotal}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-2 text-center">
-            <div className="text-xs text-muted-foreground">Chop navbati</div>
+            <div className="text-xs text-muted-foreground">{t("chopNavbati")}</div>
             <div className="text-lg font-bold" data-testid="text-print-queue">{d.printQueue.pending}</div>
           </CardContent>
         </Card>
@@ -195,7 +197,7 @@ export function AsosiyTab() {
 
       <Card>
         <CardHeader className="p-3 pb-1">
-          <CardTitle className="text-sm">Oxirgi harakatlar</CardTitle>
+          <CardTitle className="text-sm">{t("oxirgiHarakatlar")}</CardTitle>
         </CardHeader>
         <CardContent className="p-3 pt-1">
           {d.recentMovements && d.recentMovements.length > 0 ? (
@@ -215,7 +217,7 @@ export function AsosiyTab() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">Harakatlar yo'q</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{t("harakatlarYoq")}</p>
           )}
         </CardContent>
       </Card>

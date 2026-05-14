@@ -25,12 +25,14 @@ import {
   OptimizeResultPanel,
 } from "./TechCardsDialogs";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function TechCards() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // UI state
@@ -124,7 +126,7 @@ export default function TechCards() {
     setGenDialog(true);
   };
 
-  if (isLoading) return <div className="p-6">Yuklanmoqda...</div>;
+  if (isLoading) return <div className="p-6">{t("Yuklanmoqda...")}</div>;
 
   const safeCards = Array.isArray(cards) ? cards : [];
 
@@ -137,9 +139,9 @@ export default function TechCards() {
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Texnologik Kartalar</b></>}
-        title="Texnologik Kartalar"
-        subtitle="Ishlab chiqarish texnologik kartalari va AI generatsiya"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("texnologikKartalar")}</b></>}
+        title={t("texnologikKartalar")}
+        subtitle={t("ishlabChiqarishTexnologikKartalariVa")}
       />
         </div>
       </div>

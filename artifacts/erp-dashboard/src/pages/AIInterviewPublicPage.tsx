@@ -27,8 +27,10 @@ import {
 } from "./AIInterviewPublicPageSections";
 import { InterviewingSection } from "./AIInterviewPublicPageInterview";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 export default function AIInterviewPublicPage() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const token = location.split("/ai-interview/")[1]?.split("?")[0];
 

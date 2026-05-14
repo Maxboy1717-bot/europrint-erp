@@ -30,6 +30,7 @@ import {
   type ObserverWithUser,
 } from "../kanban-types";
 import { getAvatar, getName, initials } from "./MainTabContentTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Description ──────────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ interface DescriptionFieldProps {
 }
 
 export function DescriptionField({ card, onUpdate, t }: DescriptionFieldProps) {
+  const { t } = useTranslation("common");
   return (
     <div>
       <Label>{t.fields.description}</Label>
@@ -98,10 +100,10 @@ export function DeadlineField({ card, onUpdate, t }: DeadlineFieldProps) {
       <div className="flex-1 space-y-2">
         <div className="flex gap-2 p-2 border-b" data-testid="quick-date-options">
           <Button variant="outline" size="sm" onClick={() => onUpdate({ dueDate: format(new Date(), "yyyy-MM-dd") })} data-testid="button-date-today">
-            Bugun
+            {t("today")}
           </Button>
           <Button variant="outline" size="sm" onClick={() => onUpdate({ dueDate: format(addDays(new Date(), 1), "yyyy-MM-dd") })} data-testid="button-date-tomorrow">
-            Ertaga
+            {t("ertaga")}
           </Button>
           <Button variant="outline" size="sm" onClick={() => {
             const today = new Date();
@@ -109,7 +111,7 @@ export function DeadlineField({ card, onUpdate, t }: DeadlineFieldProps) {
             const daysUntilSaturday = dayOfWeek === 0 ? 6 : 6 - dayOfWeek;
             onUpdate({ dueDate: format(addDays(today, daysUntilSaturday), "yyyy-MM-dd") });
           }} data-testid="button-date-weekend">
-            Hafta oxiri
+            {t("haftaOxiri")}
           </Button>
         </div>
         <Input type="date" defaultValue={card.dueDate || ""} onChange={(e) => onUpdate({ dueDate: e.target.value })} data-testid="input-task-deadline" />

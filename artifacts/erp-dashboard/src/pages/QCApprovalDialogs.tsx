@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShieldCheck, AlertTriangle } from "lucide-react";
 import { QCOrder, TEST_CATEGORIES, TEST_PARAMS_BY_CATEGORY } from "./QCApprovalTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface InspectorSubmitDialogProps {
   open: boolean;
@@ -35,24 +36,25 @@ export function InspectorSubmitDialog({
   isPending,
   onSubmit,
 }: InspectorSubmitDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Inspeksiyani Yakunlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("inspeksiyaniYakunlash")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
+          <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md flex items-start gap-2">
             <ShieldCheck className="h-5 w-5 text-[var(--ep-blue)] mt-0.5" />
             <p className="text-sm text-[var(--ep-blue)] dark:text-blue-300">
-              Test ID ni kiriting. Test bu buyurtmaga tegishli bo'lishi shart. Yuborilgandan so'ng QC menejer ko'rib chiqadi.
+              {t("testIdNiKiritingTest")}
             </p>
           </div>
           <div>
-            <label className="text-sm font-medium">QC Test ID *</label>
+            <label className="text-sm font-medium">{t("qcTestId")}</label>
             <Input
-              placeholder="Test ID kiriting"
+              placeholder={t("testIdKiriting")}
               value={inspectorTestId}
               onChange={(e) => onInspectorTestIdChange(e.target.value)}
               data-testid="input-test-id"
@@ -66,7 +68,7 @@ export function InspectorSubmitDialog({
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             onClick={onSubmit}
             disabled={isPending || !inspectorTestId.trim()}
@@ -122,11 +124,11 @@ export function ApprovalDialog({
           <DialogTitle className="text-[18px] font-semibold"> {selectedOrder?.status === "pending_review" ? "QC Menejer Tasdiqlash" : "QC Ko'rish"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
+          <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
 
           {selectedOrder?.status !== "pending_review" && (
             <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
-              <p className="text-sm text-[var(--ep-yellow)]">Bu buyurtma hali inspeksiya yakunlanishini kutmoqda. Tasdiqlash uchun inspeksiya birinchi yuborilishi kerak.</p>
+              <p className="text-sm text-[var(--ep-yellow)]">{t("buBuyurtmaHaliInspeksiyaYakunlanishini")}</p>
             </div>
           )}
 
@@ -135,29 +137,29 @@ export function ApprovalDialog({
               <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] mt-0.5" />
                 <div>
-                  <p className="font-medium text-yellow-800 dark:text-yellow-200">Diqqat!</p>
+                  <p className="font-medium text-yellow-800 dark:text-yellow-200">{t("diqqat")}</p>
                   <p className="text-sm text-[var(--ep-yellow)] dark:text-yellow-300">
-                    Barcha 4 ta nazorat nuqtasini tasdiqlang. Aks holda tasdiqlash mumkin emas.
+                    {t("barcha4TaNazoratNuqtasini")}
                   </p>
                 </div>
               </div>
               <div className="space-y-3 border rounded-md p-3">
-                <p className="text-sm font-medium text-muted-foreground">Sifat nazorati chek-listasi:</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("sifatNazoratiChekListasi")}</p>
                 <div className="flex items-center gap-2">
                   <Checkbox id="visual-ok" checked={visualOk} onCheckedChange={(v) => onVisualOkChange(!!v)} data-testid="checkbox-visual" />
-                  <label htmlFor="visual-ok" className="text-sm cursor-pointer">Vizual tekshiruv — rangi, yuzasi, nuqsonlar yo'q</label>
+                  <label htmlFor="visual-ok" className="text-sm cursor-pointer">{t("vizualTekshiruvRangiYuzasiNuqsonlar")}</label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox id="dimensions-ok" checked={dimensionsOk} onCheckedChange={(v) => onDimensionsOkChange(!!v)} data-testid="checkbox-dimensions" />
-                  <label htmlFor="dimensions-ok" className="text-sm cursor-pointer">O'lchamlar — format, qalinlik, gramaj norma doirasida</label>
+                  <label htmlFor="dimensions-ok" className="text-sm cursor-pointer">{t("olchamlarFormatQalinlikGramajNorma")}</label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox id="print-ok" checked={printOk} onCheckedChange={(v) => onPrintOkChange(!!v)} data-testid="checkbox-print" />
-                  <label htmlFor="print-ok" className="text-sm cursor-pointer">Bosma sifati — rasm, matn, ranglar to'g'ri</label>
+                  <label htmlFor="print-ok" className="text-sm cursor-pointer">{t("bosmaSifatiRasmMatnRanglar")}</label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox id="packaging-ok" checked={packagingOk} onCheckedChange={(v) => onPackagingOkChange(!!v)} data-testid="checkbox-packaging" />
-                  <label htmlFor="packaging-ok" className="text-sm cursor-pointer">Qadoqlash — qutilash, yig'ish, etiketka to'g'ri</label>
+                  <label htmlFor="packaging-ok" className="text-sm cursor-pointer">{t("qadoqlashQutilashYigishEtiketkaTogri")}</label>
                 </div>
               </div>
               <Textarea
@@ -170,7 +172,7 @@ export function ApprovalDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Yopish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("close2")}</Button>
           {selectedOrder?.status === "pending_review" && (
             <Button
               onClick={onApprove}
@@ -207,10 +209,10 @@ export function RejectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">QC Rad etish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("qcRadEtish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
+          <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
           <Textarea
             placeholder="Rad etish sababi - qaysi test muvaffaqiyatsiz bo'ldi? (majburiy)"
             value={comments}
@@ -220,7 +222,7 @@ export function RejectDialog({
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             variant="destructive"
             onClick={onReject}
@@ -272,7 +274,7 @@ export function TestInputDialog({
                 <div key={param} className="flex items-center gap-3">
                   <label className="text-sm w-40 shrink-0">{param}</label>
                   <Input
-                    placeholder="Natija kiriting"
+                    placeholder={t("natijaKiriting")}
                     value={testInputs[cat.id]?.[param] || ""}
                     onChange={(e) => onTestInputChange(cat.id, param, e.target.value)}
                     data-testid={`input-test-${cat.id}-${param}`}
@@ -283,7 +285,7 @@ export function TestInputDialog({
           ))}
         </Tabs>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Yopish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("close2")}</Button>
           <Button
             onClick={onSave}
             disabled={isPending}

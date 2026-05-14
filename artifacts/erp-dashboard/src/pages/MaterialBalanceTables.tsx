@@ -85,7 +85,7 @@ export function RequestsSection({ requests, requestsLoading, onApprove, onIssue,
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <ClipboardList className="w-5 h-5" />
-            Ichki material so'rovlar
+            {t("ichkiMaterialSorovlar")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -95,13 +95,13 @@ export function RequestsSection({ requests, requestsLoading, onApprove, onIssue,
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Holat</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
                   <TableHead>{t('Material')}</TableHead>
-                  <TableHead className="text-right">Miqdor</TableHead>
-                  <TableHead>So'rovchi</TableHead>
-                  <TableHead>Maqsad</TableHead>
-                  <TableHead>Muhimlik</TableHead>
-                  <TableHead>Amallar</TableHead>
+                  <TableHead className="text-right">{t("quantity")}</TableHead>
+                  <TableHead>{t("sorovchi")}</TableHead>
+                  <TableHead>{t("Maqsad")}</TableHead>
+                  <TableHead>{t("priority")}</TableHead>
+                  <TableHead>{t("Amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -167,7 +167,7 @@ export function RequestsSection({ requests, requestsLoading, onApprove, onIssue,
                       colSpan={7}
                       className="text-center text-muted-foreground py-8"
                     >
-                      So'rovlar mavjud emas
+                      {t("sorovlarMavjudEmas")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -197,7 +197,7 @@ export function ProductionSection({ production, productionLoading, }: Production
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Package className="w-5 h-5" />
-            Ishlab chiqarish uchun materiallar
+            {t("ishlabChiqarishUchunMateriallar")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -207,13 +207,13 @@ export function ProductionSection({ production, productionLoading, }: Production
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kod</TableHead>
+                  <TableHead>{t("code")}</TableHead>
                   <TableHead>{t('Material')}</TableHead>
-                  <TableHead className="text-right">Joriy qoldiq</TableHead>
-                  <TableHead className="text-right">Min zaxira</TableHead>
-                  <TableHead>O'lchov</TableHead>
-                  <TableHead>Ombor</TableHead>
-                  <TableHead className="text-right">Narx</TableHead>
+                  <TableHead className="text-right">{t("currentBalance")}</TableHead>
+                  <TableHead className="text-right">{t("minZaxira")}</TableHead>
+                  <TableHead>{t("olchov1")}</TableHead>
+                  <TableHead>{t("ombor")}</TableHead>
+                  <TableHead className="text-right">{t("price")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -255,7 +255,7 @@ export function ProductionSection({ production, productionLoading, }: Production
                       colSpan={7}
                       className="text-center text-muted-foreground py-8"
                     >
-                      Ma'lumot topilmadi
+                      {t("noData")}
                     </TableCell>
                   </TableRow>
                 )}

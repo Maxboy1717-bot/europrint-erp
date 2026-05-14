@@ -52,7 +52,7 @@ export default function ProgressPage() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('progress.title', 'Jarayon holati')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('progress.title', 'Jarayon holati')}</b></>}
         title={t('progress.title', 'Jarayon holati')}
         subtitle={t('progress.description', 'O2C tsikl bosqichlari real-time progress')}
       />

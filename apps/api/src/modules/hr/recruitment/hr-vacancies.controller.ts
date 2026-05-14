@@ -7,6 +7,7 @@ import {
 Controller, Get, Post, Patch, Put, Body, Param, ParseIntPipe,
   NotFoundException, UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { unwrapOrInternal } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';

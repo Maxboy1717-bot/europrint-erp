@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, Pencil } from "lucide-react";
 import { Company } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CompanyHeaderProps {
   company: Company;
@@ -16,6 +17,7 @@ interface CompanyHeaderProps {
 }
 
 export function CompanyHeader({ company, isEditMode, onEditClick }: CompanyHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <SheetHeader>
       <div className="flex items-start justify-between">
@@ -51,7 +53,7 @@ export function CompanyHeader({ company, isEditMode, onEditClick }: CompanyHeade
             data-testid="button-edit"
           >
             <Pencil className="h-4 w-4 mr-2" />
-            Tahrirlash
+            {t("edit")}
           </Button>
         )}
       </div>

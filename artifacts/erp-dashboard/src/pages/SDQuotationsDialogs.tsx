@@ -5,6 +5,7 @@
  */
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -32,13 +33,14 @@ export function QuotationConfirmDialogs({
   onConvertOpenChange,
   onConfirmConvert,
 }: QuotationConfirmDialogsProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       <ConfirmDialog
         open={confirmDeleteQuotationId !== null}
         onOpenChange={(open) => { if (!open) onDeleteOpenChange(false); }}
-        title="Taklifni o'chirish"
-        description="Ushbu taklifnomani o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("taklifniOchirish")}
+        description={t("ushbuTaklifnomaniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"
@@ -47,8 +49,8 @@ export function QuotationConfirmDialogs({
       <ConfirmDialog
         open={confirmConvertOrderId !== null}
         onOpenChange={(open) => { if (!open) onConvertOpenChange(false); }}
-        title="Buyurtmaga aylantirish"
-        description="Bu taklifni savdo buyurtmasiga aylantirishni tasdiqlaysizmi?"
+        title={t("buyurtmagaAylantirish")}
+        description={t("buTaklifniSavdoBuyurtmasigaAylantirishni")}
         confirmText="Ha, aylantirish"
         cancelText="Bekor qilish"
         variant="default"

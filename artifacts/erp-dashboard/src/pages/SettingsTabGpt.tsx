@@ -48,7 +48,7 @@ export function SettingsTabGpt({
         ) : (
           <>
             <div className="space-y-1">
-          <Label htmlFor="gpt-model">GPT Model</Label>
+          <Label htmlFor="gpt-model">{t("gptModel")}</Label>
               <Select
                 value={form.gptModel}
                 onValueChange={(value) => onChange({ gptModel: value })}
@@ -58,12 +58,12 @@ export function SettingsTabGpt({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                  <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                  <SelectItem value="gpt-4o-mini">{t("gpt4oMini")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-          <Label htmlFor="prompt-template">Prompt</Label>
+          <Label htmlFor="prompt-template">{t("prompt")}</Label>
               <Textarea
                 id="prompt-template"
                 rows={6}

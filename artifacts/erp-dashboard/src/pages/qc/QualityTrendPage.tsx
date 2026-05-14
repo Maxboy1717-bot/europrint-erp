@@ -42,7 +42,7 @@ export default function QualityTrendPage() {
   const latest = items.length > 0 ? items[items.length - 1] : null;
   const previous = items.length > 1 ? items[items.length - 2] : null;
   const trendDirection = latest && previous
-    ? (latest.passRate > previous.passRate ? "up" : latest.passRate < previous.passRate ? "down" : "flat")
+    ? (latest.passRate > {t("previousPassrateUpLatestPassrate")}< previous.passRate ? "down" : "flat")
     : "flat";
 
   const avgDpmo = items.length > 0

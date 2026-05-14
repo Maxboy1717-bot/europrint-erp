@@ -190,8 +190,8 @@ export default function RoutingConfiguration() {
           </div>
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Routing Konfiguratsiyasi</b></>}
-        title="Routing Konfiguratsiyasi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("routingKonfiguratsiyasi")}</b></>}
+        title={t("routingKonfiguratsiyasi")}
         subtitle={t("routingConfigDesc")}
       />
           </div>

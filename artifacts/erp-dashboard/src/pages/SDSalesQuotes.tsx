@@ -20,8 +20,10 @@ import {
 import { NewQuotationDialog } from "./SDSalesQuotesDialogs";
 import { QuotationList } from "./SDSalesQuotesSections";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function SDSalesQuotes() {
+  const { t } = useTranslation("common");
   const [isNew, setIsNew] = useState(false);
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
   const [calcForm, setCalcForm] = useState<CalcForm>({ ...defaultCalcForm });
@@ -120,9 +122,9 @@ export default function SDSalesQuotes() {
         </div>
         <div className="flex-1">
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Sotuv Takliflari</b></>}
-        title="Sotuv Takliflari"
-        subtitle="Narx hisoblash, taklifnoma yaratish va tasdiqlash"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("sotuvTakliflari")}</b></>}
+        title={t("sotuvTakliflari")}
+        subtitle={t("narxHisoblashTaklifnomaYaratishVa")}
       />
         </div>
         <NewQuotationDialog

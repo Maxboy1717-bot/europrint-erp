@@ -108,7 +108,7 @@ export default function FinanceBreakEven() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('breakEvenAnalysis')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('breakEvenAnalysis')}</b></>}
         title={t('breakEvenAnalysis')}
         subtitle={t('breakEvenSubtitle')}
       />

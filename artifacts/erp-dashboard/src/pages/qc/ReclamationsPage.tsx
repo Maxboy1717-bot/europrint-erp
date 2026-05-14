@@ -94,9 +94,9 @@ export default function ReclamationsPage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
-                    <span>Mahsulot: <strong>{r.productName ?? '—'}</strong></span>
-                    <span>Kategoriya: <strong>{r.category}</strong></span>
-                    <span>Qabul: <strong>{new Date(r.receivedAt).toLocaleDateString()}</strong></span>
+                    <span>{t("mahsulot")}<strong>{r.productName ?? '—'}</strong></span>
+                    <span>{t("kategoriya1")}<strong>{r.category}</strong></span>
+                    <span>{t("qabul")}<strong>{new Date(r.receivedAt).toLocaleDateString()}</strong></span>
                   </div>
                 </div>
               );

@@ -32,18 +32,18 @@ export function AddTenantDialog({open, onOpenChange, form, onSubmit, isPending }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Tenant Yaratish</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiTenantYaratish")}</DialogTitle></DialogHeader>
         <form className="space-y-4" onSubmit={form.handleSubmit((d) => onSubmit(d))}>
           <div className="space-y-1">
-          <Label>Kompaniya nomi *</Label>
-            <Input {...form.register("name", { required: true })} placeholder="Zavod LLC" data-testid="input-tenant-name" />
+          <Label>{t("kompaniyaNomi")}</Label>
+            <Input {...form.register("name", { required: true })} placeholder={t("zavodLlc")} data-testid="input-tenant-name" />
           </div>
           <div className="space-y-1">
-          <Label>Domen *</Label>
+          <Label>{t("domen")}</Label>
             <Input {...form.register("domain", { required: true })} placeholder="zavod.uz" data-testid="input-tenant-domain" />
           </div>
           <div className="space-y-1">
-          <Label>Tarif *</Label>
+          <Label>{t("tarif")}</Label>
             <Select defaultValue="basic" onValueChange={v => form.setValue("plan", v)}>
               <SelectTrigger data-testid="select-tenant-plan" className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -57,12 +57,12 @@ export function AddTenantDialog({open, onOpenChange, form, onSubmit, isPending }
               <Input {...form.register("contactEmail")} type="email" placeholder="admin@zavod.uz" />
             </div>
             <div className="space-y-1">
-          <Label>Telefon</Label>
+          <Label>{t("phone")}</Label>
               <Input {...form.register("contactPhone")} placeholder="+998 90..." />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Bekor</Button>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
             <Button type="submit" disabled={isPending} data-testid="button-create-tenant">
               {isPending ? "Yaratilmoqda..." : "Yaratish"}
             </Button>

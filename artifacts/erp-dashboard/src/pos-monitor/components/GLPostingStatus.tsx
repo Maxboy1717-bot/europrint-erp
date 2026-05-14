@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { glApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface GlEntry {
@@ -126,7 +127,7 @@ function FullCard({
           <table className="pos-table">
             <thead>
               <tr>
-                <th>Bosqich</th>
+                <th>{t("milestone1")}</th>
                 <th>{t("common.status")}</th>
                 <th>Hisob (Debet)</th>
                 <th>Hisob (Kredit)</th>

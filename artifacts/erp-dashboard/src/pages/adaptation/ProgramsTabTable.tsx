@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import type { AdaptationProgram } from "@shared/schema";
 import type { DepartmentItem, PositionItem } from "./ProgramsTabTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ProgramsTableProps {
   programs: AdaptationProgram[];
@@ -31,18 +32,19 @@ export function ProgramsTable({
   onEdit,
   onDelete,
 }: ProgramsTableProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Nomi</TableHead>
-          <TableHead>Davomiyligi</TableHead>
-          <TableHead>Bo'lim</TableHead>
-          <TableHead>Lavozim</TableHead>
-          <TableHead>Vazifalar</TableHead>
-          <TableHead>Mentor</TableHead>
-          <TableHead>Holat</TableHead>
-          <TableHead>Amallar</TableHead>
+          <TableHead>{t("name")}</TableHead>
+          <TableHead>{t("davomiyligi")}</TableHead>
+          <TableHead>{t("bolim1")}</TableHead>
+          <TableHead>{t("lavozim1")}</TableHead>
+          <TableHead>{t("vazifalar")}</TableHead>
+          <TableHead>{t("mentor")}</TableHead>
+          <TableHead>{t("status28")}</TableHead>
+          <TableHead>{t("Amallar")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -51,8 +53,8 @@ export function ProgramsTable({
             <TableCell colSpan={8}>
               <EmptyState
                 icon={BookOpen}
-                title="Dasturlar topilmadi"
-                description="Hozircha hech qanday adaptatsiya dasturi mavjud emas. Yangi dastur yaratish uchun yuqoridagi tugmani bosing."
+                title={t("dasturlarTopilmadi")}
+                description={t("hozirchaHechQandayAdaptatsiyaDasturi")}
               />
             </TableCell>
           </TableRow>
@@ -84,14 +86,14 @@ export function ProgramsTable({
                 {dept ? (
                   <Badge variant="outline">{dept.name}</Badge>
                 ) : (
-                  <span className="text-muted-foreground">Hammasi</span>
+                  <span className="text-muted-foreground">{t("hammasi")}</span>
                 )}
               </TableCell>
               <TableCell>
                 {pos ? (
                   <Badge variant="outline">{pos.name}</Badge>
                 ) : (
-                  <span className="text-muted-foreground">Hammasi</span>
+                  <span className="text-muted-foreground">{t("hammasi")}</span>
                 )}
               </TableCell>
               <TableCell>
@@ -106,9 +108,9 @@ export function ProgramsTable({
               </TableCell>
               <TableCell>
                 {program.mentorRequired ? (
-                  <Badge>Kerak</Badge>
+                  <Badge>{t("kerak")}</Badge>
                 ) : (
-                  <EPStatusPill tone="neutral">Kerak emas</EPStatusPill>
+                  <EPStatusPill tone="neutral">{t("kerakEmas")}</EPStatusPill>
                 )}
               </TableCell>
               <TableCell>

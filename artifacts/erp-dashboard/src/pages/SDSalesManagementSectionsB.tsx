@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart2, Award, Target, Trophy } from "lucide-react";
 import { AnalyticsMonthly, CommissionRecord, LeaderboardEntry, statusVariant, statusLabel } from "./SDSalesManagementTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // AnalyticsSection
@@ -21,11 +22,12 @@ interface AnalyticsSectionProps {
 }
 
 export function AnalyticsSection({ analyticsMonthly, analyticsVelocity, isLoading }: AnalyticsSectionProps) {
+  const { t } = useTranslation("common");
   const safeMonthly = Array.isArray(analyticsMonthly) ? analyticsMonthly : [];
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-foreground">Savdo Analitikasi</h2>
+      <h2 className="text-xl font-bold text-foreground">{t("savdoAnalitikasi")}</h2>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -34,8 +36,8 @@ export function AnalyticsSection({ analyticsMonthly, analyticsVelocity, isLoadin
       ) : analyticsMonthly.length === 0 ? (
         <div className="bg-card rounded-xl p-8 text-center text-muted-foreground">
           <BarChart2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="font-medium">Analitika ma'lumotlari yo'q</p>
-          <p className="text-sm mt-1 opacity-70">Savdo ma'lumotlari to'planayotganda analitika ko'rinadi</p>
+          <p className="font-medium">{t("analitikaMalumotlariYoq")}</p>
+          <p className="text-sm mt-1 opacity-70">{t("savdoMalumotlariToplanayotgandaAnalitikaKorinadi")}</p>
         </div>
       ) : (
         <>
@@ -77,17 +79,17 @@ export function AnalyticsSection({ analyticsMonthly, analyticsVelocity, isLoadin
 
           <Card className="bg-card border-none rounded-xl">
             <CardHeader>
-              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Oylik Trend</CardTitle>
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("oylikTrend")}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Oy</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Daromad</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Buyurtmalar</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">O'rtacha buyurtma</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Yangi mijozlar</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("daromad")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("buyurtmalar")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ortachaBuyurtma")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("yangiMijozlar")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -108,8 +110,8 @@ export function AnalyticsSection({ analyticsMonthly, analyticsVelocity, isLoadin
           {analyticsVelocity && (
             <Card className="bg-card border-none rounded-xl">
               <CardHeader>
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Savdo Tezligi</CardTitle>
-                <CardDescription className="text-muted-foreground">Pipeline va konversiya metrikalari</CardDescription>
+                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("savdoTezligi")}</CardTitle>
+                <CardDescription className="text-muted-foreground">{t("pipelineVaKonversiyaMetrikalari")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -143,7 +145,7 @@ interface CommissionSectionProps {
 export function CommissionSection({ commissions, leaderboard, commLoading, leaderLoading }: CommissionSectionProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-foreground">Savdochilar Komissiyasi</h2>
+      <h2 className="text-xl font-bold text-foreground">{t("savdochilarKomissiyasi")}</h2>
 
       {leaderLoading ? (
         <div className="space-y-3">
@@ -152,8 +154,8 @@ export function CommissionSection({ commissions, leaderboard, commLoading, leade
       ) : leaderboard.length === 0 ? (
         <div className="bg-card rounded-xl p-6 text-center text-muted-foreground">
           <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="font-medium">Leaderboard ma'lumotlari mavjud emas</p>
-          <p className="text-sm mt-1 opacity-70">Savdochilar rejalari qo'shilganda reyting shakllanadi</p>
+          <p className="font-medium">{t("leaderboardMalumotlariMavjudEmas")}</p>
+          <p className="text-sm mt-1 opacity-70">{t("savdochilarRejalariQoshilgandaReytingShakllanadi")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -170,7 +172,7 @@ export function CommissionSection({ commissions, leaderboard, commLoading, leade
               <div className="text-3xl font-bold text-primary mt-2">
                 {l.totalSales ? `${(Number(l.totalSales) / 1_000_000).toFixed(1)}M` : "—"}
               </div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">so'm</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">{t("som")}</div>
               {l.achievementPct != null && (
                 <Badge className="mt-3 bg-muted/60 text-foreground border-none shadow-none rounded-full px-3">
                   {Number(l.achievementPct).toFixed(0)}% reja
@@ -185,7 +187,7 @@ export function CommissionSection({ commissions, leaderboard, commLoading, leade
         <CardHeader>
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
-            Komissiya Hisob-Kitobi
+            {t("komissiyaHisobKitobi")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -196,19 +198,19 @@ export function CommissionSection({ commissions, leaderboard, commLoading, leade
           ) : commissions.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Award className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="font-medium">Komissiya hisoblari mavjud emas</p>
-              <p className="text-sm mt-1 opacity-70">Savdochilar rejalari va natijalar kiritilganda hisob-kitob avtomatik bajariladi</p>
+              <p className="font-medium">{t("komissiyaHisoblariMavjudEmas")}</p>
+              <p className="text-sm mt-1 opacity-70">{t("savdochilarRejalariVaNatijalarKiritilganda")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Savdochi</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Davr</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Jami savdo</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Stavka</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Komissiya</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("savdochi")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("period")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("jamiSavdo")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("stavka")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("komissiya")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

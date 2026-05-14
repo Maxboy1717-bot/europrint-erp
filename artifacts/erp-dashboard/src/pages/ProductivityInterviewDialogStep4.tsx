@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { WORKER_TYPE_META } from "@/lib/workerType";
 import { TOOL_TRAITS } from "./ProductivityInterviewDialogTypes";
 import type { SummaryData } from "./ProductivityInterviewDialogTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface Step4Props {
   summary: SummaryData;
@@ -31,13 +32,14 @@ const DECISION_OPTIONS = [
 ] as const;
 
 export function Step4Summary({ summary, avgScore, workerType, onChange, onToggleToolTest }: Step4Props) {
+  const { t } = useTranslation("common");
   const meta = WORKER_TYPE_META[workerType as keyof typeof WORKER_TYPE_META];
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">Yakuniy xulosa</h3>
-        <Badge variant="outline" className="text-[9px]">Umumiy baho + Qaror</Badge>
+        <h3 className="font-semibold text-sm text-primary">{t("yakuniyXulosa")}</h3>
+        <Badge variant="outline" className="text-[9px]">{t("umumiyBahoQaror")}</Badge>
       </div>
 
       {/* Scores table */}
@@ -45,9 +47,9 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
         <table className="w-full text-xs">
           <thead className="bg-muted/60">
             <tr>
-              <th className="text-left px-3 py-2 text-muted-foreground font-medium">Bo'lim</th>
+              <th className="text-left px-3 py-2 text-muted-foreground font-medium">{t("bolim1")}</th>
               <th className="text-center px-3 py-2 text-muted-foreground font-medium">Ball (1-10)</th>
-              <th className="text-left px-3 py-2 text-muted-foreground font-medium">Izoh</th>
+              <th className="text-left px-3 py-2 text-muted-foreground font-medium">{t("Izoh")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
@@ -68,7 +70,7 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
                 <td className="px-3 py-2">
                   <Input
                     className="h-7 text-xs"
-                    placeholder="Qisqa izoh..."
+                    placeholder={t("qisqaIzoh")}
                     value={summary[row.noteKey]}
                     onChange={e => onChange(row.noteKey, e.target.value as SummaryData[typeof row.noteKey])}
                   />
@@ -76,7 +78,7 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
               </tr>
             ))}
             <tr className="bg-primary/5 font-semibold">
-              <td className="px-3 py-2 text-primary">O'rtacha</td>
+              <td className="px-3 py-2 text-primary">{t("average")}</td>
               <td className="px-3 py-2 text-center text-primary text-sm font-bold">{avgScore}</td>
               <td className="px-3 py-2 text-[10px] text-muted-foreground">
                 {avgScore >= 8 ? "A'lo" : avgScore >= 6 ? "Yaxshi" : avgScore >= 4 ? "O'rta" : "Past"}
@@ -95,7 +97,7 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
             <div className="text-[10px] text-muted-foreground">{meta.desc}</div>
           </div>
           <Badge variant="outline" className={`ml-auto text-[10px] shrink-0 ${meta.color} ${meta.border}`}>
-            Avtomatik
+            {t("avtomatik")}
           </Badge>
         </div>
       )}
@@ -118,13 +120,13 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
           ))}
         </div>
         <p className="text-[10px] text-muted-foreground mt-1.5">
-          Belgilanganlar: TOOL TEST da talab darajasini qondirgan sifatlar
+          {t("belgilanganlarToolTestDaTalab")}
         </p>
       </div>
 
       {/* Final decision */}
       <div>
-        <Label className="text-xs mb-2 block font-medium">Yakuniy qaror:</Label>
+        <Label className="text-xs mb-2 block font-medium">{t("yakuniyQaror1")}</Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {DECISION_OPTIONS.map(opt => (
             <button
@@ -149,7 +151,7 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
         <Textarea
           rows={3}
           className="text-xs"
-          placeholder="Rekruterning yakuniy fikri, kuzatishlar..."
+          placeholder={t("rekruterningYakuniyFikriKuzatishlar")}
           value={summary.final_notes}
           onChange={e => onChange("final_notes", e.target.value)}
         />

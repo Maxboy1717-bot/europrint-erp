@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { movementsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface Movement {
   id: number;
@@ -175,31 +176,31 @@ function MovementCard({
         <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 12, color: "#6B7280" }}>
           {mov.fromWarehouseId && (
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Kimdan</span>
+              <span>{t("kimdan")}</span>
               <span style={{ color: "#374151", fontWeight: 500 }}>{mov.fromWarehouseId}</span>
             </div>
           )}
           {mov.toWarehouseId && (
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Qayerga</span>
+              <span>{t("qayerga")}</span>
               <span style={{ color: "#374151", fontWeight: 500 }}>{mov.toWarehouseId}</span>
             </div>
           )}
           {mov.supplierName && (
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Ta'minotchi</span>
+              <span>{t("taminotchi")}</span>
               <span style={{ color: "#374151", fontWeight: 500, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mov.supplierName}</span>
             </div>
           )}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-            <span>Sana</span>
+            <span>{t("date")}</span>
             <span style={{ color: "#374151", fontFamily: "monospace" }}>
               {new Date(mov.createdAt).toLocaleDateString("uz-UZ")}
             </span>
           </div>
           {(mov.totalAmount ?? 0) > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Summa</span>
+              <span>{t("summa")}</span>
               <span style={{ color: "#059669", fontWeight: 700, fontFamily: "monospace" }}>
                 {(mov.totalAmount ?? 0).toLocaleString("uz-UZ")}
               </span>
@@ -220,7 +221,7 @@ function MovementCard({
             padding: "6px 10px", cursor: "pointer", fontSize: 16, color: "#6B7280",
           }}
           onClick={() => onPrint(mov.id)}
-          title="Chop etish"
+          title={t("print1")}
         >
           🖨️
         </button>
@@ -255,7 +256,7 @@ function MovementCard({
               fontWeight: 600, fontSize: 12, cursor: "pointer",
             }}
           >
-            👁 Ko'rish
+            {t("korish")}
           </button>
         )}
       </div>
@@ -265,6 +266,7 @@ function MovementCard({
 
 // ── Main page ─────────────────────────────────────────────────────────────
 export default function PosMovements() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t }        = usePosI18n();
   const [movements, setMovements]       = useState<Movement[]>([]);
@@ -325,7 +327,7 @@ export default function PosMovements() {
         gap: 12, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10,
       }}>
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1F2937" }}>
-          Harakatlar
+          {t("actions")}
         </h2>
         <span style={{ fontSize: 12, color: "#9CA3AF" }}>{movements.length} ta jami</span>
         <div style={{ flex: 1 }} />
@@ -334,14 +336,14 @@ export default function PosMovements() {
           style={{ fontSize: 12 }}
           onClick={() => setShowFilter(f => !f)}
         >
-          🔽 Tur bo'yicha filtr
+          {t("turBoyichaFiltr")}
         </button>
         <button
           className="pos-btn pos-btn-ghost"
           style={{ fontSize: 12 }}
           onClick={() => void loadData()}
         >
-          🔄 Yangilash
+          {t("yangilash")}
         </button>
         <button
           onClick={() => navigate("/pos-monitor/movements/new")}
@@ -351,7 +353,7 @@ export default function PosMovements() {
             fontSize: 13, cursor: "pointer",
           }}
         >
-          ➕ Yangi Harakat
+          {t("yangiHarakat")}
         </button>
       </div>
 
@@ -370,7 +372,7 @@ export default function PosMovements() {
               fontWeight: 600, fontSize: 12, cursor: "pointer",
             }}
           >
-            Barchasi
+            {t("Barchasi")}
           </button>
           {TYPES.map(tp => (
             <button
@@ -455,7 +457,7 @@ export default function PosMovements() {
           <div style={{ textAlign: "center", padding: "80px 20px", color: "#9CA3AF" }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>📋</div>
             <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: "#374151" }}>
-              Harakatlar yo'q
+              {t("harakatlarYoq")}
             </div>
             <div style={{ fontSize: 13, marginBottom: 24 }}>
               {activeTab === "all" ? "Hali hech qanday harakat yaratilmagan" : "Bu toifada harakatlar yo'q"}
@@ -467,7 +469,7 @@ export default function PosMovements() {
                 borderRadius: 8, padding: "10px 24px", fontWeight: 700, cursor: "pointer",
               }}
             >
-              ➕ Yangi harakat yaratish
+              {t("yangiHarakatYaratish")}
             </button>
           </div>
         )}

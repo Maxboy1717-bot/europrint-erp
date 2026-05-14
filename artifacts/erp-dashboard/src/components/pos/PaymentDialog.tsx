@@ -45,16 +45,16 @@ export function PaymentDialog({
             </div>
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Chek:</span>
+                <span className="text-muted-foreground">{t("chek")}</span>
                 <span className="font-mono">{receiptData.receiptNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Sana:</span>
+                <span className="text-muted-foreground">{t("sana1")}</span>
                 <span>{formatDateTime(receiptData.createdAt)}</span>
               </div>
               {receiptData.customerName && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mijoz:</span>
+                  <span className="text-muted-foreground">{t("mijoz")}</span>
                   <span>{receiptData.customerName}</span>
                 </div>
               )}
@@ -62,10 +62,10 @@ export function PaymentDialog({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Mahsulot</TableHead>
-                  <TableHead className="text-xs text-center">Soni</TableHead>
-                  <TableHead className="text-xs text-right">Narx</TableHead>
-                  <TableHead className="text-xs text-right">Jami</TableHead>
+                  <TableHead className="text-xs">{t("Mahsulot")}</TableHead>
+                  <TableHead className="text-xs text-center">{t("count")}</TableHead>
+                  <TableHead className="text-xs text-right">{t("price")}</TableHead>
+                  <TableHead className="text-xs text-right">{t("total")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -81,12 +81,12 @@ export function PaymentDialog({
             </Table></div>
             <div className="border-t pt-2 space-y-1">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Jami:</span>
+                <span className="text-muted-foreground">{t("jami")}</span>
                 <span>{formatCurrency(receiptData.subtotal)}</span>
               </div>
               {receiptData.discountAmount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Chegirma:</span>
+                  <span className="text-muted-foreground">{t("chegirma")}</span>
                   <span>-{formatCurrency(receiptData.discountAmount)}</span>
                 </div>
               )}
@@ -99,12 +99,12 @@ export function PaymentDialog({
                 <span>{formatCurrency(receiptData.totalAmount)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>To'lov:</span>
+                <span>{t("tolov2")}</span>
                 <span>{paymentMethodLabels[receiptData.paymentMethod]?.uz || receiptData.paymentMethod}</span>
               </div>
               {(receiptData.paymentDetails?.changeAmount ?? 0) > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Qaytim:</span>
+                  <span className="text-muted-foreground">{t("qaytim")}</span>
                   <span>{formatCurrency(receiptData.paymentDetails.changeAmount ?? 0)}</span>
                 </div>
               )}
@@ -113,10 +113,10 @@ export function PaymentDialog({
         )}
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => setShowReceipt(false)} data-testid="button-close-receipt">
-            Yopish
+            {t("close2")}
           </Button>
           <Button onClick={handlePrintReceipt} data-testid="button-print-receipt">
-            <Printer className="h-4 w-4 mr-1" /> Chop etish
+            <Printer className="h-4 w-4 mr-1" /> {t("print1")}
           </Button>
         </DialogFooter>
       </DialogContent>

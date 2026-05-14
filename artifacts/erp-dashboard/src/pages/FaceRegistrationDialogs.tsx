@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -29,6 +30,7 @@ interface DeleteFaceDialogProps {
 // ---------------------------------------------------------------------------
 
 export function DeleteFaceDialog({ faceId, isPending, onConfirm }: DeleteFaceDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -50,7 +52,7 @@ export function DeleteFaceDialog({ faceId, isPending, onConfirm }: DeleteFaceDia
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => onConfirm(faceId)}
             className="bg-red-600 hover:bg-[var(--ep-red)]/90"

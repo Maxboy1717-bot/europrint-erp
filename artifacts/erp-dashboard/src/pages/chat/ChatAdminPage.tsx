@@ -13,8 +13,10 @@ import { apiRequest, getAuthHeaders } from '@/lib/queryClient';
 import { AdminRoom, AdminMember, AuditLog, Tab } from "./ChatAdminPageTypes";
 import { RoomsSection, AuditSection } from "./ChatAdminPageSections";
 import { RoomMembersSheet, RemoveMemberConfirm } from "./ChatAdminPageDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ChatAdminPage() {
+  const { t } = useTranslation("common");
   const [tab, setTab] = useState<Tab>("rooms");
   const [search, setSearch] = useState("");
   const [selectedRoom, setSelectedRoom] = useState<AdminRoom | null>(null);
@@ -102,13 +104,13 @@ export default function ChatAdminPage() {
         <div>
           <h1 className="text-lg font-semibold flex items-center gap-2">
             <Shield className="w-5 h-5 text-[var(--ep-blue)]" />
-            Chat Admin Panel
+            {t("chatAdminPanel")}
           </h1>
-          <p className="text-xs text-muted-foreground">Barcha xonalar va audit log boshqaruvi</p>
+          <p className="text-xs text-muted-foreground">{t("barchaXonalarVaAuditLog")}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetchRooms()} className="gap-1.5">
           <RefreshCw className="w-3.5 h-3.5" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 

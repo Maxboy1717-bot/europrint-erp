@@ -36,12 +36,12 @@ export function CheckBotTab() {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Oxirgi cheklar</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("oxirgiCheklar")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Sana/Vaqt</TableHead><TableHead>Yetkazuvchi</TableHead>
-              <TableHead>Summa</TableHead><TableHead>Toifasi</TableHead><TableHead>Holati</TableHead>
+              <TableHead>Sana/Vaqt</TableHead><TableHead>{t("yetkazuvchi")}</TableHead>
+              <TableHead>{t("summa")}</TableHead><TableHead>{t("toifasi")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {([
@@ -66,9 +66,9 @@ export function CheckBotTab() {
           <div className="flex items-center gap-3">
             <MessageSquare className="h-10 w-10 text-[#229ED9]" />
             <div>
-              <div className="font-semibold">Telegram Bot ulangan</div>
+              <div className="font-semibold">{t("telegramBotUlangan")}</div>
               <div className="text-sm text-muted-foreground">@europrint_check_bot</div>
-              <div className="text-xs text-[var(--ep-green)] mt-1">Faol — xabar yuboring yoki chek rasmini yuklang</div>
+              <div className="text-xs text-[var(--ep-green)] mt-1">{t("faolXabarYuboringYokiChek")}</div>
             </div>
           </div>
         </CardContent>
@@ -100,7 +100,7 @@ export function SupplierPortalTab({ vendorsCount, purchaseOrdersCount, requisiti
       <h2 className="text-lg font-semibold">{t('supplierPortal')}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
-          <CardHeader><CardTitle className="text-base">Portal statistikasi</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("portalStatistikasi")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([
               { l: "Ro'yxatdan o'tgan yetkazuvchilar", v: vendorsCount },
@@ -116,15 +116,15 @@ export function SupplierPortalTab({ vendorsCount, purchaseOrdersCount, requisiti
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Portal kirish</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("portalKirish")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="p-4 rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
               <ModuleSectionHeaderComponent moduleName="MM" moduleColor="text-[var(--ep-cyan)]" sectionTitle={metaTitle} icon={MetaIcon} />
               <div className="font-semibold">suppliers.europrint.uz</div>
-              <div className="text-sm text-muted-foreground mt-1">Yetkazuvchilar tashqi portal manzili</div>
+              <div className="text-sm text-muted-foreground mt-1">{t("yetkazuvchilarTashqiPortalManzili")}</div>
             </div>
             <Button className="w-full gap-2" data-testid="button-invite-supplier">
-              <Building2 className="h-4 w-4" />Yetkazuvchi Taklif Etish
+              <Building2 className="h-4 w-4" />{t("yetkazuvchiTaklifEtish")}
             </Button>
           </CardContent>
         </Card>
@@ -160,15 +160,15 @@ export function GoodsReceiptsTab({ goodsReceipts, grLoading }: GoodsReceiptsTabP
       <Card><CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
-            <TableHead>Akt №</TableHead><TableHead>Yetkazuvchi</TableHead>
-            <TableHead>Sana</TableHead><TableHead>Summa</TableHead><TableHead>Holati</TableHead>
+            <TableHead>{t("akt")}</TableHead><TableHead>{t("yetkazuvchi")}</TableHead>
+            <TableHead>{t("date")}</TableHead><TableHead>{t("summa")}</TableHead><TableHead>{t("holati")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {grLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : safe.length === 0 ? (
               <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                <PackageCheck className="h-8 w-8 mx-auto mb-2 opacity-30" />Qabul aktlari yo'q
+                <PackageCheck className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("qabulAktlariYoq")}
               </TableCell></TableRow>
             ) : safe.slice(0, 15).map((gr: GoodsReceipt) => (
               <TableRow key={gr.id} data-testid={`row-gr-${gr.id}`} className="hover:bg-muted/40 transition-colors">
@@ -204,7 +204,7 @@ export function CreditorTab({ purchaseOrders, totalPOValue, overduePOCount, pend
   const openOrders = (Array.isArray(purchaseOrders) ? purchaseOrders : []).filter(po => po.status !== "completed" && po.status !== "cancelled");
   return (
     <TabsContent value="creditor" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Kreditor Qarzlar</h2>
+      <h2 className="text-lg font-semibold">{t("kreditorQarzlar")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "Jami qarz (PO)",      v: fmtMoney(totalPOValue), c: "text-[var(--ep-red)]" },
@@ -221,8 +221,8 @@ export function CreditorTab({ purchaseOrders, totalPOValue, overduePOCount, pend
       <Card><CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
-            <TableHead>Yetkazuvchi</TableHead><TableHead>Qarz (PO summa)</TableHead>
-            <TableHead>Yetkazish muddati</TableHead><TableHead>Holati</TableHead>
+            <TableHead>{t("yetkazuvchi")}</TableHead><TableHead>Qarz (PO summa)</TableHead>
+            <TableHead>{t("yetkazishMuddati")}</TableHead><TableHead>{t("holati")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {openOrders.slice(0, 10).map((po: PurchaseOrder) => {
@@ -245,7 +245,7 @@ export function CreditorTab({ purchaseOrders, totalPOValue, overduePOCount, pend
             {openOrders.length === 0 && (
               <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">
                 <CheckCircle className="h-8 w-8 mx-auto mb-2 text-[var(--ep-green)] opacity-60" />
-                Muddati o'tgan qarzlar yo'q
+                {t("muddatiOtganQarzlarYoq")}
               </TableCell></TableRow>
             )}
           </TableBody>

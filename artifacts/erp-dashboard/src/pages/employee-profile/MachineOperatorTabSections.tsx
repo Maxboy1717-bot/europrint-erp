@@ -19,12 +19,14 @@ import { RefreshCw } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import type { MesSummary } from "./profile-types";
 import { KpiCardProps, STOPPAGE_COLORS } from "./MachineOperatorTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 /* ------------------------------------------------------------------ */
 /* KPI Card                                                             */
 /* ------------------------------------------------------------------ */
 
 export function KpiCard({ label, value, unit, icon: Icon, color, subtitle, trend }: KpiCardProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       <Button
@@ -32,7 +34,7 @@ export function KpiCard({ label, value, unit, icon: Icon, color, subtitle, trend
         size="sm"
         onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })}
         className="sr-only"
-        aria-label="Yangilash"
+        aria-label={t("refresh")}
       >
         <RefreshCw className="h-4 w-4" />
       </Button>
@@ -76,21 +78,21 @@ export function StatsRow({ completedSessions, totalSessions, totalStoppages, tot
       <div className="bg-muted/40 rounded-lg px-4 py-3 flex items-center gap-3">
         <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)] shrink-0" />
         <div>
-          <p className="text-xs text-muted-foreground">Yakunlangan sessiyalar</p>
+          <p className="text-xs text-muted-foreground">{t("yakunlanganSessiyalar")}</p>
           <p className="font-bold text-sm">{completedSessions} / {totalSessions}</p>
         </div>
       </div>
       <div className="bg-muted/40 rounded-lg px-4 py-3 flex items-center gap-3">
         <Clock className="h-5 w-5 text-[var(--ep-yellow)] shrink-0" />
         <div>
-          <p className="text-xs text-muted-foreground">To'xtashlar soni</p>
+          <p className="text-xs text-muted-foreground">{t("toxtashlarSoni")}</p>
           <p className="font-bold text-sm">{totalStoppages ?? 0} ta</p>
         </div>
       </div>
       <div className="bg-muted/40 rounded-lg px-4 py-3 flex items-center gap-3">
         <Zap className="h-5 w-5 text-[var(--ep-blue)] shrink-0" />
         <div>
-          <p className="text-xs text-muted-foreground">Jami ishlab chiqarilgan</p>
+          <p className="text-xs text-muted-foreground">{t("jamiIshlabChiqarilgan")}</p>
           <p className="font-bold text-sm">{(totalActual ?? 0).toLocaleString()} dona</p>
         </div>
       </div>
@@ -165,7 +167,7 @@ export function StoppageAnalysis({ mes }: StoppageAnalysisProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
           <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)]" />
-          To'xtash sabablari tahlili
+          {t("toxtashSabablariTahlili")}
         </CardTitle>
         {mes?.mostFrequentReason && (
           <CardDescription>
@@ -204,9 +206,9 @@ export function StoppageAnalysis({ mes }: StoppageAnalysisProps) {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">Sabab</TableHead>
-                <TableHead className="text-xs text-right">Marta</TableHead>
-                <TableHead className="text-xs text-right">Daqiqa</TableHead>
+                <TableHead className="text-xs">{t("sabab")}</TableHead>
+                <TableHead className="text-xs text-right">{t("marta")}</TableHead>
+                <TableHead className="text-xs text-right">{t("daqiqa1")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

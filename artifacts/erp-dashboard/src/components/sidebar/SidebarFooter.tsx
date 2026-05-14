@@ -5,8 +5,10 @@
 
 import { Plus, MessageSquare, Star } from "lucide-react";
 import { useLocation } from "wouter";
+import { useTranslation } from '@/lib/i18n';
 
 export function SidebarFooter() {
+  const { t } = useTranslation("common");
   const [, setLocation] = useLocation();
 
   return (
@@ -17,7 +19,7 @@ export function SidebarFooter() {
         onClick={() => setLocation("/kanban")}
       >
         <Plus className="h-3.5 w-3.5" />
-        Yangi Vazifa
+        {t("yangiVazifa1")}
       </button>
       <div className="flex gap-1 pt-0.5">
         <button
@@ -26,7 +28,7 @@ export function SidebarFooter() {
           data-testid="nav-menu-item-support"
         >
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-          <span>Yordam</span>
+          <span>{t("help")}</span>
         </button>
         <button
           onClick={() => setLocation("/feedback")}
@@ -34,7 +36,7 @@ export function SidebarFooter() {
           data-testid="nav-menu-item-feedback"
         >
           <Star className="h-3.5 w-3.5 shrink-0" />
-          <span>Fikr</span>
+          <span>{t("fikr")}</span>
         </button>
       </div>
     </div>

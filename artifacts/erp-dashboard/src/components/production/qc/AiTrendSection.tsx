@@ -10,12 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Brain, RefreshCw, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import { AiTrendData } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface AiTrendSectionProps {
   activeTab: string;
 }
 
 export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
+  const { t } = useTranslation("common");
   const { data: aiTrend, refetch: refetchAi } = useQuery<AiTrendData>({
     queryKey: ["/api/qc/ai-trend"],
     enabled: activeTab === "ai",
@@ -29,12 +31,12 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
             <Brain className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">AI Sifat Tahlili</h2>
-            <p className="text-sm text-muted-foreground">Sun'iy intellekt yordamida sifat trendlari va tavsiyalar</p>
+            <h2 className="text-xl font-bold">{t("aiSifatTahlili")}</h2>
+            <p className="text-sm text-muted-foreground">{t("suniyIntellektYordamidaSifatTrendlari")}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetchAi()} data-testid="button-refresh-ai">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Analizni yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("analizniYangilash")}
         </Button>
       </div>
 
@@ -42,9 +44,9 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
         <Card className="md:col-span-2 border-primary/20 bg-primary/5">
           <CardHeader>
             <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
-              <Brain className="h-4 w-4" /> AI Xulosasi
+              <Brain className="h-4 w-4" /> {t("aiXulosasi")}
             </CardTitle>
-            <CardDescription>Oxirgi 30 kunlik ma'lumotlar asosida shakllantirilgan</CardDescription>
+            <CardDescription>{t("oxirgi30KunlikMalumotlarAsosida")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
@@ -53,7 +55,7 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
             {aiTrend?.recommendations && aiTrend.recommendations.length > 0 && (
               <div className="pt-4 space-y-2">
                 <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">
-                  <AlertCircle className="h-4 w-4" /> Tavsiyalar:
+                  <AlertCircle className="h-4 w-4" /> {t("tavsiyalar")}
                 </h4>
                 <ul className="space-y-1.5">
                   {(Array.isArray(aiTrend.recommendations) ? aiTrend.recommendations : []).map((rec, i) => (
@@ -71,7 +73,7 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
         <div className="space-y-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Brak O'zgarishi</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("brakOzgarishi")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-2">
@@ -82,13 +84,13 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
                   <TrendingUp className="h-3 w-3 mr-1" /> +12.4%
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">O'tgan oyga nisbatan</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("otganOygaNisbatan")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Sifat Barqarorligi</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("sifatBarqarorligi")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-2">
@@ -97,7 +99,7 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
                   <TrendingUp className="h-3 w-3 mr-1" /> +0.5%
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Standartga muvofiqlik</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("standartgaMuvofiqlik")}</p>
             </CardContent>
           </Card>
         </div>
@@ -111,7 +113,7 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Sabab</TableHead>
+                <TableHead>{t("sabab")}</TableHead>
                 <TableHead className="text-right">Ulush (%)</TableHead>
               </TableRow></TableHeader>
               <TableBody>
@@ -121,7 +123,7 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
                     <TableCell className="text-right font-medium">{val}%</TableCell>
                   </TableRow>
                 )) : (
-                  <TableRow><TableCell colSpan={2} className="text-center py-6 text-[13px] text-muted-foreground">Ma'lumotlar yo'q</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={2} className="text-center py-6 text-[13px] text-muted-foreground">{t("malumotlarYoq")}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table></div>
@@ -130,13 +132,13 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">Xavf Darajasi Yuqori Bosqichlar</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t("xavfDarajasiYuqoriBosqichlar")}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Ishlab chiqarish bosqichi</TableHead>
-                <TableHead className="text-right">Xavf darajasi</TableHead>
+                <TableHead>{t("ishlabChiqarishBosqichi")}</TableHead>
+                <TableHead className="text-right">{t("xavfDarajasi")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {([

@@ -28,6 +28,7 @@ export function PayrollStatsCards({
   contractsLoading,
   calculationsLoading,
 }: PayrollStatsCardsProps) {
+  const { t } = useTranslation("common");
   const { t: tFinance } = useTranslation('finance');
 
   const cards = [
@@ -83,7 +84,7 @@ export function PayrollStatsCards({
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {(Array.isArray(cards) ? cards : []).map((card) => {
         const Icon = card.icon;

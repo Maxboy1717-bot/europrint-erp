@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,6 +87,7 @@ function KpiCard({ title, value, sub, icon: Icon, color, loading }: {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function TechDashboard() {
+  const { t } = useTranslation("common");
   const { data: stats, isLoading: sLoad } = useQuery<DesignStats>({
     queryKey: ["/api/design/statistics"],
   });
@@ -113,8 +115,8 @@ export default function TechDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Texnolog Dashbordi</h1>
-          <p className="text-sm text-muted-foreground">Dizayn va texnologik tasdiq ko'rinishi</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("texnologDashbordi")}</h1>
+          <p className="text-sm text-muted-foreground">{t("dizaynVaTexnologikTasdiqKorinishi")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className={cn("text-sm font-semibold px-3",
@@ -124,31 +126,31 @@ export default function TechDashboard() {
             Kutilmoqda: {sLoad ? "..." : pendingTech.length}
           </Badge>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/tech-approval">Tasdiqlash <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+            <Link href="/tech-approval">{t("verify")}<ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
           </Button>
         </div>
       </div>
 
       {/* ── SECTION 1: Hozirgi holat ─────────────────────────── */}
       <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Hozirgi holat</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("hozirgiHolat")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <KpiCard title="Jami buyurtmalar" value={stats?.totalOrders || 0}
+          <KpiCard title={t("jamiBuyurtmalar")} value={stats?.totalOrders || 0}
             icon={ClipboardList} color="text-[var(--ep-blue)]" loading={sLoad} />
-          <KpiCard title="Faol buyurtmalar" value={stats?.activeOrders || 0}
+          <KpiCard title={t("faolBuyurtmalar")} value={stats?.activeOrders || 0}
             sub="jarayonda" icon={Zap} color="text-[var(--ep-cyan)]" loading={sLoad} />
-          <KpiCard title="Tasdiqlash kutilmoqda" value={pendingTech.length}
+          <KpiCard title={t("tasdiqlashKutilmoqda")} value={pendingTech.length}
             icon={Clock} color="text-[var(--ep-yellow)]" loading={oLoad} />
-          <KpiCard title="Qayta ishlash" value={needsRevision.length}
+          <KpiCard title={t("process")} value={needsRevision.length}
             icon={RotateCcw} color="text-[var(--ep-red)]" loading={oLoad} />
-          <KpiCard title="Qoliplar" value={templates.length}
+          <KpiCard title={t("qoliplar")} value={templates.length}
             sub="faol" icon={Layers} color="text-[var(--ep-purple)]" loading={tLoad} />
         </div>
       </section>
 
       {/* ── SECTION 2: E'tibor kerak ─────────────────────────── */}
       <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">E'tibor kerak</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("etiborKerak")}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
           {/* Texnolog tasdiqini kutuvchilar */}
@@ -167,7 +169,7 @@ export default function TechDashboard() {
                pendingTech.length === 0 ? (
                 <div className="flex items-center gap-2 py-4 justify-center text-sm text-[var(--ep-green)]">
                   <CheckCircle className="w-4 h-4" />
-                  Hamma tasdiqlandi!
+                  {t("hammaTasdiqlandi")}
                 </div>
                ) : (
                 <div className="space-y-2">
@@ -201,13 +203,13 @@ export default function TechDashboard() {
             <CardContent>
               {oLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}</div> :
                needsRevision.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Qayta ishlash yo'q</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("qaytaIshlashYoq")}</p>
                ) : (
                 <div className="space-y-2">
                   {(Array.isArray(needsRevision) ? needsRevision : []).slice(0, 5).map(o => (
                     <div key={o.id} className="flex items-center justify-between text-sm py-0.5">
                       <span className="truncate max-w-[160px] text-muted-foreground">{o.clientName || o.orderNumber || `#${o.id}`}</span>
-                      <Badge className="text-xs ml-2 shrink-0 bg-red-50 text-[var(--ep-red)]">Revision</Badge>
+                      <Badge className="text-xs ml-2 shrink-0 bg-red-50 text-[var(--ep-red)]">{t("revision")}</Badge>
                     </div>
                   ))}
                 </div>
@@ -229,13 +231,13 @@ export default function TechDashboard() {
             <CardContent>
               {oLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}</div> :
                awaitingClient.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Kutilayotgan yo'q</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("kutilayotganYoq")}</p>
                ) : (
                 <div className="space-y-2">
                   {(Array.isArray(awaitingClient) ? awaitingClient : []).slice(0, 5).map(o => (
                     <div key={o.id} className="flex items-center justify-between text-sm py-0.5">
                       <span className="truncate max-w-[160px] text-muted-foreground">{o.clientName || o.orderNumber || `#${o.id}`}</span>
-                      <Badge className="text-xs ml-2 shrink-0 bg-violet-50 text-[var(--ep-purple)]">Kutilmoqda</Badge>
+                      <Badge className="text-xs ml-2 shrink-0 bg-violet-50 text-[var(--ep-purple)]">{t("Kutilmoqda")}</Badge>
                     </div>
                   ))}
                 </div>
@@ -247,7 +249,7 @@ export default function TechDashboard() {
 
       {/* ── SECTION 3: Statistika ─────────────────────────────── */}
       <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Statistika va trend</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("statistikaVaTrend")}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Status bo'yicha */}
@@ -255,13 +257,13 @@ export default function TechDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[var(--ep-blue)]" />
-                Buyurtmalar status bo'yicha
+                {t("buyurtmalarStatusBoyicha")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {sLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-5 w-full rounded-lg" />)}</div> :
                !stats?.ordersByStatus?.length ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Ma'lumot yo'q</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("malumotYoq")}</p>
                ) : (
                 <div className="space-y-2">
                   {(Array.isArray(stats?.ordersByStatus) ? stats.ordersByStatus : []).slice(0, 6).map(s => (
@@ -286,7 +288,7 @@ export default function TechDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Package className="w-4 h-4 text-[var(--ep-green)]" />
-                Umumiy xulosa
+                {t("umumiyXulosa")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -313,10 +315,10 @@ export default function TechDashboard() {
 
       {/* Tezkor harakatlar */}
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" asChild><Link href="/tech-approval">Tasdiqlash navbati</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/tech-cards">Texnik kartalar</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/tech/parallel-orders">Parallel buyurtmalar</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/design-dashboard">Dizayn dashbordi</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/tech-approval">{t("tasdiqlashNavbati1")}</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/tech-cards">{t("texnikKartalar")}</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/tech/parallel-orders">{t("parallelBuyurtmalar")}</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/design-dashboard">{t("dizaynDashbordi")}</Link></Button>
       </div>
     </div>
   );

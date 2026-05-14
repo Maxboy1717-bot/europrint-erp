@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CareerFormState } from "./CareerTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface CareerEditFormProps {
   form: CareerFormState;
@@ -14,30 +15,31 @@ interface CareerEditFormProps {
 }
 
 export function CareerEditForm({ form, onChange }: CareerEditFormProps) {
+  const { t } = useTranslation("common");
   const set = (patch: Partial<CareerFormState>) => onChange({ ...form, ...patch });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-1">
-          <Label>Keyingi tavsiya etilgan lavozim</Label>
+          <Label>{t("keyingiTavsiyaEtilganLavozim")}</Label>
         <Input
           value={form.nextRecommendedPosition}
           onChange={(e) => set({ nextRecommendedPosition: e.target.value })}
-          placeholder="Masalan: Ustaxona boshlig'i"
+          placeholder={t("masalanUstaxonaBoshligi")}
           data-testid="input-next-position"
         />
       </div>
       <div className="space-y-1">
-          <Label>Succession — kimning o'rniga o'tishi mumkin</Label>
+          <Label>{t("successionKimningOrnigaOtishiMumkin")}</Label>
         <Input
           value={form.successionFor}
           onChange={(e) => set({ successionFor: e.target.value })}
-          placeholder="Masalan: Direktor"
+          placeholder={t("masalanDirektor")}
           data-testid="input-succession-for"
         />
       </div>
       <div className="space-y-1">
-          <Label>Cross-training holati</Label>
+          <Label>{t("crossTrainingHolati")}</Label>
         <Select
           value={form.crossTrainingStatus}
           onValueChange={(v) => set({ crossTrainingStatus: v })}
@@ -46,32 +48,32 @@ export function CareerEditForm({ form, onChange }: CareerEditFormProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="not_started">Boshlanmagan</SelectItem>
-            <SelectItem value="in_progress">Davom etmoqda</SelectItem>
-            <SelectItem value="completed">Bajarildi</SelectItem>
+            <SelectItem value="not_started">{t("boshlanmagan")}</SelectItem>
+            <SelectItem value="in_progress">{t("davomEtmoqda")}</SelectItem>
+            <SelectItem value="completed">{t("Bajarildi")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1">
-          <Label>Karera yo'nalishi</Label>
+          <Label>{t("kareraYonalishi")}</Label>
         <Input
           value={form.careerPathDirection}
           onChange={(e) => set({ careerPathDirection: e.target.value })}
-          placeholder="Masalan: Texnik mutaxassis"
+          placeholder={t("masalanTexnikMutaxassis")}
           data-testid="input-career-direction"
         />
       </div>
       <div className="space-y-2 md:col-span-2">
-        <Label>Cross-training eslatma</Label>
+        <Label>{t("crossTrainingEslatma")}</Label>
         <Input
           value={form.crossTrainingNotes}
           onChange={(e) => set({ crossTrainingNotes: e.target.value })}
-          placeholder="Qo'shimcha ma'lumot..."
+          placeholder={t("qoshimchaMalumot")}
           data-testid="input-cross-training-notes"
         />
       </div>
       <div className="space-y-2 md:col-span-2">
-        <Label>Umumiy eslatmalar</Label>
+        <Label>{t("umumiyEslatmalar")}</Label>
         <Input
           value={form.notes}
           onChange={(e) => set({ notes: e.target.value })}

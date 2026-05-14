@@ -16,8 +16,10 @@ import { ROOMS, REFERENCE_PHOTO_ROLES, MANUAL_INSPECTION_ROLES, apiFetch } from 
 import { RoomCard, AlertsTabContent } from './InspectionPageSections';
 import { RoomDetailModal } from './InspectionPageDialogs';
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function InspectionPage() {
+  const { t } = useTranslation("common");
   const { user }      = useAuth();
   const userRole      = (user?.role ?? '').toUpperCase();
   const canUpload     = REFERENCE_PHOTO_ROLES.has(userRole);
@@ -62,7 +64,7 @@ export default function InspectionPage() {
         <div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Building2 className="w-6 h-6 text-[var(--ep-blue)]" />
-            Xona Inspeksiyasi
+            {t("xonaInspeksiyasi")}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">AI tahlil va real-time monitoring</p>
         </div>
@@ -75,7 +77,7 @@ export default function InspectionPage() {
           )}
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-            Yangilash
+            {t("refresh")}
           </Button>
         </div>
       </div>
@@ -83,7 +85,7 @@ export default function InspectionPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="rooms">
-            <Building2 className="w-4 h-4 mr-1" />Xonalar
+            <Building2 className="w-4 h-4 mr-1" />{t("xonalar")}
           </TabsTrigger>
           <TabsTrigger value="alerts">
             <AlertTriangle className="w-4 h-4 mr-1" />Ogohlantirishlar

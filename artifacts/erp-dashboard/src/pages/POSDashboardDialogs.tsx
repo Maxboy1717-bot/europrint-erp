@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from '@/lib/i18n';
 import {
   formatUZS,
   PAYMENT_METHODS,
@@ -61,11 +62,12 @@ export function PaymentDialog({
   onPaymentMethodChange,
   onConfirm,
 }: PaymentDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">To'lovni tasdiqlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("tolovniTasdiqlash")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -86,34 +88,34 @@ export function PaymentDialog({
             <Input
               value={customerName}
               onChange={e => onCustomerNameChange(e.target.value)}
-              placeholder="Mijoz ismi..."
+              placeholder={t("mijozIsmi2")}
             />
           </div>
 
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Mahsulotlar:</span>
+              <span className="text-gray-500">{t("mahsulotlar1")}</span>
               <span>{cartCount} dona</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Subtotal:</span>
+              <span className="text-gray-500">{t("subtotal")}</span>
               <span>{formatUZS(cartTotal)}</span>
             </div>
             {discountAmount > 0 && (
               <div className="flex justify-between text-sm text-[var(--ep-red)]">
-                <span>Chegirma:</span>
+                <span>{t("chegirma")}</span>
                 <span>-{formatUZS(discountAmount)}</span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between font-bold text-lg">
-              <span>Jami:</span>
+              <span>{t("jami")}</span>
               <span className="text-[var(--ep-green)]">{formatUZS(finalTotal)}</span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">To'lov usuli</label>
+            <label className="text-sm font-medium">{t("tolovUsuli")}</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {PAYMENT_METHODS.map(pm => (
                 <button
@@ -135,7 +137,7 @@ export function PaymentDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor
+            {t("Bekor")}
           </Button>
           <Button
             onClick={onConfirm}
@@ -195,7 +197,7 @@ export function ReceiptDialog({
                 variant="outline"
                 className="text-[var(--ep-yellow)] border-amber-400 text-xs"
               >
-                Oflayn
+                {t("offline3")}
               </Badge>
             )}
           </DialogTitle>
@@ -206,30 +208,30 @@ export function ReceiptDialog({
             <div className="text-center border-b pb-2">
               <p className="font-bold text-lg">EUROPRINT</p>
               <p className="text-xs text-gray-500">
-                Toshkent shahri, O'zbekiston
+                {t("toshkentShahriOzbekiston")}
               </p>
               <p className="text-xs text-gray-500">+998 71 123 45 67</p>
             </div>
 
             <div className="text-xs space-y-1">
               <div className="flex justify-between">
-                <span>Chek #:</span>
+                <span>{t("chek2")}</span>
                 <span className="font-bold">{lastSale.saleNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span>Sana:</span>
+                <span>{t("sana1")}</span>
                 <span>
                   {new Date(lastSale.createdAt).toLocaleString("uz-UZ")}
                 </span>
               </div>
               {lastSale.customerName && (
                 <div className="flex justify-between">
-                  <span>Mijoz:</span>
+                  <span>{t("mijoz")}</span>
                   <span>{lastSale.customerName}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span>To'lov:</span>
+                <span>{t("tolov2")}</span>
                 <span>{paymentLabel(lastSale.paymentMethod)}</span>
               </div>
             </div>
@@ -261,11 +263,11 @@ export function ReceiptDialog({
 
             {lastSale.isOffline && (
               <p className="text-center text-xs text-[var(--ep-yellow)] pt-1">
-                Internet ulanganida serverga yuboriladi
+                {t("internetUlanganidaServergaYuboriladi")}
               </p>
             )}
             <p className="text-center text-xs text-gray-400 pt-1">
-              Xarid uchun rahmat!
+              {t("xaridUchunRahmat")}
             </p>
           </div>
         )}
@@ -273,9 +275,9 @@ export function ReceiptDialog({
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-1" />
-            Print
+            {t("print2")}
           </Button>
-          <Button onClick={onNewSale}>Yangi sotuv</Button>
+          <Button onClick={onNewSale}>{t("yangiSotuv")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

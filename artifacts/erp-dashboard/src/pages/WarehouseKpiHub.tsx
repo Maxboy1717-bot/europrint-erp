@@ -70,36 +70,36 @@ export default function WarehouseKpiHub() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="text-xs text-gray-500 font-semibold">OMBOR KPI HUB</div>
-          <h1 className="text-2xl font-bold text-gray-900">Real-time Ombor Ko'rsatgichlari</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("realTimeOmborKorsatgichlari")}</h1>
         </div>
         <button
           onClick={() => void loadData()}
           className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-sm"
         >
-          🔄 Yangilash
+          {t("yangilash")}
         </button>
       </div>
 
-      {loading && <div className="text-center py-10 text-gray-500">⏳ Yuklanmoqda...</div>}
+      {loading && <div className="text-center py-10 text-gray-500">{t("yuklanmoqda")}</div>}
 
       {/* System KPI */}
       {!loading && sysKpi && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-            <KpiBox icon="🏭" label="Omborlar" value={String(sysKpi.totalWarehouses ?? 0)} />
-            <KpiBox icon="📦" label="Materiallar" value={String(sysKpi.totalMaterials ?? 0)} />
-            <KpiBox icon="💰" label="Jami qiymat" value={fmtMoney(sysKpi.totalStockValue) + " UZS"} color="text-[var(--ep-green)]" />
-            <KpiBox icon="⚠️" label="Past stok" value={String(sysKpi.lowStockAlerts ?? 0)} color={(sysKpi.lowStockAlerts ?? 0) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"} />
-            <KpiBox icon="⏳" label="Kutmoqda" value={String(sysKpi.pendingMovements ?? 0)} color={(sysKpi.pendingMovements ?? 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
+            <KpiBox icon="🏭" label={t("omborlar")} value={String(sysKpi.totalWarehouses ?? 0)} />
+            <KpiBox icon="📦" label={t("Materiallar")} value={String(sysKpi.totalMaterials ?? 0)} />
+            <KpiBox icon="💰" label={t("jamiQiymat1")} value={fmtMoney(sysKpi.totalStockValue) + " UZS"} color="text-[var(--ep-green)]" />
+            <KpiBox icon="⚠️" label={t("pastStok")} value={String(sysKpi.lowStockAlerts ?? 0)} color={(sysKpi.lowStockAlerts ?? 0) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"} />
+            <KpiBox icon="⏳" label={t("kutmoqda1")} value={String(sysKpi.pendingMovements ?? 0)} color={(sysKpi.pendingMovements ?? 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
             <KpiBox icon="🔬" label="QC kutmoqda" value={String(sysKpi.qcPending ?? 0)} color={(sysKpi.qcPending ?? 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
-            <KpiBox icon="📅" label="Bugun" value={String(sysKpi.todayMovements ?? 0)} />
-            <KpiBox icon="📊" label="Hafta" value={String(sysKpi.weeklyMovements ?? 0)} />
+            <KpiBox icon="📅" label={t("today")} value={String(sysKpi.todayMovements ?? 0)} />
+            <KpiBox icon="📊" label={t("hafta")} value={String(sysKpi.weeklyMovements ?? 0)} />
             <KpiBox icon="📈" label="Oy" value={String(sysKpi.monthlyMovements ?? 0)} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="font-semibold mb-3">🏆 Top omborlar</div>
+              <div className="font-semibold mb-3">{t("topOmborlar")}</div>
               {(Array.isArray(sysKpi.topWarehouses) ? sysKpi.topWarehouses : []).map((w, i) => (
                 <div key={w.code} className="flex items-center gap-2 mb-2 text-sm">
                   <div className="w-6 h-6 rounded-full bg-blue-50 text-[var(--ep-blue)] flex items-center justify-center text-xs font-bold">{i + 1}</div>
@@ -111,7 +111,7 @@ export default function WarehouseKpiHub() {
                 </div>
               ))}
               {(sysKpi.topWarehouses ?? []).length === 0 && (
-                <div className="text-center text-gray-400 py-4">Ma'lumot yo'q</div>
+                <div className="text-center text-gray-400 py-4">{t("malumotYoq")}</div>
               )}
             </div>
 
@@ -124,7 +124,7 @@ export default function WarehouseKpiHub() {
                 </div>
               ))}
               {(sysKpi.movementsByType ?? []).length === 0 && (
-                <div className="text-center text-gray-400 py-4">Harakatlar yo'q</div>
+                <div className="text-center text-gray-400 py-4">{t("harakatlarYoq")}</div>
               )}
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function WarehouseKpiHub() {
       {/* Per-warehouse */}
       {!loading && whKpis.length > 0 && (
         <div>
-          <div className="text-lg font-bold mb-3">🏪 Har ombor bo'yicha</div>
+          <div className="text-lg font-bold mb-3">{t("harOmborBoyicha")}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {whKpis.map(w => (
               <div
@@ -155,11 +155,11 @@ export default function WarehouseKpiHub() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 text-sm">
                   <Stat label={t('Material')} value={String(w.totalMaterials ?? 0)} />
-                  <Stat label="Past" value={String(w.lowStockCount ?? 0)} red={(w.lowStockCount ?? 0) > 0} />
-                  <Stat label="Tugagan" value={String(w.outOfStockCount ?? 0)} red={(w.outOfStockCount ?? 0) > 0} />
-                  <Stat label="Bugun" value={String(w.movementsToday ?? 0)} />
-                  <Stat label="Hafta" value={String(w.movementsThisWeek ?? 0)} />
-                  <Stat label="Kutmoqda" value={String(w.pendingApprovals ?? 0)} amber={(w.pendingApprovals ?? 0) > 0} />
+                  <Stat label={t("low")} value={String(w.lowStockCount ?? 0)} red={(w.lowStockCount ?? 0) > 0} />
+                  <Stat label={t("tugagan")} value={String(w.outOfStockCount ?? 0)} red={(w.outOfStockCount ?? 0) > 0} />
+                  <Stat label={t("today")} value={String(w.movementsToday ?? 0)} />
+                  <Stat label={t("hafta")} value={String(w.movementsThisWeek ?? 0)} />
+                  <Stat label={t("kutmoqda1")} value={String(w.pendingApprovals ?? 0)} amber={(w.pendingApprovals ?? 0) > 0} />
                 </div>
 
                 <div className="border-t pt-2 mb-2">
@@ -169,7 +169,7 @@ export default function WarehouseKpiHub() {
 
                 {(w.units ?? []).length > 0 && (
                   <div className="border-t pt-2">
-                    <div className="text-xs text-gray-500 mb-1">O'LCHOV BIRLIKLARI</div>
+                    <div className="text-xs text-gray-500 mb-1">{t("olchovBirliklari")}</div>
                     <div className="flex flex-wrap gap-1">
                       {(w.units ?? []).slice(0, 5).map(u => (
                         <span key={u.unit} className="bg-gray-50 rounded px-2 py-1 text-xs">

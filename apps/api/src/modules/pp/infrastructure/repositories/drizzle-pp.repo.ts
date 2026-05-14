@@ -91,7 +91,7 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async saveRouting(routing: Routing): Promise<Result<number>> {
     try {
-      const insertedId = await execSaveRouting(Number(routing.getProductId()), routing.getName(), routing.getVersion());
+      const insertedId = await execSaveRouting(Number(routing.getProductId()), `routing-${routing.getProductId()}`, routing.getVersion());
       return Ok(insertedId);
     } catch {
       this.logger.error('Failed to save routing');
@@ -103,7 +103,7 @@ export class DrizzlePpRepository implements IPpRepository {
     try {
       const row = await queryRouting(id);
       if (!row) return Err('Routing topilmadi');
-      return Ok(new Routing(Number(row['id']), String(row['name']), Number(row['version'] ?? 1)));
+      return Ok(new Routing(Number(row['id']), Number(row['product_id'] ?? 0), Number(row['version'] ?? 1)));
     } catch {
       this.logger.error('Failed to get routing');
       return Err('Oqish xatoligi');
@@ -114,7 +114,7 @@ export class DrizzlePpRepository implements IPpRepository {
     try {
       const row = await queryRoutingByProduct(productId);
       if (!row) return Err('Routing topilmadi');
-      return Ok(new Routing(Number(row['id']), String(row['name']), Number(row['version'] ?? 1)));
+      return Ok(new Routing(Number(row['id']), Number(row['product_id'] ?? 0), Number(row['version'] ?? 1)));
     } catch {
       this.logger.error('Failed to get routing by product');
       return Err('Oqish xatoligi');

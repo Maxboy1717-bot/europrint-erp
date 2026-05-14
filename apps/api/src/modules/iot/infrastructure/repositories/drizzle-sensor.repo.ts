@@ -13,10 +13,9 @@ import { ISensorRepo } from '../../domain/repositories/i-sensor.repo';
 import { SensorDevice } from '../../domain/aggregates/sensor-device.aggregate';
 import { SensorReading } from '../../domain/aggregates/sensor-reading.aggregate';
 import { SensorStatus, SensorType } from '../../domain/enums/sensor-status.enum';
-import { sql } from 'drizzle-orm';
-
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

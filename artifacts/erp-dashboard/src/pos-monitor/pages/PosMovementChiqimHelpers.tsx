@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import type { Toast, EmployeeSuggestion } from "./PosMovementChiqimTypes";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Toast container ──────────────────────────────────────────────────────────
 
@@ -12,6 +13,7 @@ interface ToastContainerProps {
 }
 
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
+  const { t } = useTranslation("common");
   if (!toasts.length) return null;
   return (
     <div style={{
@@ -67,17 +69,17 @@ export function NoStockModal({ materialName, onClose }: NoStockModalProps) {
       >
         <div style={{ fontSize: 52, marginBottom: 12 }}>🚫</div>
         <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "var(--pos-danger)" }}>
-          Qoldiq yo'q!
+          {t("qoldiqYoq")}
         </h3>
         <p style={{ color: "var(--pos-text-muted)", fontSize: 13, marginBottom: 20 }}>
-          <strong>{materialName}</strong> — omborda mavjud qoldiq yo'q. Bu mahsulot chiqim qilinmaydi.
+          <strong>{materialName}</strong> {t("ombordaMavjudQoldiqYoqBu")}
         </p>
         <button
           className="pos-btn pos-btn-danger"
           style={{ minWidth: 120, justifyContent: "center" }}
           onClick={onClose}
         >
-          Yopish
+          {t("close2")}
         </button>
       </div>
     </div>
@@ -123,7 +125,7 @@ export function EmployeeSearch({ value, onChange }: EmployeeSearchProps) {
         value={query}
         onChange={e => search(e.target.value)}
         onBlur={() => setTimeout(() => setOpen(false), 180)}
-        placeholder="Xodim ismi..."
+        placeholder={t("xodimIsmi2")}
       />
       {open && suggestions.length > 0 && (
         <div style={{

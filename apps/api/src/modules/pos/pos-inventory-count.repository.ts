@@ -5,13 +5,14 @@
 
 
 import { castTo } from '@common/db-rows';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 import { Injectable } from '@nestjs/common';
 import { posInventoryCounts, db, sql, eq, and, inArray } from '@workspace/db';
 import { execPosInventoryCountMarkGlPosted } from '@common/database/queries-remaining';
 import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await db.execute(q)).rows as Row[];
 };
 

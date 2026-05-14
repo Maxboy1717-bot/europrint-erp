@@ -16,8 +16,10 @@ import { getTestTypeLabel } from "./HRCapitalTestsHelpers";
 import { SessionsTab, ToolTestAdminTab, ResultsTab, MethodologyTab } from "./HRCapitalTestsTabs";
 import { CreateSessionDialog, QuestionDialog, ResultDetailDialog } from "./HRCapitalTestsDialogs";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function HRCapitalTests() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // ── UI state ─────────────────────────────────────────────────────────────────
@@ -87,9 +89,9 @@ export default function HRCapitalTests() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">HR Capital Testlar</b></>}
-        title="HR Capital Testlar"
-        subtitle="TOOL TEST · IQ · Liderlik · Takrorlash"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("hrCapitalTestlar")}</b></>}
+        title={t("hrCapitalTestlar")}
+        subtitle={t("toolTestIqLiderlikTakrorlash")}
       />
         </div>
         <Button
@@ -97,7 +99,7 @@ export default function HRCapitalTests() {
           className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
           data-testid="button-create-test-session"
         >
-          <Plus className="w-4 h-4 mr-2" /> Test Sessiyasi Yaratish
+          <Plus className="w-4 h-4 mr-2" /> {t("testSessiyasiYaratish")}
         </Button>
       </div>
 
@@ -130,10 +132,10 @@ export default function HRCapitalTests() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-muted/40">
-          <TabsTrigger value="overview">Sessiyalar</TabsTrigger>
-          <TabsTrigger value="tool-test-admin">TOOL TEST Savollar</TabsTrigger>
-          <TabsTrigger value="results">Natijalar</TabsTrigger>
-          <TabsTrigger value="methodology">Metodologiya</TabsTrigger>
+          <TabsTrigger value="overview">{t("sessiyalar")}</TabsTrigger>
+          <TabsTrigger value="tool-test-admin">{t("toolTestSavollar")}</TabsTrigger>
+          <TabsTrigger value="results">{t("natijalar")}</TabsTrigger>
+          <TabsTrigger value="methodology">{t("metodologiya")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -185,8 +187,8 @@ export default function HRCapitalTests() {
       <ConfirmDialog
         open={confirmDeleteQId !== null}
         onOpenChange={open => { if (!open) setConfirmDeleteQId(null); }}
-        title="Savolni o'chirish"
-        description="Ushbu kapital test savolini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("savolniOchirish")}
+        description={t("ushbuKapitalTestSavoliniOchirishni")}
         confirmText="O'chirish" cancelText="Bekor qilish" variant="destructive"
         onConfirm={() => { if (confirmDeleteQId !== null) deleteQuestionMutation.mutate(confirmDeleteQId); }}
       />

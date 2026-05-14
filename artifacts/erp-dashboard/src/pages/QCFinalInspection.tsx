@@ -13,8 +13,10 @@ import { PapkaOrder, FinalInspection } from "./QCFinalInspectionTypes";
 import { InspectionStats, PendingOrdersList, RecentInspectionsList } from "./QCFinalInspectionSections";
 import { InspectDialog, InspectDialogFormState, InspectDialogSetters } from "./QCFinalInspectionDialogs";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function QCFinalInspection() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // Dialog open/selected order
@@ -114,7 +116,7 @@ export default function QCFinalInspection() {
     setSampleQty, setDefectQty, setVisualOk, setDimensionsOk, setPrintOk, setPackagingOk, setComments,
   };
 
-  if (isLoading) return <div className="p-6">Yuklanmoqda...</div>;
+  if (isLoading) return <div className="p-6">{t("Yuklanmoqda...")}</div>;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
@@ -125,9 +127,9 @@ export default function QCFinalInspection() {
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Yakuniy QC Tekshiruv</b></>}
-        title="Yakuniy QC Tekshiruv"
-        subtitle="Tayyor mahsulotni yetkazib berishdan oldin yakuniy sifat nazorati"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("yakuniyQcTekshiruv")}</b></>}
+        title={t("yakuniyQcTekshiruv")}
+        subtitle={t("tayyorMahsulotniYetkazibBerishdanOldin")}
       />
         </div>
       </div>

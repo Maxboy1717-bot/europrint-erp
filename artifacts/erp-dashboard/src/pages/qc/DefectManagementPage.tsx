@@ -75,10 +75,10 @@ export default function DefectManagementPage() {
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                    <span>Markaz: <strong>{d.workCenterName ?? '—'}</strong></span>
-                    <span>Miqdor: <strong>{d.quantity} {d.unit}</strong></span>
-                    <span>Yo'qotish: <strong>{d.estimatedLossUzs.toLocaleString()} UZS</strong></span>
-                    <span>Sana: <strong>{new Date(d.reportedAt).toLocaleDateString()}</strong></span>
+                    <span>{t("markaz")}<strong>{d.workCenterName ?? '—'}</strong></span>
+                    <span>{t("miqdor")}<strong>{d.quantity} {d.unit}</strong></span>
+                    <span>{t("yoqotish")}<strong>{d.estimatedLossUzs.toLocaleString()} UZS</strong></span>
+                    <span>{t("sana1")}<strong>{new Date(d.reportedAt).toLocaleDateString()}</strong></span>
                   </div>
                   {d.rootCause ? (
                     <p className="text-xs italic mt-2 text-muted-foreground">

@@ -6,7 +6,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, and, eq, sql } from 'drizzle-orm';
 import { orgDepartments, employeeOrgDepartments, appUsers } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
@@ -17,7 +17,7 @@ const ORG_EMPLOYEES_FETCH_LIMIT = 100;
 const fullName = sql<string>`(${appUsers.first_name} || ' ' || ${appUsers.last_name})`;
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

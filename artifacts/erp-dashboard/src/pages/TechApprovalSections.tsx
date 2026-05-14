@@ -16,10 +16,12 @@ import {
 } from "lucide-react";
 import type { AiCheckResult, ApprovalLog, MaterialAlt } from "./TechApprovalTypes";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 // ─── AI Check Panel ───────────────────────────────────────────────────────────
 
 export function AiCheckPanel({ orderId }: { orderId: string }) {
+  const { t } = useTranslation("common");
   const [result, setResult] = useState<AiCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +61,7 @@ export function AiCheckPanel({ orderId }: { orderId: string }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          <span className="font-medium text-sm">AI Tahlil Natijasi</span>
+          <span className="font-medium text-sm">{t("aiTahlilNatijasi")}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className={`text-2xl font-bold ${scoreColor}`}>{result.score}</span>
@@ -122,7 +124,7 @@ export function ApprovalHistory({ orderId }: { orderId: string }) {
   if (!log || log.techAction === "pending") {
     return (
       <p className="text-sm text-muted-foreground italic">
-        Hali texnolog harakati yo'q
+        {t("haliTexnologHarakatiYoq")}
       </p>
     );
   }

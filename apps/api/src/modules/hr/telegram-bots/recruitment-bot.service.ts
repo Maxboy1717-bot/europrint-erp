@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { Result, AppError, safeCall } from '@common/result';
 import { errMsg } from "../hr-v2-error";
 import type { Telegraf, Context } from 'telegraf';
+import { message } from 'telegraf/filters';
 import {
   Lang, RecruitStep, RecruitSession, MAX_ATTEMPTS, I18N,
 } from './recruitment-bot.i18n';
@@ -28,7 +29,7 @@ export class RecruitmentBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[recruitment-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('Recruitment Bot token not configured (TELEGRAM_RECRUITMENT_BOT_TOKEN missing) — skipping');
         return;
@@ -103,7 +104,7 @@ export class RecruitmentBotService implements OnModuleInit, OnModuleDestroy {
       );
     });
 
-    bot.on('document', async (ctx: Context) => {
+    bot.on(message('document' as never), async (ctx: Context) => {
       type DocCtx = Context & {
         chat?: { id?: number };
         message?: { document?: { file_name?: string; file_id?: string } };
@@ -126,7 +127,7 @@ export class RecruitmentBotService implements OnModuleInit, OnModuleDestroy {
       );
     });
 
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       type TxtCtx = Context & {
         chat?: { id?: number };
         message?: { text?: string };

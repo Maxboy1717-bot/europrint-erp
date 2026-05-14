@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FileText, AlertTriangle, Plus, Eye, Trash2 } from "lucide-react";
 import { KpiCard, fmtDate } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function ContractsTab({ customerId, contracts }: { customerId: number; contracts: SdContractsData }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -61,7 +63,7 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
     invoice: "Invoice", act: "Akt", other: "Boshqa",
   };
 
-  if (!contracts) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
+  if (!contracts) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
   const allDocs = contracts.allDocuments || contracts.contracts || (Array.isArray(contracts) ? contracts : []);
   const contractDocs = (contracts.contracts || []);
@@ -71,11 +73,11 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <KpiCard icon={FileText} label="Jami hujjatlar" value={String(contracts.totalCount || allDocs.length)}
+        <KpiCard icon={FileText} label={t("jamiHujjatlar")} value={String(contracts.totalCount || allDocs.length)}
           gradient="" />
-        <KpiCard icon={FileText} label="Shartnomalar" value={String(contractDocs.length)}
+        <KpiCard icon={FileText} label={t("shartnomalar")} value={String(contractDocs.length)}
           gradient="" />
-        <KpiCard icon={AlertTriangle} label="Muddati yaqin" value={String(expiringSoon.length)}
+        <KpiCard icon={AlertTriangle} label={t("muddatiYaqin")} value={String(expiringSoon.length)}
           color={expiringSoon.length > 0 ? "text-[var(--ep-primary)]" : "text-[var(--ep-green)]"}
           gradient="" />
       </div>
@@ -85,7 +87,7 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
         <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 overflow-hidden">
           <div className="px-4 py-3 border-b border-orange-200 dark:border-orange-800">
             <h3 className="text-sm font-semibold text-[var(--ep-primary)] dark:text-orange-400 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />Muddati yaqinlashayotgan
+              <AlertTriangle className="h-4 w-4" />{t("muddatiYaqinlashayotgan")}
             </h3>
           </div>
           <div className="p-4 space-y-2">
@@ -109,20 +111,20 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
           <DialogTrigger asChild>
             <Button size="sm" className="bg-primary text-white border-0"
               data-testid="btn-add-document">
-              <Plus className="h-4 w-4 mr-1" />Hujjat qo'shish
+              <Plus className="h-4 w-4 mr-1" />{t("hujjatQoshish")}
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Hujjat qo'shish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("hujjatQoshish")}</DialogTitle></DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-3">
                 <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem><FormLabel>Nomi *</FormLabel>
+                  <FormItem><FormLabel>{t("nomi")}</FormLabel>
                     <FormControl><Input {...field} data-testid="input-doc-name" /></FormControl>
                     <FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="type" render={({ field }) => (
-                  <FormItem><FormLabel>Turi</FormLabel>
+                  <FormItem><FormLabel>{t("type")}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
@@ -131,17 +133,17 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
                     </Select></FormItem>
                 )} />
                 <FormField control={form.control} name="fileUrl" render={({ field }) => (
-                  <FormItem><FormLabel>Fayl URL *</FormLabel>
+                  <FormItem><FormLabel>{t("faylUrl")}</FormLabel>
                     <FormControl><Input {...field} data-testid="input-doc-url" /></FormControl>
                     <FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="expiresAt" render={({ field }) => (
-                  <FormItem><FormLabel>Muddati</FormLabel>
+                  <FormItem><FormLabel>{t("muddati")}</FormLabel>
                     <FormControl><Input {...field} type="date" /></FormControl></FormItem>
                 )} />
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>Bekor</Button>
-                  <Button type="submit" disabled={addMutation.isPending}>Saqlash</Button>
+                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>{t("Bekor")}</Button>
+                  <Button type="submit" disabled={addMutation.isPending}>{t("Saqlash")}</Button>
                 </div>
               </form>
             </Form>
@@ -153,7 +155,7 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
         {allDocs.length === 0 ? (
           <div className="rounded-xl border bg-card py-10 text-center text-muted-foreground text-sm">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            Hujjatlar yo'q
+            {t("hujjatlarYoq")}
           </div>
         ) : allDocs.map((d) => {
           const expiresAt = d.expiresAt || d.endDate;
@@ -193,12 +195,12 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Hujjatni o'chirishni tasdiqlang</AlertDialogTitle>
-                        <AlertDialogDescription>Hujjat butunlay o'chiriladi.</AlertDialogDescription>
+                        <AlertDialogTitle>{t("hujjatniOchirishniTasdiqlang")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("hujjatButunlayOchiriladi")}</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteMutation.mutate(d.id)}>O'chirish</AlertDialogAction>
+                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteMutation.mutate(d.id)}>{t("delete")}</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>

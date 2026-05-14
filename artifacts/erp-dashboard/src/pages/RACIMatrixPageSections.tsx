@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { RACITask, BusinessStage, Crisis, roleBadgeVariant, roleLabel } from "./RACIMatrixPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // RACI tab section
@@ -42,6 +43,7 @@ interface RACITaskListProps {
 }
 
 export function RACITaskList({ tasks, expandedTasks, onToggleTask }: RACITaskListProps) {
+  const { t } = useTranslation("common");
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12" data-testid="empty-tasks">
@@ -80,9 +82,9 @@ export function RACITaskList({ tasks, expandedTasks, onToggleTask }: RACITaskLis
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Rol</TableHead>
-                      <TableHead>Xodim</TableHead>
-                      <TableHead>Lavozim</TableHead>
+                      <TableHead>{t("role")}</TableHead>
+                      <TableHead>{t("xodim1")}</TableHead>
+                      <TableHead>{t("lavozim1")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -107,7 +109,7 @@ export function RACITaskList({ tasks, expandedTasks, onToggleTask }: RACITaskLis
             {isExpanded && (!task.assignments || task.assignments.length === 0) && (
               <CardContent className="pt-0 pb-4">
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Tayinlanmalar mavjud emas
+                  {t("tayinlanmalarMavjudEmas")}
                 </p>
               </CardContent>
             )}
@@ -131,7 +133,7 @@ export function BusinessStagesList({ stages }: BusinessStagesListProps) {
     return (
       <div className="text-center py-12" data-testid="empty-stages">
         <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground">Biznes bosqichlar mavjud emas</p>
+        <p className="text-muted-foreground">{t("biznesBosqichlarMavjudEmas")}</p>
       </div>
     );
   }
@@ -160,7 +162,7 @@ export function BusinessStagesList({ stages }: BusinessStagesListProps) {
 
             {stage.keyChallenges && stage.keyChallenges.length > 0 && (
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Asosiy muammolar:</p>
+                <p className="text-xs font-medium text-muted-foreground">{t("asosiyMuammolar")}</p>
                 <ul className="space-y-1">
                   {(Array.isArray(stage.keyChallenges) ? stage.keyChallenges : []).map((challenge, idx) => (
                     <li
@@ -195,7 +197,7 @@ export function CrisesList({ crises }: CrisesListProps) {
     return (
       <div className="text-center py-12" data-testid="empty-crises">
         <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground">Krizis turlari mavjud emas</p>
+        <p className="text-muted-foreground">{t("krizisTurlariMavjudEmas")}</p>
       </div>
     );
   }
@@ -220,7 +222,7 @@ export function CrisesList({ crises }: CrisesListProps) {
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                   <Activity className="h-3 w-3" />
-                  Simptomlar:
+                  {t("simptomlar")}
                 </p>
                 <ul className="space-y-1">
                   {(Array.isArray(crisis.symptoms) ? crisis.symptoms : []).map((symptom, idx) => (
@@ -241,7 +243,7 @@ export function CrisesList({ crises }: CrisesListProps) {
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                   <TrendingUp className="h-3 w-3" />
-                  Yechimlar:
+                  {t("yechimlar")}
                 </p>
                 <ul className="space-y-1">
                   {(Array.isArray(crisis.solutions) ? crisis.solutions : []).map((solution, idx) => (

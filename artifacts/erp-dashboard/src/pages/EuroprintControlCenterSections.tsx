@@ -26,12 +26,14 @@ import {
   fmt,
 } from "./EuroprintControlCenterTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // CompanyStatePanel
 // ---------------------------------------------------------------------------
 
 export function CompanyStatePanel() {
+  const { t } = useTranslation("common");
   const { data, isLoading, isError, refetch } = useQuery<CompanyStateCurrent>({
     queryKey: ["/api/company-state/current"],
     queryFn: async () => {
@@ -53,7 +55,7 @@ export function CompanyStatePanel() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" />
-            Kompaniya Holati — Avtomatik Aniqlanish
+            {t("kompaniyaHolatiAvtomatikAniqlanish")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -62,7 +64,7 @@ export function CompanyStatePanel() {
               Kompaniya holati yuklanmadi. Server bilan bog&apos;lanishda xatolik.
             </span>
             <Button size="sm" variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Qayta urinish
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t("qaytaUrinish")}
             </Button>
           </div>
         </CardContent>
@@ -76,7 +78,7 @@ export function CompanyStatePanel() {
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" />
-            Kompaniya Holati — Avtomatik Aniqlanish
+            {t("kompaniyaHolatiAvtomatikAniqlanish")}
           </CardTitle>
           {isLoading ? (
             <Skeleton className="h-7 w-32 rounded-full" />
@@ -102,8 +104,8 @@ export function CompanyStatePanel() {
                 <span className="text-xs text-muted-foreground">{fmt(data?.kpis?.profit ?? 0)}</span>
               </div>
               <p className="text-xl font-bold text-foreground">{profitPct}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Haftalik Foyda</p>
-              <p className="text-[10px] text-muted-foreground">Maqsad: 100 mln</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("haftalikFoyda")}</p>
+              <p className="text-[10px] text-muted-foreground">{t("maqsad100Mln")}</p>
             </div>
             <div className={cn("rounded-xl p-4 text-center", colors.bg)} data-testid="cs-revenue">
               <div className="flex items-center justify-center gap-1 mb-1">
@@ -113,19 +115,19 @@ export function CompanyStatePanel() {
                 <span className="text-xs text-muted-foreground">{fmt(data?.kpis?.revenue ?? 0)}</span>
               </div>
               <p className="text-xl font-bold text-foreground">{revenuePct}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Haftalik Daromad</p>
-              <p className="text-[10px] text-muted-foreground">Maqsad: 800 mln</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("haftalikDaromad")}</p>
+              <p className="text-[10px] text-muted-foreground">{t("maqsad800Mln")}</p>
             </div>
             <div className={cn("rounded-xl p-4 text-center", colors.bg)} data-testid="cs-retention">
               <div className="flex items-center justify-center gap-1 mb-1">
                 {(data?.kpis?.retentionPct ?? 100) >= 95
                   ? <TrendingUp className="w-3.5 h-3.5 text-[var(--ep-green)]" />
                   : <TrendingDown className="w-3.5 h-3.5 text-[var(--ep-red)]" />}
-                <span className="text-xs text-muted-foreground">Xodimlar</span>
+                <span className="text-xs text-muted-foreground">{t("xodimlar")}</span>
               </div>
               <p className="text-xl font-bold text-foreground">{(data?.kpis?.retentionPct ?? 100).toFixed(1)}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Xodim Saqlash</p>
-              <p className="text-[10px] text-muted-foreground">Maqsad: ≥95%</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("xodimSaqlash")}</p>
+              <p className="text-[10px] text-muted-foreground">{t("maqsad95")}</p>
             </div>
           </div>
         )}

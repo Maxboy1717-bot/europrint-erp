@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { StatusPill, AvatarMockup } from "@/components/mockup";
+import { useTranslation } from '@/lib/i18n';
 
 const ClockHistoryIconAlias = ClockHistory; // re-export for clarity
 void ClockHistoryIconAlias;
@@ -34,6 +35,7 @@ interface EmployeeProfile {
 const ClockHistoryIcon = ClockHistory; // already imported
 
 export default function EmployeeProfileMockup() {
+  const { t } = useTranslation("common");
   const { id } = useParams<{ id: string }>();
   const [alertVisible, setAlertVisible] = useState(true);
 
@@ -64,10 +66,10 @@ export default function EmployeeProfileMockup() {
       {/* Page header */}
       <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
         <div>
-          <h2 className="text-xl font-semibold m-0">Xodim paneli</h2>
+          <h2 className="text-xl font-semibold m-0">{t("xodimPaneli")}</h2>
           <div className="text-xs text-[var(--ep-muted)] mt-1 flex items-center gap-1.5">
             <Home className="h-3.5 w-3.5" />
-            <a href="/" className="text-[var(--ep-muted)] no-underline hover:text-[var(--ep-primary)]">Bosh sahifa</a>
+            <a href="/" className="text-[var(--ep-muted)] no-underline hover:text-[var(--ep-primary)]">{t("home")}</a>
             <ChevronRight className="h-2.5 w-2.5" />
             <span>HR</span>
             <ChevronRight className="h-2.5 w-2.5" />
@@ -75,7 +77,7 @@ export default function EmployeeProfileMockup() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="pill-btn"><Download className="h-3 w-3" /> Eksport</button>
+          <button className="pill-btn"><Download className="h-3 w-3" /> {t("export")}</button>
           <button className="pill-btn"><CalendarIcon className="h-3 w-3" /> 01-05-2026</button>
         </div>
       </div>
@@ -85,7 +87,7 @@ export default function EmployeeProfileMockup() {
         <div className="flex items-center justify-between p-3 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
           <span className="flex items-center gap-2 text-sm">
             <Info className="h-4 w-4 text-[var(--ep-primary)]" />
-            Sizning <strong>"24-aprel 2026"</strong> ta'til arizangiz tasdiqlandi!
+            {t("sizning")}<strong>"24-aprel 2026"</strong> {t("tatilArizangizTasdiqlandi")}
           </span>
           <button
             onClick={() => setAlertVisible(false)}
@@ -97,7 +99,7 @@ export default function EmployeeProfileMockup() {
       )}
 
       {isLoading && (
-        <div className="text-center py-8 text-[var(--ep-muted)]">Yuklanmoqda...</div>
+        <div className="text-center py-8 text-[var(--ep-muted)]">{t("Yuklanmoqda...")}</div>
       )}
 
       {/* Top row: Profile card + 2 ta info card */}
@@ -122,19 +124,19 @@ export default function EmployeeProfileMockup() {
           </div>
           <div className="p-[18px] bg-[hsl(var(--card))] space-y-3">
             <div>
-              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><Phone className="h-3 w-3" /> Telefon raqami</div>
+              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><Phone className="h-3 w-3" /> {t("telefonRaqami")}</div>
               <div className="font-semibold mt-0.5 text-sm">{emp.phone ?? '—'}</div>
             </div>
             <div>
-              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><Mail className="h-3 w-3" /> Email</div>
+              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><Mail className="h-3 w-3" /> {t("email1")}</div>
               <div className="font-semibold mt-0.5 text-sm">{emp.email ?? '—'}</div>
             </div>
             <div>
-              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><Briefcase className="h-3 w-3" /> Hisobot beradi</div>
+              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><Briefcase className="h-3 w-3" /> {t("hisobotBeradi")}</div>
               <div className="font-semibold mt-0.5 text-sm">{emp.managerName ?? '—'}</div>
             </div>
             <div>
-              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><CalendarIcon className="h-3 w-3" /> Ish boshlagan</div>
+              <div className="text-xs text-[var(--ep-muted)] flex items-center gap-1.5"><CalendarIcon className="h-3 w-3" /> {t("ishBoshlagan")}</div>
               <div className="font-semibold mt-0.5 text-sm">{emp.hireDate ?? '—'}</div>
             </div>
           </div>
@@ -143,20 +145,20 @@ export default function EmployeeProfileMockup() {
         {/* Ta'til tafsilotlari (left) */}
         <div className="ep-card h-full">
           <div className="ep-card-header">
-            <h6>Davomat statistikasi</h6>
+            <h6>{t("davomatStatistikasi")}</h6>
             <span className="pill-btn">2026</span>
           </div>
           <div className="ep-card-body">
             <div className="space-y-2 text-sm">
               <div><span className="ldot" style={{ background: 'var(--ep-primary)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>1254</strong> kunda keldi</div>
-              <div><span className="ldot" style={{ background: 'var(--ep-yellow)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>32</strong> kech qoldi</div>
-              <div><span className="ldot" style={{ background: 'var(--ep-purple)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>658</strong> uydan ish</div>
-              <div><span className="ldot" style={{ background: 'var(--ep-red)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>14</strong> yo'q</div>
+              <div><span className="ldot" style={{ background: 'var(--ep-yellow)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>32</strong> {t("kechQoldi")}</div>
+              <div><span className="ldot" style={{ background: 'var(--ep-purple)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>658</strong> {t("uydanIsh")}</div>
+              <div><span className="ldot" style={{ background: 'var(--ep-red)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>14</strong> {t("yoq")}</div>
               <div><span className="ldot" style={{ background: 'var(--ep-green)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} /><strong>68</strong> kasallik</div>
             </div>
             <div className="text-xs text-[var(--ep-muted)] mt-3 flex items-center gap-2">
               <input type="checkbox" defaultChecked className="rounded" />
-              Xodimlarning <strong className="text-[var(--ep-primary)]">85%</strong> idan yaxshiroq
+              {t("xodimlarning")}<strong className="text-[var(--ep-primary)]">85%</strong> idan yaxshiroq
             </div>
           </div>
         </div>
@@ -164,33 +166,33 @@ export default function EmployeeProfileMockup() {
         {/* Ta'til tafsilotlari (grid) */}
         <div className="ep-card h-full">
           <div className="ep-card-header">
-            <h6>Ta'til tafsilotlari</h6>
+            <h6>{t("tatilTafsilotlari")}</h6>
             <span className="pill-btn">2026</span>
           </div>
           <div className="ep-card-body">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-center">
               <div>
-                <div className="text-xs text-[var(--ep-muted)]">Jami ta'til</div>
+                <div className="text-xs text-[var(--ep-muted)]">{t("jamiTatil")}</div>
                 <h3 className="m-0 text-2xl font-bold">16</h3>
               </div>
               <div>
-                <div className="text-xs text-[var(--ep-muted)]">Olingan</div>
+                <div className="text-xs text-[var(--ep-muted)]">{t("olingan")}</div>
                 <h3 className="m-0 text-2xl font-bold">10</h3>
               </div>
               <div>
-                <div className="text-xs text-[var(--ep-muted)]">Yo'q</div>
+                <div className="text-xs text-[var(--ep-muted)]">{t("no")}</div>
                 <h3 className="m-0 text-2xl font-bold">2</h3>
               </div>
               <div>
-                <div className="text-xs text-[var(--ep-muted)]">So'rov</div>
+                <div className="text-xs text-[var(--ep-muted)]">{t("sorov")}</div>
                 <h3 className="m-0 text-2xl font-bold">0</h3>
               </div>
               <div>
-                <div className="text-xs text-[var(--ep-muted)]">Ishlagan</div>
+                <div className="text-xs text-[var(--ep-muted)]">{t("ishlagan")}</div>
                 <h3 className="m-0 text-2xl font-bold">240</h3>
               </div>
               <div>
-                <div className="text-xs text-[var(--ep-muted)]">To'lovsiz</div>
+                <div className="text-xs text-[var(--ep-muted)]">{t("tolovsiz")}</div>
                 <h3 className="m-0 text-2xl font-bold">2</h3>
               </div>
             </div>
@@ -199,7 +201,7 @@ export default function EmployeeProfileMockup() {
               style={{ background: 'var(--ep-dark)' }}
             >
               <Plus className="h-3.5 w-3.5 inline mr-1" />
-              Yangi ta'til so'rash
+              {t("yangiTatilSorash")}
             </button>
           </div>
         </div>
@@ -213,29 +215,29 @@ export default function EmployeeProfileMockup() {
           style={{ background: 'rgba(255,144,47,0.04)', borderColor: 'rgba(255,144,47,0.3)' }}
         >
           <div className="ep-card-body text-center">
-            <div className="text-xs text-[var(--ep-muted)]">Davomat</div>
+            <div className="text-xs text-[var(--ep-muted)]">{t("davomat")}</div>
             <div className="font-semibold mb-3 text-sm">08:35 AM, 1 may 2026</div>
             <div
               className="relative mx-auto mb-3"
               style={{ width: 140, height: 140, borderRadius: '50%', background: 'conic-gradient(var(--ep-primary) 0% 65%, hsl(var(--muted)) 65% 100%)' }}
             >
               <div className="absolute inset-2 rounded-full bg-[hsl(var(--card))] flex flex-col items-center justify-center">
-                <div className="text-xs text-[var(--ep-muted)]">Jami soat</div>
+                <div className="text-xs text-[var(--ep-muted)]">{t("jamiSoat")}</div>
                 <strong className="text-lg">5:45:32</strong>
               </div>
             </div>
             <div className="mb-3">
-              <StatusPill variant="dark">Ishlab chiq.: 3.45 soat</StatusPill>
+              <StatusPill variant="dark">{t("ishlabChiq345Soat")}</StatusPill>
             </div>
             <div className="text-xs text-[var(--ep-muted)] mb-3 flex items-center justify-center gap-1.5">
               <Fingerprint className="h-3.5 w-3.5 text-[var(--ep-primary)]" />
-              Punch In: 10:00 AM
+              {t("punchIn1000Am")}
             </div>
             <button
               className="w-full py-2.5 rounded-lg font-medium text-sm text-white"
               style={{ background: 'var(--ep-primary)' }}
             >
-              Punch Out
+              {t("punchOut")}
             </button>
           </div>
         </div>
@@ -244,34 +246,34 @@ export default function EmployeeProfileMockup() {
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="kpi-card-mockup">
             <span className="kpi-icon-sq ki-orange"><Clock className="h-5 w-5" /></span>
-            <div className="kpi-label">Bugungi soatlar</div>
+            <div className="kpi-label">{t("bugungiSoatlar")}</div>
             <div className="kpi-value">8.36 / 9</div>
             <a href="#" className="kpi-link" onClick={(e) => e.preventDefault()}>
-              <ArrowUp className="h-3 w-3 inline text-[var(--ep-green)]" /> 5% Bu hafta
+              <ArrowUp className="h-3 w-3 inline text-[var(--ep-green)]" /> {t("k5BuHafta")}
             </a>
           </div>
           <div className="kpi-card-mockup">
             <span className="kpi-icon-sq ki-darker"><ClockHistoryIcon className="h-5 w-5" /></span>
-            <div className="kpi-label">Hafta soatlari</div>
+            <div className="kpi-label">{t("haftaSoatlari")}</div>
             <div className="kpi-value">10 / 40</div>
             <a href="#" className="kpi-link" onClick={(e) => e.preventDefault()}>
-              <ArrowUp className="h-3 w-3 inline text-[var(--ep-green)]" /> 7% Oldingi hafta
+              <ArrowUp className="h-3 w-3 inline text-[var(--ep-green)]" /> {t("k7OldingiHafta")}
             </a>
           </div>
           <div className="kpi-card-mockup">
             <span className="kpi-icon-sq ki-blue"><CalendarIcon className="h-5 w-5" /></span>
-            <div className="kpi-label">Oy soatlari</div>
+            <div className="kpi-label">{t("oySoatlari")}</div>
             <div className="kpi-value">75 / 98</div>
             <a href="#" className="kpi-link" onClick={(e) => e.preventDefault()}>
-              <ArrowDown className="h-3 w-3 inline text-[var(--ep-red)]" /> 8% Oldingi oy
+              <ArrowDown className="h-3 w-3 inline text-[var(--ep-red)]" /> {t("k8OldingiOy")}
             </a>
           </div>
           <div className="kpi-card-mockup">
             <span className="kpi-icon-sq ki-pink"><Stopwatch className="h-5 w-5" /></span>
-            <div className="kpi-label">Qo'shimcha vaqt</div>
+            <div className="kpi-label">{t("qoshimchaVaqt")}</div>
             <div className="kpi-value">16 / 28</div>
             <a href="#" className="kpi-link" onClick={(e) => e.preventDefault()}>
-              <ArrowDown className="h-3 w-3 inline text-[var(--ep-red)]" /> 6% Oldingi oy
+              <ArrowDown className="h-3 w-3 inline text-[var(--ep-red)]" /> {t("k6OldingiOy")}
             </a>
           </div>
 
@@ -279,10 +281,10 @@ export default function EmployeeProfileMockup() {
           <div className="md:col-span-2 ep-card">
             <div className="ep-card-body">
               <div className="flex gap-3 mb-2 text-xs flex-wrap">
-                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: '#888' }} /> Jami</span>
-                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: 'var(--ep-green)' }} /> Samarali: 8s 36d</span>
-                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: 'var(--ep-yellow)' }} /> Tanaffus: 22d</span>
-                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: '#3B82F6' }} /> Qo'shimcha: 2s 15d</span>
+                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: '#888' }} /> {t("total")}</span>
+                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: 'var(--ep-green)' }} /> {t("samarali8s36d")}</span>
+                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: 'var(--ep-yellow)' }} /> {t("tanaffus22d")}</span>
+                <span><span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: '#3B82F6' }} /> {t("qoshimcha2s15d")}</span>
               </div>
               <div className="flex h-6 rounded-md overflow-hidden">
                 <div style={{ background: 'var(--ep-green)', width: '35%' }} />
@@ -306,14 +308,14 @@ export default function EmployeeProfileMockup() {
         {/* Performance */}
         <div className="ep-card h-full">
           <div className="ep-card-header">
-            <h6>Samaradorlik</h6>
+            <h6>{t("samaradorlik")}</h6>
             <span className="pill-btn">2026</span>
           </div>
           <div className="ep-card-body">
             <div className="flex items-center gap-3 mb-3">
               <h2 className="m-0 text-3xl font-bold">98%</h2>
               <StatusPill variant="success">
-                <ArrowUp className="h-3 w-3 inline" /> 12% o'tgan yil
+                <ArrowUp className="h-3 w-3 inline" /> {t("k12OtganYil")}
               </StatusPill>
             </div>
             <div className="text-xs text-[var(--ep-muted)] py-12 text-center bg-[hsl(var(--muted)/0.3)] rounded">
@@ -325,7 +327,7 @@ export default function EmployeeProfileMockup() {
         {/* Skills */}
         <div className="ep-card h-full">
           <div className="ep-card-header">
-            <h6>Mening ko'nikmalarim</h6>
+            <h6>{t("meningKonikmalarim")}</h6>
             <span className="pill-btn">2026</span>
           </div>
           <div className="ep-card-body">
@@ -358,8 +360,8 @@ export default function EmployeeProfileMockup() {
         {/* Birthday card */}
         <div className="ep-card h-full">
           <div className="ep-card-header">
-            <h6 className="flex items-center gap-2"><Cake className="h-4 w-4 text-[var(--ep-primary)]" /> Tug'ilgan kunlar</h6>
-            <span className="pill-btn">May</span>
+            <h6 className="flex items-center gap-2"><Cake className="h-4 w-4 text-[var(--ep-primary)]" /> {t("tugilganKunlar1")}</h6>
+            <span className="pill-btn">{t("may")}</span>
           </div>
           <div className="ep-card-body space-y-2">
             {[
@@ -378,7 +380,7 @@ export default function EmployeeProfileMockup() {
                   className="text-xs px-2 py-1 border rounded-md text-[var(--ep-text)] hover:bg-[var(--ep-primary)] hover:text-white hover:border-[var(--ep-primary)]"
                   style={{ borderColor: 'hsl(var(--border))' }}
                 >
-                  Tabriklash
+                  {t("tabriklash")}
                 </button>
               </div>
             ))}

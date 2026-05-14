@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Award, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface LMSLeaderboardEntry {
   userId: string;
@@ -28,9 +29,10 @@ interface GamificationTabProps {
 }
 
 export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
         <Card>
@@ -50,7 +52,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
                     <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">{([...Array(7)]).map((__, j) => <TableCell key={j}><Skeleton className="h-4 w-full rounded-lg" /></TableCell>)}</TableRow>
                   ))
                 ) : leaderboard.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Ma'lumot mavjud emas</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{t("malumotMavjudEmas")}</TableCell></TableRow>
                 ) : leaderboard.slice(0, 10).map((r, idx) => {
                   const rank = idx + 1;
                   const score = Math.round(r.overallScore || 0);
@@ -76,7 +78,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
       </div>
       <div className="space-y-4">
         <Card>
-          <CardHeader><CardTitle className="text-base">XP Tizimi</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("xpTizimi")}</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-2">
             {([
               { action: "Kursni tugatish", xp: "+50 XP" },
@@ -93,7 +95,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Darajalar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("darajalar")}</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-2">
             {([
               { level: "Yangi", range: "0–999 XP" },

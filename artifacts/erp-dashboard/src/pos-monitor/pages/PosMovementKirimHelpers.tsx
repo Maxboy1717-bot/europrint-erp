@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { MaterialSuggestion } from "./PosMovementKirimTypes";
 import { materialsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 const STEPS = [
@@ -16,6 +17,7 @@ const STEPS = [
 ];
 
 export function StepIndicator({ current }: { current: number }) {
+  const { t } = useTranslation("common");
   return (
     <div style={{ display: "flex", alignItems: "center", marginBottom: 28 }}>
       {STEPS.map((s, i) => (
@@ -104,7 +106,7 @@ export function MaterialSearch({
         onChange={e => search(e.target.value)}
         onFocus={() => suggestions.length && setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 180)}
-        placeholder="Material nomi yoki ID"
+        placeholder={t("materialNomiYokiId")}
       />
       {loading && (
         <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--pos-text-muted)" }}>⏳</span>

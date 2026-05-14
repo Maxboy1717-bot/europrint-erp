@@ -21,6 +21,7 @@ import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 
 export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDialogOpen, setBankDialogOpen, bankForm, setBankForm, saveBankMutation, }: BankCardProps) {
+  const { t } = useTranslation("common");
   const accounts = Array.isArray(bankAccounts) ? bankAccounts : [];
 
   return (
@@ -47,7 +48,7 @@ export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDi
                 <Input
                   value={bankForm.bankName}
                   onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
-                  placeholder="Xalq banki"
+                  placeholder={t("xalqBanki")}
                   data-testid="input-bank-name"
                 />
               </div>
@@ -75,7 +76,7 @@ export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDi
                   <Input
                     value={bankForm.cardHolderName}
                     onChange={(e) => setBankForm({ ...bankForm, cardHolderName: e.target.value })}
-                    placeholder="Ism Familiya"
+                    placeholder={t("ismFamiliya")}
                     data-testid="input-card-holder"
                   />
                 </div>

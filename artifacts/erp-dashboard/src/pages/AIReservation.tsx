@@ -170,9 +170,9 @@ export default function AIReservation() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
             <Brain className="w-7 h-7" />
-            AI Rezervatsiya Tizimi
+            {t("aiRezervatsiyaTizimi")}
           </h1>
-          <p className="text-sm text-muted-foreground">Material partiyalari va buyurtma rezervatsiyalarini AI boshqaradi</p>
+          <p className="text-sm text-muted-foreground">{t("materialPartiyalariVaBuyurtmaRezervatsiyalarini")}</p>
         </div>
         <Button
           variant="outline"
@@ -180,33 +180,33 @@ export default function AIReservation() {
           onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/dashboard"] })}
         >
           <RefreshCw className="w-4 h-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard
-          title="Jami partiyalar"
+          title={t("jamiPartiyalar")}
           value={d?.totalBatches ?? 0}
           icon={Layers}
           loading={dashLoading}
           sub={`${d?.totalQuantity ?? 0} jami miqdor`}
         />
         <StatCard
-          title="Rezervatsiya"
+          title={t("rezervatsiya")}
           value={`${d?.reservedPercent ?? 0}%`}
           icon={Percent}
           loading={dashLoading}
           sub={`${d?.totalReserved ?? 0} ajratilgan`}
         />
         <StatCard
-          title="AI ishonch"
+          title={t("aiIshonch")}
           value={`${d?.avgConfidence ?? 0}%`}
           icon={Brain}
           loading={dashLoading}
         />
         <StatCard
-          title="Tez muddatlilar"
+          title={t("tezMuddatlilar")}
           value={d?.expiringSoon ?? 0}
           icon={Clock}
           loading={dashLoading}
@@ -229,8 +229,8 @@ export default function AIReservation() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="dashboard" data-testid="tab-dashboard">{t('dashboard1')}</TabsTrigger>
-          <TabsTrigger value="batches" data-testid="tab-batches">Partiyalar</TabsTrigger>
-          <TabsTrigger value="requests" data-testid="tab-requests">Rezervatsiyalar</TabsTrigger>
+          <TabsTrigger value="batches" data-testid="tab-batches">{t("partiyalar")}</TabsTrigger>
+          <TabsTrigger value="requests" data-testid="tab-requests">{t("rezervatsiyalar")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-4 space-y-4">
@@ -247,7 +247,7 @@ export default function AIReservation() {
                     <Badge key={mt} variant="secondary" data-testid={`badge-material-${mt}`}>{mt}</Badge>
                   ))}
                   {(d?.materialTypes?.length ?? 0) === 0 && (
-                    <p className="text-sm text-muted-foreground">Hali material turlari yo'q</p>
+                    <p className="text-sm text-muted-foreground">{t("haliMaterialTurlariYoq")}</p>
                   )}
                 </div>
               )}
@@ -275,7 +275,7 @@ export default function AIReservation() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Material partiyalar
+                {t("materialPartiyalar")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -285,13 +285,13 @@ export default function AIReservation() {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Partiya raqami</TableHead>
-                      <TableHead>Material turi</TableHead>
-                      <TableHead className="text-right">Jami</TableHead>
-                      <TableHead className="text-right">Ajratilgan</TableHead>
-                      <TableHead className="text-right">Bo'sh</TableHead>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Muddati</TableHead>
+                      <TableHead>{t("partiyaRaqami")}</TableHead>
+                      <TableHead>{t("materialTuri")}</TableHead>
+                      <TableHead className="text-right">{t("total")}</TableHead>
+                      <TableHead className="text-right">{t("ajratilgan")}</TableHead>
+                      <TableHead className="text-right">{t("bosh")}</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
+                      <TableHead>{t("muddati")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -311,7 +311,7 @@ export default function AIReservation() {
                     {(batches?.data?.length ?? 0) === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          Partiyalar yo'q
+                          {t("partiyalarYoq")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -327,7 +327,7 @@ export default function AIReservation() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Rezervatsiya so'rovlar
+                {t("rezervatsiyaSorovlar")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -337,12 +337,12 @@ export default function AIReservation() {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Material turi</TableHead>
-                      <TableHead className="text-right">Kerak</TableHead>
-                      <TableHead className="text-right">Ajratildi</TableHead>
-                      <TableHead>Kerak sana</TableHead>
-                      <TableHead className="text-right">AI ishonch</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
+                      <TableHead>{t("materialTuri")}</TableHead>
+                      <TableHead className="text-right">{t("kerak")}</TableHead>
+                      <TableHead className="text-right">{t("ajratildi")}</TableHead>
+                      <TableHead>{t("kerakSana")}</TableHead>
+                      <TableHead className="text-right">{t("aiIshonch")}</TableHead>
                       <TableHead>AI tavsiya</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -369,7 +369,7 @@ export default function AIReservation() {
                     {(requests?.data?.length ?? 0) === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          So'rovlar yo'q
+                          {t("sorovlarYoq")}
                         </TableCell>
                       </TableRow>
                     )}

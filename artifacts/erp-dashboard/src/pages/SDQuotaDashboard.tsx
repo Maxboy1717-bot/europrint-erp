@@ -19,8 +19,10 @@ import {
   ProposalStatusCard,
 } from "./SDQuotaDashboardSections";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function SDQuotaDashboard() {
+  const { t } = useTranslation("common");
   const { data: kpi, isLoading, refetch } = useQuery<QuotaData>({
     queryKey: ["/api/sd/dashboard/quota"],
     refetchInterval: 120_000,
@@ -49,30 +51,30 @@ export default function SDQuotaDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6 flex-wrap">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Mening KPI va Kvotam</b></>}
-        title="Mening KPI va Kvotam"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("meningKpiVaKvotam")}</b></>}
+        title={t("meningKpiVaKvotam")}
         subtitle="{kpi?.period} — {kpi?.daysLeft} kun qoldi"
       />
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Yangilash
+            {t("refresh")}
           </Button>
           {isAhead ? (
             <Badge className="bg-green-100 text-green-800 no-default-hover-elevate gap-1.5">
               <CheckCircle className="w-3.5 h-3.5" />
-              Reja bajarilmoqda
+              {t("rejaBajarilmoqda")}
             </Badge>
           ) : isOnTrack ? (
             <Badge className="bg-amber-100 text-amber-800 no-default-hover-elevate gap-1.5">
               <Zap className="w-3.5 h-3.5" />
-              Maqsadga yaqin
+              {t("maqsadgaYaqin")}
             </Badge>
           ) : (
             <Badge className="bg-red-100 text-red-800 no-default-hover-elevate gap-1.5">
               <AlertCircle className="w-3.5 h-3.5" />
-              Orqada qolmoqda
+              {t("orqadaQolmoqda")}
             </Badge>
           )}
           <Badge variant="secondary" className="no-default-hover-elevate gap-1.5">

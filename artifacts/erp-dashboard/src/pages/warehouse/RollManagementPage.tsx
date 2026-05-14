@@ -11,10 +11,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface RollBalance { articleCode: string; count: number; totalKg: number }
 interface FifoRoll { rollId: string; receivedDate: string; remainingWeightKg: number; supplierName: string | null }
 
 export default function RollManagementPage() {
+  const { t } = useTranslation("common");
   const qc = useQueryClient();
   const { toast } = useToast();
   const [filterArticle, setFilterArticle] = useState('');
@@ -55,12 +57,12 @@ export default function RollManagementPage() {
         <div className="flex items-center gap-3">
           <Package className="h-7 w-7 text-[var(--ep-green)]" />
           <div>
-            <h1 className="text-2xl font-bold">Roll boshqaruv</h1>
-            <p className="text-sm text-muted-foreground">Gofrokarton rulonlar — FIFO + skanerlash + QR</p>
+            <h1 className="text-2xl font-bold">{t("rollBoshqaruv")}</h1>
+            <p className="text-sm text-muted-foreground">{t("gofrokartonRulonlarFifoSkanerlashQr")}</p>
           </div>
         </div>
         <Button onClick={() => setShowScan(true)}>
-          <Plus className="h-4 w-4 mr-1.5" /> Yangi roll qabul qilish
+          <Plus className="h-4 w-4 mr-1.5" /> {t("yangiRollQabulQilish")}
         </Button>
       </header>
 
@@ -70,15 +72,15 @@ export default function RollManagementPage() {
         {balance.isLoading ? <EPLoader /> :
          (balance.data?.length ?? 0) === 0 ? (
           <p className="text-center py-8 text-sm text-muted-foreground">
-            Hozircha rolllar yo'q. Yangi roll qo'shish uchun yuqoridagi tugmani bosing.
+            {t("hozirchaRolllarYoqYangiRoll")}
           </p>
         ) : (
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground uppercase border-b">
               <tr>
-                <th className="text-left py-2">Artikel</th>
-                <th className="text-center py-2">Dona</th>
-                <th className="text-right py-2">Jami og'irlik</th>
+                <th className="text-left py-2">{t("artikel")}</th>
+                <th className="text-center py-2">{t("dona1")}</th>
+                <th className="text-right py-2">{t("jamiOgirlik")}</th>
                 <th className="text-center py-2">FIFO</th>
               </tr>
             </thead>
@@ -90,7 +92,7 @@ export default function RollManagementPage() {
                   <td className="text-right py-2.5 font-bold tabular-nums">{b.totalKg.toLocaleString()} kg</td>
                   <td className="text-center py-2.5">
                     <Button size="sm" variant="ghost" onClick={() => setFilterArticle(b.articleCode)}>
-                      <Search className="h-3 w-3 mr-1" /> Ko'rish
+                      <Search className="h-3 w-3 mr-1" /> {t("view")}
                     </Button>
                   </td>
                 </tr>
@@ -144,17 +146,17 @@ export default function RollManagementPage() {
       {showScan && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowScan(false)}>
           <Card className="w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold text-base mb-3">Yangi roll qabul qilish</h3>
+            <h3 className="font-bold text-base mb-3">{t("yangiRollQabulQilish")}</h3>
             <div className="space-y-3">
-              <Input2 label="Roll ID *" value={scanForm.rollId} onChange={(v) => setScanForm({...scanForm, rollId: v})} placeholder="masalan RL-2026-0042" />
-              <Input2 label="Artikel kodi *" value={scanForm.articleCode} onChange={(v) => setScanForm({...scanForm, articleCode: v})} placeholder="masalan GOFRO-180-B" />
-              <Input2 label="Ta'minotchi nomi" value={scanForm.supplierName} onChange={(v) => setScanForm({...scanForm, supplierName: v})} />
+              <Input2 label={t("rollId")} value={scanForm.rollId} onChange={(v) => setScanForm({...scanForm, rollId: v})} placeholder="masalan RL-2026-0042" />
+              <Input2 label={t("artikelKodi")} value={scanForm.articleCode} onChange={(v) => setScanForm({...scanForm, articleCode: v})} placeholder="masalan GOFRO-180-B" />
+              <Input2 label={t("taminotchiNomi")} value={scanForm.supplierName} onChange={(v) => setScanForm({...scanForm, supplierName: v})} />
               <Input2 label="Boshlang'ich og'irlik (kg) *" value={scanForm.initialWeightKg} onChange={(v) => setScanForm({...scanForm, initialWeightKg: v})} type="number" placeholder="masalan 250" />
-              <Input2 label="Ombor ID" value={scanForm.warehouseId} onChange={(v) => setScanForm({...scanForm, warehouseId: v})} />
+              <Input2 label={t("omborId")} value={scanForm.warehouseId} onChange={(v) => setScanForm({...scanForm, warehouseId: v})} />
               <Input2 label="Bin (joy)" value={scanForm.binLocation} onChange={(v) => setScanForm({...scanForm, binLocation: v})} placeholder="masalan A-3-12" />
             </div>
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => setShowScan(false)}>Bekor qilish</Button>
+              <Button variant="outline" onClick={() => setShowScan(false)}>{t("cancel")}</Button>
               <Button onClick={() => scan.mutate(scanForm)} disabled={!scanForm.rollId || !scanForm.articleCode || !scanForm.initialWeightKg || scan.isPending}>
                 {scan.isPending ? 'Saqlanmoqda...' : 'Qabul qilish'}
               </Button>

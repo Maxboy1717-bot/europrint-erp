@@ -9,6 +9,7 @@ import { AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import { fmtQty, fmtDate } from "@/components/wms/helpers";
 import { KpiCard } from "@/components/wms/tabs/KpiCard";
 import type { StorageData, MaterialBasic } from "@/components/wms/wms-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StorageTabProps {
   storage: StorageData | null | undefined;
@@ -16,7 +17,8 @@ interface StorageTabProps {
 }
 
 export function StorageTab({ storage, basic }: StorageTabProps) {
-  if (!storage) return <div className="text-muted-foreground text-sm py-8 text-center">Saqlash ma'lumotlari yo'q</div>;
+  const { t } = useTranslation("common");
+  if (!storage) return <div className="text-muted-foreground text-sm py-8 text-center">{t("saqlashMalumotlariYoq")}</div>;
 
   return (
     <div className="space-y-4">
@@ -27,7 +29,7 @@ export function StorageTab({ storage, basic }: StorageTabProps) {
       </div>
       {(storage.expiringBatches?.length ?? 0) > 0 ? (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Muddati yaqin partiyalar</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("muddatiYaqinPartiyalar")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -58,7 +60,7 @@ export function StorageTab({ storage, basic }: StorageTabProps) {
       ) : (
         <Card><CardContent className="py-8 text-center">
           <CheckCircle className="h-8 w-8 text-[var(--ep-green)] mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Muddati yaqin partiyalar yo'q</p>
+          <p className="text-sm text-muted-foreground">{t("muddatiYaqinPartiyalarYoq")}</p>
         </CardContent></Card>
       )}
     </div>

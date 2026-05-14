@@ -9,6 +9,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from '@/lib/i18n';
 import {
   StockItem,
   Warehouse,
@@ -37,6 +38,7 @@ export function MovementDialog({
   isPending,
   warehouses,
 }: MovementDialogProps) {
+  const { t } = useTranslation("common");
   const uniqueMovementTypes = MOVEMENT_TYPES.filter(
     (m, i, arr) => arr.findIndex((x) => x.value === m.value) === i,
   );
@@ -45,7 +47,7 @@ export function MovementDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi Movement</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiMovement")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           {selectedItem && (
@@ -58,7 +60,7 @@ export function MovementDialog({
             </div>
           )}
           <div>
-            <label className="text-xs font-medium">Movement turi</label>
+            <label className="text-xs font-medium">{t("movementTuri")}</label>
             <Select
               value={form.movementType}
               onValueChange={(v) =>
@@ -77,14 +79,14 @@ export function MovementDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <label className="text-xs font-medium">Qaerdan</label>
+              <label className="text-xs font-medium">{t("qaerdan")}</label>
               <Select
                 value={form.fromWarehouseId}
                 onValueChange={(v) =>
                   onFormChange((f) => ({ ...f, fromWarehouseId: v }))
                 }
               >
-                <SelectTrigger><SelectValue placeholder="Ombor" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("ombor")} /></SelectTrigger>
                 <SelectContent>
                   {warehouses.map((w) => (
                     <SelectItem key={w.id} value={String(w.id)}>
@@ -95,14 +97,14 @@ export function MovementDialog({
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium">Qayerga</label>
+              <label className="text-xs font-medium">{t("qayerga")}</label>
               <Select
                 value={form.toWarehouseId}
                 onValueChange={(v) =>
                   onFormChange((f) => ({ ...f, toWarehouseId: v }))
                 }
               >
-                <SelectTrigger><SelectValue placeholder="Ombor" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("ombor")} /></SelectTrigger>
                 <SelectContent>
                   {warehouses.map((w) => (
                     <SelectItem key={w.id} value={String(w.id)}>
@@ -114,7 +116,7 @@ export function MovementDialog({
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium">Miqdor *</label>
+            <label className="text-xs font-medium">{t("miqdor1")}</label>
             <Input
               type="number"
               value={form.quantity}
@@ -125,19 +127,19 @@ export function MovementDialog({
             />
           </div>
           <div>
-            <label className="text-xs font-medium">Sabab</label>
+            <label className="text-xs font-medium">{t("sabab")}</label>
             <Input
               value={form.reason}
               onChange={(e) =>
                 onFormChange((f) => ({ ...f, reason: e.target.value }))
               }
-              placeholder="Nima uchun?"
+              placeholder={t("nimaUchun")}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}

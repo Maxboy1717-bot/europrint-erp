@@ -16,6 +16,7 @@ import { Clock, Upload, Plus, File, Image, FileText, FileType2 } from "lucide-re
 import { useToast } from "@/hooks/use-toast";
 import { getAuthHeaders, apiRequest } from "@/lib/queryClient";
 import { safeStorage } from "@/lib/safeStorage";
+import { useTranslation } from '@/lib/i18n';
 import {
   addDocFormSchema, type AddDocFormValues,
   FILE_CATEGORIES, EMP_DOC_CATEGORIES, formatBytes,
@@ -42,6 +43,7 @@ interface UploadDialogProps {
 }
 
 export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogProps) {
+  const { t } = useTranslation("common");
   const { toast }              = useToast();
   const qc                     = useQueryClient();
   const fileInputRef           = useRef<HTMLInputElement>(null);
@@ -85,14 +87,14 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5 text-primary" /> Fayl yuklash
+            <Upload className="h-5 w-5 text-primary" /> {t("faylYuklash")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {/* File picker */}
           <div className="space-y-1">
-          <Label>Fayl *</Label>
+          <Label>{t("fayl1")}</Label>
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                 selectedFile ? "border-primary/50 bg-primary/5" : "border-muted-foreground/25 hover:border-primary/30"
@@ -108,8 +110,8 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <Upload className="h-8 w-8 opacity-40" />
-                  <p className="text-sm">Fayl tanlash uchun bosing</p>
-                  <p className="text-xs opacity-60">PDF, Word, Excel, rasm — max 15 MB</p>
+                  <p className="text-sm">{t("faylTanlashUchunBosing")}</p>
+                  <p className="text-xs opacity-60">{t("pdfWordExcelRasmMax")}</p>
                 </div>
               )}
               <input
@@ -123,10 +125,10 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
 
           {/* Category */}
           <div className="space-y-1">
-          <Label>Toifa *</Label>
+          <Label>{t("toifa1")}</Label>
             <Select value={uploadCategory} onValueChange={setUploadCategory}>
               <SelectTrigger data-testid="select-category" className="h-9">
-                <SelectValue placeholder="Toifani tanlang" />
+                <SelectValue placeholder={t("toifaniTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(FILE_CATEGORIES).map(([key, cfg]) => {
@@ -147,7 +149,7 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
           <div className="space-y-1">
           <Label>Izoh (ixtiyoriy)</Label>
             <Input
-              placeholder="Hujjat haqida qisqacha ma'lumot..."
+              placeholder={t("hujjatHaqidaQisqachaMalumot")}
               value={uploadDescription}
               onChange={e => setUploadDescription(e.target.value)}
               data-testid="input-description"
@@ -156,11 +158,11 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>Bekor qilish</Button>
+          <Button variant="outline" onClick={handleClose}>{t("cancel")}</Button>
           <Button onClick={handleUpload} disabled={!selectedFile || uploading} className="gap-2" data-testid="button-confirm-upload">
             {uploading
-              ? <><Clock className="h-4 w-4 animate-spin" /> Yuklanmoqda...</>
-              : <><Upload className="h-4 w-4" /> Yuklash</>}
+              ? <><Clock className="h-4 w-4 animate-spin" /> {t("Yuklanmoqda...")}</>
+              : <><Upload className="h-4 w-4" /> {t("upload")}</>}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -222,16 +224,16 @@ export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogPro
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-4 w-4 text-primary" /> Hujjat qo'shish
+            <Plus className="h-4 w-4 text-primary" /> {t("hujjatQoshish")}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={addDocForm.handleSubmit(handleAddDoc)} className="space-y-4 py-2">
           <div className="space-y-1">
-          <Label>Kategoriya *</Label>
+          <Label>{t("kategoriya")}</Label>
             <Controller control={addDocForm.control} name="category" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger data-testid="select-doc-category" className="h-9"><SelectValue placeholder="Kategoriyani tanlang" /></SelectTrigger>
+                <SelectTrigger data-testid="select-doc-category" className="h-9"><SelectValue placeholder={t("kategoriyaniTanlang")} /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(EMP_DOC_CATEGORIES).map(([key, cfg]) => {
                     const Icon = cfg.icon;
@@ -249,8 +251,8 @@ export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogPro
           </div>
 
           <div className="space-y-1">
-          <Label>Sarlavha *</Label>
-            <Input {...addDocForm.register("title")} placeholder="Masalan: Pasport nusxasi" data-testid="input-doc-title" />
+          <Label>{t("sarlavha")}</Label>
+            <Input {...addDocForm.register("title")} placeholder={t("masalanPasportNusxasi")} data-testid="input-doc-title" />
             {addDocForm.formState.errors.title && (
               <p className="text-sm text-destructive">{addDocForm.formState.errors.title.message}</p>
             )}
@@ -258,7 +260,7 @@ export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogPro
 
           <div className="space-y-1">
           <Label>Fayl nomi (ixtiyoriy)</Label>
-            <Input {...addDocForm.register("fileName")} placeholder="Masalan: passport.pdf" data-testid="input-doc-filename" />
+            <Input {...addDocForm.register("fileName")} placeholder={t("masalanPassportPdf")} data-testid="input-doc-filename" />
           </div>
 
           <div className="space-y-1">
@@ -268,15 +270,15 @@ export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogPro
 
           <div className="space-y-1">
           <Label>Izoh (ixtiyoriy)</Label>
-            <Textarea {...addDocForm.register("notes")} placeholder="Hujjat haqida qo'shimcha ma'lumot..." rows={3} data-testid="input-doc-notes" />
+            <Textarea {...addDocForm.register("notes")} placeholder={t("hujjatHaqidaQoshimchaMalumot")} rows={3} data-testid="input-doc-notes" />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>Bekor qilish</Button>
+            <Button type="button" variant="outline" onClick={handleClose}>{t("cancel")}</Button>
             <Button type="submit" disabled={savingDoc} className="gap-2" data-testid="button-confirm-add-doc">
               {savingDoc
-                ? <><Clock className="h-4 w-4 animate-spin" /> Saqlanmoqda...</>
-                : <><Plus className="h-4 w-4" /> Saqlash</>}
+                ? <><Clock className="h-4 w-4 animate-spin" /> {t("saqlanmoqda")}</>
+                : <><Plus className="h-4 w-4" /> {t("Saqlash")}</>}
             </Button>
           </DialogFooter>
         </form>

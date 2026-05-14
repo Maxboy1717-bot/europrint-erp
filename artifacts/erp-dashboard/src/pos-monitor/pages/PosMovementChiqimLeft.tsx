@@ -4,6 +4,7 @@ import { useRef } from "react";
 import type { MovementTypeCode, ScannedLine } from "./PosMovementChiqimTypes";
 import { MOVEMENT_TYPES } from "./PosMovementChiqimTypes";
 import { EmployeeSearch } from "./PosMovementChiqimHelpers";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Movement type selector ───────────────────────────────────────────────────
 
@@ -13,10 +14,11 @@ interface MovementTypeSelectorProps {
 }
 
 export function MovementTypeSelector({ selectedType, onSelect }: MovementTypeSelectorProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card" style={{ padding: "16px 20px" }}>
       <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>
-        Harakat turi
+        {t("harakatTuri1")}
       </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {MOVEMENT_TYPES.map(t => (
@@ -97,8 +99,8 @@ export function ScanZone({ fromWarehouseId, scanFlash, scanning, onCameraOpen }:
         {!fromWarehouseId ? (
           <div style={{ textAlign: "center", color: "rgba(255,255,255,0.5)", zIndex: 1 }}>
             <div style={{ fontSize: 36, marginBottom: 8 }}>🏭</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>Avval manba omborini tanlang</div>
-            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.7 }}>Quyidagi "Manba ombori" maydonini to'ldiring</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{t("avvalManbaOmboriniTanlang")}</div>
+            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.7 }}>{t("quyidagiManbaOmboriMaydoniniToldiring")}</div>
           </div>
         ) : (
           <div style={{ textAlign: "center", color: "rgba(255,255,255,0.8)", zIndex: 1 }}>
@@ -112,11 +114,11 @@ export function ScanZone({ fromWarehouseId, scanFlash, scanning, onCameraOpen }:
       <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid var(--pos-border)", background: "var(--pos-card)" }}>
         <div style={{ flex: 1, fontSize: 12, color: "var(--pos-text-muted)" }}>
           {fromWarehouseId
-            ? <span className="pos-live" style={{ color: "var(--pos-success)", fontWeight: 600 }}>Skaner kutmoqda...</span>
+            ? <span className="pos-live" style={{ color: "var(--pos-success)", fontWeight: 600 }}>{t("skanerKutmoqda")}</span>
             : "Ombor tanlanmagan"}
         </div>
         <button className="pos-btn pos-btn-primary" style={{ fontSize: 12 }} disabled={!fromWarehouseId} onClick={onCameraOpen}>
-          📷 Kamera
+          {t("kamera")}
         </button>
       </div>
     </div>
@@ -157,7 +159,7 @@ export function ContextFields({
           <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.3 }}>
             Qaytarish sababi (majburiy)
           </label>
-          <textarea className="pos-input" rows={3} value={returnReason} onChange={e => onReturnReasonChange(e.target.value)} placeholder="Nima uchun qaytarilmoqda..." style={{ resize: "vertical" }} />
+          <textarea className="pos-input" rows={3} value={returnReason} onChange={e => onReturnReasonChange(e.target.value)} placeholder={t("nimaUchunQaytarilmoqda")} style={{ resize: "vertical" }} />
         </>
       )}
       {needsDamageDesc && (
@@ -165,7 +167,7 @@ export function ContextFields({
           <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.3 }}>
             Zarar tavsifi (majburiy)
           </label>
-          <textarea className="pos-input" rows={3} value={notes} onChange={e => onNotesChange(e.target.value)} placeholder="Zarar turi va sababi..." style={{ resize: "vertical", marginBottom: 10 }} />
+          <textarea className="pos-input" rows={3} value={notes} onChange={e => onNotesChange(e.target.value)} placeholder={t("zararTuriVaSababi")} style={{ resize: "vertical", marginBottom: 10 }} />
           <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={() => photoInputRef.current?.click()}>
             📎 Foto biriktirish {damagePhotos.length > 0 && `(${damagePhotos.length} ta)`}
           </button>
@@ -223,25 +225,25 @@ export function BottomBar({
     <div className="pos-card" style={{ marginTop: 16, padding: "18px 20px" }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
         <div>
-          <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>Manba ombori *</label>
-          <input className="pos-input" value={fromWarehouseId} onChange={e => onFromWarehouseChange(e.target.value)} placeholder="Ombor ID yoki kodi" />
+          <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>{t("manbaOmbori")}</label>
+          <input className="pos-input" value={fromWarehouseId} onChange={e => onFromWarehouseChange(e.target.value)} placeholder={t("omborIdYokiKodi")} />
         </div>
         {needsToWarehouse && (
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>Manzil ombori *</label>
-            <input className="pos-input" value={toWarehouseId} onChange={e => onToWarehouseChange(e.target.value)} placeholder="Ombor ID yoki kodi" />
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>{t("manzilOmbori")}</label>
+            <input className="pos-input" value={toWarehouseId} onChange={e => onToWarehouseChange(e.target.value)} placeholder={t("omborIdYokiKodi")} />
           </div>
         )}
         {needsEmployee && (
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>Xodim</label>
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>{t("xodim1")}</label>
             <EmployeeSearch value={employeeName} onChange={onEmployeeChange} />
           </div>
         )}
         {!needsDamageDesc && !needsReturnReason && (
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>Izoh</label>
-            <input className="pos-input" value={notes} onChange={e => onNotesChange(e.target.value)} placeholder="Qo'shimcha izoh..." />
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.3 }}>{t("Izoh")}</label>
+            <input className="pos-input" value={notes} onChange={e => onNotesChange(e.target.value)} placeholder={t("qoshimchaIzoh")} />
           </div>
         )}
       </div>

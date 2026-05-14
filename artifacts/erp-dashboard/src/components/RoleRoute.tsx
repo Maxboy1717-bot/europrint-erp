@@ -5,6 +5,7 @@
 
 import { Redirect } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from '@/lib/i18n';
 
 interface RoleRouteProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface RoleRouteProps {
 }
 
 export function RoleRoute({ children, roles }: RoleRouteProps) {
+  const { t } = useTranslation("common");
   const { user, isLoading, isAuthenticated, hasRole } = useAuth();
 
   if (isLoading) {
@@ -29,8 +31,8 @@ export function RoleRoute({ children, roles }: RoleRouteProps) {
   if (roles && roles.length > 0 && !hasRole(...roles)) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4" data-testid="access-denied">
-        <h1 className="text-2xl font-bold text-destructive">Ruxsat yo'q</h1>
-        <p className="text-muted-foreground">Bu sahifaga kirish uchun sizda ruxsat yo'q</p>
+        <h1 className="text-2xl font-bold text-destructive">{t("ruxsatYoq")}</h1>
+        <p className="text-muted-foreground">{t("buSahifagaKirishUchunSizda")}</p>
         <p className="text-sm text-muted-foreground">Kerakli rollar: {roles.join(', ')}</p>
       </div>
     );

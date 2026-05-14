@@ -17,6 +17,7 @@ import { FolderKanban, Plus } from "lucide-react";
 import { KanbanColumn } from "@/pages/kanban/KanbanColumn";
 import { CardOverlay } from "@/pages/kanban/KanbanCard";
 import { KanbanTranslations, KanbanColumn as KanbanColumnType, CardWithOwner } from "@/components/kanban/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface KanbanBoardViewProps {
   sensors:              SensorDescriptor<SensorOptions>[];
@@ -42,6 +43,7 @@ export function KanbanBoardView({
   onDeleteColumn, selectedBoardId, activeCard,
   t, onQuickAddColumnId,
 }: KanbanBoardViewProps) {
+  const { t } = useTranslation("common");
   const [quickAddColumnId, setQuickAddColumnId] = useState<string | number | null>(null);
 
   return (
@@ -62,7 +64,7 @@ export function KanbanBoardView({
               style={{ color: "#A0AEC0" }}
             >
               <FolderKanban style={{ width: 48, height: 48, opacity: 0.4 }} />
-              <p style={{ fontSize: 14, fontWeight: 500, color: "#718096" }}>Ustunlar yo'q</p>
+              <p style={{ fontSize: 14, fontWeight: 500, color: "#718096" }}>{t("ustunlarYoq")}</p>
               <button
                 onClick={() => setShowAddColumn(true)}
                 style={{
@@ -80,7 +82,7 @@ export function KanbanBoardView({
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "4px 4px 12px rgba(163,177,198,0.30), -2px -2px 8px rgba(255,255,255,0.80)"; }}
               >
                 <Plus style={{ width: 14, height: 14 }} />
-                Ustun qo'shish
+                {t("ustunQoshish")}
               </button>
             </div>
           ) : (
@@ -126,7 +128,7 @@ export function KanbanBoardView({
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "3px 3px 10px rgba(163,177,198,0.25), -2px -2px 6px rgba(255,255,255,0.70)"; }}
               >
                 <Plus style={{ width: 14, height: 14 }} />
-                Ustun qo'shish
+                {t("ustunQoshish")}
               </button>
             </div>
           )}

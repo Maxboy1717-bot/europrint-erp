@@ -33,6 +33,7 @@ const QUICK_LINKS = [
 ] as const;
 
 export default function WarehouseDashboard() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
 
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery<DashboardData>({
@@ -58,21 +59,21 @@ export default function WarehouseDashboard() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] text-muted-foreground font-medium">Real-vaqt monitoring</span>
+            <span className="text-[11px] text-muted-foreground font-medium">{t("realVaqtMonitoring")}</span>
             {lastUpdated && <span className="text-[11px] text-muted-foreground">· {lastUpdated}</span>}
           </div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Ombor Boshqaruvi</b></>}
-        title="Ombor Boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("omborBoshqaruvi1")}</b></>}
+        title={t("omborBoshqaruvi1")}
       />
-          <p className="text-sm text-muted-foreground mt-1">Barcha omborlar holati, zaxira va harakat nazorati</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("barchaOmborlarHolatiZaxiraVa")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5 text-xs">
-            <RefreshCw className="w-3.5 h-3.5" />Yangilash
+            <RefreshCw className="w-3.5 h-3.5" />{t("refresh")}
           </Button>
           <Button size="sm" onClick={() => navigate("/wms/transfer")} className="gap-1.5 text-xs">
-            <ArrowRightLeft className="w-3.5 h-3.5" />Ko'chirish
+            <ArrowRightLeft className="w-3.5 h-3.5" />{t("move")}
           </Button>
         </div>
       </div>
@@ -90,8 +91,8 @@ export default function WarehouseDashboard() {
               <Warehouse className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <p className="font-bold text-sm text-foreground">Omborlar Ro'yxati</p>
-              <p className="text-xs text-muted-foreground">Bosing — batafsil ko'ring</p>
+              <p className="font-bold text-sm text-foreground">{t("omborlarRoyxati")}</p>
+              <p className="text-xs text-muted-foreground">{t("bosingBatafsilKoring")}</p>
             </div>
           </div>
           <Badge variant="outline" className="text-xs">{warehouses.length} ta ombor</Badge>
@@ -114,7 +115,7 @@ export default function WarehouseDashboard() {
         ) : warehouses.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-border rounded-xl">
             <Warehouse className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-            <p className="text-muted-foreground font-medium">Faol omborlar topilmadi</p>
+            <p className="text-muted-foreground font-medium">{t("faolOmborlarTopilmadi")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -137,7 +138,7 @@ export default function WarehouseDashboard() {
 
       {/* Quick links bar */}
       <div className="mt-6 pt-5 border-t border-border/60">
-        <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Tezkor havolalar</p>
+        <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">{t("tezkorHavolalar")}</p>
         <div className="flex flex-wrap gap-2">
           {QUICK_LINKS.map((link) => (
             <Button key={link.url} variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate(link.url)}>
@@ -152,3 +153,4 @@ export default function WarehouseDashboard() {
 }
 
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';

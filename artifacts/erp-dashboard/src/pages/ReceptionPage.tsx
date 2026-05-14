@@ -14,8 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ReceptionPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({
@@ -80,8 +82,8 @@ export default function ReceptionPage() {
   return (
     <div className="p-6 space-y-6 bg-background min-h-screen">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">🏢 Reception — Tashrif Boshqaruvi</h1>
-        <p className="text-muted-foreground text-sm mt-1">Tashrifchilarni ro'yxatga olish va nazorat qilish</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("receptionTashrifBoshqaruvi")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("tashrifchilarniRoyxatgaOlishVaNazorat")}</p>
       </div>
 
       {/* Stats */}
@@ -104,17 +106,17 @@ export default function ReceptionPage() {
 
       <Tabs defaultValue="checkin">
         <TabsList className="bg-muted">
-          <TabsTrigger value="checkin" className="data-[state=active]:bg-card data-[state=active]:text-foreground">➕ Check-in</TabsTrigger>
-          <TabsTrigger value="active" className="data-[state=active]:bg-card data-[state=active]:text-foreground">🟢 Hozir ichkari</TabsTrigger>
-          <TabsTrigger value="validate" className="data-[state=active]:bg-card data-[state=active]:text-foreground">🔍 Badge tekshirish</TabsTrigger>
-          <TabsTrigger value="log" className="data-[state=active]:bg-card data-[state=active]:text-foreground">📋 Jurnal</TabsTrigger>
+          <TabsTrigger value="checkin" className="data-[state=active]:bg-card data-[state=active]:text-foreground">{t("checkIn")}</TabsTrigger>
+          <TabsTrigger value="active" className="data-[state=active]:bg-card data-[state=active]:text-foreground">{t("hozirIchkari")}</TabsTrigger>
+          <TabsTrigger value="validate" className="data-[state=active]:bg-card data-[state=active]:text-foreground">{t("badgeTekshirish")}</TabsTrigger>
+          <TabsTrigger value="log" className="data-[state=active]:bg-card data-[state=active]:text-foreground">{t("jurnal")}</TabsTrigger>
         </TabsList>
 
         {/* CHECK-IN FORM */}
         <TabsContent value="checkin" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="bg-card border-border">
-              <CardHeader><CardTitle className="text-foreground">Yangi tashrif ro'yxatga olish</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-foreground">{t("yangiTashrifRoyxatgaOlish")}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 {([
                   { key: "visitor_name", label: "Tashrifchi ismi *", placeholder: "To'liq ism" },
@@ -140,10 +142,10 @@ export default function ReceptionPage() {
             {/* Badge print preview */}
             {lastBadge && (
               <Card className="bg-card border-2 border-primary">
-                <CardHeader><CardTitle className="text-foreground text-center">🎫 Berilgan Badge</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-foreground text-center">{t("berilganBadge")}</CardTitle></CardHeader>
                 <CardContent className="text-center space-y-4">
                   <div className="bg-white text-black p-6 rounded-xl mx-auto max-w-64">
-                    <div className="text-blue-900 font-bold text-lg">EuroPrint</div>
+                    <div className="text-blue-900 font-bold text-lg">{t("europrint1")}</div>
                     <div className="text-3xl font-bold tracking-widest my-4 text-[var(--ep-red)]">{lastBadge.badge_code}</div>
                     <div className="font-semibold">{lastBadge.visit?.visitor_name}</div>
                     <div className="text-sm text-gray-600">{lastBadge.visit?.visitor_company}</div>
@@ -152,7 +154,7 @@ export default function ReceptionPage() {
                     </div>
                   </div>
                   <Button onClick={() => window.print()} variant="outline" className="border-border text-muted-foreground">
-                    🖨️ Chop etish
+                    {t("chopEtish")}
                   </Button>
                 </CardContent>
               </Card>
@@ -181,12 +183,12 @@ export default function ReceptionPage() {
                     </div>
                     <Button size="sm" onClick={() => checkOut.mutate(v.id)}
                       className="bg-muted hover:bg-[var(--ep-red)]/90 text-foreground hover:text-white text-xs">
-                      Chiqish
+                      {t("logout")}
                     </Button>
                   </div>
                 ))}
                 {(!active || active.length === 0) && (
-                  <div className="text-center py-8 text-[13px] text-muted-foreground">Hozir hech kim yo'q</div>
+                  <div className="text-center py-8 text-[13px] text-muted-foreground">{t("hozirHechKimYoq")}</div>
                 )}
               </div>
             </CardContent>
@@ -196,28 +198,28 @@ export default function ReceptionPage() {
         {/* BADGE VALIDATE */}
         <TabsContent value="validate" className="mt-4">
           <Card className="bg-card border-border max-w-md">
-            <CardHeader><CardTitle className="text-foreground">🔍 Badge Tekshirish</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-foreground">{t("badgeTekshirish1")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <Input value={validateCode} onChange={e => setValidateCode(e.target.value.toUpperCase())}
                   placeholder="Badge kodi (masalan: A1B2C3D4)" maxLength={8}
                   className="bg-input border-border font-mono text-lg text-center" />
                 <Button onClick={validateBadge} className="bg-primary hover:bg-primary/90 text-white">
-                  Tekshirish
+                  {t("check")}
                 </Button>
               </div>
               {validateResult && (
                 <div className={`p-4 rounded-lg ${validateResult.valid ? 'bg-green-900/30 border border-green-600' : 'bg-red-900/30 border border-red-600'}`}>
                   {validateResult.valid ? (
                     <div className="space-y-1">
-                      <div className="text-green-400 font-bold text-lg">✅ Badge Haqiqiy</div>
+                      <div className="text-green-400 font-bold text-lg">{t("badgeHaqiqiy")}</div>
                       <div className="text-foreground">{validateResult.visitor_name}</div>
                       <div className="text-muted-foreground text-sm">Mezboni: {validateResult.host_name}</div>
                       <div className="text-muted-foreground text-sm">Muddat: {new Date(validateResult.expires_at ?? '').toLocaleString()}</div>
                     </div>
                   ) : (
                     <div>
-                      <div className="text-red-400 font-bold text-lg">❌ Badge Noto'g'ri</div>
+                      <div className="text-red-400 font-bold text-lg">{t("badgeNotogri")}</div>
                       <div className="text-muted-foreground text-sm mt-1">{validateResult.error}</div>
                     </div>
                   )}
@@ -230,7 +232,7 @@ export default function ReceptionPage() {
         {/* LOG */}
         <TabsContent value="log" className="mt-4">
           <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-foreground">📋 Tashrif Jurnali</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-foreground">{t("tashrifJurnali")}</CardTitle></CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -248,7 +250,7 @@ export default function ReceptionPage() {
                         <td className="py-2 px-3 text-muted-foreground">{v.visitor_company || "—"}</td>
                         <td className="py-2 px-3 text-foreground">{v.host_name || "—"}</td>
                         <td className="py-2 px-3 text-foreground">{new Date(v.check_in_at).toLocaleTimeString()}</td>
-                        <td className="py-2 px-3 text-foreground">{v.check_out_at ? new Date(v.check_out_at).toLocaleTimeString() : <EPStatusPill tone="success">Ichkari</EPStatusPill>}</td>
+                        <td className="py-2 px-3 text-foreground">{v.check_out_at ? new Date(v.check_out_at).toLocaleTimeString() : <EPStatusPill tone="success">{t("ichkari")}</EPStatusPill>}</td>
                         <td className="py-2 px-3 text-muted-foreground">{v.duration_minutes ? Math.round(v.duration_minutes) : "—"}</td>
                         <td className="py-2 px-3 font-mono text-yellow-400">{v.badge_code}</td>
                       </tr>

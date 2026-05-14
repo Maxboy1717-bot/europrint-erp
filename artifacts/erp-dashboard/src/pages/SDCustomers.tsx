@@ -27,6 +27,7 @@ import { Customer360View } from "@/components/sd/Customer360View";
 import { Customer, CustomerFormData } from "./SDCustomersTypes";
 import { AddCustomerDialog } from "./SDCustomersDialogs";
 import { CustomerFilterBar, CustomerTable } from "./SDCustomersSections";
+import { useTranslation } from '@/lib/i18n';
 import {
   EPPageHeader, EPKpiCard, EPErrorState, EPSkeletonKpiRow,
 } from "@/components/ep";
@@ -53,6 +54,7 @@ const fmtMoney = (n: number): string => {
 };
 
 export default function SDCustomers() {
+  const { t } = useTranslation("common");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [segFilter, setSegFilter] = useState("all");
@@ -134,8 +136,8 @@ export default function SDCustomers() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · SD · <b className="text-foreground">Mijozlar</b></>}
-        title="Mijozlar bazasi"
+        breadcrumb={<>{t("dashboardSd")}<b className="text-foreground">{t("mijozlar")}</b></>}
+        title={t("mijozlarBazasi")}
         subtitle={`${stats.total} ta mijoz · ${stats.activeCount} ta faol`}
         actions={
           <AddCustomerDialog
@@ -154,7 +156,7 @@ export default function SDCustomers() {
       ) : !isError && (
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           <EPKpiCard
-            label="Jami mijozlar"
+            label={t("jamiMijozlar")}
             value={stats.total}
             icon={Users}
             iconBg="sd"
@@ -182,7 +184,7 @@ export default function SDCustomers() {
             enterDelayMs={180}
           />
           <EPKpiCard
-            label="Umumiy qiymat"
+            label={t("umumiyQiymat")}
             staticValue={fmtMoney(stats.totalVal)}
             icon={TrendingUp}
             iconBg="var(--ep-purple)"

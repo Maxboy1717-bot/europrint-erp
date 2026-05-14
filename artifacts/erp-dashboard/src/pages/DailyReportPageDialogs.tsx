@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import type { DailyReportEmployee, DeptItem, ReportType } from "./DailyReportPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ── DeptFilterBar ────────────────────────────────────────────────────────────
 interface DeptFilterBarProps {
@@ -36,14 +37,15 @@ export function DeptFilterBar({
   onDeptChange,
   onTypeChange,
 }: DeptFilterBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Select value={selectedDept} onValueChange={v => onDeptChange(v === "all" ? "" : v)}>
         <SelectTrigger className="w-56 bg-input border-border h-9" data-testid="select-dept-filter">
-          <SelectValue placeholder="Bo'limni tanlang..." />
+          <SelectValue placeholder={t("bolimniTanlang1")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha bo'limlar</SelectItem>
+          <SelectItem value="all">{t("barchaBolimlar")}</SelectItem>
           {(Array.isArray(deptList) ? deptList : []).map((d) => (
             <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
           ))}
@@ -123,7 +125,7 @@ export function DeptReportColumns({
                   {r.submitted_at && (
                     <div className="text-xs text-muted-foreground">{new Date(r.submitted_at).toLocaleTimeString()}</div>
                   )}
-                  <Badge className="bg-green-800 text-white text-xs mt-1">Topshirildi</Badge>
+                  <Badge className="bg-green-800 text-white text-xs mt-1">{t("topshirildi")}</Badge>
                 </div>
               </div>
               {r.tasks_completed && (
@@ -144,7 +146,7 @@ export function DeptReportColumns({
                       disabled={!overrideReason || isOverridePending}
                       onClick={() => onOverride(r.id)}
                     >
-                      Yo'qlik deb belgilash
+                      {t("yoqlikDebBelgilash")}
                     </Button>
                     <Button
                       size="sm"
@@ -152,7 +154,7 @@ export function DeptReportColumns({
                       className="h-6 text-xs text-muted-foreground"
                       onClick={() => { onSetOverrideId(null); onSetOverrideReason(""); }}
                     >
-                      Bekor
+                      {t("Bekor")}
                     </Button>
                   </div>
                 </div>
@@ -169,7 +171,7 @@ export function DeptReportColumns({
             </div>
           ))}
           {submittedList.length === 0 && (
-            <div className="text-center py-6 text-muted-foreground text-sm">Hali hech kim topshirmagan</div>
+            <div className="text-center py-6 text-muted-foreground text-sm">{t("haliHechKimTopshirmagan")}</div>
           )}
         </CardContent>
       </Card>
@@ -189,16 +191,16 @@ export function DeptReportColumns({
               </div>
               <div className="flex items-center gap-2">
                 {e.is_machine_operator && (
-                  <Badge className="bg-blue-800 text-white text-xs">Operator</Badge>
+                  <Badge className="bg-blue-800 text-white text-xs">{t("Operator")}</Badge>
                 )}
-                <Badge className="bg-red-800/60 text-red-300 text-xs">Topshirmagan</Badge>
+                <Badge className="bg-red-800/60 text-red-300 text-xs">{t("topshirmagan")}</Badge>
               </div>
             </div>
           ))}
           {missingList.length === 0 && (
             <div className="text-center py-6 text-green-400 text-sm">
               <CheckCircle className="w-8 h-8 mx-auto mb-2" />
-              Barcha xodimlar hisobot topshirdi!
+              {t("barchaXodimlarHisobotTopshirdi")}
             </div>
           )}
         </CardContent>
@@ -237,7 +239,7 @@ export function AllReportsList({ allReports, isLoading, reportType }: AllReports
         )}
       </div>
 
-      {isLoading && <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>}
+      {isLoading && <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>}
       {!isLoading && Array.isArray(allReports) && allReports.length === 0 && (
         <div className="text-center py-12 text-[13px] text-muted-foreground">
           <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -274,11 +276,11 @@ export function AllReportsList({ allReports, isLoading, reportType }: AllReports
                       </span>
                     )}
                     {r.is_auto_absent ? (
-                      <EPStatusPill tone="danger">Yo'qlik</EPStatusPill>
+                      <EPStatusPill tone="danger">{t("yoqlik")}</EPStatusPill>
                     ) : r.status === "submitted" ? (
-                      <EPStatusPill tone="success">Topshirildi</EPStatusPill>
+                      <EPStatusPill tone="success">{t("topshirildi")}</EPStatusPill>
                     ) : (
-                      <EPStatusPill tone="warning">Kutilmoqda</EPStatusPill>
+                      <EPStatusPill tone="warning">{t("Kutilmoqda")}</EPStatusPill>
                     )}
                   </div>
                 </div>

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { User, Star, TrendingUp, AlertTriangle, Briefcase, Pencil } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface AdaptationData {
   recordId?: number | null;
@@ -110,11 +111,11 @@ function MentorCard({
               <DialogTitle>{title} tayinlash</DialogTitle>
             </DialogHeader>
             <div className="space-y-1">
-          <Label>Xodim ID</Label>
-              <Input type="number" placeholder="Xodim ID kiriting" value={val} onChange={e => setVal(e.target.value)} />
+          <Label>{t("xodimId")}</Label>
+              <Input type="number" placeholder={t("xodimIdKiriting")} value={val} onChange={e => setVal(e.target.value)} />
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Bekor</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>{t("Bekor")}</Button>
               <Button
                 disabled={!val || mutation.isPending}
                 onClick={() => mutation.mutate(parseInt(val))}
@@ -130,6 +131,7 @@ function MentorCard({
 }
 
 export function AdaptationTab({ employeeId, isHr }: Props) {
+  const { t } = useTranslation("common");
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["/api/hr/adaptation", employeeId],
@@ -178,7 +180,7 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
               <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">—</div>
             )}
             <div>
-              <p className="text-xs text-muted-foreground">Umumiy ball</p>
+              <p className="text-xs text-muted-foreground">{t("umumiyBall")}</p>
               <p className="font-semibold text-foreground">{overallScore !== null ? `${overallScore.toFixed(1)} / 5.0` : "Ma'lumot yo'q"}</p>
               {ad.programName && <p className="text-xs text-muted-foreground mt-0.5">{ad.programName}</p>}
               <Badge className={`text-xs mt-1 ${statusConfig.color}`}>{statusConfig.label}</Badge>
@@ -189,7 +191,7 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
         {/* Progress */}
         <Card className="border-border/50">
           <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground mb-2">Moslashuv Jarayoni</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("moslashuvJarayoni")}</p>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary shrink-0" />
               <span className="text-sm font-medium">
@@ -213,9 +215,9 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
         {/* HR Notes (compact) */}
         <Card className="border-border/50">
           <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground mb-1">HR Izohi</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("hrIzohi")}</p>
             <p className="text-sm text-foreground line-clamp-4">
-              {ad.hrNotes ?? <span className="text-muted-foreground/50 italic">Izoh yo'q</span>}
+              {ad.hrNotes ?? <span className="text-muted-foreground/50 italic">{t("izohYoq")}</span>}
             </p>
           </CardContent>
         </Card>
@@ -254,9 +256,9 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
         <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl">
           <AlertTriangle className="w-5 h-5 text-[var(--ep-red)] shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-[var(--ep-red)] dark:text-red-400 text-sm">Moslashuv xavf ostida</p>
+            <p className="font-semibold text-[var(--ep-red)] dark:text-red-400 text-sm">{t("moslashuvXavfOstida")}</p>
             <p className="text-xs text-[var(--ep-red)] dark:text-red-500 mt-0.5">
-              Umumiy ball 3.0 dan past. HR bilan suhbat va qo'shimcha qo'llab-quvvatlash tavsiya etiladi.
+              {t("umumiyBall30Dan")}
             </p>
           </div>
         </div>
@@ -267,15 +269,15 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Star className="w-4 h-4 text-primary" />
-            Haftalik baholash
+            {t("haftalikBaholash")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {weeklyScores.length === 0 ? (
             <div className="text-center py-10 text-[13px] text-muted-foreground">
               <Star className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">Haftalik baholashlar hali kiritilmagan</p>
-              <p className="text-xs mt-1 opacity-60">HR mentor tomonidan baholash amalga oshirilgach ko'rinadi</p>
+              <p className="text-sm">{t("haftalikBaholashlarHaliKiritilmagan")}</p>
+              <p className="text-xs mt-1 opacity-60">{t("hrMentorTomonidanBaholashAmalga")}</p>
             </div>
           ) : (
             <div className="space-y-3">

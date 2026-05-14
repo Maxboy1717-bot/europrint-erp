@@ -18,8 +18,10 @@ import { AbcAnalysisTab } from "@/components/wms/reports/AbcAnalysisTab";
 import { AgingTab } from "@/components/wms/reports/AgingTab";
 import { ExpiryTab } from "@/components/wms/reports/ExpiryTab";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseReports() {
+  const { t } = useTranslation("common");
   const [lang, setLang] = useState<Lang>("uz");
   const t = translations[lang];
 
@@ -89,7 +91,7 @@ export default function WarehouseReports() {
         <ReportsHeader t={t} lang={lang} setLang={setLang} onExport={handleExport} />
         <Button variant="outline" size="sm" onClick={() => refetchStock()} className="shrink-0">
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 

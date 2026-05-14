@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Flame, Route } from "lucide-react";
 import type { Employee, TransportResult, ViewMode } from "./HRMapTypes";
 import { FACTORY_LAT, FACTORY_LNG, GROUP_COLORS } from "./HRMapTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Icon factories ────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ export const homeIcon = (color: string) => L.divIcon({
 // ── Map utility components ────────────────────────────────────────────────────
 
 export function MapCenterController({ center }: { center: [number, number] }) {
+  const { t } = useTranslation("common");
   const map = useMap();
   useEffect(() => { map.setView(center, 13); }, []);
   return null;
@@ -183,7 +185,7 @@ export function ViewModeButtons({ viewMode, onSetViewMode }: ViewModeButtonsProp
         onClick={() => onSetViewMode("markers")}
         data-testid="button-view-markers"
       >
-        <MapPin className="h-3.5 w-3.5 mr-1.5" />Markerlar
+        <MapPin className="h-3.5 w-3.5 mr-1.5" />{t("markerlar")}
       </Button>
       <Button
         variant={viewMode === "heatmap" ? "default" : "outline"}
@@ -191,7 +193,7 @@ export function ViewModeButtons({ viewMode, onSetViewMode }: ViewModeButtonsProp
         onClick={() => onSetViewMode("heatmap")}
         data-testid="button-view-heatmap"
       >
-        <Flame className="h-3.5 w-3.5 mr-1.5" />Zichlik
+        <Flame className="h-3.5 w-3.5 mr-1.5" />{t("zichlik")}
       </Button>
       <Button
         variant={viewMode === "routes" ? "default" : "outline"}
@@ -199,7 +201,7 @@ export function ViewModeButtons({ viewMode, onSetViewMode }: ViewModeButtonsProp
         onClick={() => onSetViewMode("routes")}
         data-testid="button-view-routes"
       >
-        <Route className="h-3.5 w-3.5 mr-1.5" />Marshrutlar
+        <Route className="h-3.5 w-3.5 mr-1.5" />{t("marshrutlar")}
       </Button>
     </div>
   );

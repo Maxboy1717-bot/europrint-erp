@@ -11,17 +11,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { type MESShift, MACHINE_NORMS } from "./MESExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Norms Tab ───────────────────────────────────────────────────────────────
 
 /** Tab content: Uskuna Normalari (static data until API is available) */
 export function NormsTab() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="norms" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Uskuna Normalari</h2>
+        <h2 className="text-lg font-semibold">{t("uskunaNormalari")}</h2>
         <Button size="sm" data-testid="button-add-norm">
-          <Plus className="h-3.5 w-3.5 mr-1.5" />Norma Qo'shish
+          <Plus className="h-3.5 w-3.5 mr-1.5" />{t("normaQoshish")}
         </Button>
       </div>
 
@@ -30,10 +32,10 @@ export function NormsTab() {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Stanoq</TableHead>
-                <TableHead>Normativ tezlik</TableHead>
-                <TableHead>Tayyorlov vaqti</TableHead>
-                <TableHead>Min. brak %</TableHead>
+                <TableHead>{t("stanoq")}</TableHead>
+                <TableHead>{t("normativTezlik")}</TableHead>
+                <TableHead>{t("tayyorlovVaqti")}</TableHead>
+                <TableHead>{t("minBrak")}</TableHead>
                 <TableHead>OEE maqsad</TableHead>
               </TableRow>
             </TableHeader>
@@ -85,7 +87,7 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
   return (
     <TabsContent value="smena" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Smena O'tkazish Protokoli</h2>
+        <h2 className="text-lg font-semibold">{t("smenaOtkazishProtokoli")}</h2>
         <div className="flex items-center gap-2">
           <Badge variant="outline" data-testid="badge-current-shift">
             <Clock className="h-3 w-3 mr-1" />
@@ -98,7 +100,7 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
             data-testid="button-start-handover"
             onClick={onHandoverToast}
           >
-            <Plus className="h-3.5 w-3.5 mr-1.5" />Smena Yakunlash
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("smenaYakunlash")}
           </Button>
         </div>
       </div>
@@ -119,7 +121,7 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
         {/* Outgoing shift summary */}
         <Card>
           <CardHeader>
-            <h3 className="font-semibold text-sm">Smena Yakuniy Hisobot</h3>
+            <h3 className="font-semibold text-sm">{t("smenaYakuniyHisobot")}</h3>
           </CardHeader>
           <CardContent className="space-y-3">
             {outgoingInfo.map(item => (
@@ -137,35 +139,35 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
         {/* Incoming shift form */}
         <Card>
           <CardHeader>
-            <h3 className="font-semibold text-sm">Yangi Smena Ma'lumotlari</h3>
+            <h3 className="font-semibold text-sm">{t("yangiSmenaMalumotlari")}</h3>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-sm">Kiruvchi operator</Label>
+              <Label className="text-sm">{t("kiruvchiOperator")}</Label>
               <Input
-                placeholder="Operator ismi"
+                placeholder={t("operatorIsmi")}
                 data-testid="input-incoming-operator"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm">Stanoq holati tekshiruvi</Label>
+              <Label className="text-sm">{t("stanoqHolatiTekshiruvi")}</Label>
               <Select>
                 <SelectTrigger data-testid="select-machine-status" className="h-9">
-                  <SelectValue placeholder="Holat tanlang" />
+                  <SelectValue placeholder={t("holatTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="good">Yaxshi</SelectItem>
-                  <SelectItem value="minor_issue">Kichik muammo</SelectItem>
-                  <SelectItem value="needs_maintenance">Texnik xizmat kerak</SelectItem>
+                  <SelectItem value="good">{t("Yaxshi")}</SelectItem>
+                  <SelectItem value="minor_issue">{t("kichikMuammo")}</SelectItem>
+                  <SelectItem value="needs_maintenance">{t("texnikXizmatKerak")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm">Izoh</Label>
+              <Label className="text-sm">{t("Izoh")}</Label>
               <Input
-                placeholder="Smena bo'yicha izoh..."
+                placeholder={t("smenaBoyichaIzoh")}
                 data-testid="input-shift-note"
               />
             </div>
@@ -175,7 +177,7 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
               data-testid="button-confirm-handover"
               onClick={handleConfirmHandover}
             >
-              Smena O'tkazishni Tasdiqlash
+              {t("smenaOtkazishniTasdiqlash")}
             </Button>
           </CardContent>
         </Card>

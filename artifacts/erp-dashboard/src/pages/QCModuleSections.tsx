@@ -43,6 +43,7 @@ export function ParameterTableSection({
   onDeleteParameter,
   onToggleControlChart,
 }: ParameterTableSectionProps) {
+  const { t } = useTranslation("common");
   const { t: tCommon } = useTranslation("common");
 
   return (
@@ -126,7 +127,7 @@ export function ParameterTableSection({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            size="icon" variant="ghost" aria-label="Nazorat grafigi"
+                            size="icon" variant="ghost" aria-label={t("nazoratGrafigi")}
                             onClick={() => onToggleControlChart(param.id)}
                             className={`h-8 w-8 hover:bg-muted ${selectedParameterId === param.id ? "text-primary" : "text-muted-foreground"}`}
                             data-testid={`button-control-chart-${param.id}`}
@@ -134,7 +135,7 @@ export function ParameterTableSection({
                             <BarChart3 className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Nazorat grafigi</TooltipContent>
+                        <TooltipContent>{t("nazoratGrafigi")}</TooltipContent>
                       </Tooltip>
 
                       <Tooltip>
@@ -171,7 +172,7 @@ export function ControlChartCard({ dataPoints }: ControlChartCardProps) {
     <Card className="bg-card rounded-lg border-none shadow-none">
       <div className="p-4 flex items-center gap-2">
         <BarChart3 className="w-4 h-4 text-primary" />
-        <span className="text-sm font-semibold text-foreground">Nazorat grafigi</span>
+        <span className="text-sm font-semibold text-foreground">{t("nazoratGrafigi")}</span>
         <span className="ml-auto text-xs text-muted-foreground">
           {Array.isArray(dataPoints) ? `${dataPoints.length} nuqta` : "Yuklanmoqda..."}
         </span>

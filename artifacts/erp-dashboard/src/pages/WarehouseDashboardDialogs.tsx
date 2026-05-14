@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { WarehouseStat } from "./WarehouseDashboardTypes";
 import { TYPE_COLORS, TYPE_LABELS, WAREHOUSE_GRADIENTS, fmt } from "./WarehouseDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 const WAREHOUSE_ICON_COMPONENTS: Record<string, React.ElementType> = {
   Package, ScrollText: Package, Boxes: Package, Factory: Package,
@@ -49,6 +50,7 @@ export function KpiCard({
   bg?: string;
   accent?: string;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card className="border border-border/60 shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-5">
@@ -117,14 +119,14 @@ export function WarehouseCard({ wh, onClick }: { wh: WarehouseStat; onClick: () 
             <p className="text-base font-black text-foreground">{wh.stats.itemCount}</p>
           </div>
           <div className="bg-muted/40 rounded-lg p-2.5">
-            <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Mavjud</p>
+            <p className="text-[10px] text-muted-foreground font-medium mb-0.5">{t("mavjud")}</p>
             <p className="text-base font-black text-[var(--ep-green)]">{fmt(wh.stats.availableQty)}</p>
           </div>
         </div>
         {wh.capacity && (
           <div>
             <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-              <span>To'lganlik</span>
+              <span>{t("tolganlik")}</span>
               <span className="font-bold">{fillPct}%</span>
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">

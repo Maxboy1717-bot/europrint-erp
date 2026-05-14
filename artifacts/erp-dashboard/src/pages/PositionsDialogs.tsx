@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Target } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type Position, type Department, type PositionForm, KPI_TEMPLATES } from "./PositionsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Add / Edit dialog
@@ -35,6 +36,7 @@ interface PositionFormDialogProps {
 export function PositionFormDialog({
   open, onOpenChange, editing, form, setForm, departments, isPending, onSave,
 }: PositionFormDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
@@ -48,7 +50,7 @@ export function PositionFormDialog({
               <Input
                 value={form.name_uz}
                 onChange={(e) => setForm((f) => ({ ...f, name_uz: e.target.value, name: e.target.value }))}
-                placeholder="Lavozim nomi"
+                placeholder={t("lavozimNomi1")}
               />
             </div>
             <div className="space-y-1">
@@ -62,7 +64,7 @@ export function PositionFormDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label>Kod</Label>
+              <Label>{t("code")}</Label>
               <Input
                 value={form.code}
                 onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
@@ -70,7 +72,7 @@ export function PositionFormDialog({
               />
             </div>
             <div className="space-y-1">
-              <Label>Daraja</Label>
+              <Label>{t("daraja")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -81,16 +83,16 @@ export function PositionFormDialog({
             </div>
           </div>
           <div className="space-y-1">
-            <Label>Bo'lim</Label>
+            <Label>{t("bolim1")}</Label>
             <Select
               value={form.department_id || "none"}
               onValueChange={(v) => setForm((f) => ({ ...f, department_id: v === "none" ? "" : v }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Bo'limni tanlang" />
+                <SelectValue placeholder={t("bolimniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Bo'limsiz —</SelectItem>
+                <SelectItem value="none">{t("bolimsiz")}</SelectItem>
                 {(Array.isArray(departments) ? departments : []).map((d) => (
                   <SelectItem key={d.id} value={d.id}>{d.name_uz || d.name}</SelectItem>
                 ))}
@@ -118,7 +120,7 @@ export function PositionFormDialog({
             </div>
           </div>
           <div className="space-y-1">
-            <Label>Shtat soni</Label>
+            <Label>{t("shtatSoni")}</Label>
             <Input
               type="number"
               min={1}
@@ -133,7 +135,7 @@ export function PositionFormDialog({
                 onCheckedChange={(v) => setForm((f) => ({ ...f, is_management: v }))}
                 id="pos-mgmt"
               />
-              <Label htmlFor="pos-mgmt">Boshqaruv lavozimi</Label>
+              <Label htmlFor="pos-mgmt">{t("boshqaruvLavozimi")}</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch
@@ -141,12 +143,12 @@ export function PositionFormDialog({
                 onCheckedChange={(v) => setForm((f) => ({ ...f, is_active: v }))}
                 id="pos-active"
               />
-              <Label htmlFor="pos-active">Faol</Label>
+              <Label htmlFor="pos-active">{t("active")}</Label>
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={!form.name_uz || isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>
@@ -171,8 +173,8 @@ export function PositionDeleteDialog({ deleteId, onOpenChange, onConfirm }: Posi
     <ConfirmDialog
       open={!!deleteId}
       onOpenChange={(open) => { if (!open) onOpenChange(false); }}
-      title="Lavozimni o'chirish"
-      description="Ushbu lavozimni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("lavozimniOchirish")}
+      description={t("ushbuLavozimniOchirishniTasdiqlaysizmiBu")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"
@@ -206,7 +208,7 @@ export function KpiTemplateDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-4 w-4 text-primary" />
-            KPI Shabloni Biriktirish
+            {t("kpiShabloniBiriktirish")}
           </DialogTitle>
         </DialogHeader>
         {position && (
@@ -237,7 +239,7 @@ export function KpiTemplateDialog({
         )}
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             disabled={!selectedTemplate || isPending}

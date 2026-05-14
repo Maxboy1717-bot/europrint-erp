@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Brain } from "lucide-react";
 import type { DashboardData, BudgetItem, ProviderConfig } from "./HRAIDashboardTypes";
 import { taskTypes, providerColors, providerList } from "./HRAIDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Skeleton Helpers ────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ interface StatCardsRowProps {
 }
 
 export function StatCardsRow({ items }: StatCardsRowProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       {(Array.isArray(items) ? items : []).map((stat, idx) => (
@@ -73,7 +75,7 @@ interface ProvidersBudgetSectionProps {
 export function ProvidersBudgetSection({ budgetItems, providers }: ProvidersBudgetSectionProps) {
   return (
     <div className="bg-card rounded-xl p-6 mb-8 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground mb-4">Provayderlar va byudjet</h2>
+      <h2 className="text-lg font-semibold text-foreground mb-4">{t("provayderlarVaByudjet")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(Array.isArray(providerList) ? providerList : []).map((providerKey) => {
           const pBudget = (Array.isArray(budgetItems) ? budgetItems : []).find(b => b.provider === providerKey);
@@ -106,7 +108,7 @@ export function ProvidersBudgetSection({ budgetItems, providers }: ProvidersBudg
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-muted-foreground font-medium">Oylik byudjet</span>
+                    <span className="text-muted-foreground font-medium">{t("oylikByudjet")}</span>
                     <span className="text-foreground font-semibold">
                       ${monthlySpent.toFixed(2)} / ${monthlyBudget.toFixed(2)}
                     </span>
@@ -118,7 +120,7 @@ export function ProvidersBudgetSection({ budgetItems, providers }: ProvidersBudg
                   />
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">Kunlik so'rovlar</span>
+                  <span className="text-muted-foreground font-medium">{t("kunlikSorovlar")}</span>
                   <span className="text-foreground font-semibold" data-testid={`text-daily-requests-${providerKey}`}>
                     {dailyUsed} / {dailyLimit}
                   </span>
@@ -141,7 +143,7 @@ interface TaskTypeGridProps {
 export function TaskTypeGrid({ onSelectTask }: TaskTypeGridProps) {
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground mb-4">AI Vazifalar</h2>
+      <h2 className="text-lg font-semibold text-foreground mb-4">{t("aiVazifalar")}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {(Array.isArray(taskTypes) ? taskTypes : []).map((task) => {
           const IconComp = task.icon;
@@ -173,7 +175,7 @@ interface RecentTasksPanelProps {
 export function RecentTasksPanel({ dashboard, getStatusBadge }: RecentTasksPanelProps) {
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground mb-4">So'nggi natijalar</h2>
+      <h2 className="text-lg font-semibold text-foreground mb-4">{t("songgiNatijalar")}</h2>
       {dashboard?.recentTasks && dashboard.recentTasks.length > 0 ? (
         <div className="space-y-3">
           {(Array.isArray(dashboard.recentTasks) ? dashboard.recentTasks : []).map((task) => (
@@ -195,7 +197,7 @@ export function RecentTasksPanel({ dashboard, getStatusBadge }: RecentTasksPanel
       ) : (
         <div className="text-center py-12">
           <Brain className="h-12 w-12 text-outline-variant mx-auto mb-4" />
-          <p className="text-muted-foreground font-medium">Hozircha natijalar yo'q</p>
+          <p className="text-muted-foreground font-medium">{t("hozirchaNatijalarYoq")}</p>
         </div>
       )}
     </div>

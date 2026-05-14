@@ -8,7 +8,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok, Err, AppError } from '@common/result';
 import { AutoGlPostingRepository } from '../repositories/auto-gl-posting.repository';
 
-interface GlEntry {
+export interface GlEntry {
   movementId:    number;
   debitAccount:  string;
   creditAccount: string;

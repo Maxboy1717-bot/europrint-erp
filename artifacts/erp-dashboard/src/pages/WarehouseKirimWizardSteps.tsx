@@ -30,11 +30,11 @@ export function Step1({header, setHeader, warehouses, cfg }: Step1Props) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Manzil ombori *</Label>
+          <Label>{t("manzilOmbori")}</Label>
           <select value={header.toWarehouseId}
                   onChange={e => setHeader({...header, toWarehouseId: e.target.value})}
                   className="w-full mt-1 p-2 border rounded text-sm">
-            <option value="">Tanlang</option>
+            <option value="">{t("tanlang")}</option>
             {warehouses.map(w => (
               <option key={w.id} value={w.id}>
                 {w.code} — {w.name}{w.code === "QC-HOLD" ? " 🔒" : ""}
@@ -43,7 +43,7 @@ export function Step1({header, setHeader, warehouses, cfg }: Step1Props) {
           </select>
         </div>
         <div>
-          <Label>Kelish sanasi *</Label>
+          <Label>{t("kelishSanasi1")}</Label>
           <Input type="date" value={header.arrivalDate}
                  onChange={e => setHeader({...header, arrivalDate: e.target.value})} />
         </div>
@@ -69,7 +69,7 @@ export function Step1({header, setHeader, warehouses, cfg }: Step1Props) {
         </div>
         {cfg.showWaybill && (
           <div>
-            <Label>Yuk xati raqami</Label>
+            <Label>{t("yukXatiRaqami")}</Label>
             <Input value={header.waybillNumber}
                    onChange={e => setHeader({...header, waybillNumber: e.target.value})}
                    placeholder="YX-2026/001" />
@@ -77,22 +77,22 @@ export function Step1({header, setHeader, warehouses, cfg }: Step1Props) {
         )}
         {cfg.showCurrency && (
           <div>
-            <Label>Valyuta</Label>
+            <Label>{t("valyuta")}</Label>
             <select value={header.currency}
                     onChange={e => setHeader({...header, currency: e.target.value})}
                     className="w-full mt-1 p-2 border rounded text-sm">
-              <option value="UZS">UZS — O'zbek so'mi</option>
+              <option value="UZS">{t("uzsOzbekSomi1")}</option>
               <option value="USD">USD — AQSh dollari</option>
-              <option value="EUR">EUR — Yevro</option>
+              <option value="EUR">{t("eurYevro")}</option>
             </select>
           </div>
         )}
         <div className="col-span-2">
-          <Label>Izoh</Label>
+          <Label>{t("Izoh")}</Label>
           <textarea value={header.notes}
                     onChange={e => setHeader({...header, notes: e.target.value})}
                     className="w-full mt-1 p-2 border rounded text-sm" rows={2}
-                    placeholder="Qo'shimcha izoh..." />
+                    placeholder={t("qoshimchaIzoh")} />
         </div>
       </div>
     </div>
@@ -119,7 +119,7 @@ export function Step2({ lines, materials, cfg, currency, totalQty, totalValue, o
         <div className={`text-sm px-3 py-2 rounded flex-1 mr-3 ${cfg.bannerClass}`}>
           💡 {cfg.step2Hint}
         </div>
-        <Button onClick={onAddLine} size="sm"><Plus className="h-4 w-4 mr-1" /> Qator qo'shish</Button>
+        <Button onClick={onAddLine} size="sm"><Plus className="h-4 w-4 mr-1" /> {t("qatorQoshish")}</Button>
       </div>
       {lines.map((l, i) => (
         <Card key={l._key} className="border-2 border-gray-200">
@@ -138,18 +138,18 @@ export function Step2({ lines, materials, cfg, currency, totalQty, totalValue, o
                 <select value={l.materialCardId ?? ""}
                         onChange={e => onSelectMaterial(l._key, parseInt(e.target.value, 10))}
                         className="w-full mt-1 p-2 border rounded text-sm">
-                  <option value="">Material tanlang</option>
+                  <option value="">{t("materialTanlang")}</option>
                   {materials.map(m => <option key={m.id} value={m.id}>{m.code} — {m.name}</option>)}
                 </select>
               </div>
               <div>
-                <Label>Miqdor *</Label>
+                <Label>{t("miqdor1")}</Label>
                 <Input type="number" min="0" step="any"
                        value={l.quantity || ""}
                        onChange={e => onUpdateLine(l._key, "quantity", parseFloat(e.target.value) || 0)} />
               </div>
               <div>
-                <Label>Birlik narxi</Label>
+                <Label>{t("birlikNarxi")}</Label>
                 <Input type="number" min="0" step="any"
                        value={l.unitPrice || ""}
                        onChange={e => onUpdateLine(l._key, "unitPrice", parseFloat(e.target.value) || 0)} />
@@ -158,10 +158,10 @@ export function Step2({ lines, materials, cfg, currency, totalQty, totalValue, o
                 <Label>Partiya № (avto)</Label>
                 <Input value={l.batchNumber}
                        onChange={e => onUpdateLine(l._key, "batchNumber", e.target.value)}
-                       placeholder="Avto" />
+                       placeholder={t("avto")} />
               </div>
               <div>
-                <Label>Yaroqlilik muddati</Label>
+                <Label>{t("yaroqlilikMuddati")}</Label>
                 <Input type="date" value={l.expiryDate}
                        onChange={e => onUpdateLine(l._key, "expiryDate", e.target.value)} />
               </div>
@@ -170,7 +170,7 @@ export function Step2({ lines, materials, cfg, currency, totalQty, totalValue, o
         </Card>
       ))}
       <div className="bg-blue-50 p-3 rounded text-sm">
-        <b>Jami:</b> {lines.length} qator · {totalQty.toLocaleString("uz-UZ")} miqdor · {totalValue.toLocaleString("uz-UZ")} {currency || "UZS"}
+        <b>{t("jami")}</b> {lines.length} qator · {totalQty.toLocaleString("uz-UZ")} miqdor · {totalValue.toLocaleString("uz-UZ")} {currency || "UZS"}
       </div>
     </div>
   );
@@ -227,12 +227,12 @@ export function Step4({ lines, header, activeWarehouse, cfg, totalQty, totalValu
     <div className="space-y-4">
       <div className="bg-gray-100 p-4 rounded space-y-2 text-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><span className="text-gray-500">Ombor:</span> <b>{activeWarehouse?.name ?? "—"}</b></div>
-          <div><span className="text-gray-500">Sana:</span> <b>{header.arrivalDate}</b></div>
+          <div><span className="text-gray-500">{t("ombor1")}</span> <b>{activeWarehouse?.name ?? "—"}</b></div>
+          <div><span className="text-gray-500">{t("sana1")}</span> <b>{header.arrivalDate}</b></div>
           <div><span className="text-gray-500">{cfg.supplierLabel}:</span> <b>{header.supplierName || "—"}</b></div>
           <div><span className="text-gray-500">{cfg.contractLabel}:</span> <b>{header.contractNumber || "—"}</b></div>
-          {cfg.showWaybill && <div><span className="text-gray-500">Yuk xati:</span> <b>{header.waybillNumber || "—"}</b></div>}
-          {cfg.showCurrency && <div><span className="text-gray-500">Valyuta:</span> <b>{header.currency}</b></div>}
+          {cfg.showWaybill && <div><span className="text-gray-500">{t("yukXati")}</span> <b>{header.waybillNumber || "—"}</b></div>}
+          {cfg.showCurrency && <div><span className="text-gray-500">{t("valyuta1")}</span> <b>{header.currency}</b></div>}
         </div>
       </div>
       <div className="border rounded overflow-hidden">
@@ -240,10 +240,10 @@ export function Step4({ lines, header, activeWarehouse, cfg, totalQty, totalValu
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left p-2">{"Material"}</th>
-              <th className="text-right p-2">Miqdor</th>
-              <th className="text-right p-2">Narx</th>
-              <th className="text-right p-2">Summa</th>
-              <th className="text-left p-2">Partiya №</th>
+              <th className="text-right p-2">{t("quantity")}</th>
+              <th className="text-right p-2">{t("price")}</th>
+              <th className="text-right p-2">{t("summa")}</th>
+              <th className="text-left p-2">{t("partiya")}</th>
             </tr>
           </thead>
           <tbody>
@@ -286,21 +286,21 @@ export function Step5({ created, cfg, onNavigate, onReset }: Step5Props) {
   return (
     <div className="text-center py-10">
       <CheckCircle2 className="h-20 w-20 text-[var(--ep-green)] mx-auto mb-4" />
-      <div className="text-2xl font-bold mb-2">Muvaffaqiyatli yaratildi!</div>
-      <div className="text-gray-600 mb-1">Hujjat raqami:</div>
+      <div className="text-2xl font-bold mb-2">{t("muvaffaqiyatliYaratildi")}</div>
+      <div className="text-gray-600 mb-1">{t("hujjatRaqami1")}</div>
       <div className="text-2xl font-mono font-bold text-[var(--ep-blue)] mb-6">{created.movementNumber}</div>
       <div className="flex gap-3 justify-center flex-wrap">
-        <Button onClick={() => onNavigate("/warehouse/hub")} variant="outline">Ombor Hub ga</Button>
+        <Button onClick={() => onNavigate("/warehouse/hub")} variant="outline">{t("omborHubGa")}</Button>
         {cfg.successNext === "quarantine" && (
-          <Button onClick={() => onNavigate("/wms/quarantine")} className="bg-amber-500 hover:bg-[var(--ep-yellow)]/90">Karantinga →</Button>
+          <Button onClick={() => onNavigate("/wms/quarantine")} className="bg-amber-500 hover:bg-[var(--ep-yellow)]/90">{t("karantinga")}</Button>
         )}
         {cfg.successNext === "fg" && (
-          <Button onClick={() => onNavigate("/warehouse/hub/FG-MAIN")} className="bg-emerald-600 hover:bg-[var(--ep-green)]/90">FG Omborga →</Button>
+          <Button onClick={() => onNavigate("/warehouse/hub/FG-MAIN")} className="bg-emerald-600 hover:bg-[var(--ep-green)]/90">{t("fgOmborga")}</Button>
         )}
         {cfg.successNext === "wip" && (
-          <Button onClick={() => onNavigate("/warehouse/hub/WIP-MAIN")} className="bg-violet-600 hover:bg-[var(--ep-purple)]/90">WIP Omborga →</Button>
+          <Button onClick={() => onNavigate("/warehouse/hub/WIP-MAIN")} className="bg-violet-600 hover:bg-[var(--ep-purple)]/90">{t("wipOmborga")}</Button>
         )}
-        <Button onClick={onReset} variant="outline">Yana yaratish</Button>
+        <Button onClick={onReset} variant="outline">{t("yanaYaratish")}</Button>
       </div>
     </div>
   );

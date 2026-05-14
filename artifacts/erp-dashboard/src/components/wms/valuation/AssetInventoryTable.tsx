@@ -61,7 +61,7 @@ export function AssetInventoryTable({assets
     return (
       <div className="text-center py-8 text-[13px] text-muted-foreground">
         <Building2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p>Aktivlar ma'lumotlari topilmadi</p>
+        <p>{t("aktivlarMalumotlariTopilmadi")}</p>
       </div>
     );
   }
@@ -71,15 +71,15 @@ export function AssetInventoryTable({assets
       <div className="ep-table-scroll"><Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/40 transition-colors">
-            <TableHead>Kod</TableHead>
-            <TableHead>Nomi</TableHead>
-            <TableHead>Tur</TableHead>
-            <TableHead>Joylashuv</TableHead>
-            <TableHead className="text-right">Xarid qiymati</TableHead>
-            <TableHead className="text-right">Joriy qiymat</TableHead>
-            <TableHead>Holat</TableHead>
+            <TableHead>{t("code")}</TableHead>
+            <TableHead>{t("name")}</TableHead>
+            <TableHead>{t("tur")}</TableHead>
+            <TableHead>{t("location")}</TableHead>
+            <TableHead className="text-right">{t("xaridQiymati")}</TableHead>
+            <TableHead className="text-right">{t("joriyQiymat")}</TableHead>
+            <TableHead>{t("status28")}</TableHead>
             <TableHead>{t('status2')}</TableHead>
-            <TableHead>Oxirgi inventar</TableHead>
+            <TableHead>{t("oxirgiInventar")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

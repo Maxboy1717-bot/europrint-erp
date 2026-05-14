@@ -19,7 +19,9 @@ import { CourseDeleteDialogs } from "@/components/lms/CourseDeleteDialogs";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export default function CourseDetail() {
+  const { t } = useTranslation("common");
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -166,10 +168,10 @@ export default function CourseDetail() {
   if (!course) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground mb-4">Kurs topilmadi</p>
+        <p className="text-muted-foreground mb-4">{t("kursTopilmadi")}</p>
         <Button onClick={() => navigate("/courses")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Orqaga
+          {t("back")}
         </Button>
       </div>
     );
@@ -196,12 +198,12 @@ export default function CourseDetail() {
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <EPPageHeader
-        breadcrumb={<>Dashboard · LMS · <b className="text-foreground">{course.title}</b></>}
+        breadcrumb={<>{t("dashboardLms")}<b className="text-foreground">{course.title}</b></>}
         title={course.title}
       />
             {course.isRequired && (
               <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none">
-                Majburiy
+                {t("majburiy")}
               </Badge>
             )}
           </div>
@@ -225,7 +227,7 @@ export default function CourseDetail() {
             className="rounded-lg px-4 py-2"
           >
             <Play className="w-4 h-4 mr-2" />
-            O'qishni boshlash
+            {t("oqishniBoshlash")}
           </Button>
           <Button
             onClick={() => setShowAssignCourse(true)}
@@ -233,23 +235,23 @@ export default function CourseDetail() {
             className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Xodimlarga tayinlash
+            {t("xodimlargaTayinlash")}
           </Button>
         </div>
       </div>
 
       <Card className="bg-card border-border shadow-none">
         <CardHeader>
-          <CardTitle className="text-foreground">Kurs ma'lumotlari</CardTitle>
+          <CardTitle className="text-foreground">{t("kursMalumotlari")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Kurs kodi</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("kursKodi1")}</p>
               <p className="text-xl font-bold tracking-tight text-foreground">{course.code}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Daraja</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("daraja")}</p>
               <p className="text-xl font-bold tracking-tight text-foreground">
                 {course.level === "beginner" ? "Boshlang'ich"
                   : course.level === "intermediate" ? "O'rta"
@@ -260,10 +262,10 @@ export default function CourseDetail() {
 
           {mentor && (
             <div className="pt-4 border-t border-border">
-              <p className="text-sm font-semibold text-foreground mb-3">Mentor haqida</p>
+              <p className="text-sm font-semibold text-foreground mb-3">{t("mentorHaqida")}</p>
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Ism</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("ism1")}</p>
                   <p className="font-medium text-foreground">{mentor.name}</p>
                   {mentorEmployee && (
                     <EPStatusPill tone="neutral" className="mt-1 bg-muted/60 text-foreground shadow-none border-none">
@@ -273,33 +275,33 @@ export default function CourseDetail() {
                 </div>
                 {mentor.bio && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Kim</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t("kim1")}</p>
                     <p className="text-sm">{mentor.bio}</p>
                   </div>
                 )}
                 {mentor.source && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Qayerdan</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t("qayerdan")}</p>
                     <p className="text-sm">{mentor.source}</p>
                   </div>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {mentor.experience && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Tajriba</p>
+                      <p className="text-sm text-muted-foreground mb-1">{t("tajriba")}</p>
                       <p className="text-sm">{mentor.experience}</p>
                     </div>
                   )}
                   {mentor.expertise && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Mutaxassislik</p>
+                      <p className="text-sm text-muted-foreground mb-1">{t("mutaxassislik")}</p>
                       <p className="text-sm">{mentor.expertise}</p>
                     </div>
                   )}
                 </div>
                 {mentor.achievements && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Yutuqlar</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t("yutuqlar")}</p>
                     <p className="text-sm">{mentor.achievements}</p>
                   </div>
                 )}

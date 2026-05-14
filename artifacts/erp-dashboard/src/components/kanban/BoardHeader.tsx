@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationsPanel } from "../../pages/kanban/NotificationsPanel";
+import { useTranslation } from '@/lib/i18n';
 import {
   KanbanBoardType, KanbanColumn, KanbanTranslations,
   KanbanTemplate, RoleFilter, FilterState, ViewMode,
@@ -150,6 +151,7 @@ export function BoardHeader({
   setShowRobots, setShowFlows, setShowReports, setShowTemplates,
   boards, setShowCreateBoard, hasActiveFilters, onDeleteBoard,
 }: BoardHeaderProps) {
+  const { t } = useTranslation("common");
   const clearFilters = () => setFilters(() => ({
     search: "", columnId: null, priority: null, assigneeId: null,
     overdue: false, hasNewComments: false, tagId: null, tagName: null,
@@ -172,7 +174,7 @@ export function BoardHeader({
           className="mr-2"
           style={{ fontSize: 22, fontWeight: 700, color: "#2D3748", letterSpacing: "-0.01em" }}
         >
-          Kanban doskasi
+          {t("kanbanDoskasi")}
         </h1>
 
         {/* Yangi vazifa dropdown */}
@@ -237,7 +239,7 @@ export function BoardHeader({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => { setQuickTaskType("template"); setShowQuickTask(true); }} data-testid="menu-create-template">
               <Plus className="h-4 w-4 mr-2" />
-              Yangi shablon
+              {t("yangiShablon")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -292,7 +294,7 @@ export function BoardHeader({
         <Popover open={showNotifications} onOpenChange={setShowNotifications}>
           <PopoverTrigger asChild>
             <span>
-              <IconBtn badge={unreadCount} title="Bildirishnomalar" testId="button-notifications">
+              <IconBtn badge={unreadCount} title={t("notifications")} testId="button-notifications">
                 <Bell style={{ width: 16, height: 16 }} />
               </IconBtn>
             </span>
@@ -301,22 +303,22 @@ export function BoardHeader({
         </Popover>
 
         {/* Robotlar */}
-        <IconBtn onClick={() => setShowRobots(true)} title="Robotlar" testId="button-robots">
+        <IconBtn onClick={() => setShowRobots(true)} title={t("robotlar")} testId="button-robots">
           <Bot style={{ width: 16, height: 16 }} />
         </IconBtn>
 
         {/* Oqimlar */}
-        <IconBtn onClick={() => setShowFlows(true)} title="Oqimlar" testId="button-flows">
+        <IconBtn onClick={() => setShowFlows(true)} title={t("oqimlar")} testId="button-flows">
           <GitBranch style={{ width: 16, height: 16 }} />
         </IconBtn>
 
         {/* Hisobotlar */}
-        <IconBtn onClick={() => setShowReports(true)} title="Hisobotlar" testId="button-reports">
+        <IconBtn onClick={() => setShowReports(true)} title={t("reports")} testId="button-reports">
           <TrendingUp style={{ width: 16, height: 16 }} />
         </IconBtn>
 
         {/* Shablonlar */}
-        <IconBtn onClick={() => setShowTemplates(true)} title="Shablonlar" testId="button-templates">
+        <IconBtn onClick={() => setShowTemplates(true)} title={t("shablonlar")} testId="button-templates">
           <FileText style={{ width: 16, height: 16 }} />
         </IconBtn>
       </div>
@@ -352,7 +354,7 @@ export function BoardHeader({
         {/* Doskani o'chirish */}
         {selectedBoardId && (
           <button
-            title="Doskani o'chirish"
+            title={t("doskaniOchirish")}
             data-testid="button-delete-board"
             onClick={() => {
               const board = boards.find(b => String(b.id) === String(selectedBoardId));
@@ -387,7 +389,7 @@ export function BoardHeader({
           <input
             value={filters.search}
             onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
-            placeholder="Qidirish..."
+            placeholder={t("Qidirish...")}
             data-testid="input-search"
             style={{
               width: "100%", height: 40,

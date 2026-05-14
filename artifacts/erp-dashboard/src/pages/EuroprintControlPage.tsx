@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Settings2, ShieldCheck, Activity, CheckCircle2, XCircle, AlertCircle, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface ModuleHealth {
   module?: string;
   name?: string;
@@ -59,6 +60,7 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 };
 
 export default function EuroprintControlPage() {
+  const { t } = useTranslation("common");
   const { data: dashboard, isLoading: loadingDash, isError: errDash, refetch: retryDash } =
     useQuery<AuditorDashboard | { data?: AuditorDashboard }>({
       queryKey: ["/api/europrint-control/auditor-dashboard"],
@@ -116,7 +118,7 @@ export default function EuroprintControlPage() {
   return (
     <ModulePage
       module="admin"
-      title="EuroPrint Boshqaruv Markazi"
+      title={t("europrintBoshqaruvMarkazi")}
       icon={<Settings2 className="h-5 w-5" />}
     >
       <div className="space-y-6">
@@ -152,7 +154,7 @@ export default function EuroprintControlPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Activity className="h-4 w-4" />
-                Modul holati
+                {t("modulHolati")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -167,7 +169,7 @@ export default function EuroprintControlPage() {
                   ))}
                 </div>
               ) : healthItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">Ma'lumot yo'q</p>
+                <p className="text-sm text-muted-foreground py-4">{t("malumotYoq")}</p>
               ) : (
                 <div className="space-y-3">
                   {healthItems.map((m, i) => {
@@ -201,7 +203,7 @@ export default function EuroprintControlPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4" />
-                Validatsiya xulosasi
+                {t("validatsiyaXulosasi")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -210,7 +212,7 @@ export default function EuroprintControlPage() {
                   {([1, 2, 3]).map(i => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
                 </div>
               ) : Object.keys(validation).length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">Ma'lumot yo'q</p>
+                <p className="text-sm text-muted-foreground py-4">{t("malumotYoq")}</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
@@ -241,7 +243,7 @@ export default function EuroprintControlPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Activity className="h-4 w-4" />
-              Oxirgi audit loglari
+              {t("oxirgiAuditLoglari")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -256,7 +258,7 @@ export default function EuroprintControlPage() {
                 ))}
               </div>
             ) : auditLogs.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">Loglar topilmadi</p>
+              <p className="text-sm text-muted-foreground py-8 text-center">{t("loglarTopilmadi")}</p>
             ) : (
               <div className="divide-y max-h-72 overflow-y-auto">
                 {auditLogs.map(log => {

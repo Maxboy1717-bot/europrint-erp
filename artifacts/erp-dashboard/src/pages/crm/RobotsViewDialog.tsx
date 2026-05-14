@@ -56,18 +56,18 @@ export function RobotFormDialog({open,
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-1">
-          <Label>Nomi *</Label>
-            <Input {...form.register("name")} placeholder="Robot nomi" data-testid="input-robot-name" />
+          <Label>{t("nomi")}</Label>
+            <Input {...form.register("name")} placeholder={t("robotNomi")} data-testid="input-robot-name" />
             {form.formState.errors.name && (
               <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-1">
-          <Label>Tavsif</Label>
+          <Label>{t("progress.description")}</Label>
             <Textarea
               {...form.register("description")}
-              placeholder="Robot haqida qisqacha ma'lumot"
+              placeholder={t("robotHaqidaQisqachaMalumot")}
               rows={3}
               data-testid="input-robot-description"
             />
@@ -75,21 +75,21 @@ export function RobotFormDialog({open,
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Obyekt turi *</Label>
+          <Label>{t("obyektTuri")}</Label>
               <Controller control={form.control} name="entityType" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger data-testid="select-entity-type" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="leads">Lidlar</SelectItem>
-                    <SelectItem value="deals">Bitimlar</SelectItem>
-                    <SelectItem value="contacts">Kontaktlar</SelectItem>
-                    <SelectItem value="companies">Kompaniyalar</SelectItem>
+                    <SelectItem value="leads">{t("lidlar")}</SelectItem>
+                    <SelectItem value="deals">{t("bitimlar")}</SelectItem>
+                    <SelectItem value="contacts">{t("kontaktlar")}</SelectItem>
+                    <SelectItem value="companies">{t("kompaniyalar")}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
             </div>
             <div className="space-y-1">
-          <Label>Trigger turi *</Label>
+          <Label>{t("triggerTuri")}</Label>
               <Controller control={form.control} name="triggerType" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger data-testid="select-trigger-type" className="h-9"><SelectValue /></SelectTrigger>
@@ -117,13 +117,13 @@ export function RobotFormDialog({open,
                 min={1}
                 data-testid="input-time-elapsed-hours"
               />
-              <p className="text-xs text-muted-foreground">Necha soat faoliyatsizlikdan keyin ishga tushadi</p>
+              <p className="text-xs text-muted-foreground">{t("nechaSoatFaoliyatsizlikdanKeyinIshga")}</p>
             </div>
           )}
 
           {form.watch("triggerType") === "FIELD_CHANGED" && (
             <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
-              <Label>Maydon nomi</Label>
+              <Label>{t("maydonNomi")}</Label>
               <Input
                 value={(form.watch("triggerConditions")?.fieldName as string) || ""}
                 onChange={(e) => form.setValue("triggerConditions", {
@@ -137,7 +137,7 @@ export function RobotFormDialog({open,
           )}
 
           <div className="space-y-1">
-          <Label>Harakat turi *</Label>
+          <Label>{t("harakatTuri")}</Label>
             <Controller control={form.control} name="actionType" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger data-testid="select-action-type" className="h-9"><SelectValue /></SelectTrigger>
@@ -152,14 +152,14 @@ export function RobotFormDialog({open,
 
           {form.watch("actionType") === "SEND_NOTIFICATION" && (
             <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
-              <Label>Xabar matni</Label>
+              <Label>{t("xabarMatni")}</Label>
               <Textarea
                 value={(form.watch("actionConfig")?.message as string) || ""}
                 onChange={(e) => form.setValue("actionConfig", {
                   ...form.getValues("actionConfig"),
                   message: e.target.value,
                 })}
-                placeholder="Xabar matni..."
+                placeholder={t("xabarMatni1")}
                 rows={2}
                 data-testid="input-notification-message"
               />
@@ -169,26 +169,26 @@ export function RobotFormDialog({open,
           {form.watch("actionType") === "CREATE_TASK" && (
             <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
               <div className="space-y-1">
-          <Label>Vazifa sarlavhasi</Label>
+          <Label>{t("vazifaSarlavhasi")}</Label>
                 <Input
                   value={(form.watch("actionConfig")?.taskTitle as string) || ""}
                   onChange={(e) => form.setValue("actionConfig", {
                     ...form.getValues("actionConfig"),
                     taskTitle: e.target.value,
                   })}
-                  placeholder="Vazifa sarlavhasi"
+                  placeholder={t("vazifaSarlavhasi")}
                   data-testid="input-task-title"
                 />
               </div>
               <div className="space-y-1">
-          <Label>Vazifa tavsifi</Label>
+          <Label>{t("vazifaTavsifi")}</Label>
                 <Textarea
                   value={(form.watch("actionConfig")?.taskDescription as string) || ""}
                   onChange={(e) => form.setValue("actionConfig", {
                     ...form.getValues("actionConfig"),
                     taskDescription: e.target.value,
                   })}
-                  placeholder="Vazifa tavsifi"
+                  placeholder={t("vazifaTavsifi")}
                   rows={2}
                   data-testid="input-task-description"
                 />
@@ -198,7 +198,7 @@ export function RobotFormDialog({open,
 
           {form.watch("actionType") === "CHANGE_STAGE" && (
             <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
-              <Label>Yangi bosqich ID</Label>
+              <Label>{t("yangiBosqichId")}</Label>
               <Input
                 value={(form.watch("actionConfig")?.newStageId as string) || ""}
                 onChange={(e) => form.setValue("actionConfig", {
@@ -243,14 +243,14 @@ export function RobotFormDialog({open,
 
           {form.watch("actionType") === "SEND_TELEGRAM" && (
             <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
-              <Label>Telegram xabar matni</Label>
+              <Label>{t("telegramXabarMatni")}</Label>
               <Textarea
                 value={(form.watch("actionConfig")?.telegramMessage as string) || ""}
                 onChange={(e) => form.setValue("actionConfig", {
                   ...form.getValues("actionConfig"),
                   telegramMessage: e.target.value,
                 })}
-                placeholder="Telegram xabar matni"
+                placeholder={t("telegramXabarMatni")}
                 rows={2}
                 data-testid="input-telegram-message"
               />
@@ -259,8 +259,8 @@ export function RobotFormDialog({open,
 
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div>
-              <Label>Faol holat</Label>
-              <p className="text-xs text-muted-foreground">Robot yaratilgandan keyin ishga tushadi</p>
+              <Label>{t("faolHolat")}</Label>
+              <p className="text-xs text-muted-foreground">{t("robotYaratilgandanKeyinIshgaTushadi")}</p>
             </div>
             <Controller control={form.control} name="isActive" render={({ field }) => (
               <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-robot-active" />
@@ -269,11 +269,11 @@ export function RobotFormDialog({open,
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSaving} data-testid="button-save-robot">
               {isSaving ? (
-                <><EPLoader className="mr-2" />Saqlanmoqda...</>
+                <><EPLoader className="mr-2" />{t("saqlanmoqda")}</>
               ) : (
                 <><Save className="h-4 w-4 mr-2" />{editingRobot ? "Yangilash" : "Yaratish"}</>
               )}

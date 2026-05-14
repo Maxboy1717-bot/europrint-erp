@@ -83,27 +83,27 @@ export default function PIPPage() {
     <div className="p-6 space-y-6 bg-background min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">📈 PIP — Samaradorlikni Yaxshilash Rejasi</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("pipSamaradorlikniYaxshilashRejasi")}</h1>
           <p className="text-muted-foreground text-sm mt-1">Performance Improvement Plans — 30/60/90 kunlik rejalar</p>
         </div>
         <Button onClick={() => setShowCreate(!showCreate)} className="bg-primary hover:bg-primary/90 text-white">
-          ➕ Yangi PIP
+          {t("yangiPip")}
         </Button>
       </div>
 
       {/* Create Form */}
       {showCreate && (
         <Card className="bg-card border-primary max-w-2xl">
-          <CardHeader><CardTitle className="text-foreground">Yangi PIP yaratish</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-foreground">{t("yangiPipYaratish")}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-muted-foreground">Xodim ID *</Label>
+                <Label className="text-muted-foreground">{t("xodimId2")}</Label>
                 <Input value={form.employee_id} onChange={e => setForm(f => ({ ...f, employee_id: e.target.value }))}
-                  placeholder="Xodim ID" className="bg-input border-border mt-1" />
+                  placeholder={t("xodimId")} className="bg-input border-border mt-1" />
               </div>
               <div>
-                <Label className="text-muted-foreground">Nazoratchi ID</Label>
+                <Label className="text-muted-foreground">{t("nazoratchiId")}</Label>
                 <Input value={form.supervisor_id} onChange={e => setForm(f => ({ ...f, supervisor_id: e.target.value }))}
                   placeholder={t('supervisorId')} className="bg-input border-border mt-1" />
               </div>
@@ -119,20 +119,20 @@ export default function PIPPage() {
                 </Select>
               </div>
               <div>
-                <Label className="text-muted-foreground">Boshlanish sanasi *</Label>
+                <Label className="text-muted-foreground">{t("boshlanishSanasi1")}</Label>
                 <Input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))}
                   className="bg-input border-border mt-1" />
               </div>
             </div>
             <div>
-              <Label className="text-muted-foreground">Maqsadlar *</Label>
+              <Label className="text-muted-foreground">{t("maqsadlar1")}</Label>
               <Textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))}
                 placeholder="PIP maqsadlari va kutilgan natijalar..." className="bg-input border-border mt-1 min-h-24" />
             </div>
             <div>
-              <Label className="text-muted-foreground">Muvaffaqiyat mezonlari</Label>
+              <Label className="text-muted-foreground">{t("muvaffaqiyatMezonlari")}</Label>
               <Textarea value={form.success_criteria} onChange={e => setForm(f => ({ ...f, success_criteria: e.target.value }))}
-                placeholder="Qanday natijaga erishilsa muvaffaqiyatli deb hisoblanadi?" className="bg-input border-border mt-1" />
+                placeholder={t("qandayNatijagaErishilsaMuvaffaqiyatliDeb")} className="bg-input border-border mt-1" />
             </div>
             <div className="flex gap-2">
               <Button onClick={() => create.mutate({ ...form, employee_id: parseInt(form.employee_id), duration_days: parseInt(form.duration_days) })}
@@ -140,7 +140,7 @@ export default function PIPPage() {
                 className="bg-primary hover:bg-primary/90 text-white">
                 {create.isPending ? "Yaratilmoqda..." : "✅ Yaratish"}
               </Button>
-              <Button onClick={() => setShowCreate(false)} variant="outline" className="border-border text-muted-foreground">Bekor qilish</Button>
+              <Button onClick={() => setShowCreate(false)} variant="outline" className="border-border text-muted-foreground">{t("cancel")}</Button>
             </div>
           </CardContent>
         </Card>
@@ -150,7 +150,7 @@ export default function PIPPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-1 space-y-3">
           <h3 className="text-muted-foreground text-sm font-medium">Barcha PIP rejalar ({pips?.length || 0})</h3>
-          {isLoading && <div className="text-muted-foreground text-center py-4">Yuklanmoqda...</div>}
+          {isLoading && <div className="text-muted-foreground text-center py-4">{t("Yuklanmoqda...")}</div>}
           {pips?.map((pip) => (
             <Card key={pip.id}
               onClick={() => setSelectedPip(pip)}
@@ -181,7 +181,7 @@ export default function PIPPage() {
             </Card>
           ))}
           {(!pips || pips.length === 0) && !isLoading && (
-            <div className="text-center py-8 text-muted-foreground text-sm">Hali PIP yo'q</div>
+            <div className="text-center py-8 text-muted-foreground text-sm">{t("haliPipYoq")}</div>
           )}
         </div>
 
@@ -200,25 +200,25 @@ export default function PIPPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <div className="text-muted-foreground">Davomiyligi</div>
+                    <div className="text-muted-foreground">{t("davomiyligi")}</div>
                     <div className="text-foreground font-semibold">{pipDetail.pip?.duration_days} kun</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Boshlanish</div>
+                    <div className="text-muted-foreground">{t("boshlanish")}</div>
                     <div className="text-foreground font-semibold">{pipDetail.pip?.start_date}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Tugash</div>
+                    <div className="text-muted-foreground">{t("tugash")}</div>
                     <div className="text-foreground font-semibold">{pipDetail.pip?.end_date}</div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-sm mb-1">Maqsadlar</div>
+                  <div className="text-muted-foreground text-sm mb-1">{t("maqsadlar")}</div>
                   <div className="text-foreground text-sm bg-muted p-3 rounded">{pipDetail.pip?.goals}</div>
                 </div>
                 {pipDetail.pip?.success_criteria && (
                   <div>
-                    <div className="text-muted-foreground text-sm mb-1">Muvaffaqiyat mezonlari</div>
+                    <div className="text-muted-foreground text-sm mb-1">{t("muvaffaqiyatMezonlari")}</div>
                     <div className="text-foreground text-sm bg-muted p-3 rounded">{pipDetail.pip.success_criteria}</div>
                   </div>
                 )}
@@ -233,9 +233,9 @@ export default function PIPPage() {
                   {pipDetail.pip?.status === 'active' && (
                     <>
                       <Button onClick={() => complete.mutate({ id: pipDetail.pip?.id, result: "PASSED" })} size="sm"
-                        className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white">✅ O'tdi</Button>
+                        className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white">{t("otdi1")}</Button>
                       <Button onClick={() => complete.mutate({ id: pipDetail.pip?.id, result: "FAILED" })} size="sm"
-                        className="bg-[var(--ep-red)] hover:bg-[var(--ep-red)]/90 text-white">❌ O'tmadi</Button>
+                        className="bg-[var(--ep-red)] hover:bg-[var(--ep-red)]/90 text-white">{t("otmadi")}</Button>
                     </>
                   )}
                 </div>
@@ -245,7 +245,7 @@ export default function PIPPage() {
             {/* Progress updates */}
             {pipDetail.pip?.status === 'active' && (
               <Card className="bg-card border-border">
-                <CardHeader><CardTitle className="text-foreground text-base">Progress Yangilash</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-foreground text-base">{t("progressYangilash")}</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex gap-2 items-end">
                     <div className="flex-1">
@@ -255,14 +255,14 @@ export default function PIPPage() {
                         className="bg-input border-border mt-1" />
                     </div>
                     <div className="flex-2">
-                      <Label className="text-muted-foreground text-sm">Izoh</Label>
+                      <Label className="text-muted-foreground text-sm">{t("Izoh")}</Label>
                       <Input value={progressForm.notes}
                         onChange={e => setProgressForm(f => ({ ...f, notes: e.target.value }))}
-                        placeholder="Bu haftadagi o'zgarish..." className="bg-input border-border mt-1" />
+                        placeholder={t("buHaftadagiOzgarish")} className="bg-input border-border mt-1" />
                     </div>
                     <Button onClick={() => addProgress.mutate({ id: pipDetail.pip?.id, data: { ...progressForm, progress_percent: parseInt(progressForm.progress_percent) } })}
                       className="bg-primary hover:bg-primary/90 text-white" size="sm">
-                      Saqlash
+                      {t("Saqlash")}
                     </Button>
                   </div>
                   <div className="space-y-2">

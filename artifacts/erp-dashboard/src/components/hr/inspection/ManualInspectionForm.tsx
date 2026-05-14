@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ClipboardCheck, Star, Upload, X } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 const FormSchema = z.object({
   cleanliness:      z.number().int().min(1, 'Kamida 1 yulduz').max(5),
@@ -52,6 +53,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 }
 
 export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSaved }: Props) {
+  const { t } = useTranslation("common");
   const [pdfUrl,         setPdfUrl]         = useState<string | null>(null);
   const [submitError,    setSubmitError]    = useState<string | null>(null);
   const [evidenceBase64, setEvidenceBase64] = useState<string>('');
@@ -130,12 +132,12 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 py-2">
           {isGood && (
             <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-sm text-[var(--ep-green)] font-medium">
-              ✅ Xona holati yaxshi
+              {t("xonaHolatiYaxshi")}
             </div>
           )}
 
           <div className="space-y-1">
-            <Label>Tozalik darajasi</Label>
+            <Label>{t("tozalikDarajasi")}</Label>
             <Controller
               name="cleanliness"
               control={control}
@@ -145,7 +147,7 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
           </div>
 
           <div className="space-y-1">
-            <Label>Tartib darajasi</Label>
+            <Label>{t("tartibDarajasi")}</Label>
             <Controller
               name="order_score"
               control={control}
@@ -155,7 +157,7 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
           </div>
 
           <div className="flex items-center justify-between py-1 border-t">
-            <Label className="font-medium">Jihozlar joyida</Label>
+            <Label className="font-medium">{t("jihozlarJoyida")}</Label>
             <Controller
               name="equipment_ok"
               control={control}
@@ -165,8 +167,8 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
 
           <div className="flex items-center justify-between py-1 border-t">
             <div>
-              <Label className="font-medium text-[var(--ep-red)]">Favqulodda holat</Label>
-              <p className="text-xs text-gray-400">Xavfli holat yoki shoshilinch muammo</p>
+              <Label className="font-medium text-[var(--ep-red)]">{t("favquloddaHolat")}</Label>
+              <p className="text-xs text-gray-400">{t("xavfliHolatYokiShoshilinchMuammo")}</p>
             </div>
             <Controller
               name="emergency_issues"
@@ -186,7 +188,7 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
             <Label>Dalil fotosi (ixtiyoriy)</Label>
             {evidencePreview ? (
               <div className="relative rounded-lg overflow-hidden border bg-gray-50">
-                <img src={evidencePreview} alt="Dalil" className="w-full h-36 object-cover" />
+                <img src={evidencePreview} alt={t("dalil")} className="w-full h-36 object-cover" />
                 <button
                   type="button"
                   onClick={clearEvidence}
@@ -203,17 +205,17 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
                            justify-center gap-2 hover:border-blue-300 hover:bg-blue-50 transition-colors"
               >
                 <Upload className="w-5 h-5 text-gray-400" />
-                <span className="text-sm text-gray-400">Rasm biriktirish</span>
+                <span className="text-sm text-gray-400">{t("rasmBiriktirish")}</span>
               </button>
             )}
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
           </div>
 
           <div className="space-y-1">
-            <Label>Izohlar</Label>
+            <Label>{t("notes")}</Label>
             <Textarea
               {...register('notes')}
-              placeholder="Qo'shimcha izohlar yoki muammolar haqida yozing..."
+              placeholder={t("qoshimchaIzohlarYokiMuammolarHaqida")}
               rows={3}
               className="resize-none"
             />
@@ -225,7 +227,7 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
               <Badge variant="secondary" className="text-xs">PDF tayyorlandi</Badge>
               <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
                  className="text-xs text-[var(--ep-blue)] hover:underline">
-                Yuklab olish →
+                {t("yuklabOlish")}
               </a>
             </div>
           )}
@@ -236,7 +238,7 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Saqlanmoqda...' : 'Tasdiqlash & PDF'}
