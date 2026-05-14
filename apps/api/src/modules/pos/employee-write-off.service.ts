@@ -1,3 +1,8 @@
+/**
+ * @module employee-write-off.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 /**
@@ -67,7 +72,7 @@ export class EmployeeWriteOffService {
         } as typeof employeeWriteOffActs.$inferInsert)
         .returning();
   
-      const lineValues = (input?.lines ?? []).map(line => ({
+      const lineValues = (Array.isArray(input?.lines) ? input?.lines : []).map(line => ({
         actId:              act.id,
         ledgerEntryId:      line.ledgerEntryId,
         materialCardId:     line.materialCardId,

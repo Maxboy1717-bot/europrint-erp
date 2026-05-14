@@ -1,3 +1,8 @@
+/**
+ * @module ReportsHeader
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { Lang, TranslationType } from "./types";

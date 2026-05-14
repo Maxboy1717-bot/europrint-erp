@@ -1,3 +1,8 @@
+/**
+ * @module EmailForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -35,16 +40,31 @@ export function EmailForm({ entityType, entityId, email }: EmailFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/activities", entityType, entityId] });
       setEmailForm({ to: email || "", subject: "", body: "", attachments: [] });
     },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "";
+      toast({
+        title: "Email yuborilmadi",
+        description: msg.includes("400")
+          ? "To'g'ri email manzil kiriting (masalan: user@example.com)"
+          : "Serverda xatolik yuz berdi, qaytadan urinib ko'ring",
+        variant: "destructive",
+      });
+    },
   });
 
   return (
     <div className="space-y-3 p-4">
-      <Input
-        placeholder="Kimg"
-        value={emailForm.to}
-        onChange={(e) => setEmailForm((prev) => ({ ...prev, to: e.target.value }))}
-        data-testid="input-email-to"
-      />
+      <div>
+        <Input
+          placeholder="Kimga (masalan: user@example.com)"
+          value={emailForm.to}
+          onChange={(e) => setEmailForm((prev) => ({ ...prev, to: e.target.value }))}
+          data-testid="input-email-to"
+        />
+        {emailForm.to && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailForm.to) && (
+          <p className="text-xs text-destructive mt-1">To'g'ri email manzil kiriting</p>
+        )}
+      </div>
       <Input
         placeholder="Mavzu"
         value={emailForm.subject}
@@ -65,9 +85,14 @@ export function EmailForm({ entityType, entityId, email }: EmailFormProps) {
         </Button>
       </div>
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => sendEmailMutation.mutate(emailForm)}
-        disabled={!emailForm.to || !emailForm.subject || sendEmailMutation.isPending}
+        disabled={
+          !emailForm.to ||
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailForm.to) ||
+          !emailForm.subject ||
+          sendEmailMutation.isPending
+        }
         data-testid="button-send-email"
       >
         <Mail className="h-4 w-4 mr-2" />

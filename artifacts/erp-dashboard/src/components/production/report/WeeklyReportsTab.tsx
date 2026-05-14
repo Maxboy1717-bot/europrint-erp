@@ -1,3 +1,8 @@
+/**
+ * @module WeeklyReportsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,6 +15,7 @@ import {
   Calendar, RefreshCw, ChevronLeft, ChevronRight, BarChart2,
 } from "lucide-react";
 import { formatNum, getWeekRange } from "./helpers";
+import { apiRequest } from '@/lib/queryClient';
 
 interface WeeklyStat {
   department: string;
@@ -26,7 +32,7 @@ export function WeeklyReportsTab() {
   const { data, isLoading, refetch } = useQuery<{ stats: WeeklyStat[] }>({
     queryKey: ["/api/production/reports/weekly", start, end],
     queryFn: async () => {
-      const r = await fetch(`/api/production/reports/weekly?start=${start}&end=${end}`);
+      const r = await apiRequest('GET', `/api/production/reports/weekly?start=${start}&end=${end}`);
       if (!r.ok) throw new Error("Xato");
       return r.json();
     },
@@ -51,7 +57,7 @@ export function WeeklyReportsTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
-          ([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-32 w-full" />)
+          ([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-32 w-full rounded-lg" />)
         ) : stats.length === 0 ? (
           <p className="text-center py-10 text-muted-foreground col-span-full">Ushbu hafta uchun ma'lumotlar yo'q</p>
         ) : (
@@ -79,7 +85,7 @@ export function WeeklyReportsTab() {
                   </div>
                   <div className="flex justify-between text-sm border-t pt-1 mt-1">
                     <span className="text-muted-foreground">To'xtashlar</span>
-                    <span className="font-semibold text-orange-600">{s.total_downtime} min</span>
+                    <span className="font-semibold text-[var(--ep-primary)]">{s.total_downtime} min</span>
                   </div>
                 </div>
               </CardContent>
@@ -93,7 +99,7 @@ export function WeeklyReportsTab() {
           <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Batafsil ma'lumot</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="pl-4">Bo'lim</TableHead>
@@ -104,7 +110,7 @@ export function WeeklyReportsTab() {
             </TableHeader>
             <TableBody>
               {(Array.isArray(stats) ? stats : []).map((s) => (
-                <TableRow key={s.department}>
+                <TableRow key={s.department} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="pl-4 font-medium">{s.department}</TableCell>
                   <TableCell className="text-right">—</TableCell>
                   <TableCell className="text-right font-semibold">{formatNum(s.total_qty)}</TableCell>
@@ -112,7 +118,7 @@ export function WeeklyReportsTab() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

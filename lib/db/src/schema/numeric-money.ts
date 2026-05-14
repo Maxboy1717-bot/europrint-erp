@@ -1,3 +1,8 @@
+/**
+ * @module numeric-money
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { customType } from "drizzle-orm/pg-core";
 
 /**

@@ -1,3 +1,8 @@
+/**
+ * @module DesignOrderDetail
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +16,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Send, Paperclip, ExternalLink, Package } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { format } from "date-fns";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface DesignOrder {
   order: {
     id: string;
@@ -51,6 +56,7 @@ interface DesignOrderMessage {
 }
 
 export default function DesignOrderDetail() {
+  const { t } = useTranslation('common');
   const [, params] = useRoute("/design-orders/:id");
   const orderId = params?.id;
   const { toast } = useToast();
@@ -103,7 +109,7 @@ export default function DesignOrderDetail() {
 
   if (!orderId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+      <div className="min-h-screen from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -129,7 +135,7 @@ export default function DesignOrderDetail() {
 
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
   if (!orderData) {
     return null;
@@ -137,18 +143,18 @@ export default function DesignOrderDetail() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      'yangi': 'bg-blue-100 text-blue-700',
-      'jarayonda': 'bg-orange-100 text-orange-700',
-      'tasdiq-kutilmoqda': 'bg-purple-100 text-purple-700',
-      'tasdiqlangan': 'bg-green-100 text-green-700',
-      'ishlab-chiqarish': 'bg-teal-100 text-teal-700',
-      'yakunlangan': 'bg-emerald-100 text-emerald-700',
+      'yangi': 'bg-blue-100 text-[var(--ep-blue)]',
+      'jarayonda': 'bg-orange-100 text-[var(--ep-primary)]',
+      'tasdiq-kutilmoqda': 'bg-purple-100 text-[var(--ep-purple)]',
+      'tasdiqlangan': 'bg-green-100 text-[var(--ep-green)]',
+      'ishlab-chiqarish': 'bg-teal-100 text-[var(--ep-cyan)]',
+      'yakunlangan': 'bg-emerald-100 text-[var(--ep-green)]',
     };
-    return styles[status as keyof typeof styles] || 'bg-surface-container-low text-on-surface';
+    return styles[status as keyof typeof styles] || 'bg-muted/40 text-foreground';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+    <div className="min-h-screen from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/design/orders">
@@ -157,7 +163,7 @@ export default function DesignOrderDetail() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent" data-testid="text-order-number">
+            <h1 className="ep-h1 bg-primary bg-clip-text text-transparent" data-testid="text-order-number">
               {orderData.order.orderNumber}
             </h1>
             <p className="text-muted-foreground mt-1">
@@ -265,14 +271,14 @@ export default function DesignOrderDetail() {
 
                 {orderData.order.clientEmail && (
                   <div>
-                    <Label className="text-muted-foreground">Email</Label>
+                    <Label className="text-muted-foreground">{t('email1')}</Label>
                     <p>{orderData.order.clientEmail}</p>
                   </div>
                 )}
 
                 {orderData.order.dealId && (
                   <div className="pt-2 border-t">
-                    <Label className="text-muted-foreground">CRM Deal</Label>
+                    <Label className="text-muted-foreground">{t('crmDeal')}</Label>
                     <Link href="/crm">
                       <Button variant="ghost" size="sm" className="p-0 h-auto mt-1" data-testid="link-crm-deal">
                         CRM'ga o'tish
@@ -311,10 +317,10 @@ export default function DesignOrderDetail() {
                         <div
                           className={`max-w-[70%] rounded-lg p-3 ${
                             msg.senderRole === 'sales'
-                              ? 'bg-orange-500 text-white'
+                              ? 'bg-[var(--ep-primary)] text-white'
                               : msg.senderRole === 'design'
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-surface-container text-on-surface'
+                              ? 'bg-[var(--ep-blue)] text-white'
+                              : 'bg-muted/60 text-foreground'
                           }`}
                         >
                           <div className="flex items-baseline gap-2 mb-1">

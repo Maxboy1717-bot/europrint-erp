@@ -1,3 +1,8 @@
+/**
+ * @module TreeNodeCard
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Plus, UserX, Settings2, Users, ChevronUp, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +13,14 @@ export function TreeNodeCard({
   node,
   onClick,
   onAdd,
+  isDragging,
+  isDragTarget,
 }: {
   node: OrgNode;
   onClick: (id: number) => void;
   onAdd: (parentId: string) => void;
+  isDragging?: boolean;
+  isDragTarget?: boolean;
 }) {
   const [hrcExpanded, setHrcExpanded] = useState(false);
   const isVacant = !node.headUserName;
@@ -29,8 +38,10 @@ export function TreeNodeCard({
           width: CARD_W,
           minHeight: CARD_H,
           background: `linear-gradient(135deg, ${baseColor}f0, ${baseColor}bb)`,
-          border: isVacant ? "2px dashed #ef4444" : `2px solid ${baseColor}44`,
-          boxShadow: `0 4px 16px ${baseColor}44`,
+          border: isDragTarget ? "2px solid #22c55e" : isVacant ? "2px dashed #ef4444" : `2px solid ${baseColor}44`,
+          boxShadow: isDragTarget ? "0 0 0 4px #22c55e55" : `0 4px 16px ${baseColor}44`,
+          opacity: isDragging ? 0.5 : 1,
+          outline: isDragTarget ? "2px solid #22c55e" : undefined,
         }}
         onClick={() => onClick(node.id)}
         data-testid={`node-${node.id}`}
@@ -133,12 +144,12 @@ export function TreeNodeCard({
 
       {hrcExpanded && !isVacant && (
         <div
-          className="absolute left-0 right-0 z-50 rounded-b-xl shadow-2xl border border-violet-500/30 bg-[#1a1a2e]/95 backdrop-blur-sm text-white p-2.5 flex flex-col gap-2"
+          className="absolute left-0 right-0 z-50 rounded-b-xl shadow-lg border border-border bg-popover text-popover-foreground p-2.5 flex flex-col gap-2"
           style={{ top: CARD_H + 2 }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-violet-300 flex items-center gap-1">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-primary flex items-center gap-1">
               <Brain className="h-2.5 w-2.5" />HR Capital Portret
             </span>
             {node.portretFilled
@@ -149,7 +160,7 @@ export function TreeNodeCard({
 
           {hasHrc ? (
             <>
-              <div className="grid grid-cols-5 gap-1">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-1">
                 {(Array.isArray(HRC_INDICATORS) ? HRC_INDICATORS : []).map(key => {
                   const score = node.hrcLatest?.[key] ?? 0;
                   const pct = Math.max(4, (score + 100) / 2);
@@ -196,7 +207,7 @@ export function TreeNodeCard({
           {node.headUserEmployeeId && (
             <a
               href={`/employees/${node.headUserEmployeeId}?tab=hr-capital`}
-              className="text-[9px] text-violet-300 hover:text-violet-100 underline text-center block"
+              className="text-[9px] text-primary/70 hover:text-primary underline text-center block"
               onClick={(e) => e.stopPropagation()}
             >
               To'liq portretni ko'rish →

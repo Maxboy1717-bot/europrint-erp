@@ -1,3 +1,8 @@
+/**
+ * @module HRCapitalCourses
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -26,8 +31,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState, EPStatusPill } from "@/components/ep";
 interface HRCapitalCourse {
   id: string;
   title: string;
@@ -48,10 +52,10 @@ const getDifficultyBadge = (difficulty: string) => {
     case "beginner":
       return <Badge variant="outline">Boshlang'ich</Badge>;
     case "intermediate":
-      return <Badge variant="secondary">O'rta</Badge>;
+      return <EPStatusPill tone="neutral">O'rta</EPStatusPill>;
     case "advanced":
       return (
-        <Badge className="bg-purple-500 hover:bg-purple-600">Ilg'or</Badge>
+        <Badge className="bg-purple-500 hover:bg-[var(--ep-purple)]/90">Ilg'or</Badge>
       );
     default:
       return <Badge>{difficulty}</Badge>;
@@ -62,10 +66,10 @@ const StatsSkeleton = () => (
   <Card>
     <CardContent className="p-6">
       <div className="flex items-center gap-4">
-        <Skeleton className="h-12 w-12 rounded" />
+        <Skeleton className="h-12 w-12 rounded rounded-full" />
         <div className="flex-1">
-          <Skeleton className="h-4 w-24 mb-2" />
-          <Skeleton className="h-8 w-16" />
+          <Skeleton className="h-4 w-24 mb-2 rounded-lg" />
+          <Skeleton className="h-8 w-16 rounded-lg" />
         </div>
       </div>
     </CardContent>
@@ -75,11 +79,11 @@ const StatsSkeleton = () => (
 const CourseCardSkeleton = () => (
   <Card>
     <CardContent className="p-6">
-      <Skeleton className="h-6 w-full mb-4" />
+      <Skeleton className="h-6 w-full mb-4 rounded-lg" />
       <div className="space-y-3">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-8 w-20 mt-4" />
+        <Skeleton className="h-4 w-24 rounded-lg" />
+        <Skeleton className="h-4 w-32 rounded-lg" />
+        <Skeleton className="h-8 w-20 mt-4 rounded-lg" />
       </div>
     </CardContent>
   </Card>
@@ -87,7 +91,6 @@ const CourseCardSkeleton = () => (
 
 export default function HRCapitalCourses() {
   const { t } = useTranslation("hr");
-  const { t: tCommon } = useTranslation("common");
   const [activeTab, setActiveTab] = useState("all");
 
   const { data: courses = [], isLoading: isLoadingCourses, isError, refetch} = useQuery<
@@ -112,29 +115,29 @@ export default function HRCapitalCourses() {
 
   const statsList = [
     {
-      icon: <BookOpen className="h-8 w-8 text-blue-500" />,
+      icon: <BookOpen className="h-8 w-8 text-[var(--ep-blue)]" />,
       label: "Jami kurslar",
       value: stats?.totalCourses || 0,
     },
     {
-      icon: <GraduationCap className="h-8 w-8 text-green-500" />,
+      icon: <GraduationCap className="h-8 w-8 text-[var(--ep-green)]" />,
       label: "Faol kurslar",
       value: stats?.activeCourses || 0,
     },
     {
-      icon: <Brain className="h-8 w-8 text-purple-500" />,
+      icon: <Brain className="h-8 w-8 text-[var(--ep-purple)]" />,
       label: "Jami modullar",
       value: stats?.totalModules || 0,
     },
     {
-      icon: <Users className="h-8 w-8 text-orange-500" />,
+      icon: <Users className="h-8 w-8 text-[var(--ep-primary)]" />,
       label: "Test urinishlari",
       value: stats?.totalAttempts || 0,
     },
   ];
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   if (isLoading) {
@@ -143,14 +146,14 @@ export default function HRCapitalCourses() {
         module="hr"
         title="HR Capital - O'quv Kurslari"
         icon={<BookOpen className="h-5 w-5" />}
-        actions={<Skeleton className="h-9 w-32" />}
+        actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {([1, 2, 3, 4]).map((i) => (
             <StatsSkeleton key={`k-${i}`} />
           ))}
         </div>
-        <Skeleton className="h-10 w-48 mb-6" />
+        <Skeleton className="h-10 w-48 mb-6 rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {([1, 2, 3, 4, 5, 6]).map((i) => (
             <CourseCardSkeleton key={`k-${i}`} />
@@ -228,7 +231,7 @@ export default function HRCapitalCourses() {
                 <Card key={course.id} data-testid={`card-course-${course.id}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg">{course.title}</CardTitle>
+                      <CardTitle className="text-[14px] font-semibold">{course.title}</CardTitle>
                       {getDifficultyBadge(course.difficulty)}
                     </div>
                   </CardHeader>
@@ -268,7 +271,7 @@ export default function HRCapitalCourses() {
                 <Card key={course.id} data-testid={`card-course-${course.id}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg">{course.title}</CardTitle>
+                      <CardTitle className="text-[14px] font-semibold">{course.title}</CardTitle>
                       {getDifficultyBadge(course.difficulty)}
                     </div>
                   </CardHeader>
@@ -308,7 +311,7 @@ export default function HRCapitalCourses() {
                 <Card key={course.id} data-testid={`card-course-${course.id}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg">{course.title}</CardTitle>
+                      <CardTitle className="text-[14px] font-semibold">{course.title}</CardTitle>
                       {getDifficultyBadge(course.difficulty)}
                     </div>
                   </CardHeader>

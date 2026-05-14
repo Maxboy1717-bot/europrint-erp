@@ -1,3 +1,8 @@
+/**
+ * @module schema-marketing-ext
+ * @description Source module. See exports for details.
+ */
+
 import { pgTable, uuid, text, boolean, integer, timestamp, index } from 'drizzle-orm/pg-core';
 import { stub } from './schema-compat-helpers';
 

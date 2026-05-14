@@ -1,6 +1,11 @@
+/**
+ * @module FolderTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { FolderOpen, Plus, Loader2, FileText, Video, ClipboardList, X } from "lucide-react";
+import { FolderOpen, Plus, FileText, Video, ClipboardList, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,17 +15,25 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { FolderItem } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
+import { EPLoader } from "@/components/ep";
 interface FolderTabProps {
   nodeId: string | number;
 }
 
-export function FolderTab({ nodeId }: FolderTabProps) {
+export function FolderTab({nodeId }: FolderTabProps) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [addFolderOpen, setAddFolderOpen] = useState(false);
   const [folderForm, setFolderForm] = useState({
@@ -58,7 +71,7 @@ export function FolderTab({ nodeId }: FolderTabProps) {
   if (folderLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <EPLoader size={32} tone="muted" />
       </div>
     );
   }
@@ -68,7 +81,7 @@ export function FolderTab({ nodeId }: FolderTabProps) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-sm flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
+            <FolderOpen className="h-4 w-4 text-primary" />
             Lavozim Papkasi
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -130,7 +143,7 @@ export function FolderTab({ nodeId }: FolderTabProps) {
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:underline truncate block"
+                              className="text-xs text-[var(--ep-blue)] hover:underline truncate block"
                             >
                               {item.url}
                             </a>
@@ -140,16 +153,29 @@ export function FolderTab({ nodeId }: FolderTabProps) {
                           <span className="text-xs text-muted-foreground hidden sm:block">
                             {new Date(item.createdAt).toLocaleDateString("uz-UZ")}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeFolderItemMutation.mutate(item.id)}
-                            disabled={removeFolderItemMutation.isPending}
-                            data-testid={`button-remove-folder-item-${item.id}`}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                disabled={removeFolderItemMutation.isPending}
+                                data-testid={`button-remove-folder-item-${item.id}`}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>O'chirishni tasdiqlang</AlertDialogTitle>
+                                <AlertDialogDescription>Ushbu element papkadan olib tashlanadi.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeFolderItemMutation.mutate(item.id)}>O'chirish</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </CardContent>
                     </Card>
@@ -162,10 +188,10 @@ export function FolderTab({ nodeId }: FolderTabProps) {
       )}
 
       <Dialog open={addFolderOpen} onOpenChange={setAddFolderOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
+              <FolderOpen className="h-4 w-4 text-primary" />
               Papkaga element qo'shish
             </DialogTitle>
           </DialogHeader>
@@ -176,7 +202,7 @@ export function FolderTab({ nodeId }: FolderTabProps) {
                 value={folderForm.itemType}
                 onValueChange={(v) => setFolderForm((f) => ({ ...f, itemType: v as "document" | "video" | "test" }))}
               >
-                <SelectTrigger data-testid="select-folder-item-type">
+                <SelectTrigger data-testid="select-folder-item-type" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -184,7 +210,7 @@ export function FolderTab({ nodeId }: FolderTabProps) {
                     <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" />Hujjat</span>
                   </SelectItem>
                   <SelectItem value="video">
-                    <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5" />Video</span>
+                    <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5" />{t('video')}</span>
                   </SelectItem>
                   <SelectItem value="test">
                     <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5" />Test / LMS kurs</span>

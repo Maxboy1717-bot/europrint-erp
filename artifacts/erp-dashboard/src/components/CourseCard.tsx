@@ -1,3 +1,8 @@
+/**
+ * @module CourseCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,7 +57,7 @@ export function CourseCard({
       )}
       <CardHeader className="space-y-0 pb-3">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg line-clamp-2">{title}</CardTitle>
+          <CardTitle className="text-[14px] font-semibold line-clamp-2">{title}</CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -109,9 +114,9 @@ export function CourseCard({
       </CardContent>
       <CardFooter className="flex items-center justify-between gap-2 pt-0">
         {isRequired ? (
-          <Badge className="bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-xs font-semibold">Majburiy</Badge>
+          <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">Majburiy</Badge>
         ) : (
-          <Badge className="bg-surface-container text-on-surface-variant rounded-full px-2.5 py-0.5 text-xs font-semibold">Ixtiyoriy</Badge>
+          <Badge className="bg-muted/60 text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold">Ixtiyoriy</Badge>
         )}
         <Button 
           variant="outline" 

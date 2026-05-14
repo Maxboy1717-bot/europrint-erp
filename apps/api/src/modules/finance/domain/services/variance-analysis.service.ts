@@ -1,3 +1,51 @@
+/**
+ * @module variance-analysis.service
+ * @description Standard-cost vs. actual-cost variance analysis per production
+ *   order. Decomposes the gap between what we *planned* a job should cost
+ *   (BOM × standard prices + routing × standard rates) and what it *actually*
+ *   cost (consumed materials + posted labour + applied overhead) into five
+ *   named variances:
+ *
+ *     MPV — Material Price Variance       (actualPrice − stdPrice) × actualQty
+ *     MQV — Material Quantity Variance    (actualQty   − stdQty)   × stdPrice
+ *     LRV — Labour Rate Variance          (actualRate  − stdRate)  × actualHrs
+ *     LEV — Labour Efficiency Variance    (actualHrs   − stdHrs)   × stdRate
+ *     OV  — Overhead Volume Variance      Σ over/under-applied overhead
+ *
+ *   Each variance has a `Favourable / Unfavourable / Neutral` label so the
+ *   CFO sees at a glance which knobs went the wrong way. Total = sum of the
+ *   five, and `needsAudit` flags orders whose total variance exceeds the
+ *   configured threshold (20% by default — see constant).
+ * @layer Domain Service (Finance / cost accounting)
+ *
+ * WHY THIS DECOMPOSITION (and not just "actual − planned")
+ *   A 10M UZS variance is the same headline whether materials were 10% more
+ *   expensive or labour took twice as long. Decomposing tells the operations
+ *   team WHICH lever moved:
+ *     - MPV high → procurement / supplier negotiation
+ *     - MQV high → scrap, waste, theft, line-loss
+ *     - LRV high → wage inflation, overtime mix
+ *     - LEV high → operator skill, machine downtime, training need
+ *     - OV  high → mis-applied overhead rate, capacity utilisation
+ *   This is the same 4-way split taught in every cost-accounting textbook.
+ *
+ * WHY 20% AUDIT THRESHOLD
+ *   Standard-cost systems expect small drift (±5-10%). Anything beyond 20%
+ *   indicates either a process problem or a mis-set standard. We flag for
+ *   manual review rather than silently absorbing it into the period close.
+ *
+ * WHY OVERHEAD AND LABOR RATES COME FROM CFO CONFIG (not hardcoded)
+ *   These rates change with wage agreements and overhead absorption policies
+ *   (typically annually). Storing in `cfo_config` table lets the CFO update
+ *   them without a deploy; the defaults (15k overhead/hr, 25k labour/hr UZS)
+ *   are conservative seed values used when the row hasn't been set.
+ *
+ * WHY "Favourable / Unfavourable" labelling (not just signs)
+ *   Sign convention is ambiguous: spending less than standard is "favourable"
+ *   (good) but mathematically negative. We label explicitly so CFO email
+ *   reports don't get misread by non-accountants.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';

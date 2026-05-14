@@ -1,3 +1,8 @@
+/**
+ * @module RecentMovementsPanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { RecentMovement } from "./types";

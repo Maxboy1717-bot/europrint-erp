@@ -1,3 +1,8 @@
+/**
+ * @module order-costing.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
 import { IOrderCostingRepository, ORDER_COSTING_REPO } from './i-order-costing.repo';
 import { safeCall, Result, AppError } from '@common/result';

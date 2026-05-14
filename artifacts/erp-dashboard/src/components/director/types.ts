@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface DirectorSummary {
   revenue: { value: number; formatted: string; change: string; trend: string };
   orders: { value: number; formatted: string; change: string; trend: string };

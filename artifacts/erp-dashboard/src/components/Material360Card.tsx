@@ -1,3 +1,8 @@
+/**
+ * @module Material360Card
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,9 +50,9 @@ export function Material360Card({ materialId, onBack, onEdit }: { materialId: st
   if (isLoading) {
     return (
       <div className="space-y-4 p-4">
-        <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-full" /><Skeleton className="h-6 w-48" /></div>
-        <Skeleton className="h-40 w-full" />
-        <div className="grid grid-cols-4 gap-3">{([...Array(4)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-24" />)}</div>
+        <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-full" /><Skeleton className="h-6 w-48 rounded-lg" /></div>
+        <Skeleton className="h-40 w-full rounded-lg" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{([...Array(4)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>
       </div>
     );
   }
@@ -74,7 +79,7 @@ export function Material360Card({ materialId, onBack, onEdit }: { materialId: st
             <div className="flex flex-col sm:flex-row">
               <div
                 className="relative flex-shrink-0 sm:w-44 flex flex-col items-center justify-center"
-                style={{ background: "linear-gradient(160deg, #065f46 0%, #059669 55%, #0d9488 100%)" }}
+                style={{ background: "var(--ep-primary)" }}
               >
                 <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
                   <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full border-2 border-white" />

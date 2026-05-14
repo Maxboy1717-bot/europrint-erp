@@ -1,3 +1,8 @@
+/**
+ * @module HRAlumni
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +24,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { EPStatusPill } from "@/components/ep";
 
 interface AlumniRecord {
   id: string;
@@ -72,10 +78,10 @@ function InviteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <UserCheck className="h-4 w-4 text-green-600" />
+            <UserCheck className="h-4 w-4 text-[var(--ep-green)]" />
             Qayta taklif qilish
           </DialogTitle>
         </DialogHeader>
@@ -135,12 +141,12 @@ export default function HRAlumni() {
     );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Users className="h-5 w-5 text-indigo-600" />
+          <Users className="h-4 w-4 text-[var(--ep-blue)]" />
           <h1 className="font-semibold text-base">HR — Alumni Hamjamiyati</h1>
-          <Badge variant="secondary">{stats.total} a'zo</Badge>
+          <EPStatusPill tone="neutral">{stats.total} a'zo</EPStatusPill>
         </div>
       </div>
 
@@ -150,10 +156,10 @@ export default function HRAlumni() {
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-blue-100 p-2.5">
-                <Users className="h-4 w-4 text-blue-600" />
+                <Users className="h-4 w-4 text-[var(--ep-blue)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+                <div className="text-2xl font-bold text-[var(--ep-blue)]">{stats.total}</div>
                 <div className="text-xs text-muted-foreground">Jami alumni a'zolari</div>
               </div>
             </CardContent>
@@ -161,10 +167,10 @@ export default function HRAlumni() {
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-green-100 p-2.5">
-                <RefreshCcw className="h-4 w-4 text-green-600" />
+                <RefreshCcw className="h-4 w-4 text-[var(--ep-green)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{stats.returned}</div>
+                <div className="text-2xl font-bold text-[var(--ep-green)]">{stats.returned}</div>
                 <div className="text-xs text-muted-foreground">Qayta ishga qaytganlar</div>
               </div>
             </CardContent>
@@ -172,10 +178,10 @@ export default function HRAlumni() {
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-purple-100 p-2.5">
-                <Handshake className="h-4 w-4 text-purple-600" />
+                <Handshake className="h-4 w-4 text-[var(--ep-purple)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-purple-600">{stats.collaborations}</div>
+                <div className="text-2xl font-bold text-[var(--ep-purple)]">{stats.collaborations}</div>
                 <div className="text-xs text-muted-foreground">Faol hamkorliklar</div>
               </div>
             </CardContent>
@@ -188,13 +194,13 @@ export default function HRAlumni() {
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Ism, lavozim yoki kompaniya..."
-              className="pl-8 h-8 text-sm"
+              className="pl-8 h-9 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[180px] h-8 text-sm">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
               <SelectValue placeholder="Filtr" />
             </SelectTrigger>
             <SelectContent>
@@ -212,8 +218,8 @@ export default function HRAlumni() {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
+            <div className="ep-table-scroll"><Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
                   <TableHead>Xodim</TableHead>
                   <TableHead>Oxirgi lavozim</TableHead>
@@ -227,13 +233,13 @@ export default function HRAlumni() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">
                       Yuklanmoqda...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-10 text-[13px] text-muted-foreground">
                       <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       <p className="text-sm">
                         {alumni.length === 0
@@ -244,10 +250,10 @@ export default function HRAlumni() {
                   </TableRow>
                 ) : (
                   (Array.isArray(filtered) ? filtered : []).map(a => (
-                    <TableRow key={a.id} data-testid={`row-alumni-${a.id}`}>
+                    <TableRow key={a.id} data-testid={`row-alumni-${a.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0">
+                          <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-[var(--ep-blue)] shrink-0">
                             {a.fullName.charAt(0)}
                           </div>
                           <div>
@@ -307,7 +313,7 @@ export default function HRAlumni() {
                   ))
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>

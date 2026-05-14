@@ -1,3 +1,8 @@
+/**
+ * @module absence-block.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, Optional } from '@nestjs/common';
@@ -5,7 +10,8 @@ import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TelegramService } from '../telegram/telegram.service';
 import { CronStatusService } from './cron-status.service';
-import { AbsenceBlockRepository, AbsentEmployeeRow } from './repositories/absence-block.repository';
+import { AbsenceBlockRepository, AbsentEmployeeRow, HrManagerRow } from './repositories/absence-block.repository';
+import { extractDrizzleError } from '@common/utils/drizzle-error.util';
 
 @Injectable()
 export class AbsenceBlockCron {
@@ -28,17 +34,26 @@ export class AbsenceBlockCron {
         this.absenceRepo.findAbsentEmployeesToBlock(),
       ]);
 
+      // Pre-fetch HR contacts once — reused by both escalate and block steps
+      const [hrManagers, directors] = (day2.length > 0 || day3.length > 0)
+        ? await Promise.all([
+            this.absenceRepo.findHrManagersWithTelegram(),
+            this.absenceRepo.findDirectorsWithTelegram(),
+          ])
+        : [[], []] as [HrManagerRow[], HrManagerRow[]];
+
       await this._warnDay1(day1);
-      await this._escalateDay2(day2);
-      const blockedCount = await this._blockDay3(day3);
+      await this._escalateDay2(day2, hrManagers);
+      const blockedCount = await this._blockDay3(day3, hrManagers, directors);
 
       this.logger.log(
         `AbsenceBlockCron: warned=${day1.length} escalated=${day2.length} blocked=${blockedCount}`,
       );
       this.cronStatus.recordSuccess(jobName);
     } catch (err) {
-      this.logger.error(`AbsenceBlockCron error: ${String(err)}`);
-      this.cronStatus.recordFailure(jobName, String(err));
+      const detail = extractDrizzleError(err);
+      this.logger.error('AbsenceBlockCron error: %s', detail);
+      this.cronStatus.recordFailure(jobName, detail);
     }
   }
 
@@ -62,11 +77,10 @@ export class AbsenceBlockCron {
     }
   }
 
-  private async _escalateDay2(employees: AbsentEmployeeRow[]): Promise<void> {
-    const hrManagers = employees.length > 0
-      ? await this.absenceRepo.findHrManagersWithTelegram()
-      : [];
-
+  private async _escalateDay2(
+    employees: AbsentEmployeeRow[],
+    hrManagers: HrManagerRow[],
+  ): Promise<void> {
     for (const emp of employees) {
       try {
         if (this.telegram && emp.telegram_chat_id) {
@@ -96,15 +110,13 @@ export class AbsenceBlockCron {
     }
   }
 
-  private async _blockDay3(employees: AbsentEmployeeRow[]): Promise<number> {
+  private async _blockDay3(
+    employees: AbsentEmployeeRow[],
+    hrManagers: HrManagerRow[],
+    directors: HrManagerRow[],
+  ): Promise<number> {
     const blockReason = "Avtomatik bloklash: 3 kun ketma-ket yo'qlik";
-
-    const [hrManagers, directors] = employees.length > 0
-      ? await Promise.all([
-          this.absenceRepo.findHrManagersWithTelegram(),
-          this.absenceRepo.findDirectorsWithTelegram(),
-        ])
-      : [[], []];
+    const deptLeadCache = new Map<number, HrManagerRow | null>();
 
     let blockedCount = 0;
     const blockedNames: string[] = [];
@@ -138,9 +150,14 @@ export class AbsenceBlockCron {
         }
 
         if (emp.department_id !== null) {
-          const deptLead = await this.absenceRepo
-            .findDepartmentLeadWithTelegram(emp.department_id)
-            .catch((e) => { this.logger.warn(`AbsenceBlockCron deptLead lookup dept=${emp.department_id}: ${String(e)}`); return null; });
+          // Cache dept lead to avoid a DB round-trip per employee in the same dept
+          let deptLead = deptLeadCache.get(emp.department_id);
+          if (deptLead === undefined) {
+            deptLead = await this.absenceRepo
+              .findDepartmentLeadWithTelegram(emp.department_id)
+              .catch((e) => { this.logger.warn(`AbsenceBlockCron deptLead lookup dept=${emp.department_id}: ${String(e)}`); return null; });
+            deptLeadCache.set(emp.department_id, deptLead ?? null);
+          }
           if (this.telegram && deptLead) {
             const deptMsg =
               `⛔ Xodim ${emp.first_name} ${emp.last_name} 3 kun kelmadi — ERP bloklandi.`;

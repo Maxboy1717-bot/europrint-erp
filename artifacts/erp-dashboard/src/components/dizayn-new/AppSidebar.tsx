@@ -155,7 +155,7 @@ function NavItemButton({ item, isActive, isCollapsed, onClick }: NavItemButtonPr
         {!isCollapsed && item.badge && item.badge > 0 && (
           <Badge
             variant="secondary"
-            className="ml-auto h-5 min-w-5 px-1.5 text-[10px] font-semibold bg-primary/15 text-primary border-0"
+            className="ml-auto h-5 min-w-5 px-1.5 text-[10px] font-semibold bg-primary/10 text-primary border-0"
           >
             {item.badge}
           </Badge>
@@ -220,7 +220,7 @@ export function AppSidebarRedesign({
   const renderSection = (section: NavSection) => {
     const visibleItems = isAdmin
       ? section.items
-      : (section.items ?? []).filter((item) => isMenuAllowed(item.url));
+      : (Array.isArray(section.items) ? section.items : []).filter((item) => isMenuAllowed(item.url));
 
     if (visibleItems.length === 0) return null;
 
@@ -272,7 +272,7 @@ export function AppSidebarRedesign({
           <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-sidebar-accent transition-colors">
             <Avatar className="w-8 h-8 flex-shrink-0">
               {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-              <AvatarFallback className="text-xs font-semibold bg-primary/15 text-primary">
+              <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>

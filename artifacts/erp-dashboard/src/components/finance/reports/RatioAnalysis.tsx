@@ -1,15 +1,22 @@
+/**
+ * @module RatioAnalysis
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Percent, Activity, Calculator, Target } from "lucide-react";
 import { formatPercent, formatRatio } from "./helpers";
 import { KPIDashboard } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
 interface RatioAnalysisProps {
   data: KPIDashboard | undefined;
   isLoading: boolean;
 }
 
-export function RatioAnalysis({ data, isLoading }: RatioAnalysisProps) {
+export function RatioAnalysis({data, isLoading }: RatioAnalysisProps) {
+  const { t } = useTranslation('common');
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       <Card data-testid="card-liquidity-ratios">
@@ -21,18 +28,18 @@ export function RatioAnalysis({ data, isLoading }: RatioAnalysisProps) {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+              <Skeleton className="h-8 w-full rounded-lg" />
             </div>
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Current Ratio</span>
+                <span className="text-muted-foreground">{t('currentRatio')}</span>
                 <span className="font-bold">{formatRatio(data?.liquidity?.currentRatio)}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Quick Ratio</span>
-                <span className="font-bold text-blue-600">{formatRatio(data?.liquidity?.quickRatio)}</span>
+                <span className="font-bold text-[var(--ep-blue)]">{formatRatio(data?.liquidity?.quickRatio)}</span>
               </div>
             </div>
           )}
@@ -48,18 +55,18 @@ export function RatioAnalysis({ data, isLoading }: RatioAnalysisProps) {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+              <Skeleton className="h-8 w-full rounded-lg" />
             </div>
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">ROE</span>
-                <span className="font-bold text-green-600">{formatPercent(data?.profitability?.returnOnEquity)}</span>
+                <span className="font-bold text-[var(--ep-green)]">{formatPercent(data?.profitability?.returnOnEquity)}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">ROA</span>
-                <span className="font-bold text-emerald-600">{formatPercent(data?.profitability?.returnOnAssets)}</span>
+                <span className="font-bold text-[var(--ep-green)]">{formatPercent(data?.profitability?.returnOnAssets)}</span>
               </div>
             </div>
           )}
@@ -75,8 +82,8 @@ export function RatioAnalysis({ data, isLoading }: RatioAnalysisProps) {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+              <Skeleton className="h-8 w-full rounded-lg" />
             </div>
           ) : (
             <div className="space-y-3">
@@ -102,14 +109,14 @@ export function RatioAnalysis({ data, isLoading }: RatioAnalysisProps) {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+              <Skeleton className="h-8 w-full rounded-lg" />
             </div>
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Debt to Equity</span>
-                <span className="font-bold text-red-600">{formatRatio(data?.leverage?.debtToEquity)}</span>
+                <span className="font-bold text-[var(--ep-red)]">{formatRatio(data?.leverage?.debtToEquity)}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Debt to Assets</span>

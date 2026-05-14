@@ -1,3 +1,8 @@
+/**
+ * @module FinancialReports
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { exportToCSV } from "@/lib/export-utils";
@@ -13,8 +18,6 @@ import {
   Factory,
   FileSpreadsheet,
 } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-
 // Sub-components
 import { WeeklyOverview } from "@/components/finance/reports/WeeklyOverview";
 import { CashFlowARAP } from "@/components/finance/reports/CashFlowARAP";
@@ -30,6 +33,7 @@ import { ProductionAnalysis } from "@/components/finance/reports/ProductionAnaly
 
 // Types
 import { WeeklySummary, MonthlySummary, KPIDashboard, ProductionEfficiency } from "@/components/finance/reports/types";
+import { EPErrorState } from "@/components/ep";
 
 export default function FinancialReports() {
   const [activeTab, setActiveTab] = useState("weekly");
@@ -85,38 +89,38 @@ export default function FinancialReports() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="min-h-screen bg-background" data-testid="financial-reports">
-      <div className="border-b bg-gradient-to-r from-green-600 to-emerald-500 text-white">
-        <div className="container mx-auto px-4 py-4">
+    <div data-testid="financial-reports">
+      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
+        <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <FileText className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold">Moliyaviy Hisobotlar</h1>
-                <p className="text-green-100 text-sm">Haftalik, oylik va KPI hisobotlari</p>
+                <p className="text-white/75 text-sm">Haftalik, oylik va KPI hisobotlari</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Button 
                 variant="outline" 
-                className="bg-surface-container-lowest/10 border-white/30 text-white hover:bg-surface-container-lowest/20"
+                className="bg-card/10 border-white/30 text-white hover:bg-card/20 gap-2"
                 onClick={handleExportPDF}
                 data-testid="button-export-pdf"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4" />
                 PDF yuklab olish
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-surface-container-lowest/10 border-white/30 text-white hover:bg-surface-container-lowest/20"
+                className="bg-card/10 border-white/30 text-white hover:bg-card/20 gap-2"
                 onClick={handleExportExcel}
                 data-testid="button-export-excel"
               >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                <FileSpreadsheet className="h-4 w-4" />
                 Excel yuklab olish
               </Button>
             </div>
@@ -124,7 +128,7 @@ export default function FinancialReports() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="weekly" data-testid="tab-weekly">
@@ -149,7 +153,7 @@ export default function FinancialReports() {
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <h2 className="text-xl font-semibold">Haftalik Moliyaviy Xulosa</h2>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-[200px]" data-testid="select-period">
+                <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-period">
                   <SelectValue placeholder="Davrni tanlang" />
                 </SelectTrigger>
                 <SelectContent>

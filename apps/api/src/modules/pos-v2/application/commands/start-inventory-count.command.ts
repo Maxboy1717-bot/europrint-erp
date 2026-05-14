@@ -1,3 +1,8 @@
+/**
+ * @module start-inventory-count.command
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
@@ -66,7 +71,7 @@ export class StartInventoryCountHandler implements ICommandHandler<StartInventor
         command.warehouseId,
         countNumber,
         CountStatus.IN_PROGRESS,
-        (lines ?? []).map((l) => ({ ...l, countId: createId() })),
+        (Array.isArray(lines) ? lines : []).map((l) => ({ ...l, countId: createId() })),
         command.userId,
         null,
         null,

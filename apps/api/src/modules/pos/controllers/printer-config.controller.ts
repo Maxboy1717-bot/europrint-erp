@@ -1,3 +1,8 @@
+/**
+ * @module printer-config.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { PRINTER_DEFAULT_PORT } from '@common/constants/app.constants';

@@ -1,6 +1,11 @@
+/**
+ * @module qc-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -29,7 +34,10 @@ export const qcStandards = pgTable("qc_standards", {
   documentUrl: text("document_url"), // Litsenziya hujjati
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  check("qc_standards_type_chk", sql`${t.type} IN ('iso','gost','uzst','internal')`),
+  check("qc_standards_category_chk", sql`${t.category} IN ('physical','mechanical','printability','chemical','environmental','logistics','visual','documentation','ai_analysis')`),
+]);
 
 
 // QC Parameter Definitions (Parametr ta'riflari)
@@ -46,25 +54,28 @@ export const qcParameterDefinitions = pgTable("qc_parameter_definitions", {
   warningMinValue: numericMoney("warning_min_value"), // Warning threshold (lower)
   warningMaxValue: numericMoney("warning_max_value"), // Warning threshold (upper)
   defaultValue: numericMoney("default_value"), // Standart qiymat
-  standardId: integer("standard_id").references(() => qcStandards.id), // Bog'langan standart
+  standardId: integer("standard_id").references(() => qcStandards.id, { onDelete: "set null" }), // Bog'langan standart
   testMethod: text("test_method"), // Test usuli tavsifi
   testMethodRu: text("test_method_ru"),
   equipmentRequired: text("equipment_required"), // Kerakli uskuna
   isRequired: boolean("is_required").notNull().default(false), // Majburiy parametr
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("qc_param_defs_category_chk", sql`${t.category} IN ('physical','mechanical','printability','chemical','environmental','logistics','visual','documentation','ai_analysis')`),
+  check("qc_param_defs_data_type_chk", sql`${t.dataType} IN ('number','boolean','text','range')`),
+]);
 
 
 // QC Material Tests (Material test natijalari)
 export const qcMaterialTests = pgTable("qc_material_tests", {
   id: serial("id").primaryKey(),
-  orderId: varchar("order_id").references(() => papkaOrders.id), // Buyurtma
-  materialCardId: varchar("material_card_id").references(() => materialCards.id), // Material
+  orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }), // Buyurtma
+  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }), // Material
   batchNumber: varchar("batch_number", { length: 50 }), // Partiya raqami
   testCategory: varchar("test_category", { length: 50 }).notNull().default("physical"), // Category being tested
   testDate: varchar("test_date", { length: 10 }).notNull(), // YYYY-MM-DD
-  testedBy: varchar("tested_by").references(() => users.id), // Operator
+  testedBy: varchar("tested_by").references(() => users.id, { onDelete: "set null" }), // Operator
   equipmentUsed: text("equipment_used"), // Ishlatilgan uskuna
   
   // Natijalar JSONB formatida - har bir parametr uchun
@@ -83,7 +94,12 @@ export const qcMaterialTests = pgTable("qc_material_tests", {
   certificateNumber: varchar("certificate_number", { length: 50 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  check("qc_material_tests_status_chk", sql`${t.overallStatus} IN ('pending','passed','failed','conditional')`),
+  check("qc_material_tests_test_category_chk", sql`${t.testCategory} IN ('physical','mechanical','printability','chemical','environmental','logistics','visual','documentation','ai_analysis')`),
+  check("qc_material_tests_passed_count_chk", sql`${t.passedCount} IS NULL OR ${t.passedCount} >= 0`),
+  check("qc_material_tests_failed_count_chk", sql`${t.failedCount} IS NULL OR ${t.failedCount} >= 0`),
+]);
 
 
 // Insert schemas for QC module
@@ -137,7 +153,7 @@ export type InsertQcMaterialTest = z.infer<typeof insertQcMaterialTestSchema>;
 export const qcFinalInspections = pgTable("qc_final_inspections", {
   id: serial("id").primaryKey(),
   papkaOrderId: varchar("papka_order_id").notNull().references(() => papkaOrders.id),
-  inspectedBy: varchar("inspected_by").references(() => users.id),
+  inspectedBy: varchar("inspected_by").references(() => users.id, { onDelete: "set null" }),
   inspectedAt: timestamp("inspected_at").notNull().defaultNow(),
   // Namunaviy nazorat (TZ_04 spec bo'yicha)
   sampleSize: integer("sample_size").notNull().default(10),   // Namuna soni
@@ -151,7 +167,13 @@ export const qcFinalInspections = pgTable("qc_final_inspections", {
   notes: text("notes"),
   photos: jsonb("photos"),  // URL massivi
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("qc_final_inspections_result_chk", sql`${t.result} IN ('pending','passed','failed','rework','conditional_pass','rework_required')`),
+  check("qc_final_inspections_sample_size_chk", sql`${t.sampleSize} > 0`),
+  check("qc_final_inspections_passed_count_chk", sql`${t.passedCount} >= 0`),
+  check("qc_final_inspections_defect_count_chk", sql`${t.defectCount} >= 0`),
+  check("qc_final_inspections_defect_rate_chk", sql`${t.defectRate} IS NULL OR (${t.defectRate} >= 0 AND ${t.defectRate} <= 100)`),
+]);
 
 // TZ-07: To'liq QC final natija holatlari (hujjat bilan mos)
 export const QC_FINAL_RESULTS = ["pending", "passed", "conditional_pass", "failed", "rework_required"] as const;
@@ -183,7 +205,7 @@ export type InsertQcFinalInspection = z.infer<typeof insertQcFinalInspectionSche
 export const qcReclamations = pgTable("qc_reclamations", {
   id: serial("id").primaryKey(),
   reclamationNumber: varchar("reclamation_number", { length: 30 }).notNull().unique(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   clientId: varchar("client_id"),
   clientName: text("client_name").notNull(),
   claimDate: varchar("claim_date", { length: 10 }).notNull(),
@@ -193,14 +215,17 @@ export const qcReclamations = pgTable("qc_reclamations", {
   defectUnit: varchar("defect_unit", { length: 20 }).default("dona"),
   photos: jsonb("photos"), // URL array
   status: varchar("status", { length: 30 }).notNull().default("new"), // new, investigating, resolved, rejected
-  responsibleUserId: integer("responsible_user_id").references(() => users.id),
+  responsibleUserId: integer("responsible_user_id").references(() => users.id, { onDelete: "set null" }),
   resolution: text("resolution"),
   resolvedAt: timestamp("resolved_at"),
   deadlineDays: integer("deadline_days").default(5),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("qc_reclamations_issue_type_chk", sql`${t.issueType} IN ('print_quality','size_mismatch','moisture','damage','other')`),
+  check("qc_reclamations_status_chk", sql`${t.status} IN ('new','investigating','resolved','rejected')`),
+]);
 
 export const insertQcReclamationSchema = createInsertSchema(qcReclamations, {
   clientName: z.string().min(1, "Mijoz nomi kerak"),
@@ -217,7 +242,7 @@ export type InsertQcReclamation = z.infer<typeof insertQcReclamationSchema>;
 // ========== TZ_04: Brak boshqaruvi ==========
 export const qcBraks = pgTable("qc_braks", {
   id: serial("id").primaryKey(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   brakDate: varchar("brak_date", { length: 10 }).notNull(),
   stage: varchar("stage", { length: 50 }).notNull(), // incoming, production, final, warehouse
   quantity: integer("quantity").notNull().default(0),
@@ -225,13 +250,15 @@ export const qcBraks = pgTable("qc_braks", {
   reason: varchar("reason", { length: 100 }).notNull(), // misprint, size, damage, moisture, equipment, operator_error, material
   description: text("description"),
   equipmentId: varchar("equipment_id"),
-  operatorId: varchar("operator_id").references(() => users.id),
+  operatorId: varchar("operator_id").references(() => users.id, { onDelete: "set null" }),
   costImpact: numericMoney("cost_impact").default(0),
   isReworkable: boolean("is_reworkable").default(false),
   reworked: boolean("reworked").default(false),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("qc_braks_stage_chk", sql`${t.stage} IN ('incoming','production','final','warehouse')`),
+]);
 
 export const insertQcBrakSchema = createInsertSchema(qcBraks, {
   brakDate: z.string().min(10, "Sana kerak"),
@@ -249,13 +276,13 @@ export const qcSupplierQuality = pgTable("qc_supplier_quality", {
   id: serial("id").primaryKey(),
   supplierId: varchar("supplier_id"),
   supplierName: text("supplier_name").notNull(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id),
+  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
   deliveryDate: varchar("delivery_date", { length: 10 }).notNull(),
   totalQuantity: integer("total_quantity").notNull().default(0),
   rejectedQuantity: integer("rejected_quantity").default(0),
   passRate: numericMoney("pass_rate").default(100),
   qualityScore: integer("quality_score").default(100), // 0-100
-  testId: varchar("test_id").references(() => qcMaterialTests.id),
+  testId: varchar("test_id").references(() => qcMaterialTests.id, { onDelete: "set null" }),
   issues: jsonb("issues"), // [{parameter, value, expected}]
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -290,7 +317,7 @@ export const qcRootCauses = pgTable("qc_root_causes", {
   // Bog'liq ob'ekt
   entityType: varchar("entity_type", { length: 30 }).notNull(), // final_inspection, brak, reclamation, material_test
   entityId: varchar("entity_id").notNull(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   // RCA ma'lumotlari (5-Why usuli)
   why1: text("why1"),
   why2: text("why2"),
@@ -302,16 +329,20 @@ export const qcRootCauses = pgTable("qc_root_causes", {
   // Korrupsiya chorasi
   correctiveAction: text("corrective_action"),
   preventiveAction: text("preventive_action"),
-  responsibleUserId: integer("responsible_user_id").references(() => users.id),
+  responsibleUserId: integer("responsible_user_id").references(() => users.id, { onDelete: "set null" }),
   dueDate: varchar("due_date", { length: 10 }),
   status: varchar("status", { length: 20 }).notNull().default("open"), // open, in_progress, closed
   closedAt: timestamp("closed_at"),
-  closedBy: varchar("closed_by").references(() => users.id),
+  closedBy: varchar("closed_by").references(() => users.id, { onDelete: "set null" }),
   // Metadata
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("qc_root_causes_entity_type_chk", sql`${t.entityType} IN ('final_inspection','brak','reclamation','material_test')`),
+  check("qc_root_causes_category_chk", sql`${t.category} IS NULL OR ${t.category} IN ('equipment','operator','material','process','environment')`),
+  check("qc_root_causes_status_chk", sql`${t.status} IN ('open','in_progress','closed')`),
+]);
 
 export const insertQcRootCauseSchema = createInsertSchema(qcRootCauses, {
   entityType: z.enum(["final_inspection", "brak", "reclamation", "material_test"]),

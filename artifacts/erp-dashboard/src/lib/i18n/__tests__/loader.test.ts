@@ -1,3 +1,8 @@
+/**
+ * @module loader.test
+ * @description Jest / Vitest test suite.
+ */
+
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   ALL_TRANSLATIONS,

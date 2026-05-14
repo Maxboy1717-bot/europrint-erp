@@ -1,3 +1,8 @@
+/**
+ * @module mm-wms-extended.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { MmVendorsPrController } from '../src/modules/mm/presentation/mm-vendors-pr.controller';
 import { MmGoodsController } from '../src/modules/mm/presentation/mm-goods.controller';

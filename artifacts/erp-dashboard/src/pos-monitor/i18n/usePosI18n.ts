@@ -1,3 +1,8 @@
+/**
+ * @module usePosI18n
+ * @description Source module. See exports for details.
+ */
+
 import { useState, useCallback, useEffect } from "react";
 import uz from "./uz.json";
 import ru from "./ru.json";

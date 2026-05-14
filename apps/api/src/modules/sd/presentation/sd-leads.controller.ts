@@ -1,3 +1,8 @@
+/**
+ * @module sd-leads.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
@@ -7,6 +12,7 @@ BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException, P
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdLeadsService } from '../application/sd-leads.service';
@@ -22,6 +28,7 @@ const SD_ADMIN_ROLES = ['sales_manager', 'super_admin', 'director'];
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('sd/leads')
 export class SdLeadsController {
   private readonly logger = new Logger(SdLeadsController.name);

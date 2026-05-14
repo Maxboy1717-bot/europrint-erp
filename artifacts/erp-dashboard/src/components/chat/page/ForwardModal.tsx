@@ -1,3 +1,8 @@
+/**
+ * @module ForwardModal
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from "react";
 import { X, Search, CornerUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,7 +51,7 @@ export function ForwardModal({ message, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+      <div className="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
           <div className="flex items-center gap-2">
             <CornerUpRight className="w-4 h-4 text-primary" />
@@ -112,7 +117,7 @@ export function ForwardModal({ message, onClose }: Props) {
             className={cn(
               "w-full py-2 rounded-xl text-sm font-medium transition-colors",
               done
-                ? "bg-green-500 text-white"
+                ? "bg-[var(--ep-green)] text-white"
                 : "bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             )}
           >

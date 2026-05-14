@@ -1,3 +1,8 @@
+/**
+ * @module sonner
+ * @description React UI component.
+ */
+
 "use client"
 
 import { useTheme } from "next-themes"

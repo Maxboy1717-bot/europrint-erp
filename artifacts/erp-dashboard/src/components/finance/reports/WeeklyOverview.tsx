@@ -1,3 +1,8 @@
+/**
+ * @module WeeklyOverview
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react";
@@ -12,14 +17,14 @@ interface WeeklyOverviewProps {
 export function WeeklyOverview({ data, isLoading }: WeeklyOverviewProps) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white border-0" data-testid="card-weekly-revenue">
+      <Card className="bg-[var(--ep-green)] text-white border-0" data-testid="card-weekly-revenue">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle className="text-sm font-medium opacity-90">Daromad</CardTitle>
           <TrendingUp className="h-5 w-5 opacity-80" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-8 w-32 bg-surface-container-lowest/20" />
+            <Skeleton className="h-8 w-32 bg-card/20 rounded-lg" />
           ) : (
             <>
               <div className="text-2xl font-bold">{formatShortCurrency(data?.revenue || 0)}</div>
@@ -36,14 +41,14 @@ export function WeeklyOverview({ data, isLoading }: WeeklyOverviewProps) {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0" data-testid="card-weekly-expenses">
+      <Card className="bg-[var(--ep-red)] text-white border-0" data-testid="card-weekly-expenses">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle className="text-sm font-medium opacity-90">Xarajatlar</CardTitle>
           <TrendingDown className="h-5 w-5 opacity-80" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-8 w-32 bg-surface-container-lowest/20" />
+            <Skeleton className="h-8 w-32 bg-card/20 rounded-lg" />
           ) : (
             <>
               <div className="text-2xl font-bold">{formatShortCurrency(data?.expenses || 0)}</div>
@@ -60,14 +65,14 @@ export function WeeklyOverview({ data, isLoading }: WeeklyOverviewProps) {
         </CardContent>
       </Card>
 
-      <Card className={`bg-gradient-to-br ${(data?.netProfit || 0) >= 0 ? "from-emerald-500 to-emerald-600" : "from-orange-500 to-orange-600"} text-white border-0`} data-testid="card-weekly-profit">
+      <Card className={`${(data?.netProfit || 0) >= 0 ? "" : ""} text-white border-0`} data-testid="card-weekly-profit">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle className="text-sm font-medium opacity-90">Sof foyda</CardTitle>
           <DollarSign className="h-5 w-5 opacity-80" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-8 w-32 bg-surface-container-lowest/20" />
+            <Skeleton className="h-8 w-32 bg-card/20 rounded-lg" />
           ) : (
             <>
               <div className="text-2xl font-bold">{formatShortCurrency(data?.netProfit || 0)}</div>

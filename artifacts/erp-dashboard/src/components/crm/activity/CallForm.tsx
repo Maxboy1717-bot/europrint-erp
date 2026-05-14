@@ -1,3 +1,8 @@
+/**
+ * @module CallForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -28,12 +33,16 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
   });
 
   const createActivityMutation = useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
-      return apiRequest("POST", "/api/crm/activities", {
-        ...data,
-        entityType,
-        entityId,
-      });
+    mutationFn: async (data: typeof activityForm) => {
+      const payload: Record<string, unknown> = {
+        type:      data.type,
+        subject:   data.subject,
+        notes:     data.description || undefined,
+        due_date:  data.deadline.toISOString(),
+      };
+      if (entityType === "leads")  payload.lead_id  = entityId;
+      else if (entityType === "deals") payload.deal_id = entityId;
+      return apiRequest("POST", "/api/crm/activities", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/activities", entityType, entityId] });
@@ -83,7 +92,7 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
           value={activityForm.type}
           onValueChange={(value) => setActivityForm((prev) => ({ ...prev, type: value }))}
         >
-          <SelectTrigger className="w-[140px] h-8" data-testid="select-activity-type">
+          <SelectTrigger className="w-full sm:w-[140px] h-9" data-testid="select-activity-type">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -106,7 +115,7 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
         data-testid="input-activity-description"
       />
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => createActivityMutation.mutate(activityForm)}
         disabled={!activityForm.subject || createActivityMutation.isPending}
         data-testid="button-save-activity"

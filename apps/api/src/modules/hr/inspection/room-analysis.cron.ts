@@ -1,3 +1,8 @@
+/**
+ * @module room-analysis.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { safeCall, Result, AppError } from '@common/result';
@@ -27,7 +32,9 @@ export class RoomAnalysisCron {
   async runAnalysis(): Promise<void> {
     const result = await this._run();
     if (!result.ok) {
-      this.logger.error('RoomAnalysisCron failed: %s', String(result.error));
+      const e = result.error;
+      const msg = `[${e.code}] ${e.message}`;
+      this.logger.error('RoomAnalysisCron failed: %s', msg);
     }
   }
 

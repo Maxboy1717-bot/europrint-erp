@@ -1,3 +1,8 @@
+/**
+ * @module feedback-360.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Feedback360Repository } from './feedback-360.repo';
 import { safeCall, Result, AppError } from '@common/result';

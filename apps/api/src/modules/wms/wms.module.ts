@@ -1,3 +1,8 @@
+/**
+ * @module wms.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -19,6 +24,13 @@ import { WmsInventoryController } from './presentation/wms-inventory.controller'
 import { WmsExtendedController } from './presentation/wms-extended.controller';
 import { WmsCountsController } from './presentation/wms-counts.controller';
 import { WmsWarehouseGatewayController } from './presentation/wms-warehouse-gateway.controller';
+import { WmsBarcodeController } from './presentation/wms-barcode.controller';
+import { WmsCatalogController } from './presentation/wms-catalog.controller';
+import { WmsCatalogService } from './application/wms-catalog.service';
+import { WmsIntegrationController } from './presentation/wms-integration.controller';
+import { WmsGatewayWarehousesController } from './presentation/wms-gateway-warehouses.controller';
+import { WmsGatewayBinZoneController } from './presentation/wms-gateway-binszone.controller';
+import { WmsGatewayInventoryController } from './presentation/wms-gateway-inventory.controller';
 import { InventoryMaterialsController } from './presentation/inventory-materials.controller';
 import { IotEnhancedController } from './presentation/iot-enhanced.controller';
 import { IotMaterialKitsController } from './presentation/iot-material-kits.controller';
@@ -89,6 +101,12 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     WmsExtendedController,
     WmsCountsController,
     WmsWarehouseGatewayController,
+    WmsGatewayWarehousesController,
+    WmsGatewayBinZoneController,
+    WmsGatewayInventoryController,
+    WmsBarcodeController,
+    WmsCatalogController,
+    WmsIntegrationController,
     InventoryMaterialsController,
     IotEnhancedController,
     IotMaterialKitsController,
@@ -123,6 +141,7 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     InventoryAdvancedRepository,
     WmsCrudRepository,
     WmsCrudService,
+    WmsCatalogService,
     EoqCalculatorService,
     SafetyStockService,
     WmsEoqService,

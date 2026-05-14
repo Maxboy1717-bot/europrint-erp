@@ -1,3 +1,8 @@
+/**
+ * @module admin-extra.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { ONE_MB } from '@common/constants/app.constants';
@@ -50,6 +55,30 @@ export class AdminExtraService {
       const r = await this.repo.findAuditByTable(tableName, page);
       if (!r.ok) { this.logger.warn('getAudit: repo error, returning empty'); return { data: [], page }; }
       return { data: r.data, page };
+    });
+  }
+
+  async getLogsFiltered(opts: {
+    action?: string;
+    tableName?: string;
+    userId?: string;
+    search?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const r = await this.repo.findLogsFiltered(opts);
+      if (!r.ok) return { data: [], total: 0 };
+      return { data: r.data.rows, total: r.data.total };
+    });
+  }
+
+  async getDistinctTables(): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const r = await this.repo.getDistinctTables();
+      return { tables: r.ok ? r.data : [] };
     });
   }
 

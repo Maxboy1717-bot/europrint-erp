@@ -1,3 +1,8 @@
+/**
+ * @module EmployeeTable
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Link } from "wouter";
 import { formatDate } from "@/lib/format";
@@ -121,60 +126,60 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
       case "resigned":
         return { className: "bg-amber-100 text-amber-800", label: "Ishdan ketgan" };
       case "inactive":
-        return { className: "bg-surface-container text-on-surface-variant", label: "Nofaol" };
+        return { className: "bg-muted/60 text-muted-foreground", label: "Nofaol" };
       default:
-        return { className: "bg-surface-container text-on-surface-variant", label: status };
+        return { className: "bg-muted/60 text-muted-foreground", label: status };
     }
   };
 
 
   return (
     <>
-      <div className="rounded-lg border border-outline-variant overflow-hidden">
-        <Table>
+      <div className="rounded-lg border border-border overflow-hidden">
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Xodim</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Telegram ID</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Tabel raqami</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Ish staji</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Tashkiliy tuzilma</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Attestatsiya</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Reyting</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Yiqilgan testlar</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Bonus</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Holat</TableHead>
-              <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 w-12"></TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Xodim</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Telegram ID</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tabel raqami</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Ish staji</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tashkiliy tuzilma</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Attestatsiya</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Reyting</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Yiqilgan testlar</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Bonus</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 w-12"></TableHead>
             </TableRow>
           </TableHeader>
         <TableBody>
           {(Array.isArray(employees) ? employees : []).map((employee) => (
             <TableRow 
               key={employee.id}
-              className="hover:bg-surface-container-low transition-colors cursor-pointer"
+              className="hover:bg-muted/40 transition-colors cursor-pointer"
               onClick={() => onEmployeeClick?.(employee)}
               data-testid={`row-employee-${employee.id}`}
             >
               <TableCell className="px-6">
                 <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10 rounded-full bg-primary-container border border-outline-variant">
+                  <Avatar className="w-10 h-10 rounded-full bg-primary/10 border border-border">
                     {employee.profileImageUrl && (
                       <AvatarImage src={employee.profileImageUrl} alt={employee.fullName} />
                     )}
-                    <AvatarFallback className="text-sm font-semibold text-on-primary-container">
+                    <AvatarFallback className="text-sm font-semibold text-primary">
                       {getInitials(employee.fullName)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium text-on-surface">{employee.fullName}</span>
+                  <span className="font-medium text-foreground">{employee.fullName}</span>
                 </div>
               </TableCell>
-              <TableCell className="px-6 text-on-surface-variant">
+              <TableCell className="px-6 text-muted-foreground">
                 {employee.telegramChatId || "—"}
               </TableCell>
-              <TableCell className="px-6 text-on-surface">
+              <TableCell className="px-6 text-foreground">
                 {employee.employeeId}
               </TableCell>
-              <TableCell className="px-6 text-on-surface-variant">
+              <TableCell className="px-6 text-muted-foreground">
                   {employee.hireDate ? (() => {
                     const hireDate = new Date(employee.hireDate);
                     const now = new Date();
@@ -200,16 +205,16 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                     {employee.orgStructure}
                   </Link>
                 ) : (
-                  <span className="text-red-600 text-xs flex items-center gap-1 font-medium">
+                  <span className="text-[var(--ep-red)] text-xs flex items-center gap-1 font-medium">
                     <Building2 className="w-3 h-3" />
                     Tayinlanmagan
                   </span>
                 )}
               </TableCell>
-              <TableCell className="px-6 text-on-surface-variant">
+              <TableCell className="px-6 text-muted-foreground">
                 {formatDate(employee.attestationDate)}
               </TableCell>
-              <TableCell className="px-6 text-on-surface">
+              <TableCell className="px-6 text-foreground">
                 <div className="flex items-center gap-2">
                   {employee.rating !== undefined && employee.rating > 0 ? (
                     <>
@@ -219,7 +224,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                           <span
                             key={star}
                             className={`text-sm ${
-                              star <= Math.round(employee.rating!) ? "text-primary" : "text-surface-container-high"
+                              star <= Math.round(employee.rating ?? 0) ? "text-primary" : "text-surface-container-high"
                             }`}
                           >
                             ★
@@ -228,26 +233,26 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                       </div>
                     </>
                   ) : (
-                    <span className="text-on-surface-variant">—</span>
+                    <span className="text-muted-foreground">—</span>
                   )}
                 </div>
               </TableCell>
-              <TableCell className="px-6 text-on-surface">
+              <TableCell className="px-6 text-foreground">
                 {employee.failedTests !== undefined && employee.failedTests > 0 ? (
                   <Badge variant="destructive" className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold" data-testid={`badge-failed-tests-${employee.id}`}>
                     {employee.failedTests}
                   </Badge>
                 ) : (
-                  <span className="text-on-surface-variant">—</span>
+                  <span className="text-muted-foreground">—</span>
                 )}
               </TableCell>
-              <TableCell className="px-6 text-on-surface">
+              <TableCell className="px-6 text-foreground">
                 {employee.bonusAmount !== undefined && employee.bonusAmount > 0 ? (
                   <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">
                     +{employee.bonusAmount.toLocaleString()}
                   </Badge>
                 ) : (
-                  <span className="text-on-surface-variant">—</span>
+                  <span className="text-muted-foreground">—</span>
                 )}
               </TableCell>
               <TableCell className="px-6">
@@ -336,7 +341,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </Table></div>
     </div>
 
     <ConfirmDialog

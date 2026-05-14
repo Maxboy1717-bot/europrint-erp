@@ -1,5 +1,10 @@
+/**
+ * @module finance-gl.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, UsePipes } from '@nestjs/common';
-import { throwFromError, assertOk } from '@common/http-result';
+import { throwFromError, assertOk, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -38,7 +43,8 @@ export class FinanceGlController {
     @Query('limit') limit?: string,
     @Query('account') account?: string,
   ) {
-    return await this.queryBus.execute(new GetGlEntriesQuery({ account, page: Number(page), limit: Number(limit) }));
+    const result = await this.queryBus.execute(new GetGlEntriesQuery({ account, page: Number(page), limit: Number(limit) }));
+    return unwrapOrThrow(result);
   }
 
   @Post('post-sales-invoice')

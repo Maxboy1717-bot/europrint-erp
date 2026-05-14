@@ -1,5 +1,10 @@
+/**
+ * @module useGoodsReceivingHooks
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, getAuthHeaders } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useGoodsReceivingTranslations } from "./useGoodsReceivingTranslations";
 import {
@@ -18,9 +23,7 @@ export function useGoodsReceivingData(statusFilter: string, dateFrom: string, da
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (dateFrom) params.append("dateFrom", dateFrom);
       if (dateTo) params.append("dateTo", dateTo);
-      const res = await fetch(`/api/warehouse/goods-receipts?${params.toString()}`, {
-        credentials: "include",
-      });
+      const res = await apiRequest('GET', `/api/warehouse/goods-receipts?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },
@@ -60,7 +63,7 @@ export function useGoodsReceivingMutations(refetchDetail?: () => void) {
 
   const updateQcMutation = useMutation({
     mutationFn: async ({ lineId, data }: { lineId: string; data: Record<string, unknown> }) => {
-      return apiRequest("PATCH", `/api/warehouse/goods-receipts/lines/${lineId}/qc`, data);
+      return apiRequest("POST", `/api/warehouse/goods-receipts/lines/${lineId}/qc`, data);
     },
     onSuccess: () => {
       toast({ title: t.qcUpdated });

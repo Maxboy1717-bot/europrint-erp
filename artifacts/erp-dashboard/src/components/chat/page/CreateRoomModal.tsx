@@ -1,15 +1,22 @@
+/**
+ * @module CreateRoomModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { useChatStore } from "@/store/chatStore";
 import { useEmployeeSearch } from "@/hooks/chat/useRooms";
 import { ChatAvatar } from "./ChatAvatar";
+import { apiRequest } from '@/lib/queryClient';
 
+import { EPLoader } from "@/components/ep";
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -35,8 +42,8 @@ export function CreateRoomModal({ open, onClose }: Props) {
 
   const toggleEmployee = (emp: Employee) => {
     setSelected((prev) =>
-      (prev ?? []).find((e) => e.id === emp.id)
-        ? (prev ?? []).filter((e) => e.id !== emp.id)
+      (Array.isArray(prev) ? prev : []).find((e) => e.id === emp.id)
+        ? (Array.isArray(prev) ? prev : []).filter((e) => e.id !== emp.id)
         : [...prev, emp]
     );
   };
@@ -45,25 +52,30 @@ export function CreateRoomModal({ open, onClose }: Props) {
     if (!name.trim() || selected.length === 0) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/chat/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        credentials: "include",
-        body: JSON.stringify({
-          name: name.trim(),
-          type,
-          memberIds: (Array.isArray(selected) ? selected : []).map((e) => e.id),
-        }),
+      const res = await apiRequest('POST', "/api/chat/rooms/group", {
+        name: name.trim(),
+        memberIds: (Array.isArray(selected) ? selected : []).map((e) => e.id),
       });
       if (res.ok) {
         const room = await res.json();
-        const rooms = useChatStore.getState().rooms;
-        useChatStore.getState().setRooms([room, ...rooms]);
+        // Refresh full room list so the new room appears with correct member data
+        const refreshRes = await apiRequest('GET', "/api/chat/rooms");
+        if (refreshRes.ok) {
+          const allRooms = await refreshRes.json();
+          useChatStore.getState().setRooms(Array.isArray(allRooms) ? allRooms : []);
+        } else {
+          // fallback: prepend the new room
+          const rooms = useChatStore.getState().rooms;
+          useChatStore.getState().setRooms([room, ...rooms]);
+        }
         useChatStore.getState().setActiveRoomId(room.id);
         onClose();
         setName("");
         setSelected([]);
         setSearch("");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert((err as { message?: string }).message || "Xato yuz berdi");
       }
     } finally {
       setLoading(false);
@@ -79,9 +91,9 @@ export function CreateRoomModal({ open, onClose }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Yangi guruh yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{type === "CHANNEL" ? "Yangi kanal yaratish" : "Yangi guruh yaratish"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -102,7 +114,7 @@ export function CreateRoomModal({ open, onClose }: Props) {
           </div>
 
           <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Guruh nomi</Label>
+            <Label className="text-xs text-muted-foreground mb-1 block">{type === "CHANNEL" ? "Kanal nomi" : "Guruh nomi"}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -168,7 +180,7 @@ export function CreateRoomModal({ open, onClose }: Props) {
               disabled={!name.trim() || selected.length === 0 || loading}
               className="flex-1"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {loading ? <EPLoader className="w-4 h-4 mr-2" /> : null}
               Yaratish
             </Button>
           </div>

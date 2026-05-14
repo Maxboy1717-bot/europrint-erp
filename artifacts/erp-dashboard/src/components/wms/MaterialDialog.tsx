@@ -1,3 +1,8 @@
+/**
+ * @module MaterialDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
+import { useTranslation } from '@/lib/i18n';
 export interface MaterialRecord {
   id: string;
   kod: string;
@@ -51,9 +57,8 @@ function materialToForm(m: MaterialRecord): MaterialFormData {
   };
 }
 
-export function MaterialDialog({ open, onClose, editMaterial }: {
-  open: boolean; onClose: () => void; editMaterial?: MaterialRecord | null;
-}) {
+export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean; onClose: () => void; editMaterial?: MaterialRecord | null; }) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEdit = !!editMaterial;
@@ -76,7 +81,7 @@ export function MaterialDialog({ open, onClose, editMaterial }: {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: MaterialFormData) => apiRequest("PUT", `/api/inventory/materials/${editMaterial!.id}`, data),
+    mutationFn: (data: MaterialFormData) => apiRequest("PUT", `/api/inventory/materials/${editMaterial?.id}`, data),
     onSuccess: (res) => {
       if (res.error) { toast({ title: "Xatolik", description: res.error, variant: "destructive" }); return; }
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/materials"] });
@@ -103,20 +108,20 @@ export function MaterialDialog({ open, onClose, editMaterial }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-material-crud">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-6" data-testid="dialog-material-crud">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Materialni tahrirlash" : "Yangi material yaratish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{isEdit ? "Materialni tahrirlash" : "Yangi material yaratish"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="m-kod">Material kodi *</Label>
+              <Label htmlFor="m-kod">{t('materialKodi1')}</Label>
               <Input id="m-kod" data-testid="input-material-kod" value={form.kod} onChange={set("kod")} placeholder="MAT-001" disabled={isEdit} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="m-type">Tur</Label>
               <Select value={form.materialType} onValueChange={setVal("materialType")}>
-                <SelectTrigger data-testid="select-material-type"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-material-type" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="raw">Xom ashyo</SelectItem>
                   <SelectItem value="semi">Yarim tayyor</SelectItem>
@@ -138,28 +143,28 @@ export function MaterialDialog({ open, onClose, editMaterial }: {
             <Input id="m-name-ru" data-testid="input-material-name-ru" value={form.xomAshyoRu} onChange={set("xomAshyoRu")} placeholder="Название материала" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Kategoriya *</Label>
               <Select value={form.category} onValueChange={setVal("category")}>
-                <SelectTrigger data-testid="select-material-category"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-material-category" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>{(Array.isArray(categories) ? categories : []).map(c => <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label>O'lchov birligi *</Label>
               <Select value={form.unitOfMeasure} onValueChange={setVal("unitOfMeasure")}>
-                <SelectTrigger data-testid="select-material-unit"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-material-unit" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>{(Array.isArray(units) ? units : []).map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="m-abc">ABC segment</Label>
               <Select value={form.abcSegment || "none"} onValueChange={v => setVal("abcSegment")(v === "none" ? "" : v)}>
-                <SelectTrigger data-testid="select-material-abc"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                <SelectTrigger data-testid="select-material-abc" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">—</SelectItem>
                   <SelectItem value="A">A (Yuqori prioritet)</SelectItem>
@@ -174,7 +179,7 @@ export function MaterialDialog({ open, onClose, editMaterial }: {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label htmlFor="m-fmt-a">Format A (mm)</Label>
               <Input id="m-fmt-a" data-testid="input-material-format-a" value={form.formatA} onChange={set("formatA")} placeholder="1000" />
@@ -189,7 +194,7 @@ export function MaterialDialog({ open, onClose, editMaterial }: {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="m-min">Min zaxira</Label>
               <Input id="m-min" data-testid="input-material-min-stock" type="number" min="0" value={form.minStock} onChange={set("minStock")} placeholder="500" />

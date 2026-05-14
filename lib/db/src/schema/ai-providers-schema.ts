@@ -1,3 +1,8 @@
+/**
+ * @module ai-providers-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { sql } from "drizzle-orm";
 import { serial, pgTable, varchar, text, integer, boolean, timestamp, jsonb, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -24,7 +29,7 @@ export const aiProvidersConfig = pgTable("ai_providers_config", {
 
 export const aiInterviews = pgTable("ai_interviews", {
   id: serial("id").primaryKey(),
-  candidateId: varchar("candidate_id").references(() => users.id),
+  candidateId: varchar("candidate_id").references(() => users.id, { onDelete: "set null" }),
   jobId: varchar("job_id"),
   sessionId: varchar("session_id", { length: 100 }).unique().notNull(),
   provider: varchar("provider", { length: 50 }).default("gemini"),
@@ -44,7 +49,7 @@ export const aiInterviews = pgTable("ai_interviews", {
 
 export const aiInterviewQuestions = pgTable("ai_interview_questions", {
   id: serial("id").primaryKey(),
-  interviewId: varchar("interview_id").references(() => aiInterviews.id),
+  interviewId: varchar("interview_id").references(() => aiInterviews.id, { onDelete: "cascade" }),
   questionOrder: integer("question_order"),
   questionText: text("question_text").notNull(),
   questionType: varchar("question_type", { length: 50 }),
@@ -68,7 +73,7 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
   outputTokens: integer("output_tokens").default(0),
   totalTokens: integer("total_tokens").default(0),
   estimatedCost: numeric("estimated_cost", { precision: 10, scale: 6 }).default("0"),
-  userId: integer("user_id").references(() => users.id),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   sessionId: varchar("session_id", { length: 100 }),
   requestSummary: text("request_summary"),
   responseSummary: text("response_summary"),

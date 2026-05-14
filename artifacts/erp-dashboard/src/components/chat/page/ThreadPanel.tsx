@@ -1,3 +1,8 @@
+/**
+ * @module ThreadPanel
+ * @description React UI component.
+ */
+
 import { useState, useRef, useEffect, useCallback } from "react";
 import { X, Send } from "lucide-react";
 import { cn } from "@/lib/utils";

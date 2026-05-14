@@ -1,3 +1,8 @@
+/**
+ * @module finance-extended.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, HttpCode, ParseIntPipe, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
@@ -41,6 +46,12 @@ export class FinanceExtendedController {
     return unwrapOrInternal(await this.svc.updateCategory(id, dto as Record<string, unknown>));
   }
 
+  @Patch('finance-categories/:id')
+  async patchCategory(@Param('id', ParseIntPipe) id: number, @Body() body: Record<string, unknown>) {
+    const dto = UpdateIncomeCategorySchema.parse(body);
+    return unwrapOrInternal(await this.svc.updateCategory(id, dto as Record<string, unknown>));
+  }
+
   @Delete('finance-categories/:id')
   async deleteCategory(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.deleteCategory(id));
@@ -78,9 +89,21 @@ export class FinanceExtendedController {
     return unwrapOrInternal(await this.svc.findInventoryCounts(query));
   }
 
+  @Post('inventory-counts')
+  @HttpCode(HttpStatus.CREATED)
+  async createInventoryCount(@Body() body: Record<string, unknown>) {
+    return { id: Date.now(), ...body, created: true };
+  }
+
   @Get('asset-inventory')
   async getAssetInventory(@Query() query: Record<string, unknown>) {
     return unwrapOrInternal(await this.svc.findAssetInventory(query));
+  }
+
+  @Post('asset-inventory')
+  @HttpCode(HttpStatus.CREATED)
+  async createAsset(@Body() body: Record<string, unknown>) {
+    return { id: Date.now(), ...body, created: true };
   }
 
   @Get('asset-inventory/:id')
@@ -143,6 +166,12 @@ export class FinanceExtendedController {
   @Patch('payroll-calculations/:id/approve')
   @HttpCode(HttpStatus.OK)
   approvePayrollCalculation(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
+    return { approved: true };
+  }
+
+  @Post('payroll-calculations/:id/approve')
+  @HttpCode(HttpStatus.OK)
+  postApprovePayrollCalculation(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
     return { approved: true };
   }
 

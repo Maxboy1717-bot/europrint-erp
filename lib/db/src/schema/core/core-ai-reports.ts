@@ -1,6 +1,11 @@
+/**
+ * @module core-ai-reports
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, decimal, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-users";
@@ -17,7 +22,7 @@ export const aiPrompts = pgTable("ai_prompts", {
   usageCount: integer("usage_count").notNull().default(0),
   avgRating: numericMoney("avg_rating"),
   isActive: boolean("is_active").notNull().default(true),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -68,7 +73,9 @@ export const aiReportDefinitions = pgTable("ai_report_definitions", {
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("ai_report_defs_schedule_chk", sql`${t.schedule} IS NULL OR ${t.schedule} IN ('daily','weekly','monthly','realtime')`),
+]);
 
 export const insertAiReportDefinitionSchema = createInsertSchema(aiReportDefinitions, {
   code: z.string().min(1).max(100),
@@ -90,7 +97,10 @@ export const aiReportRuns = pgTable("ai_report_runs", {
   executionTimeMs: integer("execution_time_ms"),
   dataSnapshot: jsonb("data_snapshot"),
   error: text("error"),
-});
+}, (t) => [
+  check("ai_report_runs_run_type_chk", sql`${t.runType} IN ('scheduled','manual','triggered')`),
+  check("ai_report_runs_status_chk", sql`${t.status} IN ('pending','running','completed','failed')`),
+]);
 
 export const insertAiReportRunSchema = createInsertSchema(aiReportRuns, {
   runType: z.enum(["scheduled", "manual", "triggered"]),
@@ -113,7 +123,10 @@ export const aiReportInsights = pgTable("ai_report_insights", {
   data: jsonb("data"),
   actionRequired: boolean("action_required").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("ai_report_insights_type_chk", sql`${t.insightType} IS NULL OR ${t.insightType} IN ('analysis','prediction','anomaly','recommendation')`),
+  check("ai_report_insights_severity_chk", sql`${t.severity} IS NULL OR ${t.severity} IN ('info','warning','critical')`),
+]);
 
 export const insertAiReportInsightSchema = createInsertSchema(aiReportInsights, {
   insightType: z.enum(["analysis", "prediction", "anomaly", "recommendation"]).optional(),
@@ -137,10 +150,13 @@ export const aiAlerts = pgTable("ai_alerts", {
   data: jsonb("data"),
   isRead: boolean("is_read").default(false),
   isResolved: boolean("is_resolved").default(false),
-  resolvedById: varchar("resolved_by_id").references(() => users.id),
+  resolvedById: varchar("resolved_by_id").references(() => users.id, { onDelete: "set null" }),
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("ai_alerts_type_chk", sql`${t.alertType} IS NULL OR ${t.alertType} IN ('anomaly','threshold','prediction')`),
+  check("ai_alerts_severity_chk", sql`${t.severity} IS NULL OR ${t.severity} IN ('low','medium','high','critical')`),
+]);
 
 export const insertAiAlertSchema = createInsertSchema(aiAlerts, {
   alertType: z.enum(["anomaly", "threshold", "prediction"]).optional(),
@@ -161,13 +177,16 @@ export const aiTasks = pgTable("ai_tasks", {
   descriptionRu: text("description_ru"),
   priority: varchar("priority", { length: 20 }).default("medium"),
   status: varchar("status", { length: 20 }).default("pending"),
-  assignedToId: varchar("assigned_to_id").references(() => users.id),
+  assignedToId: varchar("assigned_to_id").references(() => users.id, { onDelete: "set null" }),
   assignedById: varchar("assigned_by_id"),
   dueDate: timestamp("due_date"),
   completedAt: timestamp("completed_at"),
   completionNotes: text("completion_notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("ai_tasks_priority_chk", sql`${t.priority} IS NULL OR ${t.priority} IN ('low','medium','high','urgent')`),
+  check("ai_tasks_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('pending','in_progress','completed','cancelled')`),
+]);
 
 export const insertAiTaskSchema = createInsertSchema(aiTasks, {
   title: z.string().min(1),
@@ -187,7 +206,10 @@ export const aiReportSubscriptions = pgTable("ai_report_subscriptions", {
   isActive: boolean("is_active").notNull().default(true),
   lastDeliveredAt: timestamp("last_delivered_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("ai_report_subs_channel_chk", sql`${t.deliveryChannel} IS NULL OR ${t.deliveryChannel} IN ('telegram','email','push')`),
+  check("ai_report_subs_schedule_chk", sql`${t.schedule} IS NULL OR ${t.schedule} IN ('daily','weekly','monthly')`),
+]);
 
 export const insertAiReportSubscriptionSchema = createInsertSchema(aiReportSubscriptions, {
   deliveryChannel: z.enum(["telegram", "email", "push"]).default("telegram"),
@@ -239,7 +261,7 @@ export const documentReversals = pgTable("document_reversals", {
   reversalReason: text("reversal_reason").notNull(),
   reversalDocumentId: varchar("reversal_document_id", { length: 100 }),
   reversalDocumentNumber: varchar("reversal_document_number", { length: 100 }),
-  reversedBy: varchar("reversed_by").references(() => users.id),
+  reversedBy: varchar("reversed_by").references(() => users.id, { onDelete: "set null" }),
   reversedAt: timestamp("reversed_at").notNull().defaultNow(),
   status: varchar("status", { length: 20 }).notNull().default("reversed"),
 });
@@ -267,7 +289,7 @@ export const exchangeRates = pgTable("exchange_rates", {
   rate: numericMoney("rate").notNull(),
   rateDate: varchar("rate_date", { length: 10 }).notNull(),
   source: varchar("source", { length: 50 }).default("manual"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -281,9 +303,9 @@ export const approvalRequests = pgTable("approval_requests", {
   amount: numericMoney("amount").notNull(),
   currency: varchar("currency", { length: 3 }).notNull().default("UZS"),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
-  requestedBy: varchar("requested_by").references(() => users.id),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "set null" }),
   requestedAt: timestamp("requested_at").notNull().defaultNow(),
-  approverUserId: varchar("approver_user_id").references(() => users.id),
+  approverUserId: varchar("approver_user_id").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   rejectedAt: timestamp("rejected_at"),
   rejectionReason: text("rejection_reason"),
@@ -318,8 +340,8 @@ export const approvalWorkflows = pgTable("approval_workflows", {
   id: serial("id").primaryKey(),
   documentType: varchar("document_type", { length: 50 }).notNull(),
   documentId: varchar("document_id", { length: 100 }).notNull(),
-  templateId: varchar("template_id").notNull().references(() => approvalWorkflowTemplates.id),
-  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  templateId: varchar("template_id").notNull().references(() => approvalWorkflowTemplates.id, { onDelete: "restrict" }),
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "restrict" }),
   currentStep: integer("current_step").notNull().default(1),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   submittedAt: timestamp("submitted_at"),
@@ -333,7 +355,7 @@ export const approvalWorkflowApprovals = pgTable("approval_workflow_approvals", 
   id: serial("id").primaryKey(),
   workflowId: varchar("workflow_id").notNull().references(() => approvalWorkflows.id, { onDelete: "cascade" }),
   stepNumber: integer("step_number").notNull(),
-  approverId: varchar("approver_id").notNull().references(() => users.id),
+  approverId: varchar("approver_id").notNull().references(() => users.id, { onDelete: "restrict" }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   comment: text("comment"),
   approvedAt: timestamp("approved_at"),

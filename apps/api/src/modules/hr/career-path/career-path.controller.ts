@@ -1,3 +1,8 @@
+/**
+ * @module career-path.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Err } from '@common/types/result.type';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Logger, NotFoundException, UseInterceptors } from '@nestjs/common';

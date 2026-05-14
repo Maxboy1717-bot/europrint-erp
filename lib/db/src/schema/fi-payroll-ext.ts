@@ -1,6 +1,11 @@
+/**
+ * @module fi-payroll-ext
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
@@ -24,7 +29,7 @@ export type InsertAiFinanceInsight = z.infer<typeof insertAiFinanceInsightSchema
 // Payroll Work Evidence (Ish dalillari - AI tomonidan yig'ilgan)
 export const payrollWorkEvidence = pgTable("payroll_work_evidence", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").notNull().references(() => users.id),
+  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   periodMonth: varchar("period_month", { length: 7 }).notNull(), // YYYY-MM
 
   // Attendance data (Davomat ma'lumotlari)
@@ -59,7 +64,7 @@ export const payrollWorkEvidence = pgTable("payroll_work_evidence", {
 
   // Manual overrides (Qo'lda o'zgartirishlar)
   manualOverride: boolean("manual_override").default(false),
-  overrideBy: varchar("override_by").references(() => users.id),
+  overrideBy: varchar("override_by").references(() => users.id, { onDelete: "set null" }),
   overrideReason: text("override_reason"),
   overrideAt: timestamp("override_at"),
 
@@ -70,6 +75,8 @@ export const payrollWorkEvidence = pgTable("payroll_work_evidence", {
 }, (t) => [
   index("idx_payroll_work_evidence_employee_id").on(t.employeeId),
   index("idx_payroll_work_evidence_period_month").on(t.periodMonth),
+  check("payroll_work_evidence_quality_chk", sql`${t.dataQualityScore} IS NULL OR ${t.dataQualityScore} IN ('low','medium','high')`),
+  check("payroll_work_evidence_confidence_chk", sql`${t.overallConfidence} IS NULL OR (${t.overallConfidence} >= 0 AND ${t.overallConfidence} <= 100)`),
 ]);
 
 
@@ -90,9 +97,9 @@ export type InsertPayrollWorkEvidence = z.infer<typeof insertPayrollWorkEvidence
 // AI Payroll Recommendations (AI oylik tavsiялари)
 export const payrollAiRecommendations = pgTable("payroll_ai_recommendations", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").notNull().references(() => users.id),
+  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   periodMonth: varchar("period_month", { length: 7 }).notNull(), // YYYY-MM
-  evidenceId: varchar("evidence_id").references(() => payrollWorkEvidence.id),
+  evidenceId: varchar("evidence_id").references(() => payrollWorkEvidence.id, { onDelete: "set null" }),
   
   // Recommendation type
   recommendationType: varchar("recommendation_type", { length: 30 }).notNull(), // bonus, penalty, adjustment, warning, optimization
@@ -114,7 +121,7 @@ export const payrollAiRecommendations = pgTable("payroll_ai_recommendations", {
   
   // Status
   status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, rejected, applied
-  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedBy: varchar("reviewed_by").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewed_at"),
   reviewNote: text("review_note"),
   
@@ -123,6 +130,9 @@ export const payrollAiRecommendations = pgTable("payroll_ai_recommendations", {
   index("idx_payroll_ai_recommendations_employee_id").on(t.employeeId),
   index("idx_payroll_ai_recommendations_period_month").on(t.periodMonth),
   index("idx_payroll_ai_recommendations_status").on(t.status),
+  check("payroll_ai_rec_type_chk", sql`${t.recommendationType} IN ('bonus','penalty','adjustment','warning','optimization')`),
+  check("payroll_ai_rec_priority_chk", sql`${t.priority} IS NULL OR ${t.priority} IN ('low','medium','high','critical')`),
+  check("payroll_ai_rec_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('pending','accepted','rejected','applied')`),
 ]);
 
 
@@ -144,9 +154,9 @@ export type InsertPayrollAiRecommendation = z.infer<typeof insertPayrollAiRecomm
 // 7. STOCK LEDGER - Ombor qoldig'i real-time
 export const stockLedger = pgTable("stock_ledger", {
   id: serial("id").primaryKey(),
-  productMasterId: varchar("product_master_id").references(() => productMasters.id),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
+  productMasterId: varchar("product_master_id").references(() => productMasters.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   batchNumber: varchar("batch_number", { length: 50 }),
   onHandQuantity: numericMoney("on_hand_quantity").notNull().default(0),
   reservedQuantity: numericMoney("reserved_quantity").notNull().default(0),
@@ -191,7 +201,7 @@ export const budgetControls = pgTable("budget_controls", {
   overspendLimit: numericMoney("overspend_limit"),
   approverRoleForOverspend: varchar("approver_role_for_overspend", { length: 50 }),
   status: varchar("status", { length: 20 }).notNull().default("active"), // active, frozen, closed
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 }, (t) => [
@@ -220,7 +230,7 @@ export const posTransactions = pgTable("pos_transactions", {
   transactionNumber: varchar("transaction_number", { length: 30 }).notNull().unique(),
   customerId: varchar("customer_id"),
   customerName: text("customer_name"),
-  cashierId: integer("cashier_id").references(() => users.id),
+  cashierId: integer("cashier_id").references(() => users.id, { onDelete: "set null" }),
   items: jsonb("items").notNull(),
   subtotal: numericMoney("subtotal").notNull(),
   taxAmount: numericMoney("tax_amount").notNull().default(0),

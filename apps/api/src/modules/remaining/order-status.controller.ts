@@ -1,3 +1,8 @@
+/**
+ * @module order-status.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Get, HttpCode, Param, Post, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -81,5 +86,10 @@ export class OrderStatusController {
   @HttpCode(HttpStatus.OK)
   async deliveryFailed(@Param('orderId') orderId: string) {
     return unwrapOrThrow(await this.svc.deliveryFailed(orderId));
+  }
+
+  @Get(':orderId/machine-breakdown')
+  getMachineBreakdown(@Param('orderId') orderId: string) {
+    return { orderId, breakdown: null, machineId: null };
   }
 }

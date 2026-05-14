@@ -1,3 +1,8 @@
+/**
+ * @module useCashRegister
+ * @description React UI component.
+ */
+
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -66,9 +71,9 @@ export function useCashRegister() {
 
   const addToCart = useCallback((product: PosProduct) => {
     setCart((prev) => {
-      const existing = (prev ?? []).find((item) => item.productId === product.id);
+      const existing = (Array.isArray(prev) ? prev : []).find((item) => item.productId === product.id);
       if (existing) {
-        return (prev ?? []).map((item) =>
+        return (Array.isArray(prev) ? prev : []).map((item) =>
           item.productId === product.id
             ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.unitPrice }
             : item
@@ -98,9 +103,13 @@ export function useCashRegister() {
   const transactionMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest<PosTransaction>("POST", "/api/pos/transactions", data),
     onSuccess: async (transaction) => {
-      const receipt = await apiRequest<ReceiptData>("GET", `/api/pos/receipt/${transaction.id}`);
-      setReceiptData(receipt);
-      setShowReceipt(true);
+      try {
+        const receipt = await apiRequest<ReceiptData>("GET", `/api/pos/receipt/${transaction.id}`);
+        setReceiptData(receipt);
+        setShowReceipt(true);
+      } catch {
+        toast({ title: "Tranzaksiya muvaffaqiyatli", description: "Chek yuklanmadi, keyinroq ko'ring", variant: "default" });
+      }
       setCart([]);
       setDiscountAmount(0);
       setCashAmount(0);
@@ -144,14 +153,14 @@ export function useCashRegister() {
   });
 
   const updateQuantity = (productId: string, delta: number) => {
-    setCart((prev) => (prev ?? []).map((item) => {
+    setCart((prev) => (Array.isArray(prev) ? prev : []).map((item) => {
       if (item.productId !== productId) return item;
       const newQty = Math.max(0, item.quantity + delta);
       return { ...item, quantity: newQty, total: newQty * item.unitPrice };
     }).filter((item) => item.quantity > 0));
   };
 
-  const removeFromCart = (productId: string) => setCart((prev) => (prev ?? []).filter((item) => item.productId !== productId));
+  const removeFromCart = (productId: string) => setCart((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item.productId !== productId));
 
   const handleBarcodeScan = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && barcodeInput.trim()) {
@@ -163,6 +172,8 @@ export function useCashRegister() {
   const subtotal = (Array.isArray(cart) ? cart : []).reduce((sum, item) => sum + item.total, 0);
   const taxRate = sysSettings?.qqsRate ?? 12;
   const taxableAmount = subtotal - discountAmount;
+  // QQS hisob-kitobi: narxlar QQS bilan birga (inclusive)
+  // taxAmount = subtotal * taxRate / (100 + taxRate)
   const taxAmount = Math.round((taxableAmount * taxRate) / (100 + taxRate));
   const totalAmount = subtotal - discountAmount;
 

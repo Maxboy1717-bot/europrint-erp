@@ -1,3 +1,8 @@
+/**
+ * @module fi.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result, AppError, Ok } from '@common/result';

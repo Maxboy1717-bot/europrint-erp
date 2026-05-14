@@ -1,8 +1,14 @@
+/**
+ * @module spoilage.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeDiv, safeNum } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { PERCENT_BASIS, PERCENT_MULTIPLIER, ROUND_2DP_FACTOR } from '@common/constants/app.constants';
+import { COST_SPLIT_PAPER, COST_SPLIT_INK, COST_SPLIT_LABOR } from '@common/constants/business.constants';
 import { SPOILAGE_ALARM_MULTIPLIER } from '../../constants/qc.constants';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -156,9 +162,9 @@ export class SpoilageService {
       defectiveSheets: safeNum(row.defective_sheets),
       totalSheets:     Math.max(safeNum(row.total_sheets), 1),
       printType,
-      unitCostPaper:   unitCost * 0.40,
-      unitCostInk:     unitCost * 0.35,
-      unitCostLabor:   unitCost * 0.25,
+      unitCostPaper:   unitCost * COST_SPLIT_PAPER,
+      unitCostInk:     unitCost * COST_SPLIT_INK,
+      unitCostLabor:   unitCost * COST_SPLIT_LABOR,
     };
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module vendors.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { vendors } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';

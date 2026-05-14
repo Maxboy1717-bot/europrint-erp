@@ -1,3 +1,8 @@
+/**
+ * @module warehouse-barcode-ops.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db,
   rawSql} from '@shared/db';

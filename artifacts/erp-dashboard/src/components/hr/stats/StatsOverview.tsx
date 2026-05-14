@@ -1,3 +1,8 @@
+/**
+ * @module StatsOverview
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, CheckCircle2, Trophy, Award } from "lucide-react";
 

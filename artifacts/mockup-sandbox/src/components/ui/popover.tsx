@@ -1,3 +1,8 @@
+/**
+ * @module popover
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 

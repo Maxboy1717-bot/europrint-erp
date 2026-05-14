@@ -1,3 +1,8 @@
+/**
+ * @module tabs
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 

@@ -1,3 +1,8 @@
+/**
+ * @module erp.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { ErpProductsController } from './erp-products.controller';
 import { ErpOrdersController } from './erp-orders.controller';

@@ -1,3 +1,8 @@
+/**
+ * @module reception.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { ReceptionService } from './reception.service';
 import { ReceptionController } from './reception.controller';

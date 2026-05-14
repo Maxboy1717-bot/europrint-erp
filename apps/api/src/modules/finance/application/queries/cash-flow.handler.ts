@@ -1,3 +1,8 @@
+/**
+ * @module cash-flow.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { FINANCE_REPO } from '../../domain/repositories/i-finance.repo';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Logger, Inject } from '@nestjs/common';

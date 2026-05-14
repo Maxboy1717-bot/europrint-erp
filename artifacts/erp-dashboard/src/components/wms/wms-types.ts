@@ -1,3 +1,8 @@
+/**
+ * @module wms-types
+ * @description React UI component.
+ */
+
 export interface MaterialBasic {
   kod?: string;
   xomAshyo?: string;

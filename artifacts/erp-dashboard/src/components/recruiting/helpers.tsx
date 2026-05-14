@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -106,13 +111,13 @@ export function StatCard({ icon: Icon, label, value, color }: {
   label: string; value: number | string; color?: string;
 }) {
   return (
-    <div className="bg-surface-container-low rounded-xl p-4 flex items-center gap-3 min-w-[130px]">
+    <div className="bg-muted/40 rounded-xl p-4 flex items-center gap-3 min-w-[130px]">
       <div className={`p-2 rounded-lg ${color ?? "bg-primary/10"}`}>
         <Icon className={`w-5 h-5 ${color ? "text-white" : "text-primary"}`} />
       </div>
       <div>
-        <div className="text-xl font-bold text-on-surface">{value}</div>
-        <div className="text-xs text-on-surface-variant">{label}</div>
+        <div className="text-xl font-bold text-foreground">{value}</div>
+        <div className="text-xs text-muted-foreground">{label}</div>
       </div>
     </div>
   );
@@ -126,7 +131,7 @@ export function HCMethodologyBanner() {
         variant="outline"
         size="sm"
         onClick={() => setOpen(p => !p)}
-        className="mb-2 gap-2 border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+        className="mb-2 gap-2 border-purple-500/30 text-purple-400 hover:bg-[var(--ep-purple)]/90/10"
         data-testid="button-toggle-hc-methodology"
       >
         <BookOpen className="w-4 h-4" />
@@ -134,7 +139,7 @@ export function HCMethodologyBanner() {
         {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </Button>
       {open && (
-        <div className="bg-surface-container rounded-xl p-4 border border-purple-500/20">
+        <div className="bg-muted/60 rounded-xl p-4 border border-purple-500/20">
           <p className="text-xs text-muted-foreground mb-3">
             Rekrutment jarayoni HR Capital metodologiyasining 7 bosqichiga asoslanadi:
           </p>
@@ -158,7 +163,7 @@ export function HCMethodologyBanner() {
             {(Array.isArray(STAGES) ? STAGES : []).filter(s => s.key !== "REJECTED").map(stage => {
               const phase = getPhaseForStage(stage.key);
               return (
-                <span key={stage.key} className="inline-flex items-center gap-1 text-[10px] bg-surface-container-low rounded px-1.5 py-0.5 border border-border/40">
+                <span key={stage.key} className="inline-flex items-center gap-1 text-[10px] bg-muted/40 rounded px-1.5 py-0.5 border border-border/40">
                   <div className={`w-1.5 h-1.5 rounded-full ${stage.accent}`} />
                   {stage.label}
                   {phase && <span className="text-muted-foreground">→ {phase.label}</span>}
@@ -192,7 +197,7 @@ export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; on
 
   const updateChannelMutation = useMutation({
     mutationFn: ({ channel, status }: { channel: string; status: string }) =>
-      apiRequest("PATCH", `/api/hr/recruitment/vacancies/${vacancy.id}/channel-status`, { channel, status }),
+      apiRequest("POST", `/api/hr/recruitment/vacancies/${vacancy.id}/channel-status`, { channel, status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/vacancies"] });
       toast({ title: "Kanal holati yangilandi" });
@@ -221,16 +226,16 @@ export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; on
   return (
     <div className="border border-border/40 rounded-lg p-3 bg-muted/20 space-y-2">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <p className="text-xs font-semibold text-on-surface flex items-center gap-1">
+        <p className="text-xs font-semibold text-foreground flex items-center gap-1">
           <Globe className="w-3.5 h-3.5 text-primary" />Kanal holatlari
         </p>
         <div className="flex gap-1">
-          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-sky-500/40 text-sky-400 hover:bg-sky-500/10"
+          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-sky-500/40 text-sky-400 hover:bg-[var(--ep-blue)]/90/10"
             onClick={() => announceOnTelegramMutation.mutate()} disabled={announceOnTelegramMutation.isPending}
             data-testid={`button-telegram-announce-${vacancy.id}`}>
             <Send className="w-2.5 h-2.5" />Telegram
           </Button>
-          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/10"
+          <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1 border-indigo-500/40 text-indigo-400 hover:bg-[var(--ep-blue)]/90/10"
             onClick={() => notifyAlumniMutation.mutate()} disabled={notifyAlumniMutation.isPending}
             data-testid={`button-alumni-notify-${vacancy.id}`}>
             <RefreshCcw className="w-2.5 h-2.5" />Alumni
@@ -246,7 +251,7 @@ export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; on
             <div key={ch} className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <div className={`w-2 h-2 rounded-full ${CHANNEL_COLORS[ch] ?? "bg-gray-400"}`} />
-                <span className="text-xs text-on-surface">{CHANNEL_LABELS[ch] ?? ch}</span>
+                <span className="text-xs text-foreground">{CHANNEL_LABELS[ch] ?? ch}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className={`text-[10px] border rounded-full px-2 py-0.5 ${statusInfo.color}`}>{statusInfo.label}</span>
@@ -295,7 +300,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
   );
 
   const createSessionMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/hr/ai-interview/sessions", {
+    mutationFn: () => apiRequest("POST", "/api/hr-v2/ai-interview/sessions", {
       candidate_name: entry.candidate_name,
       candidate_language: "uz",
       pipeline_entry_id: entry.id,
@@ -316,7 +321,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
   });
 
   const reviewMutation = useMutation({
-    mutationFn: () => apiRequest("PATCH", `/api/hr/ai-interview/session/${entrySession!.id}/review`, { recruiter_notes: recruiterNotes, recommendation }),
+    mutationFn: () => apiRequest("PATCH", `/api/hr/ai-interview/session/${entrySession?.id}/review`, { recruiter_notes: recruiterNotes, recommendation }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/ai-interview/sessions"] });
       toast({ title: "Izoh saqlandi" });
@@ -345,7 +350,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
           <Bot className="w-3 h-3" />AI Intervyu
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="w-5 h-5 text-indigo-400" />
@@ -372,7 +377,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
               <div className="bg-muted/40 rounded-lg p-3 space-y-2">
                 <p className="text-xs text-muted-foreground">Intervyu havolasi:</p>
                 <div className="flex gap-2">
-                  <Input readOnly value={interviewLink} className="text-xs h-8 flex-1" />
+                  <Input readOnly value={interviewLink} className="text-xs h-9 flex-1" />
                   <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => { navigator.clipboard.writeText(interviewLink).catch(() => {}); toast({ title: "Nusxalandi!" }); }}>
                     <Copy className="w-3.5 h-3.5" />
                   </Button>
@@ -424,7 +429,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
                   )}
                   <Textarea placeholder="Rekruter izohi yozing..." value={recruiterNotes || entrySession.recruiter_notes || ""} onChange={e => setRecruiterNotes(e.target.value)} className="text-sm min-h-[80px]" data-testid={`textarea-recruiter-notes-${entry.id}`} />
                   <Select value={recommendation || entrySession.recommendation || ""} onValueChange={setRecommendation}>
-                    <SelectTrigger className="text-sm" data-testid={`select-recommendation-${entry.id}`}>
+                    <SelectTrigger className="text-sm h-9" data-testid={`select-recommendation-${entry.id}`}>
                       <SelectValue placeholder="Tavsiya tanlang..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -472,7 +477,7 @@ export function ProbationCompleteButton({ entryId, onComplete, isPending }: { en
       data-testid={`button-sinov-complete-${entryId}`}
       size="sm"
       variant="default"
-      className="h-7 text-xs flex-1 bg-lime-600 hover:bg-lime-700 disabled:opacity-40"
+      className="h-7 text-xs flex-1 bg-lime-600 hover:bg-[var(--ep-green)]/90 disabled:opacity-40"
       disabled={isPending || !day90Done}
       title={!day90Done ? "90-kun baholash to'ldirilishi shart" : undefined}
       onClick={onComplete}

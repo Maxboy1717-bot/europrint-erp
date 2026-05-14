@@ -1,3 +1,8 @@
+/**
+ * @module pos.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { IPosSvcRepository, POS_SVC_REPO } from './pos-svc/i-pos-svc.repo';
 import {

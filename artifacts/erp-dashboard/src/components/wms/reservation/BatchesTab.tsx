@@ -1,3 +1,8 @@
+/**
+ * @module BatchesTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +51,7 @@ export function BatchesTab({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-xl font-bold flex items-center gap-2">
+        <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2">
           <Package className="w-5 h-5" />
           {t.batches.title}
         </CardTitle>
@@ -69,7 +74,7 @@ export function BatchesTab({
           </div>
           <div className="flex gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[150px]" data-testid="select-type-filter">
+              <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="select-type-filter">
                 <SelectValue placeholder={t.allTypes} />
               </SelectTrigger>
               <SelectContent>
@@ -82,7 +87,7 @@ export function BatchesTab({
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]" data-testid="select-status-filter">
+              <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="select-status-filter">
                 <SelectValue placeholder={t.allStatuses} />
               </SelectTrigger>
               <SelectContent>
@@ -103,7 +108,7 @@ export function BatchesTab({
           </div>
         ) : (
           <ScrollArea className="h-[500px] border rounded-md">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t.batches.batchNum}</TableHead>
@@ -118,7 +123,7 @@ export function BatchesTab({
               </TableHeader>
               <TableBody>
                 {(Array.isArray(filteredBatches) ? filteredBatches : []).map((b) => (
-                  <TableRow key={b.id}>
+                  <TableRow key={b.id} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-mono text-xs">{b.batchNumber}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
@@ -136,7 +141,7 @@ export function BatchesTab({
                       <div className="flex items-center gap-1 text-xs">
                         {b.expiryDate ? new Date(b.expiryDate).toLocaleDateString() : "-"}
                         {b.expiryDate && new Date(b.expiryDate) < new Date() && (
-                          <AlertTriangle className="w-3 h-3 text-red-500" />
+                          <AlertTriangle className="w-3 h-3 text-[var(--ep-red)]" />
                         )}
                       </div>
                     </TableCell>
@@ -162,7 +167,7 @@ export function BatchesTab({
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         )}
       </CardContent>

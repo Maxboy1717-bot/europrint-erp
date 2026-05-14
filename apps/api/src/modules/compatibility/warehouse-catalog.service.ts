@@ -1,3 +1,8 @@
+/**
+ * @module warehouse-catalog.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable , NotFoundException } from '@nestjs/common';
 import { db,
   rawSql} from '@shared/db';
@@ -45,12 +50,14 @@ export class WarehouseCatalogService {
 
   async getBatches(materialId?: string, warehouseId?: string, status?: string, search?: string){
     return safeCall(async () => {
-    const conditions: string[] = ['1=1'];
-    if (materialId)  conditions.push(`wb.material_card_id = '${materialId.replace(/'/g, "''")}'`);
-    if (warehouseId) conditions.push(`wb.warehouse_id = '${warehouseId.replace(/'/g, "''")}'`);
-    if (status)      conditions.push(`wb.status = '${status.replace(/'/g, "''")}'`);
-    if (search)      conditions.push(`(wb.batch_number ILIKE '%${search.replace(/'/g, "''")}%' OR mc.xom_ashyo ILIKE '%${search.replace(/'/g, "''")}%')`);
-    const result = await rawSql(sql.raw(`
+    // Parameterized filters — no string concatenation, no sql.raw()
+    const matFilter    = materialId  ? sql`AND wb.material_card_id = ${materialId}`  : sql``;
+    const whFilter     = warehouseId ? sql`AND wb.warehouse_id = ${warehouseId}`     : sql``;
+    const statusFilter = status      ? sql`AND wb.status = ${status}`                : sql``;
+    const searchFilter = search
+      ? sql`AND (wb.batch_number ILIKE ${'%' + search + '%'} OR mc.xom_ashyo ILIKE ${'%' + search + '%'})`
+      : sql``;
+    const result = await rawSql(sql`
       SELECT wb.id, wb.batch_number AS "batchNumber", wb.material_card_id AS "materialCardId",
              mc.xom_ashyo AS "materialName", wb.warehouse_id AS "warehouseId", w.name AS "warehouseName",
              wb.quantity, wb.remaining_quantity AS "remainingQuantity", wb.unit_cost AS "unitCost",
@@ -60,11 +67,11 @@ export class WarehouseCatalogService {
              wb.status, mc.barcode, wb.notes
       FROM warehouse_batches wb JOIN material_cards mc ON mc.id = wb.material_card_id
       LEFT JOIN warehouses w ON w.id = wb.warehouse_id
-      WHERE ${conditions.join(' AND ')}
+      WHERE 1=1 ${matFilter} ${whFilter} ${statusFilter} ${searchFilter}
       ORDER BY wb.created_at DESC LIMIT ${MAX_LARGE_QUERY_LIMIT}
-    `));
+    `);
     return dbRows(result);
-  
+
     });}
 
   async createBatch(body: Record<string, unknown>){
@@ -88,27 +95,28 @@ export class WarehouseCatalogService {
 
   async updateBatch(id: string, body: Record<string, unknown>){
     return safeCall(async () => {
-    const fieldMap: Record<string, string> = {
-      batchNumber: 'batch_number', materialCardId: 'material_card_id', warehouseId: 'warehouse_id',
-      quantity: 'quantity', remainingQuantity: 'remaining_quantity', unitCost: 'unit_cost',
-      productionDate: 'production_date', expiryDate: 'expiry_date',
-      supplierBatchNumber: 'supplier_batch_number', qcStatus: 'qc_status', status: 'status', notes: 'notes',
-    };
-    const sets: string[] = [];
-    for (const [jsKey, dbCol] of Object.entries(fieldMap)) {
-      if (body[jsKey] !== undefined) {
-        const val = body[jsKey];
-        if (val === null) sets.push(`${dbCol} = NULL`);
-        else if (typeof val === 'number') sets.push(`${dbCol} = ${val}`);
-        else sets.push(`${dbCol} = '${String(val).replace(/'/g, "''")}'`);
-      }
-    }
-    if (!sets.length) return body;
-    sets.push('updated_at = NOW()');
-    const result = await rawSql(sql.raw(`UPDATE warehouse_batches SET ${sets.join(', ')} WHERE id = '${id.replace(/'/g, "''")}' RETURNING *`));
+    // Fully parameterized COALESCE update — no sql.raw(), no string injection possible
+    const result = await rawSql(sql`
+      UPDATE warehouse_batches SET
+        batch_number          = COALESCE(${body['batchNumber']          ?? null}, batch_number),
+        material_card_id      = COALESCE(${body['materialCardId']       ?? null}, material_card_id),
+        warehouse_id          = COALESCE(${body['warehouseId']          ?? null}, warehouse_id),
+        quantity              = COALESCE(${body['quantity'] != null ? Number(body['quantity']) : null}, quantity),
+        remaining_quantity    = COALESCE(${body['remainingQuantity'] != null ? Number(body['remainingQuantity']) : null}, remaining_quantity),
+        unit_cost             = COALESCE(${body['unitCost'] != null ? Number(body['unitCost']) : null}, unit_cost),
+        production_date       = COALESCE(${body['productionDate']       ?? null}, production_date),
+        expiry_date           = COALESCE(${body['expiryDate']           ?? null}, expiry_date),
+        supplier_batch_number = COALESCE(${body['supplierBatchNumber']  ?? null}, supplier_batch_number),
+        qc_status             = COALESCE(${body['qcStatus']             ?? null}, qc_status),
+        status                = COALESCE(${body['status']               ?? null}, status),
+        notes                 = COALESCE(${body['notes']                ?? null}, notes),
+        updated_at            = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `);
     const _found = dbRows(result)[0];
     if (!_found) throw new NotFoundException('Record not found');
     return _found;
-  
+
     });}
 }

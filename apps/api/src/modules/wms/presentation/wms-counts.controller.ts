@@ -1,3 +1,8 @@
+/**
+ * @module wms-counts.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import {
 BadRequestException, Body, Controller, Delete, Get, NotFoundException,

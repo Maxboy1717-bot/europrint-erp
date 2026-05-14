@@ -1,5 +1,11 @@
+/**
+ * @module useMessages
+ * @description React custom hook.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from '@/lib/queryClient';
 
 export interface ChatMessage {
   id: string;
@@ -25,16 +31,13 @@ export function useMessages(roomId: string | null, limit = 50) {
     queryKey: ["chat-messages", roomId, limit],
     enabled: !!roomId,
     queryFn: async () => {
-      const res = await fetch(
-        `/api/chat/rooms/${roomId}/messages?limit=${limit}`,
-        { credentials: "include", headers: getAuthHeaders() },
-      );
+      const res = await apiRequest('GET', `/api/chat/rooms/${roomId}/messages?limit=${limit}`);
       if (!res.ok) throw new Error("Xabarlar yuklanmadi");
       const data = await res.json();
       const arr = Array.isArray(data) ? data : (data as { data?: ChatMessage[] }).data ?? [];
       return arr;
     },
-    staleTime: 0,
+    staleTime: 30_000,   // 30 s — WebSocket handles real-time updates; HTTP is catch-up only
     refetchOnWindowFocus: false,
   });
 }

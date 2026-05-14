@@ -1,3 +1,8 @@
+/**
+ * @module fin.bot
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { execSql, helpReply, deniedReply, hasBotPermission, sql } from './bot.helpers';
 import type { BotMessage, BotReply } from './bot.helpers';

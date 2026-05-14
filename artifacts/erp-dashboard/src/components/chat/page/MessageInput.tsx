@@ -1,3 +1,8 @@
+/**
+ * @module MessageInput
+ * @description React UI component.
+ */
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Send, X, Smile, Paperclip, BarChart2, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";

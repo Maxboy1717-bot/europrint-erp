@@ -1,3 +1,8 @@
+/**
+ * @module ExitControlPanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Camera } from "lucide-react";
@@ -22,7 +27,7 @@ export function ExitControlPanel({ logs }: ExitControlProps) {
           <Badge variant="default">RUXSAT</Badge>
           <Badge variant="secondary">OGOHLANTIRISH</Badge>
           <Badge variant="destructive">BLOKLASH</Badge>
-          <Badge variant="destructive" className="bg-black text-white dark:bg-surface-container-lowest dark:text-on-surface">XAVFLI</Badge>
+          <Badge variant="destructive" className="bg-black text-white dark:bg-card dark:text-foreground">XAVFLI</Badge>
         </div>
         {!logs || logs.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">

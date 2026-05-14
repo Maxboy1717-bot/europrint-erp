@@ -1,3 +1,8 @@
+/**
+ * @module inventory-count.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { InternalServerErrorException } from '@nestjs/common';

@@ -1,3 +1,8 @@
+/**
+ * @module feedback-360.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -7,7 +12,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Role } from '@common/constants/roles.constants';
 import { Feedback360Service } from './feedback-360.service';
 
-import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
+import { parsePagination } from '@common/pipes/parse-pagination.pipe';
 import { unwrapOrInternal } from '@common/http-result';
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('360')
@@ -31,8 +36,7 @@ export class Feedback360Controller {
   ) {
     const employeeId = employeeIdParam ? parseInt(employeeIdParam, 10) || undefined : undefined;
     const year = yearParam ? parseInt(yearParam, 10) || undefined : undefined;
-    const limit = Math.min(parseInt(limitParam ?? '50', 10) || 50, MAX_QUERY_LIMIT);
-    const offset = parseInt(offsetParam ?? '0', 10) || 0;
+    const { limit, offset } = parsePagination(limitParam, offsetParam);
     return unwrapOrInternal(await this.svc.getAssessments(employeeId, year, limit, offset));
   }
 
@@ -45,8 +49,7 @@ export class Feedback360Controller {
   ) {
     const employeeId = employeeIdParam ? parseInt(employeeIdParam, 10) || undefined : undefined;
     const year = yearParam ? parseInt(yearParam, 10) || undefined : undefined;
-    const limit = Math.min(parseInt(limitParam ?? '50', 10) || 50, MAX_QUERY_LIMIT);
-    const offset = parseInt(offsetParam ?? '0', 10) || 0;
+    const { limit, offset } = parsePagination(limitParam, offsetParam);
     return unwrapOrInternal(await this.svc.getAssessments(employeeId, year, limit, offset));
   }
 
@@ -57,8 +60,7 @@ export class Feedback360Controller {
     @Query('offset') offsetParam?: string,
   ) {
     const assessmentId = assessmentIdParam ? parseInt(assessmentIdParam, 10) || undefined : undefined;
-    const limit = Math.min(parseInt(limitParam ?? '50', 10) || 50, MAX_QUERY_LIMIT);
-    const offset = parseInt(offsetParam ?? '0', 10) || 0;
+    const { limit, offset } = parsePagination(limitParam, offsetParam);
     return unwrapOrInternal(await this.svc.getResponses(assessmentId, limit, offset));
   }
 }

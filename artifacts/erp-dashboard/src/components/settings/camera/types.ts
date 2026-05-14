@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface CameraWithPrompt {
   id: string;
   code: string;
@@ -77,8 +82,8 @@ export const MODULE_LABELS: Record<string, string> = {
 };
 
 export const SEVERITY_LABELS: Record<string, { label: string; color: string }> = {
-  low: { label: "Past", color: "text-blue-500" },
-  medium: { label: "O'rta", color: "text-yellow-500" },
-  high: { label: "Yuqori", color: "text-orange-500" },
-  critical: { label: "Kritik", color: "text-red-500" },
+  low: { label: "Past", color: "text-[var(--ep-blue)]" },
+  medium: { label: "O'rta", color: "text-[var(--ep-yellow)]" },
+  high: { label: "Yuqori", color: "text-[var(--ep-primary)]" },
+  critical: { label: "Kritik", color: "text-[var(--ep-red)]" },
 };

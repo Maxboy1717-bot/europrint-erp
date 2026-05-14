@@ -166,7 +166,7 @@ export class ChurnService {
         safeNum(features.daysSinceLastContact),              // days_contact
         safeNum(features.supportTicketCount),                // tickets
       ];
-      logit = (activeCoef ?? []).reduce((s, b, i) => s + b * (featureVec[i] ?? 0), 0);
+      logit = (Array.isArray(activeCoef) ? activeCoef : []).reduce((s, b, i) => s + b * (featureVec[i] ?? 0), 0);
       modelSource = 'db';
     } else {
       const c = DEFAULT_CHURN_COEFFICIENTS;

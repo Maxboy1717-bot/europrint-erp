@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-design.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -68,7 +73,7 @@ export class DrizzleDesignRepository implements IDesignRepo {
         .then((rows) => rows.length)
         .catch((error) => { this.logger.error('Error counting design orders'); throw error; }),
     ])
-      .then(([items, total]) => Ok({ items: (items ?? []).map((row) => this.toDomain(row)), total }))
+      .then(([items, total]) => Ok({ items: (Array.isArray(items) ? items : []).map((row) => this.toDomain(row)), total }))
       .catch((error) => Err((error as Error).message));
   }
 

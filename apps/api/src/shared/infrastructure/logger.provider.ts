@@ -1,3 +1,8 @@
+/**
+ * @module logger.provider
+ * @description Source module. See exports for details.
+ */
+
 import pino from 'pino';
 
 export const LOGGER = 'PINO_LOGGER';

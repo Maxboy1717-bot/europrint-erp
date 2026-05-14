@@ -1,3 +1,8 @@
+/**
+ * @module WeeklyTrendChart
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, RefreshCw } from "lucide-react";
@@ -19,14 +24,14 @@ export function WeeklyTrendChart({ chartData, isLoading }: WeeklyTrendChartProps
     <Card className="lg:col-span-2" data-testid="card-weekly-trend">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <LineChart className="h-5 w-5 text-violet-500" />
+          <LineChart className="h-4 w-4 text-primary" />
           Haftalik Trend
         </CardTitle>
         <CardDescription>So'nggi 7 kunlik daromad va xarajat tendensiyasi</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="h-[300px] flex items-center justify-center"><Skeleton className="h-full w-full" /></div>
+          <div className="h-[300px] flex items-center justify-center"><Skeleton className="h-full w-full rounded-lg" /></div>
         ) : chartData.length > 0 ? (
           <div className="glass-chart h-[300px]">
             <ResponsiveContainer width="100%" height="100%">

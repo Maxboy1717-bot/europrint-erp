@@ -1,3 +1,8 @@
+/**
+ * @module EmployeeSkillDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -27,9 +32,9 @@ export function EmployeeSkillDialog({ open, onOpenChange, form, employees, skill
           Ko'nikma belgilash
         </Button>
       </DialogTrigger>
-      <DialogContent data-testid="dialog-add-employee-skill">
+      <DialogContent data-testid="dialog-add-employee-skill" className="p-6">
         <DialogHeader>
-          <DialogTitle>Xodimga ko'nikma belgilash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Xodimga ko'nikma belgilash</DialogTitle>
           <DialogDescription>Xodim profiliga ko'nikma qo'shing</DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -39,7 +44,7 @@ export function EmployeeSkillDialog({ open, onOpenChange, form, employees, skill
                 <FormLabel>Xodim</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger data-testid="select-employee"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+                    <SelectTrigger data-testid="select-employee" className="h-9"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {employees?.map((emp) => (
@@ -55,7 +60,7 @@ export function EmployeeSkillDialog({ open, onOpenChange, form, employees, skill
                 <FormLabel>Ko'nikma</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger data-testid="select-skill"><SelectValue placeholder="Ko'nikmani tanlang" /></SelectTrigger>
+                    <SelectTrigger data-testid="select-skill" className="h-9"><SelectValue placeholder="Ko'nikmani tanlang" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {skills?.map((skill) => (
@@ -71,7 +76,7 @@ export function EmployeeSkillDialog({ open, onOpenChange, form, employees, skill
                 <FormLabel>Daraja (1-5)</FormLabel>
                 <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value.toString()}>
                   <FormControl>
-                    <SelectTrigger data-testid="select-level"><SelectValue placeholder="Darajani tanlang" /></SelectTrigger>
+                    <SelectTrigger data-testid="select-level" className="h-9"><SelectValue placeholder="Darajani tanlang" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="1">1 - Boshlang'ich</SelectItem>

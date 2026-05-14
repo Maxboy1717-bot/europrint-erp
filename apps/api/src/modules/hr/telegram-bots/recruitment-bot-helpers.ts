@@ -1,3 +1,8 @@
+/**
+ * @module recruitment-bot-helpers
+ * @description Source module. See exports for details.
+ */
+
 import { Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';

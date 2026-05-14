@@ -1,3 +1,8 @@
+/**
+ * @module translations
+ * @description React UI component.
+ */
+
 import { Language, Translation } from "./types";
 
 export const translations: Record<Language, Translation> = {

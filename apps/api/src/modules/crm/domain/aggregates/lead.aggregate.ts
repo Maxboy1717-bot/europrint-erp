@@ -1,3 +1,8 @@
+/**
+ * @module lead.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { AggregateRoot } from '@shared/domain/aggregate-root.base';
@@ -128,5 +133,37 @@ export class Lead extends AggregateRoot {
 
   getCompanyId(): number {
     return this.companyId;
+  }
+
+  getFirstName(): string {
+    return this.firstName;
+  }
+
+  getLastName(): string {
+    return this.lastName;
+  }
+
+  getEmail(): string {
+    return this.email;
+  }
+
+  getPhone(): string {
+    return this.phone;
+  }
+
+  getSource(): string {
+    return this.source;
+  }
+
+  getNotes(): string | undefined {
+    return this.notes;
+  }
+
+  getAssignedTo(): number | undefined {
+    return this.assignedTo;
+  }
+
+  getCreatedBy(): number {
+    return this.createdBy;
   }
 }

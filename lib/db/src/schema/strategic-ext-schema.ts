@@ -1,6 +1,11 @@
+/**
+ * @module strategic-ext-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, numeric, date, serial } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, numeric, date, serial, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users, departments } from "./core-schema";
@@ -26,7 +31,7 @@ export const strategicCategories = pgTable("strategic_categories", {
 export const strategicTasks = pgTable("strategic_tasks", {
   id: serial("id").primaryKey(),
   taskNumber: integer("task_number").notNull(),
-  categoryId: varchar("category_id").references(() => strategicCategories.id),
+  categoryId: varchar("category_id").references(() => strategicCategories.id, { onDelete: "set null" }),
   title: text("title").notNull(),
   titleRu: text("title_ru"),
   description: text("description"),
@@ -35,8 +40,8 @@ export const strategicTasks = pgTable("strategic_tasks", {
   status: varchar("status", { length: 30 }).notNull().default("planned"),
   phase: varchar("phase", { length: 30 }),
   targetModule: varchar("target_module", { length: 50 }),
-  assignedDepartmentId: varchar("assigned_department_id").references(() => departments.id),
-  assignedUserId: varchar("assigned_user_id").references(() => users.id),
+  assignedDepartmentId: varchar("assigned_department_id").references(() => departments.id, { onDelete: "set null" }),
+  assignedUserId: varchar("assigned_user_id").references(() => users.id, { onDelete: "set null" }),
   startDate: varchar("start_date", { length: 10 }),
   targetDate: varchar("target_date", { length: 10 }),
   completedDate: varchar("completed_date", { length: 10 }),
@@ -54,18 +59,23 @@ export const strategicTasks = pgTable("strategic_tasks", {
   industryAdaptable: boolean("industry_adaptable").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("strategic_tasks_priority_chk", sql`${t.priority} IN ('low','medium','high','critical')`),
+  check("strategic_tasks_status_chk", sql`${t.status} IN ('planned','in_progress','testing','completed','on_hold','cancelled')`),
+]);
 
 export const strategicMilestones = pgTable("strategic_milestones", {
   id: serial("id").primaryKey(),
-  taskId: varchar("task_id").notNull().references(() => strategicTasks.id),
+  taskId: varchar("task_id").notNull().references(() => strategicTasks.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   titleRu: text("title_ru"),
   targetDate: varchar("target_date", { length: 10 }),
   completedDate: varchar("completed_date", { length: 10 }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("strategic_milestones_status_chk", sql`${t.status} IN ('pending','in_progress','completed','overdue')`),
+]);
 
 export const insertStrategicCategorySchema = createInsertSchema(strategicCategories, {
   name: z.string().min(1, "Kategoriya nomi kerak"),
@@ -123,7 +133,7 @@ export const companyFunctions = pgTable("company_functions", {
 
 export const functionKpis = pgTable("function_kpis", {
   id: serial("id").primaryKey(),
-  functionId: varchar("function_id").notNull().references(() => companyFunctions.id),
+  functionId: varchar("function_id").notNull().references(() => companyFunctions.id, { onDelete: "cascade" }),
   kpiName: varchar("kpi_name", { length: 200 }).notNull(),
   kpiNameRu: varchar("kpi_name_ru", { length: 200 }),
   description: text("description"),
@@ -159,8 +169,8 @@ export const raciTasks = pgTable("raci_tasks", {
 
 export const raciAssignments = pgTable("raci_assignments", {
   id: serial("id").primaryKey(),
-  taskId: varchar("task_id").notNull().references(() => raciTasks.id),
-  userId: integer("user_id").notNull().references(() => users.id),
+  taskId: varchar("task_id").notNull().references(() => raciTasks.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "restrict" }),
   role: varchar("role", { length: 20 }).notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -207,13 +217,13 @@ export const businessCrises = pgTable("business_crises", {
 export const companyHealthAssessment = pgTable("company_health_assessment", {
   id: serial("id").primaryKey(),
   assessmentDate: date("assessment_date").notNull(),
-  currentStageId: varchar("current_stage_id").references(() => businessStages.id),
+  currentStageId: varchar("current_stage_id").references(() => businessStages.id, { onDelete: "set null" }),
   employeeCount: integer("employee_count"),
   monthlyRevenue: numeric("monthly_revenue", { precision: 15, scale: 2 }),
   identifiedCrises: text("identified_crises").array(),
   aiRecommendations: jsonb("ai_recommendations"),
   overallHealthScore: integer("overall_health_score"),
-  assessedBy: varchar("assessed_by").references(() => users.id),
+  assessedBy: varchar("assessed_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -235,7 +245,7 @@ export type InsertCompanyHealthAssessment = z.infer<typeof insertCompanyHealthAs
 export const orgChartSettings = pgTable("org_chart_settings", {
   id: serial("id").primaryKey(),
   companyName: varchar("company_name", { length: 200 }),
-  ceoUserId: varchar("ceo_user_id").references(() => users.id),
+  ceoUserId: varchar("ceo_user_id").references(() => users.id, { onDelete: "set null" }),
   chartStyle: varchar("chart_style", { length: 50 }).default("hierarchical"),
   showPhotos: boolean("show_photos").default(true),
   showContactInfo: boolean("show_contact_info").default(false),
@@ -249,7 +259,7 @@ export const orgChartSnapshots = pgTable("org_chart_snapshots", {
   chartData: jsonb("chart_data").notNull(),
   employeeCount: integer("employee_count"),
   departmentCount: integer("department_count"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -269,8 +279,8 @@ export const okrObjectives = pgTable("okr_objectives", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   type: varchar("type", { length: 20 }).notNull().default("company"),
-  departmentId: integer("department_id").references(() => departments.id),
-  ownerId: integer("owner_id").references(() => users.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
+  ownerId: integer("owner_id").references(() => users.id, { onDelete: "set null" }),
   quarter: varchar("quarter", { length: 2 }),
   year: integer("year").notNull(),
   description: text("description"),
@@ -278,11 +288,14 @@ export const okrObjectives = pgTable("okr_objectives", {
   progressPercent: integer("progress_percent").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("okr_objectives_type_chk", sql`${t.type} IN ('company','department','individual')`),
+  check("okr_objectives_status_chk", sql`${t.status} IN ('active','completed','cancelled','on_hold')`),
+]);
 
 export const okrKeyResults = pgTable("okr_key_results", {
   id: serial("id").primaryKey(),
-  objectiveId: integer("objective_id").notNull().references(() => okrObjectives.id),
+  objectiveId: integer("objective_id").notNull().references(() => okrObjectives.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   targetValue: numeric("target_value", { precision: 12, scale: 2 }),
   currentValue: numeric("current_value", { precision: 12, scale: 2 }).default("0"),
@@ -292,7 +305,9 @@ export const okrKeyResults = pgTable("okr_key_results", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("okr_key_results_status_chk", sql`${t.status} IN ('on_track','at_risk','behind','completed')`),
+]);
 
 export const insertOkrObjectiveSchema = createInsertSchema(okrObjectives, {
   title: z.string().min(1, "Maqsad nomi kerak"),

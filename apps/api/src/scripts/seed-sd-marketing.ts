@@ -1,3 +1,8 @@
+/**
+ * @module seed-sd-marketing
+ * @description Source module. See exports for details.
+ */
+
 import 'dotenv/config';
 import { Pool } from 'pg';
 

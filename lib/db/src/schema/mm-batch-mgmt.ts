@@ -1,6 +1,11 @@
+/**
+ * @module mm-batch-mgmt
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -27,8 +32,8 @@ export const stockReservations = pgTable("stock_reservations", {
   id: serial("id").primaryKey(),
   reservationNumber: varchar("reservation_number", { length: 50 }).notNull().unique(),
   reservationDate: varchar("reservation_date", { length: 10 }).notNull(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
+  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   orderId: varchar("order_id"),
   orderType: varchar("order_type", { length: 30 }),
   quantity: numericMoney("quantity").notNull(),
@@ -39,8 +44,8 @@ export const stockReservations = pgTable("stock_reservations", {
   requiredDate: varchar("required_date", { length: 10 }),
   expiryDate: varchar("expiry_date", { length: 10 }),
   batchNumber: varchar("batch_number", { length: 50 }),
-  requestedBy: varchar("requested_by").references(() => users.id),
-  reservedBy: varchar("reserved_by").references(() => users.id),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "set null" }),
+  reservedBy: varchar("reserved_by").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   reservedAt: timestamp("reserved_at"),
@@ -51,6 +56,9 @@ export const stockReservations = pgTable("stock_reservations", {
   index("idx_stock_reservations_status").on(t.status),
   index("idx_stock_reservations_required_date").on(t.requiredDate),
   index("idx_stock_reservations_created_at").on(t.createdAt),
+  check("stock_reservations_status_chk", sql`${t.status} IN ('pending','reserved','partial','issued','cancelled')`),
+  check("stock_reservations_priority_chk", sql`${t.priority} IS NULL OR (${t.priority} >= 1 AND ${t.priority} <= 10)`),
+  check("stock_reservations_qty_chk", sql`${t.quantity} > 0`),
 ]);
 
 
@@ -85,18 +93,18 @@ export type MaterialCategory = typeof materialCategories.$inferSelect;
 export const materialKits = pgTable("material_kits", {
   id: serial("id").primaryKey(),
   kitNumber: varchar("kit_number", { length: 50 }).notNull().unique(), // ORD-156-KIT
-  orderId: varchar("order_id").references(() => papkaOrders.id).notNull(),
-  machineTaskId: varchar("machine_task_id").references(() => machineTasks.id),
-  equipmentId: varchar("equipment_id").references(() => equipment.id),
+  orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
+  machineTaskId: varchar("machine_task_id").references(() => machineTasks.id, { onDelete: "set null" }),
+  equipmentId: varchar("equipment_id").references(() => equipment.id, { onDelete: "set null" }),
   scheduledDate: varchar("scheduled_date", { length: 10 }).notNull(), // YYYY-MM-DD
   scheduledTime: varchar("scheduled_time", { length: 5 }), // HH:MM
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   // pending, prepared, delivered, confirmed, in_use, completed
-  preparedBy: varchar("prepared_by").references(() => users.id), // Omborchi
+  preparedBy: varchar("prepared_by").references(() => users.id, { onDelete: "set null" }), // Omborchi
   preparedAt: timestamp("prepared_at"),
-  deliveredBy: varchar("delivered_by").references(() => users.id), // Roklerchi
+  deliveredBy: varchar("delivered_by").references(() => users.id, { onDelete: "set null" }), // Roklerchi
   deliveredAt: timestamp("delivered_at"),
-  confirmedBy: varchar("confirmed_by").references(() => users.id), // Master
+  confirmedBy: varchar("confirmed_by").references(() => users.id, { onDelete: "set null" }), // Master
   confirmedAt: timestamp("confirmed_at"),
   barcode: text("barcode"), // To'plam shtrix kodi
   notes: text("notes"),
@@ -107,6 +115,7 @@ export const materialKits = pgTable("material_kits", {
   index("idx_material_kits_status").on(t.status),
   index("idx_material_kits_scheduled_date").on(t.scheduledDate),
   index("idx_material_kits_created_at").on(t.createdAt),
+  check("material_kits_status_chk", sql`${t.status} IN ('pending','prepared','delivered','confirmed','in_use','completed')`),
 ]);
 
 
@@ -120,10 +129,10 @@ export type InsertMaterialKit = z.infer<typeof insertMaterialKitSchema>;
 // Material Kit Items (To'plam ichidagi materiallar)
 export const materialKitItems = pgTable("material_kit_items", {
   id: serial("id").primaryKey(),
-  kitId: varchar("kit_id").references(() => materialKits.id).notNull(),
-  materialId: varchar("material_id").references(() => rawMaterials.id),
+  kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "cascade" }).notNull(),
+  materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
   materialName: text("material_name").notNull(), // Fallback if material deleted
-  categoryId: varchar("category_id").references(() => materialCategories.id),
+  categoryId: varchar("category_id").references(() => materialCategories.id, { onDelete: "set null" }),
   requiredQuantity: numericMoney("required_quantity").notNull(),
   issuedQuantity: numericMoney("issued_quantity").default(0),
   returnedQuantity: numericMoney("returned_quantity").default(0),
@@ -132,7 +141,7 @@ export const materialKitItems = pgTable("material_kit_items", {
   itemBarcode: text("item_barcode"), // Individual item barcode
   isScanned: boolean("is_scanned").default(false), // Master skanerladimi
   scannedAt: timestamp("scanned_at"),
-  scannedBy: varchar("scanned_by").references(() => users.id),
+  scannedBy: varchar("scanned_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_material_kit_items_kit_id").on(t.kitId),
@@ -151,10 +160,10 @@ export type InsertMaterialKitItem = z.infer<typeof insertMaterialKitItemSchema>;
 // Material Movements - Ishlab chiqarish paytida real-time material harakatlari
 export const materialMovements = pgTable("material_movements", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id).notNull(),
-  orderId: varchar("order_id").references(() => papkaOrders.id),
-  kitId: varchar("kit_id").references(() => materialKits.id),
-  materialId: varchar("material_id").references(() => rawMaterials.id),
+  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
+  kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
+  materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
   materialName: text("material_name").notNull(),
   // Harakat turi
   movementType: varchar("movement_type", { length: 20 }).notNull(),
@@ -166,8 +175,8 @@ export const materialMovements = pgTable("material_movements", {
   barcode: text("barcode"),
   scannedAt: timestamp("scanned_at"),
   // Kim, qayerda
-  performedBy: varchar("performed_by").references(() => users.id).notNull(),
-  equipmentId: varchar("equipment_id").references(() => equipment.id),
+  performedBy: varchar("performed_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
+  equipmentId: varchar("equipment_id").references(() => equipment.id, { onDelete: "set null" }),
   // Izoh
   reason: text("reason"), // Qo'shimcha olish/qaytarish sababi
   notes: text("notes"),
@@ -196,8 +205,8 @@ export type InsertMaterialMovement = z.infer<typeof insertMaterialMovementSchema
 // Material Inventory Valuations (Material inventar baholash)
 export const materialInventoryValuations = pgTable("material_inventory_valuations", {
   id: serial("id").primaryKey(),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
-  materialId: varchar("material_id").references(() => rawMaterials.id),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
+  materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
   valuationDate: varchar("valuation_date", { length: 10 }).notNull(), // YYYY-MM-DD
   valuationMethod: varchar("valuation_method", { length: 20 }).notNull().default("weighted_avg"), // fifo, lifo, weighted_avg
   quantity: numericMoney("quantity").notNull(),
@@ -208,7 +217,7 @@ export const materialInventoryValuations = pgTable("material_inventory_valuation
   variance: numericMoney("variance"), // Farq
   variancePercent: numericMoney("variance_percent"),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_material_inventory_valuations_warehouse_id").on(t.warehouseId),

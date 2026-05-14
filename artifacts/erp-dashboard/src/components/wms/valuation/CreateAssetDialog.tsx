@@ -1,3 +1,8 @@
+/**
+ * @module CreateAssetDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,15 +30,15 @@ export function CreateAssetDialog({
 }: CreateAssetDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle>Yangi Aktiv Qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Yangi Aktiv Qo'shish</DialogTitle>
           <DialogDescription>
             Asosiy vositalar ro'yxatiga yangi aktiv ma'lumotlarini kiriting
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Aktiv kodi *</Label>
               <Input
@@ -49,7 +54,7 @@ export function CreateAssetDialog({
                 value={form.assetType} 
                 onValueChange={(value) => setForm({ ...form, assetType: value })}
               >
-                <SelectTrigger data-testid="select-asset-type">
+                <SelectTrigger data-testid="select-asset-type" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -71,7 +76,7 @@ export function CreateAssetDialog({
               data-testid="input-asset-name"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Xarid sanasi</Label>
               <Input
@@ -91,7 +96,7 @@ export function CreateAssetDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Xarid qiymati (UZS) *</Label>
               <Input
@@ -111,7 +116,7 @@ export function CreateAssetDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Foydali xizmat muddati (yil)</Label>
               <Input
@@ -131,14 +136,14 @@ export function CreateAssetDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Holati</Label>
               <Select 
                 value={form.condition} 
                 onValueChange={(value) => setForm({ ...form, condition: value })}
               >
-                <SelectTrigger data-testid="select-asset-condition">
+                <SelectTrigger data-testid="select-asset-condition" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

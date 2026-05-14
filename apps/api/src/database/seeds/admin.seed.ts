@@ -1,9 +1,18 @@
+/**
+ * @module admin.seed
+ * @description Database seeder. Runs idempotent fixture inserts.
+ */
+
 import 'dotenv/config';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD ?? 'Admin123!';
+const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  throw new Error("ADMIN_SEED_PASSWORD muhit o'zgaruvchisi o'rnatilmagan.\n" +
+    "Ishga tushirish: ADMIN_SEED_PASSWORD='...' pnpm --filter @europrint/api run seed");
+}
 const ADMIN_ROLE = 'super_admin';
 const ADMIN_EMAIL = 'admin@europrint.uz';
 const BCRYPT_ROUNDS = 12;

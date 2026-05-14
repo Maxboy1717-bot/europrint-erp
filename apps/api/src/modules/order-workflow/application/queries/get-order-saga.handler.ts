@@ -1,3 +1,8 @@
+/**
+ * @module get-order-saga.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
@@ -109,19 +114,19 @@ export class GetOrderSagaHandler implements IQueryHandler<GetOrderSagaQuery> {
 
   private calcMoldPct(rows: Array<{ status: string }>): number {
     if (!rows.length) return 0;
-    const done = (rows ?? []).filter((r) => r.status === MOLD_DONE_STATUS).length;
+    const done = (Array.isArray(rows) ? rows : []).filter((r) => r.status === MOLD_DONE_STATUS).length;
     return Math.round((done / rows.length) * FULL_PCT);
   }
 
   private calcClichePct(rows: Array<{ arrivedAt: Date | null }>): number {
     if (!rows.length) return 0;
-    const done = (rows ?? []).filter((r) => r.arrivedAt !== null).length;
+    const done = (Array.isArray(rows) ? rows : []).filter((r) => r.arrivedAt !== null).length;
     return Math.round((done / rows.length) * FULL_PCT);
   }
 
   private calcMatPct(rows: Array<{ status: string }>): number {
     if (!rows.length) return 0;
-    const done = (rows ?? []).filter((r) => r.status === MAT_DONE_STATUS).length;
+    const done = (Array.isArray(rows) ? rows : []).filter((r) => r.status === MAT_DONE_STATUS).length;
     return Math.round((done / rows.length) * FULL_PCT);
   }
 }

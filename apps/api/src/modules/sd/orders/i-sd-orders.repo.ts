@@ -1,3 +1,8 @@
+/**
+ * @module i-sd-orders.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { salesOrders } from '@europrint/schemas';
 import { Result } from '@common/result';
 

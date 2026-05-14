@@ -1,3 +1,8 @@
+/**
+ * @module LeadKanbanColumn
+ * @description React UI component.
+ */
+
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,

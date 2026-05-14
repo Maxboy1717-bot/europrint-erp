@@ -1,3 +1,8 @@
+/**
+ * @module erp.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { ErpRepository } from './erp.repository';
@@ -57,4 +62,14 @@ export class ErpService {
   async updateRoutingOperation(id: number, body: Record<string, unknown>) {
     return this.repo.updateRoutingOperation(id, body);
   }
+
+  async createProduct(body: Record<string, unknown>) { return this.repo.createProduct(body); }
+  async deleteProduct(id: number) { return this.repo.deleteProduct(id); }
+  async createBomHeader(body: Record<string, unknown>) { return this.repo.createBomHeader(body); }
+  async deleteBomHeader(id: number) { return this.repo.deleteBomHeader(id); }
+  async deleteBomItem(id: number) { return this.repo.deleteBomItem(id); }
+  async createRouting(body: Record<string, unknown>) { return this.repo.createRouting(body); }
+  async deleteRouting(id: number) { return this.repo.deleteRouting(id); }
+  async createRoutingOperation(body: Record<string, unknown>) { return this.repo.createRoutingOperation(body); }
+  async deleteRoutingOperation(id: number) { return this.repo.deleteRoutingOperation(id); }
 }

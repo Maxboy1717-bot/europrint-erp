@@ -1,3 +1,8 @@
+/**
+ * @module hr.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common'

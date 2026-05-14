@@ -1,3 +1,8 @@
+/**
+ * @module request-design.command
+ * @description Source module. See exports for details.
+ */
+
 export class RequestDesignCommand {
   constructor(readonly salesOrderId: number,
     readonly productId: number,

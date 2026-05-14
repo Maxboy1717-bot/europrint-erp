@@ -1,4 +1,9 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+/**
+ * @module hr-compat-safety.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -126,5 +131,18 @@ export class HrCompatSafetyController {
   async generateMilestones(@Query('employeeId') employeeId?: string) {
     const data = await this.svc.getAdaptationMilestones(employeeId);
     return { data };
+  }
+
+  @Post('milestones/generate')
+  async postGenerateMilestones(@Body() body: Record<string, unknown>) {
+    const data = await this.svc.getAdaptationMilestones(body['employeeId'] ? String(body['employeeId']) : undefined);
+    return { data };
+  }
+
+  @Put('brand-settings')
+  @UsePipes(new ZodValidationPipe(HrBrandSettingsSchema))
+  async putBrandSettings(@Body() body: HrBrandSettingsDto) {
+    await this.svc.updateBrandSettings(body);
+    return { data: { updated: true } };
   }
 }

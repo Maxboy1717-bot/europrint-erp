@@ -3,6 +3,7 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { AI_MAX_TOKENS_STANDARD } from '@common/constants/app.constants';
+import { SAFETY_STOCK_FACTOR } from '@common/constants/business.constants';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
 import { AiRouterService } from '../application/services/ai-router.service';
 
@@ -51,7 +52,7 @@ export class WmsAiService {
   ): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       this.logger.log(`WMS AI: qayta buyurtma nuqtasi hisoblanmoqda: item="${itemName}"`);
-      const safetyStock = Math.ceil(avgDailyUsage * leadTimeDays * 0.5);
+      const safetyStock = Math.ceil(avgDailyUsage * leadTimeDays * SAFETY_STOCK_FACTOR);
       const reorderPoint = Math.ceil(avgDailyUsage * leadTimeDays + safetyStock);
       const daysUntilStockout = avgDailyUsage > 0 ? Math.floor(currentStock / avgDailyUsage) : 999;
       const mathFallback: ReorderPointResult = {

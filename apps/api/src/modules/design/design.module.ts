@@ -1,3 +1,8 @@
+/**
+ * @module design.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RequestDesignHandler } from './application/commands/request-design.handler';

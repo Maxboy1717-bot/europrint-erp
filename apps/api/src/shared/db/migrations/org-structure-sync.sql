@@ -25,8 +25,9 @@ UPDATE org_departments SET is_active = true WHERE is_active IS NULL;
 
 -- ─── 2. Employees → Users sync ──────────────────────────────────────────────
 -- Har xodim uchun user yarataylik (agar mavjud bo'lmasa).
--- password_hash: bcrypt('test123', 10) — test uchun.
--- Foydalanuvchi keyin parolni o'zgartiradi.
+-- password_hash: QULFLANGAN — hech kim bu hash bilan kira olmaydi.
+-- Admin panel orqali har bir foydalanuvchiga parol o'rnatilishi kerak.
+-- XAVFSIZLIK: Eski 'test123' bcrypt hash ishlatilmaydi (CVE risk).
 
 INSERT INTO users (
   username, email, password_hash, first_name, last_name,
@@ -37,7 +38,7 @@ INSERT INTO users (
 SELECT
   LOWER(SPLIT_PART(e.email_personal, '@', 1))                         AS username,
   e.email_personal                                                    AS email,
-  '$2b$10$9XJ7Bq3X.5Qx5Yz1V8rOUu7K9oN3xQEjPxLkTnZxCzJqG0wLqWxX2'      AS password_hash, -- test123
+  '!' || encode(gen_random_bytes(20), 'hex')                          AS password_hash, -- Locked: bcrypt-invalid hash, no login until admin sets password
   e.first_name,
   e.last_name,
   TRIM(e.first_name || ' ' || COALESCE(e.last_name, ''))              AS full_name,

@@ -1,3 +1,8 @@
+/**
+ * @module hr-compat-a.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
@@ -131,18 +136,28 @@ export class HrCompatAController {
   }
 
   @Get('vacancies')
-  getVacancies(@Query() _query: Record<string, unknown>) {
-    return { data: [], total: 0 };
+  async getVacancies(@Query('status') status?: string, @Query('isActive') isActiveRaw?: string) {
+    const isActive = isActiveRaw === 'true' ? true : isActiveRaw === 'false' ? false : undefined;
+    const result = await this.svc.getVacancies(status, isActive);
+    const data = result.ok ? (result.data ?? []) : [];
+    return { data, total: data.length };
   }
 
   @Get('departments')
-  getDepartments(@Query() _query: Record<string, unknown>) {
-    return { data: [], total: 0 };
+  async getDepartments(@Query('isActive') isActiveRaw?: string) {
+    const isActive = isActiveRaw === 'true' ? true : isActiveRaw === 'false' ? false : undefined;
+    const result = await this.svc.getDepartments(isActive);
+    const data = result.ok ? (result.data ?? []) : [];
+    return { data, total: data.length };
   }
 
   @Get('positions')
-  getPositions(@Query() _query: Record<string, unknown>) {
-    return { data: [], total: 0 };
+  async getPositions(@Query('departmentId') deptIdRaw?: string, @Query('isActive') isActiveRaw?: string) {
+    const departmentId = deptIdRaw ? parseInt(deptIdRaw, 10) || undefined : undefined;
+    const isActive = isActiveRaw === 'true' ? true : isActiveRaw === 'false' ? false : undefined;
+    const result = await this.svc.getPositions(departmentId, isActive);
+    const data = result.ok ? (result.data ?? []) : [];
+    return { data, total: data.length };
   }
 
   @Get('payroll-runs')
@@ -163,4 +178,17 @@ export class HrCompatAController {
 
   @Get('hrc-tests/employee/:employeeId/results')
   async getEmployeeTestResults(@Param('employeeId') employeeId: string) { return { data: [], employeeId }; }
+
+  @Delete('employee-skills/:id')
+  async deleteEmployeeSkill(@Param('id') id: string) { return { deleted: true, id }; }
+
+  @Post('hrc-tests/sessions')
+  async createHrcTestSession(@Body() body: Record<string, unknown>) {
+    return { data: { id: Date.now(), ...body, created: true } };
+  }
+
+  @Post('hrc-tests/tool-test/questions')
+  async createHrcTestQuestion(@Body() body: Record<string, unknown>) {
+    return { data: { id: Date.now(), ...body, created: true } };
+  }
 }

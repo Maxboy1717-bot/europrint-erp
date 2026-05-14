@@ -1,3 +1,8 @@
+/**
+ * @module toaster
+ * @description Source module. See exports for details.
+ */
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,

@@ -1,3 +1,8 @@
+/**
+ * @module EditPersonalInfoDialog
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,8 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
 interface EmployeePersonalInfo {
   age?: number | string;
   gender?: string;
@@ -86,18 +92,18 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>Shaxsiy ma'lumotlarni tahrirlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Shaxsiy ma'lumotlarni tahrirlash</DialogTitle>
           <DialogDescription>
             ABC analiz uchun xodimning shaxsiy ma'lumotlarini yangilang
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="age">Yoshi</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="age">Yoshi</Label>
               <Input
                 id="age"
                 type="number"
@@ -109,10 +115,10 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="gender">Jinsi</Label>
+            <div className="space-y-1">
+          <Label htmlFor="gender">Jinsi</Label>
               <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                <SelectTrigger data-testid="select-gender">
+                <SelectTrigger data-testid="select-gender" className="h-9">
                   <SelectValue placeholder="Tanlang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,11 +129,11 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="maritalStatus">Oilaviy holat</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="maritalStatus">Oilaviy holat</Label>
               <Select value={formData.maritalStatus} onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}>
-                <SelectTrigger data-testid="select-marital-status">
+                <SelectTrigger data-testid="select-marital-status" className="h-9">
                   <SelectValue placeholder="Tanlang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -140,8 +146,8 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="childrenCount">Farzandlar soni</Label>
+            <div className="space-y-1">
+          <Label htmlFor="childrenCount">Farzandlar soni</Label>
               <Input
                 id="childrenCount"
                 type="number"
@@ -154,10 +160,10 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="childrenEducation">Farzandlarning ta'lim holati</Label>
+          <div className="space-y-1">
+          <Label htmlFor="childrenEducation">Farzandlarning ta'lim holati</Label>
             <Select value={formData.childrenEducation} onValueChange={(value) => setFormData({ ...formData, childrenEducation: value })}>
-              <SelectTrigger data-testid="select-children-education">
+              <SelectTrigger data-testid="select-children-education" className="h-9">
                 <SelectValue placeholder="Tanlang" />
               </SelectTrigger>
               <SelectContent>
@@ -173,11 +179,11 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
           <div className="border-t pt-4 mt-4">
             <h3 className="text-sm font-semibold mb-4">Uy-joy sharoiti</h3>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="housingType">Uy turi</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+          <Label htmlFor="housingType">Uy turi</Label>
                 <Select value={formData.housingType} onValueChange={(value) => setFormData({ ...formData, housingType: value })}>
-                  <SelectTrigger data-testid="select-housing-type">
+                  <SelectTrigger data-testid="select-housing-type" className="h-9">
                     <SelectValue placeholder="Tanlang" />
                   </SelectTrigger>
                   <SelectContent>
@@ -187,8 +193,8 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="householdSize">Oilada necha kishi yashaydi</Label>
+              <div className="space-y-1">
+          <Label htmlFor="householdSize">Oilada necha kishi yashaydi</Label>
                 <Input
                   id="householdSize"
                   type="number"
@@ -233,7 +239,7 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
             >
               {updateMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <EPLoader className="mr-2" />
                   Saqlanmoqda...
                 </>
               ) : (

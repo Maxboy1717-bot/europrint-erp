@@ -1,3 +1,8 @@
+/**
+ * @module apiBase
+ * @description Frontend utility / library module.
+ */
+
 export function getApiBase(): string {
   return "/api";
 }

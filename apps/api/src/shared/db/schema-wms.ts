@@ -1,3 +1,8 @@
+/**
+ * @module schema-wms
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable,
   uuid,

@@ -1,3 +1,8 @@
+/**
+ * @module deal-won.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { DealWonEvent } from '../../domain/events/deal-won.event';

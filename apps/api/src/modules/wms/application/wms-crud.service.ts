@@ -1,3 +1,8 @@
+/**
+ * @module wms-crud.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Result } from '@common/result';
 import { WmsCrudRepository } from './wms-crud.repository';
@@ -43,5 +48,9 @@ export class WmsCrudService {
   }
   softDeleteWarehouse(id: string | number, userId: number | null): Promise<Result<Row>> {
     return this.repo.softDeleteWarehouse(id, userId);
+  }
+
+  getStockById(id: number): Promise<Result<Row | null>> {
+    return this.repo.getStockById(id);
   }
 }

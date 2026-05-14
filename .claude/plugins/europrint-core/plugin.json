@@ -1,0 +1,63 @@
+{
+  "name": "europrint-core",
+  "version": "1.0.0",
+  "description": "EuroPrint ERP — asosiy agent to'plami (5-qatlamli ADK)",
+  "author": "EuroPrint IT",
+  "license": "Proprietary",
+  "engines": {
+    "claude-code": ">=1.0.0"
+  },
+  "layers": {
+    "memory": {
+      "global": "~/.claude/CLAUDE.md",
+      "project": ".claude/../CLAUDE.md",
+      "description": "Loyiha konstitutsiyasi va global qoidalar (21KB hujjat — joriy)"
+    },
+    "skills": {
+      "path": ".claude/skills/",
+      "items": [
+        { "name": "production",     "description": "PP/MES — buyurtma, BOM, sex, OEE" },
+        { "name": "warehouse",      "description": "WMS/MM — material, rulo, FIFO, ABC" },
+        { "name": "hr",             "description": "Xodim, davomad, payroll, KPI, rekruting" },
+        { "name": "finance",        "description": "GL, AR/AP, payroll, byudjet, cashflow" },
+        { "name": "quality",        "description": "QC, SPC, FMEA, sertifikat" },
+        { "name": "ai-integration", "description": "Claude/GPT, agents, CFO bot, director AI" }
+      ]
+    },
+    "agents": {
+      "path": ".claude/agents/",
+      "items": [
+        { "name": "code-reviewer", "description": "Kod sifati tahlili (read-only, JSON output)" },
+        { "name": "db-analyst",    "description": "Drizzle/migration tahlili, N+1, missing index" },
+        { "name": "feature-dev",   "description": "Schema → repo → service → controller → frontend → test" },
+        { "name": "bug-hunter",    "description": "Stack trace tahlili, root cause, yechim" }
+      ]
+    },
+    "hooks": {
+      "path": ".claude/hooks/",
+      "wired_in": ".claude/settings.local.json",
+      "items": [
+        { "name": "PreToolUse",    "trigger": "Bash|Edit|Write|MultiEdit", "purpose": "DROP TABLE / force-push / rm -rf blok; .env audit" },
+        { "name": "PostToolUse",   "trigger": "Bash|Edit|Write|MultiEdit", "purpose": "audit log; schema o'zgarishi eslatma; 300-line warning" },
+        { "name": "SessionStart",  "trigger": "session start",            "purpose": "branch / commit / reviewer report holatini ko'rsatadi" }
+      ]
+    },
+    "architecture_rules": {
+      "path": "ARCHITECTURE_RULES.md",
+      "aggregator": "scripts/run-all-reviewers.sh",
+      "count": 22,
+      "current_status": "18 PASS / 4 FAIL (Rules 4, 9, 16, 17)"
+    }
+  },
+  "ci_integration": {
+    "merge_gate": "bash scripts/run-all-reviewers.sh && exit 0",
+    "test_suite": "npx jest --config apps/api/test/jest.config.js",
+    "typecheck": "npx tsc --noEmit -p apps/api/tsconfig.json"
+  },
+  "tech_stack": {
+    "backend": "NestJS 11 + Fastify + Drizzle ORM + PostgreSQL",
+    "frontend": "React 19 + Vite + TanStack Query v5 + shadcn/ui",
+    "monorepo": "pnpm workspaces",
+    "languages": ["uz", "ru"]
+  }
+}

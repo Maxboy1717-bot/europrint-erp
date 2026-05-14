@@ -1,3 +1,8 @@
+/**
+ * @module telegram-bots-cron.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -8,7 +13,6 @@ import { NotificationBotService } from './notification-bot.service';
 import { TelegramBotsRepository } from './telegram-bots.repository';
 import { AttendanceBotService } from './attendance-bot.service';
 import { LearningBotService } from './learning-bot.service';
-import { BoomerangEmbeddingService } from './boomerang-embedding.service';
 import { NOTIFICATION_TEMPLATES, renderTemplate } from './notification-templates';
 
 interface IncidentPayload {
@@ -18,17 +22,6 @@ interface IncidentPayload {
   description?: string;
   responsiblePerson?: string;
   incidentTime?: string;
-}
-
-interface VacancyPublishedPayload {
-  vacancyId: number;
-  title: string;
-  department?: string;
-  salaryMin?: number;
-  salaryMax?: number;
-  url?: string;
-  requiredSkills?: string;
-  tags?: string;
 }
 
 @Injectable()
@@ -41,7 +34,6 @@ export class TelegramBotsCronService {
     private readonly cfg: ConfigService,
     private readonly attendanceBot: AttendanceBotService,
     private readonly learningBot: LearningBotService,
-    private readonly boomerangEmbedding: BoomerangEmbeddingService,
   ) {}
 
   @Cron('30 7 * * *')
@@ -146,34 +138,6 @@ export class TelegramBotsCronService {
         await this.attendanceBot.sendMorningCheckQuery(emp.telegram_chat_id as string);
       }
       if (unrecognized.length > 0) this.logger.log(`Morning attendance check sent to ${unrecognized.length} employees`);
-    });
-  }
-
-  @Cron('0 9 * * *')
-  async sendMandatoryCourseDeadlineReminders(): Promise<Result<void, AppError>> {
-    return safeCall(async () => {
-      const coursesR = await this.repo.getCoursesDeadlineIn3Days();
-      const courses = coursesR.ok ? coursesR.data : [];
-      for (const c of courses) {
-        if (!c.employee_id) continue;
-        const daysLeft = Number(c.days_left ?? 3);
-        const url = String(c.course_url ?? 'https://erp.europrint.uz');
-        const deadline = String(c.deadline ?? '');
-        const progress = String(c.progress ?? 0);
-        await this.notificationBot.sendNotification({
-          userId: c.employee_id as number,
-          templateKey: 'TRAINING_DEADLINE',
-          params: {
-            name: String(c.first_name ?? '') + (c.last_name ? ` ${String(c.last_name)}` : ''),
-            course_title: String(c.course_title ?? ''),
-            days_left: String(daysLeft),
-            deadline,
-            progress,
-            url,
-          },
-        });
-      }
-      if (courses.length > 0) this.logger.log(`Course deadline reminders sent: ${courses.length}`);
     });
   }
 
@@ -350,84 +314,6 @@ export class TelegramBotsCronService {
     }
   }
 
-  private buildVacancyKeywords(payload: VacancyPublishedPayload): string[] {
-    const raw = [
-      payload.title,
-      payload.department ?? '',
-      payload.requiredSkills ?? '',
-      payload.tags ?? '',
-    ].join(' ').toLowerCase();
-    return raw.split(/[\s,;/|]+/).map(k => k.trim()).filter(k => k.length >= 3);
-  }
-
-  private candidateMatchesVacancy(candidate: Record<string, unknown>, vacancyKeywords: string[]): boolean {
-    if (!vacancyKeywords.length) return true;
-    const candidateText = [
-      String(candidate['position_hint'] ?? ''),
-      String(candidate['department_hint'] ?? ''),
-      String(candidate['skills_hint'] ?? ''),
-    ].join(' ').toLowerCase();
-
-    const departmentMatch = (candidate['department_hint'] as string ?? '').toLowerCase() !== '' &&
-      (candidate['department_hint'] as string).toLowerCase() ===
-        (vacancyKeywords.find(k => k.length > 3) ?? '');
-
-    const keywordMatches = vacancyKeywords.filter(k => candidateText.includes(k)).length;
-    return departmentMatch || keywordMatches >= Math.max(1, Math.floor(vacancyKeywords.length * 0.25));
-  }
-
-  @OnEvent('vacancy.published')
-  async onVacancyPublished(payload: VacancyPublishedPayload): Promise<void> {
-    try {
-      const twoYearsAgo = new Date();
-      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-      const candidatesR = await this.repo.getBoomerangCandidates(twoYearsAgo.toISOString());
-      const allCandidates = candidatesR.ok ? candidatesR.data : [];
-
-      const ranked = await this.boomerangEmbedding.rankCandidates(allCandidates, {
-        title: payload.title,
-        department: payload.department,
-        requiredSkills: payload.requiredSkills,
-        tags: payload.tags,
-      });
-
-      const keywords = this.buildVacancyKeywords(payload);
-      const matchedCandidates = ranked.length > 0
-        ? ranked.map(r => r.candidate)
-        : allCandidates.filter(c => this.candidateMatchesVacancy(c, keywords));
-
-      const salary = payload.salaryMin && payload.salaryMax
-        ? `${payload.salaryMin.toLocaleString()} – ${payload.salaryMax.toLocaleString()} so'm`
-        : 'Kelishiladi';
-      const vacancyUrl = payload.url ?? `https://erp.europrint.uz/vacancies/${payload.vacancyId}`;
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('uz');
-
-      let sent = 0;
-      for (const candidate of matchedCandidates) {
-        const message = renderTemplate(NOTIFICATION_TEMPLATES.BOOMERANG_OFFER.template_uz, {
-          name: String(candidate['name'] ?? 'Hurmatli nomzod'),
-          vacancy_title: payload.title,
-          department: payload.department ?? '',
-          salary,
-          url: vacancyUrl,
-          expires_at: expiresAt,
-        });
-        if (candidate['telegram_chat_id']) {
-          await this.notificationBot.sendNotificationRaw(candidate['telegram_chat_id'] as string, message);
-          sent++;
-        }
-        if (candidate['phone']) {
-          await this.sendSms(candidate['phone'] as string, this.stripHtml(message));
-        }
-      }
-      this.logger.log(
-        `Boomerang offers: ${sent}/${allCandidates.length} embedding-ranked candidates notified for vacancy #${payload.vacancyId}`,
-      );
-    } catch (err) {
-      this.logger.warn(`onVacancyPublished (boomerang) error: ${errMsg(err)}`);
-    }
-  }
-
   private async sendSms(phone: string, message: string): Promise<void> {
     const smsApiUrl = this.cfg.get<string>('SMS_API_URL');
     const smsApiKey = this.cfg.get<string>('SMS_API_KEY');
@@ -451,5 +337,38 @@ export class TelegramBotsCronService {
 
   private stripHtml(html: string): string {
     return html.replace(/<[^>]*>/g, '');
+  }
+
+  // ── Manager: daily report summary (20:30 each work day) ─────────────────
+  @Cron('30 20 * * 1-6')
+  async sendManagerDailySummary(): Promise<void> {
+    try {
+      const managersR = await this.repo.getActiveEmployeesWithChatId();
+      if (!managersR.ok) return;
+      const allActive = managersR.data as { id: number; telegram_chat_id: string }[];
+
+      for (const mgr of allActive) {
+        const managerR = await this.repo.getManagerByChatId(Number(mgr.telegram_chat_id));
+        if (!managerR.ok || !managerR.data) continue;
+        const manager = managerR.data;
+        if (!manager['department_id']) continue;
+
+        const summaryR = await this.repo.getDailyReportStatusForManager(mgr.id);
+        if (!summaryR.ok) continue;
+        const s = summaryR.data as { total: number; submitted: number; missing: number };
+        if (Number(s.missing) === 0) continue;
+
+        const message = renderTemplate(NOTIFICATION_TEMPLATES.MANAGER_DAILY_SUMMARY.template_uz, {
+          department: String(manager['department_name'] ?? 'Bo\'lim'),
+          total:      String(s.total     ?? 0),
+          submitted:  String(s.submitted ?? 0),
+          missing:    String(s.missing   ?? 0),
+          url: 'https://erp.europrint.uz/daily-reports',
+        });
+        await this.notificationBot.sendNotificationRaw(mgr.telegram_chat_id, message);
+      }
+    } catch (err) {
+      this.logger.warn(`sendManagerDailySummary error: ${errMsg(err)}`);
+    }
   }
 }

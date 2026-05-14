@@ -1,3 +1,8 @@
+/**
+ * @module ProductionStats
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Factory, CheckCircle, Clock, Package } from "lucide-react";
@@ -20,7 +25,7 @@ export function ProductionStats({ data, isLoading }: ProductionStatsProps) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full rounded-lg" />
           ) : (
             <div>
               <div className="text-2xl font-bold">{data?.orderStats?.totalOrders || 0}</div>
@@ -38,10 +43,10 @@ export function ProductionStats({ data, isLoading }: ProductionStatsProps) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full rounded-lg" />
           ) : (
             <div>
-              <div className="text-2xl font-bold text-green-600">{formatPercent(data?.efficiencyMetrics?.qualityRate)}</div>
+              <div className="text-2xl font-bold text-[var(--ep-green)]">{formatPercent(data?.efficiencyMetrics?.qualityRate)}</div>
               <p className="text-xs text-muted-foreground mt-1">Yaroqli mahsulot ulushi</p>
             </div>
           )}
@@ -56,10 +61,10 @@ export function ProductionStats({ data, isLoading }: ProductionStatsProps) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full rounded-lg" />
           ) : (
             <div>
-              <div className="text-2xl font-bold text-blue-600">{formatPercent(data?.orderStats?.onTimeDeliveryRate)}</div>
+              <div className="text-2xl font-bold text-[var(--ep-blue)]">{formatPercent(data?.orderStats?.onTimeDeliveryRate)}</div>
               <p className="text-xs text-muted-foreground mt-1">O'z vaqtida yetkazish (OTD)</p>
             </div>
           )}
@@ -74,10 +79,10 @@ export function ProductionStats({ data, isLoading }: ProductionStatsProps) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full rounded-lg" />
           ) : (
             <div>
-              <div className="text-2xl font-bold text-purple-600">{formatPercent(data?.efficiencyMetrics?.overallEquipmentEfficiency)}</div>
+              <div className="text-2xl font-bold text-[var(--ep-purple)]">{formatPercent(data?.efficiencyMetrics?.overallEquipmentEfficiency)}</div>
               <p className="text-xs text-muted-foreground mt-1">Umumiy samaradorlik</p>
             </div>
           )}

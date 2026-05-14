@@ -1,3 +1,8 @@
+/**
+ * @module AIShiftManagementPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -5,6 +10,7 @@ import { DedicatedPageShell, KpiCard, Section } from "@/components/DedicatedPage
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Users, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
 interface ShiftRecommendation {
   shiftId: number;
@@ -46,7 +52,7 @@ export default function AIShiftManagementPage() {
 
       <Section title={t('shiftMgmt.recommendations', "AI tavsiyalari")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}</div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('shiftMgmt.empty', "Tavsiyalar yo'q")}</p>
         ) : (
@@ -64,10 +70,10 @@ export default function AIShiftManagementPage() {
                 </p>
                 <p className="text-xs italic">{r.aiReasoning}</p>
                 {r.conflictsCount > 0 ? (
-                  <Badge variant="destructive" className="mt-2 text-xs">
+                  <EPStatusPill tone="danger" className="mt-2 text-xs">
                     {r.conflictsCount} ta konflikt
-                  </Badge>
-                ) : <CheckCircle2 className="h-3 w-3 inline-block text-emerald-600 mt-2" />}
+                  </EPStatusPill>
+                ) : <CheckCircle2 className="h-3 w-3 inline-block text-[var(--ep-green)] mt-2" />}
               </div>
             ))}
           </div>

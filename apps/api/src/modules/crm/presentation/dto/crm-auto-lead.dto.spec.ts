@@ -1,3 +1,8 @@
+/**
+ * @module crm-auto-lead.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import {
   IngestCallLeadDtoSchema,
   IngestFormLeadDtoSchema,

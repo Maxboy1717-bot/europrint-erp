@@ -1,3 +1,8 @@
+/**
+ * @module document-workflow.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { errMsg } from "../hr-v2-error";
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -133,6 +138,10 @@ export class DocumentWorkflowService {
       documentId,
     });
     this.logger.log(`Dalolatnoma #${documentId} tasdiqlandi — xodim #${employeeId} blokdan chiqarildi`);
+  }
+
+  async getDocumentById(documentId: number) {
+    return this.repo.findDocument(documentId);
   }
 
   async getDocumentsByEmployee(employeeId: number) {

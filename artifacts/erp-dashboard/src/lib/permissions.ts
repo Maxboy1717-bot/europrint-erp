@@ -1,3 +1,47 @@
+/**
+ * @module permissions
+ * @description Frontend RBAC — the source of truth for "which UI feature
+ *   does this role see?" Every gated action (a button, route, dropdown
+ *   item) consults a `Permission` here. Each role gets a static permission
+ *   list, and the `hasPermission(user, perm)` helper does the lookup.
+ *
+ *   The matching backend permission check is authoritative — this file
+ *   exists only to **hide UI elements** the user can't use, so they don't
+ *   click into 403 errors. Never rely on this for security.
+ * @layer Frontend utility (RBAC mapping)
+ *
+ * WHY PERMISSIONS ARE NAMED `domain:action` STRINGS
+ *   Three-part role/resource models (e.g. "can_edit_invoice_in_finance")
+ *   explode combinatorially. The `domain:action` convention scales linearly
+ *   with the number of domains and keeps the union type small enough to
+ *   audit. New permissions go here first, then are referenced from
+ *   components — TypeScript catches typos at compile time.
+ *
+ * WHY `"all"` SHORT-CIRCUITS EVERY CHECK
+ *   Super-admin / admin roles have `["all"]` in their permission list.
+ *   The `hasPermission` helper treats `"all"` as a wildcard match for any
+ *   permission query. This means new permissions automatically grant to
+ *   admins without touching this file — they're always allowed.
+ *
+ * WHY BOTH `super_admin` AND `superadmin` KEYS
+ *   Legacy data has both spellings — `super_admin` from snake-case DB
+ *   inserts, `superadmin` from older form code. Rather than data-migrate
+ *   400+ users, we accept both at the lookup layer. Same for `admin`.
+ *
+ * WHY ROLE LISTS ARE FROZEN STATIC, NOT DB-DRIVEN
+ *   Permissions change at a deploy cadence (when features ship). Storing
+ *   them in DB would require migrations + UI for editing + audit log of
+ *   permission grants — overkill for our team size. If/when we onboard
+ *   a customer who needs custom role definitions, refactor to DB-driven
+ *   then. Until then, code commits ARE the audit log.
+ *
+ * WHY THIS LIVES IN frontend (not just backend)
+ *   The backend `@RequirePermission` decorator is the security gate.
+ *   This file is purely for UX: hiding buttons the user can't press,
+ *   avoiding empty pages that would 403, and choosing which sidebar
+ *   items to render. Backend changes always come first; frontend mirrors.
+ */
+
 export type Permission =
   | "crm:read"
   | "crm:write"

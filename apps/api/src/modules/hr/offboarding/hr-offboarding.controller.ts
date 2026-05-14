@@ -1,3 +1,8 @@
+/**
+ * @module hr-offboarding.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Controller, Patch, Post, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, UsePipes,

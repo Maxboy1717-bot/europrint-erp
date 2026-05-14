@@ -1,3 +1,8 @@
+/**
+ * @module iot-camera-events.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertRequired } from '@common/assertions';
 import {
   AuditInterceptor } from '@common/interceptors/audit.interceptor';import { BadRequestException,

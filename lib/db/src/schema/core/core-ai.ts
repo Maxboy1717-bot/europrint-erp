@@ -1,5 +1,10 @@
+/**
+ * @module core-ai
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { AdaptationRecord, InsertAdaptationRecord } from "../hr-schema";
@@ -19,10 +24,15 @@ export const goals = pgTable("goals", {
   endDate: varchar("end_date", { length: 10 }).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("active"),
   priority: varchar("priority", { length: 20 }).notNull().default("medium"),
-  createdBy: varchar("created_by").references(() => admins.id),
+  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("goals_category_chk", sql`${t.category} IN ('learning','completion','engagement','performance','retention')`),
+  check("goals_target_type_chk", sql`${t.targetType} IN ('department','position','user','global')`),
+  check("goals_status_chk", sql`${t.status} IN ('active','completed','failed','cancelled')`),
+  check("goals_priority_chk", sql`${t.priority} IN ('low','medium','high','critical')`),
+]);
 
 export const insertGoalSchema = createInsertSchema(goals, {
   title: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
@@ -46,10 +56,12 @@ export const benchmarks = pgTable("benchmarks", {
   value: integer("value").notNull(),
   source: text("source"),
   isActive: boolean("is_active").notNull().default(true),
-  createdBy: varchar("created_by").references(() => admins.id),
+  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("benchmarks_category_chk", sql`${t.category} IN ('industry','company','department','custom')`),
+]);
 
 export const insertBenchmarkSchema = createInsertSchema(benchmarks, {
   name: z.string().min(3, "Nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
@@ -67,7 +79,7 @@ export const savedFilters = pgTable("saved_filters", {
   description: text("description"),
   filterData: jsonb("filter_data").notNull(),
   isPublic: boolean("is_public").notNull().default(false),
-  createdBy: varchar("created_by").references(() => admins.id),
+  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -90,7 +102,9 @@ export const aiInsights = pgTable("ai_insights", {
   isRead: boolean("is_read").notNull().default(false),
   validUntil: timestamp("valid_until"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("ai_insights_severity_chk", sql`${t.severity} IN ('info','warning','critical','success')`),
+]);
 
 export const insertAiInsightSchema = createInsertSchema(aiInsights, {
   title: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
@@ -115,13 +129,15 @@ export const welcomeEvents = pgTable("welcome_events", {
   location: text("location"),
   participants: text("participants").array(),
   agenda: jsonb("agenda"),
-  organizerId: varchar("organizer_id").references(() => admins.id),
+  organizerId: varchar("organizer_id").references(() => admins.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("planned"),
   attendanceCount: integer("attendance_count").notNull().default(0),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("welcome_events_status_chk", sql`${t.status} IN ('planned','in_progress','completed','cancelled')`),
+]);
 
 export const insertWelcomeEventSchema = createInsertSchema(welcomeEvents, {
   title: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
@@ -147,11 +163,14 @@ export const knowledgeBase = pgTable("knowledge_base", {
   tags: text("tags").array(),
   isActive: boolean("is_active").notNull().default(true),
   order: integer("order").notNull().default(0),
-  createdBy: varchar("created_by").references(() => admins.id),
+  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("knowledge_base_category_chk", sql`${t.category} IN ('about_company','products','services','policies','procedures','faq','history','team','other')`),
+  check("knowledge_base_file_type_chk", sql`${t.fileType} IS NULL OR ${t.fileType} IN ('pdf','docx','txt')`),
+]);
 
 export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase, {
   title: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),

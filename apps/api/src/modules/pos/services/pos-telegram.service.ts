@@ -1,3 +1,8 @@
+/**
+ * @module pos-telegram.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { SECONDS_PER_HOUR, MS_PER_SECOND } from '@common/constants/app.constants';
 /**
  * POS — Telegram Service
@@ -100,7 +105,7 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
 
     // Saralash va data_check_string yasash
     const dataCheckArr: string[] = [];
-    (params ?? []).forEach((value, key) => dataCheckArr.push(`${key}=${value}`));
+    (Array.isArray(params) ? params : []).forEach((value, key) => dataCheckArr.push(`${key}=${value}`));
     dataCheckArr.sort();
     const dataCheckString = dataCheckArr.join('\n');
 
@@ -121,7 +126,7 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
 
     // Ma'lumotlarni parse qilish
     const result: Record<string, string> = {};
-    (params ?? []).forEach((value, key) => result[key] = value);
+    (Array.isArray(params) ? params : []).forEach((value, key) => result[key] = value);
     return result;
   }
 

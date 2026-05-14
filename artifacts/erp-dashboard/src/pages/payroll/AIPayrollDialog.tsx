@@ -1,3 +1,8 @@
+/**
+ * @module AIPayrollDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/format";
@@ -22,8 +27,8 @@ interface AIPayrollDialogProps {
 
 export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDialogProps) {
   const { t } = useTranslation('hr');
-  const { t: tCommon } = useTranslation('common');
   const { t: tFinance } = useTranslation('finance');
+  const { t: tCommon } = useTranslation('common');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedAIEmployee, setSelectedAIEmployee] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>(() => {
@@ -62,10 +67,10 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setAiResult(null); }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-purple-500" />
+            <Brain className="h-5 w-5 text-[var(--ep-purple)]" />
             {tFinance('aiCalculation')}
           </DialogTitle>
           <DialogDescription>{tFinance('payrollAutomation')}</DialogDescription>
@@ -76,7 +81,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('employee')}</label>
               <Select value={selectedAIEmployee} onValueChange={setSelectedAIEmployee}>
-                <SelectTrigger data-testid="select-ai-employee">
+                <SelectTrigger data-testid="select-ai-employee" className="h-9">
                   <SelectValue placeholder={tCommon('select')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -97,7 +102,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
           <Button
             onClick={handleAICalculate}
             disabled={aiCalculateMutation.isPending || !selectedAIEmployee}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            className="w-full bg-purple-500 hover:from-purple-600 hover:to-pink-600"
             data-testid="button-run-ai-calculation"
           >
             {aiCalculateMutation.isPending ? (
@@ -111,8 +116,8 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
             <Card className="border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)]" />
                     {tFinance('aiCalculation')}
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -128,7 +133,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <h4 className="font-medium text-sm text-muted-foreground">{tFinance('workData')}</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                       <div className="flex justify-between p-2 bg-background rounded">
                         <span>{tFinance('workDays')}:</span>
                         <span className="font-medium">{aiResult.workDays}</span>
@@ -161,7 +166,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                       <Separator />
                       <div className="flex justify-between font-medium">
                         <span>{tFinance('grossSalary')}:</span>
-                        <span className="text-green-600">{formatCurrency(aiResult.grossPay)}</span>
+                        <span className="text-[var(--ep-green)]">{formatCurrency(aiResult.grossPay)}</span>
                       </div>
                       <div className="flex justify-between text-muted-foreground">
                         <span>INPS (12%):</span>
@@ -172,7 +177,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                         <span>-{formatCurrency(aiResult.taxJshd)}</span>
                       </div>
                       {aiResult.minWageTopUp > 0 && (
-                        <div className="flex justify-between text-blue-600">
+                        <div className="flex justify-between text-[var(--ep-blue)]">
                           <span>{tFinance('minWageTopUp')}:</span>
                           <span>+{formatCurrency(aiResult.minWageTopUp)}</span>
                         </div>
@@ -180,7 +185,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                       <Separator />
                       <div className="flex justify-between text-lg font-bold">
                         <span>{tFinance('netSalary')}:</span>
-                        <span className="text-purple-600">{formatCurrency(aiResult.netPay)}</span>
+                        <span className="text-[var(--ep-purple)]">{formatCurrency(aiResult.netPay)}</span>
                       </div>
                     </div>
                   </div>
@@ -198,13 +203,13 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                           rec.type === "bonus" ? "border-green-200 bg-green-50/50 dark:bg-green-950/20" :
                           rec.type === "warning" ? "border-yellow-200 bg-yellow-50/50 dark:bg-yellow-950/20" :
                           rec.type === "optimization" ? "border-blue-200 bg-blue-50/50 dark:bg-blue-950/20" :
-                          "border-outline-variant/30"
+                          "border-border/30"
                         }`}>
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-start gap-2">
-                              {rec.type === "bonus" && <ThumbsUp className="h-4 w-4 text-green-500 mt-0.5" />}
-                              {rec.type === "warning" && <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />}
-                              {rec.type === "optimization" && <Sparkles className="h-4 w-4 text-blue-500 mt-0.5" />}
+                              {rec.type === "bonus" && <ThumbsUp className="h-4 w-4 text-[var(--ep-green)] mt-0.5" />}
+                              {rec.type === "warning" && <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] mt-0.5" />}
+                              {rec.type === "optimization" && <Sparkles className="h-4 w-4 text-[var(--ep-blue)] mt-0.5" />}
                               <div>
                                 <p className="font-medium text-sm">{rec.title}</p>
                                 <p className="text-xs text-muted-foreground">{rec.description}</p>
@@ -212,7 +217,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                             </div>
                             <div className="text-right">
                               {rec.suggestedAmount && (
-                                <span className="text-sm font-medium text-green-600">+{formatCurrency(rec.suggestedAmount)}</span>
+                                <span className="text-sm font-medium text-[var(--ep-green)]">+{formatCurrency(rec.suggestedAmount)}</span>
                               )}
                               <Badge variant="outline" className="ml-2 text-xs">{rec.confidence}%</Badge>
                             </div>

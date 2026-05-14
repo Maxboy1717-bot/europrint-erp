@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-finance-budget.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { safeNum } from '@common/math';
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
@@ -86,14 +91,27 @@ export class FinanceBudgetRepo {
     try {
       const [budget] = await db.select().from(budgets).where(eq(budgets.id, budgetId)).limit(1);
       if (!budget) return Err('Budget not found');
-      const lines = await db.select().from(budgetLines).where(eq(budgetLines.budgetId, budgetId));
       const budgetRow = budget as Record<string, unknown>;
-      let totalActual = 0;
-      for (const line of lines) {
-        const lineRow = line as Record<string, unknown>;
-        const r = await exec(sql`SELECT COALESCE(SUM(total_debit), 0) AS sum FROM gl_journal_entries WHERE description ILIKE ${'%' + String(lineRow.category) + '%'} AND created_at BETWEEN ${new Date(Number(budgetRow.fiscalYear), 0, 1)} AND ${new Date(Number(budgetRow.fiscalYear), 11, 31)}`);
-        totalActual += safeNum(r[0]?.sum);
-      }
+      const yearStart = new Date(Number(budgetRow.fiscalYear), 0, 1);
+      const yearEnd   = new Date(Number(budgetRow.fiscalYear), 11, 31, 23, 59, 59, 999);
+
+      // Single batch query: sum GL entries per budget line using exact match or account_code fallback.
+      // Exact equality (LOWER(...) = LOWER(...)) is used instead of ILIKE to avoid unreliable
+      // partial-text matching on free-text accounting fields.
+      const agg = await exec(sql`
+        SELECT bl.id AS line_id, COALESCE(SUM(gje.amount), 0) AS actual
+        FROM budget_lines bl
+        LEFT JOIN gl_journal_entries gje ON (
+          LOWER(gje.description) = LOWER(bl.category)
+          OR gje.account_code = bl.account_code
+        )
+        WHERE bl.budget_id = ${budgetId}
+          AND (gje.entry_date BETWEEN ${yearStart} AND ${yearEnd} OR gje.id IS NULL)
+        GROUP BY bl.id
+      `);
+
+      const totalActual = agg.reduce((acc, row) => acc + safeNum(row['actual']), 0);
+
       const result = await db.update(budgets).set({ totalActual: totalActual.toString(), updatedAt: _time.now() }).where(eq(budgets.id, budgetId)).returning();
       return Ok(result[0]);
     } catch (error: unknown) { this.logger.error(`Error updating actuals: ${(error as Error).message}`); return Err((error as Error).message); }

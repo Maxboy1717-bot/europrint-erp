@@ -1,3 +1,8 @@
+/**
+ * @module AssetFormDialogs
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,12 +64,12 @@ export function AssetFormDialogs({
   return (
     <>
       <Dialog open={isCreateAssetOpen} onOpenChange={setIsCreateAssetOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
           <DialogHeader>
-            <DialogTitle>{t("newAssetTitle")}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("newAssetTitle")}</DialogTitle>
             <DialogDescription>{t("assetInfoHint")}</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>{t("labelAssetCode")}</Label>
               <Input value={assetForm.assetCode} onChange={(e) => setAssetForm(f => ({ ...f, assetCode: e.target.value }))} placeholder="AV-001" data-testid="input-asset-code" />
@@ -76,7 +81,7 @@ export function AssetFormDialogs({
             <div className="space-y-1">
               <Label>{t("labelType")}</Label>
               <Select value={assetForm.assetType} onValueChange={(v) => setAssetForm(f => ({ ...f, assetType: v }))}>
-                <SelectTrigger data-testid="select-asset-type"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-asset-type" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(assetTypeLabels).map(([val, key]) => (
                     <SelectItem key={val} value={val}>{t(key)}</SelectItem>
@@ -99,7 +104,7 @@ export function AssetFormDialogs({
             <div className="space-y-1">
               <Label>{t("colDepMethod")}</Label>
               <Select value={assetForm.depreciationMethod} onValueChange={(v) => setAssetForm(f => ({ ...f, depreciationMethod: v }))}>
-                <SelectTrigger data-testid="select-depreciation-method"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-depreciation-method" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="straight_line">{t("depMethodStraightLine")}</SelectItem>
                   <SelectItem value="declining_balance">{t("depMethodDeclining")}</SelectItem>
@@ -117,7 +122,7 @@ export function AssetFormDialogs({
             <div className="space-y-1">
               <Label>{t("conditionLabel")}</Label>
               <Select value={assetForm.condition} onValueChange={(v) => setAssetForm(f => ({ ...f, condition: v }))}>
-                <SelectTrigger data-testid="select-condition"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-condition" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="excellent">{t("conditionExcellent")}</SelectItem>
                   <SelectItem value="good">{t("conditionGood")}</SelectItem>
@@ -151,14 +156,14 @@ export function AssetFormDialogs({
       <Dialog open={isDepreciateOpen} onOpenChange={setIsDepreciateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("calcDepreciationDialog")}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("calcDepreciationDialog")}</DialogTitle>
             <DialogDescription>{t("btnCalculate")}: "{selectedAsset?.assetName}" — {t("depreciateSingleMonthDesc")}</DialogDescription>
           </DialogHeader>
           {selectedAsset && (
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">{t("cardPurchaseValue")}:</span><span className="font-medium">{formatCurrency(selectedAsset.purchaseValue)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">{t("colCurrentValue2")}:</span><span className="font-medium">{formatCurrency(selectedAsset.currentValue)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">{t("labelAccumDep")}</span><span className="font-medium text-red-500">-{formatCurrency(selectedAsset.accumulatedDepreciation)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{t("labelAccumDep")}</span><span className="font-medium text-[var(--ep-red)]">-{formatCurrency(selectedAsset.accumulatedDepreciation)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">{t("colMethod")}:</span><span className="font-medium">{t(depreciationMethodLabels[selectedAsset.depreciationMethod] || "depMethodStraightLine")}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">{t("labelUsefulLife")}:</span><span className="font-medium">{selectedAsset.usefulLife} {t("yearUnit")}</span></div>
             </div>
@@ -175,14 +180,14 @@ export function AssetFormDialogs({
       <Dialog open={isMaintenanceOpen} onOpenChange={setIsMaintenanceOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("addMaintenanceRecord")}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("addMaintenanceRecord")}</DialogTitle>
             <DialogDescription>{selectedAsset ? `"${selectedAsset.assetName}" ${t("maintenanceForAsset")}` : t("addMaintenanceRecord")}</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>{t("labelType")}</Label>
               <Select value={maintenanceForm.maintenanceType} onValueChange={(v) => setMaintenanceForm(f => ({ ...f, maintenanceType: v }))}>
-                <SelectTrigger data-testid="select-maintenance-type"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-maintenance-type" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="preventive">{t("maintTypePreventive")}</SelectItem>
                   <SelectItem value="corrective">{t("maintTypeCorrective")}</SelectItem>
@@ -220,7 +225,7 @@ export function AssetFormDialogs({
       <Dialog open={isCompleteMaintenanceOpen} onOpenChange={setIsCompleteMaintenanceOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("dialogTitleCompleteMaint")}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("dialogTitleCompleteMaint")}</DialogTitle>
             <DialogDescription>{t("completeMaintConfirm")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

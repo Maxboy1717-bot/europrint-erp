@@ -1,3 +1,8 @@
+/**
+ * @module TopNavigation
+ * @description React UI component.
+ */
+
 import {
   LayoutDashboard,
   BookOpen,
@@ -306,11 +311,11 @@ const moduleColors: Record<string, { icon: string; bg: string; hover: string; bo
     activeItem: "bg-module-warehouse text-white"
   },
   buxgalteriya: {
-    icon: "text-indigo-600 dark:text-indigo-400",
+    icon: "text-[var(--ep-blue)] dark:text-indigo-400",
     bg: "bg-indigo-50 dark:bg-indigo-500/10",
     hover: "hover:bg-indigo-100 dark:hover:bg-indigo-500/20",
     border: "border-indigo-200 dark:border-indigo-500/30",
-    activeItem: "bg-indigo-500 text-white"
+    activeItem: "bg-[var(--ep-blue)] text-white"
   },
   moliya: {
     icon: "text-module-fi",
@@ -327,11 +332,11 @@ const moduleColors: Record<string, { icon: string; bg: string; hover: string; bo
     activeItem: "bg-module-hr text-white"
   },
   lms: {
-    icon: "text-purple-600 dark:text-purple-400",
+    icon: "text-[var(--ep-purple)] dark:text-purple-400",
     bg: "bg-purple-50 dark:bg-purple-500/10",
     hover: "hover:bg-purple-100 dark:hover:bg-purple-500/20",
     border: "border-purple-300/30 dark:border-purple-500/30",
-    activeItem: "bg-purple-500 text-white"
+    activeItem: "bg-[var(--ep-purple)] text-white"
   },
   ai: {
     icon: "text-primary",
@@ -371,12 +376,12 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                   )}
                   data-testid={`dropdown-${key}`}
                 >
-                  <group.icon className={cn("h-5 w-5 shrink-0", colors.icon)} />
+                  <group.icon className={cn("h-4 w-4 shrink-0", colors.icon)} />
                   <span className="truncate">{group.title}</span>
                   <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[280px] max-h-[70vh] overflow-y-auto">
+              <DropdownMenuContent align="start" className="w-full sm:w-[280px] max-h-[70vh] overflow-y-auto">
                 <div className={cn("px-3 py-2 mb-1 border-b border-border/50", colors.bg)}>
                   <span className={cn("text-xs font-semibold", colors.icon)}>{group.title}</span>
                 </div>

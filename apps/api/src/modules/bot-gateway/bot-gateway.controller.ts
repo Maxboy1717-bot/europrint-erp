@@ -1,5 +1,11 @@
-import { Body, Controller, Param, Post, HttpCode, UseGuards, Req } from '@nestjs/common';
+/**
+ * @module bot-gateway.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Logger, Param, Post, HttpCode, UseGuards, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { z } from 'zod';
 import { Public } from '@modules/auth/infrastructure/decorators/public.decorator';
 import { CrmBotService } from './bots/crm.bot';
 import { MesBotService } from './bots/mes.bot';
@@ -17,25 +23,33 @@ import type { TelegramWebhookRequest } from './telegram-auth.guard';
 const BOT_NAMES = ['crm', 'mes', 'hr', 'logistics', 'fin', 'qc', 'director', 'ombor', 'pos'] as const;
 type BotName = (typeof BOT_NAMES)[number];
 
-interface TelegramUpdate {
-  message?: {
-    chat?:     { id?: number | string };
-    from?:     { id?: number | string };
-    text?:     string;
-    entities?: { type: string; offset: number; length: number }[];
-  };
-  callback_query?: {
-    from?:    { id?: number | string };
-    data?:    string;
-    message?: { chat?: { id?: number | string } };
-  };
-}
+// Zod schema (Rule 3) — validates the incoming Telegram webhook payload.
+const TelegramUpdateSchema = z.object({
+  message: z.object({
+    chat: z.object({ id: z.union([z.number(), z.string()]).optional() }).optional(),
+    from: z.object({ id: z.union([z.number(), z.string()]).optional() }).optional(),
+    text: z.string().optional(),
+    entities: z.array(z.object({
+      type: z.string(),
+      offset: z.number(),
+      length: z.number(),
+    })).optional(),
+  }).optional(),
+  callback_query: z.object({
+    from: z.object({ id: z.union([z.number(), z.string()]).optional() }).optional(),
+    data: z.string().optional(),
+    message: z.object({ chat: z.object({ id: z.union([z.number(), z.string()]).optional() }).optional() }).optional(),
+  }).optional(),
+}).passthrough();
+
+type TelegramUpdate = z.infer<typeof TelegramUpdateSchema>;
 
 @Public()
 @Controller('bot')
 @Throttle({ default: { limit: 300, ttl: 60 } })
 @UseGuards(TelegramAuthGuard)
 export class BotGatewayController {
+  private readonly logger = new Logger(BotGatewayController.name);
   private readonly bots: Record<BotName, { handle(msg: BotMessage): Promise<unknown> }>;
 
   constructor(
@@ -56,12 +70,13 @@ export class BotGatewayController {
   @HttpCode(200)
   async webhook(
     @Param('bot') bot: string,
-    @Body() body: TelegramUpdate,
+    @Body() rawBody: unknown,
     @Req() req: TelegramWebhookRequest,
   ) {
     const botSvc = this.bots[bot as BotName];
     if (!botSvc) return {};
 
+    const body: TelegramUpdate = TelegramUpdateSchema.parse(rawBody);
     const message  = body?.message;
     // For callback_query, Telegram sends the originating chat in callback_query.message.chat.id
     const chatId   = String(
@@ -96,9 +111,19 @@ export class BotGatewayController {
       role:       req.botEmployee?.role,
     };
 
-    const reply = await botSvc.handle(msg).catch(() => ({
-      text: '❌ Xizmat vaqtincha mavjud emas. Iltimos, qayta urinib ko\'ring.', parse: 'HTML' as const, success: false,
-    }));
+    // Don't silently swallow handler errors — log them with the bot slug + chat
+    // so an on-call engineer can trace which command crashed.
+    const reply = await botSvc.handle(msg).catch((err: unknown) => {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Bot handler failed [${bot} · chat=${chatId} · cmd=${command ?? text.slice(0, 40)}]: ${errMsg}`,
+      );
+      return {
+        text: '❌ Xizmat vaqtincha mavjud emas. Iltimos, qayta urinib ko\'ring.',
+        parse: 'HTML' as const,
+        success: false,
+      };
+    });
 
     if (!chatId) return {};
 

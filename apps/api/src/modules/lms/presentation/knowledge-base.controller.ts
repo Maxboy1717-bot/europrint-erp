@@ -1,3 +1,8 @@
+/**
+ * @module knowledge-base.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put,
   Query, Req, UseGuards, UseInterceptors, UsePipes, HttpStatus } from '@nestjs/common';

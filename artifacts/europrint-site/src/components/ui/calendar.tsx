@@ -1,3 +1,8 @@
+/**
+ * @module calendar
+ * @description Source module. See exports for details.
+ */
+
 "use client"
 
 import * as React from "react"

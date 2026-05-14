@@ -1,3 +1,8 @@
+/**
+ * @module reports-hub.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';

@@ -1,3 +1,8 @@
+/**
+ * @module mark-deal-won.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, BadRequestException, Logger } from '@nestjs/common';
 import { Result, Ok, Err } from '@common/types/result.type';

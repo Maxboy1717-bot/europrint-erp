@@ -1,3 +1,8 @@
+/**
+ * @module seed
+ * @description Source module. See exports for details.
+ */
+
 import { db, pool } from "./index";
 import { departments } from "./schema/departments";
 import { positions } from "./schema/positions";
@@ -27,8 +32,8 @@ async function seed() {
     { code: "DIGITAL", nameUz: "Raqamli bosma", nameRu: "Цифровая печать", vysotskiyFunction: "production", level: 3, sortOrder: 18, parentId: 5 },
     { code: "POSTPRESS", nameUz: "Postpress", nameRu: "Постпресс", vysotskiyFunction: "production", level: 3, sortOrder: 19, parentId: 5 },
     { code: "LARGEFORMAT", nameUz: "Katta format", nameRu: "Широкоформат", vysotskiyFunction: "production", level: 3, sortOrder: 20, parentId: 5 },
-  ]).returning();
-  console.log(`✅ ${deptRows.length} departments inserted`);
+  ]).onConflictDoNothing().returning();
+  console.log(`✅ ${deptRows.length} departments upserted (skip if exists)`);
 
   const posRows = await db.insert(positions).values([
     { code: "OWNER", nameUz: "Asoschi / Egasi", nameRu: "Владелец", level: 1, rbacTier: "owner", isManagement: true, sortOrder: 1 },
@@ -141,8 +146,8 @@ async function seed() {
     { code: "DEPT_HEAD", nameUz: "Bo'lim boshlig'i", nameRu: "Начальник отдела", level: 3, rbacTier: "manager", isManagement: true, sortOrder: 108 },
     { code: "TEAM_LEAD", nameUz: "Jamoa rahbari", nameRu: "Тимлид", level: 4, rbacTier: "supervisor", isManagement: true, sortOrder: 109 },
     { code: "SENIOR_SPECIALIST", nameUz: "Katta mutaxassis", nameRu: "Старший специалист", level: 4, rbacTier: "specialist", isManagement: false, sortOrder: 110 },
-  ]).returning();
-  console.log(`✅ ${posRows.length} positions inserted`);
+  ]).onConflictDoNothing().returning();
+  console.log(`✅ ${posRows.length} positions upserted (skip if exists)`);
 
   await db.insert(leaveTypes).values([
     { code: "ANNUAL", nameUz: "Yillik ta'til", nameRu: "Ежегодный отпуск", maxDaysPerYear: 24, isPaid: true, requiresMedicalCert: false, requiresDirectorApproval: false, minDaysBeforeRequest: 14, sortOrder: 1 },
@@ -153,8 +158,8 @@ async function seed() {
     { code: "STUDY", nameUz: "O'qish ta'tili", nameRu: "Учебный отпуск", maxDaysPerYear: 30, isPaid: false, requiresMedicalCert: false, requiresDirectorApproval: true, minDaysBeforeRequest: 14, sortOrder: 6 },
     { code: "COMPASSIONATE", nameUz: "Qayg'uli voqea", nameRu: "Семейные обстоятельства", maxDaysPerYear: 5, isPaid: true, requiresMedicalCert: false, requiresDirectorApproval: false, minDaysBeforeRequest: 0, sortOrder: 7 },
     { code: "MARRIAGE", nameUz: "Nikoh ta'tili", nameRu: "Свадебный отпуск", maxDaysPerYear: 3, isPaid: true, requiresMedicalCert: false, requiresDirectorApproval: false, minDaysBeforeRequest: 7, sortOrder: 8 },
-  ]);
-  console.log("✅ leave_types inserted");
+  ]).onConflictDoNothing();
+  console.log("✅ leave_types upserted");
 
   await db.insert(shiftTypes).values([
     { code: "DAY", nameUz: "Kunduzgi smena", nameRu: "Дневная смена", startTime: "08:00", endTime: "17:00", durationHours: "8.0", isOvernight: false, overtimeMultiplier: "1.5", sortOrder: 1 },
@@ -162,8 +167,8 @@ async function seed() {
     { code: "NIGHT", nameUz: "Tungi smena", nameRu: "Ночная смена", startTime: "22:00", endTime: "06:00", durationHours: "8.0", isOvernight: true, overtimeMultiplier: "2.0", sortOrder: 3 },
     { code: "EXTENDED", nameUz: "Uzaytirilgan smena", nameRu: "Удлинённая смена", startTime: "07:00", endTime: "19:00", durationHours: "12.0", isOvernight: false, overtimeMultiplier: "1.5", sortOrder: 4 },
     { code: "FLEX", nameUz: "Erkin grafik", nameRu: "Свободный график", startTime: "09:00", endTime: "18:00", durationHours: "8.0", isOvernight: false, overtimeMultiplier: "1.5", sortOrder: 5 },
-  ]);
-  console.log("✅ shift_types inserted");
+  ]).onConflictDoNothing();
+  console.log("✅ shift_types upserted");
 
   await db.insert(skillCategories).values([
     { code: "PRINTING", nameUz: "Bosma texnologiyalari", nameRu: "Технологии печати", sortOrder: 1 },
@@ -176,23 +181,23 @@ async function seed() {
     { code: "SAFETY_SKILLS", nameUz: "Xavfsizlik ko'nikmalari", nameRu: "Навыки безопасности", sortOrder: 8 },
     { code: "QUALITY_SKILLS", nameUz: "Sifat nazorati", nameRu: "Навыки контроля качества", sortOrder: 9 },
     { code: "LANGUAGE", nameUz: "Til bilimi", nameRu: "Языковые навыки", sortOrder: 10 },
-  ]);
-  console.log("✅ skill_categories inserted");
+  ]).onConflictDoNothing();
+  console.log("✅ skill_categories upserted");
 
   await db.insert(abcThresholds).values([
     { category: "A", minScore: "90.00", maxScore: "100.00", bonusPercentage: "15.00", description: "A'lo xodim — yuqori bonus", attendanceWeight: "0.40", qualityWeight: "0.25", taskWeight: "0.20", lmsWeight: "0.15" },
     { category: "B", minScore: "70.00", maxScore: "89.99", bonusPercentage: "10.00", description: "Yaxshi xodim — o'rtacha bonus", attendanceWeight: "0.40", qualityWeight: "0.25", taskWeight: "0.20", lmsWeight: "0.15" },
     { category: "C", minScore: "0.00", maxScore: "69.99", bonusPercentage: "5.00", description: "Rivojlanish kerak — minimal bonus", attendanceWeight: "0.40", qualityWeight: "0.25", taskWeight: "0.20", lmsWeight: "0.15" },
-  ]);
-  console.log("✅ abc_thresholds inserted (A≥90→15%, B≥70→10%, C<70→5%)");
+  ]).onConflictDoNothing();
+  console.log("✅ abc_thresholds upserted (A≥90→15%, B≥70→10%, C<70→5%)");
 
   await db.insert(payrollTaxRules).values([
     { code: "INPS_EMPLOYEE", nameUz: "INPS xodim ulushi", nameRu: "ИНПС доля сотрудника", ratePercent: "12.00", isEmployeeContribution: true, isEmployerContribution: false, minWageUzs: 1120000, effectiveFrom: new Date("2026-01-01") },
     { code: "JSHD_PIT", nameUz: "Jismoniy shaxslar daromad solig'i", nameRu: "НДФЛ (подоходный налог)", ratePercent: "12.00", isEmployeeContribution: true, isEmployerContribution: false, minWageUzs: 1120000, effectiveFrom: new Date("2026-01-01") },
     { code: "INPS_EMPLOYER", nameUz: "INPS ish beruvchi ulushi", nameRu: "ИНПС доля работодателя", ratePercent: "12.00", isEmployeeContribution: false, isEmployerContribution: true, minWageUzs: 1120000, effectiveFrom: new Date("2026-01-01") },
     { code: "SOCIAL_TAX", nameUz: "Ijtimoiy soliq", nameRu: "Социальный налог", ratePercent: "12.00", isEmployeeContribution: false, isEmployerContribution: true, minWageUzs: 1120000, effectiveFrom: new Date("2026-01-01") },
-  ]);
-  console.log("✅ payroll_tax_rules inserted (INPS 12%, PIT 12%, MinWage 1,120,000 UZS)");
+  ]).onConflictDoNothing();
+  console.log("✅ payroll_tax_rules upserted (INPS 12%, PIT 12%, MinWage 1,120,000 UZS)");
 
   await db.insert(workCenters).values([
     { code: "WC_PREPRESS_1", nameUz: "Prepress stansiya 1", nameRu: "Препресс станция 1", departmentId: 16, capacity: 3 },
@@ -213,8 +218,8 @@ async function seed() {
     { code: "WC_UV_FLATBED", nameUz: "UV Flatbed printer", nameRu: "UV планшетный принтер", departmentId: 20, capacity: 1 },
     { code: "WC_CNC_1", nameUz: "CNC kesish", nameRu: "CNC резка", departmentId: 19, capacity: 1 },
     { code: "WC_PACKAGING_1", nameUz: "Qadoqlash stansiyasi", nameRu: "Станция упаковки", departmentId: 19, capacity: 3 },
-  ]);
-  console.log("✅ work_centers inserted");
+  ]).onConflictDoNothing();
+  console.log("✅ work_centers upserted");
 
   console.log("\n🎉 Seed completed successfully!");
   await pool.end();

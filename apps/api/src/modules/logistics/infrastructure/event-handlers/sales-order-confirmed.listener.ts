@@ -1,3 +1,8 @@
+/**
+ * @module sales-order-confirmed.listener
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';

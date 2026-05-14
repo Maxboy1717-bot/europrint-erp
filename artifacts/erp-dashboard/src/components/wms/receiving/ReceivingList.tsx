@@ -1,3 +1,8 @@
+/**
+ * @module ReceivingList
+ * @description React UI component.
+ */
+
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,7 +57,7 @@ export function ReceivingList({
   const t = useGoodsReceivingTranslations();
 
   return (
-    <div className="bg-surface-container-lowest rounded-xl p-6">
+    <div className="bg-card rounded-xl p-6">
       <div className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
         <div className="flex items-center gap-2 flex-1">
           <div className="relative flex-1 max-w-sm">
@@ -66,7 +71,7 @@ export function ReceivingList({
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]" data-testid="select-status-filter">
+            <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="select-status-filter">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder={t.allStatuses} />
             </SelectTrigger>
@@ -86,7 +91,7 @@ export function ReceivingList({
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="w-[150px]"
+            className="w-full sm:w-[150px]"
             data-testid="input-date-from"
           />
           <span className="text-muted-foreground">—</span>
@@ -94,7 +99,7 @@ export function ReceivingList({
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="w-[150px]"
+            className="w-full sm:w-[150px]"
             data-testid="input-date-to"
           />
         </div>
@@ -103,26 +108,26 @@ export function ReceivingList({
         {isLoading ? (
           <div className="space-y-2">
             {([...Array(5)]).map((_, i) => (
-              <Skeleton key={`k-${i}`} className="h-12 w-full" />
+              <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
             ))}
           </div>
         ) : (
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.receiptNumber}</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.date}</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.supplier}</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.warehouse}</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-center">{t.items}</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right">{t.value}</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">{t.status}</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 text-right">{t.actions}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.receiptNumber}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.date}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.supplier}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.warehouse}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-center">{t.items}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t.value}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t.status}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(Array.isArray(receipts) ? receipts : []).map((receipt) => (
-                <TableRow key={receipt.id} data-testid={`row-receipt-${receipt.id}`} className="hover:bg-surface-container-low transition-colors">
+                <TableRow key={receipt.id} data-testid={`row-receipt-${receipt.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{receipt.receiptNumber}</TableCell>
                   <TableCell>{receipt.receiptDate}</TableCell>
                   <TableCell className={receipt.status === 'KIRIM' ? 'border-l-4 border-green-500' : receipt.status === 'CHIQIM' ? 'border-l-4 border-error' : ''}>{receipt.supplierName || "—"}</TableCell>
@@ -156,7 +161,7 @@ export function ReceivingList({
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         )}
       </div>
     </div>

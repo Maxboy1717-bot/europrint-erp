@@ -1,3 +1,8 @@
+/**
+ * @module zno.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { safeNum } from '@common/math';
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError, Err } from '@common/result';

@@ -1,3 +1,8 @@
+/**
+ * @module create-department.command
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -25,7 +30,7 @@ export class CreateDepartmentHandler implements ICommandHandler<CreateDepartment
       return Err('Departamentlarni topishda xato');
     }
 
-    const codeTaken = (allDepts?.data ?? []).some((d) => d.code === data.code);
+    const codeTaken = (Array.isArray(allDepts?.data) ? allDepts?.data : []).some((d) => d.code === data.code);
     if (codeTaken) {
       return Err('Bu kod allaqachon ishlatilgan');
     }

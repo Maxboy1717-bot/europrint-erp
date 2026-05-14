@@ -1,3 +1,8 @@
+/**
+ * @module gpt.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Body,
@@ -16,7 +21,7 @@ import { GptTestDto } from './dto/ai-gpt.dto';
 
 @ApiTags('§15 GPT Test')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@Throttle({ ai: { limit: 20, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('gpt')
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)

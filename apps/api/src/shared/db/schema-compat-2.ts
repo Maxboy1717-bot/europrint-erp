@@ -1,3 +1,8 @@
+/**
+ * @module schema-compat-2
+ * @description Source module. See exports for details.
+ */
+
 import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
 
 export const payrollPeriods = stub(pgTable('payroll_periods', {
@@ -169,17 +174,24 @@ export const salesOrders = stub(pgTable('sales_orders', {
 }));
 
 export const sdLeads = stub(pgTable('sd_leads', {
-  id: integer('id').primaryKey(),
-  firstName: text('first_name').notNull(),
-  lastName: text('last_name').notNull(),
-  company: text('company'),
-  email: text('email'),
-  phone: text('phone'),
-  status: text('status').notNull().default('new'),
-  assignedTo: text('assigned_to'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
+  id:              integer('id').primaryKey(),
+  firstName:       text('first_name').notNull().default(''),
+  lastName:        text('last_name').notNull().default(''),
+  contactName:     text('contact_name'),
+  contactPhone:    text('contact_phone'),
+  company:         text('company'),
+  email:           text('email'),
+  phone:           text('phone'),
+  status:          text('status').notNull().default('new'),
+  assignedTo:      text('assigned_to'),
+  managerId:       integer('manager_id'),
+  lostReason:      text('lost_reason'),
+  productInterest: text('product_interest'),
+  estimatedValue:  decimal('estimated_value', { precision: 18, scale: 2 }),
+  source:          text('source'),
+  createdAt:       ts('created_at').defaultNow(),
+  updatedAt:       ts('updated_at').defaultNow(),
+  deletedAt:       ts('deleted_at'),
 }));
 
 export const purchaseOrders = stub(pgTable('purchase_orders', {

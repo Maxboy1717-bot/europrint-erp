@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.utils
+ * @description Source module. See exports for details.
+ */
+
 interface ScoredAnswer {
   question: string;
   answer: string;
@@ -35,8 +40,8 @@ export function calculateResults(
   answers: ScoredAnswer[],
   evaluation?: { strengths: string[]; weaknesses: string[]; summary: string; recommendation: string },
 ) {
-  const scores = (answers ?? []).map(a => a.score ?? 5);
-  const avg = scores.length > 0 ? (scores ?? []).reduce((a, b) => a + b, 0) / scores.length : 5;
+  const scores = (Array.isArray(answers) ? answers : []).map(a => a.score ?? 5);
+  const avg = scores.length > 0 ? (Array.isArray(scores) ? scores : []).reduce((a, b) => a + b, 0) / scores.length : 5;
   const pct = Math.round(avg * 10);
 
   return {
@@ -46,7 +51,7 @@ export function calculateResults(
     overallScore: pct,
     recommendation: evaluation?.recommendation || (avg >= 7 ? 'HIRE' : avg >= 5 ? 'CONSIDER' : 'REJECT'),
     aiSummary: evaluation?.summary || `Nomzod ${answers.length} ta savolga javob berdi. O'rtacha ball: ${avg.toFixed(1)}/10`,
-    transcript: (answers ?? []).map((a, i) => `S${i + 1}: ${a.question}\nJ: ${a.answer}`).join('\n\n'),
+    transcript: (Array.isArray(answers) ? answers : []).map((a, i) => `S${i + 1}: ${a.question}\nJ: ${a.answer}`).join('\n\n'),
     strengths: evaluation?.strengths || [],
     weaknesses: evaluation?.weaknesses || [],
   };
@@ -64,7 +69,7 @@ export function fallbackAnalysis(answer: string): { score: number; feedback: str
 
 export function fallbackEvaluation(answers: ScoredAnswer[]): { strengths: string[]; weaknesses: string[]; summary: string; recommendation: string } {
   const avg = answers.length > 0
-    ? (answers ?? []).reduce((sum, a) => sum + (a.score || 5), 0) / answers.length
+    ? (Array.isArray(answers) ? answers : []).reduce((sum, a) => sum + (a.score || 5), 0) / answers.length
     : 5;
   return {
     strengths: ['Intervyu yakunlandi'],

@@ -1,3 +1,8 @@
+/**
+ * @module webPush
+ * @description React UI component.
+ */
+
 import { getAuthHeaders } from '@/lib/queryClient';
 
 export async function registerWebPush(vapidPublicKey: string): Promise<boolean> {

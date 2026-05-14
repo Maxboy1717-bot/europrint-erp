@@ -1,3 +1,8 @@
+/**
+ * @module mes-production-sessions.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -11,11 +16,12 @@ export class MesProductionSessionsRepository {
   async listSessions(page: number, limit: number, status?: string): Promise<Row[]> {
     try {
       const rows = await runQuery<Row>(sql`
-        SELECT ms.*, wc.name AS work_center_name, u.full_name AS operator_name
+        SELECT ms.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name
         FROM mes_sessions ms
         LEFT JOIN work_centers wc ON wc.id = ms.work_center_id
         LEFT JOIN users u ON u.id = ms.operator_id
         WHERE (${status ?? null}::text IS NULL OR ms.status = ${status ?? null})
+
         ORDER BY ms.start_time DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}
       `);
       return rows.rows as Row[];
@@ -42,7 +48,7 @@ export class MesProductionSessionsRepository {
   async getSession(id: number): Promise<Row | null> {
     try {
       const rows = await runQuery<Row>(sql`
-        SELECT ms.*, wc.name AS work_center_name, u.full_name AS operator_name
+        SELECT ms.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name
         FROM mes_sessions ms
         LEFT JOIN work_centers wc ON wc.id = ms.work_center_id
         LEFT JOIN users u ON u.id = ms.operator_id

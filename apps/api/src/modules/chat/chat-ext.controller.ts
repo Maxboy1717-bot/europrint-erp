@@ -1,3 +1,8 @@
+/**
+ * @module chat-ext.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrInternal } from '@common/http-result';
 import {
   Body, Controller, Delete, Get,

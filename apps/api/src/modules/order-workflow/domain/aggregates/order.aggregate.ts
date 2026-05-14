@@ -1,3 +1,8 @@
+/**
+ * @module order.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { OrderStatusVo, OrderStatusCode } from '../value-objects/order-status.vo';
 

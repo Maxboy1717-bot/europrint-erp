@@ -1,3 +1,8 @@
+/**
+ * @module order-status.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
@@ -11,7 +16,7 @@ export class OrderStatusRepository {
   async getStatusLog(orderId: string): Promise<Result<Row[]>>  {
   try {  
       const rows = await runQuery<Row>(sql`
-        SELECT osl.*, u.full_name AS changed_by_name
+        SELECT osl.*, (u.first_name || ' ' || u.last_name) AS changed_by_name
         FROM order_status_logs osl
         LEFT JOIN users u ON u.id = osl.changed_by
         WHERE osl.order_id = ${orderId}

@@ -1,3 +1,8 @@
+/**
+ * @module OvertimeDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,13 +41,13 @@ export function OvertimeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Ish vaqtidan tashqari mehnatni qayd etish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Ish vaqtidan tashqari mehnatni qayd etish</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="workDate">Sana</Label>
+          <div className="space-y-1">
+          <Label htmlFor="workDate">Sana</Label>
             <Input
               id="workDate"
               type="date"
@@ -50,9 +55,9 @@ export function OvertimeDialog({
               onChange={(e) => updateField("workDate", e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="hours">Soatlar soni</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="hours">Soatlar soni</Label>
               <Input
                 id="hours"
                 type="number"
@@ -60,13 +65,13 @@ export function OvertimeDialog({
                 onChange={(e) => updateField("hours", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="multiplier">Koeffitsient</Label>
+            <div className="space-y-1">
+          <Label htmlFor="multiplier">Koeffitsient</Label>
               <Select
                 value={form.multiplier}
                 onValueChange={(val) => updateField("multiplier", val)}
               >
-                <SelectTrigger id="multiplier">
+                <SelectTrigger id="multiplier" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -76,8 +81,8 @@ export function OvertimeDialog({
               </Select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="hourlyRate">Soatbay stavka (UZS)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="hourlyRate">Soatbay stavka (UZS)</Label>
             <Input
               id="hourlyRate"
               type="number"
@@ -85,8 +90,8 @@ export function OvertimeDialog({
               onChange={(e) => updateField("hourlyRate", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="reason">Sabab</Label>
+          <div className="space-y-1">
+          <Label htmlFor="reason">Sabab</Label>
             <Textarea
               id="reason"
               value={form.reason}

@@ -1,9 +1,15 @@
+/**
+ * @module SkillsGapTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TrendingUp, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { EPStatusPill } from "@/components/ep";
 
 const SKILLS_GAP_DATA = [
   { skill: "Mashina boshqarish (Gofrokarton)", required: 4, current: 3.2, employees: 8, status: "gap" },
@@ -25,7 +31,7 @@ export function SkillsGapTab() {
         <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5" />Skills Gap Tahlili</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               {(["Ko'nikma", "Talab darajasi", "Mavjud daraja", "Gap", "Ta'lim zarur xodimlar", "Holat"]).map(h => <TableHead key={h}>{h}</TableHead>)}
@@ -36,17 +42,17 @@ export function SkillsGapTab() {
               const gap = (row.required - row.current).toFixed(1);
               const gapNum = parseFloat(gap);
               return (
-                <TableRow key={`k-${i}`} data-testid={`row-skills-gap-${i}`}>
+                <TableRow key={`k-${i}`} data-testid={`row-skills-gap-${i}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{row.skill}</TableCell>
                   <TableCell className="text-center">{row.required}/5</TableCell>
                   <TableCell className="text-center font-mono">{row.current}/5</TableCell>
                   <TableCell className="text-center">
-                    <span className={`font-mono font-bold ${gapNum > 0.5 ? "text-red-500" : gapNum > 0 ? "text-orange-500" : "text-green-500"}`}>
+                    <span className={`font-mono font-bold ${gapNum > 0.5 ? "text-[var(--ep-red)]" : gapNum > 0 ? "text-[var(--ep-primary)]" : "text-[var(--ep-green)]"}`}>
                       {gapNum > 0 ? `+${gap}` : gap}
                     </span>
                   </TableCell>
                   <TableCell className="text-center">
-                    {row.employees > 0 ? <Badge variant="destructive">{row.employees} kishi</Badge> : <Badge variant="secondary">—</Badge>}
+                    {row.employees > 0 ? <EPStatusPill tone="danger">{row.employees} kishi</EPStatusPill> : <EPStatusPill tone="neutral">—</EPStatusPill>}
                   </TableCell>
                   <TableCell>
                     <Badge variant={row.status === "ok" ? "secondary" : row.status === "gap" ? "default" : "destructive"}>
@@ -57,7 +63,7 @@ export function SkillsGapTab() {
               );
             })}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
     </>

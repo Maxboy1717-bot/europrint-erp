@@ -1,3 +1,8 @@
+/**
+ * @module QCReclamationsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +12,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MessageSquareWarning, Plus } from "lucide-react";
+import { MessageSquareWarning, Plus } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+import { EPLoader } from "@/components/ep";
 interface Reclamation {
   id: string;
   reclamationNumber: string;
@@ -60,11 +66,11 @@ export function QCReclamationsTab() {
         </CardHeader>
         <CardContent>
           {reclamationsLoading ? (
-            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <div className="flex justify-center py-8"><EPLoader className="w-6 h-6" /></div>
           ) : !reclamationsData?.length ? (
-            <div className="text-center py-8 text-muted-foreground">Reklamatsiyalar yo'q</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">Reklamatsiyalar yo'q</div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Raqam</TableHead>
@@ -77,7 +83,7 @@ export function QCReclamationsTab() {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(reclamationsData) ? reclamationsData : []).map(r => (
-                  <TableRow key={r.id} data-testid={`row-reclamation-${r.id}`}>
+                  <TableRow key={r.id} data-testid={`row-reclamation-${r.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-mono text-sm">{r.reclamationNumber}</TableCell>
                     <TableCell>{r.clientName}</TableCell>
                     <TableCell>{r.claimDate}</TableCell>
@@ -93,19 +99,19 @@ export function QCReclamationsTab() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={reclamationDialogOpen} onOpenChange={setReclamationDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg p-6">
           <DialogHeader>
-            <DialogTitle>Yangi Reklamatsiya</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">Yangi Reklamatsiya</DialogTitle>
             <DialogDescription>Mijoz shikoyatini qayd eting</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Mijoz nomi *</label>
                 <Input id="rcl-client" placeholder="Mijoz nomi" data-testid="input-reclamation-client" />
@@ -118,7 +124,7 @@ export function QCReclamationsTab() {
             <div>
               <label className="text-sm font-medium">Muammo turi *</label>
               <Select onValueChange={(v) => { const el = document.getElementById("rcl-type-hidden") as HTMLInputElement; if(el) el.value = v; }}>
-                <SelectTrigger data-testid="select-reclamation-type">
+                <SelectTrigger data-testid="select-reclamation-type" className="h-9">
                   <SelectValue placeholder="Muammo turi" />
                 </SelectTrigger>
                 <SelectContent>
@@ -157,7 +163,7 @@ export function QCReclamationsTab() {
                   createReclamationMutation.mutate({ clientName, claimDate, issueType, defectQuantity, description });
                 }}
               >
-                {createReclamationMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {createReclamationMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
                 Saqlash
               </Button>
             </DialogFooter>

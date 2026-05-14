@@ -1,3 +1,8 @@
+/**
+ * @module use-mm
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, safeArray } from "@/lib/queryClient";
 
@@ -49,7 +54,7 @@ export function useCreatePurchaseOrder() {
 export function useApprovePurchaseOrder() {
   return useMutation({
     mutationFn: (id: string | number) =>
-      apiRequest("PATCH", `/api/mm/purchase-orders/${id}/approve`, {}),
+      apiRequest("POST", `/api/mm/purchase-orders/${id}/approve`, {}),
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ["/api/mm/purchase-orders"],

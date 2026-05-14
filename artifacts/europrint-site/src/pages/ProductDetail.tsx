@@ -1,3 +1,8 @@
+/**
+ * @module ProductDetail
+ * @description Source module. See exports for details.
+ */
+
 import { useRoute, Link } from "wouter";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";

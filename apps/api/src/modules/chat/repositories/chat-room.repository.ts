@@ -1,7 +1,12 @@
+/**
+ * @module chat-room.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, or, isNull, sql } from 'drizzle-orm';
 import { chatRooms, chatMembers, chatMessages, orgDepartments, employeeOrgDepartments, appUsers, adminsTable } from '@shared/db';
 import { ensureChatTables as _ensureChatTables, runChatMigrations as _runChatMigrations, ensureChatTrigger as _ensureChatTrigger } from '@common/database/ddl-migrations';
 import { safeCall, Result } from '@common/result';
@@ -126,8 +131,8 @@ export class ChatRoomRepository {
           lastReadAt: chatMembers.last_read_at,
           memberRole: chatMembers.role,
           unreadCount: sql<number>`COALESCE(${chatMembers.unread_count}, 0)`,
-          lastMessage: sql<unknown>`(SELECT json_build_object('id', m.id, 'content', COALESCE(m.content, m.text), 'senderName', u.full_name, 'createdAt', m.created_at, 'messageType', LOWER(m.message_type)) FROM chat_messages m LEFT JOIN users u ON u.id = m.sender_id::int WHERE m.room_id = ${chatRooms.id} AND m.is_deleted = false ORDER BY m.created_at DESC LIMIT 1)`,
-          displayName: sql<string>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT u.full_name FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE ${chatRooms.name} END`,
+          lastMessage: sql<unknown>`(SELECT json_build_object('id', m.id, 'content', COALESCE(m.content, m.text), 'senderName', (u.first_name || ' ' || u.last_name), 'createdAt', m.created_at, 'messageType', LOWER(m.message_type)) FROM chat_messages m LEFT JOIN users u ON u.id = m.sender_id::int WHERE m.room_id = ${chatRooms.id} AND m.is_deleted = false ORDER BY m.created_at DESC LIMIT 1)`,
+          displayName: sql<string>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT (u.first_name || ' ' || u.last_name) FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE ${chatRooms.name} END`,
           avatarUrl: sql<string>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT u.profile_image_url FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE NULL END`,
           otherUserId: sql<unknown>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT u.id FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE NULL END`,
         })
@@ -179,11 +184,11 @@ export class ChatRoomRepository {
       }, 'DB_ERROR');
   }
 
-  async createGroupRoom(name: string, createdByStr: string): Promise<Result<Record<string, unknown>>> {
+  async createGroupRoom(name: string, createdByStr: string, type: 'GROUP' | 'CHANNEL' = 'GROUP'): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db
         .insert(chatRooms)
-        .values({ name, type: 'GROUP', created_by: createdByStr })
+        .values({ name, type, created_by: createdByStr })
         .returning();
       return castTo<Record<string, unknown>>(row);
       }, 'DB_ERROR');
@@ -230,13 +235,21 @@ export class ChatRoomRepository {
           fullName: appUsers.full_name,
           employeeId: appUsers.employee_id,
           avatarUrl: appUsers.profile_image_url,
-          departmentName: sql<string>`(SELECT d.name FROM org_departments d JOIN employee_org_departments eod ON eod.org_department_id = d.id WHERE eod.user_id = ${appUsers.id} LIMIT 1)`,
+          departmentName: sql<string>`(
+            SELECT d.name FROM org_departments d
+            JOIN employee_org_departments eod ON eod.org_department_id = d.id
+            WHERE eod.user_id = users.id LIMIT 1
+          )`,
         })
         .from(appUsers)
         .where(
           and(
             isNull(appUsers.deleted_at),
-            eq(appUsers.status, 'active'),
+            // Accept active users OR users with no status set (NULL)
+            or(
+              eq(appUsers.status, 'active'),
+              isNull(appUsers.status),
+            ),
             search ? sql`${appUsers.full_name} ILIKE ${'%' + search + '%'}` : undefined,
           ),
         )
@@ -284,5 +297,27 @@ export class ChatRoomRepository {
       .update(chatMembers)
       .set({ is_muted: muted, muted_until: null })
       .where(and(eq(chatMembers.room_id, roomIdStr), eq(chatMembers.user_id, userIdStr)));
+  }
+
+  async findTodayBirthdays(): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id: appUsers.id,
+          fullName: appUsers.full_name,
+          avatarUrl: appUsers.profile_image_url,
+          birthDate: sql<string>`${appUsers.birth_date}`,
+        })
+        .from(appUsers)
+        .where(
+          and(
+            isNull(appUsers.deleted_at),
+            sql`TO_CHAR(${appUsers.birth_date}::date, 'MM-DD') = TO_CHAR(CURRENT_DATE, 'MM-DD')`,
+            sql`${appUsers.birth_date} IS NOT NULL`,
+          ),
+        )
+        .limit(50);
+      return castTo<Record<string, unknown>[]>(rows);
+    }, 'DB_ERROR');
   }
 }

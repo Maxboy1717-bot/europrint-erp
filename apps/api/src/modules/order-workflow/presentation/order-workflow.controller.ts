@@ -1,3 +1,8 @@
+/**
+ * @module order-workflow.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body, Controller, Get, Logger, Param,
   Patch, Post, Query, UseGuards,

@@ -1,255 +1,153 @@
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
-import { Injectable, Logger } from '@nestjs/common';
-import { and, eq, desc, lt, ne, isNotNull, sql } from 'drizzle-orm';
-import { db, kanban_tasks } from '@shared/db';
-import { safeCall, Result } from '@common/result';
-import {
-  kanbanFlows, kanbanRobots, kanbanChecklists, kanbanChecklistItems,
-  kanbanCardComments, kanbanCardWatchers,
-} from '@europrint/schemas';
+/**
+ * @module drizzle-kanban-ext.repo
+ * @description Facade repository — delegates all methods to the three
+ * focused sub-repositories. Kept so that kanban-ext.service.ts and
+ * kanban.module.ts do not need to change.
+ *
+ * Sub-repos:
+ *   DrizzleKanbanCoreRepository       — Flows, Robots, Board, Checklists, Comments, Watchers, Card creation, Accept/Complete
+ *   DrizzleKanbanEngagementRepository — Notifications, Templates, Time Tracking, Tags, Observers, Co-Executors
+ *   DrizzleKanbanAnalyticsRepository  — Results, Files, Analytics & Stats, Legacy helpers
+ */
 
-const COUNT_EXPR = sql<number>`count(*)::int`;
+import { Injectable } from '@nestjs/common';
+import { Result } from '@common/result';
+import { DrizzleKanbanCoreRepository } from './drizzle-kanban-core.repo';
+import { DrizzleKanbanEngagementRepository } from './drizzle-kanban-engagement.repo';
+import { DrizzleKanbanAnalyticsRepository } from './drizzle-kanban-analytics.repo';
+
+export { DrizzleKanbanCoreRepository } from './drizzle-kanban-core.repo';
+export { DrizzleKanbanEngagementRepository } from './drizzle-kanban-engagement.repo';
+export { DrizzleKanbanAnalyticsRepository } from './drizzle-kanban-analytics.repo';
 
 @Injectable()
 export class DrizzleKanbanExtRepository {
-  private readonly logger = new Logger(DrizzleKanbanExtRepository.name);
+  constructor(
+    private readonly core: DrizzleKanbanCoreRepository,
+    private readonly engagement: DrizzleKanbanEngagementRepository,
+    private readonly analytics: DrizzleKanbanAnalyticsRepository,
+  ) {}
 
-  async getFlowById(id: string): Promise<Result<Record<string, unknown> | null>> {
-    return safeCall(async () => {
-      const [row] = await db.select().from(kanbanFlows).where(eq(kanbanFlows.id, id)).limit(1);
-      return row ?? null;
-    });
-  }
+  // ─── Flows ────────────────────────────────────────────────────────────────
 
-  async updateFlow(id: string, name: string, description: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.update(kanbanFlows)
-        .set({ name, description, updatedAt: _time.now() })
-        .where(eq(kanbanFlows.id, id))
-        .returning();
-      return row ?? { id };
-    });
-  }
+  getFlowsByBoard(boardId: string) { return this.core.getFlowsByBoard(boardId); }
+  createFlow(data: { boardId: string; name: string; description?: string; assignmentType?: string; userIds?: string[] }) { return this.core.createFlow(data); }
+  getFlowById(id: string) { return this.core.getFlowById(id); }
+  updateFlow(id: string, name: string, description: string) { return this.core.updateFlow(id, name, description); }
+  deleteFlow(id: string) { return this.core.deleteFlow(id); }
 
-  async deleteFlow(id: string): Promise<Result<void>> {
-    return safeCall(async () => { await db.delete(kanbanFlows).where(eq(kanbanFlows.id, id)); });
-  }
+  // ─── Robots ───────────────────────────────────────────────────────────────
 
-  async getRobotById(id: string): Promise<Result<Record<string, unknown> | null>> {
-    return safeCall(async () => {
-      const [row] = await db.select().from(kanbanRobots).where(eq(kanbanRobots.id, id)).limit(1);
-      return row ?? null;
-    });
-  }
+  getRobotsByBoard(boardId: string) { return this.core.getRobotsByBoard(boardId); }
+  createRobot(data: { boardId: string; name: string; trigger: string; actions: unknown[] }) { return this.core.createRobot(data); }
+  getRobotById(id: string) { return this.core.getRobotById(id); }
+  updateRobot(id: string, name: string, isActive: boolean) { return this.core.updateRobot(id, name, isActive); }
+  deleteRobot(id: string) { return this.core.deleteRobot(id); }
 
-  async updateRobot(id: string, name: string, isActive: boolean): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.update(kanbanRobots)
-        .set({ name, isActive })
-        .where(eq(kanbanRobots.id, id))
-        .returning();
-      return row ?? { id };
-    });
-  }
+  // ─── Board board-level ────────────────────────────────────────────────────
 
-  async deleteRobot(id: string): Promise<Result<void>> {
-    return safeCall(async () => { await db.delete(kanbanRobots).where(eq(kanbanRobots.id, id)); });
-  }
+  updateBoardFlows(boardId: string, name: string) { return this.core.updateBoardFlows(boardId, name); }
+  deleteBoardFlows(boardId: string) { return this.core.deleteBoardFlows(boardId); }
 
-  async updateBoardFlows(boardId: string, name: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      await db.update(kanbanFlows)
-        .set({ name, updatedAt: _time.now() })
-        .where(eq(kanbanFlows.boardId, boardId));
-      return { boardId, name, updatedAt: _time.now().toISOString() };
-    });
-  }
+  // ─── Checklists ───────────────────────────────────────────────────────────
 
-  async deleteBoardFlows(boardId: string): Promise<Result<void>> {
-    return safeCall(async () => { await db.delete(kanbanFlows).where(eq(kanbanFlows.boardId, boardId)); });
-  }
+  getCardChecklists(cardId: string) { return this.core.getCardChecklists(cardId); }
+  createChecklist(cardId: string, title: string) { return this.core.createChecklist(cardId, title); }
+  updateChecklist(id: string, title: string) { return this.core.updateChecklist(id, title); }
+  deleteChecklist(id: string) { return this.core.deleteChecklist(id); }
+  getChecklistItems(checklistId: string) { return this.core.getChecklistItems(checklistId); }
+  createChecklistItem(checklistId: string, title: string) { return this.core.createChecklistItem(checklistId, title); }
+  updateChecklistItem(checklistId: string, itemId: string, title: string, isCompleted: boolean) { return this.core.updateChecklistItem(checklistId, itemId, title, isCompleted); }
+  deleteChecklistItem(checklistId: string, itemId: string) { return this.core.deleteChecklistItem(checklistId, itemId); }
+  toggleChecklistItem(itemId: string) { return this.core.toggleChecklistItem(itemId); }
 
-  async getCardChecklists(cardId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => db.select().from(kanbanChecklists)
-      .where(eq(kanbanChecklists.cardId, cardId))
-      .orderBy(kanbanChecklists.position));
-  }
+  // ─── Comments ─────────────────────────────────────────────────────────────
 
-  async createChecklist(cardId: string, title: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanChecklists).values({ cardId, title }).returning();
-      if (!row) throw new Error('Cheklistni yaratishda xato: natija qaytmadi');
-      return row;
-    });
-  }
+  getCardComments(cardId: string) { return this.core.getCardComments(cardId); }
+  addComment(cardId: string, userId: number, content: string) { return this.core.addComment(cardId, userId, content); }
 
-  async updateChecklist(id: string, title: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.update(kanbanChecklists)
-        .set({ title })
-        .where(eq(kanbanChecklists.id, id))
-        .returning();
-      return row ?? { id };
-    });
-  }
+  // ─── Watchers ─────────────────────────────────────────────────────────────
 
-  async deleteChecklist(id: string): Promise<Result<void>> {
-    return safeCall(async () => { await db.delete(kanbanChecklists).where(eq(kanbanChecklists.id, id)); });
-  }
+  getCardWatchers(cardId: string) { return this.core.getCardWatchers(cardId); }
+  addWatcher(cardId: string, userId: number) { return this.core.addWatcher(cardId, userId); }
 
-  async getChecklistItems(checklistId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => db.select().from(kanbanChecklistItems)
-      .where(eq(kanbanChecklistItems.checklistId, checklistId))
-      .orderBy(kanbanChecklistItems.position));
-  }
+  // ─── Card creation ────────────────────────────────────────────────────────
 
-  async createChecklistItem(checklistId: string, title: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanChecklistItems).values({ checklistId, title }).returning();
-      if (!row) throw new Error('Checklist elementi yaratishda xato: natija qaytmadi');
-      return row;
-    });
-  }
+  createCardFlat(data: Record<string, unknown>) { return this.core.createCardFlat(data); }
 
-  async updateChecklistItem(
-    checklistId: string, itemId: string, title: string, isCompleted: boolean,
-  ): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.update(kanbanChecklistItems)
-        .set({ title, isCompleted })
-        .where(and(eq(kanbanChecklistItems.checklistId, checklistId), eq(kanbanChecklistItems.id, itemId)))
-        .returning();
-      return row ?? { id: itemId };
-    });
-  }
+  // ─── Accept / Complete ────────────────────────────────────────────────────
 
-  async deleteChecklistItem(checklistId: string, itemId: string): Promise<Result<void>> {
-    return safeCall(async () => {
-      await db.delete(kanbanChecklistItems)
-        .where(and(eq(kanbanChecklistItems.checklistId, checklistId), eq(kanbanChecklistItems.id, itemId)));
-    });
-  }
+  acceptCard(cardId: string, userId: number) { return this.core.acceptCard(cardId, userId); }
+  completeCard(cardId: string, userId: number, completionReport?: string) { return this.core.completeCard(cardId, userId, completionReport); }
 
-  async toggleChecklistItem(itemId: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.update(kanbanChecklistItems)
-        .set({ isCompleted: sql<boolean>`NOT ${kanbanChecklistItems.isCompleted}` })
-        .where(eq(kanbanChecklistItems.id, itemId))
-        .returning();
-      return row ?? { id: itemId };
-    });
-  }
+  // ─── Notifications ────────────────────────────────────────────────────────
 
-  async getCardComments(cardId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => db.select().from(kanbanCardComments)
-      .where(eq(kanbanCardComments.cardId, cardId))
-      .orderBy(desc(kanbanCardComments.createdAt)));
-  }
+  getUnreadCount(userId: number) { return this.engagement.getUnreadCount(userId); }
+  getNotifications(userId: number, limit?: number, offset?: number) { return this.engagement.getNotifications(userId, limit, offset); }
+  markNotificationRead(id: string, userId: number) { return this.engagement.markNotificationRead(id, userId); }
+  markAllNotificationsRead(userId: number) { return this.engagement.markAllNotificationsRead(userId); }
+  createNotification(data: { userId: number; cardId?: string; boardId?: string; type: string; title: string; message?: string }) { return this.engagement.createNotification(data); }
 
-  async addComment(cardId: string, userId: number, content: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanCardComments).values({ cardId, userId, content }).returning();
-      if (!row) throw new Error('Izoh qo\'shishda xato: natija qaytmadi');
-      return row;
-    });
-  }
+  // ─── Templates ────────────────────────────────────────────────────────────
 
-  async getCardWatchers(cardId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => db.select().from(kanbanCardWatchers)
-      .where(eq(kanbanCardWatchers.cardId, cardId)));
-  }
+  getTemplates(boardId?: string) { return this.engagement.getTemplates(boardId); }
+  createTemplate(data: { name: string; description?: string; priority?: string; boardId?: string; checklistItems?: unknown[]; columnsConfig?: unknown[]; createdById?: number }) { return this.engagement.createTemplate(data); }
+  updateTemplate(id: string, data: { name?: string; description?: string; priority?: string; checklistItems?: unknown[]; columnsConfig?: unknown[] }) { return this.engagement.updateTemplate(id, data); }
+  deleteTemplate(id: string) { return this.engagement.deleteTemplate(id); }
 
-  async addWatcher(cardId: string, userId: number): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanCardWatchers).values({ cardId, userId }).returning();
-      if (!row) throw new Error('Kuzatuvchi qo\'shishda xato: natija qaytmadi');
-      return row;
-    });
-  }
+  // ─── Time Tracking ────────────────────────────────────────────────────────
 
-  async getSprintInfo(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const active = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(ne(kanban_tasks.status, 'done'));
-      const done = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(eq(kanban_tasks.status, 'done'));
-      return {
-        activeSprint: { totalCards: Number(active[0]?.count ?? 0), completedCards: Number(done[0]?.count ?? 0) },
-        upcomingSprints: [],
-        completedSprints: [],
-      };
-    });
-  }
+  startTimeTracking(cardId: string, userId: number, description?: string) { return this.engagement.startTimeTracking(cardId, userId, description); }
+  stopTimeTracking(cardId: string, userId: number) { return this.engagement.stopTimeTracking(cardId, userId); }
+  getTimeEntries(cardId: string) { return this.engagement.getTimeEntries(cardId); }
 
-  async getMembers(): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => {
-      const rows = await db.selectDistinct({ assignedTo: kanban_tasks.assigned_to })
-        .from(kanban_tasks)
-        .where(isNotNull(kanban_tasks.assigned_to));
-      return (rows ?? []).map((r) => ({ userId: r.assignedTo }));
-    });
-  }
+  // ─── Tags ─────────────────────────────────────────────────────────────────
 
-  async getOverdueCards(): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => db.select().from(kanban_tasks)
-      .where(and(lt(kanban_tasks.due_date, _time.now()), ne(kanban_tasks.status, 'done')))
-      .orderBy(kanban_tasks.due_date));
-  }
+  getCardTags(cardId: string) { return this.engagement.getCardTags(cardId); }
+  addTagToCard(cardId: string, tagData: { name: string; color?: string; boardId?: string }) { return this.engagement.addTagToCard(cardId, tagData); }
+  removeTagFromCard(cardId: string, tagId: string) { return this.engagement.removeTagFromCard(cardId, tagId); }
 
-  async getCardsByEmployee(employeeId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => db.select().from(kanban_tasks)
-      .where(eq(kanban_tasks.assigned_to, employeeId)));
-  }
+  // ─── Observers ────────────────────────────────────────────────────────────
 
-  async getProductivityReport(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const total = await db.select({ count: COUNT_EXPR }).from(kanban_tasks);
-      const done  = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(eq(kanban_tasks.status, 'done'));
-      return {
-        period: 'all',
-        totalCards:     Number(total[0]?.count ?? 0),
-        completedCards: Number(done[0]?.count ?? 0),
-        generatedAt: _time.now().toISOString(),
-      };
-    });
-  }
+  getObservers(cardId: string) { return this.engagement.getObservers(cardId); }
+  addObserver(cardId: string, userId: number) { return this.engagement.addObserver(cardId, userId); }
+  removeObserver(cardId: string, observerId: string) { return this.engagement.removeObserver(cardId, observerId); }
 
-  async getOverdueReport(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const rows = await db.select().from(kanban_tasks)
-        .where(and(lt(kanban_tasks.due_date, _time.now()), ne(kanban_tasks.status, 'done')))
-        .orderBy(kanban_tasks.due_date);
-      return { overdueCards: rows, totalOverdue: rows.length, generatedAt: _time.now().toISOString() };
-    });
-  }
+  // ─── Co-Executors ─────────────────────────────────────────────────────────
 
-  async getAnalyticsSummary(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const total = await db.select({ count: COUNT_EXPR }).from(kanban_tasks);
-      const done  = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(eq(kanban_tasks.status, 'done'));
-      return {
-        totalCards:     Number(total[0]?.count ?? 0),
-        completedCards: Number(done[0]?.count ?? 0),
-        overdueCards: 0,
-        activeUsers: 0,
-      };
-    });
-  }
+  getCoExecutors(cardId: string) { return this.engagement.getCoExecutors(cardId); }
+  addCoExecutor(cardId: string, userId: number) { return this.engagement.addCoExecutor(cardId, userId); }
+  removeCoExecutor(cardId: string, coExecutorId: string) { return this.engagement.removeCoExecutor(cardId, coExecutorId); }
 
-  async getEmployeePerformance(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const total = await db.select({ count: COUNT_EXPR }).from(kanban_tasks);
-      const done  = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(eq(kanban_tasks.status, 'done'));
-      return {
-        employees: [],
-        totalCards:     Number(total[0]?.count ?? 0),
-        completedCards: Number(done[0]?.count ?? 0),
-        generatedAt: _time.now().toISOString(),
-      };
-    });
-  }
+  // ─── Results ──────────────────────────────────────────────────────────────
+
+  getCardResults(cardId: string) { return this.analytics.getCardResults(cardId); }
+  createResult(cardId: string, createdById: number, description?: string) { return this.analytics.createResult(cardId, createdById, description); }
+  getResultFiles(resultId: string) { return this.analytics.getResultFiles(resultId); }
+  deleteResultFile(fileId: string) { return this.analytics.deleteResultFile(fileId); }
+  addResultFile(resultId: string, data: { fileName: string; fileUrl: string; fileSize?: number; mimeType?: string }) { return this.analytics.addResultFile(resultId, data); }
+
+  // ─── Files ────────────────────────────────────────────────────────────────
+
+  getCardFiles(cardId: string) { return this.analytics.getCardFiles(cardId); }
+  createFile(data: { cardId: string; fileName: string; fileUrl: string; fileSize?: number; mimeType?: string; uploadedById?: number }) { return this.analytics.createFile(data); }
+  deleteFile(fileId: string) { return this.analytics.deleteFile(fileId); }
+
+  // ─── Analytics & Stats ────────────────────────────────────────────────────
+
+  getTaskStats(boardId?: string) { return this.analytics.getTaskStats(boardId); }
+  getTeamMetrics(boardId?: string) { return this.analytics.getTeamMetrics(boardId); }
+  getOverdueInbox(boardId?: string) { return this.analytics.getOverdueInbox(boardId); }
+  getEmployees() { return this.analytics.getEmployees(); }
+
+  // ─── Legacy helpers ───────────────────────────────────────────────────────
+
+  getSprintInfo() { return this.analytics.getSprintInfo(); }
+  getMembers() { return this.analytics.getMembers(); }
+  getOverdueCards() { return this.analytics.getOverdueCards(); }
+  getCardsByEmployee(employeeId: string) { return this.analytics.getCardsByEmployee(employeeId); }
+  getProductivityReport() { return this.analytics.getProductivityReport(); }
+  getOverdueReport() { return this.analytics.getOverdueReport(); }
+  getAnalyticsSummary() { return this.analytics.getAnalyticsSummary(); }
+  getEmployeePerformance() { return this.analytics.getEmployeePerformance(); }
 }

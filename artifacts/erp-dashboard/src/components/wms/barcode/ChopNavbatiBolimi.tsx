@@ -1,3 +1,8 @@
+/**
+ * @module ChopNavbatiBolimi
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +15,7 @@ export function ChopNavbatiBolimi() {
     queryKey: ["/api/barcode-warehouse/print-queue"],
   });
 
-  if (isLoading) return <Skeleton className="h-20 w-full" />;
+  if (isLoading) return <Skeleton className="h-20 w-full rounded-lg" />;
 
   const kutayotganlar = navbat?.filter((p: PrintJob) => p.status === "PENDING") || [];
 

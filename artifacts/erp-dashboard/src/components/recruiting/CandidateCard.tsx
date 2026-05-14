@@ -1,6 +1,12 @@
-import React from "react";
+/**
+ * @module CandidateCard
+ * @description React UI component.
+ */
+
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { WORKER_TYPE_META } from "@/lib/workerType";
 import { SyndromeAnalysis } from "@/components/hr/SyndromeAnalysis";
 import { CandidateChecklistSheet, ChecklistProgressBadge, ProbationReviewBadges } from "@/pages/CandidateChecklist";
@@ -18,6 +24,7 @@ import {
 } from "@/components/recruiting/helpers";
 import type { PipelineEntry, Vacancy, AIInterviewSession } from "@/components/recruiting/types";
 
+import { useTranslation } from '@/lib/i18n';
 export interface CandidateCardProps {
   entry: PipelineEntry;
   stage: typeof STAGES[0];
@@ -36,20 +43,21 @@ export interface CandidateCardProps {
   setPortretVacancy: (v: Vacancy | null) => void;
 }
 
-export function CandidateCard({
-  entry, stage, aiSessions, vacancyMap,
+export function CandidateCard({entry, stage, aiSessions, vacancyMap,
   expandedCard, setExpandedCard,
   cpPanelOpen, setCpPanelOpen,
   updateMutation, rejectMutation,
   setInterviewEntry, setJobOfferEntry, setReportEntry, setRoadmapEntry, setPortretVacancy,
 }: CandidateCardProps) {
+  const { t } = useTranslation('common');
   const vac = entry.vacancy_id ? vacancyMap[entry.vacancy_id] : null;
   const isUrgent = vac?.is_urgent ?? false;
+  const [confirmRejectId, setConfirmRejectId] = useState<number | null>(null);
 
   return (
     <div
       data-testid={`card-candidate-${entry.id}`}
-      className={`bg-surface-container-lowest rounded-lg p-4 hover-elevate flex flex-col gap-2 shadow-sm ${isUrgent ? "border border-red-500/30" : ""}`}
+      className={`bg-card rounded-lg p-4 hover-elevate flex flex-col gap-2 shadow-sm ${isUrgent ? "border border-red-500/30" : ""}`}
     >
       <div className="flex items-start justify-between gap-1">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -58,7 +66,7 @@ export function CandidateCard({
           <ChecklistProgressBadge pipelineEntryId={entry.id} />
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
-          {isUrgent && <Badge className="bg-red-500 text-white text-[9px] px-1 py-0 h-4 gap-0.5"><Zap className="w-2 h-2" />SHOSHILINCH</Badge>}
+          {isUrgent && <Badge className="bg-[var(--ep-red)] text-white text-[9px] px-1 py-0 h-4 gap-0.5"><Zap className="w-2 h-2" />SHOSHILINCH</Badge>}
           <button data-testid={`button-expand-card-${entry.id}`} aria-label={expandedCard === entry.id ? "Portretni yopish" : "Portretni ko'rish"} aria-expanded={expandedCard === entry.id} onClick={() => setExpandedCard(expandedCard === entry.id ? null : entry.id)} className="text-muted-foreground hover:text-foreground transition-colors p-0.5">
             {expandedCard === entry.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
@@ -110,7 +118,7 @@ export function CandidateCard({
             {entry.recommendation && <span className={`text-[9px] rounded px-1.5 py-0.5 font-semibold uppercase ${entry.recommendation === "qabul" ? "bg-green-500/15 text-green-400" : entry.recommendation === "kutish" ? "bg-amber-500/15 text-amber-400" : entry.recommendation === "rad" ? "bg-orange-500/15 text-orange-400" : "bg-red-500/15 text-red-400"}`}>{entry.recommendation === "qabul" ? "✓ Qabul" : entry.recommendation === "kutish" ? "⏳ Kutish" : entry.recommendation === "rad" ? "✕ Rad" : "⛔ Hech qachon"}</span>}
           </div>
           {entry.tool_test_results && Object.keys(entry.tool_test_results).length > 0 && (
-            <div className="grid grid-cols-5 gap-1 mt-0.5">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-1 mt-0.5">
               {(["A","B","C","D","E","F","G","H","I","J"]).map(key => {
                 const score = entry.tool_test_results?.[key] ?? 0;
                 const pct = Math.max(4, (score + 100) / 2);
@@ -153,13 +161,13 @@ export function CandidateCard({
           {vac.portret?.danger_candidate && <div><span className="text-[10px] text-red-400 font-medium">Xavfli kanditat:</span><p className="text-muted-foreground mt-0.5 leading-snug line-clamp-2">{vac.portret.danger_candidate}</p></div>}
 
           {(stage.key === "INTERVIEW_SCHEDULED" || stage.key === "INTERVIEWED") && vac.portret?.candidate_presentation && Object.values(vac.portret.candidate_presentation).some(v => !!v) && (() => {
-            const cp = vac.portret!.candidate_presentation!;
+            const cp = vac.portret?.candidate_presentation ?? {};
             const isOpen = cpPanelOpen.has(entry.id);
             const sinov = ([cp.sinov_maosh_min, cp.sinov_maosh_max]).filter(Boolean).join(" – ");
             const SHARTNOMA_LABELS: Record<string, string> = { unlimited: "Muddatsiz", limited: "Muddatli", gpc: "GPC", ip: "IP" };
             return (
               <div className="border border-sky-500/30 rounded-lg bg-sky-500/5 overflow-hidden">
-                <button type="button" onClick={() => setCpPanelOpen((prev: Set<number>) => { const next = new Set(prev); if (next.has(entry.id)) next.delete(entry.id); else next.add(entry.id); return next; })} className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-sky-500/10 transition-colors">
+                <button type="button" onClick={() => setCpPanelOpen((prev: Set<number>) => { const next = new Set(prev); if (next.has(entry.id)) next.delete(entry.id); else next.add(entry.id); return next; })} className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-[var(--ep-blue)]/90/10 transition-colors">
                   <span className="text-[10px] font-semibold text-sky-400 flex items-center gap-1">💬 Kandidatga aytiladi (IV bo'lim)</span>
                   <span className="text-[10px] text-sky-400">{isOpen ? "▲" : "▼"}</span>
                 </button>
@@ -193,7 +201,7 @@ export function CandidateCard({
           {vac.tool_test_requirements?.traits && (
             <div>
               <span className="text-[10px] text-muted-foreground">TOOL TEST talabi vs natija (A-J):</span>
-              <div className="grid grid-cols-5 gap-x-2 gap-y-1.5 mt-1">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-1.5 mt-1">
                 {(["A","B","C","D","E","F","G","H","I","J"]).map(k => {
                   const req = vac.tool_test_requirements?.traits?.[k] ?? 0;
                   const cand = entry.tool_test_results?.[k] ?? null;
@@ -236,20 +244,30 @@ export function CandidateCard({
           {stage.key === "PROBATION" && <ProbationCompleteButton entryId={entry.id} isPending={updateMutation.isPending} onComplete={() => updateMutation.mutate({ id: entry.id, funnel_stage: "SINOV_COMPLETE" })} />}
           {NEXT_STAGE[stage.key] && stage.key !== "PROBATION" && (
             <Button data-testid={`button-advance-${entry.id}`} size="sm" variant="default" className="h-7 text-xs flex-1" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate({ id: entry.id, funnel_stage: NEXT_STAGE[stage.key]! })}>
-              <ChevronRight className="w-3 h-3 mr-0.5" />{(STAGES ?? []).find(s => s.key === NEXT_STAGE[stage.key])?.label}
+              <ChevronRight className="w-3 h-3 mr-0.5" />{(Array.isArray(STAGES) ? STAGES : []).find(s => s.key === NEXT_STAGE[stage.key])?.label}
             </Button>
           )}
-          {!TERMINAL_STAGES.includes(stage.key) && <Button data-testid={`button-reject-${entry.id}`} size="sm" variant="outline" className="h-7 text-xs text-red-500 border-red-500/30" disabled={rejectMutation.isPending} onClick={() => rejectMutation.mutate(entry.id)}>✕</Button>}
+          {!TERMINAL_STAGES.includes(stage.key) && <Button data-testid={`button-reject-${entry.id}`} size="sm" variant="outline" className="h-7 text-xs text-[var(--ep-red)] border-red-500/30" disabled={rejectMutation.isPending} onClick={() => setConfirmRejectId(entry.id)}>✕</Button>}
         </div>
-        {stage.key === "OFFER_SENT" && <Button size="sm" variant="outline" className="h-6 text-[10px] text-orange-400 border-orange-500/30 hover:bg-orange-500/10 gap-1" onClick={() => setJobOfferEntry(entry)} data-testid={`button-job-offer-${entry.id}`}><Send className="w-2.5 h-2.5" />Job Offer</Button>}
-        {(["INTERVIEWED", "OFFER_SENT", "HIRED", "REJECTED"] as FunnelStage[]).includes(stage.key) && <Button size="sm" variant="ghost" className="h-6 text-[10px] text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 gap-1 px-1 border border-blue-500/20" onClick={() => setReportEntry(entry)} data-testid={`button-candidate-report-${entry.id}`}><FileText className="w-2.5 h-2.5" />Hisobot</Button>}
-        {stage.key === "HIRED" && <Button size="sm" variant="outline" className="h-6 text-[10px] text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 gap-1" onClick={() => setRoadmapEntry(entry)} data-testid={`button-roadmap-${entry.id}`}><Map className="w-2.5 h-2.5" />Yo'l xaritasi</Button>}
-        {vac?.portret && <Button size="sm" variant="ghost" className="h-6 text-[10px] text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 px-1" onClick={() => vac && setPortretVacancy(vac)}><BookOpen className="w-2.5 h-2.5 mr-1" />Portret ko'rish</Button>}
-        {(stage.key === "INTERVIEW_SCHEDULED" || stage.key === "INTERVIEWED" || stage.key === "TEST_SENT") && <Button size="sm" variant="ghost" data-testid={`button-interview-blank-${entry.id}`} className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 px-1" onClick={() => setInterviewEntry(entry)}><Star className="w-2.5 h-2.5 mr-1" />Suhbat blanki</Button>}
-        {stage.key === "PHONE_SCREENING" && <PhoneScriptSheet candidateName={entry.candidate_name} trigger={<Button size="sm" variant="ghost" data-testid={`button-phone-script-${entry.id}`} className="h-6 text-[10px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 px-1"><Phone className="w-2.5 h-2.5" />Skript №53</Button>} />}
-        {(stage.key === "NEW" || stage.key === "QUESTIONNAIRE_SENT") && <CVScreeningGuide candidateName={entry.candidate_name} trigger={<Button size="sm" variant="ghost" data-testid={`button-cv-guide-${entry.id}`} className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 gap-1 px-1"><FileText className="w-2.5 h-2.5" />CV Mezonlari №52</Button>} />}
+        {stage.key === "OFFER_SENT" && <Button size="sm" variant="outline" className="h-6 text-[10px] text-orange-400 border-orange-500/30 hover:bg-[var(--ep-primary)]/90/10 gap-1" onClick={() => setJobOfferEntry(entry)} data-testid={`button-job-offer-${entry.id}`}><Send className="w-2.5 h-2.5" />{t('jobOffer')}</Button>}
+        {(["INTERVIEWED", "OFFER_SENT", "HIRED", "REJECTED"] as FunnelStage[]).includes(stage.key) && <Button size="sm" variant="ghost" className="h-6 text-[10px] text-blue-400 hover:text-blue-300 hover:bg-[var(--ep-blue)]/90/10 gap-1 px-1 border border-blue-500/20" onClick={() => setReportEntry(entry)} data-testid={`button-candidate-report-${entry.id}`}><FileText className="w-2.5 h-2.5" />Hisobot</Button>}
+        {stage.key === "HIRED" && <Button size="sm" variant="outline" className="h-6 text-[10px] text-emerald-400 border-emerald-500/30 hover:bg-[var(--ep-green)]/90/10 gap-1" onClick={() => setRoadmapEntry(entry)} data-testid={`button-roadmap-${entry.id}`}><Map className="w-2.5 h-2.5" />Yo'l xaritasi</Button>}
+        {vac?.portret && <Button size="sm" variant="ghost" className="h-6 text-[10px] text-purple-400 hover:text-purple-300 hover:bg-[var(--ep-purple)]/90/10 px-1" onClick={() => vac && setPortretVacancy(vac)}><BookOpen className="w-2.5 h-2.5 mr-1" />Portret ko'rish</Button>}
+        {(stage.key === "INTERVIEW_SCHEDULED" || stage.key === "INTERVIEWED" || stage.key === "TEST_SENT") && <Button size="sm" variant="ghost" data-testid={`button-interview-blank-${entry.id}`} className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-[var(--ep-cyan)]/90/10 px-1" onClick={() => setInterviewEntry(entry)}><Star className="w-2.5 h-2.5 mr-1" />Suhbat blanki</Button>}
+        {stage.key === "PHONE_SCREENING" && <PhoneScriptSheet candidateName={entry.candidate_name} trigger={<Button size="sm" variant="ghost" data-testid={`button-phone-script-${entry.id}`} className="h-6 text-[10px] text-violet-400 hover:text-violet-300 hover:bg-[var(--ep-purple)]/90/10 gap-1 px-1"><Phone className="w-2.5 h-2.5" />Skript №53</Button>} />}
+        {(stage.key === "NEW" || stage.key === "QUESTIONNAIRE_SENT") && <CVScreeningGuide candidateName={entry.candidate_name} trigger={<Button size="sm" variant="ghost" data-testid={`button-cv-guide-${entry.id}`} className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-[var(--ep-cyan)]/90/10 gap-1 px-1"><FileText className="w-2.5 h-2.5" />CV Mezonlari №52</Button>} />}
         <AIInterviewDialog entry={entry} sessions={aiSessions} />
       </div>
+      <ConfirmDialog
+        open={confirmRejectId !== null}
+        onOpenChange={(open) => { if (!open) setConfirmRejectId(null); }}
+        title="Nomzodni rad etish"
+        description={`"${entry.candidate_name}" nomzodini rad etishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.`}
+        confirmText="Rad etish"
+        cancelText="Bekor qilish"
+        variant="destructive"
+        onConfirm={() => { if (confirmRejectId !== null) rejectMutation.mutate(confirmRejectId); }}
+      />
     </div>
   );
 }

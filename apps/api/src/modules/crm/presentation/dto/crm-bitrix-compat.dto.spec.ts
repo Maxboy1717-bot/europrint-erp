@@ -1,3 +1,8 @@
+/**
+ * @module crm-bitrix-compat.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import {
   CreateRobotDtoSchema,
   UpdateRobotDtoSchema,

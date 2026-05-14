@@ -143,7 +143,7 @@ export const hrVacancyProfiles = pgTable("hr_vacancy_profiles", {
 export const hrCandidateFunnels = pgTable("hr_candidate_funnels", {
   id: serial("id").primaryKey(),
   candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
-  vacancyId: integer("vacancy_id").references(() => vacancies.id),
+  vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
 
   // Joriy funnel bosqichi
   funnelStage: recruitmentFunnelStageEnum("funnel_stage").notNull().default("NEW"),
@@ -154,7 +154,7 @@ export const hrCandidateFunnels = pgTable("hr_candidate_funnels", {
   // Manba (HR CAPITAL Material #50)
   source: candidateSourceEnum("source").default("OTHER"),
   sourceDetails: text("source_details"), // Masalan: "Telegram @europrint_jobs kanali"
-  referredById: integer("referred_by_id").references(() => users.id), // Tavsiya qilgan xodim
+  referredById: integer("referred_by_id").references(() => users.id, { onDelete: "set null" }), // Tavsiya qilgan xodim
 
   // Tezkor qayta ishlash ma'lumotlari (4-qadam)
   initialScreeningNotes: text("initial_screening_notes"),
@@ -169,7 +169,7 @@ export const hrCandidateFunnels = pgTable("hr_candidate_funnels", {
   rejectedAt: timestamp("rejected_at"),
 
   // Mas'ul rekruter
-  assignedRecruiterId: integer("assigned_recruiter_id").references(() => users.id),
+  assignedRecruiterId: integer("assigned_recruiter_id").references(() => users.id, { onDelete: "set null" }),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -185,7 +185,7 @@ export const hrFunnelHistory = pgTable("hr_funnel_history", {
   funnelId: integer("funnel_id").notNull().references(() => hrCandidateFunnels.id, { onDelete: "cascade" }),
   fromStage: recruitmentFunnelStageEnum("from_stage"),
   toStage: recruitmentFunnelStageEnum("to_stage").notNull(),
-  changedById: integer("changed_by_id").references(() => users.id),
+  changedById: integer("changed_by_id").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -198,8 +198,8 @@ export const hrFunnelHistory = pgTable("hr_funnel_history", {
 export const hrToolTestResults = pgTable("hr_tool_test_results", {
   id: serial("id").primaryKey(),
   candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
-  vacancyId: integer("vacancy_id").references(() => vacancies.id),
-  funnelId: integer("funnel_id").references(() => hrCandidateFunnels.id),
+  vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
+  funnelId: integer("funnel_id").references(() => hrCandidateFunnels.id, { onDelete: "set null" }),
 
   // 10 ta shaxsiyat ko'rsatkichi (-100 dan +100 gacha)
   pointA: integer("point_a"), // Внимание  — Diqqat
@@ -225,7 +225,7 @@ export const hrToolTestResults = pgTable("hr_tool_test_results", {
   positionMatchNotes: text("position_match_notes"),
 
   // Tekshirish ma'lumotlari
-  testedById: integer("tested_by_id").references(() => users.id), // Tekshiruvchi
+  testedById: integer("tested_by_id").references(() => users.id, { onDelete: "set null" }), // Tekshiruvchi
   testDate: timestamp("test_date").notNull().defaultNow(),
   isValid: boolean("is_valid").notNull().default(true),
   invalidReason: text("invalid_reason"),
@@ -241,8 +241,8 @@ export const hrToolTestResults = pgTable("hr_tool_test_results", {
 export const hrProductivityInterviews = pgTable("hr_productivity_interviews", {
   id: serial("id").primaryKey(),
   candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
-  funnelId: integer("funnel_id").references(() => hrCandidateFunnels.id),
-  interviewerId: integer("interviewer_id").references(() => users.id),
+  funnelId: integer("funnel_id").references(() => hrCandidateFunnels.id, { onDelete: "set null" }),
+  interviewerId: integer("interviewer_id").references(() => users.id, { onDelete: "set null" }),
 
   // 1-qism: Produktivlik intervyusi (Интервью на продуктивность)
   productivityInterview: jsonb("productivity_interview").$type<{
@@ -301,8 +301,8 @@ export const hrOnboardingPlans = pgTable("hr_onboarding_plans", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 200 }).notNull(),
   nameRu: varchar("name_ru", { length: 200 }),
-  positionId: integer("position_id").references(() => positions.id),
-  departmentId: integer("department_id").references(() => departments.id),
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
 
   // Haftalik reja (6 hafta — HR Manager uchun HR CAPITAL standarti)
   weeklyPlan: jsonb("weekly_plan").$type<Array<{
@@ -333,7 +333,7 @@ export const hrOnboardingPlans = pgTable("hr_onboarding_plans", {
   }>>(),
 
   isActive: boolean("is_active").notNull().default(true),
-  createdById: integer("created_by_id").references(() => users.id),
+  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -342,8 +342,8 @@ export const hrOnboardingPlans = pgTable("hr_onboarding_plans", {
 export const hrEmployeeOnboardings = pgTable("hr_employee_onboardings", {
   id: serial("id").primaryKey(),
   employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  planId: integer("plan_id").notNull().references(() => hrOnboardingPlans.id),
-  mentorId: integer("mentor_id").references(() => users.id), // Mentor xodim
+  planId: integer("plan_id").notNull().references(() => hrOnboardingPlans.id, { onDelete: "cascade" }),
+  mentorId: integer("mentor_id").references(() => users.id, { onDelete: "set null" }), // Mentor xodim
 
   startDate: timestamp("start_date").notNull(),
   expectedEndDate: timestamp("expected_end_date"),
@@ -444,9 +444,9 @@ export const hrJobDescriptions = pgTable("hr_job_descriptions", {
     bonusDescription?: string;
   }>(),
 
-  approvedById: integer("approved_by_id").references(() => users.id),
+  approvedById: integer("approved_by_id").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
-  createdById: integer("created_by_id").references(() => users.id),
+  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => ({
@@ -460,7 +460,7 @@ export const hrJobDescriptions = pgTable("hr_job_descriptions", {
 export const hrMotivationPlans = pgTable("hr_motivation_plans", {
   id: serial("id").primaryKey(),
   employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  createdById: integer("created_by_id").references(() => users.id),
+  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
 
   // Шкала тонов (Tone Scale) bahosi
   toneScaleLevel: integer("tone_scale_level"), // Masalan: 2.0, 3.5, 4.0 (10 ga ko'paytirilgan: 20, 35, 40)
@@ -501,7 +501,7 @@ export const hrMotivationPlans = pgTable("hr_motivation_plans", {
 
 export const hrWeeklyStatistics = pgTable("hr_weekly_statistics", {
   id: serial("id").primaryKey(),
-  recruiterId: integer("recruiter_id").notNull().references(() => users.id),
+  recruiterId: integer("recruiter_id").notNull().references(() => users.id, { onDelete: "restrict" }),
   weekStart: timestamp("week_start").notNull(),  // Dushanba
   weekEnd: timestamp("week_end").notNull(),      // Yakshanba
 
@@ -558,7 +558,7 @@ export const hrReferencesChecks = pgTable("hr_references_checks", {
   // Baholash
   rating: integer("rating"),                                 // 1-10
 
-  checkedById: integer("checked_by_id").references(() => users.id),
+  checkedById: integer("checked_by_id").references(() => users.id, { onDelete: "set null" }),
   checkedAt: timestamp("checked_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => ({
@@ -580,9 +580,9 @@ export const jobOfferStatusEnum = pgEnum("job_offer_status", [
 
 export const hrJobOffers = pgTable("hr_job_offers", {
   id: serial("id").primaryKey(),
-  vacancyId: integer("vacancy_id").references(() => vacancies.id),
+  vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
-  funnelId: integer("funnel_id").references(() => hrCandidateFunnels.id),
+  funnelId: integer("funnel_id").references(() => hrCandidateFunnels.id, { onDelete: "set null" }),
 
   // Lavozim ma'lumotlari
   position: varchar("position", { length: 200 }).notNull(),
@@ -603,7 +603,7 @@ export const hrJobOffers = pgTable("hr_job_offers", {
   respondedAt: timestamp("responded_at"),
   declineReason: text("decline_reason"),
 
-  createdById: integer("created_by_id").references(() => users.id),
+  createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => ({

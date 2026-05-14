@@ -1,3 +1,8 @@
+/**
+ * @module EditDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -46,11 +51,11 @@ export function EditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>Bo'limni tahrirlash — {node.name}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Bo'limni tahrirlash — {node.name}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 py-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
           <div>
             <Label>Nomi (UZ)</Label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />

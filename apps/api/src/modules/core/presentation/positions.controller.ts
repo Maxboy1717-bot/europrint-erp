@@ -1,3 +1,8 @@
+/**
+ * @module positions.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertValidated } from '@common/assertions';
 import { unwrapOrThrow } from '@common/http-result';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';

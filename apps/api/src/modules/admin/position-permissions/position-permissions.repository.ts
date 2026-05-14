@@ -1,7 +1,12 @@
+/**
+ * @module position-permissions.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db, positionPermissions, positions } from '@europrint/schemas';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 type PositionRow = typeof positions.$inferSelect;
 type PermRow = typeof positionPermissions.$inferSelect;
@@ -28,7 +33,7 @@ export class PositionPermissionsRepository {
 
   async findAllPositions(): Promise<Result<PositionRow[]>> {
     try {
-      const rows = await db.select().from(positions);
+      const rows = await db.select().from(positions).where(sql`${positions}.deleted_at IS NULL`);
       return Ok(rows);
     } catch (_e) {
       return Err(String(_e));

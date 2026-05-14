@@ -1,3 +1,8 @@
+/**
+ * @module get-materials.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, Ok, Err } from '@common/result';

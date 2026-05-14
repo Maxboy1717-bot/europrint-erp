@@ -1,3 +1,8 @@
+/**
+ * @module completeness.test
+ * @description Jest / Vitest test suite.
+ */
+
 import { describe, it, expect } from 'vitest';
 import { ALL_TRANSLATIONS } from '../loader';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, TRANSLATION_MODULES } from '../constants';

@@ -1,3 +1,8 @@
+/**
+ * @module sd-leads.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { MAX_EXPORT_LIMIT } from '@common/constants/app.constants';
@@ -62,13 +67,13 @@ export class SdLeadsRepository {
   }
 
   async getById(lid: number): Promise<Result<Row[]>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
         FROM sd_leads l
         LEFT JOIN employees e ON e.id = l.assigned_to
         LEFT JOIN sd_customers c ON c.id = l.customer_id
-        WHERE l.id = ${lid}
+        WHERE l.id = ${lid} AND l.deleted_at IS NULL
       `);
       return Ok(rows.rows as Row[]);  } catch (_e) {
     return Err(String(_e));
@@ -125,8 +130,8 @@ export class SdLeadsRepository {
   }
 
   async getLeadForConvert(lid: number): Promise<Result<Row | null>>  {
-  try {  
-      const rows = await runQuery<Row>(sql`SELECT * FROM sd_leads WHERE id = ${lid}`);
+  try {
+      const rows = await runQuery<Row>(sql`SELECT * FROM sd_leads WHERE id = ${lid} AND deleted_at IS NULL`);
       return Ok((rows.rows[0] ?? null) as Row | null);  } catch (_e) {
     return Err(String(_e));
   }
@@ -137,7 +142,7 @@ export class SdLeadsRepository {
   try {  
       const rows = await runQuery<Row>(sql`
         INSERT INTO sales_orders (customer_id, total_amount, status, sd_lead_id, notes)
-        VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'pending', ${lid}, ${notes ?? null})
+        VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
         RETURNING *
       `);
       return Ok(rows.rows[0] as Row);  } catch (_e) {

@@ -1,12 +1,17 @@
+/**
+ * @module ForecastTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney, fmtQty, fmtDate } from "@/components/wms/helpers";
 import type { ForecastData, MaterialBasic } from "@/components/wms/wms-types";
 
 const STATUS_CONF: Record<string, { label: string; cls: string }> = {
   overdue: { label: "KECHIKDI", cls: "text-destructive" },
-  urgent: { label: "SHOSHILINCH", cls: "text-red-600" },
-  soon: { label: "Tez orada", cls: "text-yellow-600" },
-  ok: { label: "Normal", cls: "text-green-600" },
+  urgent: { label: "SHOSHILINCH", cls: "text-[var(--ep-red)]" },
+  soon: { label: "Tez orada", cls: "text-[var(--ep-yellow)]" },
+  ok: { label: "Normal", cls: "text-[var(--ep-green)]" },
   unknown: { label: "Noma'lum", cls: "text-muted-foreground" },
 };
 

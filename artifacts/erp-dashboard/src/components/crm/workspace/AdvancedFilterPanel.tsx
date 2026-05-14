@@ -1,3 +1,8 @@
+/**
+ * @module AdvancedFilterPanel
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +25,7 @@ export function AdvancedFilterPanel({
   stages,
 }: AdvancedFilterPanelProps) {
   return (
-    <div className="bg-surface-container-low border-b border-outline-variant px-4 py-4 animate-in slide-in-from-top duration-200">
+    <div className="bg-muted/40 border-b border-border px-4 py-4 animate-in slide-in-from-top duration-200">
       <div className="max-w-screen-2xl mx-auto flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -40,26 +45,26 @@ export function AdvancedFilterPanel({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <Label className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">
+            <Label className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
               Yaratilgan sana (dan)
             </Label>
             <Input
               type="date"
               value={filters.dateFrom || ""}
               onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value || null })}
-              className="h-9 bg-surface"
+              className="h-9 bg-card"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">
+            <Label className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
               Yaratilgan sana (gacha)
             </Label>
             <Input
               type="date"
               value={filters.dateTo || ""}
               onChange={(e) => setFilters({ ...filters, dateTo: e.target.value || null })}
-              className="h-9 bg-surface"
+              className="h-9 bg-card"
             />
           </div>
 
@@ -68,7 +73,7 @@ export function AdvancedFilterPanel({
             activeEntity === "proposals" ||
             activeEntity === "invoices") && (
             <div className="space-y-1.5">
-              <Label className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">
+              <Label className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
                 Bosqich
               </Label>
               <Select
@@ -77,7 +82,7 @@ export function AdvancedFilterPanel({
                   setFilters({ ...filters, stageId: v === "all" ? null : v })
                 }
               >
-                <SelectTrigger className="h-9 bg-surface">
+                <SelectTrigger className="h-9 bg-card">
                   <SelectValue placeholder="Hammasi" />
                 </SelectTrigger>
                 <SelectContent>
@@ -93,7 +98,7 @@ export function AdvancedFilterPanel({
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">
+            <Label className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
               Summa (dan)
             </Label>
             <Input
@@ -105,13 +110,13 @@ export function AdvancedFilterPanel({
                   amountFrom: e.target.value === "" ? null : Number(e.target.value),
                 })
               }
-              className="h-9 bg-surface"
+              className="h-9 bg-card"
               placeholder="0"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">
+            <Label className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
               Summa (gacha)
             </Label>
             <Input
@@ -123,7 +128,7 @@ export function AdvancedFilterPanel({
                   amountTo: e.target.value === "" ? null : Number(e.target.value),
                 })
               }
-              className="h-9 bg-surface"
+              className="h-9 bg-card"
               placeholder="∞"
             />
           </div>

@@ -1,3 +1,8 @@
+/**
+ * @module ip-blocker.guard
+ * @description NestJS guard. canActivate() returns true when access is permitted; throws Unauthorized/Forbidden otherwise.
+ */
+
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 
 import { MS_PER_MINUTE } from '@common/constants/app.constants';

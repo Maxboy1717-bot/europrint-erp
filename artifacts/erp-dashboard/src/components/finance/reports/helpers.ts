@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 export function formatShortCurrency(amount: number): string {
   if (amount >= 1000000000) {
     return (amount / 1000000000).toFixed(1) + " mlrd";

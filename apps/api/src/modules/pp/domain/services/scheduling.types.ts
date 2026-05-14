@@ -1,3 +1,8 @@
+/**
+ * @module scheduling.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 import { AppError } from '@common/result';
 
 export interface Job {

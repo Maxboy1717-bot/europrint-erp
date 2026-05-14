@@ -1,3 +1,8 @@
+/**
+ * @module mes-maintenance.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
@@ -88,6 +93,11 @@ export class MesMaintenanceController {
   @Get('downtime-reasons')
   async getDowntimeReasons() {
     return unwrapOrThrow(await this.svc.getDowntimeReasons());
+  }
+
+  @Get('downtime-events')
+  async listDowntimeEvents(@Query('limit') limit?: string) {
+    return unwrapOrThrow(await this.svc.getDowntimeEvents(0));
   }
 
   @Post('downtime-events')

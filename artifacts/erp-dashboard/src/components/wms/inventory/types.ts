@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { z } from "zod";
 
 export interface InventoryCountLineData {
@@ -73,7 +78,7 @@ export const inventoryCountFormSchema = z.object({
 export type InventoryCountFormValues = z.infer<typeof inventoryCountFormSchema>;
 
 export const STATUS_COLORS: Record<string, string> = {
-  planned: "bg-gray-500/20 text-on-surface-variant border-gray-500/40",
+  planned: "bg-gray-500/20 text-muted-foreground border-gray-500/40",
   in_progress: "bg-blue-500/20 text-blue-400 border-blue-500/40",
   completed: "bg-green-500/20 text-green-400 border-green-500/40",
   approved: "bg-purple-500/20 text-purple-400 border-purple-500/40",

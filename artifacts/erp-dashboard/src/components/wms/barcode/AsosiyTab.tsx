@@ -1,3 +1,8 @@
+/**
+ * @module AsosiyTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,7 +19,7 @@ import {
   Boxes,
   FileWarning,
 } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
+import { EPErrorState } from "@/components/ep";
 import { statusRangi, statusNomi, harakatTuriNomi } from "./helpers";
 import { RecentMovement } from "./types";
 
@@ -57,14 +62,14 @@ export function AsosiyTab() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   if (isLoading) {
     return (
       <div className="space-y-3 p-3">
         {([1, 2, 3, 4]).map((i) => (
-          <Skeleton key={`k-${i}`} className="h-20 w-full" />
+          <Skeleton key={`k-${i}`} className="h-20 w-full rounded-lg" />
         ))}
       </div>
     );
@@ -106,7 +111,7 @@ export function AsosiyTab() {
                   {statusNomi(skanMutation.data.barcode?.status)}
                 </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-sm">
                 <div><span className="text-muted-foreground">Barcode:</span> {skanMutation.data.barcode?.barcodeId}</div>
                 <div><span className="text-muted-foreground">Miqdor:</span> {skanMutation.data.barcode?.remainingQuantity} {skanMutation.data.barcode?.uom}</div>
                 <div><span className="text-muted-foreground">Lot:</span> {skanMutation.data.barcode?.lotNumber || "—"}</div>
@@ -117,11 +122,11 @@ export function AsosiyTab() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-green-100 dark:bg-green-900">
-              <Boxes className="h-5 w-5 text-green-600" />
+              <Boxes className="h-4 w-4 text-[var(--ep-green)]" />
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Mavjud</div>
@@ -133,7 +138,7 @@ export function AsosiyTab() {
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-yellow-100 dark:bg-yellow-900">
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <AlertTriangle className="h-5 w-5 text-[var(--ep-yellow)]" />
             </div>
             <div>
               <div className="text-xs text-muted-foreground">QC kutilmoqda</div>
@@ -145,7 +150,7 @@ export function AsosiyTab() {
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900">
-              <ClipboardCheck className="h-5 w-5 text-blue-600" />
+              <ClipboardCheck className="h-5 w-5 text-[var(--ep-blue)]" />
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Picking topshiriqlari</div>
@@ -157,7 +162,7 @@ export function AsosiyTab() {
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-red-100 dark:bg-red-900">
-              <FileWarning className="h-5 w-5 text-red-600" />
+              <FileWarning className="h-5 w-5 text-[var(--ep-red)]" />
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Operator qarzlari</div>
@@ -167,7 +172,7 @@ export function AsosiyTab() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <Card>
           <CardContent className="p-2 text-center">
             <div className="text-xs text-muted-foreground">Jami barcode</div>

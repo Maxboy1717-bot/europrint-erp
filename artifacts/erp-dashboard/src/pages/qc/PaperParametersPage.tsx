@@ -1,3 +1,8 @@
+/**
+ * @module PaperParametersPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -63,7 +68,7 @@ export default function PaperParametersPage() {
 
       <Section title={t('paperParams.list', "Parametrlar ro'yxati")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12" />)}</div>
+          <div className="space-y-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('paperParams.empty', "Parametr yo'q")}</p>
         ) : (
@@ -94,7 +99,7 @@ export default function PaperParametersPage() {
                     <td className="p-2 text-muted-foreground">{p.unit}</td>
                     <td className="p-2 text-xs text-muted-foreground">{p.testMethod ?? '—'}</td>
                     <td className="text-center p-2">
-                      {p.isActive ? <CheckCircle2 className="inline h-4 w-4 text-emerald-600" /> : <XCircle className="inline h-4 w-4 text-rose-600" />}
+                      {p.isActive ? <CheckCircle2 className="inline h-4 w-4 text-[var(--ep-green)]" /> : <XCircle className="inline h-4 w-4 text-[var(--ep-red)]" />}
                     </td>
                   </tr>
                 ))}

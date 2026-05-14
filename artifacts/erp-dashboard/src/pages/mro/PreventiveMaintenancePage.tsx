@@ -1,3 +1,8 @@
+/**
+ * @module PreventiveMaintenancePage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -20,10 +25,10 @@ interface PmSchedule {
 }
 
 const STATUS_CONFIG: Record<PmSchedule["status"], { label: string; className: string }> = {
-  scheduled: { label: "Rejada",      className: "bg-blue-100 text-blue-700" },
-  due:       { label: "Bugun",       className: "bg-yellow-100 text-yellow-700" },
-  overdue:   { label: "Kechikkan",   className: "bg-rose-100 text-rose-700" },
-  completed: { label: "Bajarilgan",  className: "bg-emerald-100 text-emerald-700" },
+  scheduled: { label: "Rejada",      className: "bg-blue-100 text-[var(--ep-blue)]" },
+  due:       { label: "Bugun",       className: "bg-yellow-100 text-[var(--ep-yellow)]" },
+  overdue:   { label: "Kechikkan",   className: "bg-rose-100 text-[var(--ep-red)]" },
+  completed: { label: "Bajarilgan",  className: "bg-emerald-100 text-[var(--ep-green)]" },
 };
 
 const DUE_WINDOW_DAYS = 7;
@@ -58,7 +63,7 @@ export default function PreventiveMaintenancePage() {
 
       <Section title={t('pm.schedules', "Texnik xizmat jadvali")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}</div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('pm.empty', "Reja yo'q")}</p>
         ) : (
@@ -69,13 +74,13 @@ export default function PreventiveMaintenancePage() {
                 <div key={p.id} className="border rounded-md p-3">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <Wrench className="h-4 w-4 text-blue-600" />
+                      <Wrench className="h-4 w-4 text-[var(--ep-blue)]" />
                       <span className="font-medium">{p.equipmentName}</span>
                       <Badge variant="outline" className="text-xs">{p.scheduleType}</Badge>
                     </div>
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
                     <span>Keyingi: <strong>{p.nextDueDate}</strong></span>
                     <span>Oxirgi: <strong>{p.lastCompletedDate ?? '—'}</strong></span>
                     <span>Vaqt: <strong>{p.estimatedDurationHours} soat</strong></span>

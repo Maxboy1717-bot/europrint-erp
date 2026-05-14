@@ -1,3 +1,8 @@
+/**
+ * @module QCStandardsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Pencil, Trash2, Loader2, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +24,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "@/lib/i18n";
+import { EPStatusPill, EPLoader } from "@/components/ep";
 
 interface QcStandard {
   id: string;
@@ -161,7 +167,7 @@ export function QCStandardsTab() {
           </div>
           <div className="flex gap-2">
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-32" data-testid="filter-type">
+              <SelectTrigger className="w-32 h-9" data-testid="filter-type">
                 <SelectValue placeholder={tCommon('type')} />
               </SelectTrigger>
               <SelectContent>
@@ -183,7 +189,7 @@ export function QCStandardsTab() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{editingStandard ? tCommon('edit') : tCommon('create')}</DialogTitle>
+                  <DialogTitle className="text-[18px] font-semibold">{editingStandard ? tCommon('edit') : tCommon('create')}</DialogTitle>
                 </DialogHeader>
                 <Form {...standardForm}>
                   <form onSubmit={standardForm.handleSubmit(handleStandardSubmit)} className="space-y-4">
@@ -213,7 +219,7 @@ export function QCStandardsTab() {
                         <FormLabel>{tCommon('type')}</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-standard-type"><SelectValue placeholder={tCommon('select')} /></SelectTrigger>
+                            <SelectTrigger data-testid="select-standard-type" className="h-9"><SelectValue placeholder={tCommon('select')} /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {(Array.isArray(STANDARD_TYPES) ? STANDARD_TYPES : []).map(t => (
@@ -229,7 +235,7 @@ export function QCStandardsTab() {
                         <FormLabel>{tCommon('category')}</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-standard-category"><SelectValue placeholder={tCommon('select')} /></SelectTrigger>
+                            <SelectTrigger data-testid="select-standard-category" className="h-9"><SelectValue placeholder={tCommon('select')} /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {(Array.isArray(CATEGORY_OPTIONS) ? CATEGORY_OPTIONS : []).map(cat => (
@@ -262,7 +268,7 @@ export function QCStandardsTab() {
                         data-testid="button-save-standard"
                       >
                         {(createStandardMutation.isPending || updateStandardMutation.isPending) && (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <EPLoader className="w-4 h-4 mr-2" />
                         )}
                         {tCommon('save')}
                       </Button>
@@ -277,12 +283,12 @@ export function QCStandardsTab() {
       <CardContent>
         {standardsLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <EPLoader className="w-6 h-6" />
           </div>
         ) : standards.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">{tCommon('noData')}</div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground">{tCommon('noData')}</div>
         ) : (
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{tCommon('code')}</TableHead>
@@ -295,7 +301,7 @@ export function QCStandardsTab() {
             </TableHeader>
             <TableBody>
               {(Array.isArray(standards) ? standards : []).map(standard => (
-                <TableRow key={standard.id} data-testid={`row-standard-${standard.id}`}>
+                <TableRow key={standard.id} data-testid={`row-standard-${standard.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-mono">{standard.code}</TableCell>
                   <TableCell>
                     <div>{standard.name}</div>
@@ -309,7 +315,7 @@ export function QCStandardsTab() {
                     {standard.isActive ? (
                       <Badge variant="success">{tCommon('active')}</Badge>
                     ) : (
-                      <Badge variant="secondary">{tCommon('inactive')}</Badge>
+                      <EPStatusPill tone="neutral">{tCommon('inactive')}</EPStatusPill>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -337,7 +343,7 @@ export function QCStandardsTab() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         )}
       </CardContent>
     </Card>

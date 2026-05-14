@@ -1,7 +1,8 @@
 /**
- * EuroPrint ERP — Design tokens
- * Bitrix24-style: Navy dark + Orange-red accent
- * Primary: #ff5d2e | Dark: #1a1a2e / #16213e
+ * EuroPrint ERP — Base design tokens (Layer 1)
+ * Overridden by europrint-mockup-theme.css (Layer 2)
+ * Final design: EP Linear Soft (Direction A)
+ * Primary: #FF902F | Bg: #FAFAF9 | Font: Inter
  */
 
 :root {
@@ -102,9 +103,9 @@
   --error: 0 80% 56%;
 
   /* Typography */
-  --font-sans: 'Segoe UI', Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, 'SF Pro Text', system-ui, sans-serif;
   --font-serif: Georgia, serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
 
   /* Layout */
   --radius: 0.75rem;   /* 12px — Bitrix24 karta radiusi */

@@ -1,4 +1,10 @@
-import { pgTable, serial, varchar, integer, boolean, timestamp, text, date, decimal } from "drizzle-orm/pg-core";
+/**
+ * @module employees
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, varchar, integer, boolean, timestamp, text, date, decimal, check, index } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments } from "./departments";
@@ -7,7 +13,7 @@ import { users } from "./users";
 
 export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).unique(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }).unique(),
   employeeCode: varchar("employee_code", { length: 20 }).notNull().unique(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
@@ -22,10 +28,10 @@ export const employees = pgTable("employees", {
   baseSalary: decimal("base_salary", { precision: 12, scale: 2 }),
   dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }),
   hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }),
-  departmentId: integer("department_id").references(() => departments.id),
-  positionId: integer("position_id").references(() => positions.id),
-  managerId: integer("manager_id").references((): any => employees.id),
-  managerDepartmentId: integer("manager_department_id").references(() => departments.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }),
+  managerId: integer("manager_id").references((): any => employees.id, { onDelete: "set null" }),
+  managerDepartmentId: integer("manager_department_id").references(() => departments.id, { onDelete: "set null" }),
   vysotskiyCategory: varchar("vysotskiy_category", { length: 10 }),
   workCenterId: integer("work_center_id"),
   teamId: integer("team_id"),
@@ -59,11 +65,17 @@ export const employees = pgTable("employees", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("employees_status_chk", sql`${t.status} IN ('active','inactive','terminated','on_leave','probation')`),
+  check("employees_contract_type_chk", sql`${t.contractType} IS NULL OR ${t.contractType} IN ('permanent','contract','probation','part_time','temporary')`),
+  index("idx_employees_status").on(t.status),
+  index("idx_employees_department_id").on(t.departmentId),
+  index("idx_employees_deleted_at").on(t.deletedAt),
+]);
 
 export const employmentContracts = pgTable("employment_contracts", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   contractNumber: varchar("contract_number", { length: 50 }).unique(),
   contractType: varchar("contract_type", { length: 20 }),
   startDate: date("start_date").notNull(),
@@ -82,11 +94,14 @@ export const employmentContracts = pgTable("employment_contracts", {
   terminationReason: varchar("termination_reason", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("emp_contracts_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('draft','active','expired','terminated')`),
+  check("emp_contracts_type_chk", sql`${t.contractType} IS NULL OR ${t.contractType} IN ('permanent','contract','probation','part_time','temporary')`),
+]);
 
 export const employeePassports = pgTable("employee_passports", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull().unique(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull().unique(),
   passportSeries: varchar("passport_series", { length: 10 }),
   passportNumber: varchar("passport_number", { length: 10 }),
   passportIssueDate: date("passport_issue_date"),
@@ -100,7 +115,7 @@ export const employeePassports = pgTable("employee_passports", {
 
 export const employeeBankAccounts = pgTable("employee_bank_accounts", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   accountNumber: varchar("account_number", { length: 34 }),
   accountHolderName: varchar("account_holder_name", { length: 100 }),
   bankName: varchar("bank_name", { length: 100 }),
@@ -114,7 +129,7 @@ export const employeeBankAccounts = pgTable("employee_bank_accounts", {
 
 export const employeeEmergencyContacts = pgTable("employee_emergency_contacts", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   contactName: varchar("contact_name", { length: 100 }),
   relationship: varchar("relationship", { length: 50 }),
   phoneNumber: varchar("phone_number", { length: 20 }),
@@ -126,7 +141,7 @@ export const employeeEmergencyContacts = pgTable("employee_emergency_contacts", 
 
 export const employeeFiles = pgTable("employee_files", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   fileName: varchar("file_name", { length: 255 }),
   fileType: varchar("file_type", { length: 50 }),
   fileUrl: text("file_url"),

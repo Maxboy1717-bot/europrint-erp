@@ -1,3 +1,8 @@
+/**
+ * @module AlertsSettingsTab
+ * @description React UI component.
+ */
+
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,23 +34,23 @@ export function AlertsSettingsTab({
   t
 }: AlertsSettingsTabProps) {
   return (
-    <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none">
-      <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-        <CardTitle className="text-lg font-bold flex items-center gap-2 text-on-surface">
-          <Bell className="h-5 w-5 text-yellow-500" />
+    <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none">
+      <CardHeader className="bg-muted/40/50 py-4 px-6">
+        <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
+          <Bell className="h-5 w-5 text-[var(--ep-yellow)]" />
           {t.alertSettings}
         </CardTitle>
-        <CardDescription className="text-on-surface-variant">
+        <CardDescription className="text-muted-foreground">
           {language === "uz" ? "Qaysi turdagi ogohlantirishlarni qabul qilish" : "Какие типы уведомлений получать"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 p-6">
-        <div className="flex items-center justify-between p-4 rounded-lg bg-surface border border-outline-variant hover:bg-surface-container-low transition-colors group">
+        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border hover:bg-muted/40 transition-colors group">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-orange-100 text-orange-600">
+            <div className="p-2 rounded-lg bg-orange-100 text-[var(--ep-primary)]">
               <Shield className="h-5 w-5" />
             </div>
-            <Label htmlFor="safety-alerts" className="font-bold text-on-surface cursor-pointer">{t.enableSafety}</Label>
+            <Label htmlFor="safety-alerts" className="font-bold text-foreground cursor-pointer">{t.enableSafety}</Label>
           </div>
           <Switch
             id="safety-alerts"
@@ -56,12 +61,12 @@ export function AlertsSettingsTab({
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 rounded-lg bg-surface border border-outline-variant hover:bg-surface-container-low transition-colors group">
+        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border hover:bg-muted/40 transition-colors group">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+            <div className="p-2 rounded-lg bg-blue-100 text-[var(--ep-blue)]">
               <Factory className="h-5 w-5" />
             </div>
-            <Label htmlFor="quality-alerts" className="font-bold text-on-surface cursor-pointer">{t.enableQuality}</Label>
+            <Label htmlFor="quality-alerts" className="font-bold text-foreground cursor-pointer">{t.enableQuality}</Label>
           </div>
           <Switch
             id="quality-alerts"
@@ -72,12 +77,12 @@ export function AlertsSettingsTab({
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 rounded-lg bg-surface border border-outline-variant hover:bg-surface-container-low transition-colors group">
+        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border hover:bg-muted/40 transition-colors group">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
+            <div className="p-2 rounded-lg bg-purple-100 text-[var(--ep-purple)]">
               <Settings className="h-5 w-5" />
             </div>
-            <Label htmlFor="machine-alerts" className="font-bold text-on-surface cursor-pointer">{t.enableMachine}</Label>
+            <Label htmlFor="machine-alerts" className="font-bold text-foreground cursor-pointer">{t.enableMachine}</Label>
           </div>
           <Switch
             id="machine-alerts"
@@ -88,12 +93,12 @@ export function AlertsSettingsTab({
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 rounded-lg bg-surface border border-outline-variant hover:bg-surface-container-low transition-colors group">
+        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border hover:bg-muted/40 transition-colors group">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-100 text-green-600">
+            <div className="p-2 rounded-lg bg-green-100 text-[var(--ep-green)]">
               <Activity className="h-5 w-5" />
             </div>
-            <Label htmlFor="productivity-alerts" className="font-bold text-on-surface cursor-pointer">{t.enableProductivity}</Label>
+            <Label htmlFor="productivity-alerts" className="font-bold text-foreground cursor-pointer">{t.enableProductivity}</Label>
           </div>
           <Switch
             id="productivity-alerts"

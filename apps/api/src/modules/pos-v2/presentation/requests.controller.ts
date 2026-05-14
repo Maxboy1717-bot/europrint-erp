@@ -1,3 +1,8 @@
+/**
+ * @module requests.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertValidated, parseSafe } from '@common/assertions';
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -65,7 +70,7 @@ export class RequestsController {
  ): Promise<TransferRequest> {
  const result = await this.queryBus.execute(new GetRequestsQuery());
  assertOk(result);
- const request = (result?.data?.data ?? []).find((r: TransferRequest) => r.id === requestId);
+ const request = (Array.isArray(result?.data?.data) ? result?.data?.data : []).find((r: TransferRequest) => r.id === requestId);
  assertFound(request, 'Not found');
  return request;
 }
@@ -76,7 +81,7 @@ export class RequestsController {
  @Body() body: CreateTransferRequestDto,
  @CurrentUser() user: AuthenticatedUser,
  ): Promise<TransferRequest> {
- const lines: TransferLineInput[] = (body?.lines ?? []).map((line) => ({
+ const lines: TransferLineInput[] = (Array.isArray(body?.lines) ? body?.lines : []).map((line) => ({
  stockItemId: line.stockItemId,
  itemName: line.itemName,
  sku: line.sku,

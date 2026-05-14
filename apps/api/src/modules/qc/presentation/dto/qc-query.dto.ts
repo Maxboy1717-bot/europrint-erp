@@ -1,3 +1,8 @@
+/**
+ * @module qc-query.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 
 export const GetInspectionsDtoSchema = z.object({

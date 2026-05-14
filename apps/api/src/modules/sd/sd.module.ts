@@ -1,3 +1,8 @@
+/**
+ * @module sd.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -9,6 +14,7 @@ import { SdCustomersController } from './presentation/sd-customers.controller';
 import { SdLeadsController } from './presentation/sd-leads.controller';
 import { SdPaymentsController } from './presentation/sd-payments.controller';
 import { SdQuotationsController } from './presentation/sd-quotations.controller';
+import { SdContractsController } from './presentation/sd-contracts.controller';
 import { SdPaymentsService } from './application/sd-payments.service';
 import { SdPaymentsRepository } from './application/sd-payments.repository';
 import { SdDashboardRepository } from './application/sd-dashboard.repository';
@@ -75,7 +81,7 @@ const repositories = [
   controllers: [
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
     SdDashboardController, SdCustomersController, SdLeadsController,
-    SdPaymentsController, SdQuotationsController,
+    SdPaymentsController, SdQuotationsController, SdContractsController,
   ],
   providers: [
     loggerProvider,

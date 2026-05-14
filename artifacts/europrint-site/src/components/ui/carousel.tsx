@@ -1,3 +1,8 @@
+/**
+ * @module carousel
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,

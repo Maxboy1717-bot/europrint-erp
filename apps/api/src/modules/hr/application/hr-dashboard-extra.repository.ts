@@ -1,3 +1,8 @@
+/**
+ * @module hr-dashboard-extra.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { HR_SALARY_MEDIUM_UZS } from '@common/constants/app.constants';

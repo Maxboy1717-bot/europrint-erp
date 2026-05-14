@@ -1,3 +1,8 @@
+/**
+ * @module AssessmentTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -95,7 +100,7 @@ export function AssessmentTab({
             {difficultyData ? (
               <>
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-green-600">✅ Eng Oson Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-green)]">✅ Eng Oson Savollar</h4>
                   {difficultyData.easiest?.slice(0, 3).map((q: QuestionAnalysisItem, idx: number) => (
                     <div key={q.questionId} className="flex items-center justify-between p-2 rounded border">
                       <div className="flex-1 min-w-0">
@@ -112,7 +117,7 @@ export function AssessmentTab({
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-red-600">❌ Eng Qiyin Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-red)]">❌ Eng Qiyin Savollar</h4>
                   {difficultyData.hardest?.slice(0, 3).map((q: QuestionAnalysisItem) => (
                     <div key={q.questionId} className="flex items-center justify-between p-2 rounded border">
                       <div className="flex-1 min-w-0">
@@ -169,7 +174,7 @@ export function AssessmentTab({
             {discriminationData ? (
               <>
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-green-600">⭐ Eng Yaxshi Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-green)]">⭐ Eng Yaxshi Savollar</h4>
                   {discriminationData.best?.slice(0, 3).map((q: DiscriminationItem) => (
                     <div key={q.questionId} className="space-y-1 p-2 rounded border">
                       <div className="flex items-center justify-between">
@@ -185,7 +190,7 @@ export function AssessmentTab({
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-red-600">⚠️ Eng Zaif Savollar</h4>
+                  <h4 className="text-sm font-semibold text-[var(--ep-red)]">⚠️ Eng Zaif Savollar</h4>
                   {discriminationData.worst?.slice(0, 3).map((q: DiscriminationItem) => (
                     <div key={q.questionId} className="space-y-1 p-2 rounded border">
                       <div className="flex items-center justify-between">

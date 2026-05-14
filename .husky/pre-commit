@@ -1,8 +1,6 @@
+#!/usr/bin/env sh
 # EuroPrint - pre-commit hook (Husky v9)
-# Hozirda passive: ESLint/Prettier o'rnatilgach kuchaytiramiz.
-# Typecheck va testlar CI'da ishlaydi (.github/workflows/ci.yml).
+# Staged fayllar uchun ESLint + Prettier ishlatadi (lint-staged orqali).
+# Typecheck va testlar CI'da ishlaydi.
 
-echo ""
-echo "==> Pre-commit (passive — full checks CI'da)"
-echo "OK: Pre-commit o'tdi. Typecheck/lint/test CI'da ishlaydi."
-exit 0
+pnpm lint-staged

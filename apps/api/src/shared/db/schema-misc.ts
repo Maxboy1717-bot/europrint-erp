@@ -1,3 +1,8 @@
+/**
+ * @module schema-misc
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, uuid, text, boolean, timestamp, decimal, integer,
   index, uniqueIndex, date, jsonb,

@@ -1,3 +1,8 @@
+/**
+ * @module SummaryCards
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
@@ -18,15 +23,15 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
       <Card data-testid="card-total-income">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{t("inflow")}</CardTitle>
-          <TrendingUp className="h-4 w-4 text-green-500" />
+          <TrendingUp className="h-4 w-4 text-[var(--ep-green)]" />
         </CardHeader>
         <CardContent>
           {loading ? (
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-32 rounded-lg" />
           ) : (
             <>
               <div
-                className="text-2xl font-bold text-green-500"
+                className="text-2xl font-bold text-[var(--ep-green)]"
                 data-testid="text-total-income"
               >
                 {formatCurrency(summary?.totalIncome || 0)}
@@ -40,15 +45,15 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
       <Card data-testid="card-total-expense">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{t("outflow")}</CardTitle>
-          <TrendingDown className="h-4 w-4 text-red-500" />
+          <TrendingDown className="h-4 w-4 text-[var(--ep-red)]" />
         </CardHeader>
         <CardContent>
           {loading ? (
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-32 rounded-lg" />
           ) : (
             <>
               <div
-                className="text-2xl font-bold text-red-500"
+                className="text-2xl font-bold text-[var(--ep-red)]"
                 data-testid="text-total-expense"
               >
                 {formatCurrency(summary?.totalExpense || 0)}
@@ -62,16 +67,16 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
       <Card data-testid="card-net-amount">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{t("netCashFlow")}</CardTitle>
-          <Wallet className="h-4 w-4 text-indigo-500" />
+          <Wallet className="h-4 w-4 text-[var(--ep-blue)]" />
         </CardHeader>
         <CardContent>
           {loading ? (
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-32 rounded-lg" />
           ) : (
             <>
               <div
                 className={`text-2xl font-bold ${
-                  (summary?.netAmount || 0) >= 0 ? "text-green-500" : "text-red-500"
+                  (summary?.netAmount || 0) >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"
                 }`}
                 data-testid="text-net-amount"
               >

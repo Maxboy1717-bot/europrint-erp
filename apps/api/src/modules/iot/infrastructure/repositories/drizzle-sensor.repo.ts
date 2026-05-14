@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-sensor.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
@@ -46,7 +51,7 @@ export class DrizzleSensorRepo implements ISensorRepo {
           : exec(sql`SELECT id, sensor_code, name, type, location, unit, is_active, created_at, CASE WHEN is_active THEN 'active' ELSE 'inactive' END AS status FROM iot_sensors ORDER BY name LIMIT ${limit} OFFSET ${offset}`),
         exec(sql`SELECT COUNT(*) AS total FROM iot_sensors`),
       ]);
-      return Ok({ items: (items ?? []).map((item) => this.mapToDevice(item)), total: Number(countRows[0]?.total ?? 0) });
+      return Ok({ items: (Array.isArray(items) ? items : []).map((item) => this.mapToDevice(item)), total: Number(countRows[0]?.total ?? 0) });
     } catch { this.logger.error('Find all devices error'); return Err('Failed to find devices'); }
   }
 
@@ -99,7 +104,7 @@ export class DrizzleSensorRepo implements ISensorRepo {
         : opts.to
         ? await exec(sql`SELECT r.id, r.sensor_id AS device_id, r.value, r.status, r.recorded_at, s.unit FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.sensor_id = ${deviceId} AND r.recorded_at <= ${opts.to} ORDER BY r.recorded_at DESC LIMIT ${limit}`)
         : await exec(sql`SELECT r.id, r.sensor_id AS device_id, r.value, r.status, r.recorded_at, s.unit FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.sensor_id = ${deviceId} ORDER BY r.recorded_at DESC LIMIT ${limit}`);
-      return Ok((r ?? []).map((item) => this.mapToReading(item)));
+      return Ok((Array.isArray(r) ? r : []).map((item) => this.mapToReading(item)));
     } catch { this.logger.error('Find readings error'); return Err('Failed to find readings'); }
   }
 
@@ -112,7 +117,7 @@ export class DrizzleSensorRepo implements ISensorRepo {
         exec(sql`SELECT r.id, r.sensor_id AS device_id, r.value, r.status, r.recorded_at, s.unit, s.max_threshold FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.status = 'anomaly' OR (s.max_threshold IS NOT NULL AND r.value::float > s.max_threshold::float) ORDER BY r.recorded_at DESC LIMIT ${limit} OFFSET ${offset}`),
         exec(sql`SELECT COUNT(*) AS total FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.status = 'anomaly' OR (s.max_threshold IS NOT NULL AND r.value::float > s.max_threshold::float)`),
       ]);
-      return Ok({ items: (items ?? []).map((item) => this.mapToReading(item)), total: Number(countRows[0]?.total ?? 0) });
+      return Ok({ items: (Array.isArray(items) ? items : []).map((item) => this.mapToReading(item)), total: Number(countRows[0]?.total ?? 0) });
     } catch { this.logger.error('Find anomalies error'); return Err('Failed to find anomalies'); }
   }
 

@@ -1,3 +1,8 @@
+/**
+ * @module daily-report.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common'
@@ -21,7 +26,7 @@ export class DailyReportCron {
         .select({ employee_id: hr_daily_reports.employee_id })
         .from(hr_daily_reports)
         .where(eq(hr_daily_reports.report_date, today))
-      const reportedIds = (alreadyReported ?? []).map(r => r.employee_id)
+      const reportedIds = (Array.isArray(alreadyReported) ? alreadyReported : []).map(r => r.employee_id)
 
       const baseQuery = db
         .select({ id: hrEmployees.id, position_name: hrPositions.name })
@@ -46,7 +51,7 @@ export class DailyReportCron {
       }
 
       await db.insert(hr_daily_reports).values(
-        (activeEmps ?? []).map(e => ({
+        (Array.isArray(activeEmps) ? activeEmps : []).map(e => ({
           employee_id: e.id,
           report_date: today,
           tasks_completed: '',

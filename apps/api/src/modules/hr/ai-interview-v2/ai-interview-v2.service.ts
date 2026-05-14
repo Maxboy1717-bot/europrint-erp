@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -159,7 +164,7 @@ export class AiInterviewV2Service {
       const rowsResult = await this.repo.listSessions();
       if (!rowsResult.ok) throw new Error(rowsResult.error.message);
       const rows = rowsResult.data as Array<Record<string, unknown>>;
-      return status ? (rows ?? []).filter(row => row['status'] === status) : rows;
+      return status ? (Array.isArray(rows) ? rows : []).filter(row => row['status'] === status) : rows;
     });
     if (!r.ok) { this.logger.warn(`listSessions: ${r.error.message}`); return Ok([]); }
     return r;

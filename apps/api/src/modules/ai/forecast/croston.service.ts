@@ -1,3 +1,8 @@
+/**
+ * @module croston.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeDiv, safeAvg, stddev } from '@common/math/math-utils';
@@ -126,7 +131,7 @@ export class CrostonService {
       return Err({ code: 'VALIDATION', message: 'horizon musbat bo\'lishi kerak' });
     }
 
-    const safe = (series ?? []).map(safeNum);
+    const safe = (Array.isArray(series) ? series : []).map(safeNum);
 
     let usedAlpha: number;
     let usedBeta:  number;
@@ -159,7 +164,7 @@ export class CrostonService {
 
   /** Check if CV > threshold → recommend Croston */
   isSporadic(series: number[]): boolean {
-    const safe = (series ?? []).map(safeNum);
+    const safe = (Array.isArray(series) ? series : []).map(safeNum);
     const avg  = safeAvg(safe);
     const sd   = stddev(safe);
     return safeDiv(sd, Math.abs(avg)) > CV_THRESHOLD;

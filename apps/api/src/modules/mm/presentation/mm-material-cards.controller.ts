@@ -1,3 +1,8 @@
+/**
+ * @module mm-material-cards.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import {
   Controller,

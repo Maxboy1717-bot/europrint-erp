@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description Source module. See exports for details.
+ */
+
 export interface CameraAiRow {
   id: number | string;
   code: string;

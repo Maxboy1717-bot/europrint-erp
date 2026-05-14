@@ -1,13 +1,22 @@
+/**
+ * @module PosStockPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Package, AlertTriangle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Search, Package, AlertTriangle, SlidersHorizontal } from "lucide-react";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
 
 interface PosStockRow {
   warehouseId: number;
@@ -22,8 +31,12 @@ interface PosStockRow {
 
 export default function PosStockPage() {
   const { t } = useTranslation('warehouse');
+  const { toast } = useToast();
+  const queryClientHook = useQueryClient();
   const [search, setSearch] = useState("");
   const [warehouseId, setWarehouseId] = useState<string>("");
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustForm, setAdjustForm] = useState({ productId: "", adjustment: "", reason: "" });
 
   const { data, isLoading } = useQuery<{ items: PosStockRow[] }>({
     queryKey: ["/api/pos/stock", search, warehouseId],
@@ -36,15 +49,87 @@ export default function PosStockPage() {
     },
   });
 
+  const adjustMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/pos/stock/adjust", {
+        productId: adjustForm.productId,
+        adjustment: Number(adjustForm.adjustment),
+        reason: adjustForm.reason,
+      });
+    },
+    onSuccess: () => {
+      queryClientHook.invalidateQueries({ queryKey: ["/api/pos/stock"] });
+      toast({ title: "Muvaffaqiyat", description: "Miqdor muvaffaqiyatli sozlandi" });
+      setAdjustForm({ productId: "", adjustment: "", reason: "" });
+      setAdjustOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Xato", description: "Amal bajarilmadi", variant: "destructive" });
+    },
+  });
+
   const items = selectArray<PosStockRow>(data, "items");
   const lowCount = items.filter((x) => x.isLow).length;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <div className="flex items-start justify-between">
+        <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">{t('posStock.title', 'POS Zaxira')}</b></>}
         title={t('posStock.title', 'POS Zaxira')}
-        description={t('posStock.description', 'Real-time ombor qoldiqlari (POS terminallari)')}
+        subtitle={t('posStock.description', 'Real-time ombor qoldiqlari (POS terminallari)')}
       />
+        <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-adjust-stock">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              Miqdorni sozlash
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-[18px] font-semibold">Miqdorni sozlash</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-1">
+                <Label htmlFor="stock-productId">Mahsulot ID</Label>
+                <Input
+                  id="stock-productId"
+                  value={adjustForm.productId}
+                  onChange={(e) => setAdjustForm((f) => ({ ...f, productId: e.target.value }))}
+                  placeholder={t('product001')}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="stock-adjustment">Miqdor o'zgarishi</Label>
+                <Input
+                  id="stock-adjustment"
+                  type="number"
+                  value={adjustForm.adjustment}
+                  onChange={(e) => setAdjustForm((f) => ({ ...f, adjustment: e.target.value }))}
+                  placeholder="10 yoki -5"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="stock-reason">Sabab</Label>
+                <Input
+                  id="stock-reason"
+                  value={adjustForm.reason}
+                  onChange={(e) => setAdjustForm((f) => ({ ...f, reason: e.target.value }))}
+                  placeholder="Sabab..."
+                />
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => adjustMutation.mutate()}
+                disabled={adjustMutation.isPending || !adjustForm.productId || !adjustForm.adjustment}
+              >
+                {adjustMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -61,12 +146,12 @@ export default function PosStockPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)]" />
               {t('posStock.lowStock', 'Kam zaxira')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-yellow-600">{lowCount}</p>
+            <p className="text-3xl font-bold text-[var(--ep-yellow)]">{lowCount}</p>
           </CardContent>
         </Card>
         <Card>
@@ -102,7 +187,7 @@ export default function PosStockPage() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14" />)}
+              {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
             </div>
           ) : items.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
@@ -133,9 +218,9 @@ export default function PosStockPage() {
                       </td>
                       <td className="text-center p-2">
                         {row.isLow ? (
-                          <Badge variant="destructive">{t('posStock.low', 'KAM')}</Badge>
+                          <EPStatusPill tone="danger">{t('posStock.low', 'KAM')}</EPStatusPill>
                         ) : (
-                          <Badge variant="outline" className="text-emerald-700">
+                          <Badge variant="outline" className="text-[var(--ep-green)]">
                             OK
                           </Badge>
                         )}

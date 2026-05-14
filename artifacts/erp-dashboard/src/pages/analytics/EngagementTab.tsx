@@ -1,3 +1,8 @@
+/**
+ * @module EngagementTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Users, Activity, RefreshCw } from "lucide-react";
@@ -155,7 +160,7 @@ export function EngagementTab({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">7-kun Retention</span>
-                    <span className="text-2xl font-bold text-blue-600">{retention.day7Retention}%</span>
+                    <span className="text-2xl font-bold text-[var(--ep-blue)]">{retention.day7Retention}%</span>
                   </div>
                   <Progress value={retention.day7Retention} className="h-3" />
                   <p className="text-xs text-muted-foreground">
@@ -166,7 +171,7 @@ export function EngagementTab({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">30-kun Retention</span>
-                    <span className="text-2xl font-bold text-green-600">{retention.day30Retention}%</span>
+                    <span className="text-2xl font-bold text-[var(--ep-green)]">{retention.day30Retention}%</span>
                   </div>
                   <Progress value={retention.day30Retention} className="h-3" />
                   <p className="text-xs text-muted-foreground">
@@ -215,19 +220,19 @@ export function EngagementTab({
                   <p className="text-sm text-muted-foreground">O'rtacha sessiya davomiyligi (daqiqa)</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="text-center p-4 rounded-lg border">
-                    <div className="text-3xl font-bold text-blue-600">{sessionStats.totalSessions}</div>
+                    <div className="text-3xl font-bold text-[var(--ep-blue)]">{sessionStats.totalSessions}</div>
                     <p className="text-xs text-muted-foreground mt-1">Jami sessiyalar</p>
                   </div>
                   <div className="text-center p-4 rounded-lg border">
-                    <div className="text-3xl font-bold text-green-600">{sessionStats.uniqueUsers}</div>
+                    <div className="text-3xl font-bold text-[var(--ep-green)]">{sessionStats.uniqueUsers}</div>
                     <p className="text-xs text-muted-foreground mt-1">Faol foydalanuvchilar</p>
                   </div>
                 </div>
 
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-purple-600">{sessionStats.sessionsPerUser}</div>
+                  <div className="text-3xl font-bold text-[var(--ep-purple)]">{sessionStats.sessionsPerUser}</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     O'rtacha sessiya/foydalanuvchi
                   </p>

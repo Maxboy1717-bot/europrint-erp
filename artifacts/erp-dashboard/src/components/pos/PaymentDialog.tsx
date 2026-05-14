@@ -1,3 +1,8 @@
+/**
+ * @module PaymentDialog
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -22,11 +27,10 @@ export function PaymentDialog({
   paymentMethodLabels,
 }: PaymentDialogProps) {
   const { t } = useTranslation('finance');
-  const { t: tCommon } = useTranslation('common');
 
   return (
     <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
-      <DialogContent className="max-w-md" data-testid="dialog-receipt">
+      <DialogContent className="max-w-md p-6" data-testid="dialog-receipt">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5" /> Chek / Receipt
@@ -55,7 +59,7 @@ export function PaymentDialog({
                 </div>
               )}
             </div>
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Mahsulot</TableHead>
@@ -66,7 +70,7 @@ export function PaymentDialog({
               </TableHeader>
               <TableBody>
                 {(Array.isArray(receiptData.items) ? receiptData.items : []).map((item: TransactionItem, idx: number) => (
-                  <TableRow key={idx}>
+                  <TableRow key={idx} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="text-xs">{item.name}</TableCell>
                     <TableCell className="text-xs text-center">{item.quantity}</TableCell>
                     <TableCell className="text-xs text-right">{formatCurrency(item.unitPrice)}</TableCell>
@@ -74,7 +78,7 @@ export function PaymentDialog({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
             <div className="border-t pt-2 space-y-1">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Jami:</span>

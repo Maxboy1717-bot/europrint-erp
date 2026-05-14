@@ -1,5 +1,16 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+/**
+ * @module useAuth
+ * @description Canonical auth Context + hook. Reads JWT from safeStorage
+ * (key `access_token`), exposes the current AuthUser plus login/logout
+ * helpers, and surfaces role aliases that mirror the backend's RBAC table
+ * (so the UI never grants a permission the server would refuse).
+ *
+ * All new code MUST import from this file; `use-auth.ts` is a deprecated shim.
+ */
+
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { safeStorage } from '@/lib/safeStorage';
+import { apiRequest } from '@/lib/queryClient';
 
 // Mirror backend ROLE_ALIASES so UI permissions consistently match server authorization
 const ROLE_ALIASES: Record<string, string> = {
@@ -17,14 +28,28 @@ const ROLE_ALIASES: Record<string, string> = {
   department_head: "department_head",
 };
 
-interface User {
+/**
+ * Authenticated user as exposed to the React tree. Mirrors the JWT payload
+ * minus secrets. `positionId` / `position_id` coexist because the server
+ * historically used snake_case; new code should read `positionId`.
+ */
+export interface AuthUser {
   id: number;
   username: string;
   fullName: string;
   role: string;
   email?: string;
   employeeId?: number;
+  positionId?: number;
+  /** @deprecated use positionId */
+  position_id?: number;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
 }
+
+/** @deprecated use AuthUser */
+type User = AuthUser;
 
 interface AuthContextType {
   user: User | null;
@@ -47,8 +72,10 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isRefreshingRef = useRef(false);
 
   const fetchUser = useCallback(async () => {
+    setIsLoading(true);
     try {
       const token = safeStorage.getItem("access_token");
       // Token yo'q bo'lsa /api/auth/me chaqirmaymiz — 401 spam'ni oldini olamiz.
@@ -58,11 +85,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+      // eslint-disable-next-line no-restricted-globals
       const res = await fetch("/api/auth/me", { credentials: "include", headers });
       if (res.ok) {
         const data = await res.json();
         setUser(data);
       } else {
+        if (res.status === 401 && !isRefreshingRef.current) {
+          isRefreshingRef.current = true;
+          try {
+            const refreshRes = await fetch('/api/auth/refresh', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { Authorization: `Bearer ${safeStorage.getItem('access_token') ?? ''}` },
+            });
+            if (refreshRes.ok) {
+              const data = await refreshRes.json();
+              if (data.accessToken) {
+                safeStorage.setItem('access_token', data.accessToken);
+                if (data.refreshToken) safeStorage.setItem('refresh_token', data.refreshToken);
+                isRefreshingRef.current = false;
+                // Retry once with the new token, reading it fresh
+                const retryToken = safeStorage.getItem('access_token');
+                const retryRes = await fetch('/api/auth/me', {
+                  credentials: 'include',
+                  headers: { Authorization: `Bearer ${retryToken}` },
+                });
+                if (retryRes.ok) {
+                  setUser(await retryRes.json());
+                  return;
+                }
+              }
+            }
+          } catch { /* refresh failed, fall through to logout */ }
+          isRefreshingRef.current = false;
+        }
         setUser(null);
       }
     } catch {
@@ -85,10 +142,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     const token = safeStorage.getItem("access_token");
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include", headers });
+    // eslint-disable-next-line no-restricted-globals
+    await apiRequest('POST', "/api/auth/logout");
     safeStorage.removeItem("access_token");
     safeStorage.removeItem("refresh_token");
     setUser(null);
+    window.location.href = '/login';
   }, []);
 
   return (

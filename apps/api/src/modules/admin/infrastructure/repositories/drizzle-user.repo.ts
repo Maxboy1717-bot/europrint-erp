@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-user.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
@@ -82,7 +87,11 @@ export class DrizzleUserRepo implements IUserRepo {
 
       const conditions = [];
       if (filters.role) conditions.push(eq(users.role, filters.role));
-      if (filters.isActive !== undefined) conditions.push(eq(users.isActive, filters.isActive));
+      if (filters.isActive !== undefined) {
+        conditions.push(eq(users.isActive, filters.isActive));
+      } else {
+        conditions.push(eq(users.isActive, true)); // default: show only active users
+      }
       if (filters.departmentId) {
         conditions.push(eq(users.departmentId, Number(filters.departmentId)));
       }
@@ -91,14 +100,14 @@ export class DrizzleUserRepo implements IUserRepo {
 
       const [results, countRows] = await Promise.all([
         this.db.db.select().from(users).where(whereClause).limit(limit).offset(offset),
-        this.db.db.select({ id: users.id }).from(users).where(whereClause),
+        this.db.db.select({ count: sql<number>`COUNT(*)` }).from(users).where(whereClause),
       ]);
 
-      const total = countRows.length;
+      const total = Number(countRows[0]?.count ?? 0);
       const pages = Math.ceil(total / limit);
 
       return {
-        data: (results ?? []).map(rowToDomain),
+        data: (Array.isArray(results) ? results : []).map(rowToDomain),
         total,
         page,
         limit,

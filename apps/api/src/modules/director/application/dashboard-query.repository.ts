@@ -1,3 +1,8 @@
+/**
+ * @module dashboard-query.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { safeNum } from '@common/math';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
@@ -44,7 +49,7 @@ export class DashboardQueryRepository {
   async getTopUnpaidInvoices(): Promise<Result<Array<{ invoiceId: string; amount: number; daysOverdue: number }>>> {
     return safeCall(async () => {
       const r = await exec(sql`SELECT id AS invoice_id, CAST(amount AS DECIMAL) AS amount, DATE_PART('day', NOW() - due_date)::INT AS days_overdue FROM invoices WHERE status != 'paid' AND due_date < NOW() ORDER BY due_date ASC LIMIT 5`);
-      return (r ?? []).map((row) => ({ invoiceId: String(row.invoice_id), amount: safeNum(row.amount), daysOverdue: Number(row.days_overdue) }));
+      return (Array.isArray(r) ? r : []).map((row) => ({ invoiceId: String(row.invoice_id), amount: safeNum(row.amount), daysOverdue: Number(row.days_overdue) }));
       }, 'DB_ERROR');
   }
 

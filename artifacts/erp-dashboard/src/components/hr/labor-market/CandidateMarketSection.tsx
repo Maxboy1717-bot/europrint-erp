@@ -1,3 +1,8 @@
+/**
+ * @module CandidateMarketSection
+ * @description React UI component.
+ */
+
 import { Users } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -16,7 +21,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         Ish izlovchilar bozori
       </h3>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs mb-1 block">Mavjud kandidatlar soni (taxminiy)</Label>
           <Input
@@ -87,7 +92,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
                 onClick={() => setCandidateMarket(prev => ({ ...prev, avg_skill_level: level }))}
                 className={`flex-1 text-xs rounded-lg border px-2 py-1.5 transition-all capitalize ${
                   candidateMarket.avg_skill_level === level
-                    ? "bg-primary/15 border-primary/50 text-primary font-semibold"
+                    ? "bg-primary/10 border-primary/50 text-primary font-semibold"
                     : "border-border/40 text-muted-foreground hover:border-border"
                 }`}
                 data-testid={`btn-skill-level-${level}`}

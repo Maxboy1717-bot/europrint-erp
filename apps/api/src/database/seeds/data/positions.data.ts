@@ -167,9 +167,6 @@ const _operators: ReadonlyArray<PositionSeed> = [
   { code: 'WAREHOUSE_SHIFT_LEADER', nameUz: 'Ombor Smena Boshlig\'i', nameRu: 'Сменный мастер склада', departmentCode: 'WAREHOUSE', level: 5, rbacTier: 'manager', isManagement: true, headcount: 2, sortOrder: 272 },
 ];
 
-export const POSITIONS_SEED: ReadonlyArray<PositionSeed> = [
-  ..._executive,
-  ..._heads,
-  ..._specialists,
-  ..._operators,
-];
+// Lavozimlar org chart UI orqali boshqariladi (node_type='position').
+// Migration: 0026_sync_departments_to_org.sql ni bir marta ishga tushiring.
+export const POSITIONS_SEED: ReadonlyArray<PositionSeed> = [];

@@ -1,3 +1,8 @@
+/**
+ * @module chat-message.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { ChatMessageRepository } from './repositories/chat-message.repository';
@@ -65,12 +70,14 @@ export class ChatMessageService {
   }
 
   async editMessage(messageId: string | number, userId: number, content: string): Promise<Record<string, unknown> | null> {
-    return this.msgRepo.updateMessageContent(messageId, userId, content);
+    const result = await this.msgRepo.updateMessageContent(messageId, userId, content);
+    return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
   async deleteMessage(messageId: string | number, userId: number): Promise<Record<string, unknown> | null> {
     this.logger.log(`chat message: o'chirilmoqda`);
-    return this.msgRepo.softDeleteMessage(messageId, userId);
+    const result = await this.msgRepo.softDeleteMessage(messageId, userId);
+    return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
   async pinMessage(messageId: string | number, userId: number, pin: boolean): Promise<Record<string, unknown> | null> {
@@ -87,7 +94,8 @@ export class ChatMessageService {
   }
 
   async getPinnedMessage(roomId: string | number): Promise<Record<string, unknown> | null> {
-    return this.msgRepo.findPinnedMessage(String(roomId));
+    const result = await this.msgRepo.findPinnedMessage(String(roomId));
+    return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
   async starMessage(messageId: string, userId: string, starred: boolean): Promise<{ starred: boolean; messageId: string }> {

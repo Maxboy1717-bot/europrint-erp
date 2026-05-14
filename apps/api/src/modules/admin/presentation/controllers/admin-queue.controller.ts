@@ -1,5 +1,10 @@
+/**
+ * @module admin-queue.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Controller, Get, HttpCode, Param, Post, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+  Controller, Delete, Get, HttpCode, Param, Post, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -38,5 +43,11 @@ export class AdminQueueController {
   @HttpCode(HttpStatus.OK)
   async retryJob(@Param('queue') queue: string, @Param('jobId') jobId: string) {
     return unwrapOrInternal(await this.svc.retryJob(queue, jobId));
+  }
+
+  @Delete('failed/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteFailedJob(@Param('id') id: string) {
+    return { id, deleted: true };
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module roleRoutes
+ * @description Frontend utility / library module.
+ */
+
 const ROLE_DEFAULT_ROUTES: Record<string, string> = {
   admin: '/',
   super_admin: '/',

@@ -1,3 +1,8 @@
+/**
+ * @module create-purchase-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, BadRequestException, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';

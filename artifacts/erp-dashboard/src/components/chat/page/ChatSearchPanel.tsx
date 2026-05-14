@@ -1,15 +1,21 @@
+/**
+ * @module ChatSearchPanel
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChatAvatar } from "./ChatAvatar";
-import { Search, X, ArrowRight, Loader2 } from "lucide-react";
+import { Search, X, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { useChatStore } from "@/store/chatStore";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { useDebounce } from "@/hooks/useDebounce";
 
+import { EPLoader } from "@/components/ep";
 interface SearchResult {
   id: string;
   roomId: string;
@@ -103,7 +109,7 @@ export function ChatSearchPanel({ onClose }: Props) {
           </div>
         ) : showLoading ? (
           <div className="flex items-center justify-center h-24">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <EPLoader tone="muted" className="w-5 h-5" />
           </div>
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 gap-2 text-muted-foreground">

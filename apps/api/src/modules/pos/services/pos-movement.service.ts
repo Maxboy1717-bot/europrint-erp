@@ -1,3 +1,8 @@
+/**
+ * @module pos-movement.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 /**
@@ -6,7 +11,7 @@ const _time = new TashkentTimeService();
  * createMovement + addLines + createDamageAct
  * (Boshqa servislar faqat createMovement ni ishlatadi)
  */
-import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -14,6 +19,7 @@ import { LifecycleBlockService }   from '../lifecycle-block.service';
 import { StockReservationService } from '../stock-reservation.service';
 import { EmployeeLedgerService }   from '../employee-ledger.service';
 import { PosAuditService }         from './pos-audit.service';
+import { PosBalanceGuardService }  from './pos-balance-guard.service';
 import { CreateMovementDto, AddMovementLineDto, CreateDamageActDto } from '../dto/movement.dto';
 import { PosMovementRepository } from './pos-movement.repository';
 import { movementTypeEnum, posMovements, posMovementLines } from '@workspace/db';
@@ -21,6 +27,15 @@ import { movementTypeEnum, posMovements, posMovementLines } from '@workspace/db'
 type PosMovementType     = typeof movementTypeEnum.enumValues[number];
 type PosMovementRow      = typeof posMovements.$inferSelect;
 type LineInsert          = Omit<typeof posMovementLines.$inferInsert, 'id'>;
+
+/** Chiqim harakatlari — balans tekshiruvi talab qilinadi */
+const OUTBOUND_TYPES = new Set([
+  'EXTERNAL_OUT',
+  'INTERNAL_ISSUE',
+  'INTERNAL_RETURN',
+  'INTERNAL_TRANSFER',
+  'DAMAGE',
+]);
 
 @Injectable()
 export class PosMovementService {
@@ -31,6 +46,7 @@ export class PosMovementService {
     private readonly stockReservation: StockReservationService,
     private readonly employeeLedger:   EmployeeLedgerService,
     private readonly auditService:     PosAuditService,
+    private readonly balanceGuard:     PosBalanceGuardService,
     private readonly eventEmitter:     EventEmitter2,
     private readonly repo:             PosMovementRepository,
   ) {}
@@ -64,6 +80,53 @@ export class PosMovementService {
         for (const line of dto.lines) {
           const check = await this.lifecycleBlock.check(dto.receivedByEmployeeId, line.materialCardId, line.quantity);
           if (!check.allowed) throw new BadRequestException(`Material ${line.materialCardId}: ${check.reason}`);
+        }
+      }
+
+      // Chiqim harakatlari uchun ombor qoldiqlarini tekshirish
+      if (OUTBOUND_TYPES.has(movType.code) && dto.lines?.length && dto.fromWarehouseId) {
+        const balanceLines = dto.lines.map((l) => ({
+          warehouseId:    dto.fromWarehouseId as string,
+          materialCardId: l.materialCardId,
+          quantity:       l.quantity,
+        }));
+
+        const guardResult = await this.balanceGuard.checkMovementLines(
+          balanceLines,
+          (dto as Record<string, unknown>).overrideReason as string | undefined,
+        );
+
+        if (guardResult.blocks.length > 0) {
+          throw new BadRequestException(
+            `Ombor qoldig'i yetarli emas:\n${guardResult.blocks.join('\n')}`,
+          );
+        }
+
+        if (guardResult.warnings.length > 0 && !(dto as Record<string, unknown>).overrideReason) {
+          // 409 — frontend tasdiqlash dialogini ko'rsatadi
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.CONFLICT,
+              message:    'Qoldiq ogohlantirishi: davom etish uchun overrideReason yuboring',
+              warnings:   guardResult.warnings,
+            },
+            HttpStatus.CONFLICT,
+          );
+        }
+
+        if (guardResult.warnings.length > 0 && (dto as Record<string, unknown>).overrideReason) {
+          await this.auditService.log({
+            userId:     createdById,
+            action:     'pos.movement.balance_override',
+            entityType: 'pos_movements',
+            entityId:   0,
+            newValue: {
+              movementType: movType.code,
+              overrideReason: (dto as Record<string, unknown>).overrideReason,
+              warnings: guardResult.warnings,
+            },
+            ipAddress,
+          });
         }
       }
 

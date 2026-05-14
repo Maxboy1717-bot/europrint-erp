@@ -1,3 +1,8 @@
+/**
+ * @module reclamation.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { DefectSeverity } from './defect.aggregate';

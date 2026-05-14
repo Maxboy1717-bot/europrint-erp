@@ -1,3 +1,8 @@
+/**
+ * @module use-qc
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, safeArray } from "@/lib/queryClient";
 

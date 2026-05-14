@@ -1,3 +1,8 @@
+/**
+ * @module fp-cycle-cron.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -34,7 +39,7 @@ export class FpCycleCronService {
     const idsResult = await this.repo.getEmployeeIdsByRoles(roles);
     const ids = idsResult.ok ? idsResult.data : [];
     await Promise.allSettled(
-      (ids ?? []).map((userId) =>
+      (Array.isArray(ids) ? ids : []).map((userId) =>
         this.commandBus.execute(
           new CreateNotificationCommand(String(userId), title, body, type),
         ),

@@ -1,3 +1,8 @@
+/**
+ * @module pos-pdf-inventory.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { sql, db } from '@workspace/db';
 import { Ok, Err, Result, safeCall } from '@common/result';
 

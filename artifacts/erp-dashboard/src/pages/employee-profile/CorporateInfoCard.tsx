@@ -1,3 +1,8 @@
+/**
+ * @module CorporateInfoCard
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +16,8 @@ import { Edit, Check, X, Phone, Mail, Settings, Clock } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+import { useTranslation } from '@/lib/i18n';
+import { EPStatusPill } from "@/components/ep";
 interface CorporateInfo {
   id: number;
   corporate_phone: string | null;
@@ -25,7 +32,8 @@ interface CorporateInfoCardProps {
   isHr: boolean;
 }
 
-export function CorporateInfoCard({ employeeId, isHr }: CorporateInfoCardProps) {
+export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<CorporateInfo>>({});
@@ -33,13 +41,13 @@ export function CorporateInfoCard({ employeeId, isHr }: CorporateInfoCardProps) 
   const { data, isLoading } = useQuery<CorporateInfo>({
     queryKey: ["/api/hr/employee-corp", employeeId],
     queryFn: () =>
-      apiRequest("GET", `/api/hr/employee-corp/${employeeId}`).then((r) => r.json()),
+      apiRequest("GET", `/api/hr/employee-corp/${employeeId}`),
     enabled: !!employeeId,
   });
 
   const saveMutation = useMutation({
     mutationFn: (body: Partial<CorporateInfo>) =>
-      apiRequest("PATCH", `/api/hr/employee-corp/${employeeId}`, body).then((r) => r.json()),
+      apiRequest("PATCH", `/api/hr/employee-corp/${employeeId}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/employee-corp", employeeId] });
       toast({ title: "Korporativ ma'lumotlar saqlandi" });
@@ -62,10 +70,10 @@ export function CorporateInfoCard({ employeeId, isHr }: CorporateInfoCardProps) 
   if (isLoading) {
     return (
       <Card>
-        <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
+        <CardHeader><Skeleton className="h-5 w-40 rounded-lg" /></CardHeader>
         <CardContent className="space-y-3">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full rounded-lg" />
+          <Skeleton className="h-9 w-full rounded-lg" />
         </CardContent>
       </Card>
     );
@@ -108,7 +116,7 @@ export function CorporateInfoCard({ employeeId, isHr }: CorporateInfoCardProps) 
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Korporativ email</Label>
+              <Label className="text-xs">{t('korporativEmail')}</Label>
               <Input
                 value={form.corporate_email ?? ""}
                 onChange={(e) => setForm({ ...form, corporate_email: e.target.value || null })}
@@ -151,7 +159,7 @@ export function CorporateInfoCard({ employeeId, isHr }: CorporateInfoCardProps) 
             </div>
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-muted-foreground">Korp. email:</span>
+              <span className="text-muted-foreground">{t('korpEmail')}</span>
               <span className="font-medium">{data?.corporate_email ?? "—"}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -161,10 +169,10 @@ export function CorporateInfoCard({ employeeId, isHr }: CorporateInfoCardProps) 
             </div>
             <div className="flex items-center gap-3">
               {data?.is_machine_operator && (
-                <Badge variant="secondary">Mashina operatori</Badge>
+                <EPStatusPill tone="neutral">Mashina operatori</EPStatusPill>
               )}
               {data?.block_erp_access && (
-                <Badge variant="destructive">ERP bloklangan</Badge>
+                <EPStatusPill tone="danger">ERP bloklangan</EPStatusPill>
               )}
               {!data?.is_machine_operator && !data?.block_erp_access && (
                 <span className="text-muted-foreground text-xs">Standart kirish</span>

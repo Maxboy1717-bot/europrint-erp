@@ -1,6 +1,11 @@
+/**
+ * @module crm-docs
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -31,7 +36,9 @@ export const crmWatchers = pgTable("crm_watchers", {
   userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("crm_watchers_entity_type_chk", sql`${t.entityType} IN ('lead','deal','contact','company','proposal','invoice')`),
+]);
 
 
 export const insertCrmWatcherSchema = createInsertSchema(crmWatchers, {
@@ -60,7 +67,10 @@ export const crmCustomFields = pgTable("crm_custom_fields", {
   sort: integer("sort").default(500),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("crm_custom_fields_entity_chk", sql`${t.entityType} IN ('lead','deal','contact','company')`),
+  check("crm_custom_fields_type_chk", sql`${t.fieldType} IN ('text','number','date','select','multiselect','checkbox','phone','email')`),
+]);
 
 
 export const insertCrmCustomFieldSchema = createInsertSchema(crmCustomFields, {
@@ -98,7 +108,12 @@ export const crmRobots = pgTable("crm_robots", {
   sort: integer("sort").default(500),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("crm_robots_entity_chk", sql`${t.entityType} IN ('leads','deals','contacts','companies')`),
+  check("crm_robots_trigger_chk", sql`${t.triggerType} IN ('STAGE_CHANGED','CREATED','FIELD_CHANGED','TIME_ELAPSED')`),
+  check("crm_robots_action_chk", sql`${t.actionType} IN ('SEND_NOTIFICATION','CREATE_TASK','CHANGE_STAGE','CHANGE_FIELD','SEND_EMAIL','SEND_TELEGRAM','AI_ANALYZE')`),
+  check("crm_robots_target_chk", sql`${t.targetType} IS NULL OR ${t.targetType} IN ('responsible','manager','specific_user')`),
+]);
 
 
 export const insertCrmRobotSchema = createInsertSchema(crmRobots, {
@@ -143,15 +158,19 @@ export const crmDocuments = pgTable("crm_documents", {
   
   // Status
   status: varchar("status", { length: 30 }).default("draft"), // draft, active, signed, archived
-  
+
   // Signature
   signedAt: timestamp("signed_at"),
   signedById: varchar("signed_by_id").references(() => users.id, { onDelete: 'set null' }),
-  
+
   // Assignment
   createdById: integer("created_by_id").references(() => users.id, { onDelete: 'set null' }),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("crm_documents_entity_chk", sql`${t.entityType} IN ('deal','lead','contact','company','proposal','invoice')`),
+  check("crm_documents_doc_type_chk", sql`${t.documentType} IN ('contract','agreement','act','letter')`),
+  check("crm_documents_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('draft','active','signed','archived')`),
+]);
 

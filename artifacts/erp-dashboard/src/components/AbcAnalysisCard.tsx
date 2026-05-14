@@ -1,3 +1,8 @@
+/**
+ * @module AbcAnalysisCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -121,7 +126,7 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
               <Card className="bg-muted/50">
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <Brain className="h-5 w-5 text-blue-600" />
+                    <Brain className="h-4 w-4 text-[var(--ep-blue)]" />
                     <h5 className="font-semibold">1. Bilim darajasi</h5>
                   </div>
                   <div>
@@ -145,7 +150,7 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
               <Card className="bg-muted/50">
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <Heart className="h-5 w-5 text-red-600" />
+                    <Heart className="h-5 w-5 text-[var(--ep-red)]" />
                     <h5 className="font-semibold">2. Sadoqat va fidokorlik</h5>
                   </div>
                   <div>
@@ -169,7 +174,7 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
               <Card className="bg-muted/50">
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <Shield className="h-5 w-5 text-green-600" />
+                    <Shield className="h-5 w-5 text-[var(--ep-green)]" />
                     <h5 className="font-semibold">3. Intizom (qoidalarga rioya qilish)</h5>
                   </div>
                   <div className="flex justify-between items-center">
@@ -191,7 +196,7 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
               <Card className="bg-muted/50">
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckSquare className="h-5 w-5 text-purple-600" />
+                    <CheckSquare className="h-5 w-5 text-[var(--ep-purple)]" />
                     <h5 className="font-semibold">4. Topshiriqlarni 100% bajarish</h5>
                   </div>
                   <div>
@@ -208,7 +213,7 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
               <Card className="bg-muted/50">
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-5 w-5 text-orange-600" />
+                    <Clock className="h-5 w-5 text-[var(--ep-primary)]" />
                     <h5 className="font-semibold">5. Vaqtida kelish (kech qolmaslik)</h5>
                   </div>
                   <div>
@@ -225,7 +230,7 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
               <Card className="bg-muted/50">
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <Lightbulb className="h-5 w-5 text-yellow-600" />
+                    <Lightbulb className="h-5 w-5 text-[var(--ep-yellow)]" />
                     <h5 className="font-semibold">6. Tashabbus va g'oyalar</h5>
                   </div>
                   <div className="flex justify-between items-center">
@@ -252,11 +257,11 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
                 {/* A daraja imtiyozlari */}
                 <div className={`p-4 rounded-lg ${analysis.grade === 'A' ? 'bg-green-500/10 border-2 border-green-500' : 'bg-muted/50'}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-green-500 text-white">A Daraja (5 ball)</Badge>
+                    <Badge className="bg-[var(--ep-green)] text-white">A Daraja (5 ball)</Badge>
                     {analysis.grade === 'A' && <Badge variant="secondary">Joriy daraja ✓</Badge>}
                   </div>
                   <p className="text-sm mb-3 font-semibold">A'lo xodim - To'liq imtiyozlar:</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Badge variant="outline" className="justify-start">💰 Kompaniyadan kredit</Badge>
                     <Badge variant="outline" className="justify-start">✈️ Safari/Sayohat</Badge>
                     <Badge variant="outline" className="justify-start">📈 Oylik oshirish</Badge>
@@ -272,11 +277,11 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
                 {/* B daraja imtiyozlari */}
                 <div className={`p-4 rounded-lg ${analysis.grade === 'B' ? 'bg-blue-500/10 border-2 border-blue-500' : 'bg-muted/50'}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-blue-500 text-white">B Daraja (4 ball)</Badge>
+                    <Badge className="bg-[var(--ep-blue)] text-white">B Daraja (4 ball)</Badge>
                     {analysis.grade === 'B' && <Badge variant="secondary">Joriy daraja ✓</Badge>}
                   </div>
                   <p className="text-sm mb-3">Yaxshi xodim - Cheklangan imtiyozlar:</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Badge variant="outline" className="justify-start">🎁 Bonus to'lovlar</Badge>
                     <Badge variant="outline" className="justify-start">🎓 O'qitishlar</Badge>
                   </div>
@@ -285,7 +290,7 @@ export function AbcAnalysisCard({ analysis, onCalculate, onEdit, isCalculating }
                 {/* C daraja */}
                 <div className={`p-4 rounded-lg ${analysis.grade === 'C' ? 'bg-orange-500/10 border-2 border-orange-500' : 'bg-muted/50'}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-orange-500 text-white">C Daraja (3 ball)</Badge>
+                    <Badge className="bg-[var(--ep-primary)] text-white">C Daraja (3 ball)</Badge>
                     {analysis.grade === 'C' && <Badge variant="secondary">Joriy daraja ✓</Badge>}
                   </div>
                   <p className="text-sm mb-2">Qoniqarli xodim - Imtiyozlar yo'q</p>

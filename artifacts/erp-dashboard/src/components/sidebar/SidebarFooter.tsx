@@ -1,3 +1,8 @@
+/**
+ * @module SidebarFooter
+ * @description React UI component.
+ */
+
 import { Plus, MessageSquare, Star } from "lucide-react";
 import { useLocation } from "wouter";
 

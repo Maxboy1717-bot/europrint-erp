@@ -1,3 +1,8 @@
+/**
+ * @module crm-leads-ops.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -14,15 +19,15 @@ export class CrmLeadsOpsRepository {
   async updateLead(lid: number, body: Row): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const { first_name, last_name, email, phone, source, notes, status, company_id } = body;
+      const contactName = [first_name, last_name].filter(Boolean).join(' ') || null;
       const rows = await db.update(crmLeads).set({
-        first_name: sql`COALESCE(${first_name ?? null}, ${crmLeads.first_name})`,
-        last_name:  sql`COALESCE(${last_name ?? null}, ${crmLeads.last_name})`,
-        email:      sql`COALESCE(${email ?? null}, ${crmLeads.email})`,
-        phone:      sql`COALESCE(${phone ?? null}, ${crmLeads.phone})`,
-        source:     sql`COALESCE(${source ?? null}, ${crmLeads.source})`,
-        notes:      sql`COALESCE(${notes ?? null}, ${crmLeads.notes})`,
-        status:     sql`COALESCE(${status ?? null}, ${crmLeads.status})`,
-        company_id: sql`COALESCE(${company_id ?? null}, ${crmLeads.company_id})`,
+        contact_name:  sql`COALESCE(${contactName ?? null}, ${crmLeads.contact_name})`,
+        contact_email: sql`COALESCE(${email ?? null}, ${crmLeads.contact_email})`,
+        contact_phone: sql`COALESCE(${phone ?? null}, ${crmLeads.contact_phone})`,
+        source:        sql`COALESCE(${source ?? null}, ${crmLeads.source})`,
+        notes:         sql`COALESCE(${notes ?? null}, ${crmLeads.notes})`,
+        status:        sql`COALESCE(${status ?? null}, ${crmLeads.status})`,
+        customer_id:   sql`COALESCE(${company_id ?? null}, ${crmLeads.customer_id})`,
         updated_at: _time.now(),
       }).where(eq(crmLeads.id, lid)).returning();
       return castTo<Row[]>(rows);
@@ -37,10 +42,10 @@ export class CrmLeadsOpsRepository {
       }, 'DB_ERROR');
   }
 
-  async updateLeadStage(lid: number, stageId: number): Promise<Result<Row[]>> {
+  async updateLeadStage(lid: number, _stageId: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
+      // crm_leads has no stage_id column; touch updated_at until column is added
       const rows = await db.update(crmLeads).set({
-        stage_id:   stageId,
         updated_at: _time.now(),
       }).where(eq(crmLeads.id, lid)).returning();
       return castTo<Row[]>(rows);

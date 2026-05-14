@@ -1,3 +1,8 @@
+/**
+ * @module CfoConfigSettings
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -87,7 +92,7 @@ export default function CfoConfigSettings() {
             step={isPct ? '0.01' : '1000'}
             min={0}
             max={isPct ? 1 : undefined}
-            className="w-32 h-8 text-xs"
+            className="w-32 h-9 text-xs"
             value={displayVal}
             onChange={e => handleEdit(cfg.configKey, e.target.value)}
           />
@@ -123,7 +128,7 @@ export default function CfoConfigSettings() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
         </div>
       ) : (
         <>

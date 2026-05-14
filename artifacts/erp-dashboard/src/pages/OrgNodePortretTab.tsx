@@ -1,3 +1,8 @@
+/**
+ * @module OrgNodePortretTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -130,7 +135,7 @@ export function OrgNodePortretTab({ nodeId, nodeName }: { nodeId: number; nodeNa
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}><Save className="h-3.5 w-3.5 mr-1.5" /> {saveMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}</Button>
-          <Button size="sm" onClick={() => setHrDialogOpen(true)} className="bg-primary text-on-primary"><Send className="h-3.5 w-3.5 mr-1.5" /> HR ga so'rov</Button>
+          <Button size="sm" onClick={() => setHrDialogOpen(true)} className="bg-primary text-primary-foreground"><Send className="h-3.5 w-3.5 mr-1.5" /> HR ga so'rov</Button>
         </div>
       </div>
 
@@ -140,7 +145,7 @@ export function OrgNodePortretTab({ nodeId, nodeName }: { nodeId: number; nodeNa
         {(Array.isArray(STEPS) ? STEPS : []).map((s, i) => {
           const Icon = s.icon;
           return (
-            <button key={s.id} onClick={() => setStep(i)} className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 px-0.5 rounded-lg text-xs transition-all border ${step === i ? "bg-primary text-on-primary border-primary" : "bg-surface-container-low border-border/40 text-on-surface-variant hover:border-primary/40"}`}>
+            <button key={s.id} onClick={() => setStep(i)} className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 px-0.5 rounded-lg text-xs transition-all border ${step === i ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border/40 text-muted-foreground hover:border-primary/40"}`}>
               <Icon className="w-3 h-3" /><span className="font-medium leading-tight">{s.title}</span><span className="text-[8px] opacity-60 leading-tight text-center hidden sm:block">{s.full}</span>
             </button>
           );
@@ -158,7 +163,7 @@ export function OrgNodePortretTab({ nodeId, nodeName }: { nodeId: number; nodeNa
       <div className="flex items-center justify-between border-t pt-3">
         <Button variant="outline" size="sm" disabled={step === 0} onClick={() => setStep(s => s - 1)}><ChevronLeft className="w-3.5 h-3.5 mr-1" /> Orqaga</Button>
         <Button variant="outline" size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}><Save className="w-3.5 h-3.5 mr-1" /> {saveMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}</Button>
-        {step < STEPS.length - 1 ? <Button size="sm" onClick={() => setStep(s => s + 1)}>Keyingi <ChevronRight className="w-3.5 h-3.5 ml-1" /></Button> : <Button size="sm" onClick={() => saveMutation.mutate()} className="bg-green-600 hover:bg-green-700 text-white"><Save className="w-3.5 h-3.5 mr-1" /> Saqlash</Button>}
+        {step < STEPS.length - 1 ? <Button size="sm" onClick={() => setStep(s => s + 1)}>Keyingi <ChevronRight className="w-3.5 h-3.5 ml-1" /></Button> : <Button size="sm" onClick={() => saveMutation.mutate()} className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white"><Save className="w-3.5 h-3.5 mr-1" /> Saqlash</Button>}
       </div>
 
       <HRRequestsHistory requests={reqData?.requests ?? []} />

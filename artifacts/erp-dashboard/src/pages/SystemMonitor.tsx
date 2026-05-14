@@ -1,14 +1,19 @@
+/**
+ * @module SystemMonitor
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
 import {
   Activity, Database, Clock, Cpu, HardDrive, Server,
   CheckCircle, XCircle, AlertTriangle, RefreshCw, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { EPPageHeader } from "@/components/ep";
 
 interface SystemHealth {
   uptime?: { formatted?: string };
@@ -27,9 +32,9 @@ interface CronJob { name?: string; schedule?: string; module?: string }
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "ok" || status === "running" || status === "active" || status === "connected")
-    return <Badge className="bg-green-500/10 text-green-700 dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Faol</Badge>;
+    return <Badge className="bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Faol</Badge>;
   if (status === "warning" || status === "in_memory" || status === "default" || status === "default_key")
-    return <Badge className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"><AlertTriangle className="w-3 h-3 mr-1" />{status === "in_memory" ? "Xotirada" : "Ogohlantirish"}</Badge>;
+    return <Badge className="bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400"><AlertTriangle className="w-3 h-3 mr-1" />{status === "in_memory" ? "Xotirada" : "Ogohlantirish"}</Badge>;
   return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Ulanmagan</Badge>;
 }
 
@@ -60,10 +65,11 @@ export default function SystemMonitor() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Tizim monitoring</b></>}
         title="Tizim monitoring"
-        description="Server holati, ma'lumotlar bazasi va integratsiyalar"
+        subtitle="Server holati, ma'lumotlar bazasi va integratsiyalar"
         actions={
           <Button variant="outline" size="default" onClick={handleRefresh} data-testid="button-refresh-monitor">
             <RefreshCw className="w-4 h-4 mr-2" />Yangilash
@@ -72,8 +78,8 @@ export default function SystemMonitor() {
       />
 
       {/* Server Health */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {loadingHealth ? Array(4).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-28" />) : <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {loadingHealth ? Array(4).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />) : <>
           <Card data-testid="card-uptime">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Clock className="w-4 h-4" />Ishlash vaqti</div>
@@ -112,7 +118,7 @@ export default function SystemMonitor() {
             <CardTitle className="flex items-center gap-2 text-base"><Database className="w-4 h-4" />Ma'lumotlar bazasi statistikasi</CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingDb ? <Skeleton className="h-40" /> : (
+            {loadingDb ? <Skeleton className="h-40 rounded-lg" /> : (
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">DB hajmi</span>
@@ -139,7 +145,7 @@ export default function SystemMonitor() {
             <CardTitle className="flex items-center gap-2 text-base"><Zap className="w-4 h-4" />Integratsiyalar holati</CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingIntegrations ? <Skeleton className="h-40" /> : (
+            {loadingIntegrations ? <Skeleton className="h-40 rounded-lg" /> : (
               <div className="space-y-2">
                 {integrations?.map((intg) => (
                   <div key={intg.key} className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0" data-testid={`row-integration-${intg.key}`}>
@@ -162,11 +168,11 @@ export default function SystemMonitor() {
           <CardTitle className="flex items-center gap-2 text-base"><Activity className="w-4 h-4" />Cron ishlar ({cronJobs?.length || 0})</CardTitle>
         </CardHeader>
         <CardContent>
-          {loadingCron ? <Skeleton className="h-32" /> : (
+          {loadingCron ? <Skeleton className="h-32 rounded-lg" /> : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {cronJobs?.map((job, i) => (
                 <div key={`k-${i}`} className="flex items-start gap-2 p-2 rounded-md border border-border/50" data-testid={`card-cron-${i}`}>
-                  <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
+                  <CheckCircle className="w-3.5 h-3.5 text-[var(--ep-green)] mt-0.5 shrink-0" />
                   <div className="min-w-0">
                     <div className="text-xs font-medium truncate">{job.name}</div>
                     <div className="text-xs text-muted-foreground">{job.schedule}</div>

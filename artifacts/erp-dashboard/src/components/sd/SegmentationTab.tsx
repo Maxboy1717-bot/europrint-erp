@@ -1,22 +1,41 @@
-import { SdSegmentationData } from "./sd-types";
+/**
+ * @module SegmentationTab
+ * @description React UI component.
+ */
+
+import { SdSegmentationData, SdInternalIntelligenceData } from "./sd-types";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, BarChart3, Target } from "lucide-react";
+import { ChevronRight, BarChart3, Target, MapPin, Clock, Brain, Star, Lightbulb, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
 } from "recharts";
-import { fmtNum } from "./helpers";
+import { fmtNum, fmtDate } from "./helpers";
 
-export function SegmentationTab({ segmentation }: { segmentation: SdSegmentationData }) {
+interface JourneyData {
+  stage: string;
+  stageLabel: string;
+  firstOrderDate?: string;
+  lastOrderDate?: string;
+  daysSinceFirstOrder?: number;
+  daysSinceLastOrder?: number;
+}
+
+export function SegmentationTab({ segmentation, journey, internalIntelligence }: {
+  segmentation: SdSegmentationData;
+  journey?: JourneyData;
+  internalIntelligence?: SdInternalIntelligenceData;
+}) {
   if (!segmentation) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
 
   const { abcScore, abcCategory, scoreBreakdown, recommendations, categoryLabel } = segmentation;
   const seg = abcCategory || segmentation.segment || "C";
 
   const catConf: Record<string, { gradient: string; text: string; border: string; label: string }> = {
-    A: { gradient: "from-emerald-500 to-teal-500", text: "text-emerald-600", border: "border-emerald-200 dark:border-emerald-800", label: "VIP mijoz" },
-    B: { gradient: "from-sky-500 to-blue-500", text: "text-sky-600", border: "border-sky-200 dark:border-sky-800", label: "Doimiy mijoz" },
-    C: { gradient: "from-amber-500 to-orange-500", text: "text-amber-600", border: "border-amber-200 dark:border-amber-800", label: "Oddiy mijoz" },
-    D: { gradient: "from-rose-500 to-red-500", text: "text-rose-600", border: "border-rose-200 dark:border-rose-800", label: "Xavfli mijoz" },
+    A: { gradient: "", text: "text-[var(--ep-green)]", border: "border-emerald-200 dark:border-emerald-800", label: "VIP mijoz" },
+    B: { gradient: "", text: "text-[var(--ep-blue)]", border: "border-sky-200 dark:border-sky-800", label: "Doimiy mijoz" },
+    C: { gradient: "", text: "text-[var(--ep-yellow)]", border: "border-amber-200 dark:border-amber-800", label: "Oddiy mijoz" },
+    D: { gradient: "", text: "text-[var(--ep-red)]", border: "border-rose-200 dark:border-rose-800", label: "Xavfli mijoz" },
   };
   const conf = catConf[seg] || catConf.C;
 
@@ -29,14 +48,37 @@ export function SegmentationTab({ segmentation }: { segmentation: SdSegmentation
   ] : [];
 
   const score = fmtNum(abcScore);
+  const rfm = segmentation.rfm as { recency: number; frequency: number; monetary: number } | undefined;
 
   return (
     <div className="space-y-4">
+      {/* RFM mini-badges */}
+      {rfm && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { label: "Recency", desc: "So'nggi faollik", val: rfm.recency, color: "" },
+            { label: "Frequency", desc: "Buyurtma chastotasi", val: rfm.frequency, color: "" },
+            { label: "Monetary", desc: "Daromad hajmi", val: rfm.monetary, color: "" },
+          ].map(item => (
+            <div key={item.label} className="rounded-xl border bg-card p-3 text-center">
+              <div className={`w-10 h-10 rounded-xl ${item.color} mx-auto flex items-center justify-center mb-2`}>
+                <span className="text-lg font-black text-white">{item.val}</span>
+              </div>
+              <p className="text-xs font-bold">{item.label}</p>
+              <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+              <div className="mt-1.5">
+                <Progress value={item.val * 20} className="h-1 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Score card */}
         <div className={`rounded-xl border-2 ${conf.border} bg-card overflow-hidden`}>
           <div className="p-6 text-center">
-            <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${conf.gradient} shadow-lg mb-3`}>
+            <div className={`inline-flex items-center justify-center w-20 h-20 rounded-xl ${conf.gradient} shadow-lg mb-3`}>
               <span className="text-4xl font-black text-white">{seg}</span>
             </div>
             <p className="text-lg font-bold">{categoryLabel || conf.label}</p>
@@ -111,6 +153,133 @@ export function SegmentationTab({ segmentation }: { segmentation: SdSegmentation
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Internal Intelligence (Layer 7) */}
+      {internalIntelligence && (
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b bg-muted/30">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Brain className="h-4 w-4 text-muted-foreground" />Ichki razvedka (Layer 7)
+            </h3>
+          </div>
+          <div className="p-4 space-y-3">
+            {/* Relationship quality */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Munosabat sifati</span>
+              <Badge className={
+                internalIntelligence.relationshipQuality === 'excellent' ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+                : internalIntelligence.relationshipQuality === 'good'    ? "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200"
+                : internalIntelligence.relationshipQuality === 'difficult'? "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200"
+                : "bg-muted text-muted-foreground"
+              } variant="outline">{internalIntelligence.relationshipLabel}</Badge>
+            </div>
+            {/* Last interaction */}
+            {internalIntelligence.lastInteraction && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground">So'nggi muloqot:</span>
+                <span className="font-medium">{internalIntelligence.lastInteraction.type}</span>
+                <span className="text-muted-foreground text-xs">{fmtDate(String(internalIntelligence.lastInteraction.date ?? ""))}</span>
+                {internalIntelligence.lastInteraction.by && (
+                  <span className="text-xs text-muted-foreground">({String(internalIntelligence.lastInteraction.by)})</span>
+                )}
+              </div>
+            )}
+            {/* Key insights */}
+            {(internalIntelligence.keyInsights || []).filter(Boolean).length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" />Asosiy xulosalar</p>
+                {internalIntelligence.keyInsights.filter(Boolean).map((insight, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[var(--ep-green)] shrink-0" />
+                    <span>{String(insight)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Next actions */}
+            {(internalIntelligence.nextActions || []).length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Target className="h-3.5 w-3.5" />Keyingi amallar</p>
+                {internalIntelligence.nextActions.slice(0, 3).map((a, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm rounded-lg bg-muted/40 px-2.5 py-1.5">
+                    <Star className="h-3.5 w-3.5 text-[var(--ep-yellow)] shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <span>{String(a.action ?? "")}</span>
+                      {a.date && <span className="text-xs text-muted-foreground ml-2">{fmtDate(String(a.date))}</span>}
+                    </div>
+                    {a.by && <span className="text-xs text-muted-foreground shrink-0">{String(a.by)}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Journey stage */}
+      {journey && (
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b bg-muted/30">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />Mijoz yo'li (Journey)
+            </h3>
+          </div>
+          <div className="p-4">
+            {/* Journey stages visual */}
+            {(() => {
+              const stages = ["prospect", "new", "growing", "stable", "at_risk", "lost"] as const;
+              const stageLabels: Record<string, string> = {
+                prospect: "Potensial", new: "Yangi", growing: "O'sish", stable: "Barqaror", at_risk: "Xavf ostida", lost: "Yo'qolgan",
+              };
+              const stageColors: Record<string, string> = {
+                prospect: "bg-violet-500", new: "bg-sky-500", growing: "bg-emerald-500",
+                stable: "bg-teal-500", at_risk: "bg-amber-500", lost: "bg-rose-500",
+              };
+              const currentIdx = stages.indexOf(journey.stage as typeof stages[number]);
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1">
+                    {stages.map((s, i) => (
+                      <div key={s} className="flex items-center flex-1 min-w-0">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0
+                          ${i === currentIdx ? stageColors[s] : i < currentIdx ? "bg-muted-foreground/40" : "bg-muted/60"}`}>
+                          {i + 1}
+                        </div>
+                        {i < stages.length - 1 && (
+                          <div className={`h-0.5 flex-1 mx-0.5 ${i < currentIdx ? "bg-muted-foreground/40" : "bg-muted/60"}`} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center">
+                    <span className={`inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full text-white ${stageColors[journey.stage] || "bg-muted"}`}>
+                      <MapPin className="h-3.5 w-3.5" />
+                      {journey.stageLabel || stageLabels[journey.stage] || journey.stage}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {journey.daysSinceFirstOrder !== undefined && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Birinchi buyurtmadan:</span>
+                        <span className="font-medium">{journey.daysSinceFirstOrder} kun</span>
+                      </div>
+                    )}
+                    {journey.daysSinceLastOrder !== undefined && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">So'nggi buyurtmadan:</span>
+                        <span className="font-medium">{journey.daysSinceLastOrder} kun</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

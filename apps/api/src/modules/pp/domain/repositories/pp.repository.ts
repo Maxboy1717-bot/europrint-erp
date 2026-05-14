@@ -1,3 +1,8 @@
+/**
+ * @module pp.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { ProductionOrder } from '../aggregates/production-order.aggregate';
 import { Bom } from '../aggregates/bom.aggregate';
 import { Routing } from '../aggregates/routing.aggregate';

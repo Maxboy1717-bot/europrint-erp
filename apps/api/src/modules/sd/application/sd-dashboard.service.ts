@@ -1,3 +1,8 @@
+/**
+ * @module sd-dashboard.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { SdDashboardRepository } from './sd-dashboard.repository';
@@ -8,11 +13,14 @@ export class SdDashboardService {
 
   async getOverview(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-      const [stats, top_customers] = await Promise.all([
+      const [statsRes, customersRes] = await Promise.all([
         this.repo.getOverview(),
         this.repo.getTopCustomers(),
       ]);
-      return { stats, top_customers };
+      return {
+        stats: statsRes.ok ? statsRes.data : {},
+        top_customers: customersRes.ok ? customersRes.data : [],
+      };
     });
   }
 

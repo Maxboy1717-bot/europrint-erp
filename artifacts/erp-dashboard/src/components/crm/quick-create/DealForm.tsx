@@ -1,3 +1,8 @@
+/**
+ * @module DealForm
+ * @description React UI component.
+ */
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -21,11 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+;
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCIES, dealFormSchema, type DealFormValues } from "./deal-schema";
 
+import { EPLoader } from "@/components/ep";
 interface DealFormProps {
   users: Array<{ id: string; fullName: string }>;
   usersLoading: boolean;
@@ -80,6 +86,7 @@ export function DealForm({
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/deals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/crm/pipeline"] });
       toast({
         title: "Bitim yaratildi",
         description: "Yangi bitim muvaffaqiyatli qo'shildi",
@@ -101,7 +108,7 @@ export function DealForm({
       <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
         <div className="space-y-4">
           <h4 className="text-sm font-medium text-muted-foreground">Asosiy ma'lumotlar</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="title"
@@ -123,7 +130,7 @@ export function DealForm({
                   <FormLabel>Mas'ul shaxs</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-deal-assignedById">
+                      <SelectTrigger data-testid="select-deal-assignedById" className="h-9">
                         <SelectValue placeholder={usersLoading ? "Yuklanmoqda..." : "Mas'ul shaxsni tanlang"} />
                       </SelectTrigger>
                     </FormControl>
@@ -158,9 +165,9 @@ export function DealForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kontakt</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value !== undefined ? String(field.value) : undefined}>
+                  <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value !== undefined ? String(field.value) : undefined}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-contactId">
+                      <SelectTrigger data-testid="select-contactId" className="h-9">
                         <SelectValue placeholder={contactsLoading ? "Yuklanmoqda..." : "Kontaktni tanlang"} />
                       </SelectTrigger>
                     </FormControl>
@@ -182,9 +189,9 @@ export function DealForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kompaniya</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value !== undefined ? String(field.value) : undefined}>
+                  <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value !== undefined ? String(field.value) : undefined}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-companyId">
+                      <SelectTrigger data-testid="select-companyId" className="h-9">
                         <SelectValue placeholder={companiesLoading ? "Yuklanmoqda..." : "Kompaniyani tanlang"} />
                       </SelectTrigger>
                     </FormControl>
@@ -207,7 +214,7 @@ export function DealForm({
 
         <div className="space-y-4">
           <h4 className="text-sm font-medium text-muted-foreground">Moliyaviy ma'lumotlar</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="opportunity"
@@ -229,7 +236,7 @@ export function DealForm({
                   <FormLabel>Valyuta</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-currencyId">
+                      <SelectTrigger data-testid="select-currencyId" className="h-9">
                         <SelectValue placeholder="Valyutani tanlang" />
                       </SelectTrigger>
                     </FormControl>
@@ -287,7 +294,7 @@ export function DealForm({
             Bekor qilish
           </Button>
           <Button type="submit" disabled={mutation.isPending} data-testid="button-submit">
-            {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            {mutation.isPending && <EPLoader className="mr-2" />}
             Yaratish
           </Button>
         </DialogFooter>

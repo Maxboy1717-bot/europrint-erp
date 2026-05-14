@@ -1,3 +1,8 @@
+/**
+ * @module CareerSection
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,11 +23,11 @@ export function CareerSection({
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Kasbiy O'sish va Vorislik Rejalashtirish</h2>
       </div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { l: "Faol reja", v: careerPlans.length, c: "text-blue-600", i: TrendingUp },
-          { l: "Kandidatlar", v: "14", c: "text-green-600", i: UserPlus },
-          { l: "O'sish (bu oy)", v: "3", c: "text-orange-600", i: FileText },
+          { l: "Faol reja", v: careerPlans.length, c: "text-[var(--ep-blue)]", i: TrendingUp },
+          { l: "Kandidatlar", v: "14", c: "text-[var(--ep-green)]", i: UserPlus },
+          { l: "O'sish (bu oy)", v: "3", c: "text-[var(--ep-primary)]", i: FileText },
           { l: "Vorislik tayyorgarligi", v: "68%", c: "text-primary", i: TrendingUp },
         ]).map(s => (
           <Card key={s.l}><CardContent className="pt-4 pb-3 flex items-start justify-between">
@@ -37,7 +42,7 @@ export function CareerSection({
       <Card>
         <CardHeader><CardTitle className="text-base">Karyera Rivojlanish Rejalari</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
               <TableHead>Xodim</TableHead><TableHead>Joriy lavozim</TableHead>
               <TableHead>Maqsadli lavozim</TableHead><TableHead>Sana</TableHead>
@@ -47,9 +52,9 @@ export function CareerSection({
               {careerLoading ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow>
               ) : careerPlans.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Rejalar mavjud emas</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Rejalar mavjud emas</TableCell></TableRow>
               ) : (Array.isArray(careerPlans) ? careerPlans : []).map((plan) => (
-                <TableRow key={plan.id}>
+                <TableRow key={plan.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{plan.employee_name}</TableCell>
                   <TableCell className="text-muted-foreground">{plan.current_position_title || "—"}</TableCell>
                   <TableCell>{plan.target_position_title || "—"}</TableCell>
@@ -62,7 +67,7 @@ export function CareerSection({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

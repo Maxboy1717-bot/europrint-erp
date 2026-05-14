@@ -1,3 +1,8 @@
+/**
+ * @module pos-inventory-count.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 
 import { castTo } from '@common/db-rows';
 import { Injectable } from '@nestjs/common';

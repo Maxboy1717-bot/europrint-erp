@@ -1,0 +1,9 @@
+{
+  "cameraUnsupported": "Камера не поддерживается",
+  "scan": "Сканировать",
+  "manualInput": "Ручной ввод",
+  "scanCamera": "Сканировать Камера",
+  "scanHistory": "Сканировать History",
+  "notFound": "not Found",
+  "notifyAdmin": "notify Admin"
+}

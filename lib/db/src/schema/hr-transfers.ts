@@ -1,6 +1,11 @@
+/**
+ * @module hr-transfers
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, Position, admins, departments, positions, users } from "./core-schema";
@@ -17,16 +22,18 @@ export const employeeTransferHistory = pgTable("employee_transfer_history", {
   // Eski ma'lumotlar
   fromDepartmentId: varchar("from_department_id").references(() => departments.id, { onDelete: 'set null' }),
   fromPositionId: varchar("from_position_id").references(() => positions.id, { onDelete: 'set null' }),
-  fromWorkCenterId: varchar("from_work_center_id").references(() => workCenters.id),
+  fromWorkCenterId: varchar("from_work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   // Yangi ma'lumotlar
   toDepartmentId: varchar("to_department_id").references(() => departments.id, { onDelete: 'set null' }),
   toPositionId: varchar("to_position_id").references(() => positions.id, { onDelete: 'set null' }),
-  toWorkCenterId: varchar("to_work_center_id").references(() => workCenters.id),
+  toWorkCenterId: varchar("to_work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   reason: text("reason"), // O'zgarish sababi
   notes: text("notes"),
   createdBy: integer("created_by").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("emp_transfer_history_v2_type_chk", sql`${t.transferType} IN ('department','position','work_center','promotion','demotion')`),
+]);
 
 
 export const insertEmployeeTransferHistorySchema = createInsertSchema(employeeTransferHistory, {
@@ -54,7 +61,9 @@ export const employeeStrengthsWeaknesses = pgTable("employee_strengths_weaknesse
   aiSummary: text("ai_summary"), // GPT tomonidan yaratilgan umumiy xulosalar
   recommendations: text("recommendations"), // Tavsiyalar
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("emp_sw_v2_period_chk", sql`${t.periodType} IN ('weekly','monthly','quarterly')`),
+]);
 
 
 export const insertEmployeeStrengthsWeaknessesSchema = createInsertSchema(employeeStrengthsWeaknesses, {
@@ -82,8 +91,8 @@ export type InsertEmployeeStrengthsWeaknesses = z.infer<typeof insertEmployeeStr
 export const employeeComparisonLogs = pgTable("employee_comparison_logs", {
   id: serial("id").primaryKey(),
   comparedBy: varchar("compared_by").references(() => users.id, { onDelete: 'set null' }),
-  employee1Id: varchar("employee1_id").references(() => users.id).notNull(),
-  employee2Id: varchar("employee2_id").references(() => users.id).notNull(),
+  employee1Id: varchar("employee1_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
+  employee2Id: varchar("employee2_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
   comparisonDate: varchar("comparison_date", { length: 10 }).notNull(), // YYYY-MM-DD
   comparisonType: varchar("comparison_type", { length: 50 }).notNull().default("performance"), // performance, productivity, attendance
   results: jsonb("results"), // Solishtirish natijalari
@@ -105,10 +114,10 @@ export type InsertEmployeeComparisonLog = z.infer<typeof insertEmployeeCompariso
 // Employee Productivity (Xodim samaradorligi - kamera asosida)
 export const employeeProductivity = pgTable("employee_productivity", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
   shift: varchar("shift", { length: 20 }), // 1-smena, 2-smena, 3-smena
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   // Vaqt statistikasi (daqiqa)
   totalWorkMinutes: integer("total_work_minutes").default(0),
   activeWorkMinutes: integer("active_work_minutes").default(0), // Faol ishlagan
@@ -149,7 +158,7 @@ export type InsertEmployeeProductivity = z.infer<typeof insertEmployeeProductivi
 // Face Embeddings (Yuz vektorlari)
 export const faceEmbeddings = pgTable("face_embeddings", {
   id: serial("id").primaryKey(),
-  employeeId: varchar("employee_id").references(() => users.id).notNull(),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   embedding: text("embedding").notNull(), // AES-256 encrypted face vector
   imageUrl: text("image_url"), // Original face image URL
   isActive: boolean("is_active").default(true),
@@ -171,7 +180,7 @@ export type InsertFaceEmbedding = z.infer<typeof insertFaceEmbeddingSchema>;
 // Daily Attendance Summary (Kunlik davomad xulosasi)
 export const dailyAttendanceSummary = pgTable("daily_attendance_summary", {
   id: serial("id").primaryKey(),
-  employeeId: varchar("employee_id").references(() => users.id).notNull(),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
   firstSeenAt: timestamp("first_seen_at"), // Birinchi marta ko'rilgan
   lastSeenAt: timestamp("last_seen_at"), // Oxirgi marta ko'rilgan
@@ -184,7 +193,10 @@ export const dailyAttendanceSummary = pgTable("daily_attendance_summary", {
   status: varchar("status", { length: 20 }).default("present"), // present, late, absent, early_leave
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  check("daily_attendance_summary_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('present','late','absent','early_leave')`),
+  check("daily_attendance_summary_minutes_chk", sql`${t.totalMinutes} IS NULL OR ${t.totalMinutes} >= 0`),
+]);
 
 
 export type DailyAttendanceSummary = typeof dailyAttendanceSummary.$inferSelect;

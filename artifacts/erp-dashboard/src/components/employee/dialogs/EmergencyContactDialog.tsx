@@ -1,3 +1,8 @@
+/**
+ * @module EmergencyContactDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,21 +41,21 @@ export function EmergencyContactDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Favqulodda aloqa qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Favqulodda aloqa qo'shish</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="contactName">Ism-sharif</Label>
+          <div className="space-y-1">
+          <Label htmlFor="contactName">Ism-sharif</Label>
             <Input
               id="contactName"
               value={form.contactName}
               onChange={(e) => updateField("contactName", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="relationship">Qarindoshlik darajasi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="relationship">Qarindoshlik darajasi</Label>
             <Input
               id="relationship"
               value={form.relationship}
@@ -58,24 +63,24 @@ export function EmergencyContactDialog({
               placeholder="Masalan: Otasi, Onasi, Turmush o'rtog'i"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="phoneNumber">Telefon raqami</Label>
+          <div className="space-y-1">
+          <Label htmlFor="phoneNumber">Telefon raqami</Label>
             <Input
               id="phoneNumber"
               value={form.phoneNumber}
               onChange={(e) => updateField("phoneNumber", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="alternativePhone">Muqobil telefon</Label>
+          <div className="space-y-1">
+          <Label htmlFor="alternativePhone">Muqobil telefon</Label>
             <Input
               id="alternativePhone"
               value={form.alternativePhone}
               onChange={(e) => updateField("alternativePhone", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Manzil</Label>
+          <div className="space-y-1">
+          <Label htmlFor="address">Manzil</Label>
             <Input
               id="address"
               value={form.address}

@@ -1,3 +1,8 @@
+/**
+ * @module WarehouseHub
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
@@ -5,17 +10,9 @@ import WarehouseDashboard from "@/pages/WarehouseDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, 
-  ScanBarcode, 
-  Loader2, 
-  Boxes, 
-  ArrowRightLeft, 
-  Eye 
-} from "lucide-react";
+import { Search, ScanBarcode, Boxes, ArrowRightLeft, Eye } from "lucide-react";
 import { apiRequest, queryClient, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ErrorState } from "@/components/ui/error-state";
 import { useWarehousePosSync } from "@/hooks/useWarehousePosSync";
 
 import { 
@@ -39,6 +36,7 @@ import { ExitControlPanel } from "@/components/wms/hub/ExitControlPanel";
 import { OperatorDebtsPanel } from "@/components/wms/hub/OperatorDebtsPanel";
 import { RecentMovementsPanel } from "@/components/wms/hub/RecentMovementsPanel";
 import { ScanResultDialog } from "@/components/wms/hub/ScanResultDialog";
+import { EPErrorState, EPLoader } from "@/components/ep";
 
 export default function WarehouseHub() {
   const { toast } = useToast();
@@ -179,7 +177,7 @@ export default function WarehouseHub() {
   const handleScan = async () => {
     if (!scanInput.trim()) return;
     try {
-      const res = await fetch(`/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`, { credentials: "include" });
+      const res = await apiRequest('GET', `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`);
       if (res.ok) {
         setScanResult(await res.json());
         setScanDialogOpen(true);
@@ -198,38 +196,38 @@ export default function WarehouseHub() {
   const pendingPickingCount = pickingTasks.filter(t => t.status === "pending").length;
   const debtCount = operatorDebts.filter(d => d.status === "open").length;
 
-  if (whLoading) return <div className="flex items-center justify-center h-screen bg-surface"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
-  if (isError) return <div className="h-screen bg-surface"><ErrorState onRetry={refetch} /></div>;
+  if (whLoading) return <div className="flex items-center justify-center h-screen bg-background"><EPLoader size={40} /></div>;
+  if (isError) return <div className="h-screen bg-background"><EPErrorState onRetry={refetch} /></div>;
   if (!selectedWarehouse) return <WarehouseDashboard />;
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6 font-inter">
+    <div className="space-y-6 font-inter">
       <WarehouseHeader warehouse={selectedWarehouse} onBack={() => { setSelectedWarehouse(null); navigate("/warehouse/hub"); }} />
       
       <div className="flex items-center gap-4 mb-8">
         <div className="relative flex-1">
-          <ScanBarcode className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-on-surface-variant" />
+          <ScanBarcode className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Barcode skanerlang yoki qo'lda kiriting..."
             value={scanInput}
             onChange={(e) => setScanInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleScan()}
-            className="pl-12 h-14 rounded-2xl border-outline-variant bg-surface-container-lowest text-lg font-medium shadow-sm focus:ring-primary/20"
+            className="pl-12 h-14 rounded-xl border-border bg-card text-lg font-medium shadow-sm focus:ring-primary/20"
           />
         </div>
-        <Button onClick={handleScan} className="h-14 w-14 rounded-2xl bg-primary text-white hover:scale-105 transition-transform"><Search className="h-6 w-6" /></Button>
+        <Button onClick={handleScan} className="h-14 w-14 rounded-xl bg-primary text-white hover:scale-105 transition-transform"><Search className="h-6 w-6" /></Button>
         <Button
           onClick={() => selectedWarehouse && syncToPos(selectedWarehouse.id)}
           disabled={isSyncing || !selectedWarehouse}
           variant="outline"
-          className="h-14 px-4 rounded-2xl border-outline-variant text-sm font-semibold"
+          className="h-14 px-4 rounded-xl border-border text-sm font-semibold"
           title="POS Monitor terminallariga stok ma'lumotini yuborish"
           data-testid="button-sync-pos"
         >
           {isSyncing ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <EPLoader size={20} />
           ) : (
-            <ArrowRightLeft className="h-5 w-5 mr-1" />
+            <ArrowRightLeft className="h-4 w-4 mr-1" />
           )}
           {isSyncing ? "Yuborilmoqda..." : "POS Sync"}
         </Button>
@@ -238,7 +236,7 @@ export default function WarehouseHub() {
       <WarehouseStatsPanel availableCount={availableCount} qcHoldCount={qcHoldCount} pendingPickingCount={pendingPickingCount} debtCount={debtCount} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-surface-container p-1 rounded-2xl border border-outline-variant h-auto w-full grid grid-cols-3">
+        <TabsList className="bg-muted/60 p-1 rounded-xl border border-border h-auto w-full grid grid-cols-1 md:grid-cols-3">
           <TabsTrigger value="zaxira" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Boxes className="h-4 w-4 mr-2" />Zaxira</TabsTrigger>
           <TabsTrigger value="jarayon" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><ArrowRightLeft className="h-4 w-4 mr-2" />Jarayon</TabsTrigger>
           <TabsTrigger value="nazorat" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Eye className="h-4 w-4 mr-2" />Nazorat</TabsTrigger>

@@ -1,3 +1,8 @@
+/**
+ * @module AddTestDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
 interface AddTestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -113,17 +119,17 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Yangi test yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Yangi test yaratish</DialogTitle>
           <DialogDescription>
             Test uchun asosiy parametrlarni belgilang
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="testTitle">Test nomi (O'zbek) *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="testTitle">Test nomi (O'zbek) *</Label>
             <Input
               id="testTitle"
               placeholder="Texnika xavfsizligi testi"
@@ -134,8 +140,8 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="testTitleRu">Test nomi (Rus) *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="testTitleRu">Test nomi (Rus) *</Label>
             <Input
               id="testTitleRu"
               placeholder="Тест по технике безопасности"
@@ -146,10 +152,10 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="testCourse">Kurs (ixtiyoriy)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="testCourse">Kurs (ixtiyoriy)</Label>
             <Select value={formData.courseId} onValueChange={(value) => setFormData({ ...formData, courseId: value })}>
-              <SelectTrigger data-testid="select-test-course">
+              <SelectTrigger data-testid="select-test-course" className="h-9">
                 <SelectValue placeholder="Kursni tanlang" />
               </SelectTrigger>
               <SelectContent>
@@ -163,11 +169,11 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="testDepartment">Bo'lim (ixtiyoriy)</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="testDepartment">Bo'lim (ixtiyoriy)</Label>
               <Select value={formData.departmentId} onValueChange={(value) => setFormData({ ...formData, departmentId: value })}>
-                <SelectTrigger data-testid="select-test-department">
+                <SelectTrigger data-testid="select-test-department" className="h-9">
                   <SelectValue placeholder="Bo'limni tanlang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -181,10 +187,10 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="testPosition">Lavozim (ixtiyoriy)</Label>
+            <div className="space-y-1">
+          <Label htmlFor="testPosition">Lavozim (ixtiyoriy)</Label>
               <Select value={formData.positionId} onValueChange={(value) => setFormData({ ...formData, positionId: value })}>
-                <SelectTrigger data-testid="select-test-position">
+                <SelectTrigger data-testid="select-test-position" className="h-9">
                   <SelectValue placeholder="Lavozimni tanlang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -199,9 +205,9 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="passPercentage">O'tish foizi *</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="passPercentage">O'tish foizi *</Label>
               <Input
                 id="passPercentage"
                 type="number"
@@ -214,8 +220,8 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="timeLimit">Vaqt (daqiqa)</Label>
+            <div className="space-y-1">
+          <Label htmlFor="timeLimit">Vaqt (daqiqa)</Label>
               <Input
                 id="timeLimit"
                 type="number"
@@ -226,8 +232,8 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="maxAttempts">Urinishlar *</Label>
+            <div className="space-y-1">
+          <Label htmlFor="maxAttempts">Urinishlar *</Label>
               <Input
                 id="maxAttempts"
                 type="number"
@@ -262,7 +268,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               Bekor qilish
             </Button>
             <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-test">
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
               Yaratish
             </Button>
           </DialogFooter>

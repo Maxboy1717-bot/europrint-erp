@@ -1,3 +1,8 @@
+/**
+ * @module misc-extended.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { OkrController } from '../src/modules/director/presentation/okr.controller';

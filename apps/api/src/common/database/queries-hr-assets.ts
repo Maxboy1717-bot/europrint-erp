@@ -1,3 +1,8 @@
+/**
+ * @module queries-hr-assets
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { asset_items_ext, employee_assets } from '@shared/db';
 import { hrEmployees } from '@shared/db';

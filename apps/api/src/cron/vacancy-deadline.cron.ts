@@ -1,3 +1,8 @@
+/**
+ * @module vacancy-deadline.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { Injectable, Logger, Optional } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { db, vacancies, hrDepartments, hrEmployees } from '@shared/db'
@@ -32,7 +37,7 @@ export class VacancyDeadlineCron {
           ),
         )
 
-      const managerIds = [...new Set((rows ?? []).map(r => r.manager_id).filter(Boolean) as number[])]
+      const managerIds = [...new Set((Array.isArray(rows) ? rows : []).map(r => r.manager_id).filter(Boolean) as number[])]
       const managerMap = new Map<number, { telegram_chat_id: string | null; first_name: string | null }>()
       if (managerIds.length > 0) {
         const mgrRows = await db

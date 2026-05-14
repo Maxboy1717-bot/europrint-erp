@@ -1,8 +1,14 @@
+/**
+ * @module SocketReconnectBanner
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useChatSocketContext } from "@/hooks/chat/ChatSocketProvider";
-import { Wifi, Loader2 } from "lucide-react";
+import { Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { EPLoader } from "@/components/ep";
 export function SocketReconnectBanner() {
   const { connected } = useChatSocketContext();
   const [showDisconnected, setShowDisconnected] = useState(false);
@@ -31,13 +37,13 @@ export function SocketReconnectBanner() {
   return (
     <div
       className={cn(
-        "fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium animate-in fade-in slide-in-from-top-2",
-        showDisconnected ? "bg-red-500 text-white" : "bg-green-500 text-white"
+        "fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-[14px] font-medium animate-in fade-in slide-in-from-top-2",
+        showDisconnected ? "bg-[var(--ep-red)] text-white" : "bg-[var(--ep-green)] text-white"
       )}
     >
       {showDisconnected ? (
         <>
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <EPLoader className="w-4 h-4" />
           <span>Ulanmoqda...</span>
         </>
       ) : (

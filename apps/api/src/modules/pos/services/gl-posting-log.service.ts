@@ -1,3 +1,8 @@
+/**
+ * @module gl-posting-log.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { GlPostingLogRepository } from '../repositories/gl-posting-log.repository';

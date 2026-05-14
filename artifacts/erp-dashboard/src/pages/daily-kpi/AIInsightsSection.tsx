@@ -1,3 +1,8 @@
+/**
+ * @module AIInsightsSection
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,14 +26,14 @@ export function AIInsightsSection({ insights, isLoading }: AIInsightsSectionProp
     <Card data-testid="card-ai-insights">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-violet-500" />
+          <Brain className="h-4 w-4 text-primary" />
           AI Tahlil va Tavsiyalar
         </CardTitle>
         <CardDescription>Sun'iy intellekt tomonidan tayyorlangan moliyaviy tahlillar</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="space-y-4">{([1, 2, 3]).map((i) => <Skeleton key={`k-${i}`} className="h-24 w-full" />)}</div>
+          <div className="space-y-4">{([1, 2, 3]).map((i) => <Skeleton key={`k-${i}`} className="h-24 w-full rounded-lg" />)}</div>
         ) : insights && insights.length > 0 ? (
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-4">
@@ -38,7 +43,7 @@ export function AIInsightsSection({ insights, isLoading }: AIInsightsSectionProp
                   <div key={insight.id} className="p-4 rounded-lg border bg-card hover-elevate" data-testid={`insight-card-${insight.id}`}>
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500"><IconComp className="h-4 w-4" /></div>
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary"><IconComp className="h-4 w-4" /></div>
                         <div>
                           <h4 className="font-medium">{insight.title}</h4>
                           <p className="text-xs text-muted-foreground capitalize">{insight.segment} • {insight.insightDate}</p>
@@ -60,10 +65,10 @@ export function AIInsightsSection({ insights, isLoading }: AIInsightsSectionProp
                       </div>
                     )}
                     {insight.recommendation && (
-                      <div className="p-3 rounded-md bg-violet-500/5 border border-violet-500/20">
+                      <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
                         <div className="flex items-center gap-2 mb-1">
-                          <Lightbulb className="h-3 w-3 text-violet-500" />
-                          <span className="text-xs font-medium text-violet-500">Tavsiya</span>
+                          <Lightbulb className="h-3 w-3 text-primary" />
+                          <span className="text-xs font-medium text-primary">Tavsiya</span>
                         </div>
                         <p className="text-sm">{insight.recommendation}</p>
                       </div>

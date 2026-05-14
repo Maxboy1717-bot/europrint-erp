@@ -1,3 +1,8 @@
+/**
+ * @module SlotsForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -47,13 +52,13 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
 
   return (
     <div className="space-y-3 p-4">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Sana</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start h-9" data-testid="button-meeting-date">
-                <CalendarIcon className="h-3.5 w-3.5 mr-2" />
+              <Button variant="outline" className="w-full justify-start h-9 gap-2" data-testid="button-meeting-date">
+                <CalendarIcon className="h-3.5 w-3.5" />
                 {format(meetingForm.date, "dd.MM.yyyy")}
               </Button>
             </PopoverTrigger>
@@ -83,7 +88,7 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Davomiyligi</Label>
           <Select
@@ -123,7 +128,7 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
         />
       </div>
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => scheduleMeetingMutation.mutate(meetingForm)}
         disabled={!meetingForm.slot || scheduleMeetingMutation.isPending}
         data-testid="button-save-meeting"

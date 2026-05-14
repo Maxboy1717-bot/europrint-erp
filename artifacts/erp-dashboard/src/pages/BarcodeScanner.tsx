@@ -1,3 +1,8 @@
+/**
+ * @module BarcodeScanner
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +16,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Scan, Package, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
 interface ScanResult {
   material?: {
@@ -89,21 +95,21 @@ export default function BarcodeScanner() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
         <Scan className="h-5 w-5 text-primary" />
         <h1 className="font-semibold text-base">Barcode Skaneri</h1>
-        <Badge variant="secondary">WMS</Badge>
+        <EPStatusPill tone="neutral">WMS</EPStatusPill>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-2xl mx-auto space-y-4">
+        <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Skanerlash sozlamalari</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Amal</Label>
                   <Select value={action} onValueChange={setAction}>
@@ -176,9 +182,9 @@ export default function BarcodeScanner() {
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-start gap-3">
                   {lastResult.success !== false ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)] mt-0.5 shrink-0" />
                   ) : (
-                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+                    <AlertCircle className="h-5 w-5 text-[var(--ep-red)] mt-0.5 shrink-0" />
                   )}
                   <div className="space-y-1">
                     {lastResult.material ? (
@@ -236,7 +242,7 @@ export default function BarcodeScanner() {
                       <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="font-mono text-xs">{item.code}</span>
                       <Badge variant="outline" className="text-xs">
-                        {(ACTIONS ?? []).find((a) => a.value === item.action)?.label}
+                        {(Array.isArray(ACTIONS) ? ACTIONS : []).find((a) => a.value === item.action)?.label}
                       </Badge>
                       <span className="text-muted-foreground truncate flex-1">
                         {item.result.material?.name ?? item.result.message ?? "—"}

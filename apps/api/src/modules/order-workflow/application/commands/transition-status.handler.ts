@@ -1,3 +1,8 @@
+/**
+ * @module transition-status.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
@@ -155,7 +160,7 @@ export class TransitionStatusHandler implements ICommandHandler<TransitionStatus
 
     const payments = await db.select().from(owPaymentPlanEntries)
       .where(eq(owPaymentPlanEntries.orderId, orderId));
-    const hasAdvance = (payments ?? []).some((e) => e.dueType === ADVANCE_DUE_TYPE);
+    const hasAdvance = (Array.isArray(payments) ? payments : []).some((e) => e.dueType === ADVANCE_DUE_TYPE);
     if (!hasAdvance) {
       return Err(AppErr('PAYMENT_REQUIRED',
         'Ishlab chiqarishni rejalash uchun avans to\'lov rejasi talab qilinadi'));
@@ -164,7 +169,7 @@ export class TransitionStatusHandler implements ICommandHandler<TransitionStatus
     const materials = await db.select().from(owMaterialRequirements)
       .where(eq(owMaterialRequirements.orderId, orderId));
     if (materials.length > 0) {
-      const unready = (materials ?? []).filter(
+      const unready = (Array.isArray(materials) ? materials : []).filter(
         (m) => m.status !== RESERVED_STATUS || !m.labPassed || Number(m.qtyReserved) < Number(m.qtyRequired),
       );
       if (unready.length > 0) {
@@ -189,8 +194,8 @@ export class TransitionStatusHandler implements ICommandHandler<TransitionStatus
       .where(eq(owPaymentPlanEntries.orderId, orderId));
 
     if (customerTier === REGULAR_TIER) {
-      const seq1 = (payments ?? []).find((e) => e.sequence === 1);
-      const seq2 = (payments ?? []).find((e) => e.sequence === 2);
+      const seq1 = (Array.isArray(payments) ? payments : []).find((e) => e.sequence === 1);
+      const seq2 = (Array.isArray(payments) ? payments : []).find((e) => e.sequence === 2);
       if (!seq1 || seq1.status !== PAID_STATUS) {
         return Err(AppErr('PAYMENT_REQUIRED',
           'Jo\'natish uchun sequence 1 to\'lovi to\'langan bo\'lishi kerak (tier: REGULAR)'));
@@ -200,7 +205,7 @@ export class TransitionStatusHandler implements ICommandHandler<TransitionStatus
           'Jo\'natish uchun sequence 2 to\'lovi to\'langan bo\'lishi kerak (tier: REGULAR)'));
       }
     } else {
-      const seq1 = (payments ?? []).find((e) => e.sequence === 1);
+      const seq1 = (Array.isArray(payments) ? payments : []).find((e) => e.sequence === 1);
       if (!seq1 || seq1.status !== PAID_STATUS) {
         return Err(AppErr('PAYMENT_REQUIRED',
           'Jo\'natish uchun birinchi avans to\'lov (sequence 1) to\'langan bo\'lishi kerak (tier: NEW)'));
@@ -234,7 +239,7 @@ export class TransitionStatusHandler implements ICommandHandler<TransitionStatus
     if ((payments ?? []).length === 0) {
       return Err(AppErr('PAYMENT_REQUIRED', 'Yopish uchun to\'lov rejasi bo\'lishi kerak'));
     }
-    const unpaid = (payments ?? []).filter((e) => e.status !== PAID_STATUS);
+    const unpaid = (Array.isArray(payments) ? payments : []).filter((e) => e.status !== PAID_STATUS);
     if (unpaid.length > 0) {
       return Err(AppErr('PAYMENT_REQUIRED',
         `Yopish uchun barcha ${payments.length} ta to'lov to'langan bo'lishi kerak. To'lanmagan: ${unpaid.length}`));

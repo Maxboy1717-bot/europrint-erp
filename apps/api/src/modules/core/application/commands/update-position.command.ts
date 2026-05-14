@@ -1,3 +1,8 @@
+/**
+ * @module update-position.command
+ * @description Source module. See exports for details.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/types/result.type';
@@ -30,7 +35,7 @@ export class UpdatePositionHandler implements ICommandHandler<UpdatePositionComm
         return Err('Lavozilarni topishda xato');
       }
 
-      const codeTaken = (allPos?.data ?? []).some((p) => p.code === data.code && p.id !== id);
+      const codeTaken = (Array.isArray(allPos?.data) ? allPos?.data : []).some((p) => p.code === data.code && p.id !== id);
       if (codeTaken) {
         return Err('Bu kod allaqachon ishlatilgan');
       }

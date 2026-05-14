@@ -1,10 +1,13 @@
+/**
+ * @module GoodsReceiving
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2, AlertCircle } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { Plus, AlertCircle } from "lucide-react";
 import {
   GoodsReceipt,
   GoodsReceiptLine,
@@ -21,6 +24,7 @@ import {
   useGoodsReceivingMutations,
   useGoodsReceivingLookups,
 } from "@/components/wms/receiving/useGoodsReceivingHooks";
+import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 export default function GoodsReceiving() {
   const { language, setLanguage } = useLanguage();
@@ -92,12 +96,12 @@ export default function GoodsReceiving() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64" data-testid="loading-spinner">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <EPLoader size={32} tone="muted" />
       </div>
     );
   }
 
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch} />;
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="error-state">
@@ -108,12 +112,13 @@ export default function GoodsReceiving() {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-surface p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface" data-testid="text-page-title">
-            Tovarlar <span className="font-bold text-primary">Qabuli</span>
-          </h1>
+          <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Tovarlar Qabuli</b></>}
+        title="Tovarlar Qabuli"
+      />
           <p className="text-muted-foreground">{t.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">

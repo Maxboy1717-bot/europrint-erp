@@ -1,3 +1,8 @@
+/**
+ * @module finance-actions.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -8,6 +13,8 @@ import { salary_history } from '@shared/db/schema-business-c-2';
 import { payroll_advances } from '@shared/db/schema-business-b-1';
 import { hrEmployees } from '@shared/db/schema-misc-app-a';
 import { customer_payments } from '@shared/db/schema-compat-5';
+import { vendor_invoices } from '@shared/db/schema-business-b-2';
+import { sales_invoices } from '@shared/db/schema-business-c-2';
 
 type Row = Record<string, unknown>;
 
@@ -89,6 +96,38 @@ export class FinanceActionsRepository {
         .orderBy(desc(payroll_advances.created_at))
         .limit(100);
       return Ok(rows as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async createApEntry(data: Record<string, unknown>): Promise<Result<Row>> {
+    try {
+      const inserted = await db.insert(vendor_invoices).values({
+        vendor_id:    data['vendorId'] ? Number(data['vendorId']) : null,
+        invoice_no:   `AP-${Date.now()}`,
+        amount:       data['amount'] ? String(data['amount']) : '0',
+        match_status: 'unmatched',
+        invoice_date: data['dueDate'] ? String(data['dueDate']) : null,
+      }).returning({ id: vendor_invoices.id });
+      return Ok({ id: inserted[0]?.id ?? null, ...data } as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async createArEntry(data: Record<string, unknown>): Promise<Result<Row>> {
+    try {
+      const inserted = await db.insert(sales_invoices).values({
+        customer_id:    data['customerId'] ? String(data['customerId']) : null,
+        customer_name:  data['customerName'] ? String(data['customerName']) : null,
+        invoice_number: `AR-${Date.now()}`,
+        total_amount:   data['amount'] ? String(data['amount']) : '0',
+        payment_status: 'unpaid',
+        status:         'issued',
+        due_date:       data['dueDate'] ? String(data['dueDate']) : null,
+      }).returning({ id: sales_invoices.id });
+      return Ok({ id: inserted[0]?.id ?? null, ...data } as Row);
     } catch (e) {
       return Err(String(e));
     }

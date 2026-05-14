@@ -1,3 +1,8 @@
+/**
+ * @module i-sensor.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Result } from '@common/result';
 import { SensorDevice } from '../aggregates/sensor-device.aggregate';
 import { SensorReading } from '../aggregates/sensor-reading.aggregate';

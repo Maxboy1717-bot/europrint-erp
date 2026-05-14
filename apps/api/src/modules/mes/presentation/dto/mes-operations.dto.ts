@@ -1,3 +1,8 @@
+/**
+ * @module mes-operations.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 import { DOWNTIME_REASON_CODES } from '../../domain/aggregates/downtime-event.aggregate';
 

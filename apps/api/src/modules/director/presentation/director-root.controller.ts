@@ -1,7 +1,13 @@
+/**
+ * @module director-root.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, InternalServerErrorException, UseGuards, UseInterceptors } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -14,7 +20,7 @@ import { DirectorDataService } from '../application/director-data.service';
 @ApiBearerAuth()
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('director')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class DirectorRootController {
   constructor(

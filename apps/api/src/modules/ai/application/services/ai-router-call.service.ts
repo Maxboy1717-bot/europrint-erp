@@ -1,3 +1,8 @@
+/**
+ * @module ai-router-call.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Err, isErr, safeCall } from '@common/result';
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

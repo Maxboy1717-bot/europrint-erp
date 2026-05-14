@@ -1,3 +1,8 @@
+/**
+ * @module IQScaleChart
+ * @description React UI component.
+ */
+
 interface IQLevel {
   label: string;
   labelUz: string;
@@ -106,7 +111,7 @@ export function IQScaleChart({ iq, compact = false }: IQScaleChartProps) {
 
       {/* Scale bar */}
       <div className="relative">
-        <div className="h-4 bg-gradient-to-r from-red-500/30 via-amber-500/30 via-green-500/30 via-blue-500/30 to-purple-500/30 rounded-full overflow-hidden">
+        <div className="h-4 from-red-500/30 via-amber-500/30 via-green-500/30 via-blue-500/30 to-purple-500/30 rounded-full overflow-hidden">
           <div className="absolute inset-0 flex">
             {[...IQ_LEVELS].reverse().map((l, i) => (
               <div

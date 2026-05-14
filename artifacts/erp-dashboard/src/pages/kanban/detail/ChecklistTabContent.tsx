@@ -1,3 +1,8 @@
+/**
+ * @module ChecklistTabContent
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";

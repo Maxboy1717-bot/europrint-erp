@@ -1,177 +1,229 @@
-import { useState, useEffect, useCallback } from "react";
+/**
+ * @module PosOfflineBanner
+ * @description React UI component.
+ */
+
 import { usePosI18n } from "../i18n/usePosI18n";
-import { syncApi } from "../api/pos-monitor.api";
+import { useOfflineSync, type QueueItem } from "../hooks/useOfflineSync";
 
-export interface OfflineQueueItem { id: string; data: unknown; ts: number; }
+// Re-export the legacy type so other files don't break
+export type { QueueItem as OfflineQueueItem };
 
-const IDB_NAME    = "pos_offline_db";
-const IDB_STORE   = "queue";
-const IDB_VERSION = 1;
+// ─── Standalone IDB helpers (hookdan tashqari ishlatish uchun) ──────────────
+// useOfflineSync hookida bir xil IDB schema ishlatiladi (DB_NAME=pos_monitor_offline,
+// STORE_NAME=queue). Bu funksiya komponent contextidan tashqari (form submit
+// callback ichida) ishlatiladi — masalan PosMovementKirim.tsx da.
 
-function openDb(): Promise<IDBDatabase> {
+const IDB_NAME       = "pos_monitor_offline";
+const IDB_VERSION    = 2;
+const IDB_STORE      = "queue";
+
+let _enqueueDb: IDBDatabase | null = null;
+
+function openEnqueueDb(): Promise<IDBDatabase> {
+  if (_enqueueDb) return Promise.resolve(_enqueueDb);
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(IDB_NAME, IDB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
+    req.onupgradeneeded = (e) => {
+      const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(IDB_STORE)) {
         db.createObjectStore(IDB_STORE, { keyPath: "id" });
       }
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => { _enqueueDb = req.result; resolve(req.result); };
     req.onerror   = () => reject(req.error);
   });
 }
 
-export async function idbGetQueue(): Promise<OfflineQueueItem[]> {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx    = db.transaction(IDB_STORE, "readonly");
-    const store = tx.objectStore(IDB_STORE);
-    const req   = store.getAll();
-    req.onsuccess = () => resolve((req.result ?? []) as OfflineQueueItem[]);
-    req.onerror   = () => reject(req.error);
-  });
-}
-
-export async function idbEnqueue(item: OfflineQueueItem): Promise<void> {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
+/**
+ * idbEnqueue — offline rejimda harakatni navbatga qo'yish.
+ *
+ * Form submit callback ichidan chaqirilishi mumkin (hooks ishlatib bo'lmaganda).
+ * useOfflineSync bir xil IDB ga yozadi; keyingi syncNow() avtomatik yuboradi.
+ */
+export async function idbEnqueue(input: {
+  id?:   string;
+  type?: QueueItem["type"];
+  data:  Record<string, unknown>;
+  ts?:   number;
+}): Promise<string> {
+  const item: QueueItem = {
+    id:      input.id   ?? crypto.randomUUID(),
+    type:    input.type ?? "movement",
+    data:    input.data,
+    ts:      input.ts   ?? Date.now(),
+    retries: 0,
+    status:  "pending",
+  };
+  const db = await openEnqueueDb();
+  return new Promise<string>((resolve, reject) => {
     const tx    = db.transaction(IDB_STORE, "readwrite");
     const store = tx.objectStore(IDB_STORE);
     const req   = store.put(item);
-    req.onsuccess = () => resolve();
-    req.onerror   = () => reject(req.error);
-  });
-}
-
-export async function idbClearQueue(): Promise<void> {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx    = db.transaction(IDB_STORE, "readwrite");
-    const store = tx.objectStore(IDB_STORE);
-    const req   = store.clear();
-    req.onsuccess = () => resolve();
+    req.onsuccess = () => resolve(item.id);
     req.onerror   = () => reject(req.error);
   });
 }
 
 export default function PosOfflineBanner() {
   const { t } = usePosI18n();
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [queueCount, setQueueCount] = useState(0);
-  const [syncing, setSyncing]   = useState(false);
-  const [syncMsg, setSyncMsg]   = useState("");
-  const [conflictItem, setConflictItem] = useState<OfflineQueueItem | null>(null);
+  const {
+    isOnline,
+    queueCount,
+    isSyncing,
+    lastSyncAt,
+    conflicts,
+    failedItems,
+    syncNow,
+    resolveConflict,
+    clearFailed,
+  } = useOfflineSync();
 
-  const refreshCount = useCallback(async () => {
-    try { const q = await idbGetQueue(); setQueueCount(q.length); } catch { /* noop */ }
-  }, []);
+  const hasConflict = conflicts.length > 0;
+  const firstConflict: QueueItem | null = hasConflict ? conflicts[0] : null;
 
-  useEffect(() => {
-    void refreshCount();
-    const onOnline  = () => setIsOnline(true);
-    const onOffline = () => setIsOnline(false);
-    window.addEventListener("online",  onOnline);
-    window.addEventListener("offline", onOffline);
-    return () => { window.removeEventListener("online", onOnline); window.removeEventListener("offline", onOffline); };
-  }, [refreshCount]);
-
-  useEffect(() => {
-    const interval = setInterval(() => void refreshCount(), 5000);
-    return () => clearInterval(interval);
-  }, [refreshCount]);
-
-  const doSync = useCallback(async () => {
-    const queue = await idbGetQueue();
-    if (queue.length === 0) return;
-    setSyncing(true);
-    setSyncMsg(t("offline.syncing"));
-    let failed = 0;
-    for (const item of queue) {
-      try {
-        const res = await syncApi.push({
-          clientUuid:       item.id,
-          terminalId:       "pos-web",
-          offlineCreatedAt: new Date(item.ts).toISOString(),
-          movements:        [item.data as Record<string, unknown>],
-        } as Record<string, unknown>) as { synced?: number; conflicts?: number };
-        if ((res?.conflicts ?? 0) > 0) {
-          setConflictItem(item);
-          failed++;
-        }
-      } catch { failed++; }
-    }
-    if (failed === 0) {
-      await idbClearQueue();
-      setQueueCount(0);
-      setSyncMsg(t("offline.synced", { count: queue.length }));
-    } else {
-      setSyncMsg(`${queue.length - failed}/${queue.length} sync bo'ldi`);
-    }
-    setSyncing(false);
-    setTimeout(() => setSyncMsg(""), 4000);
-  }, [t]);
-
-  useEffect(() => {
-    if (isOnline && queueCount > 0) { void doSync(); }
-  }, [isOnline, queueCount, doSync]);
-
-  async function resolveConflict(useServer: boolean) {
-    if (!conflictItem) return;
-    if (useServer) {
-      const queue = await idbGetQueue();
-      const remaining = queue.filter(q => q.id !== conflictItem.id);
-      await idbClearQueue();
-      for (const r of remaining) { await idbEnqueue(r); }
-    } else {
-      try {
-        await syncApi.push({
-          clientUuid:       conflictItem.id,
-          terminalId:       "pos-web",
-          offlineCreatedAt: new Date(conflictItem.ts).toISOString(),
-          movements:        [conflictItem.data as Record<string, unknown>],
-          forceClientVersion: true,
-        } as Record<string, unknown>);
-        const queue = await idbGetQueue();
-        const remaining = queue.filter(q => q.id !== conflictItem.id);
-        await idbClearQueue();
-        for (const r of remaining) { await idbEnqueue(r); }
-      } catch { /* noop */ }
-    }
-    setConflictItem(null);
-    void refreshCount();
+  // Nothing to show while online and nothing pending
+  if (isOnline && queueCount === 0 && !isSyncing && !hasConflict && failedItems.length === 0 && !lastSyncAt) {
+    return null;
   }
 
-  if (isOnline && queueCount === 0 && !syncMsg && !conflictItem) return null;
+  // ── Banner label ──────────────────────────────────────────────────────────
+
+  let bannerLabel: string;
+  if (isSyncing) {
+    bannerLabel = `${t("offline.syncing")} (${queueCount} ta)`;
+  } else if (!isOnline && queueCount > 0) {
+    bannerLabel = t("offline.banner", { count: queueCount });
+  } else if (!isOnline) {
+    bannerLabel = "Oflayn rejim";
+  } else if (queueCount > 0) {
+    bannerLabel = `${queueCount} ta harakat sinxronlash kutmoqda`;
+  } else if (lastSyncAt) {
+    const timeStr = lastSyncAt.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+    bannerLabel = t("offline.synced", { count: 0 }) + ` (${timeStr})`;
+  } else {
+    bannerLabel = "";
+  }
+
+  const bannerColor = !isOnline
+    ? "var(--pos-danger)"
+    : isSyncing
+      ? "var(--pos-warning)"
+      : hasConflict
+        ? "rgba(239,68,68,0.15)"
+        : "var(--pos-success)";
+
+  const bannerIcon = !isOnline ? "📡" : isSyncing ? "⏫" : queueCount > 0 ? "🕓" : "✅";
 
   return (
     <>
-      <div className="pos-offline-banner">
-        {!isOnline && <span>📡</span>}
-        {syncing && <span>⏫</span>}
-        {syncMsg && !syncing && <span>✅</span>}
-        <span>
-          {syncMsg || (!isOnline ? t("offline.banner", { count: queueCount }) : queueCount > 0 ? `${queueCount} ta kutayotgan` : null)}
-        </span>
-        {isOnline && queueCount > 0 && !syncing && (
-          <button className="pos-btn pos-btn-ghost" style={{ padding: "2px 8px", fontSize: 11 }} onClick={() => void doSync()}>
-            Sync
-          </button>
-        )}
-      </div>
+      {/* ── Main banner ── */}
+      {(bannerLabel || !isOnline) && (
+        <div
+          className="pos-offline-banner"
+          style={{
+            borderLeft: `3px solid ${bannerColor}`,
+            background: !isOnline ? "rgba(239,68,68,0.08)" : isSyncing ? "rgba(255,184,0,0.08)" : "rgba(16,185,129,0.08)",
+          }}
+        >
+          <span>{bannerIcon}</span>
+          <span style={{ flex: 1 }}>{bannerLabel}</span>
 
-      {conflictItem && (
+          {/* Sync progress bar */}
+          {isSyncing && (
+            <div style={{
+              height:       3,
+              borderRadius: 2,
+              background:   "rgba(255,184,0,0.2)",
+              overflow:     "hidden",
+              width:        80,
+              flexShrink:   0,
+            }}>
+              <div
+                className="pos-live"
+                style={{
+                  height:     "100%",
+                  width:      "60%",
+                  background: "var(--pos-warning)",
+                  borderRadius: 2,
+                }}
+              />
+            </div>
+          )}
+
+          {/* Manual sync button — online with pending items */}
+          {isOnline && queueCount > 0 && !isSyncing && (
+            <button
+              className="pos-btn pos-btn-ghost"
+              style={{ padding: "2px 10px", fontSize: 11, flexShrink: 0 }}
+              onClick={() => void syncNow()}
+            >
+              Hozir sinxronlash
+            </button>
+          )}
+
+          {/* Last sync timestamp */}
+          {!isSyncing && lastSyncAt && queueCount === 0 && (
+            <span style={{ fontSize: 10, color: "var(--pos-text-muted)", flexShrink: 0 }}>
+              {lastSyncAt.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ── Failed items notice ── */}
+      {failedItems.length > 0 && (
+        <div
+          className="pos-offline-banner"
+          style={{ background: "rgba(239,68,68,0.08)", borderLeft: "3px solid var(--pos-danger)" }}
+        >
+          <span>❌</span>
+          <span style={{ flex: 1, fontSize: 12 }}>
+            {failedItems.length} ta harakat yuborilmadi
+          </span>
+          <button
+            className="pos-btn pos-btn-ghost"
+            style={{ padding: "2px 10px", fontSize: 11, color: "var(--pos-danger)" }}
+            onClick={() => void clearFailed()}
+          >
+            Tozalash
+          </button>
+        </div>
+      )}
+
+      {/* ── Conflict resolution modal ── */}
+      {firstConflict && (
         <div className="pos-modal-overlay">
-          <div className="pos-modal" style={{ maxWidth: 400 }}>
-            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>⚠️ Server vs Mening versiyam</div>
-            <div style={{ fontSize: 13, color: "var(--pos-text-muted)", marginBottom: 16 }}>
+          <div className="pos-modal" style={{ maxWidth: 420 }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>
+              ⚠️ Server vs Mening versiyam
+            </div>
+            <div style={{ fontSize: 13, color: "var(--pos-text-muted)", marginBottom: 6 }}>
               Server versiyasi bilan to'qnashuv yuz berdi. Qaysi versiyani saqlashni tanlang:
             </div>
+            <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 16 }}>
+              Tur: <strong>{firstConflict.type}</strong> &nbsp;·&nbsp;
+              Sana: <strong>{new Date(firstConflict.ts).toLocaleString("uz-UZ")}</strong>
+              {conflicts.length > 1 && (
+                <span style={{ marginLeft: 8 }}>
+                  (+{conflicts.length - 1} ta boshqa)
+                </span>
+              )}
+            </div>
+
             <div style={{ display: "flex", gap: 10 }}>
-              <button className="pos-btn pos-btn-ghost" style={{ flex: 1 }} onClick={() => void resolveConflict(true)}>
+              <button
+                className="pos-btn pos-btn-ghost"
+                style={{ flex: 1 }}
+                onClick={() => void resolveConflict(firstConflict, true)}
+              >
                 🌐 Server versiyasi
               </button>
-              <button className="pos-btn pos-btn-primary" style={{ flex: 1 }} onClick={() => void resolveConflict(false)}>
+              <button
+                className="pos-btn pos-btn-primary"
+                style={{ flex: 1 }}
+                onClick={() => void resolveConflict(firstConflict, false)}
+              >
                 💾 Mening versiyam
               </button>
             </div>

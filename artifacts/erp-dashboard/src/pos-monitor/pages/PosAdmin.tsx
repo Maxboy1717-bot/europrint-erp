@@ -1,3 +1,8 @@
+/**
+ * @module PosAdmin
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { glApi, syncApi, printerApi } from "../api/pos-monitor.api";
@@ -90,7 +95,7 @@ export default function PosAdmin() {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("admin.title")}</h2>
-        <span className="pos-badge pos-badge-red" style={{ fontSize: 11 }}>Admin only</span>
+        <span className="pos-badge pos-badge-red" style={{ fontSize: 11 }}>{t('common.adminOnly')}</span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 16 }}>

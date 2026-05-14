@@ -1,3 +1,8 @@
+/**
+ * @module MaterialTabs
+ * @description React UI component.
+ */
+
 export { BasicTab } from "@/components/wms/tabs/BasicTab";
 export { StockTab } from "@/components/wms/tabs/StockTab";
 export { MovementsTab } from "@/components/wms/tabs/MovementsTab";

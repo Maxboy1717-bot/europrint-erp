@@ -1,3 +1,8 @@
+/**
+ * @module inspection.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { InspectionController } from './inspection.controller';

@@ -1,3 +1,8 @@
+/**
+ * @module HRHealthMonitoring
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +25,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { EPStatusPill } from "@/components/ep";
 
 interface HealthCheckup {
   id: string;
@@ -34,10 +40,10 @@ interface HealthCheckup {
 }
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; color: string }> = {
-  scheduled:   { label: "Rejalashtirilgan", variant: "secondary",   color: "text-blue-600" },
-  in_progress: { label: "Jarayonda",        variant: "secondary",   color: "text-amber-600" },
-  completed:   { label: "Yakunlangan",      variant: "default",     color: "text-green-600" },
-  overdue:     { label: "Muddati o'tgan",   variant: "destructive", color: "text-red-600" },
+  scheduled:   { label: "Rejalashtirilgan", variant: "secondary",   color: "text-[var(--ep-blue)]" },
+  in_progress: { label: "Jarayonda",        variant: "secondary",   color: "text-[var(--ep-yellow)]" },
+  completed:   { label: "Yakunlangan",      variant: "default",     color: "text-[var(--ep-green)]" },
+  overdue:     { label: "Muddati o'tgan",   variant: "destructive", color: "text-[var(--ep-red)]" },
   cancelled:   { label: "Bekor qilingan",   variant: "outline",     color: "text-muted-foreground" },
 };
 
@@ -69,14 +75,14 @@ function NewCheckupDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Yangi Tibbiy Ko'rik Rejalashtirish</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-md p-6">
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Tibbiy Ko'rik Rejalashtirish</DialogTitle></DialogHeader>
         <div className="space-y-3 py-1">
           <div>
             <Label>Bo'lim nomi *</Label>
             <Input value={form.departmentName} onChange={e => f("departmentName", e.target.value)} placeholder="Bo'lim nomi" className="mt-1" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Ko'rik sanasi *</Label>
               <Input type="date" value={form.checkupDate} onChange={e => f("checkupDate", e.target.value)} className="mt-1" />
@@ -86,7 +92,7 @@ function NewCheckupDialog({ open, onClose }: { open: boolean; onClose: () => voi
               <Input type="date" value={form.nextCheckupDate} onChange={e => f("nextCheckupDate", e.target.value)} className="mt-1" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Xodimlar soni</Label>
               <Input type="number" min={1} value={form.totalEmployees} onChange={e => f("totalEmployees", e.target.value)} placeholder="0" className="mt-1" />
@@ -94,7 +100,7 @@ function NewCheckupDialog({ open, onClose }: { open: boolean; onClose: () => voi
             <div>
               <Label>Ko'rik turi</Label>
               <Select value={form.checkupType} onValueChange={v => f("checkupType", v)}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="annual">Yillik</SelectItem>
                   <SelectItem value="quarterly">Choraklik</SelectItem>
@@ -149,12 +155,12 @@ export default function HRHealthMonitoring() {
   const completedCount = (Array.isArray(all) ? all : []).filter(c => c.status === "completed").length;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Activity className="h-5 w-5 text-indigo-600" />
+          <Activity className="h-4 w-4 text-[var(--ep-blue)]" />
           <h1 className="font-semibold text-base">HR — Sog'liq Monitoringi</h1>
-          <Badge variant="secondary">{all.length} ko'rik</Badge>
+          <EPStatusPill tone="neutral">{all.length} ko'rik</EPStatusPill>
         </div>
         <Button size="sm" onClick={() => setNewOpen(true)}>
           <Plus className="h-3.5 w-3.5 mr-1" />Yangi ko'rik
@@ -163,14 +169,14 @@ export default function HRHealthMonitoring() {
 
       <div className="flex-1 overflow-auto p-6 space-y-5">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-blue-100 p-2.5">
-                <ClipboardList className="h-4 w-4 text-blue-600" />
+                <ClipboardList className="h-4 w-4 text-[var(--ep-blue)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-blue-600">{all.length}</div>
+                <div className="text-2xl font-bold text-[var(--ep-blue)]">{all.length}</div>
                 <div className="text-xs text-muted-foreground">Jami ko'riklar</div>
               </div>
             </CardContent>
@@ -178,10 +184,10 @@ export default function HRHealthMonitoring() {
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-green-100 p-2.5">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <CheckCircle2 className="h-4 w-4 text-[var(--ep-green)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{completedCount}</div>
+                <div className="text-2xl font-bold text-[var(--ep-green)]">{completedCount}</div>
                 <div className="text-xs text-muted-foreground">Yakunlangan</div>
               </div>
             </CardContent>
@@ -189,10 +195,10 @@ export default function HRHealthMonitoring() {
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-red-100 p-2.5">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <AlertTriangle className="h-4 w-4 text-[var(--ep-red)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
+                <div className="text-2xl font-bold text-[var(--ep-red)]">{overdueCount}</div>
                 <div className="text-xs text-muted-foreground">Muddati o'tgan</div>
               </div>
             </CardContent>
@@ -201,7 +207,7 @@ export default function HRHealthMonitoring() {
             <CardContent className="pt-4 pb-3">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-muted-foreground">Qamrov</span>
-                <span className="text-sm font-bold text-purple-600">{coveragePct}%</span>
+                <span className="text-sm font-bold text-[var(--ep-purple)]">{coveragePct}%</span>
               </div>
               <Progress value={coveragePct} className="h-1.5" />
               <p className="text-xs text-muted-foreground mt-1">{totalExamined}/{totalEmployees} xodim</p>
@@ -215,13 +221,13 @@ export default function HRHealthMonitoring() {
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Bo'lim yoki tur qidiring..."
-              className="pl-8 h-8 text-sm"
+              className="pl-8 h-9 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] h-8 text-sm">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
               <SelectValue placeholder="Holat" />
             </SelectTrigger>
             <SelectContent>
@@ -241,8 +247,8 @@ export default function HRHealthMonitoring() {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
+            <div className="ep-table-scroll"><Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
                   <TableHead>Bo'lim</TableHead>
                   <TableHead>Tur</TableHead>
@@ -256,13 +262,13 @@ export default function HRHealthMonitoring() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">
                       Yuklanmoqda...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-10 text-[13px] text-muted-foreground">
                       <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       <p className="text-sm">
                         {all.length === 0 ? "Tibbiy ko'rik ma'lumotlari mavjud emas" : "Mos ko'rik topilmadi"}
@@ -280,7 +286,7 @@ export default function HRHealthMonitoring() {
                       special: "Maxsus", pre_employment: "Ishga kirish",
                     };
                     return (
-                      <TableRow key={c.id} data-testid={`row-health-${i}`}>
+                      <TableRow key={c.id} data-testid={`row-health-${i}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium">{c.departmentName || "—"}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {TYPE_LABEL[c.checkupType || ""] || c.checkupType || "—"}
@@ -315,7 +321,7 @@ export default function HRHealthMonitoring() {
                   })
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>

@@ -1,17 +1,41 @@
 /**
- * overtime-calculator.service.ts — TZ-46: Konfiguratsiyalanadigan OT Kalkulyator
+ * @module overtime-calculator.service
+ * @description Configurable overtime pay calculator. Reads the active policy
+ *   from the `overtime_policy` DB table (NOT hardcoded), splits each entry
+ *   into regular/extended/weekend/night-shift segments, and computes pay per
+ *   segment using its own multiplier.
  *
- * MUHIM: Qoidalar overtime_policy jadvalidan o'qiladi — hardcoded emas.
- * Hech qanday O'zbek qonunchiligi kodi yo'q.
+ *   Algorithm:
+ *     1. Load active policy (isActive=true, latest effectiveFrom)
+ *     2. baseRate = grossMonthly / workingHoursPerMonth
+ *     3. For each OT entry:
+ *          - If weekend → entire OT counts at `weekendMultiplier`
+ *          - Else      → first `regularOvertimeHours` at `regularMultiplier`,
+ *                        remainder at `extendedMultiplier`
+ *          - Night hours (overlap with `[nightStart..nightEnd)`) earn the
+ *            `nightShiftBonus` multiplier on top, additive.
+ *     4. Total = Σ(hours × baseRate × multiplier) across all segments.
+ * @layer Domain Service (HR / payroll)
  *
- * DB oqimi:
- *   1. overtime_policy jadvalidan faol siyosat olinadi (isActive=true, eng oxirgi effectiveFrom)
- *   2. Base_Rate = grossMonthly / workingHoursPerMonth
- *   3. OT_Pay = Σ_segment OT_h × Base_Rate × Multiplier_segment
+ * WHY POLICY IS DB-DRIVEN, NOT HARDCODED
+ *   Uzbek labour law sets minimums, but each company may pay above them
+ *   (collective agreement, factory floor norms, factor of seniority). Storing
+ *   the multipliers in `overtime_policy` lets HR change rates without a
+ *   deploy, with an `effectiveFrom` date so historical payroll runs are
+ *   reproducible. The `policySnapshot` field on the result captures the
+ *   exact rates used so payroll re-runs match audit trails.
  *
- * DB invariantlar (overtime_policy jadvalida CHECK sifatida):
- *   regular_multiplier   >= 1.0
- *   extended_multiplier  >= regular_multiplier
+ * WHY DB-LEVEL CHECK CONSTRAINTS
+ *   regular_multiplier ≥ 1.0  — overtime must pay at least the base rate.
+ *   extended_multiplier ≥ regular_multiplier  — beyond the daily limit must
+ *   not pay LESS than regular OT. These are also re-checked here in code so
+ *   the error message mentions which constraint failed.
+ *
+ * WHY night hours are computed with a circular hour loop, not `(ne - ns)`:
+ *   Night shifts cross midnight (e.g. 22:00 → 06:00 wraps). Walking each hour
+ *   one-at-a-time and using `hour % 24` handles both wrap and non-wrap ranges
+ *   uniformly. The cap `Math.min(nightHours, otHours)` prevents counting
+ *   night-bonus hours beyond the actual OT length.
  */
 
 import { Injectable } from '@nestjs/common';

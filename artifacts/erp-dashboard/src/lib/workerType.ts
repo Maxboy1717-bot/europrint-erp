@@ -1,3 +1,8 @@
+/**
+ * @module workerType
+ * @description Frontend utility / library module.
+ */
+
 export type WorkerType = "FLAGMAN" | "PROTSESSNIK" | "TRABLDAYKER";
 
 export interface WorkerTypeInput {

@@ -1,3 +1,8 @@
+/**
+ * @module ai-reservation.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, isOk, Result } from '@common/result';
 import { z } from 'zod';

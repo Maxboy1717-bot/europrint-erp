@@ -1,3 +1,8 @@
+/**
+ * @module reports.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { parseSafe } from '@common/assertions';
 import { unwrapOrThrow } from '@common/http-result';
 import { UseInterceptors , BadRequestException, InternalServerErrorException } from '@nestjs/common';

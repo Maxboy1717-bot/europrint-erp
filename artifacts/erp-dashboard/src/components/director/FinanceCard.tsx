@@ -1,3 +1,8 @@
+/**
+ * @module FinanceCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, AlertTriangle } from "lucide-react";
@@ -20,7 +25,7 @@ export function FinanceCard({ fin, finLoad }: FinanceCardProps) {
   return (
     <Card data-testid="card-finance">
       <CardHeader className="pb-3">
-        <SectionTitle icon={DollarSign} title="Moliyaviy Ko'rinish" sub="Joriy oy" accent="text-emerald-600" />
+        <SectionTitle icon={DollarSign} title="Moliyaviy Ko'rinish" sub="Joriy oy" accent="text-[var(--ep-green)]" />
       </CardHeader>
       <CardContent>
         {finLoad ? <Skeleton className="h-40 rounded-lg" /> : (
@@ -30,9 +35,9 @@ export function FinanceCard({ fin, finLoad }: FinanceCardProps) {
                 <div key={`k-${i}`} className={cn("p-3 rounded-lg", item.isMain ? "bg-muted/40" : item.ok ? "bg-muted/20" : "bg-red-50 border border-red-100")} data-testid={`finance-row-${i}`}>
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">{item.label}</p>
-                    {!item.ok && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+                    {!item.ok && <AlertTriangle className="w-3.5 h-3.5 text-[var(--ep-red)]" />}
                   </div>
-                  <p className={cn("text-lg font-bold", item.ok ? "text-foreground" : "text-red-600")}>{formatMoney(item.amount)} so'm</p>
+                  <p className={cn("text-lg font-bold", item.ok ? "text-foreground" : "text-[var(--ep-red)]")}>{formatMoney(item.amount)} so'm</p>
                   <p className="text-[10px] text-muted-foreground">{item.sub}</p>
                 </div>
               ))}

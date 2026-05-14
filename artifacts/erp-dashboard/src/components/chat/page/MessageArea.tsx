@@ -1,3 +1,8 @@
+/**
+ * @module MessageArea
+ * @description React UI component.
+ */
+
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,14 +52,13 @@ export function MessageArea({
     const el = msgRefs.current.get(msgId);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-primary/40", "rounded-2xl");
+      el.classList.add("ring-2", "ring-[var(--tg-sidebar-active)]/40", "rounded-lg");
       setTimeout(() => {
-        el.classList.remove("ring-2", "ring-primary/40", "rounded-2xl");
+        el.classList.remove("ring-2", "ring-[var(--tg-sidebar-active)]/40", "rounded-lg");
       }, 1500);
     }
   }, []);
 
-  // On new message, scroll if near bottom
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -62,7 +66,6 @@ export function MessageArea({
     if (isNearBottom) scrollToBottom();
   }, [messages.length, scrollToBottom]);
 
-  // Initial load scroll
   useEffect(() => {
     scrollToBottom(false);
   }, [roomId, scrollToBottom]);
@@ -85,30 +88,42 @@ export function MessageArea({
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground bg-muted/10">
-        <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-          <span className="text-3xl">💬</span>
+      <div className="flex-1 flex flex-col items-center justify-center gap-4" style={{ background: "var(--tg-chat-bg)" }}>
+        <div className="flex flex-col items-center gap-3 bg-[var(--tg-date-pill)] border border-black/[0.06] rounded-lg px-8 py-6 shadow-sm backdrop-blur-sm">
+          <span className="text-5xl">💬</span>
+          <div className="text-center">
+            <p className="text-[15px] font-semibold text-[var(--tg-text-primary)]">Xabarlar yo'q</p>
+            <p className="text-[13px] text-[var(--tg-text-secondary)] mt-1">Birinchi xabarni yuboring!</p>
+          </div>
         </div>
-        <p className="text-sm">Birinchi xabarni yuboring!</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden relative">
+    <div className="flex-1 flex flex-col overflow-hidden relative" style={{ background: "var(--tg-chat-bg)" }}>
+      {/* Subtle WhatsApp-style background pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+      />
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-1 scroll-smooth"
+        className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5 scroll-smooth relative"
         style={{ overscrollBehavior: "contain" }}
       >
         {(Array.isArray(grouped) ? grouped : []).map(({ date, msgs }) => (
           <div key={date}>
-            {/* Date separator */}
-            <div className="flex items-center justify-center my-3">
-              <span className="text-[11px] bg-muted text-muted-foreground px-3 py-1 rounded-full border border-border/40 select-none">
+            {/* ── Date separator with lines ── */}
+            <div className="flex items-center gap-3 my-4 px-2">
+              <div className="flex-1 h-px bg-black/10" />
+              <span className="text-[12px] font-medium text-[#666] bg-[var(--tg-date-pill)] px-3 py-1 rounded-full shadow-sm select-none backdrop-blur-sm whitespace-nowrap border border-black/[0.06]">
                 {date}
               </span>
+              <div className="flex-1 h-px bg-black/10" />
             </div>
 
             {(Array.isArray(msgs) ? msgs : []).map((msg, idx) => {
@@ -158,13 +173,13 @@ export function MessageArea({
         <button
           onClick={() => scrollToBottom()}
           className={cn(
-            "absolute bottom-16 right-4 z-10 w-9 h-9 rounded-full",
-            "bg-background border border-border shadow-md",
+            "absolute bottom-16 right-5 z-10 w-10 h-10 rounded-full",
+            "bg-[var(--tg-action-bar-bg)] shadow-[0_2px_12px_rgba(0,0,0,0.18)] border border-[var(--tg-border)]",
             "flex items-center justify-center",
-            "hover:bg-muted transition-colors"
+            "hover:scale-105 transition-all active:scale-95"
           )}
         >
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          <ChevronDown className="w-5 h-5 text-[var(--tg-sidebar-active)]" />
         </button>
       )}
     </div>

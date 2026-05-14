@@ -1,3 +1,8 @@
+/**
+ * @module value-object.base
+ * @description Source module. See exports for details.
+ */
+
 export abstract class ValueObject<T> {
   constructor(protected readonly _value: T) {}
   get value(): T { return this._value; }

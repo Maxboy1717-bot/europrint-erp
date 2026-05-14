@@ -1,11 +1,18 @@
+/**
+ * @module PinnedMessages
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { ChatAvatar } from "./ChatAvatar";
-import { Pin, PinOff, Loader2 } from "lucide-react";
+import { Pin, PinOff } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from '@/lib/queryClient';
 
+import { EPLoader } from "@/components/ep";
 interface PinnedMessage {
   id: string;
   roomId: string;
@@ -29,9 +36,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
   const { data: pinned = [], isLoading } = useQuery<PinnedMessage[]>({
     queryKey: ["chat-room-pinned-messages", roomId],
     queryFn: async () => {
-      const res = await fetch(`/api/chat/rooms/${roomId}/pinned-messages`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('GET', `/api/chat/rooms/${roomId}/pinned-messages`);
       if (!res.ok) throw new Error("Failed to load pinned messages");
       return res.json();
     },
@@ -41,10 +46,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
 
   const unpinMutation = useMutation({
     mutationFn: async (messageId: string) => {
-      const res = await fetch(`/api/chat/messages/${messageId}/pin`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('DELETE', `/api/chat/messages/${messageId}/pin`);
       if (!res.ok) throw new Error("Failed to unpin");
       return res.json();
     },
@@ -70,7 +72,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
       <div className="flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex items-center justify-center h-24">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <EPLoader tone="muted" className="w-5 h-5" />
           </div>
         ) : pinned.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-24 gap-2 text-muted-foreground">

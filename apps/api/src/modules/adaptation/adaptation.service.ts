@@ -1,3 +1,8 @@
+/**
+ * @module adaptation.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { AdaptationRepository } from './adaptation.repo';
@@ -50,5 +55,59 @@ export class AdaptationService {
       if (!r.ok) { this.logger.error('findRecordById failed', r.error); throw new Error(String(r.error)); }
       return r.data ?? null;
     });
+  }
+
+  async getNewEmployees(limit: number, offset: number) {
+    const r = await this.repo.findNewEmployees(limit, offset);
+    if (!r.ok) { this.logger.error('getNewEmployees failed', r.error); return []; }
+    return Array.isArray(r.data) ? r.data : [];
+  }
+
+  async createNewEmployee(data: Record<string, unknown>) {
+    const r = await this.repo.createNewEmployee(data);
+    if (!r.ok) { this.logger.error('createNewEmployee failed', r.error); return {}; }
+    return r.data;
+  }
+
+  async updateNewEmployee(id: string, data: Record<string, unknown>) {
+    const r = await this.repo.updateNewEmployee(id, data);
+    if (!r.ok) { this.logger.error('updateNewEmployee failed', r.error); return {}; }
+    return r.data;
+  }
+
+  async getFeedback(limit: number, offset: number) {
+    const r = await this.repo.findFeedback(limit, offset);
+    if (!r.ok) { this.logger.error('getFeedback failed', r.error); return []; }
+    return Array.isArray(r.data) ? r.data : [];
+  }
+
+  async createFeedback(data: Record<string, unknown>) {
+    const r = await this.repo.createFeedback(data);
+    if (!r.ok) { this.logger.error('createFeedback failed', r.error); return {}; }
+    return r.data;
+  }
+
+  async updateFeedback(id: string, data: Record<string, unknown>) {
+    const r = await this.repo.updateFeedback(id, data);
+    if (!r.ok) { this.logger.error('updateFeedback failed', r.error); return {}; }
+    return r.data;
+  }
+
+  async getWelcomeEvents(limit: number, offset: number) {
+    const r = await this.repo.findWelcomeEvents(limit, offset);
+    if (!r.ok) { this.logger.error('getWelcomeEvents failed', r.error); return []; }
+    return Array.isArray(r.data) ? r.data : [];
+  }
+
+  async createWelcomeEvent(data: Record<string, unknown>) {
+    const r = await this.repo.createWelcomeEvent(data);
+    if (!r.ok) { this.logger.error('createWelcomeEvent failed', r.error); return {}; }
+    return r.data;
+  }
+
+  async updateWelcomeEvent(id: string, data: Record<string, unknown>) {
+    const r = await this.repo.updateWelcomeEvent(id, data);
+    if (!r.ok) { this.logger.error('updateWelcomeEvent failed', r.error); return {}; }
+    return r.data;
   }
 }

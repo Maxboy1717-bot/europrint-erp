@@ -1,3 +1,8 @@
+/**
+ * @module inventory-advanced.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';

@@ -1,3 +1,8 @@
+/**
+ * @module PosReports
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +17,6 @@ interface PosReportsProps {
 
 export function PosReports({ dashboard }: PosReportsProps) {
   const { t } = useTranslation('finance');
-  const { t: tCommon } = useTranslation('common');
 
   return (
     <div className="space-y-4">
@@ -65,7 +69,7 @@ export function PosReports({ dashboard }: PosReportsProps) {
             <CardTitle className="text-sm">To'lov turlari bo'yicha</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Tur</TableHead>
@@ -75,14 +79,14 @@ export function PosReports({ dashboard }: PosReportsProps) {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(dashboard.paymentBreakdown) ? dashboard.paymentBreakdown : []).map((pb) => (
-                  <TableRow key={pb.method}>
+                  <TableRow key={pb.method} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="capitalize">{pb.method}</TableCell>
                     <TableCell className="text-center">{pb.count}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(pb.total)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
 
@@ -91,7 +95,7 @@ export function PosReports({ dashboard }: PosReportsProps) {
             <CardTitle className="text-sm">Top 5 mahsulot</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Mahsulot</TableHead>
@@ -101,7 +105,7 @@ export function PosReports({ dashboard }: PosReportsProps) {
               </TableHeader>
               <TableBody>
                 {dashboard.topProducts.slice(0, 5).map((p, idx) => (
-                  <TableRow key={idx}>
+                  <TableRow key={idx} className="hover:bg-muted/40 transition-colors">
                     <TableCell>
                       <div className="text-xs">
                         <span className="block font-medium truncate max-w-[150px]">{p.name}</span>
@@ -113,7 +117,7 @@ export function PosReports({ dashboard }: PosReportsProps) {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>

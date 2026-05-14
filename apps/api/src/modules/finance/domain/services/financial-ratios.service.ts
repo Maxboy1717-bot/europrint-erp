@@ -1,3 +1,41 @@
+/**
+ * @module financial-ratios.service
+ * @description CFO-dashboard ratio calculator. Reads period balance-sheet
+ *   and P&L rows and computes the four canonical ratio families:
+ *
+ *     LIQUIDITY     currentRatio, quickRatio, cashRatio, workingCapital
+ *     PROFITABILITY gross-margin %, net-margin %, ROA, ROE, ROCE
+ *     LEVERAGE      debt-to-equity, interest coverage
+ *     ALTMAN Z      bankruptcy-prediction composite (1968 Z-score)
+ *
+ *   All ratios returned in one DTO so the dashboard renders in a single
+ *   round-trip. NULL-safe — missing inputs become 0 via `safeNum`/`safeDiv`.
+ * @layer Domain Service (Finance / CFO)
+ *
+ * WHY ALTMAN Z-SCORE COEFFICIENTS ARE FROZEN AT 1968 VALUES
+ *   The Altman Z is calibrated for *publicly-traded manufacturing firms*.
+ *   The coefficients (1.2 / 1.4 / 3.3 / 0.6 / 1.0) and zone cut-offs
+ *   (2.99 safe / 1.81 distress) are NOT tuneable — they were fitted on the
+ *   original 1968 distressed-vs-healthy sample. Adjusting them invalidates
+ *   the model. If our risk team ever switches to Z' (private companies) or
+ *   Z'' (non-manufacturing), it requires a different formula entirely, not
+ *   tweaked constants — make it a new method.
+ *
+ *   References:
+ *     Altman (1968), "Financial Ratios, Discriminant Analysis and the
+ *     Prediction of Corporate Bankruptcy", Journal of Finance.
+ *
+ * WHY WE COMPUTE ALL RATIOS IN ONE METHOD, NOT ONE-PER-RATIO
+ *   They share the same source rows (balance sheet + P&L). Computing them
+ *   separately would re-query the same tables. The dashboard always shows
+ *   the full panel, so one fetch + many ratios is the right tradeoff.
+ *
+ * WHY interestCoverage CAN BE null
+ *   For companies without debt (or with 0 interest expense in a period),
+ *   interest coverage = EBIT / 0 is undefined. We return `null` and the UI
+ *   shows "N/A" — communicating "no debt service to cover" instead of "∞".
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -6,13 +44,18 @@ import { safeDiv, safeNum, roundTo } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { CfoConfigService } from './cfo-config.service';
 
-const ALTMAN_C1            = 1.2;
-const ALTMAN_C2            = 1.4;
-const ALTMAN_C3            = 3.3;
-const ALTMAN_C4            = 0.6;
-const ALTMAN_C5            = 1.0;
-const ALTMAN_SAFE_ZONE     = 2.99;
-const ALTMAN_DISTRESS_ZONE = 1.81;
+// Altman 1968 coefficients for publicly-traded manufacturing firms.
+// DO NOT TUNE — these are the fitted weights from the original discriminant
+// analysis. Different company types need a different model (Z', Z''), not
+// different coefficients on this one.
+const ALTMAN_C1            = 1.2;   // weight on Working Capital / Total Assets
+const ALTMAN_C2            = 1.4;   // weight on Retained Earnings / Total Assets
+const ALTMAN_C3            = 3.3;   // weight on EBIT / Total Assets
+const ALTMAN_C4            = 0.6;   // weight on Market Value Equity / Total Liabilities
+const ALTMAN_C5            = 1.0;   // weight on Sales / Total Assets
+const ALTMAN_SAFE_ZONE     = 2.99;  // ≥ this → 'Safe' (low bankruptcy risk)
+const ALTMAN_DISTRESS_ZONE = 1.81;  // ≤ this → 'Distress' (high bankruptcy risk)
+                                    // between the two → 'Grey Zone' (watch carefully)
 
 export interface FinancialRatiosDto {
   period: string;

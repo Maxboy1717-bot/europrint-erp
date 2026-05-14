@@ -1,3 +1,8 @@
+/**
+ * @module core-users
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
 import {
@@ -18,8 +23,8 @@ export const users = pgTable("users", {
   firstName:      varchar("first_name", { length: 100 }).notNull(),
   lastName:       varchar("last_name", { length: 100 }).notNull(),
   middleName:     varchar("middle_name", { length: 100 }),
-  positionId:     integer("position_id").references(() => positions.id),
-  departmentId:   integer("department_id").references(() => departments.id),
+  positionId:     integer("position_id").references(() => positions.id, { onDelete: "set null" }),
+  departmentId:   integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   phone:          varchar("phone", { length: 20 }),
   avatarUrl:      text("avatar_url"),
   telegramChatId: varchar("telegram_chat_id", { length: 50 }),
@@ -116,7 +121,7 @@ export const positions = pgTable("positions", {
   code:         varchar("code", { length: 50 }).notNull(),
   nameUz:       varchar("name_uz", { length: 150 }).notNull(),
   nameRu:       varchar("name_ru", { length: 150 }),
-  departmentId: integer("department_id").references(() => departments.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   level:        integer("level").default(1),
   rbacTier:     varchar("rbac_tier", { length: 20 }).default("standard"),
   isManagement: boolean("is_management").default(false),
@@ -146,7 +151,7 @@ export const positions = pgTable("positions", {
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
 export const notifications = pgTable("notifications", {
   id:        serial("id").primaryKey(),
-  userId:    integer("user_id").notNull().references(() => users.id),
+  userId:    integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type:      varchar("type", { length: 50 }).notNull(),
   title:     text("title").notNull(),
   titleRu:   text("title_ru"),

@@ -1,3 +1,8 @@
+/**
+ * @module warehouse-types
+ * @description React page component. Route-level UI.
+ */
+
 import { z } from "zod";
 
 export interface WarehouseData {

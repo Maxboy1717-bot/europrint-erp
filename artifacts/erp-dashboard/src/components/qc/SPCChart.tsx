@@ -1,3 +1,8 @@
+/**
+ * @module SPCChart
+ * @description React UI component.
+ */
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import {

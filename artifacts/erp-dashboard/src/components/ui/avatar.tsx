@@ -1,3 +1,8 @@
+/**
+ * @module avatar
+ * @description React UI component.
+ */
+
 "use client"
 
 import * as React from "react"

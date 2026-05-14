@@ -1,3 +1,8 @@
+/**
+ * @module daily-report.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -118,5 +123,25 @@ export class DailyReportRepository {
 
   async markAbsentForDate(today: string): Promise<void> {
     await execDailyReportMarkAbsent(today);
+  }
+
+  async findByIdWithEmployee(reportId: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          dr.*,
+          e.first_name, e.last_name,
+          e.first_name || ' ' || e.last_name AS employee_name,
+          p.name AS position_name,
+          d.name AS department_name
+        FROM hr_daily_reports dr
+        JOIN employees e ON e.id = dr.employee_id
+        LEFT JOIN positions p ON p.id = e.position_id
+        LEFT JOIN departments d ON d.id = e.department_id
+        WHERE dr.id = ${reportId}
+        LIMIT 1
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
   }
 }

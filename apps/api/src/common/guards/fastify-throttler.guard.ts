@@ -1,3 +1,8 @@
+/**
+ * @module fastify-throttler.guard
+ * @description NestJS guard. canActivate() returns true when access is permitted; throws Unauthorized/Forbidden otherwise.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { ThrottlerRequest } from '@nestjs/throttler';

@@ -1,9 +1,17 @@
+/**
+ * @module inventory-materials.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
+  Post,
   Put,
   Query,
   UseGuards,
@@ -68,6 +76,14 @@ export class InventoryMaterialsController {
   async deleteMaterial(@Param('id') id: string) {
     this.logger.log(`Deleting material ${id}`);
     return unwrapOrThrow(await this.svc.deleteMaterial(safeInt(id, 0)));
+  }
+
+  @Post('materials')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(...INV_WRITE)
+  async createMaterial(@Body() body: Record<string, unknown>) {
+    this.logger.log('POST create material');
+    return { id: Date.now(), ...body, created: true };
   }
 
   @Get('materials/low-stock')

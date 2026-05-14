@@ -1,6 +1,11 @@
+/**
+ * @module core-rules
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, decimal, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, decimal, type AnyPgColumn, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-users";
@@ -21,7 +26,7 @@ export const businessRules = pgTable("business_rules", {
   isActive: boolean("is_active").notNull().default(true),
   requiresApproval: boolean("requires_approval").notNull().default(false),
   approverRole: varchar("approver_role", { length: 50 }),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
@@ -30,17 +35,17 @@ export type BusinessRule = typeof businessRules.$inferSelect;
 
 export const ruleViolations = pgTable("rule_violations", {
   id: serial("id").primaryKey(),
-  ruleId: varchar("rule_id").notNull().references(() => businessRules.id),
+  ruleId: varchar("rule_id").notNull().references(() => businessRules.id, { onDelete: "cascade" }),
   ruleCode: varchar("rule_code", { length: 50 }).notNull(),
   violationType: varchar("violation_type", { length: 30 }).notNull(),
   tableName: varchar("table_name", { length: 100 }).notNull(),
   recordId: varchar("record_id"),
   attemptedData: jsonb("attempted_data"),
   violationMessage: text("violation_message").notNull(),
-  userId: integer("user_id").references(() => users.id),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   userFullName: text("user_full_name"),
   ipAddress: varchar("ip_address", { length: 50 }),
-  overrideApprovedBy: varchar("override_approved_by").references(() => users.id),
+  overrideApprovedBy: varchar("override_approved_by").references(() => users.id, { onDelete: "set null" }),
   overrideReason: text("override_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -53,7 +58,7 @@ export const unitOfMeasures = pgTable("unit_of_measures", {
   name: text("name").notNull(),
   nameRu: text("name_ru"),
   category: varchar("category", { length: 30 }).notNull(),
-  baseUnitId: varchar("base_unit_id").references((): AnyPgColumn => unitOfMeasures.id),
+  baseUnitId: varchar("base_unit_id").references((): AnyPgColumn => unitOfMeasures.id, { onDelete: "set null" }),
   conversionFactor: numericMoney("conversion_factor").default(1),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -85,14 +90,14 @@ export type ValidationRule = typeof validationRules.$inferSelect;
 
 export const validationResults = pgTable("validation_results", {
   id: serial("id").primaryKey(),
-  validationRuleId: varchar("validation_rule_id").notNull().references(() => validationRules.id),
+  validationRuleId: varchar("validation_rule_id").notNull().references(() => validationRules.id, { onDelete: "cascade" }),
   ruleCode: varchar("rule_code", { length: 50 }).notNull(),
   runAt: timestamp("run_at").notNull().defaultNow(),
   status: varchar("status", { length: 20 }).notNull(),
   violationCount: integer("violation_count").default(0),
   violationDetails: jsonb("violation_details"),
   resolvedAt: timestamp("resolved_at"),
-  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedBy: integer("resolved_by").references(() => users.id, { onDelete: "set null" }),
   resolutionNotes: text("resolution_notes"),
 });
 
@@ -103,13 +108,13 @@ export const deletedRecords = pgTable("deleted_records", {
   tableName: varchar("table_name", { length: 100 }).notNull(),
   recordId: varchar("record_id").notNull(),
   recordData: jsonb("record_data").notNull(),
-  deletedBy: varchar("deleted_by").references(() => users.id),
+  deletedBy: varchar("deleted_by").references(() => users.id, { onDelete: "set null" }),
   deletedByName: text("deleted_by_name"),
   deletedAt: timestamp("deleted_at").notNull().defaultNow(),
   deleteReason: text("delete_reason"),
   canRestore: boolean("can_restore").notNull().default(true),
   restoredAt: timestamp("restored_at"),
-  restoredBy: varchar("restored_by").references(() => users.id),
+  restoredBy: varchar("restored_by").references(() => users.id, { onDelete: "set null" }),
 });
 
 export type DeletedRecord = typeof deletedRecords.$inferSelect;
@@ -121,12 +126,12 @@ export const statusChangeHistory = pgTable("status_change_history", {
   documentNumber: varchar("document_number", { length: 50 }),
   oldStatus: varchar("old_status", { length: 50 }).notNull(),
   newStatus: varchar("new_status", { length: 50 }).notNull(),
-  changedBy: varchar("changed_by").references(() => users.id),
+  changedBy: varchar("changed_by").references(() => users.id, { onDelete: "set null" }),
   changedByName: text("changed_by_name"),
   changeReason: text("change_reason"),
   isReversal: boolean("is_reversal").notNull().default(false),
   approvalRequired: boolean("approval_required").notNull().default(false),
-  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   changedAt: timestamp("changed_at").notNull().defaultNow(),
 });
 
@@ -160,7 +165,7 @@ export type KpiDefinition = typeof kpiDefinitions.$inferSelect;
 
 export const kpiValues = pgTable("kpi_values", {
   id: serial("id").primaryKey(),
-  kpiId: varchar("kpi_id").notNull().references(() => kpiDefinitions.id),
+  kpiId: varchar("kpi_id").notNull().references(() => kpiDefinitions.id, { onDelete: "cascade" }),
   kpiCode: varchar("kpi_code", { length: 50 }).notNull(),
   periodDate: varchar("period_date", { length: 10 }).notNull(),
   periodType: varchar("period_type", { length: 20 }).notNull(),
@@ -192,10 +197,10 @@ export const systemAlerts = pgTable("system_alerts", {
   actionUrl: text("action_url"),
   isRead: boolean("is_read").notNull().default(false),
   readAt: timestamp("read_at"),
-  readBy: varchar("read_by").references(() => users.id),
+  readBy: varchar("read_by").references(() => users.id, { onDelete: "set null" }),
   isResolved: boolean("is_resolved").notNull().default(false),
   resolvedAt: timestamp("resolved_at"),
-  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedBy: integer("resolved_by").references(() => users.id, { onDelete: "set null" }),
   resolutionNotes: text("resolution_notes"),
   notifiedUsers: jsonb("notified_users"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -304,11 +309,11 @@ export const exceptionLogs = pgTable("exception_logs", {
   overrideValue: jsonb("override_value"),   // qo'llangan qiymat
 
   // Ruxsat bergan
-  requestedBy: varchar("requested_by").references(() => users.id).notNull(),
+  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
   requestedByName: text("requested_by_name"),
   requestedAt: timestamp("requested_at").notNull().defaultNow(),
 
-  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedByName: text("approved_by_name"),
   approvedByRole: varchar("approved_by_role", { length: 50 }),
   approvedAt: timestamp("approved_at"),
@@ -325,7 +330,11 @@ export const exceptionLogs = pgTable("exception_logs", {
   ipAddress: varchar("ip_address", { length: 50 }),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("exception_logs_type_chk", sql`${t.exceptionType} IN ('advance_bypass','tech_override','planning_override','status_force','material_return_skip','qc_bypass','delivery_override','billing_override','custom')`),
+  check("exception_logs_module_chk", sql`${t.module} IN ('SD','PP','QC','TECH','WMS','MES','FI','HR','LOGISTICS','CRM')`),
+  check("exception_logs_status_chk", sql`${t.status} IN ('approved','rejected','pending_approval')`),
+]);
 
 export const insertExceptionLogSchema = createInsertSchema(exceptionLogs, {
   exceptionType: z.enum([
@@ -350,7 +359,7 @@ export const auditTrailLog = pgTable("audit_trail_log", {
   tableName: varchar("table_name", { length: 100 }),
   recordId: varchar("record_id", { length: 100 }),
   documentNumber: varchar("document_number", { length: 50 }),
-  userId: integer("user_id").references(() => users.id),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   userFullName: text("user_full_name"),
   userRole: varchar("user_role", { length: 50 }),
   module: varchar("module", { length: 30 }),
@@ -363,7 +372,9 @@ export const auditTrailLog = pgTable("audit_trail_log", {
   requestId: varchar("request_id", { length: 50 }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("audit_trail_log_action_chk", sql`${t.action} IN ('CREATE','UPDATE','DELETE','STATUS_CHANGE','APPROVE','REJECT','BYPASS','EXPORT','LOGIN','LOGOUT','CUSTOM')`),
+]);
 
 export const insertAuditTrailLogSchema = createInsertSchema(auditTrailLog, {
   action: z.enum([

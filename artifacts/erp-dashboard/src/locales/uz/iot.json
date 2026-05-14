@@ -1,6 +1,6 @@
 {
   "title": "IoT monitoring",
-  "dashboard": "IoT Dashboard",
+  "dashboard": "IoT paneli",
   "devices": "Qurilmalar",
   "device": "Qurilma",
   "newDevice": "Yangi qurilma",
@@ -36,7 +36,7 @@
   "realtime": "Real vaqt",
   "liveData": "Jonli ma'lumotlar",
   "historical": "Tarixiy",
-  "trend": "Trend",
+  "trend": "O'zgarish",
   "chart": "Grafik",
   "threshold": "Chegara",
   "upperThreshold": "Yuqori chegara",
@@ -151,5 +151,9 @@
   "abbreviationHigh": "yuk",
   "abbreviationMed": "ort",
   "statusIn": "KIRDI",
-  "statusOut": "CHIQDI"
+  "statusOut": "CHIQDI",
+  "tabAttendance": "Davomat",
+  "tabRooms": "Xonalar",
+  "tabHealth": "Salomatlik",
+  "dashboard1": "Boshqaruv paneli"
 }

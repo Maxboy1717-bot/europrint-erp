@@ -1,3 +1,8 @@
+/**
+ * @module queries-mm-goods
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import {
   mm_goods_receipts_ext, mm_goods_receipt_items,

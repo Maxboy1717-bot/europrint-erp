@@ -1,3 +1,8 @@
+/**
+ * @module RobotsDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -86,7 +91,7 @@ export function RobotsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
@@ -100,7 +105,7 @@ export function RobotsDialog({
               <div>
                 <p className="font-medium">{robot.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {(triggerTypes ?? []).find(t => t.value === robot.triggerType)?.label} → {actionTypes.find(a => a.value === robot.actionType)?.label}
+                  {(Array.isArray(triggerTypes) ? triggerTypes : []).find(t => t.value === robot.triggerType)?.label} → {actionTypes.find(a => a.value === robot.actionType)?.label}
                 </p>
               </div>
               <DeleteConfirmDialog
@@ -117,7 +122,7 @@ export function RobotsDialog({
           ))}
 
           {robots.length === 0 && !showAddRobot && (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-[13px] text-muted-foreground">
               <Bot className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>Robotlar yo'q</p>
             </div>
@@ -135,11 +140,11 @@ export function RobotsDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>{t.robots.trigger}</Label>
                   <Select value={newRobot.triggerType} onValueChange={(v) => setNewRobot({ ...newRobot, triggerType: v })}>
-                    <SelectTrigger data-testid="select-trigger-type">
+                    <SelectTrigger data-testid="select-trigger-type" className="h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -153,7 +158,7 @@ export function RobotsDialog({
                 <div>
                   <Label>{t.robots.action}</Label>
                   <Select value={newRobot.actionType} onValueChange={(v) => setNewRobot({ ...newRobot, actionType: v })}>
-                    <SelectTrigger data-testid="select-action-type">
+                    <SelectTrigger data-testid="select-action-type" className="h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -172,7 +177,7 @@ export function RobotsDialog({
                     value={newRobot.actionConfig.targetColumnId || ""}
                     onValueChange={(v) => setNewRobot({ ...newRobot, actionConfig: { ...newRobot.actionConfig, targetColumnId: v } })}
                   >
-                    <SelectTrigger data-testid="select-target-column">
+                    <SelectTrigger data-testid="select-target-column" className="h-9">
                       <SelectValue placeholder="Ustunni tanlang" />
                     </SelectTrigger>
                     <SelectContent>
@@ -191,7 +196,7 @@ export function RobotsDialog({
                     value={newRobot.actionConfig.targetUserId || ""}
                     onValueChange={(v) => setNewRobot({ ...newRobot, actionConfig: { ...newRobot.actionConfig, targetUserId: v } })}
                   >
-                    <SelectTrigger data-testid="select-target-user">
+                    <SelectTrigger data-testid="select-target-user" className="h-9">
                       <SelectValue placeholder="Foydalanuvchini tanlang" />
                     </SelectTrigger>
                     <SelectContent>

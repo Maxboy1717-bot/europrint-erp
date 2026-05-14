@@ -1,3 +1,8 @@
+/**
+ * @module label-ext.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PRINTER_DEFAULT_PORT, DEFAULT_TIMEOUT_MS, MM_TO_PT_RATIO, DEFAULT_BARCODE } from '@common/constants/app.constants';
 import { Result, AppError, safeCall } from '@common/result';

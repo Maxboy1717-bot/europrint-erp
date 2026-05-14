@@ -1,3 +1,8 @@
+/**
+ * @module OrdersTab
+ * @description React UI component.
+ */
+
 import { SdOrdersData } from "./sd-types";
 import { Badge } from "@/components/ui/badge";
 import { FileText, DollarSign, BarChart2, Calendar, ShoppingCart } from "lucide-react";
@@ -32,16 +37,16 @@ export function OrdersTab({ orders }: { orders: SdOrdersData }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard icon={ShoppingCart} label="Jami buyurtmalar" value={String(totalCount)}
-          gradient="from-sky-500 to-blue-500" />
+          gradient="" />
         <KpiCard icon={DollarSign} label="Jami summa" value={fmtMoney(totalAmount)}
-          gradient="from-emerald-500 to-teal-500" />
+          gradient="" />
         <KpiCard icon={BarChart2} label="O'rtacha buyurtma" value={fmtMoney(avgAmount)}
-          gradient="from-violet-500 to-purple-500" />
+          gradient="" />
         <KpiCard icon={Calendar} label="Mijozlik davri" value={`${monthsAs} oy`}
           sub={orders.firstOrderDate ? `${fmtDate(orders.firstOrderDate)} dan` : undefined}
-          gradient="from-amber-500 to-orange-500" />
+          gradient="" />
       </div>
 
       {trend.length > 0 && (

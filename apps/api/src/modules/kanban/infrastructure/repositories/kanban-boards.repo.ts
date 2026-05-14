@@ -1,3 +1,8 @@
+/**
+ * @module kanban-boards.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { sql } from 'drizzle-orm';
@@ -52,7 +57,11 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
         db.execute<Record<string, unknown>>(sql`
           SELECT id, board_id, column_id, title, description, priority, due_date,
                  sort_order, owner_user_id, related_type, related_id, source,
-                 start_date, estimated_time, created_at, updated_at
+                 start_date, estimated_time, accepted_at, completed_at,
+                 created_at, updated_at,
+                 (SELECT row_to_json(t) FROM kanban_time_tracks t
+                  WHERE t.card_id = kanban_cards.id::text AND t.is_running = true
+                  LIMIT 1) AS active_time_track
           FROM kanban_cards WHERE board_id = ${boardId} AND deleted_at IS NULL ORDER BY sort_order ASC
         `),
       ]);
@@ -72,6 +81,18 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
       return Ok(castTo<KanbanBoard>(rows.rows[0]));
     } catch (error) {
       this.logger.error('createBoard: ' + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  async deleteBoard(boardId: string): Promise<Result<void>> {
+    try {
+      await runQuery(sql`
+        UPDATE kanban_boards SET deleted_at = NOW() WHERE id = ${boardId} AND deleted_at IS NULL
+      `);
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error('deleteBoard: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
   }
@@ -128,9 +149,18 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async addCard(input: CreateCardInput): Promise<Result<KanbanCard>> {
     try {
+      // sort_order: ustundagi MAX + 1 — har doim oxirga qo'shiladi
       const rows = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, sort_order)
-        VALUES (${input.board_id}, ${input.column_id}, ${input.title}, ${input.description}, ${input.priority}, ${input.due_date}, ${input.owner_user_id}, 0)
+        VALUES (
+          ${input.board_id}, ${input.column_id}, ${input.title}, ${input.description},
+          ${input.priority}, ${input.due_date}, ${input.owner_user_id},
+          COALESCE(
+            (SELECT MAX(sort_order) FROM kanban_cards
+             WHERE column_id = ${input.column_id} AND deleted_at IS NULL),
+            -1
+          ) + 1
+        )
         RETURNING *
       `);
       return Ok(castTo<KanbanCard>(rows.rows[0]));
@@ -142,11 +172,24 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async updateCard(id: string, input: UpdateCardInput): Promise<Result<KanbanCard>> {
     try {
+      // Note: due_date, start_date, recurrence_end_date are varchar in DB (not date type)
+      //       parent_card_id, project_id, related_id are integer in DB
       const rows = await runQuery<Record<string, unknown>>(sql`
-        UPDATE kanban_cards
-        SET title = COALESCE(${input.title ?? null}, title), description = COALESCE(${input.description ?? null}, description),
-            priority = COALESCE(${input.priority ?? null}, priority), due_date = COALESCE(${input.due_date ?? null}, due_date),
-            owner_user_id = COALESCE(${input.owner_user_id ?? null}, owner_user_id), updated_at = NOW()
+        UPDATE kanban_cards SET
+          title               = COALESCE(${input.title ?? null},               title),
+          description         = CASE WHEN ${input.description} IS NOT NULL THEN ${input.description} ELSE description END,
+          priority            = COALESCE(${input.priority ?? null},             priority),
+          due_date            = COALESCE(${input.due_date ?? null},             due_date),
+          start_date          = COALESCE(${input.start_date ?? null},           start_date),
+          owner_user_id       = COALESCE(${input.owner_user_id ?? null},        owner_user_id),
+          estimated_time      = COALESCE(${input.estimated_time ?? null},       estimated_time),
+          parent_card_id      = COALESCE(${input.parent_card_id ?? null},       parent_card_id),
+          project_id          = COALESCE(${input.project_id ?? null},           project_id),
+          related_type        = COALESCE(${input.related_type ?? null},         related_type),
+          related_id          = COALESCE(${input.related_id ?? null},           related_id),
+          recurrence_pattern  = COALESCE(${input.recurrence_pattern ?? null},   recurrence_pattern),
+          recurrence_end_date = COALESCE(${input.recurrence_end_date ?? null},  recurrence_end_date),
+          updated_at          = NOW()
         WHERE id = ${id} AND deleted_at IS NULL RETURNING *
       `);
       if (!rows.rows[0]) return Err({ message: `Card ${id} topilmadi`, code: 'NOT_FOUND' });
@@ -159,8 +202,22 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async moveCard(id: string, input: MoveCardInput): Promise<Result<KanbanCard>> {
     try {
+      // sort_order berilgan bo'lsa — o'sha pozitsiyadagi va undan keyingi kartalarni siljitish
+      if (input.sort_order != null && input.column_id) {
+        await runQuery(sql`
+          UPDATE kanban_cards
+          SET sort_order = sort_order + 1, updated_at = NOW()
+          WHERE column_id = ${input.column_id}
+            AND sort_order >= ${input.sort_order}
+            AND id::text != ${id}
+            AND deleted_at IS NULL
+        `);
+      }
       const rows = await runQuery<Record<string, unknown>>(sql`
-        UPDATE kanban_cards SET column_id = ${input.column_id}, sort_order = COALESCE(${input.sort_order ?? null}, sort_order), updated_at = NOW()
+        UPDATE kanban_cards
+        SET column_id  = COALESCE(${input.column_id ?? null},  column_id),
+            sort_order = COALESCE(${input.sort_order ?? null}, sort_order),
+            updated_at = NOW()
         WHERE id = ${id} AND deleted_at IS NULL RETURNING *
       `);
       if (!rows.rows[0]) return Err({ message: `Card ${id} topilmadi`, code: 'NOT_FOUND' });

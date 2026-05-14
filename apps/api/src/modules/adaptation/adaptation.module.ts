@@ -1,3 +1,8 @@
+/**
+ * @module adaptation.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { AdaptationController } from './adaptation.controller';

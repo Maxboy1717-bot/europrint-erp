@@ -1,3 +1,8 @@
+/**
+ * @module pos-lifecycle-block.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { sql, db } from '@workspace/db';
 
 import { Injectable } from '@nestjs/common';

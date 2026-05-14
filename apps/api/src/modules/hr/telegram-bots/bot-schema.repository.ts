@@ -1,3 +1,8 @@
+/**
+ * @module bot-schema.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable, Logger } from '@nestjs/common';
 import { ensureBotTables } from '@common/database/ddl-migrations';

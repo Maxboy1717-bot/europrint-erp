@@ -1,3 +1,8 @@
+/**
+ * @module upload
+ * @description React UI component.
+ */
+
 import { getAuthHeaders } from '@/lib/queryClient';
 
 export interface UploadResult {
@@ -24,10 +29,14 @@ export async function uploadFile(
   if (!res.ok) throw new Error(`Upload URL request failed: HTTP ${res.status}`);
   const data = (await res.json()) as { uploadUrl: string; publicUrl: string; fileKey: string; thumbnailUrl: string | null };
 
+  // Send as multipart/form-data — @fastify/multipart handles this natively,
+  // no content-type parser registration needed. Do NOT set Content-Type manually;
+  // the browser sets it with the correct boundary automatically.
+  const formData = new FormData();
+  formData.append('file', file, file.name);
   const uploadRes = await fetch(data.uploadUrl, {
     method: 'PUT',
-    headers: { 'Content-Type': file.type || 'application/octet-stream' },
-    body: file,
+    body: formData,
   });
   if (!uploadRes.ok) throw new Error(`Upload failed: HTTP ${uploadRes.status}`);
 

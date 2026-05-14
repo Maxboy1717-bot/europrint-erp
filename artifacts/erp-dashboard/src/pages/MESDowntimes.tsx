@@ -1,3 +1,8 @@
+/**
+ * @module MESDowntimes
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -13,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Clock, CheckCircle, Calendar, Timer, Plus, StopCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EPStatusPill } from "@/components/ep";
 
 interface Downtime {
   id: string;
@@ -101,7 +107,7 @@ export default function MESDowntimes() {
   const topReasons = Object.entries(reasonCounts).sort(([, a], [, b]) => b - a).slice(0, 5);
 
   return (
-    <div className="flex-1 overflow-auto p-5 space-y-5">
+    <div className="flex flex-col flex-1 overflow-auto p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">To'xtashlar</h1>
@@ -122,12 +128,12 @@ export default function MESDowntimes() {
       </div>
 
       {/* KPI kartalar */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { label: "Jami to'xtash", value: downtimes.length, icon: AlertTriangle, color: "text-amber-600" },
+          { label: "Jami to'xtash", value: downtimes.length, icon: AlertTriangle, color: "text-[var(--ep-yellow)]" },
           { label: "Jami vaqt", value: `${totalMins} daq`, icon: Timer, color: "text-foreground" },
-          { label: "Rejalanmagan", value: unplanned.length, icon: AlertTriangle, color: "text-red-600" },
-          { label: "Rejalanmagan vaqt", value: `${unplannedMins} daq`, icon: Clock, color: "text-red-600" },
+          { label: "Rejalanmagan", value: unplanned.length, icon: AlertTriangle, color: "text-[var(--ep-red)]" },
+          { label: "Rejalanmagan vaqt", value: `${unplannedMins} daq`, icon: Clock, color: "text-[var(--ep-red)]" },
         ]).map(kpi => (
           <Card key={kpi.label}>
             <CardContent className="p-4">
@@ -150,7 +156,7 @@ export default function MESDowntimes() {
             {(Array.isArray(topReasons) ? topReasons : []).map(([code, cnt]) => (
               <div key={code} className="flex items-center justify-between gap-2">
                 <span className="text-xs text-foreground truncate flex-1">{REASON_LABELS[code] || code}</span>
-                <Badge variant="secondary" className="text-[10px] shrink-0">{cnt}</Badge>
+                <EPStatusPill tone="neutral" className="text-[10px] shrink-0">{cnt}</EPStatusPill>
               </div>
             ))}
             {topReasons.length === 0 && (
@@ -162,7 +168,7 @@ export default function MESDowntimes() {
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center gap-2">
             <Select value={filter} onValueChange={(v) => setFilter(v as "all" | "planned" | "unplanned")}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-48 h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -175,9 +181,9 @@ export default function MESDowntimes() {
           </div>
 
           {isLoading ? (
-            <div className="space-y-2">{([1, 2, 3, 4, 5]).map(i => <Skeleton key={`k-${i}`} className="h-16 w-full" />)}</div>
+            <div className="space-y-2">{([1, 2, 3, 4, 5]).map(i => <Skeleton key={`k-${i}`} className="h-16 w-full rounded-lg" />)}</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               <CheckCircle className="w-10 h-10 mx-auto mb-2 text-emerald-400" />
               <p>To'xtash topilmadi</p>
             </div>
@@ -208,8 +214,8 @@ export default function MESDowntimes() {
                         </p>
                         <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                           <span className={cn("text-[10px] font-medium",
-                            isActive ? "text-red-600 font-bold" :
-                            d.isPlanned ? "text-blue-600" : "text-red-600"
+                            isActive ? "text-[var(--ep-red)] font-bold" :
+                            d.isPlanned ? "text-[var(--ep-blue)]" : "text-[var(--ep-red)]"
                           )}>
                             {isActive ? "⚡ Aktiv" : d.isPlanned ? "Rejalashtirilgan" : "Rejalanmagan"}
                           </span>
@@ -256,19 +262,19 @@ export default function MESDowntimes() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>To'xtash hodisasini qayd etish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">To'xtash hodisasini qayd etish</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Sessiya ID</Label>
+            <div className="space-y-1">
+          <Label>Sessiya ID</Label>
               <Input
                 value={form.sessionId}
                 onChange={e => setForm(p => ({ ...p, sessionId: e.target.value }))}
                 placeholder="Sessiya raqami"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Sabab</Label>
+            <div className="space-y-1">
+          <Label>Sabab</Label>
               <Select value={form.reasonCode} onValueChange={v => setForm(p => ({ ...p, reasonCode: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -278,8 +284,8 @@ export default function MESDowntimes() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Izoh</Label>
+            <div className="space-y-1">
+          <Label>Izoh</Label>
               <Input
                 value={form.notes}
                 onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}

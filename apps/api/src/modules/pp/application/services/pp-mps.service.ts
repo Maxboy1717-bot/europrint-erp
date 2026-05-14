@@ -1,3 +1,8 @@
+/**
+ * @module pp-mps.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
@@ -111,9 +116,10 @@ export class PpMpsService {
     const map = new Map<string, Map<number, number>>();
     for (const r of rows.rows ?? []) {
       const pid = String(r['product_id']);
-      if (!map.has(pid)) map.set(pid, new Map());
+      let pidMap = map.get(pid);
+      if (!pidMap) { pidMap = new Map(); map.set(pid, pidMap); }
       const wk = safeNum(r['week_num']);
-      map.get(pid)!.set(wk, (map.get(pid)!.get(wk) ?? 0) + safeNum(r['qty']));
+      pidMap.set(wk, (pidMap.get(wk) ?? 0) + safeNum(r['qty']));
     }
     return map;
   }
@@ -126,13 +132,14 @@ export class PpMpsService {
     const groups = new Map<string, Array<{ weekNum: number; qty: number }>>();
     for (const r of rawItems) {
       const pid = String(r['product_id']);
-      if (!groups.has(pid)) groups.set(pid, []);
-      groups.get(pid)!.push({ weekNum: safeNum(r['week_num']), qty: safeNum(r['quantity']) });
+      let pidGroup = groups.get(pid);
+      if (!pidGroup) { pidGroup = []; groups.set(pid, pidGroup); }
+      pidGroup.push({ weekNum: safeNum(r['week_num']), qty: safeNum(r['quantity']) });
     }
     const result = new Map<string, { atp: number; canPromise: boolean }[]>();
     for (const [pid, entries] of groups) {
       // period = 0-based index relative to earliest week; weekNum drives committed-demand lookup
-      const mpsEntries = (entries ?? []).map((e, i) => ({ period: i, quantity: e.qty }));
+      const mpsEntries = (Array.isArray(entries) ? entries : []).map((e, i) => ({ period: i, quantity: e.qty }));
       const committedMap = committedByProduct.get(pid) ?? new Map<number, number>();
       // Map committed demand using actual week numbers (not sequential index)
       const committedOrders = entries
@@ -142,7 +149,7 @@ export class PpMpsService {
         productId: pid, onHand: onHandMap[pid] ?? 0, mpsEntries, committedOrders,
         periods: Math.max(mpsEntries.length, 1),
       });
-      result.set(pid, atpResult.ok ? (atpResult?.data?.periods ?? []).map((p) => ({ atp: p.atp, canPromise: p.canPromise })) : []);
+      result.set(pid, atpResult.ok ? (Array.isArray(atpResult?.data?.periods) ? atpResult?.data?.periods : []).map((p) => ({ atp: p.atp, canPromise: p.canPromise })) : []);
     }
     return result;
   }
@@ -152,7 +159,7 @@ export class PpMpsService {
     atpByProduct: Map<string, { atp: number; canPromise: boolean }[]>,
   ): MpsRow2[] {
     const productIdx = new Map<string, number>();
-    return (rawItems ?? []).map((r) => {
+    return (Array.isArray(rawItems) ? rawItems : []).map((r) => {
       const pid = String(r['product_id']);
       const idx = productIdx.get(pid) ?? 0;
       productIdx.set(pid, idx + 1);

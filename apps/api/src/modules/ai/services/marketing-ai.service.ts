@@ -1,3 +1,8 @@
+/**
+ * @module marketing-ai.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { AI_SHORT_MAX_TOKENS, AI_MAX_TOKENS_STANDARD, MAX_SHORT_TEXT } from '@common/constants/app.constants';
 /**
  * Marketing AI Service — Content generation, SEO, Ad copy, Sentiment analysis

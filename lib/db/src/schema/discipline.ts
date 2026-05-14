@@ -1,11 +1,17 @@
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date } from "drizzle-orm/pg-core";
+/**
+ * @module discipline
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
 
 export const disciplineRecords = pgTable("discipline_records", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   catalogCode: varchar("catalog_code", { length: 50 }),
   violationType: varchar("violation_type", { length: 100 }),
   disciplineType: varchar("discipline_type", { length: 30 }),
@@ -31,12 +37,17 @@ export const disciplineRecords = pgTable("discipline_records", {
   softDeletedAt: timestamp("soft_deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("discipline_records_status_chk", sql`${t.status} IN ('issued','appealed','overturned','expired','cancelled')`),
+  check("discipline_records_severity_chk", sql`${t.severity} IS NULL OR ${t.severity} IN ('minor','moderate','serious','critical')`),
+  check("discipline_records_fine_amount_chk", sql`${t.fineAmount} IS NULL OR ${t.fineAmount} >= 0`),
+  check("discipline_records_suspension_days_chk", sql`${t.suspensionDays} IS NULL OR ${t.suspensionDays} >= 0`),
+]);
 
 export const disciplineAppeals = pgTable("discipline_appeals", {
   id: serial("id").primaryKey(),
-  disciplineRecordId: integer("discipline_record_id").references(() => disciplineRecords.id).notNull(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  disciplineRecordId: integer("discipline_record_id").references(() => disciplineRecords.id, { onDelete: "cascade" }).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   appealDate: date("appeal_date").notNull(),
   appealReason: text("appeal_reason"),
   supportingDocumentUrl: text("supporting_document_url"),
@@ -46,7 +57,10 @@ export const disciplineAppeals = pgTable("discipline_appeals", {
   decisionNotes: text("decision_notes"),
   status: varchar("status", { length: 20 }).default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("discipline_appeals_status_chk", sql`${t.status} IN ('pending','under_review','approved','rejected')`),
+  check("discipline_appeals_decision_chk", sql`${t.decision} IS NULL OR ${t.decision} IN ('upheld','overturned','modified')`),
+]);
 
 export const insertDisciplineRecordSchema = createInsertSchema(disciplineRecords).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertDisciplineRecord = z.infer<typeof insertDisciplineRecordSchema>;

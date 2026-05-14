@@ -1,3 +1,8 @@
+/**
+ * @module TurnoverTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart as PieChartIcon, Activity, RefreshCw } from "lucide-react";
 import {
@@ -21,7 +26,7 @@ export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignation
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
-            <PieChartIcon className="h-4 w-4 text-blue-500" />
+            <PieChartIcon className="h-4 w-4 text-[var(--ep-blue)]" />
             Ketish Sabablari
           </CardTitle>
         </CardHeader>
@@ -47,11 +52,11 @@ export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignation
               <div key={idx} className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-                  <span className="text-sm text-on-surface-variant">{item.reason}</span>
+                  <span className="text-sm text-muted-foreground">{item.reason}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold">{item.count}</span>
-                  <span className="text-xs text-on-surface-variant w-10 text-right">
+                  <span className="text-xs text-muted-foreground w-10 text-right">
                     {((item.count / (totalResignations || 1)) * 100).toFixed(1)}%
                   </span>
                 </div>
@@ -64,7 +69,7 @@ export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignation
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
-            <Activity className="h-4 w-4 text-purple-500" />
+            <Activity className="h-4 w-4 text-[var(--ep-purple)]" />
             Oylik Trend
           </CardTitle>
         </CardHeader>

@@ -1,3 +1,8 @@
+/**
+ * @module not-found
+ * @description React page component. Route-level UI.
+ */
+
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

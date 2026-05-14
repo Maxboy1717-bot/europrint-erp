@@ -44,8 +44,19 @@ export function usePositionPermissions() {
     gcTime: GC_TIME_MS,
   });
 
+  // null  = not authenticated or query not yet resolved → fall back to role map
+  // data with modules:[] = authenticated, no position assigned → still fall back
+  // data with modules:[...] = position-based RBAC is active
+  const permissions = data ?? null;
+  const hasPosition = data != null && data.positionId !== null;
+  const isResolved = isAuthenticated === false || (!isLoading && !isError);
+
   return {
-    permissions: data ?? null,
+    permissions,
+    /** true when the backend returned a position assignment with module permissions */
+    hasPosition,
+    /** true when the query has either resolved or auth is not active (no pending state) */
+    isResolved,
     isLoading,
     isError,
     refetch,

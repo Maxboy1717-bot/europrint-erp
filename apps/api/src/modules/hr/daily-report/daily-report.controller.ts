@@ -1,7 +1,13 @@
+/**
+ * @module daily-report.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
+import { Controller, UseGuards, Get, HttpCode, HttpStatus, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors, Res } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
@@ -41,17 +47,15 @@ export class DailyReportController {
 
   @Post()
   async submit(@Body() body: SubmitReportDto) {
-    const metrics = body.metrics || (
-      (body.blockers || body.mood || body.productive_hours)
-        ? JSON.stringify({ blockers: body.blockers, mood: body.mood, productiveHours: body.productive_hours })
-        : undefined
-    );
     return unwrapOrInternal(await this.svc.submitReport({
-      employeeId: body.employee_id,
-      reportDate: body.report_date,
+      employeeId:     body.employee_id,
+      reportDate:     body.report_date,
       tasksCompleted: body.tasks_completed || body.completed_tasks || '',
-      metrics,
-      tomorrowPlan: body.tomorrow_plan || body.planned_tasks,
+      metrics:        body.metrics,
+      tomorrowPlan:   body.tomorrow_plan || body.planned_tasks,
+      blockers:       body.blockers,
+      mood:           body.mood,
+      productiveHours: body.productive_hours,
     }));
   }
 
@@ -80,4 +84,23 @@ export class DailyReportController {
 
   @Get('department')
   async getDepartmentReports() { return { data: [], total: 0 }; }
+
+  @Get()
+  async listReports(@Query('date') _date?: string, @Query('limit') _limit?: string) {
+    return { data: [], total: 0 };
+  }
+
+  @Get(':id/pdf')
+  async exportPdf(@Param('id', ParseIntPipe) id: number, @Res() reply: FastifyReply) {
+    const r = await this.svc.generatePdf(id);
+    if (!r.ok) {
+      await reply.status(404).send({ ok: false, error: r.error?.message ?? 'PDF yaratishda xatolik' });
+      return;
+    }
+    const filename = `daily-report-${id}-${_time.now().toISOString().split('T')[0]}.pdf`;
+    await reply
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="${filename}"`)
+      .send(Buffer.from(r.data));
+  }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module slider
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as SliderPrimitive from "@radix-ui/react-slider"
 

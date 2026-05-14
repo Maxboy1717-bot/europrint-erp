@@ -1,3 +1,8 @@
+/**
+ * @module CompetitorsTab
+ * @description React UI component.
+ */
+
 import { SdCompetitorsData } from "./sd-types";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +24,7 @@ import { KpiCard } from "./helpers";
 
 export function CompetitorsTab({ customerId, competitors }: { customerId: number; competitors: SdCompetitorsData }) {
   const [open, setOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -62,23 +69,23 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <KpiCard icon={Swords} label="Raqobatchilar" value={String(items.length)}
-          gradient="from-slate-500 to-gray-500" />
+          gradient="" />
         <KpiCard icon={BarChart2} label="Raqobat ulushi" value={`${Math.round(competitors.totalCompetitorShare || 0)}%`}
-          gradient="from-rose-500 to-pink-500" />
-        <KpiCard icon={Trophy} label="Bizning ulush" value={`${Math.round(competitors.ourShare || 100)}%`} color="text-emerald-600"
-          gradient="from-emerald-500 to-teal-500" />
+          gradient="" />
+        <KpiCard icon={Trophy} label="Bizning ulush" value={`${Math.round(competitors.ourShare || 100)}%`} color="text-[var(--ep-green)]"
+          gradient="" />
       </div>
 
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0"
+            <Button size="sm" className="bg-primary text-white border-0"
               data-testid="btn-add-competitor">
               <Plus className="h-4 w-4 mr-1" />Raqobatchi qo'shish
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Raqobatchi qo'shish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Raqobatchi qo'shish</DialogTitle></DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-3">
                 <FormField control={form.control} name="competitorName" render={({ field }) => (
@@ -86,7 +93,7 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
                     <FormControl><Input {...field} data-testid="input-competitor-name" /></FormControl>
                     <FormMessage /></FormItem>
                 )} />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FormField control={form.control} name="productType" render={({ field }) => (
                     <FormItem><FormLabel>Mahsulot turi</FormLabel>
                       <FormControl><Input {...field} /></FormControl></FormItem>
@@ -146,7 +153,7 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
                   {c.notes && <p className="text-xs text-muted-foreground mt-1">{c.notes}</p>}
                 </div>
                 <Button variant="ghost" size="icon" className="shrink-0"
-                  onClick={() => deleteMutation.mutate(c.id)}
+                  onClick={() => setConfirmDeleteId(c.id)}
                   data-testid={`btn-delete-competitor-${c.id}`}>
                   <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive transition-colors" />
                 </Button>
@@ -155,6 +162,17 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
           );
         })}
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
+        title="Raqobatchi ma'lumotini o'chirish"
+        description="Ushbu raqobatchi yozuvini o'chirishni tasdiqlaysizmi?"
+        confirmText="O'chirish"
+        cancelText="Bekor qilish"
+        variant="destructive"
+        onConfirm={() => { if (confirmDeleteId !== null) deleteMutation.mutate(confirmDeleteId); }}
+      />
     </div>
   );
 }

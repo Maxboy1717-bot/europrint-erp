@@ -1,3 +1,8 @@
+/**
+ * @module wms.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Stock } from '../aggregates/stock.aggregate';
 import { Result, Ok, Err } from '@common/result';
 
@@ -10,7 +15,7 @@ export interface IWmsRepository {
   ): Promise<Result<Stock[]>>;
   getFefoStock(materialId: number, warehouseId: number): Promise<Result<Stock[]>>;
   reserveMaterial(materialId: number, warehouseId: number, amount: number): Promise<Result<void>>;
-  issueGoods(materialId: number, warehouseId: number, amount: number): Promise<Result<void>>;
+  issueGoods(materialId: number, warehouseId: number, amount: number, reservationId?: number | null): Promise<Result<void>>;
   receiveFg(materialId: number, warehouseId: number, amount: number): Promise<Result<void>>;
   getAllStockByStatus(warehouseId: number): Promise<Result<Stock[]>>;
   softDeleteStock(id: number, deletedBy: number | null, deletedAt?: Date): Promise<Result<void>>;

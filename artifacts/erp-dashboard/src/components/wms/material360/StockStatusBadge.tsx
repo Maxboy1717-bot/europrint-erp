@@ -1,3 +1,8 @@
+/**
+ * @module StockStatusBadge
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 
 export function StockStatusBadge({ status }: { status: string }) {

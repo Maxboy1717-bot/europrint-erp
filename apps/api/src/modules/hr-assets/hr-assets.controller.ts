@@ -1,3 +1,8 @@
+/**
+ * @module hr-assets.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Controller, Get, Post, Put, Patch, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
@@ -10,6 +15,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { HrAssetsService } from './hr-assets.service';
 import { z } from 'zod';
 

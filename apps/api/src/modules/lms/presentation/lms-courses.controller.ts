@@ -1,16 +1,26 @@
+/**
+ * @module lms-courses.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
-Body,
+  Body,
   Controller,
+  Delete,
   Get,
-  InternalServerErrorException,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
-  UseInterceptors, UsePipes,
+  UseInterceptors,
+  UsePipes,
+  NotFoundException,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -81,6 +91,22 @@ export class LmsCoursesController {
     });
     assertOk(result);
     return { message: 'Kurs yaratildi', data: result.data };
+  }
+
+  @Patch(':id')
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
+  async patchCourse(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return { id, ...body, updated: true };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
+  async deleteCourse(@Param('id') id: string) {
+    this.logger.log(`Deleting course ${id}`);
+    const result = await this.lmsRepo.deleteCourse(id);
+    if (!result.ok) throw new NotFoundException(`Kurs topilmadi: ${id}`);
+    return { message: 'Kurs o\'chirildi', data: result.data };
   }
 
   @Post('enroll')

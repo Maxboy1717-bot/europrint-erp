@@ -1,3 +1,8 @@
+/**
+ * @module RecruitingHeaderActions
+ * @description React UI component.
+ */
+
 import { UseMutationResult } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,21 +45,21 @@ export function RecruitingHeaderActions({
 }: RecruitingHeaderActionsProps) {
   return (
     <div className="flex items-center gap-2">
-      {urgentVacancyCount > 0 && <Badge className="bg-red-500 text-white gap-1"><AlertTriangle className="w-3 h-3" />{urgentVacancyCount} SHOSHILINCH</Badge>}
+      {urgentVacancyCount > 0 && <Badge className="bg-[var(--ep-red)] text-white gap-1"><AlertTriangle className="w-3 h-3" />{urgentVacancyCount} SHOSHILINCH</Badge>}
       <Input data-testid="input-search-candidates" placeholder="Ism yoki telefon..." value={search} onChange={e => setSearch(e.target.value)} className="w-48 h-9" />
       <Button data-testid="button-create-vacancy" variant="outline" onClick={() => setCreateVacancyOpen(true)} className="border-primary/40 text-primary hover:bg-primary/10">
         <Briefcase className="w-4 h-4 mr-1" />Yangi vakansiya
       </Button>
       <Dialog open={createVacancyOpen} onOpenChange={setCreateVacancyOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Yangi vakansiya yaratish</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md p-6">
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi vakansiya yaratish</DialogTitle></DialogHeader>
           <p className="text-xs text-muted-foreground -mt-2">Asosiy ma'lumotlarni kiriting. Saqlangandan so'ng Xodim Portreti wizardi ochiladi.</p>
           <div className="flex flex-col gap-3 py-2">
             <div><Label className="text-xs mb-1 block">Lavozim nomi <span className="text-red-400">*</span></Label><Input data-testid="input-vacancy-title" placeholder="Masalan: Marketing menejer" value={newVacancyForm.title} onChange={e => setNewVacancyForm(p => ({ ...p, title: e.target.value }))} /></div>
             <div>
               <Label className="text-xs mb-1 block">Vakansiya turi</Label>
               <Select value={newVacancyForm.vacancy_type} onValueChange={v => setNewVacancyForm(p => ({ ...p, vacancy_type: v }))}>
-                <SelectTrigger data-testid="select-vacancy-type"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-vacancy-type" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="STANDARD">Standart (15 ish kun)</SelectItem>
                   <SelectItem value="INTERNAL">Ichki (5 ish kun)</SelectItem>
@@ -74,11 +79,11 @@ export function RecruitingHeaderActions({
         </DialogContent>
       </Dialog>
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <Button data-testid="button-add-candidate" onClick={() => setAddOpen(true)} className="bg-gradient-to-br from-primary to-primary-dim text-on-primary border-none">
+        <Button data-testid="button-add-candidate" onClick={() => setAddOpen(true)} className="bg-primary text-primary-foreground border-none">
           <Plus className="w-4 h-4 mr-1" />Yangi nomzod
         </Button>
         <DialogContent>
-          <DialogHeader><DialogTitle>Yangi nomzod qo'shish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi nomzod qo'shish</DialogTitle></DialogHeader>
           <div className="flex flex-col gap-3 py-2">
             <Input data-testid="input-candidate-name" placeholder="To'liq ism *" value={newForm.fullName} onChange={e => setNewForm(p => ({ ...p, fullName: e.target.value }))} />
             <Input data-testid="input-candidate-phone" placeholder="Telefon raqami *" value={newForm.phone} onChange={e => setNewForm(p => ({ ...p, phone: e.target.value }))} />
@@ -86,7 +91,7 @@ export function RecruitingHeaderActions({
             <div>
               <Label className="text-xs mb-1 block">Vakansiya (ixtiyoriy)</Label>
               <Select value={newForm.vacancyId} onValueChange={v => setNewForm(p => ({ ...p, vacancyId: v }))}>
-                <SelectTrigger data-testid="select-candidate-vacancy"><SelectValue placeholder="Vakansiyani tanlang" /></SelectTrigger>
+                <SelectTrigger data-testid="select-candidate-vacancy" className="h-9"><SelectValue placeholder="Vakansiyani tanlang" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Vakansiya tanlanmagan</SelectItem>
                   {(Array.isArray(openVacancies) ? openVacancies : []).map(v => <SelectItem key={v.id} value={String(v.id)}>{v.is_urgent ? "🔴 " : ""}{v.title}</SelectItem>)}
@@ -94,7 +99,7 @@ export function RecruitingHeaderActions({
               </Select>
             </div>
             <Select value={newForm.source} onValueChange={v => setNewForm(p => ({ ...p, source: v }))}>
-              <SelectTrigger data-testid="select-candidate-source"><SelectValue placeholder="Manba" /></SelectTrigger>
+              <SelectTrigger data-testid="select-candidate-source" className="h-9"><SelectValue placeholder="Manba" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="OTHER">Qo'lda kiritildi</SelectItem>
                 <SelectItem value="TELEGRAM">Telegram</SelectItem>

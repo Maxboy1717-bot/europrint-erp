@@ -1,18 +1,35 @@
+/**
+ * @module director.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 import { MAX_NOTES_LENGTH, MAX_SHORT_TEXT } from '@common/constants/app.constants';
 
 export const CoordinationCreateDoklaSchema = z.object({
-  title:       z.string().min(1).max(MAX_SHORT_TEXT),
-  description: z.string().max(MAX_NOTES_LENGTH).optional(),
-  assignee_id: z.number().int().positive().optional(),
-  due_date:    z.string().optional(),
-});
+  // accept both 'title' and 'subject' — frontend uses 'subject'
+  title:         z.string().min(1).max(MAX_SHORT_TEXT).optional(),
+  subject:       z.string().min(1).max(MAX_SHORT_TEXT).optional(),
+  description:   z.string().max(MAX_NOTES_LENGTH).optional(),
+  problem:       z.string().max(MAX_NOTES_LENGTH).optional(),
+  result:        z.string().max(MAX_NOTES_LENGTH).optional(),
+  proposal:      z.string().max(MAX_NOTES_LENGTH).optional(),
+  council_level: z.union([z.string(), z.number()]).optional(),
+  assignee_id:   z.number().int().positive().optional(),
+  due_date:      z.string().optional(),
+}).refine(d => !!(d.title || d.subject), { message: 'title yoki subject majburiy' });
 export type CoordinationCreateDoklaDto = z.infer<typeof CoordinationCreateDoklaSchema>;
 
+// Separate update schemas for dokla vs rasporyazhenie
 export const CoordinationUpdateDoklaSchema = z.object({
-  status: z.enum(['assigned', 'in_progress', 'done', 'overdue']).optional(),
+  status: z.enum(['sent', 'read', 'resolved']).optional(),
 });
 export type CoordinationUpdateDoklaDto = z.infer<typeof CoordinationUpdateDoklaSchema>;
+
+export const CoordinationUpdateRaspSchema = z.object({
+  status: z.enum(['assigned', 'in_progress', 'done', 'overdue']).optional(),
+});
+export type CoordinationUpdateRaspDto = z.infer<typeof CoordinationUpdateRaspSchema>;
 
 export const CoordinationMarkDoneSchema = z.object({
   note: z.string().max(MAX_NOTES_LENGTH).nullish(),
@@ -20,13 +37,15 @@ export const CoordinationMarkDoneSchema = z.object({
 export type CoordinationMarkDoneDto = z.infer<typeof CoordinationMarkDoneSchema>;
 
 export const CoordinationCreateRaspSchema = z.object({
-  title:       z.string().min(1).max(MAX_SHORT_TEXT),
+  // accept both 'title' and 'task' — frontend uses 'task'
+  title:       z.string().min(1).max(MAX_SHORT_TEXT).optional(),
+  task:        z.string().min(1).max(MAX_SHORT_TEXT).optional(),
   description: z.string().max(MAX_NOTES_LENGTH).optional(),
   deadline:    z.string().optional(),
   assignee_id: z.number().int().positive().optional(),
   to_user:     z.string().optional(),
-  priority:    z.enum(['low', 'normal', 'high', 'urgent']).optional(),
-});
+  priority:    z.enum(['low', 'normal', 'high', 'urgent', 'medium']).optional(),
+}).refine(d => !!(d.title || d.task), { message: 'title yoki task majburiy' });
 export type CoordinationCreateRaspDto = z.infer<typeof CoordinationCreateRaspSchema>;
 
 export const KaizenCreateSuggestionSchema = z.object({

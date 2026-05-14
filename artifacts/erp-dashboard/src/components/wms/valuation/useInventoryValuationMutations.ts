@@ -1,3 +1,8 @@
+/**
+ * @module useInventoryValuationMutations
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

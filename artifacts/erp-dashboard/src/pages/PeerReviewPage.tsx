@@ -1,3 +1,8 @@
+/**
+ * @module PeerReviewPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Users, TrendingUp, BarChart3, CheckCircle2 } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
 const CURRENT_USER_ID = 1;
 
@@ -89,9 +95,9 @@ export default function PeerReviewPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
-        <Star className="h-5 w-5 text-yellow-500" />
+        <Star className="h-5 w-5 text-[var(--ep-yellow)]" />
         <h1 className="font-semibold text-base">360° Kunlik Baholash</h1>
-        <Badge variant="secondary">{pending.length} kutilmoqda</Badge>
+        <EPStatusPill tone="neutral">{pending.length} kutilmoqda</EPStatusPill>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-5">
@@ -102,22 +108,22 @@ export default function PeerReviewPage() {
           </TabsList>
 
           <TabsContent value="review" className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-4 pb-3">
-                  <div className="text-2xl font-bold text-blue-600">{reviewable.length}</div>
+                  <div className="text-2xl font-bold text-[var(--ep-blue)]">{reviewable.length}</div>
                   <div className="text-xs text-muted-foreground">Jami xodimlar</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4 pb-3">
-                  <div className="text-2xl font-bold text-green-600">{reviewed.length}</div>
+                  <div className="text-2xl font-bold text-[var(--ep-green)]">{reviewed.length}</div>
                   <div className="text-xs text-muted-foreground">Baholangan (bugun)</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4 pb-3">
-                  <div className="text-2xl font-bold text-orange-600">{pending.length}</div>
+                  <div className="text-2xl font-bold text-[var(--ep-primary)]">{pending.length}</div>
                   <div className="text-xs text-muted-foreground">Baholanmagan</div>
                 </CardContent>
               </Card>
@@ -127,7 +133,7 @@ export default function PeerReviewPage() {
               <Card className="border-primary/40 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
+                    <Star className="h-4 w-4 text-[var(--ep-yellow)]" />
                     {selected.full_name} ni baholash
                     <Badge variant="outline" className="ml-auto">{selected.department_name || "—"}</Badge>
                   </CardTitle>
@@ -140,7 +146,7 @@ export default function PeerReviewPage() {
                   <div>
                     <p className="text-sm font-medium mb-1">
                       Sabab (kamida 30 belgi)
-                      <span className={`ml-2 text-xs ${reason.length >= 30 ? "text-green-600" : "text-orange-500"}`}>
+                      <span className={`ml-2 text-xs ${reason.length >= 30 ? "text-[var(--ep-green)]" : "text-[var(--ep-primary)]"}`}>
                         {reason.length}/30
                       </span>
                     </p>
@@ -199,7 +205,7 @@ export default function PeerReviewPage() {
                     {(Array.isArray(reviewed) ? reviewed : []).map((emp) => (
                       <div key={emp.id} className="flex items-center justify-between px-4 py-3 opacity-50">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-600">
+                          <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-[var(--ep-green)]">
                             {emp.full_name?.charAt(0)}
                           </div>
                           <div>
@@ -207,7 +213,7 @@ export default function PeerReviewPage() {
                             <p className="text-xs text-muted-foreground">{emp.department_name || "—"}</p>
                           </div>
                         </div>
-                        <Badge variant="secondary" className="text-green-600">
+                        <Badge variant="secondary" className="text-[var(--ep-green)]">
                           <CheckCircle2 className="h-3 w-3 mr-1" />Baholangan
                         </Badge>
                       </div>
@@ -228,7 +234,7 @@ export default function PeerReviewPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-blue-500" />
+                  <BarChart3 className="h-4 w-4 text-[var(--ep-blue)]" />
                   Bo'lim bo'yicha o'rtacha baho (so'nggi 30 kun)
                 </CardTitle>
               </CardHeader>
@@ -246,12 +252,12 @@ export default function PeerReviewPage() {
                           <span className="font-medium">{dept.department_name || "Noma'lum bo'lim"}</span>
                           <div className="flex items-center gap-3">
                             <span className="text-muted-foreground text-xs">{dept.review_count} ta baho</span>
-                            <span className="font-bold text-yellow-600">{parseFloat(dept.avg_rating).toFixed(1)} ⭐</span>
+                            <span className="font-bold text-[var(--ep-yellow)]">{parseFloat(dept.avg_rating).toFixed(1)} ⭐</span>
                           </div>
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full"
+                            className="h-full bg-yellow-500 rounded-full"
                             style={{ width: `${(parseFloat(dept.avg_rating) / 5) * 100}%` }}
                           />
                         </div>

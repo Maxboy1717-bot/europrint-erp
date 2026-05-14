@@ -1,7 +1,13 @@
+/**
+ * @module drizzle-attendance.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { db, runQuery, hrEmployees } from '@shared/db';
+import { face_embeddings } from '@shared/db';
 import { attendance } from '@europrint/schemas';
 import { sql, eq, and, count, desc, gte, lte, isNotNull } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
@@ -78,5 +84,60 @@ export class DrizzleAttendanceRepository implements IAttendanceRepository {
       this.logger.warn('findEmployeeByEmbedding failed: %s', (e as Error)?.message);
       return Err((e as Error)?.message || 'Embedding search failed');
     }
+  }
+
+  async findAllWithEmbeddings(): Promise<{ id: number; face_embedding: number[] | null }[]> {
+    const rows = await db
+      .select({ id: hrEmployees.id, face_embedding: hrEmployees.face_embedding })
+      .from(hrEmployees)
+      .where(isNotNull(hrEmployees.face_embedding));
+    return rows.map(r => ({ id: r.id, face_embedding: r.face_embedding as number[] | null }));
+  }
+
+  async saveEmployeeFaceEmbedding(
+    employeeId: number,
+    embedding:  number[],
+    confidence: number,
+    imageUrl?:  string,
+  ): Promise<{ id: number }> {
+    const [existing] = await db
+      .select({ face_embedding: hrEmployees.face_embedding })
+      .from(hrEmployees)
+      .where(eq(hrEmployees.id, employeeId))
+      .limit(1);
+
+    let finalEmbedding = embedding;
+    if (existing?.face_embedding) {
+      const old = existing.face_embedding as number[];
+      if (Array.isArray(old) && old.length === embedding.length) {
+        const weighted = old.map((v, i) => 0.7 * v + 0.3 * (embedding[i] ?? 0));
+        const norm = Math.sqrt(weighted.reduce((s, x) => s + x * x, 0));
+        finalEmbedding = norm > 0 ? weighted.map(x => x / norm) : weighted;
+      }
+    }
+
+    await db
+      .update(hrEmployees)
+      .set({ face_embedding: finalEmbedding, face_embedding_updated_at: _time.now() })
+      .where(eq(hrEmployees.id, employeeId));
+
+    await db
+      .update(face_embeddings)
+      .set({ is_active: false })
+      .where(and(eq(face_embeddings.employee_id, employeeId), eq(face_embeddings.is_active, true)));
+
+    const [inserted] = await db
+      .insert(face_embeddings)
+      .values({
+        employee_id: employeeId,
+        embedding:   finalEmbedding,
+        is_active:   true,
+        confidence:  String(confidence),
+        image_url:   imageUrl ?? null,
+      })
+      .returning({ id: face_embeddings.id });
+
+    if (!inserted) throw new Error('Failed to insert face_embedding record');
+    return { id: inserted.id };
   }
 }

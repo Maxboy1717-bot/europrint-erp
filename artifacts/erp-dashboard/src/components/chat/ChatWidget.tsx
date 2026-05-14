@@ -1,3 +1,8 @@
+/**
+ * @module ChatWidget
+ * @description React UI component.
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageCircle, X, Send, Search, ChevronLeft, Paperclip, Users, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +13,7 @@ import { getAuthHeaders } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStore, ChatRoom, ChatMessage } from "@/store/chatStore";
 import { useChatSocket, getSharedSocket } from "@/hooks/chat/useChatSocket";
+import { apiRequest } from '@/lib/queryClient';
 
 interface Employee {
   id: number;
@@ -160,12 +166,16 @@ export function ChatWidget() {
 
   const loadEmployees = useCallback(async (q?: string) => {
     try {
-      const res = await fetch(`/api/chat/employees${q ? `?search=${encodeURIComponent(q)}` : ""}`, {
-        credentials: "include",
-        headers: getAuthHeaders(),
-      });
+      const res = await apiRequest('GET', `/api/chat/employees${q ? `?search=${encodeURIComponent(q)}` : ''}`);
       if (res.ok) setEmployees(await res.json());
-    } catch {}
+    } catch (e) {
+      // WHY: failure here is non-critical — the employee list just stays
+      // empty. We surface a console warning in dev but never block the UI.
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn('ChatWidget loadEmployees failed:', e);
+      }
+    }
   }, []);
 
   const openNewChat = useCallback(() => {
@@ -203,7 +213,7 @@ export function ChatWidget() {
   return (
     <div className="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-2">
       {isOpen && (
-        <div className="w-[360px] h-[560px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="w-full sm:w-[360px] h-[560px] bg-background border border-border rounded-lg shadow-lg flex flex-col overflow-hidden">
           {view === "rooms" && (
             <>
               <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
@@ -280,7 +290,7 @@ export function ChatWidget() {
                             : "Xabar yo'q"}
                         </span>
                         {room.unreadCount > 0 && (
-                          <Badge className="ml-1 bg-[#ff5d2e] hover:bg-[#ff5d2e] text-white text-[10px] h-4 min-w-4 px-1 flex-shrink-0">
+                          <Badge className="ml-1 bg-primary text-primary-foreground text-[10px] h-4 min-w-4 px-1 flex-shrink-0">
                             {room.unreadCount > 99 ? "99+" : room.unreadCount}
                           </Badge>
                         )}
@@ -378,7 +388,7 @@ export function ChatWidget() {
                         return (
                           <div key={msg.id} className={cn("flex gap-2 mb-1", isMe ? "flex-row-reverse" : "flex-row")}>
                             <div className={cn("w-7 flex-shrink-0", isMe && "hidden")} />
-                            <span className="text-xs italic text-muted-foreground/60 px-3 py-1.5 bg-muted/30 rounded-2xl">
+                            <span className="text-xs italic text-muted-foreground/60 px-3 py-1.5 bg-muted/30 rounded-lg">
                               Xabar o'chirildi
                             </span>
                           </div>
@@ -395,7 +405,7 @@ export function ChatWidget() {
                               <span className="text-[11px] text-muted-foreground ml-1 mb-0.5">{msg.senderName}</span>
                             )}
                             <div className={cn(
-                              "px-3 py-1.5 rounded-2xl text-sm",
+                              "px-3 py-1.5 rounded-lg text-sm",
                               isMe
                                 ? "bg-primary text-primary-foreground rounded-tr-sm"
                                 : "bg-background border border-border rounded-tl-sm",
@@ -463,7 +473,7 @@ export function ChatWidget() {
           <div className="relative">
             <MessageCircle className="w-6 h-6" />
             {totalUnread > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#ff5d2e] text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                 {totalUnread > 99 ? "99+" : totalUnread}
               </span>
             )}

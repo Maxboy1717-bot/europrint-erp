@@ -1,3 +1,8 @@
+/**
+ * @module analytics.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Result } from '@common/result';
 import { AnalyticsRepository } from './analytics.repository';

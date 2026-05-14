@@ -78,5 +78,16 @@
   "healthCheck": "Проверка системы",
   "version": "Версия",
   "build": "Сборка",
-  "uptime": "Время работы"
+  "uptime": "Время работы",
+  "validate.stirFailed": "Ошибка STIR",
+  "validate.cardFailed": "Ошибка карты",
+  "validate.valid": "Корректно",
+  "validate.invalid": "Недопустимо",
+  "validate.title": "Заголовок",
+  "validate.description": "Описание",
+  "validate.stir": "stir",
+  "validate.stirLabel": "Stir Метка",
+  "validate.check": "check",
+  "validate.card": "card",
+  "validate.cardLabel": "Card Метка"
 }

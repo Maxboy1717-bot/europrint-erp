@@ -1,3 +1,8 @@
+/**
+ * @module QuickCreateModal
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -52,7 +57,7 @@ export function QuickCreateModal({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col" data-testid="quick-create-modal">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-6" data-testid="quick-create-modal">
         <DialogHeader>
           <DialogTitle data-testid="modal-title">
             {entityType === "lead" ? "Yangi lid yaratish" : "Yangi bitim yaratish"}

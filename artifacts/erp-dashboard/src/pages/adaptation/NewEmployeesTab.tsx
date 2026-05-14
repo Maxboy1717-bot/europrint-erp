@@ -1,3 +1,8 @@
+/**
+ * @module NewEmployeesTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -160,18 +165,16 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                 Xodim qo'shish
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl p-6">
               <DialogHeader>
-                <DialogTitle>
-                  {editingEmployee?.id ? "Ma'lumotni tahrirlash" : "Yangi xodim qo'shish"}
-                </DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold"> {editingEmployee?.id ? "Ma'lumotni tahrirlash" : "Yangi xodim qo'shish"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <Label>Xodim</Label>
                   <Controller control={form.control} name="userId" render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-user"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-user" className="h-9"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
                       <SelectContent>
                         {(Array.isArray(users) ? users : []).map((user: UserItem) => (
                           <SelectItem key={user.id} value={user.id}>{user.fullName} - {user.phone}</SelectItem>
@@ -185,7 +188,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                   <Label>Dastur (ixtiyoriy)</Label>
                   <Controller control={form.control} name="programId" render={({ field }) => (
                     <Select value={field.value ?? "none"} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-program"><SelectValue placeholder="Dasturni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-program" className="h-9"><SelectValue placeholder="Dasturni tanlang" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Dastur tanlanmagan</SelectItem>
                         {(Array.isArray(programs) ? programs : []).map((prog: AdaptationProgram) => (
@@ -199,7 +202,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                   <Label>Mentor (ixtiyoriy)</Label>
                   <Controller control={form.control} name="mentorId" render={({ field }) => (
                     <Select value={field.value ?? "none"} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-mentor"><SelectValue placeholder="Mentorni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-mentor" className="h-9"><SelectValue placeholder="Mentorni tanlang" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Mentor tanlanmagan</SelectItem>
                         {(Array.isArray(users) ? users : []).map((user: UserItem) => (
@@ -209,7 +212,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                     </Select>
                   )} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="startDate">Boshlanish sanasi</Label>
                     <Input id="startDate" type="date" {...form.register("startDate")} data-testid="input-start-date" />
@@ -220,12 +223,12 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                     <Input id="endDate" type="date" {...form.register("endDate")} data-testid="input-end-date" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Holat</Label>
                     <Controller control={form.control} name="status" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-status"><SelectValue /></SelectTrigger>
+                        <SelectTrigger data-testid="select-status" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="in_progress">Jarayonda</SelectItem>
                           <SelectItem value="completed">Yakunlangan</SelectItem>
@@ -251,7 +254,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Xodim</TableHead>
@@ -273,7 +276,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
               </TableRow>
             )}
             {(Array.isArray(employees) ? employees : []).map((emp: NewEmployeeResponse) => (
-              <TableRow key={emp.id}>
+              <TableRow key={emp.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium">{emp.employeeName}</TableCell>
                 <TableCell>
                   {emp.employeeDepartment && <div className="text-sm">{emp.employeeDepartment}</div>}
@@ -310,7 +313,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
   );

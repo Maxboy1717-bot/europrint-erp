@@ -1,3 +1,8 @@
+/**
+ * @module TemplatesDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -137,7 +142,7 @@ export function TemplatesDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -177,7 +182,7 @@ export function TemplatesDialog({
             <div>
               <Label>{t.fields.priority}</Label>
               <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
-                <SelectTrigger data-testid="select-template-priority">
+                <SelectTrigger data-testid="select-template-priority" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -222,8 +227,8 @@ export function TemplatesDialog({
 
             <ScrollArea className="flex-1">
               {paginatedTemplates.length > 0 ? (
-                <Table>
-                  <TableHeader>
+                <div className="ep-table-scroll"><Table>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       <TableHead>{t.templates.name}</TableHead>
                       <TableHead>{t.templates.taskTitle}</TableHead>
@@ -236,7 +241,7 @@ export function TemplatesDialog({
                     {(Array.isArray(paginatedTemplates) ? paginatedTemplates : []).map((tpl) => {
                       const pConfig = priorityConfig[tpl.priority as keyof typeof priorityConfig] || priorityConfig.normal;
                       return (
-                        <TableRow key={tpl.id} data-testid={`template-row-${tpl.id}`}>
+                        <TableRow key={tpl.id} data-testid={`template-row-${tpl.id}`} className="hover:bg-muted/40 transition-colors">
                           <TableCell className="font-medium">{tpl.name}</TableCell>
                           <TableCell>{tpl.title}</TableCell>
                           <TableCell>
@@ -298,9 +303,9 @@ export function TemplatesDialog({
                       );
                     })}
                   </TableBody>
-                </Table>
+                </Table></div>
               ) : (
-                <div className="text-center py-12 text-muted-foreground">
+                <div className="text-center py-12 text-[13px] text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>{t.templates.empty}</p>
                 </div>

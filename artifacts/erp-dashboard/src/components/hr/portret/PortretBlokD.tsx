@@ -1,3 +1,8 @@
+/**
+ * @module PortretBlokD
+ * @description React UI component.
+ */
+
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +52,7 @@ export function PortretBlokD({ toolReqs, onTraitChange, onOtherChange }: Portret
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-3 pt-2 border-t">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t">
         <div>
           <Label className="text-[10px] mb-1 block">IQ (min)</Label>
           <Slider min={1} max={10} step={1}

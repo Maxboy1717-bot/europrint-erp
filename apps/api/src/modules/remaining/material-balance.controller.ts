@@ -1,3 +1,8 @@
+/**
+ * @module material-balance.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';

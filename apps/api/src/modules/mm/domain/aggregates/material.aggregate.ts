@@ -1,3 +1,8 @@
+/**
+ * @module material.aggregate
+ * @description Source module. See exports for details.
+ */
+
 export class Material {
   constructor(public readonly id: string,
     public readonly materialCode: string,

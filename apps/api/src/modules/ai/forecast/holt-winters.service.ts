@@ -1,9 +1,15 @@
+/**
+ * @module holt-winters.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeAvg, safeDiv } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { ForecastService, ErrorMetrics } from './forecast.service';
 import { NelderMeadService } from './nelder-mead.service';
+import { HW_ALPHA_MIN, HW_ALPHA_MAX, FORECAST_HOLDOUT_FRACTION } from '../../../common/constants/business.constants';
 
 export interface HwParams {
   alpha: number;
@@ -27,9 +33,9 @@ function makeErr(msg: string): AppError {
  * TZ-07: Holt-Winters Triple Exponential Smoothing (Additive model)
  */
 const HW_NM_BOUNDS = [
-  { min: 0.01, max: 0.99 },
-  { min: 0.01, max: 0.99 },
-  { min: 0.01, max: 0.99 },
+  { min: HW_ALPHA_MIN, max: HW_ALPHA_MAX },
+  { min: HW_ALPHA_MIN, max: HW_ALPHA_MAX },
+  { min: HW_ALPHA_MIN, max: HW_ALPHA_MAX },
 ];
 const HW_NM_INIT = [0.3, 0.1, 0.3];
 
@@ -47,7 +53,7 @@ export class HoltWintersService {
   ): { fitted: number[]; predicted: number[]; metrics: ErrorMetrics } | null {
     const { alpha, beta, gamma, seasonLength: s } = params;
     const safeSeries = Array.isArray(series) ? series : [];
-    const y = (safeSeries ?? []).map(safeNum);
+    const y = (Array.isArray(safeSeries) ? safeSeries : []).map(safeNum);
 
     const firstSeason = y.slice(0, s);
     const secondSeason = y.slice(s, 2 * s);
@@ -126,7 +132,7 @@ export class HoltWintersService {
       ));
     }
 
-    const holdLen = Math.max(1, Math.floor(series.length * 0.2));
+    const holdLen = Math.max(1, Math.floor(series.length * FORECAST_HOLDOUT_FRACTION));
     const train   = series.slice(0, series.length - holdLen);
     const test    = series.slice(series.length - holdLen);
 
@@ -140,8 +146,8 @@ export class HoltWintersService {
         };
         const result = this._hwCore(train, holdLen, p);
         if (!result) return Infinity;
-        const residuals = (test ?? []).map((v, i) => v - (result.predicted[i] ?? 0));
-        const sumSq = (residuals ?? []).reduce((s, r) => s + r * r, 0);
+        const residuals = (Array.isArray(test) ? test : []).map((v, i) => v - (result.predicted[i] ?? 0));
+        const sumSq = (Array.isArray(residuals) ? residuals : []).reduce((s, r) => s + r * r, 0);
         return Math.sqrt(safeDiv(sumSq, test.length));
       },
       HW_NM_INIT,

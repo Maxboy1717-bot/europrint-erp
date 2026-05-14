@@ -1,3 +1,8 @@
+/**
+ * @module coordination.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Delete, Get, Logger, Param, Patch, Post, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
@@ -10,6 +15,7 @@ import { CoordinationService } from '../application/coordination.service';
 import {
   CoordinationCreateDoklaSchema, CoordinationCreateDoklaDto,
   CoordinationUpdateDoklaSchema, CoordinationUpdateDoklaDto,
+  CoordinationUpdateRaspSchema, CoordinationUpdateRaspDto,
   CoordinationMarkDoneSchema, CoordinationMarkDoneDto,
   CoordinationCreateRaspSchema, CoordinationCreateRaspDto,
 } from './dto/director.dto';
@@ -34,6 +40,11 @@ export class CoordinationController {
       { id: 4, name: 'HR Kengashi', type: 'hr' },
       { id: 5, name: 'Texnik Kengash', type: 'technical' },
     ];
+  }
+
+  @Get('baskets')
+  async getBaskets() {
+    return unwrapOrInternal(await this.svc.getBaskets());
   }
 
   @Post('dokla')
@@ -93,11 +104,27 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.markRaspDoneWithAuth(parseInt(id, 10), user.id, user.role, (body.note as string) ?? null));
   }
 
+  @Patch('dokla/:id/read')
+  async markDoklaRead(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: number; role: string },
+  ) {
+    return unwrapOrThrow(await this.svc.updateDoklaWithAuth(parseInt(id, 10), user.id, user.role, 'read'));
+  }
+
+  @Patch('dokla/:id/resolved')
+  async markDoklaResolved(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: number; role: string },
+  ) {
+    return unwrapOrThrow(await this.svc.updateDoklaWithAuth(parseInt(id, 10), user.id, user.role, 'resolved'));
+  }
+
   @Patch('rasporyazhenie/:id')
-  @UsePipes(new ZodValidationPipe(CoordinationUpdateDoklaSchema))
+  @UsePipes(new ZodValidationPipe(CoordinationUpdateRaspSchema))
   async updateRasporyazhenie(
     @Param('id') id: string,
-    @Body() body: CoordinationUpdateDoklaDto,
+    @Body() body: CoordinationUpdateRaspDto,
     @CurrentUser() user: { id: number; role: string },
   ) {
     const { status } = body as Record<string, string>;

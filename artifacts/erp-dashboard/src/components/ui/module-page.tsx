@@ -1,3 +1,8 @@
+/**
+ * @module module-page
+ * @description React UI component.
+ */
+
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 

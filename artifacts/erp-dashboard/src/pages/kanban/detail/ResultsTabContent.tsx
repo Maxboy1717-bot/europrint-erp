@@ -1,3 +1,8 @@
+/**
+ * @module ResultsTabContent
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -98,7 +103,7 @@ export function ResultsTabContent({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-5 w-5 ml-1 opacity-0 group-hover:opacity-100"
+                          className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100"
                           onClick={() => onDeleteResultFile(file.id)}
                         >
                           <X className="h-3 w-3" />

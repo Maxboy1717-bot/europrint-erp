@@ -1,3 +1,8 @@
+/**
+ * @module deal-won.event
+ * @description Domain event payload. Emitted via @nestjs/event-emitter or CQRS event bus.
+ */
+
 import { DomainEvent } from '@shared/domain/domain-event.base';
 
 export class DealWonEvent extends DomainEvent {

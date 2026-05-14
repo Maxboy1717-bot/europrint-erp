@@ -1,3 +1,8 @@
+/**
+ * @module AssignCourseDialog
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,9 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+import { EPLoader } from "@/components/ep";
 interface AssignCourseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -61,13 +67,13 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
 
   const assignMutation = useMutation({
     mutationFn: async (data: { userIds: string[], startDate: string, endDate: string }) => {
-      const promises = (data.userIds ?? []).map(userId =>
+      const promises = (Array.isArray(data.userIds) ? data.userIds : []).map(userId =>
         apiRequest("POST", "/api/assignments", {
           userId,
           courseId,
           startDate: data.startDate || null,
           endDate: data.endDate || null,
-        }).then(res => res.json())
+        })
       );
       return Promise.all(promises).catch((err: unknown) => {
         console.error('Kurs tayinlash xatosi:', err);
@@ -112,7 +118,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
   const toggleUser = (userId: string) => {
     setSelectedUsers(prev =>
       prev.includes(userId)
-        ? (prev ?? []).filter(id => id !== userId)
+        ? (Array.isArray(prev) ? prev : []).filter(id => id !== userId)
         : [...prev, userId]
     );
   };
@@ -127,18 +133,18 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-6">
         <DialogHeader>
-          <DialogTitle>Kursni tayinlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">Kursni tayinlash</DialogTitle>
           <DialogDescription>
             "{courseTitle}" kursini xodimlarga tayinlang
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">📅 Boshlanish sanasi</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="startDate">📅 Boshlanish sanasi</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -147,8 +153,8 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
                 data-testid="input-start-date"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">⏰ Tugash sanasi</Label>
+            <div className="space-y-1">
+          <Label htmlFor="endDate">⏰ Tugash sanasi</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -159,10 +165,10 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="deptFilter">Tashkiliy tuzilma bo'yicha filter</Label>
+          <div className="space-y-1">
+          <Label htmlFor="deptFilter">Tashkiliy tuzilma bo'yicha filter</Label>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-              <SelectTrigger data-testid="select-org-structure-filter">
+              <SelectTrigger data-testid="select-org-structure-filter" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -192,7 +198,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
 
           <ScrollArea className="h-[300px] border rounded-md p-4">
             {filteredUsers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-[13px] text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>Xodimlar topilmadi</p>
               </div>
@@ -241,7 +247,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
               Bekor qilish
             </Button>
             <Button type="submit" disabled={assignMutation.isPending} data-testid="button-submit-assign">
-              {assignMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {assignMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
               Tayinlash ({selectedUsers.length})
             </Button>
           </DialogFooter>

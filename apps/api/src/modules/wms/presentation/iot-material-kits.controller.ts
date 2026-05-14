@@ -1,3 +1,8 @@
+/**
+ * @module iot-material-kits.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Body, Controller, Get, HttpCode, HttpStatus,
   Param, Patch, Post, Query,

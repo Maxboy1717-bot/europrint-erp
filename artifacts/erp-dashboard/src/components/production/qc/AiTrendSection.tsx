@@ -1,3 +1,8 @@
+/**
+ * @module AiTrendSection
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,8 +41,8 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Brain className="h-5 w-5" /> AI Xulosasi
+            <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
+              <Brain className="h-4 w-4" /> AI Xulosasi
             </CardTitle>
             <CardDescription>Oxirgi 30 kunlik ma'lumotlar asosida shakllantirilgan</CardDescription>
           </CardHeader>
@@ -70,10 +75,10 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-2">
-                <div className="text-3xl font-bold text-red-600">
+                <div className="text-3xl font-bold text-[var(--ep-red)]">
                   {aiTrend?.totalBraks || 0} <span className="text-sm font-normal text-muted-foreground">kg</span>
                 </div>
-                <Badge variant="outline" className="mb-1 text-red-600 border-red-200 bg-red-50">
+                <Badge variant="outline" className="mb-1 text-[var(--ep-red)] border-red-200 bg-red-50">
                   <TrendingUp className="h-3 w-3 mr-1" /> +12.4%
                 </Badge>
               </div>
@@ -87,8 +92,8 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-2">
-                <div className="text-3xl font-bold text-green-600">96.8%</div>
-                <Badge variant="outline" className="mb-1 text-green-600 border-green-200 bg-green-50">
+                <div className="text-3xl font-bold text-[var(--ep-green)]">96.8%</div>
+                <Badge variant="outline" className="mb-1 text-[var(--ep-green)] border-green-200 bg-green-50">
                   <TrendingUp className="h-3 w-3 mr-1" /> +0.5%
                 </Badge>
               </div>
@@ -104,22 +109,22 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
             <CardTitle className="text-sm font-semibold">Brak Sabablari (AI Segmentatsiya)</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
                 <TableHead>Sabab</TableHead>
                 <TableHead className="text-right">Ulush (%)</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {aiTrend?.byReason ? Object.entries(aiTrend.byReason).map(([reason, val], i) => (
-                  <TableRow key={`k-${i}`}>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="text-sm">{reason}</TableCell>
                     <TableCell className="text-right font-medium">{val}%</TableCell>
                   </TableRow>
                 )) : (
-                  <TableRow><TableCell colSpan={2} className="text-center py-6 text-muted-foreground">Ma'lumotlar yo'q</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={2} className="text-center py-6 text-[13px] text-muted-foreground">Ma'lumotlar yo'q</TableCell></TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
 
@@ -128,25 +133,25 @@ export function AiTrendSection({ activeTab }: AiTrendSectionProps) {
             <CardTitle className="text-sm font-semibold">Xavf Darajasi Yuqori Bosqichlar</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
                 <TableHead>Ishlab chiqarish bosqichi</TableHead>
                 <TableHead className="text-right">Xavf darajasi</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {([
-                  { stage: "Gofra agregati", risk: "O'rta", color: "text-yellow-600" },
-                  { stage: "Pechka (Sukshka)", risk: "Yuqori", color: "text-red-600" },
-                  { stage: "Kesish va bishish", risk: "Past", color: "text-green-600" },
-                  { stage: "Fleksoprint", risk: "O'rta", color: "text-yellow-600" },
+                  { stage: "Gofra agregati", risk: "O'rta", color: "text-[var(--ep-yellow)]" },
+                  { stage: "Pechka (Sukshka)", risk: "Yuqori", color: "text-[var(--ep-red)]" },
+                  { stage: "Kesish va bishish", risk: "Past", color: "text-[var(--ep-green)]" },
+                  { stage: "Fleksoprint", risk: "O'rta", color: "text-[var(--ep-yellow)]" },
                 ]).map((r, i) => (
-                  <TableRow key={`k-${i}`}>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="text-sm">{r.stage}</TableCell>
                     <TableCell className={`text-right font-bold ${r.color}`}>{r.risk}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>

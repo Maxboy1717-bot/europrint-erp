@@ -1,3 +1,8 @@
+/**
+ * @module update-material.command
+ * @description Source module. See exports for details.
+ */
+
 export class UpdateMaterialCommand {
   constructor(public readonly materialId: string,
     public readonly name?: string,

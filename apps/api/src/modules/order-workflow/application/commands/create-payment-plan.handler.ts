@@ -1,3 +1,8 @@
+/**
+ * @module create-payment-plan.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
@@ -43,7 +48,7 @@ export class CreatePaymentPlanHandler implements ICommandHandler<CreatePaymentPl
       return Err(AppErr('VALIDATION', `Maksimum ${MAX_ENTRIES} ta entry ruxsat etiladi`));
     }
 
-    const totalPct = (command.entries ?? []).reduce((s, e) => s + e.percent, 0);
+    const totalPct = (Array.isArray(command.entries) ? command.entries : []).reduce((s, e) => s + e.percent, 0);
     if (Math.abs(totalPct - PCT_TOTAL) > 0.01) {
       return Err(AppErr('VALIDATION', `Foizlar yig'indisi 100 bo'lishi kerak, hozir: ${totalPct}`));
     }
@@ -60,7 +65,7 @@ export class CreatePaymentPlanHandler implements ICommandHandler<CreatePaymentPl
     );
     if (!deleteResult.ok) return Err(deleteResult.error);
 
-    const rows = (command.entries ?? []).map((e) => ({
+    const rows = (Array.isArray(command.entries) ? command.entries : []).map((e) => ({
       orderId:      command.orderId,
       sequence:     e.sequence,
       dueType:      e.dueType,

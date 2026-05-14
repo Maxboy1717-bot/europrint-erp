@@ -1,6 +1,11 @@
+/**
+ * @module hr-employees-docs
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, Position, admins, departments, positions, users } from "./core-schema";
@@ -76,6 +81,7 @@ export const employmentContracts = pgTable("employment_contracts", {
 }, (t) => [
   index("idx_employment_contracts_user_id").on(t.userId),
   index("idx_employment_contracts_is_active").on(t.isActive),
+  check("employment_contracts_type_chk", sql`${t.contractType} IN ('indefinite','fixed_term','seasonal','part_time')`),
 ]);
 
 

@@ -1,3 +1,8 @@
+/**
+ * @module ThemeToggleModern
+ * @description Source module. See exports for details.
+ */
+
 import { Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";

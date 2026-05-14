@@ -1,3 +1,8 @@
+/**
+ * @module wms-intelligence.spec
+ * @description Jest / Vitest test suite.
+ */
+
 jest.mock('../src/shared/db', () => ({
   db: {},
   runQuery: jest.fn(),

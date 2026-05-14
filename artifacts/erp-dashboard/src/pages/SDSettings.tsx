@@ -1,3 +1,8 @@
+/**
+ * @module SDSettings
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Save, RotateCcw } from "lucide-react";
 import { fmt } from "@/lib/sd-helpers";
+import { EPPageHeader } from "@/components/ep";
 
 const SETTING_GROUPS = [
   {
@@ -77,7 +83,7 @@ export default function SDSettings() {
 
   const saveMut = useMutation({
     mutationFn: (body: Record<string, number>) =>
-      apiRequest("PUT", "/api/sd/price-formulas", body).then(r => r.json()),
+      apiRequest("PUT", "/api/sd/price-formulas", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/price-formulas"] });
       setChanged(new Set());
@@ -117,22 +123,21 @@ export default function SDSettings() {
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-surface min-h-full">
-        <div className="text-center py-12 text-on-surface-variant">Yuklanmoqda...</div>
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+        <div className="text-center py-12 text-[13px] text-muted-foreground">Yuklanmoqda...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-8 bg-surface min-h-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant pb-6">
+    <div className="space-y-8 min-h-full">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            CRM & <span className="font-bold text-primary">Sotuv Sozlamalari</span>
-          </h1>
-          <p className="text-on-surface-variant mt-1">
-            Narx formulasi parametrlari — faqat super admin o'zgartiradi
-          </p>
+          <EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">CRM & Sotuv Sozlamalari</b></>}
+        title="CRM & Sotuv Sozlamalari"
+        subtitle="Narx formulasi parametrlari — faqat super admin o'zgartiradi"
+      />
         </div>
         <div className="flex gap-3">
           {changed.size > 0 && (
@@ -140,18 +145,18 @@ export default function SDSettings() {
               variant="outline" 
               onClick={handleReset} 
               data-testid="btn-reset-settings"
-              className="rounded-lg border-outline-variant text-on-surface hover:bg-surface-container-high"
+              className="rounded-lg border-border text-foreground hover:bg-muted gap-2"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />Bekor
+              <RotateCcw className="w-4 h-4" />Bekor
             </Button>
           )}
           <Button
             onClick={handleSave}
             disabled={saveMut.isPending || changed.size === 0}
             data-testid="btn-save-settings"
-            className="bg-gradient-to-br from-primary to-primary-dim text-white rounded-lg px-6 shadow-sm"
+            className="bg-primary text-white rounded-lg px-6 shadow-sm gap-2"
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4" />
             {saveMut.isPending ? "Saqlanmoqda..." : `Saqlash${changed.size > 0 ? ` (${changed.size})` : ""}`}
           </Button>
         </div>
@@ -166,9 +171,9 @@ export default function SDSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {(Array.isArray(SETTING_GROUPS) ? SETTING_GROUPS : []).map(group => (
-          <Card key={group.title} className="bg-surface-container-lowest border-none shadow-sm overflow-hidden">
-            <CardHeader className="pb-4 bg-surface-container-low/50">
-              <CardTitle className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+          <Card key={group.title} className="bg-card border-none shadow-sm overflow-hidden">
+            <CardHeader className="pb-4 bg-muted/40/50">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {group.title}
               </CardTitle>
             </CardHeader>
@@ -177,9 +182,9 @@ export default function SDSettings() {
                 {(Array.isArray(group.fields) ? group.fields : []).map(field => (
                   <div key={field.key} className="space-y-1.5">
                     <div className="flex justify-between items-baseline">
-                      <Label className="text-sm font-semibold text-on-surface">{field.label}</Label>
+                      <Label className="text-sm font-semibold text-foreground">{field.label}</Label>
                       {field.hint && (
-                        <span className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider bg-surface-container-high px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider bg-muted px-1.5 py-0.5 rounded">
                           {field.hint}
                         </span>
                       )}
@@ -190,7 +195,7 @@ export default function SDSettings() {
                         type="number"
                         value={getValue(field.key)}
                         onChange={e => handleChange(field.key, e.target.value)}
-                        className={`rounded-lg border-outline-variant bg-surface focus:ring-primary/20 ${
+                        className={`rounded-lg border-border bg-background focus:ring-primary/20 ${
                           changed.has(field.key) ? "border-primary ring-1 ring-primary/20 bg-primary/5" : ""
                         }`}
                         data-testid={`input-${field.key}`}
@@ -205,8 +210,8 @@ export default function SDSettings() {
                     </div>
                     
                     {settings?.[field.key] !== undefined && changed.has(field.key) && (
-                      <p className="text-[11px] font-medium text-on-surface-variant mt-1">
-                        Avvalgi qiymat: <span className="text-on-surface">{fmt(settings[field.key])} so'm</span>
+                      <p className="text-[11px] font-medium text-muted-foreground mt-1">
+                        Avvalgi qiymat: <span className="text-foreground">{fmt(settings[field.key])} so'm</span>
                       </p>
                     )}
                   </div>
@@ -217,21 +222,21 @@ export default function SDSettings() {
         ))}
       </div>
 
-      <div className="p-6 bg-surface-container-low rounded-2xl border border-outline-variant/30 space-y-3">
-        <div className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-2">
+      <div className="p-6 bg-muted/40 rounded-xl border border-border/30 space-y-3">
+        <div className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
           <div className="w-1 h-4 bg-primary rounded-full" />
           Eslatma
         </div>
         <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <li className="text-xs text-on-surface-variant leading-relaxed bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/20">
+          <li className="text-xs text-muted-foreground leading-relaxed bg-card p-3 rounded-xl border border-border/20">
             <span className="font-bold text-primary block mb-1">Mavjud ma'lumotlar:</span>
             Sozlamalar o'zgarganda mavjud taklifnomalar va buyurtmalar ta'sirlanmaydi
           </li>
-          <li className="text-xs text-on-surface-variant leading-relaxed bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/20">
+          <li className="text-xs text-muted-foreground leading-relaxed bg-card p-3 rounded-xl border border-border/20">
             <span className="font-bold text-primary block mb-1">Yangi hisob-kitoblar:</span>
             Faqat yangi taklifnomalar yangi narxlar bilan hisoblanadi
           </li>
-          <li className="text-xs text-on-surface-variant leading-relaxed bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/20">
+          <li className="text-xs text-muted-foreground leading-relaxed bg-card p-3 rounded-xl border border-border/20">
             <span className="font-bold text-primary block mb-1">Xavfsizlik:</span>
             Har bir o'zgarish tizimda logga yoziladi (kim, qachon, nimani)
           </li>

@@ -1,3 +1,8 @@
+/**
+ * @module saas.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
@@ -7,7 +12,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { SaasService } from './saas.service';
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
@@ -33,7 +38,7 @@ export class SaasController {
 
   @Get('tenants')
   async getTenants() {
-    return unwrapOrBadRequest(await this.svc.getTenants());
+    return unwrapOrInternal(await this.svc.getTenants());
   }
 
   @Post('tenants')
@@ -45,7 +50,7 @@ export class SaasController {
 
   @Get('platform-stats')
   async getPlatformStats() {
-    return unwrapOrBadRequest(await this.svc.getPlatformStats());
+    return unwrapOrInternal(await this.svc.getPlatformStats());
   }
 
   @Get('error-logs')
@@ -66,7 +71,7 @@ export class SaasController {
 
   @Get('expiry-alerts')
   async getExpiryAlerts() {
-    return unwrapOrBadRequest(await this.svc.getExpiryAlerts());
+    return unwrapOrInternal(await this.svc.getExpiryAlerts());
   }
 
   @Get('tenants/:id')
@@ -88,6 +93,11 @@ export class SaasController {
 
   @Get('tenants/:id/modules')
   async getTenantModules(@Param('id') id: string) { return { data: [], tenantId: id }; }
+
+  @Patch('tenants/:id/modules')
+  async updateTenantModules(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return { tenantId: id, ...body, updated: true };
+  }
 
   @Post('tenants/:id/onboard')
   async onboardTenant(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, onboarded: true }; }

@@ -1,3 +1,8 @@
+/**
+ * @module dashboard-query.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -80,5 +85,63 @@ export class DashboardQueryService {
       this.logger.error(`Open payroll count error: ${err}`);
       return Err('Open payroll count error');
     }
+  }
+
+  async getProductionSummary() {
+    const today = _time.now();
+    today.setHours(0, 0, 0, 0);
+    const [activePoResult, completedTodayResult, avgOeeResult] = await Promise.all([
+      this.getActivePoCount(),
+      this.getCompletedTodayCount(today),
+      this.getAverageOee(),
+    ]);
+    return {
+      activePoCount:  activePoResult.ok   ? activePoResult.data   : 0,
+      completedToday: completedTodayResult.ok ? completedTodayResult.data : 0,
+      avgOee:         avgOeeResult.ok     ? avgOeeResult.data     : 0,
+      generatedAt:    _time.now(),
+    };
+  }
+
+  async getFinanceSummary() {
+    const now              = _time.now();
+    const lastMonthStart   = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd     = new Date(now.getFullYear(), now.getMonth(), 0);
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [currentRevenueResult, lastMonthRevenueResult, topUnpaidResult, advancePendingResult] =
+      await Promise.all([
+        this.getMonthlyRevenue(currentMonthStart),
+        this.getMonthlyRevenue(lastMonthStart, lastMonthEnd),
+        this.getTopUnpaidInvoices(),
+        this.getAdvancePending(),
+      ]);
+
+    const currentRevenue   = currentRevenueResult.ok   ? currentRevenueResult.data   : 0;
+    const lastMonthRevenue = lastMonthRevenueResult.ok ? lastMonthRevenueResult.data : 0;
+    const revenueVsLastMonth = lastMonthRevenue > 0
+      ? Math.round(((currentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+      : 0;
+
+    return {
+      revenueVsLastMonth,
+      topUnpaidInvoices: topUnpaidResult.ok ? topUnpaidResult.data : [],
+      advancePending:    advancePendingResult.ok ? advancePendingResult.data : 0,
+      generatedAt:       _time.now(),
+    };
+  }
+
+  async getHrSummary() {
+    const today = _time.now();
+    today.setHours(0, 0, 0, 0);
+    const [attendanceTodayResult, openPayrollResult] = await Promise.all([
+      this.getAttendanceToday(today),
+      this.getOpenPayrollCount(),
+    ]);
+    return {
+      attendanceToday:  attendanceTodayResult.ok ? attendanceTodayResult.data : { attended: 0, total: 0 },
+      openPayrollCount: openPayrollResult.ok ? openPayrollResult.data : 0,
+      generatedAt:      _time.now(),
+    };
   }
 }

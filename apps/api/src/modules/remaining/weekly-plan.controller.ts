@@ -1,5 +1,10 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query, UseGuards, UseInterceptors, BadRequestException, NotFoundException, ForbiddenException, HttpStatus } from '@nestjs/common';
-import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
+/**
+ * @module weekly-plan.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { unwrapOrThrow, assertOk } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -49,9 +54,29 @@ export class WeeklyPlanController {
     return r.data;
   }
 
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: number; role: string },
+    @Body() body: CompatBodyDto,
+  ) {
+    const r = await this.svc.update(id, user, body);
+    assertOk(r);
+    return r.data;
+  }
+
   @Patch(':id/approve')
   async approve(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }) {
     const r = await this.svc.approve(id, user);
+    assertOk(r);
+    return r.data;
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin', 'super_admin', 'director', 'manager', 'department_head')
+  async deletePlan(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }) {
+    const r = await this.svc.deletePlan(id, user);
     assertOk(r);
     return r.data;
   }

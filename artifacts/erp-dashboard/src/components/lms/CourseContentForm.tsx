@@ -1,3 +1,8 @@
+/**
+ * @module CourseContentForm
+ * @description React UI component.
+ */
+
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -14,8 +19,8 @@ interface CourseContentFormProps {
 export function CourseContentForm({ formData, setFormData }: CourseContentFormProps) {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="description">Tavsif (O'zbek) *</Label>
+      <div className="space-y-1">
+          <Label htmlFor="description">Tavsif (O'zbek) *</Label>
         <Textarea
           id="description"
           placeholder="Kurs haqida batafsil ma'lumot..."
@@ -27,8 +32,8 @@ export function CourseContentForm({ formData, setFormData }: CourseContentFormPr
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="descriptionRu">Tavsif (Rus) *</Label>
+      <div className="space-y-1">
+          <Label htmlFor="descriptionRu">Tavsif (Rus) *</Label>
         <Textarea
           id="descriptionRu"
           placeholder="Подробное описание курса..."

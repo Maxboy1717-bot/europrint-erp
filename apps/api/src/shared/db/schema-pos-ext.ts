@@ -1,3 +1,8 @@
+/**
+ * @module schema-pos-ext
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable,
   uuid,

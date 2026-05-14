@@ -1,3 +1,8 @@
+/**
+ * @module schema-compat-4
+ * @description Source module. See exports for details.
+ */
+
 import { pgTable, uuid, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
 import z from 'zod';
 

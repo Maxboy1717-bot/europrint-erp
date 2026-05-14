@@ -1,3 +1,8 @@
+/**
+ * @module weekly-plan.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -96,6 +101,38 @@ export class WeeklyPlanService {
       const planData = (plan.data ?? {}) as Record<string, unknown>;
       if (!isManager && Number(planData['employee_id']) !== user.id) return Err("Ruxsat yo'q");
       return { plan };
+    });
+  }
+
+  async update(id: string, user: { id: number; role: string }, body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const planId = parseInt(id, 10);
+      if (isNaN(planId)) return Err("Noto'g'ri ID");
+      const planR = await this.repo.getOne(planId);
+      if (!planR.ok) throw new Error(planR.error.message);
+      const plan = planR.data as Record<string, unknown> | null;
+      if (!plan) return Err('Reja topilmadi');
+      const isManager = MANAGER_ROLES.includes(user.role);
+      if (!isManager && Number(plan['employee_id']) !== user.id) return Err("Ruxsat yo'q");
+      const updated = await this.repo.updatePlanById(planId, body);
+      if (!updated.ok) throw new Error(updated.error.message);
+      return { plan: updated.data };
+    });
+  }
+
+  async deletePlan(id: string, user: { id: number; role: string }): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const planId = parseInt(id, 10);
+      if (isNaN(planId)) return Err("Noto'g'ri ID");
+      const planR = await this.repo.getOne(planId);
+      if (!planR.ok) throw new Error(planR.error.message);
+      const plan = planR.data as Record<string, unknown> | null;
+      if (!plan) return Err('Reja topilmadi');
+      const isManager = MANAGER_ROLES.includes(user.role);
+      if (!isManager) return Err("Faqat menejer reja o'chira oladi");
+      const deleted = await this.repo.deletePlan(planId);
+      if (!deleted.ok || !deleted.data) return Err('Reja topilmadi yoki o\'chirib bo\'lmadi');
+      return { deleted: true, id: planId };
     });
   }
 

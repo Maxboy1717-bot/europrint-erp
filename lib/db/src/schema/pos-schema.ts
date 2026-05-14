@@ -1,8 +1,13 @@
+/**
+ * @module pos-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
 import {
   serial, pgTable, text, varchar, integer, boolean,
-  timestamp, jsonb, unique, uuid, pgEnum,
+  timestamp, jsonb, unique, uuid, pgEnum, check,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -23,7 +28,9 @@ export const posMovementTypes = pgTable("pos_movement_types", {
   requiresDocument: boolean("requires_document").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("pos_movement_types_dir_chk", sql`${t.direction} IN ('in','out','transfer','adjustment')`),
+]);
 
 export const insertPosMovementTypeSchema = createInsertSchema(posMovementTypes, {
   code: z.string().min(1),
@@ -127,7 +134,9 @@ export const inventoryBarcodeAssignments = pgTable("inventory_barcode_assignment
   printedBy: integer("printed_by").references(() => users.id, { onDelete: "set null" }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("inventory_barcode_type_chk", sql`${t.barcodeType} IN ('qr','ean13','code128','datamatrix')`),
+]);
 
 export const insertInventoryBarcodeAssignmentSchema = createInsertSchema(inventoryBarcodeAssignments, {
   barcode: z.string().min(1),
@@ -158,7 +167,9 @@ export const posMovements = pgTable("pos_movements", {
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("pos_movements_status_chk", sql`${t.status} IN ('draft','pending','approved','completed','cancelled')`),
+]);
 
 export const insertPosMovementSchema = createInsertSchema(posMovements, {
   movementNumber: z.string().min(1),

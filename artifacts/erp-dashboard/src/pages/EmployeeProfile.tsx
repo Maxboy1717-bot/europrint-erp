@@ -1,3 +1,8 @@
+/**
+ * @module EmployeeProfile
+ * @description React page component. Route-level UI.
+ */
+
 import { useParams, Link, useSearch } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect, lazy, Suspense } from "react";
@@ -13,7 +18,6 @@ import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Shield, ShieldCheck, ShieldAlert, KeyRound } from "lucide-react";
 
-import { ErrorState } from "@/components/ui/error-state";
 import { GsdGraph } from "@/components/GsdGraph";
 
 import type {
@@ -42,6 +46,7 @@ import { PasswordDialog } from "@/components/employee/dialogs/PasswordDialog";
 import { EditEmployeeDialog } from "@/components/employee/dialogs/EditEmployeeDialog";
 import { ProfileHeader } from "@/components/employee/ProfileHeader";
 import { TabNavigation } from "@/components/employee/TabNavigation";
+import { EPPageHeader } from "@/components/ep";
 
 const PersonalTab = lazy(() => import("./employee-profile/PersonalTab").then(m => ({ default: m.PersonalTab })));
 const WorkTab = lazy(() => import("./employee-profile/WorkTab").then(m => ({ default: m.WorkTab })));
@@ -61,16 +66,32 @@ const CorporateInventoryTab = lazy(() => import("./employee-profile/CorporateInv
 const MonthlyReportTab = lazy(() => import("./employee-profile/MonthlyReportTab").then(m => ({ default: m.MonthlyReportTab })));
 const FinanceTab = lazy(() => import("./employee-profile/FinanceTab").then(m => ({ default: m.FinanceTab })));
 const PerformanceTab = lazy(() => import("./employee-profile/PerformanceTab").then(m => ({ default: m.PerformanceTab })));
+const GoalsTab = lazy(() => import("./employee-profile/GoalsTab").then(m => ({ default: m.GoalsTab })));
+const OneOnOneTab = lazy(() => import("./employee-profile/OneOnOneTab").then(m => ({ default: m.OneOnOneTab })));
 const SafetyTab = lazy(() => import("./employee-profile/RemainingTabs").then(m => ({ default: m.SafetyTab })));
 const AssessmentTab = lazy(() => import("./employee-profile/AssessmentTab").then(m => ({ default: m.AssessmentTab })));
 const MachineOperatorTab = lazy(() => import("./employee-profile/MachineOperatorTab").then(m => ({ default: m.MachineOperatorTab })));
 
-const TabFallback = () => (<div className="space-y-4 py-4"><Skeleton className="h-24 w-full" /><Skeleton className="h-48 w-full" /></div>);
+const TabFallback = () => (<div className="space-y-4 py-4"><Skeleton className="h-24 w-full rounded-lg" /><Skeleton className="h-48 w-full rounded-lg" /></div>);
 const getInitials = (name: string) => (!name ? "?" : name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase());
 const ROLE_OPTIONS = [ { value: "employee", label: "Xodim" }, { value: "hr", label: "HR mutaxassisi" }, { value: "hr_manager", label: "HR menejer" }, { value: "manager", label: "Menejer" }, { value: "director", label: "Direktor" }, { value: "finance", label: "Moliya" }, { value: "finance_manager", label: "Moliya menejer" }, { value: "accountant", label: "Buxgalter" }, { value: "cfo", label: "CFO" }, { value: "warehouse", label: "Ombor" }, { value: "warehouse_manager", label: "Ombor menejer" }, { value: "production", label: "Ishlab chiqarish" }, { value: "production_manager", label: "Ishlab chiqarish menejer" }, { value: "sales", label: "Savdo" }, { value: "it", label: "IT" }, { value: "lms_manager", label: "LMS menejer" }, { value: "pp_manager", label: "PP menejer" }, { value: "qc_manager", label: "QC menejer" }, { value: "super_admin", label: "Super admin" }];
-const VALID_TABS = ["personal", "work", "documents", "discipline", "development", "adaptation", "career", "assets", "obligations", "attendance", "daily-reports", "finance", "performance", "hr-capital", "corporate-inventory", "monthly-report", "offboarding", "machine-operator"] as const;
+const VALID_TABS = ["personal", "work", "documents", "discipline", "development", "adaptation", "career", "assets", "obligations", "attendance", "daily-reports", "finance", "performance", "goals", "one-on-one", "hr-capital", "corporate-inventory", "monthly-report", "offboarding", "machine-operator"] as const;
 type TabValue = typeof VALID_TABS[number];
 function parseTabFromSearch(search: string): TabValue { const params = new URLSearchParams(search); const t = params.get("tab") as TabValue | null; return t && VALID_TABS.includes(t as TabValue) ? (t as TabValue) : "personal"; }
+
+// Normalises any API response to a plain array.
+// Handles: plain array, { data: [...] }, { items: [...] }, { rows: [...] }, { ok: true, data: [...] }
+function toArr<T>(json: unknown): T[] {
+  if (!json) return [];
+  if (Array.isArray(json)) return json as T[];
+  if (typeof json === 'object') {
+    const obj = json as Record<string, unknown>;
+    for (const key of ['data', 'items', 'rows', 'results']) {
+      if (Array.isArray(obj[key])) return obj[key] as T[];
+    }
+  }
+  return [];
+}
 
 export default function EmployeeProfile() {
   const { id } = useParams<{ id: string }>();
@@ -121,7 +142,7 @@ export default function EmployeeProfile() {
     enabled: !!id, 
     retry: false, 
     queryFn: async () => { 
-      const res = await fetch(`/api/employees/${id}/passport`, { credentials: 'include' }); 
+      const res = await apiRequest('GET', `/api/employees/${id}/passport`); 
       if (res.status === 404) return null; 
       if (!res.ok) throw new Error('Failed to fetch passport'); 
       return res.json(); 
@@ -140,65 +161,84 @@ export default function EmployeeProfile() {
   const { data: metrics } = useQuery<PerformanceMetric[]>({ queryKey: [`/api/erp/employee/${id}/metrics`], enabled: !!id });
   const { data: transfers } = useQuery<TransferRecord[]>({ queryKey: [`/api/erp/employee/${id}/transfer-history`], enabled: !!id });
   const { data: orgStructureData } = useQuery<{ primary: OrgStructureAssignment; all: OrgStructureAssignment[] }>({ queryKey: [`/api/employees/${id}/org-structure`], enabled: !!id });
-  const { data: contracts, isLoading: loadingContracts } = useQuery<EmploymentContract[]>({ queryKey: ['/api/employees', id, 'contracts'], enabled: !!id });
-  const { data: salaryHistory, isLoading: loadingSalaryHistory } = useQuery<SalaryHistoryRecord[]>({ queryKey: ['/api/employees', id, 'salary-history'], enabled: !!id });
-  const { data: bonuses, isLoading: loadingBonuses } = useQuery<BonusRecord[]>({ queryKey: ['/api/employees', id, 'bonuses'], enabled: !!id });
-  const { data: fines, isLoading: loadingFines } = useQuery<FineRecord[]>({ queryKey: ['/api/employees', id, 'fines'], enabled: !!id });
-  const { data: overtime, isLoading: loadingOvertime } = useQuery<OvertimeRecord[]>({ queryKey: ['/api/employees', id, 'overtime'], enabled: !!id });
-  const { data: cashAdvances, isLoading: loadingCashAdvances } = useQuery<CashAdvanceRecord[]>({ queryKey: ['/api/employees', id, 'cash-advances'], enabled: !!id });
-  const { data: leaveRequests, isLoading: loadingLeaveRequests } = useQuery<LeaveRequest[]>({ queryKey: ['/api/employees', id, 'leave-requests'], enabled: !!id });
-  const { data: sickLeaves, isLoading: loadingSickLeaves } = useQuery<SickLeaveRecord[]>({ queryKey: ['/api/employees', id, 'sick-leaves'], enabled: !!id });
-  const { data: businessTrips, isLoading: loadingBusinessTrips } = useQuery<BusinessTrip[]>({ queryKey: ['/api/employees', id, 'business-trips'], enabled: !!id });
+  const mkArrFn = <T,>(path: string) => async (): Promise<T[]> => {
+    const res = await fetch(path, { credentials: 'include', headers: getAuthHeaders() });
+    if (!res.ok) return [];
+    return toArr<T>(await res.json());
+  };
+  const { data: contracts, isLoading: loadingContracts } = useQuery<EmploymentContract[]>({ queryKey: ['/api/employees', id, 'contracts'], queryFn: mkArrFn<EmploymentContract>(`/api/employees/${id}/contracts`), enabled: !!id });
+  const { data: salaryHistory, isLoading: loadingSalaryHistory } = useQuery<SalaryHistoryRecord[]>({ queryKey: ['/api/employees', id, 'salary-history'], queryFn: mkArrFn<SalaryHistoryRecord>(`/api/employees/${id}/salary-history`), enabled: !!id });
+  const { data: bonuses, isLoading: loadingBonuses } = useQuery<BonusRecord[]>({ queryKey: ['/api/employees', id, 'bonuses'], queryFn: mkArrFn<BonusRecord>(`/api/employees/${id}/bonuses`), enabled: !!id });
+  const { data: fines, isLoading: loadingFines } = useQuery<FineRecord[]>({ queryKey: ['/api/employees', id, 'fines'], queryFn: mkArrFn<FineRecord>(`/api/employees/${id}/fines`), enabled: !!id });
+  const { data: overtime, isLoading: loadingOvertime } = useQuery<OvertimeRecord[]>({ queryKey: ['/api/employees', id, 'overtime'], queryFn: mkArrFn<OvertimeRecord>(`/api/employees/${id}/overtime`), enabled: !!id });
+  const { data: cashAdvances, isLoading: loadingCashAdvances } = useQuery<CashAdvanceRecord[]>({ queryKey: ['/api/employees', id, 'cash-advances'], queryFn: mkArrFn<CashAdvanceRecord>(`/api/employees/${id}/cash-advances`), enabled: !!id });
+  const { data: leaveRequests, isLoading: loadingLeaveRequests } = useQuery<LeaveRequest[]>({ queryKey: ['/api/employees', id, 'leave-requests'], queryFn: mkArrFn<LeaveRequest>(`/api/employees/${id}/leave-requests`), enabled: !!id });
+  const { data: sickLeaves, isLoading: loadingSickLeaves } = useQuery<SickLeaveRecord[]>({ queryKey: ['/api/employees', id, 'sick-leaves'], queryFn: mkArrFn<SickLeaveRecord>(`/api/employees/${id}/sick-leaves`), enabled: !!id });
+  const { data: businessTrips, isLoading: loadingBusinessTrips } = useQuery<BusinessTrip[]>({ queryKey: ['/api/employees', id, 'business-trips'], queryFn: mkArrFn<BusinessTrip>(`/api/employees/${id}/business-trips`), enabled: !!id });
   const { data: shiftSwaps, isLoading: loadingShiftSwaps } = useQuery<ShiftSwapRecord[]>({ 
     queryKey: ['/api/integration/swap-requests', id], 
     queryFn: async () => { 
-      const res = await fetch(`/api/integration/swap-requests?requestedBy=${id}`, { credentials: 'include' }); 
+      const res = await apiRequest('GET', `/api/integration/swap-requests?requestedBy=${id}`); 
       if (!res.ok) return []; 
       return res.json(); 
     }, 
     enabled: !!id 
   });
   const { data: zoneLogs, isLoading: loadingZoneLogs } = useQuery<ZoneTrackingLog[]>({ queryKey: ['/api/attendance/zone-logs', id], enabled: !!id });
-  const { data: skillGapData, isLoading: loadingSkillGap } = useQuery<SkillGapData>({ 
-    queryKey: ['/api/integration/skill-gap', id], 
-    queryFn: async () => { 
-      const res = await fetch(`/api/integration/skill-gap/${id}`, { credentials: 'include' }); 
-      if (!res.ok) return null; 
-      return res.json(); 
-    }, 
-    enabled: !!id 
+  const { data: skillGapData, isLoading: loadingSkillGap } = useQuery<SkillGapData>({
+    queryKey: ['/api/integration/skill-gap', id],
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/integration/skill-gap/${id}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      // Unwrap { ok: true, data: {...} } or { data: {...} } envelopes
+      const inner = (json?.ok === true && json?.data) ? json.data : (json?.data ?? json);
+      // Ensure gaps array is always defined
+      if (inner && !Array.isArray(inner.gaps)) inner.gaps = [];
+      return inner as SkillGapData;
+    },
+    enabled: !!id
   });
   const { data: mentorshipData, isLoading: loadingMentorship } = useQuery<MentorshipData>({ 
     queryKey: ['/api/integration/employee-mentorships', id], 
     queryFn: async () => { 
-      const res = await fetch(`/api/integration/employee-mentorships/${id}`, { credentials: 'include' }); 
+      const res = await apiRequest('GET', `/api/integration/employee-mentorships/${id}`); 
       if (!res.ok) return { asMentor: [], asMentee: [] }; 
       return res.json(); 
     }, 
     enabled: !!id 
   });
-  const { data: mesSummary, isLoading: loadingMes } = useQuery<MesSummary>({ 
-    queryKey: ['/api/integration/employee-mes-summary', id], 
-    queryFn: async () => { 
-      const res = await fetch(`/api/integration/employee-mes-summary/${id}?months=3`, { credentials: 'include' }); 
-      if (!res.ok) return null; 
-      return res.json(); 
-    }, 
-    enabled: !!id 
+  const { data: mesSummary, isLoading: loadingMes } = useQuery<MesSummary>({
+    queryKey: ['/api/integration/employee-mes-summary', id],
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/integration/employee-mes-summary/${id}?months=3`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);
+      if (!inner || typeof inner !== 'object') return null;
+      if (!inner.summary) inner.summary = { totalSessions: 0, completedSessions: 0, totalActual: 0, totalTarget: 0, totalDefects: 0, defectPercent: 0, avgOee: 0, goalAchievement: 0, totalRunningMinutes: 0, totalStoppedMinutes: 0, workTimeRatio: 0, totalStoppages: 0 };
+      return inner as MesSummary;
+    },
+    enabled: !!id
   });
-  const { data: wmsSummary, isLoading: loadingWms } = useQuery<WmsSummary>({ 
-    queryKey: ['/api/integration/employee-wms-summary', id], 
-    queryFn: async () => { 
-      const res = await fetch(`/api/integration/employee-wms-summary/${id}`, { credentials: 'include' }); 
-      if (!res.ok) return null; 
-      return res.json(); 
-    }, 
-    enabled: !!id 
+  const { data: wmsSummary, isLoading: loadingWms } = useQuery<WmsSummary>({
+    queryKey: ['/api/integration/employee-wms-summary', id],
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/integration/employee-wms-summary/${id}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);
+      if (!inner || typeof inner !== 'object') return null;
+      if (!inner.summary) inner.summary = { totalMovements: 0, totalIssued: 0, totalReturned: 0, totalWasted: 0, overallReturnRate: 0 };
+      if (!Array.isArray(inner.materials)) inner.materials = [];
+      return inner as WmsSummary;
+    },
+    enabled: !!id
   });
   const { data: payrollSummary } = useQuery<any | null>({ 
     queryKey: ['/api/employees', id, 'payroll-summary'], 
     queryFn: async () => { 
-      const res = await fetch(`/api/employees/${id}/payroll-summary`, { credentials: 'include' }); 
+      const res = await apiRequest('GET', `/api/employees/${id}/payroll-summary`); 
       if (!res.ok) return null; 
       return res.json(); 
     }, 
@@ -209,7 +249,7 @@ export default function EmployeeProfile() {
   const { data: corpInfoForMachine } = useQuery<{ is_machine_operator?: boolean }>({ 
     queryKey: ['/api/hr/employee-corp', id], 
     queryFn: async () => { 
-      const res = await fetch(`/api/hr/employee-corp/${id}`, { credentials: 'include' }); 
+      const res = await apiRequest('GET', `/api/hr/employee-corp/${id}`); 
       if (!res.ok) return {}; 
       return res.json(); 
     }, 
@@ -244,15 +284,18 @@ export default function EmployeeProfile() {
   const discStats = { warnings: disciplineData?.filter(d => d.type === "warning").length || 0, penalties: disciplineData?.filter(d => d.type === "penalty").length || 0, rewards: disciplineData?.filter(d => d.type === "reward").length || 0, totalPenaltyAmount: disciplineData?.filter(d => d.type === "penalty").reduce((s, d) => s + (d.amount || 0), 0) || 0, totalRewardAmount: disciplineData?.filter(d => d.type === "reward").reduce((s, d) => s + (d.amount || 0), 0) || 0 };
   const attPie = ([{ name: "Kelgan", value: attStats.present, color: "#10b981" }, { name: "Kelmagan", value: attStats.absent, color: "#ef4444" }, { name: "Kechikkan", value: attStats.late, color: "#f59e0b" }, { name: "Kasallik", value: attStats.sick, color: "#3b82f6" }, { name: "Ta'til", value: attStats.leave, color: "#8b5cf6" }]).filter(d => d.value > 0);
 
-  if (loadingEmployee) return <div className="p-6 space-y-6"><Skeleton className="h-48 w-full" /><div className="grid grid-cols-3 gap-6"><Skeleton className="h-32" /><Skeleton className="h-32" /><Skeleton className="h-32" /></div></div>;
+  if (loadingEmployee) return <div className="p-6 space-y-6"><Skeleton className="h-48 w-full rounded-lg" /><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><Skeleton className="h-32 rounded-lg" /><Skeleton className="h-32 rounded-lg" /><Skeleton className="h-32 rounded-lg" /></div></div>;
   if (isError || !employee) return <div className="h-screen flex items-center justify-center"><Card className="p-6">{t('employeeNotFound')}</Card></div>;
 
   return (
-    <div className="space-y-6 p-6 bg-surface min-h-screen">
-      <div className="flex items-center gap-4"><Button variant="ghost" size="icon" asChild className="rounded-full"><Link href="/employees"><ArrowLeft className="h-5 w-5" /></Link></Button><h1 className="text-4xl font-light">Xodim <span className="font-bold text-primary">Profili</span></h1></div>
-      <ProfileHeader employee={employee} abcData={abcData} orgStructureData={orgStructureData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} />
+    <div className="space-y-5" style={{ background: "#F0F4F8", minHeight: "100%", margin: "-16px -24px", padding: "16px 24px" }}>
+      <div className="flex items-center gap-4"><Button variant="ghost" size="icon" asChild className="rounded-full" style={{ background: "#fff", boxShadow: "2px 2px 8px rgba(163,177,198,0.35)" }}><Link href="/employees"><ArrowLeft className="h-4 w-4" /></Link></Button><EPPageHeader
+        breadcrumb={<>Dashboard · <b className="text-foreground">Xodim Profili</b></>}
+        title="Xodim Profili"
+      /></div>
+      <ProfileHeader employee={employee} abcData={abcData} orgStructureData={orgStructureData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} onEdit={() => setEditDialogOpen(true)} attendanceStats={attStats} attendanceData={attendanceData} />
       {isAdminOrHrManager && (
-        <Card className="border border-outline-variant shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> Kirish huquqlari</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> O'rnatilgan</Badge> : <Badge className="bg-red-50 text-red-700 text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> O'rnatilmagan</Badge>}<Button size="sm" variant="outline" onClick={() => setPasswordDialogOpen(true)}><KeyRound className="h-3 w-3 mr-1" />Parol</Button></div></CardContent></Card>
+        <Card className="border border-border shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> Kirish huquqlari</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-9 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> O'rnatilgan</Badge> : <Badge className="bg-red-50 text-[var(--ep-red)] text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> O'rnatilmagan</Badge>}<Button size="sm" variant="outline" onClick={() => setPasswordDialogOpen(true)}><KeyRound className="h-3 w-3 mr-1" />Parol</Button></div></CardContent></Card>
       )}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabNavigation isAdminOrHrManager={isAdminOrHrManager} isMachineOperator={isMachineOperator} status={employee.status} />
@@ -270,6 +313,8 @@ export default function EmployeeProfile() {
           <TabsContent value="daily-reports"><DailyReportsTab employeeId={id!} isMachineOperator={isMachineOperator} /></TabsContent>
           <TabsContent value="finance"><FinanceTab tCommon={tCommon} userId={id} baseSalary={employee.salary} salaryType={employee.salaryType} salaryHistory={salaryHistory || []} bonusDialogOpen={bonusDialogOpen} setBonusDialogOpen={setBonusDialogOpen} bonusForm={bonusForm} setBonusForm={setBonusForm} saveBonusMutation={saveBonusMutation} loadingBonuses={loadingBonuses} bonuses={bonuses || []} fineDialogOpen={fineDialogOpen} setFineDialogOpen={setFineDialogOpen} fineForm={fineForm} setFineForm={setFineForm} saveFineMutation={saveFineMutation} loadingFines={loadingFines} fines={fines || []} overtimeDialogOpen={overtimeDialogOpen} setOvertimeDialogOpen={setOvertimeDialogOpen} overtimeForm={overtimeForm} setOvertimeForm={setOvertimeForm} saveOvertimeMutation={saveOvertimeMutation} loadingOvertime={loadingOvertime} overtime={overtime || []} cashAdvanceDialogOpen={cashAdvanceDialogOpen} setCashAdvanceDialogOpen={setCashAdvanceDialogOpen} cashAdvanceForm={cashAdvanceForm} setCashAdvanceForm={setCashAdvanceForm} saveCashAdvanceMutation={saveCashAdvanceMutation} loadingCashAdvances={loadingCashAdvances} cashAdvances={cashAdvances || []} /></TabsContent>
           <TabsContent value="performance"><PerformanceTab t={t} tCommon={tCommon} loadingAbc={loadingAbc} loadingProgress={loadingProgress} abcData={abcData} courseProgress={courseProgress || []} metrics={metrics || []} attendanceStats={attStats} getGradeColor={(g: string) => g === "A" ? "bg-green-500" : g === "B" ? "bg-yellow-500" : "bg-red-500"} mesSummary={mesSummary} loadingMes={loadingMes} wmsSummary={wmsSummary} loadingWms={loadingWms} />{id && <div className="mt-4"><GsdGraph employeeId={id} canEdit={isAdminOrHrManager} /></div>}</TabsContent>
+          <TabsContent value="goals">{id && <GoalsTab userId={parseInt(id)} tCommon={tCommon} />}</TabsContent>
+          <TabsContent value="one-on-one">{id && <OneOnOneTab userId={parseInt(id)} tCommon={tCommon} />}</TabsContent>
           <TabsContent value="corporate-inventory"><CorporateInventoryTab employeeId={id!} isHr={isAdminOrHrManager} /></TabsContent>
           <TabsContent value="monthly-report"><MonthlyReportTab employeeId={id!} /></TabsContent>
           {(employee.status === "terminated" || employee.status === "offboarding") && <TabsContent value="offboarding"><OffboardingTab employeeId={id!} /></TabsContent>}

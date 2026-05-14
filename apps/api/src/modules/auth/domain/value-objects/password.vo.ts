@@ -1,4 +1,9 @@
-import { InternalServerErrorException } from '@nestjs/common';
+/**
+ * @module password.vo
+ * @description Value object. Immutable domain primitive with validation in its factory.
+ */
+
+import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 export class PasswordValueObject {
@@ -42,7 +47,7 @@ export class PasswordValueObject {
     }
 
     if (errors.length > 0) {
-      throw new InternalServerErrorException(errors.join('; '));
+      throw new BadRequestException(errors.join('; '));
     }
   }
 

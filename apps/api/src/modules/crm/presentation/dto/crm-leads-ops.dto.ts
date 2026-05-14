@@ -1,3 +1,8 @@
+/**
+ * @module crm-leads-ops.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 
 import { MAX_SHORT_TEXT } from '@common/constants/app.constants';
@@ -12,9 +17,14 @@ export const UpdateLeadDtoSchema = z.object({
 export type UpdateLeadDto = z.infer<typeof UpdateLeadDtoSchema>;
 
 export const UpdateLeadStageDtoSchema = z.object({
-  stage_id: z.number().int().positive(),
-  notes: z.string().max(MAX_SHORT_TEXT).optional(),
-});
+  stage_id:  z.union([z.number().int().positive(), z.string()]).optional(),
+  statusId:  z.union([z.number().int().positive(), z.string()]).optional(),
+  stageId:   z.union([z.number().int().positive(), z.string()]).optional(),
+  notes:     z.string().max(MAX_SHORT_TEXT).optional(),
+}).passthrough().transform(data => ({
+  ...data,
+  stage_id: Number(data.stage_id ?? data.statusId ?? data.stageId ?? 0),
+}));
 export type UpdateLeadStageDto = z.infer<typeof UpdateLeadStageDtoSchema>;
 
 export const ConvertLeadDtoSchema = z.object({

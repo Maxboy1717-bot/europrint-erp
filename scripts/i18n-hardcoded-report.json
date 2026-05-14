@@ -1,0 +1,546 @@
+{
+  "totalHits": 9012,
+  "fileCount": 779,
+  "top": [
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\accountant\\ErpRoadmapCard.tsx",
+      "hits": 86,
+      "samples": [
+        {
+          "line": 53,
+          "text": "Avval TAHLIL, keyin O'ZGARTIRISH"
+        },
+        {
+          "line": 57,
+          "text": "Tahlilsiz hech qachon kod yozma"
+        },
+        {
+          "line": 61,
+          "text": "Har bir muammo dalil bilan tasdiqlansin"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtended.tsx",
+      "hits": 73,
+      "samples": [
+        {
+          "line": 285,
+          "text": "Number(i.quantity)"
+        },
+        {
+          "line": 291,
+          "text": "MRO — Xo'jalik Boshqaruvi"
+        },
+        {
+          "line": 317,
+          "text": "Profilaktik Texnik Xizmat"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\RemainingTabs.tsx",
+      "hits": 72,
+      "samples": [
+        {
+          "line": 75,
+          "text": "Ogohlantirishlar"
+        },
+        {
+          "line": 87,
+          "text": "Jarimalar"
+        },
+        {
+          "line": 102,
+          "text": "Mukofotlar"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRSafety.tsx",
+      "hits": 72,
+      "samples": [
+        {
+          "line": 233,
+          "text": "HR — Xavfsizlik va Sog'liqni Saqlash"
+        },
+        {
+          "line": 292,
+          "text": "Hodisalar"
+        },
+        {
+          "line": 294,
+          "text": "Treninglar"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityDashboard.tsx",
+      "hits": 72,
+      "samples": [
+        {
+          "line": 183,
+          "text": "Nazorati"
+        },
+        {
+          "line": 185,
+          "text": "Kirish nazorati · PPE · Hodisalar · Evakuatsiya · Signallar"
+        },
+        {
+          "line": 206,
+          "text": "Kirish Jurnali"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrderApprovalWorkflow.tsx",
+      "hits": 67,
+      "samples": [
+        {
+          "line": 241,
+          "text": "Kutilmoqda / Ожидание"
+        },
+        {
+          "line": 243,
+          "text": "Tasdiqlangan / Одобрено"
+        },
+        {
+          "line": 245,
+          "text": "Rad etilgan / Отклонено"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrderCosting.tsx",
+      "hits": 65,
+      "samples": [
+        {
+          "line": 183,
+          "text": "Qoralama"
+        },
+        {
+          "line": 185,
+          "text": "Hisoblangan"
+        },
+        {
+          "line": 187,
+          "text": "Tasdiqlangan"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\extended\\SafetySection.tsx",
+      "hits": 63,
+      "samples": [
+        {
+          "line": 127,
+          "text": "Mehnat Muhofazasi va Xavfsizlik Tehnika"
+        },
+        {
+          "line": 129,
+          "text": "Hodisa"
+        },
+        {
+          "line": 130,
+          "text": "PPE Yozuvi"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\EditEmployeeDialog.tsx",
+      "hits": 62,
+      "samples": [
+        {
+          "line": 68,
+          "text": "Xodim ma'lumotlarini tahrirlash"
+        },
+        {
+          "line": 69,
+          "text": "Asosiy ma'lumotlarni o'zgartiring va saqlang."
+        },
+        {
+          "line": 74,
+          "text": "Asosiy ma'lumotlar"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\LeaveTab.tsx",
+      "hits": 62,
+      "samples": [
+        {
+          "line": 60,
+          "text": "Ta'til so'rovlari"
+        },
+        {
+          "line": 72,
+          "text": "Kasallik varaqalari"
+        },
+        {
+          "line": 84,
+          "text": "Xizmat safaralari"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabs.tsx",
+      "hits": 61,
+      "samples": [
+        {
+          "line": 44,
+          "text": "Jami Kurslar"
+        },
+        {
+          "line": 49,
+          "text": "Barcha kurslar"
+        },
+        {
+          "line": 55,
+          "text": "O'rtacha Tugatish"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\FinanceTab.tsx",
+      "hits": 61,
+      "samples": [
+        {
+          "line": 123,
+          "text": "Bazaviy maosh"
+        },
+        {
+          "line": 129,
+          "text": "Overvaqt"
+        },
+        {
+          "line": 135,
+          "text": "Bonus"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtended.tsx",
+      "hits": 61,
+      "samples": [
+        {
+          "line": 265,
+          "text": "OEE — Uskunalar samaradorligi monitoringi"
+        },
+        {
+          "line": 270,
+          "text": "Stanoq"
+        },
+        {
+          "line": 271,
+          "text": "Mavjudlik"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\MRODashboard.tsx",
+      "hits": 59,
+      "samples": [
+        {
+          "line": 145,
+          "text": "Boshqaruvi"
+        },
+        {
+          "line": 147,
+          "text": "Xo'jalik materiallari, ta'mirlash va texnik xizmat"
+        },
+        {
+          "line": 152,
+          "text": "Jami buyumlar"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtended.tsx",
+      "hits": 57,
+      "samples": [
+        {
+          "line": 176,
+          "text": "BOM/Routing"
+        },
+        {
+          "line": 184,
+          "text": "TEXNOLOG:"
+        },
+        {
+          "line": 199,
+          "text": "AI PP:"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\WMSExtended.tsx",
+      "hits": 56,
+      "samples": [
+        {
+          "line": 179,
+          "text": "Number(s.quantity ?? 0)"
+        },
+        {
+          "line": 187,
+          "text": "Kengaytirilgan"
+        },
+        {
+          "line": 189,
+          "text": "Material balansi, ko'chirish, lot kuzatish va KPI"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\MaterialsAccounting.tsx",
+      "hits": 53,
+      "samples": [
+        {
+          "line": 147,
+          "text": "Kirim"
+        },
+        {
+          "line": 151,
+          "text": "Chiqim"
+        },
+        {
+          "line": 153,
+          "text": "O'tkazma"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\TechCards.tsx",
+      "hits": 51,
+      "samples": [
+        {
+          "line": 233,
+          "text": "Operatsiyalar mavjud emas"
+        },
+        {
+          "line": 244,
+          "text": "Materiallar mavjud emas"
+        },
+        {
+          "line": 271,
+          "text": "EUROPRINT ERP"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanning.tsx",
+      "hits": 49,
+      "samples": [
+        {
+          "line": 69,
+          "text": "Jadval bo'sh"
+        },
+        {
+          "line": 84,
+          "text": "Gantt chart — kunlik reja"
+        },
+        {
+          "line": 170,
+          "text": "EUROPRINT ERP"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\DirectorExtended.tsx",
+      "hits": 49,
+      "samples": [
+        {
+          "line": 192,
+          "text": "Europrint — Direktor Kunlik Xulosa"
+        },
+        {
+          "line": 194,
+          "text": "Asosiy Ko'rsatkichlar"
+        },
+        {
+          "line": 196,
+          "text": "Oylik buyurtmalar"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\SystemTab.tsx",
+      "hits": 46,
+      "samples": [
+        {
+          "line": 54,
+          "text": "Mentorlik Dasturi"
+        },
+        {
+          "line": 55,
+          "text": "Mentor va mentee statistikasi"
+        },
+        {
+          "line": 67,
+          "text": "Jami mentorliklar:"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtended.tsx",
+      "hits": 46,
+      "samples": [
+        {
+          "line": 210,
+          "text": "Barcha Tenantlar"
+        },
+        {
+          "line": 235,
+          "text": "Yuklanmoqda..."
+        },
+        {
+          "line": 240,
+          "text": "Tenant"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtended.tsx",
+      "hits": 46,
+      "samples": [
+        {
+          "line": 75,
+          "text": "PPE (Shaxsiy Himoya Vositalari) Nazorati"
+        },
+        {
+          "line": 94,
+          "text": "Zo'nalar bo'yicha PPE muvofiqlik"
+        },
+        {
+          "line": 104,
+          "text": "Ma'lumot yo'q"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\AIInterviewPageSections.tsx",
+      "hits": 45,
+      "samples": [
+        {
+          "line": 21,
+          "text": "Yopish"
+        },
+        {
+          "line": 32,
+          "text": "Nomzod ID"
+        },
+        {
+          "line": 33,
+          "text": "Nomzod ismi"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\MMVendors.tsx",
+      "hits": 45,
+      "samples": [
+        {
+          "line": 276,
+          "text": "Jami yetkazuvchilar"
+        },
+        {
+          "line": 280,
+          "text": "Faol"
+        },
+        {
+          "line": 282,
+          "text": "Faol yetkazuvchilar"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\SuperAdminPanel.tsx",
+      "hits": 45,
+      "samples": [
+        {
+          "line": 258,
+          "text": "SaaS platformasini boshqaring — tenantlar, modullar, litsenziyalar"
+        },
+        {
+          "line": 354,
+          "text": "Barcha zavodlar va kompaniyalar"
+        },
+        {
+          "line": 360,
+          "text": "Tenantlar yo'q"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtended.tsx",
+      "hits": 44,
+      "samples": [
+        {
+          "line": 124,
+          "text": "Tekshiruv kutilayotgan"
+        },
+        {
+          "line": 128,
+          "text": "Bugun tasdiqlangan"
+        },
+        {
+          "line": 132,
+          "text": "Rad etilgan"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\FinanceExtended.tsx",
+      "hits": 43,
+      "samples": [
+        {
+          "line": 162,
+          "text": "Moliya — Kengaytirilgan"
+        },
+        {
+          "line": 163,
+          "text": "Faol"
+        },
+        {
+          "line": 181,
+          "text": "Xarajat Markazlari"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\WMSDashboard.tsx",
+      "hits": 43,
+      "samples": [
+        {
+          "line": 207,
+          "text": "Joriy holat"
+        },
+        {
+          "line": 214,
+          "text": "Jami materiallar"
+        },
+        {
+          "line": 216,
+          "text": "nomenklatura pozitsiya"
+        }
+      ]
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementKirimSteps.tsx",
+      "hits": 43,
+      "samples": [
+        {
+          "line": 31,
+          "text": "Manzil ombori *"
+        },
+        {
+          "line": 44,
+          "text": "Kelish sanasi *"
+        },
+        {
+          "line": 60,
+          "text": "Yuk xati raqami"
+        }
+      ]
+    }
+  ]
+}

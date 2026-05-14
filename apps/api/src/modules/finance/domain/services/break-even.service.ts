@@ -1,3 +1,39 @@
+/**
+ * @module break-even.service
+ * @description Break-even and operating-leverage analysis per product per
+ *   period. Reads `cost_structure` (fixed cost, variable cost per unit,
+ *   selling price) and joins with `production_orders` to compute:
+ *
+ *     contribution margin (CM) = price − variable cost per unit
+ *     break-even qty          = fixed cost / CM            (units to cover FC)
+ *     break-even revenue      = fixed cost × price / CM   (UZS at BE)
+ *     margin of safety (qty)  = actual qty − break-even qty
+ *     margin of safety (%)    = MOS qty / actual qty
+ *     degree of operating
+ *       leverage (DOL)        = (CM × qty) / (CM × qty − FC)
+ *
+ *   DOL > 1 means a 1% change in sales produces > 1% change in operating
+ *   income — the higher, the more sensitive profit is to volume. Useful
+ *   for capacity planning conversations.
+ * @layer Domain Service (Finance / CFO dashboard)
+ *
+ * WHY 10% MOS WARNING THRESHOLD
+ *   Industry rule of thumb: <10% margin of safety means a single bad month
+ *   can push a product line into operating loss. We flag this so the CFO
+ *   can prioritise pricing or cost actions before it actually happens.
+ *
+ * WHY CONTRIBUTION MARGIN <= 0 IS A HARD ERROR (not just warning)
+ *   A product whose unit selling price doesn't cover its variable cost is
+ *   guaranteed to lose money on every unit — fixed costs aren't even
+ *   covered yet. Break-even math literally divides by CM, so we reject the
+ *   input rather than return a nonsensical infinite break-even quantity.
+ *
+ * WHY DOL DEFAULTS TO 0 WHEN OP-INCOME IS 0
+ *   At exact break-even, op-income = 0 and DOL = CM / 0 → undefined. We
+ *   return 0 so callers can format it without special-casing; the UI shows
+ *   "N/A" when DOL=0 AND mosPct<1% as a safe heuristic.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';

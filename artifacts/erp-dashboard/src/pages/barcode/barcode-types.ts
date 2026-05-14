@@ -1,3 +1,8 @@
+/**
+ * @module barcode-types
+ * @description React page component. Route-level UI.
+ */
+
 import { z } from "zod";
 
 export interface BatchData {
@@ -281,7 +286,7 @@ export const batchFormSchema = z.object({
 
 export const STATUS_COLORS: Record<string, string> = {
   active: "bg-green-500/20 text-green-400 border-green-500/40",
-  depleted: "bg-gray-500/20 text-on-surface-variant border-gray-500/40",
+  depleted: "bg-gray-500/20 text-muted-foreground border-gray-500/40",
   blocked: "bg-red-500/20 text-red-400 border-red-500/40",
   expired: "bg-orange-500/20 text-orange-400 border-orange-500/40",
 };

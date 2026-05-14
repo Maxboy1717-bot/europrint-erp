@@ -1,3 +1,8 @@
+/**
+ * @module Categories
+ * @description Source module. See exports for details.
+ */
+
 import { Link } from "wouter";
 import { ArrowRight, Printer, BookOpen, Layers, Package, Megaphone, Gift, Shirt, Sparkles } from "lucide-react";
 

@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-pos-v2.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
@@ -80,7 +85,7 @@ export class DrizzlePosV2Repo implements IPosV2Repo {
       const countsRows = await db.select().from(inventoryCounts).where(conditions.length > 0 ? and(...conditions) : undefined).orderBy(desc(inventoryCounts.createdAt)).limit(limit).offset(offset);
       const countResult = await db.select({ count: sql<number>`count(*)` }).from(inventoryCounts).where(conditions.length > 0 ? and(...conditions) : undefined);
       const counts = await Promise.all(
-        (countsRows ?? []).map(async (c) => {
+        (Array.isArray(countsRows) ? countsRows : []).map(async (c) => {
           const ls = await db.select().from(inventoryCountLines).where(eq(inventoryCountLines.countId, c.id));
           return this.mapToInventoryCount({ ...(c as Record<string, unknown>), lines: ls });
         }),

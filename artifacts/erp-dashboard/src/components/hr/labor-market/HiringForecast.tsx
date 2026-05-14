@@ -1,3 +1,8 @@
+/**
+ * @module HiringForecast
+ * @description React UI component.
+ */
+
 import { Clock } from "lucide-react";
 
 export interface EmployerMarket {
@@ -54,7 +59,7 @@ export function HiringForecast({
 
   return (
     <div className="space-y-2">
-      <div className="bg-surface-container rounded-lg p-3 flex items-center gap-3 border border-border/40">
+      <div className="bg-muted/60 rounded-lg p-3 flex items-center gap-3 border border-border/40">
         <Clock className={`w-5 h-5 ${color} shrink-0`} />
         <div className="flex-1 min-w-0">
           <div className={`text-sm font-semibold ${color}`}>
@@ -69,16 +74,16 @@ export function HiringForecast({
       {hasHistory && (
         <div className="text-[10px] text-muted-foreground flex flex-wrap gap-3 px-1">
           <span>
-            📊 Tarix: <b>{historical!.sample_size}</b> ta shunga o'xshash vakansiya
+            📊 Tarix: <b>{historical?.sample_size}</b> ta shunga o'xshash vakansiya
           </span>
-          {historical!.avg_fill_days !== null && (
+          {historical?.avg_fill_days !== null && (
             <span>
-              ⏱ O'rtacha to'ldirish: <b>{historical!.avg_fill_days} kun</b>
+              ⏱ O'rtacha to'ldirish: <b>{historical?.avg_fill_days} kun</b>
             </span>
           )}
-          {historical!.avg_candidates_screened !== null && (
+          {historical?.avg_candidates_screened !== null && (
             <span>
-              👥 O'rtacha nomzodlar: <b>{historical!.avg_candidates_screened}</b>
+              👥 O'rtacha nomzodlar: <b>{historical?.avg_candidates_screened}</b>
             </span>
           )}
         </div>

@@ -1,14 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
+/**
+ * @module CrmFunnelAnalytics
+ * @description React page component. Route-level UI.
+ */
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Target, Users, Trophy, Loader2, Gauge } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
+import { TrendingUp, Target, Users, Trophy, Gauge, CheckCircle } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { EPErrorState, EPLoader } from "@/components/ep";
 
 interface WinRateResult {
   won: number; lost: number; total: number; winRate: number; lossRate: number;
@@ -39,28 +51,28 @@ function WinRateCard({ data, t }: { data: WinRateResult; t: (k: string) => strin
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-yellow-500" /> {t('winRate')}
+          <Trophy className="w-4 h-4 text-[var(--ep-yellow)]" /> {t('winRate')}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="text-center">
-            <p className="text-3xl font-bold text-green-600">{data.winRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground">Win Rate</p>
+            <p className="text-3xl font-bold text-[var(--ep-green)]">{data.winRate.toFixed(1)}%</p>
+            <p className="text-xs text-muted-foreground">{t('winRate1')}</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold">{data.won}</p>
             <p className="text-xs text-muted-foreground">{t('won')}</p>
           </div>
           <div className="text-center">
-            <p className="text-3xl font-bold text-red-500">{data.lost}</p>
+            <p className="text-3xl font-bold text-[var(--ep-red)]">{data.lost}</p>
             <p className="text-xs text-muted-foreground">{t('lost')}</p>
           </div>
         </div>
         <div className="space-y-2">
-          <div className="flex justify-between text-xs"><span className="text-green-600">Won</span><span>{data.winRate.toFixed(1)}%</span></div>
+          <div className="flex justify-between text-xs"><span className="text-[var(--ep-green)]">Won</span><span>{data.winRate.toFixed(1)}%</span></div>
           <Progress value={data.winRate} className="h-2" />
-          <div className="flex justify-between text-xs"><span className="text-red-500">Lost</span><span>{data.lossRate.toFixed(1)}%</span></div>
+          <div className="flex justify-between text-xs"><span className="text-[var(--ep-red)]">Lost</span><span>{data.lossRate.toFixed(1)}%</span></div>
           <Progress value={data.lossRate} className="h-2 [&>div]:bg-red-400" />
         </div>
       </CardContent>
@@ -75,15 +87,15 @@ function VelocityCard({ data, t }: { data: VelocityResult; t: (k: string) => str
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Gauge className="w-4 h-4 text-blue-500" /> {t('velocity')}
+          <Gauge className="w-4 h-4 text-[var(--ep-blue)]" /> {t('velocity')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-center mb-4">
-          <p className="text-3xl font-bold text-blue-600">{velocityFmt}</p>
+          <p className="text-3xl font-bold text-[var(--ep-blue)]">{velocityFmt}</p>
           <p className="text-xs text-muted-foreground">{t('velocityPerDay')}</p>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
           <div className="text-center rounded bg-slate-50 p-2">
             <p className="text-muted-foreground">{t('pipelineOpportunities')}</p>
             <p className="font-bold text-base">{data.opportunities}</p>
@@ -101,7 +113,7 @@ function VelocityCard({ data, t }: { data: VelocityResult; t: (k: string) => str
           <p className="text-xs text-muted-foreground mb-1">{t('winRateGauge')}</p>
           <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all"
+              className="absolute left-0 top-0 h-full bg-blue-500 rounded-full transition-all"
               style={{ width: `${Math.min(data.winRate, 100)}%` }}
             />
             <span className="absolute right-2 top-0 text-xs text-white font-medium leading-4">
@@ -121,7 +133,7 @@ function FunnelStages({ data, t }: { data: RawStage[]; t: (k: string) => string 
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Target className="w-4 h-4 text-blue-500" /> {t('stagesByCount')}
+          <Target className="w-4 h-4 text-[var(--ep-blue)]" /> {t('stagesByCount')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -150,7 +162,7 @@ function FunnelStages({ data, t }: { data: RawStage[]; t: (k: string) => string 
 }
 
 function BarStageChart({ data, t }: { data: RawStage[]; t: (k: string) => string }) {
-  const chartData = (data ?? []).map((s, i) => ({
+  const chartData = (Array.isArray(data) ? data : []).map((s, i) => ({
     name: s.stage_name.length > 12 ? s.stage_name.slice(0, 12) + "…" : s.stage_name,
     count: s.count,
     fill: STAGE_COLORS[i % STAGE_COLORS.length],
@@ -170,22 +182,178 @@ function BarStageChart({ data, t }: { data: RawStage[]; t: (k: string) => string
 
 export default function CrmFunnelAnalytics() {
   const { t } = useTranslation('crm');
+  const { toast } = useToast();
+  const queryClientHook = useQueryClient();
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [dealForm, setDealForm] = useState({ dealId: "", outcome: "", closeDate: "" });
+  const [stageOpen, setStageOpen] = useState(false);
+  const [stageForm, setStageForm] = useState({ dealId: "", stage: "" });
+
   const { data, isLoading, isError, refetch } = useQuery<FunnelData>({
     queryKey: ["crm-funnel"],
     queryFn:  () => apiRequest("GET", "/api/crm/funnel"),
     retry: 1,
   });
 
-  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
-  if (isError)   return <ErrorState onRetry={refetch} />;
+  const updateStageMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("PATCH", `/api/crm/deals/${stageForm.dealId}/stage`, { stage: stageForm.stage });
+    },
+    onSuccess: () => {
+      queryClientHook.invalidateQueries({ queryKey: ["crm-funnel"] });
+      toast({ title: "Muvaffaqiyat", description: "Bitim bosqichi yangilandi" });
+      setStageForm({ dealId: "", stage: "" });
+      setStageOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Xato", description: "Bosqich yangilanmadi", variant: "destructive" });
+    },
+  });
+
+  const closeDealMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("PATCH", "/api/crm/deals/close", {
+        dealId: dealForm.dealId,
+        outcome: dealForm.outcome,
+        closeDate: dealForm.closeDate,
+      });
+    },
+    onSuccess: () => {
+      queryClientHook.invalidateQueries({ queryKey: ["crm-funnel"] });
+      toast({ title: "Muvaffaqiyat", description: "Bitim muvaffaqiyatli yopildi" });
+      setDealForm({ dealId: "", outcome: "", closeDate: "" });
+      setCloseOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Xato", description: "Amal bajarilmadi", variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return <div className="flex items-center justify-center h-64"><EPLoader className="w-8 h-8 text-[var(--ep-blue)]" /></div>;
+  if (isError)   return <EPErrorState onRetry={refetch} />;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="w-7 h-7 text-blue-600" />
-        <div>
-          <h1 className="text-2xl font-bold">{t('funnelAnalytics')}</h1>
-          <p className="text-muted-foreground text-sm">{t('funnelDesc')}</p>
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <TrendingUp className="w-7 h-7 text-[var(--ep-blue)]" />
+          <div>
+            <h1 className="text-2xl font-bold">{t('funnelAnalytics')}</h1>
+            <p className="text-muted-foreground text-sm">{t('funnelDesc')}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+        <Dialog open={stageOpen} onOpenChange={setStageOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" data-testid="button-update-stage">
+              <Target className="h-4 w-4 mr-2" />
+              Bosqichni yangilash
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-[18px] font-semibold">Bitim bosqichini yangilash</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-1">
+                <Label htmlFor="stage-deal-id">Bitim ID</Label>
+                <Input
+                  id="stage-deal-id"
+                  value={stageForm.dealId}
+                  onChange={(e) => setStageForm((f) => ({ ...f, dealId: e.target.value }))}
+                  placeholder={t('deal001')}
+                  data-testid="input-stage-deal-id"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="stage-name">Yangi bosqich</Label>
+                {data?.rawStages && data.rawStages.length > 0 ? (
+                  <Select value={stageForm.stage} onValueChange={(v) => setStageForm((f) => ({ ...f, stage: v }))}>
+                    <SelectTrigger id="stage-name" data-testid="select-stage-name" className="h-9">
+                      <SelectValue placeholder="Bosqich tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {data.rawStages.map((s) => (
+                        <SelectItem key={s.stage_name} value={s.stage_name}>{s.stage_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="stage-name"
+                    value={stageForm.stage}
+                    onChange={(e) => setStageForm((f) => ({ ...f, stage: e.target.value }))}
+                    placeholder="Bosqich nomi"
+                    data-testid="input-stage-name"
+                  />
+                )}
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => updateStageMutation.mutate()}
+                disabled={updateStageMutation.isPending || !stageForm.dealId || !stageForm.stage}
+                data-testid="button-submit-stage"
+              >
+                {updateStageMutation.isPending ? "Saqlanmoqda..." : "Yangilash"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={closeOpen} onOpenChange={setCloseOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-close-deal">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Bitimni yopish
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-[18px] font-semibold">Bitimni yopish</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-1">
+                <Label htmlFor="deal-id">Bitim ID</Label>
+                <Input
+                  id="deal-id"
+                  value={dealForm.dealId}
+                  onChange={(e) => setDealForm((f) => ({ ...f, dealId: e.target.value }))}
+                  placeholder={t('deal001')}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="deal-outcome">Natija</Label>
+                <Select
+                  value={dealForm.outcome}
+                  onValueChange={(v) => setDealForm((f) => ({ ...f, outcome: v }))}
+                >
+                  <SelectTrigger id="deal-outcome" className="h-9">
+                    <SelectValue placeholder="Natijani tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="won">Yutildi (Won)</SelectItem>
+                    <SelectItem value="lost">Yo'qotildi (Lost)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="deal-closeDate">Yopish sanasi</Label>
+                <Input
+                  id="deal-closeDate"
+                  type="date"
+                  value={dealForm.closeDate}
+                  onChange={(e) => setDealForm((f) => ({ ...f, closeDate: e.target.value }))}
+                />
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => closeDealMutation.mutate()}
+                disabled={closeDealMutation.isPending || !dealForm.dealId || !dealForm.outcome}
+              >
+                {closeDealMutation.isPending ? "Saqlanmoqda..." : "Yopish"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         </div>
       </div>
 
@@ -200,7 +368,7 @@ export default function CrmFunnelAnalytics() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Users className="w-4 h-4 text-purple-500" /> {t('pipelineOverview')}
+                  <Users className="w-4 h-4 text-[var(--ep-purple)]" /> {t('pipelineOverview')}
                 </CardTitle>
               </CardHeader>
               <CardContent>

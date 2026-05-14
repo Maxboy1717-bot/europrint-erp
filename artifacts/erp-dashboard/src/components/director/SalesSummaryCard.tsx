@@ -1,3 +1,8 @@
+/**
+ * @module SalesSummaryCard
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart } from "lucide-react";
@@ -20,12 +25,12 @@ export function SalesSummaryCard({ dirSum, dirSumLoad }: SalesSummaryCardProps) 
   return (
     <Card data-testid="card-sales-summary">
       <CardHeader className="pb-3">
-        <SectionTitle icon={ShoppingCart} title="Savdo Ko'rsatkichlari" sub="Joriy oy" accent="text-blue-500" />
+        <SectionTitle icon={ShoppingCart} title="Savdo Ko'rsatkichlari" sub="Joriy oy" accent="text-[var(--ep-blue)]" />
       </CardHeader>
       <CardContent>
         {dirSumLoad ? <Skeleton className="h-32 rounded-lg" /> : (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(Array.isArray(stats) ? stats : []).map((item, i) => (
                 <div key={`k-${i}`} className="rounded-lg bg-muted/40 p-3" data-testid={`sales-stat-${i}`}>
                   <p className="text-xs text-muted-foreground">{item.label}</p>

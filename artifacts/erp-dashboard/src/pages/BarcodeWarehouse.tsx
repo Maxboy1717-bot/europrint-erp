@@ -1,3 +1,8 @@
+/**
+ * @module BarcodeWarehouse
+ * @description React page component. Route-level UI.
+ */
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Boxes, ScanBarcode, Shield, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +13,7 @@ import { NazoratTab } from "@/components/wms/barcode/NazoratTab";
 
 export default function BarcodeWarehouse() {
   return (
-    <div className="max-w-lg mx-auto pb-20">
+    <div className="pb-4">
       <div className="sticky top-0 z-50 bg-background border-b p-3 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold" data-testid="text-page-title">Ombor boshqaruvi</h1>
@@ -20,7 +25,7 @@ export default function BarcodeWarehouse() {
       </div>
 
       <Tabs defaultValue="asosiy" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sticky top-[65px] z-40">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 sticky top-[65px] z-40">
           <TabsTrigger data-testid="tab-asosiy" value="asosiy" className="text-xs">
             <Boxes className="h-3 w-3 mr-1" />
             Asosiy

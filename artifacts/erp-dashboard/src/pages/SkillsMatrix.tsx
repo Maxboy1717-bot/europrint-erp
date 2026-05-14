@@ -1,3 +1,8 @@
+/**
+ * @module SkillsMatrix
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +17,11 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ErrorState } from "@/components/ui/error-state";
 import type { Skill, Employee, EmployeeSkillRecord, SkillFormValues, EmployeeSkillFormValues } from "./skills-matrix/types";
 import { skillFormSchema, employeeSkillFormSchema, getLevelBadge } from "./skills-matrix/types";
 import { SkillDialog } from "./skills-matrix/SkillDialog";
 import { EmployeeSkillDialog } from "./skills-matrix/EmployeeSkillDialog";
+import { EPErrorState } from "@/components/ep";
 
 export default function SkillsMatrix() {
   const { toast } = useToast();
@@ -75,13 +80,13 @@ export default function SkillsMatrix() {
   const handleDeleteSkill = (id: string) => { setConfirmDeleteSkillId(id); };
   const handleDeleteEmployeeSkill = (id: string) => { setConfirmDeleteEmpSkillId(id); };
 
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch} />;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Ko'nikmalar Matritsasi</h1>
+          <h1 className="ep-h1">Ko'nikmalar Matritsasi</h1>
           <p className="text-muted-foreground">Ko'nikmalar va xodimlar kompetensiyalarini boshqarish</p>
         </div>
         <div className="flex gap-2">
@@ -101,15 +106,15 @@ export default function SkillsMatrix() {
           <CardHeader><CardTitle>Ko'nikmalar</CardTitle><CardDescription>Tizimda mavjud ko'nikmalar</CardDescription></CardHeader>
           <CardContent>
             {loadingSkills ? (
-              <div className="space-y-4">{([1,2,3,4,5]).map(i => <div key={`k-${i}`} className="flex items-center gap-4 py-2"><Skeleton className="h-6 w-20" /><Skeleton className="h-6 w-40" /><Skeleton className="h-6 w-24" /><Skeleton className="h-8 w-16 ml-auto" /></div>)}</div>
+              <div className="space-y-4">{([1,2,3,4,5]).map(i => <div key={`k-${i}`} className="flex items-center gap-4 py-2"><Skeleton className="h-6 w-20 rounded-lg" /><Skeleton className="h-6 w-40 rounded-lg" /><Skeleton className="h-6 w-24 rounded-lg" /><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></div>)}</div>
             ) : !(skills as Skill[] | undefined)?.length ? (
               <EmptyState icon={<Target className="h-8 w-8" />} title="Ko'nikmalar topilmadi" description="Hozircha hech qanday ko'nikma mavjud emas." actionLabel="Ko'nikma yaratish" onAction={() => setIsSkillDialogOpen(true)} />
             ) : (
-              <Table>
+              <div className="ep-table-scroll"><Table>
                 <TableHeader><TableRow><TableHead>Kod</TableHead><TableHead>Nom</TableHead><TableHead>Kategoriya</TableHead><TableHead className="text-right">Harakatlar</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {(skills as Skill[]).map((skill: Skill) => (
-                    <TableRow key={skill.id} data-testid={`row-skill-${skill.id}`}>
+                    <TableRow key={skill.id} data-testid={`row-skill-${skill.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-mono text-sm" data-testid={`text-skill-code-${skill.id}`}>{skill.code}</TableCell>
                       <TableCell data-testid={`text-skill-name-${skill.id}`}>{skill.name}</TableCell>
                       <TableCell><Badge variant="outline" data-testid={`badge-skill-category-${skill.id}`}>{skill.category}</Badge></TableCell>
@@ -122,7 +127,7 @@ export default function SkillsMatrix() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -131,7 +136,7 @@ export default function SkillsMatrix() {
           <CardHeader><CardTitle>Xodim ko'nikmalari</CardTitle><CardDescription>Belgilangan ko'nikmalar va darajalar</CardDescription></CardHeader>
           <CardContent>
             {loadingEmployeeSkills ? (
-              <div className="space-y-4">{([1,2,3,4,5]).map(i => <div key={`k-${i}`} className="flex items-center gap-4 py-2"><Skeleton className="h-6 w-32" /><Skeleton className="h-6 w-28" /><Skeleton className="h-6 w-20" /><Skeleton className="h-8 w-8 ml-auto" /></div>)}</div>
+              <div className="space-y-4">{([1,2,3,4,5]).map(i => <div key={`k-${i}`} className="flex items-center gap-4 py-2"><Skeleton className="h-6 w-32 rounded-lg" /><Skeleton className="h-6 w-28 rounded-lg" /><Skeleton className="h-6 w-20 rounded-lg" /><Skeleton className="h-8 w-8 ml-auto rounded-full" /></div>)}</div>
             ) : !(employeeSkills as EmployeeSkillRecord[] | undefined)?.length ? (
               <EmptyState icon={<TrendingUp className="h-8 w-8" />} title="Xodim ko'nikmalari topilmadi" description="Hozircha hech qanday xodimga ko'nikma belgilanmagan." actionLabel="Ko'nikma belgilash" onAction={() => setIsEmployeeSkillDialogOpen(true)} />
             ) : (

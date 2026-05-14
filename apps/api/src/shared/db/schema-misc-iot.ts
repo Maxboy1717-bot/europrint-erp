@@ -1,3 +1,8 @@
+/**
+ * @module schema-misc-iot
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, boolean, timestamp, decimal, integer,
   serial, varchar, index, uniqueIndex, text, uuid,

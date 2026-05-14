@@ -1,3 +1,8 @@
+/**
+ * @module PortretSection4
+ * @description React UI component.
+ */
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +21,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
     <div className="flex flex-col gap-4">
       <div className="bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg border border-amber-100 dark:border-amber-900/30 mb-2">
         <h4 className="font-semibold text-sm text-amber-800 dark:text-amber-300">IV Bo'lim: Kandidatga taqdimot</h4>
-        <p className="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">
+        <p className="text-[10px] text-[var(--ep-yellow)] dark:text-amber-400 mt-0.5">
           Bu ma'lumotlar HR manager tomonidan suhbat davomida nomzodga kompaniya va lavozimni "sotish" uchun ishlatiladi.
         </p>
       </div>
@@ -33,7 +38,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label className="text-xs mb-1 block">2. Ish tartibi</Label>
             <Input
@@ -53,7 +58,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
         </div>
 
         {/* 4–6: Guruh, Safar, Sinov davri */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <Label className="text-xs mb-1 block">4. Guruh (soni)</Label>
             <Input
@@ -86,7 +91,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
         </div>
 
         {/* 7–9: Maoshlar */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <Label className="text-xs mb-1 block">7. Sinov maosh (min)</Label>
             <Input
@@ -111,7 +116,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
         </div>
 
         {/* 10–13: Martaba, Ta'til, Rejim, Shartnoma */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label className="text-xs mb-1 block">10. Martaba o'sishi</Label>
             <Input
@@ -127,7 +132,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label className="text-xs mb-1 block">12. Ish rejimi (soat)</Label>
             <Input

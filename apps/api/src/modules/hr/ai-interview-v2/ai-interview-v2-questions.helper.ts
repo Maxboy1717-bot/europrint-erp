@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2-questions.helper
+ * @description Source module. See exports for details.
+ */
+
 import { Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -16,7 +21,7 @@ export async function aiInterviewGetQuestionsForJob(jobTitle?: string, language 
     const r = jobTitle
       ? await exec(sql`SELECT id, job_title, question, question_uz, question_ru, question_en, category, difficulty, expected_keywords, max_score FROM hr_interview_questions WHERE is_active = true AND (job_title = ${jobTitle} OR job_title IS NULL) ORDER BY (CASE WHEN job_title = ${jobTitle} THEN 0 ELSE 1 END), id ASC LIMIT 8`)
       : await exec(sql`SELECT id, job_title, question, question_uz, question_ru, question_en, category, difficulty, expected_keywords, max_score FROM hr_interview_questions WHERE is_active = true ORDER BY id ASC LIMIT 8`);
-    return (r ?? []).map((row: Row) => ({ ...row, question: (row[langCol] as string) || (row['question_uz'] as string) || (row['question'] as string) }));
+    return (Array.isArray(r) ? r : []).map((row: Row) => ({ ...row, question: (row[langCol] as string) || (row['question_uz'] as string) || (row['question'] as string) }));
   });
 }
 

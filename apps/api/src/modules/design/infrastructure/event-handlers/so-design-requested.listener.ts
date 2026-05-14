@@ -1,3 +1,8 @@
+/**
+ * @module so-design-requested.listener
+ * @description Source module. See exports for details.
+ */
+
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 export class SoDesignRequestedEvent {

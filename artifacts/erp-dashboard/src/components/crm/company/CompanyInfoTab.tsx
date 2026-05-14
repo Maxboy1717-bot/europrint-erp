@@ -1,3 +1,8 @@
+/**
+ * @module CompanyInfoTab
+ * @description React UI component.
+ */
+
 import { Users, Phone, Mail, Globe, MapPin, TrendingUp, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Company, formatAmount } from "./types";
@@ -28,8 +33,8 @@ export function CompanyInfoTab({ company }: CompanyInfoTabProps) {
         ) : null}
         {company.openDebt ? (
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-orange-500" />
-            <span className="text-sm text-orange-600" data-testid="text-open-debt">
+            <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />
+            <span className="text-sm text-[var(--ep-primary)]" data-testid="text-open-debt">
               Ochiq qarz: {formatAmount(company.openDebt)} UZS
             </span>
           </div>
@@ -69,7 +74,7 @@ export function CompanyInfoTab({ company }: CompanyInfoTabProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 text-sm pt-2 border-t">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pt-2 border-t">
         <div>
           <div className="text-muted-foreground">Yaratilgan</div>
           <div>{new Date(company.dateCreate).toLocaleDateString("uz-UZ")}</div>

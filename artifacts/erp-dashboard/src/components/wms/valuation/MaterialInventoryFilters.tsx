@@ -1,3 +1,8 @@
+/**
+ * @module MaterialInventoryFilters
+ * @description React UI component.
+ */
+
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,10 +50,10 @@ export function MaterialInventoryFilters({
           />
         </div>
       </div>
-      <div className="w-[160px]">
+      <div className="w-full sm:w-[160px]">
         <Label className="text-xs text-muted-foreground mb-1 block">Omborxona</Label>
         < Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
-          <SelectTrigger data-testid="select-warehouse-filter">
+          <SelectTrigger data-testid="select-warehouse-filter" className="h-9">
             <SelectValue placeholder="Barchasi" />
           </SelectTrigger>
           <SelectContent>
@@ -59,10 +64,10 @@ export function MaterialInventoryFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="w-[140px]">
+      <div className="w-full sm:w-[140px]">
         <Label className="text-xs text-muted-foreground mb-1 block">Holat</Label>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger data-testid="select-status-filter">
+          <SelectTrigger data-testid="select-status-filter" className="h-9">
             <SelectValue placeholder="Barchasi" />
           </SelectTrigger>
           <SelectContent>
@@ -74,10 +79,10 @@ export function MaterialInventoryFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="w-[130px]">
+      <div className="w-full sm:w-[130px]">
         <Label className="text-xs text-muted-foreground mb-1 block">Tur</Label>
         <Select value={countTypeFilter} onValueChange={setCountTypeFilter}>
-          <SelectTrigger data-testid="select-type-filter">
+          <SelectTrigger data-testid="select-type-filter" className="h-9">
             <SelectValue placeholder="Barchasi" />
           </SelectTrigger>
           <SelectContent>

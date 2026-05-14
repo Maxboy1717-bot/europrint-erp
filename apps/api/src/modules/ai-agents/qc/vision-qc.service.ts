@@ -1,3 +1,8 @@
+/**
+ * @module vision-qc.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { AiRouterService } from '../../ai/application/services/ai-router.service';
 import { isErr } from '@common/result';
@@ -6,6 +11,7 @@ import {
   AGENT_CODES, AI_GEMINI_MODEL,
   AI_VISION_PASS_THRESHOLD, AI_VISION_SCRAP_THRESHOLD, AI_AUTO_CONFIDENCE_THRESHOLD,
 } from '../common/ai-agents.constants';
+import { CONFIDENCE_MEDIUM } from '../../../common/constants/business.constants';
 
 export type QcVerdict = 'PASS' | 'REWORK' | 'SCRAP';
 
@@ -68,7 +74,7 @@ CIEDE2000 ΔE ni hisoblang va quyidagi JSON qaytaring:
     const aiRes = await this.ai.call({ prompt, provider: 'gemini', taskType: 'mes.quality_prediction', userId: 0 });
 
     let deltaE    = 3.5;
-    let confidence = 0.75;
+    let confidence = CONFIDENCE_MEDIUM;
     let defects: string[] = [];
 
     if (!isErr(aiRes) && aiRes.data.text) {

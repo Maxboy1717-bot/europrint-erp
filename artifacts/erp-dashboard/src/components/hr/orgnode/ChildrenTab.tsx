@@ -1,3 +1,8 @@
+/**
+ * @module ChildrenTab
+ * @description React UI component.
+ */
+
 import { useLocation } from "wouter";
 import { Network, Users, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

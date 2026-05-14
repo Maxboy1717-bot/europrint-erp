@@ -1,3 +1,8 @@
+/**
+ * @module department.aggregate
+ * @description Source module. See exports for details.
+ */
+
 export class Department {
   constructor(public readonly id: string,
     public readonly name: string,

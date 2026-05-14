@@ -1,3 +1,8 @@
+/**
+ * @module ApprovalHub
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Clock, ClipboardList } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
 interface ApprovalItem {
   id: string | number;
@@ -96,8 +102,8 @@ export default function ApprovalHub() {
     return (
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          <div className="ep-table-scroll"><Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>Tur</TableHead>
                 <TableHead>Nomi</TableHead>
@@ -113,7 +119,7 @@ export default function ApprovalHub() {
                 <TableRow>
                   <TableCell
                     colSpan={showActions ? 7 : 6}
-                    className="text-center py-8 text-muted-foreground"
+                    className="text-center py-8 text-[13px] text-muted-foreground"
                   >
                     Yuklanmoqda...
                   </TableCell>
@@ -122,14 +128,14 @@ export default function ApprovalHub() {
                 <TableRow>
                   <TableCell
                     colSpan={showActions ? 7 : 6}
-                    className="text-center py-10 text-muted-foreground"
+                    className="text-center py-10 text-[13px] text-muted-foreground"
                   >
                     Tasdiqlash so'rovlari yo'q
                   </TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(items) ? items : []).map((item) => (
-                  <TableRow key={item.id} data-testid={`row-approval-${item.id}`}>
+                  <TableRow key={item.id} data-testid={`row-approval-${item.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>
                       <Badge variant="outline">
                         {TYPE_LABELS[item.type] || item.type}
@@ -174,7 +180,7 @@ export default function ApprovalHub() {
                           <Button
                             size="sm"
                             variant="default"
-                            className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                            className="h-7 text-xs bg-green-600 hover:bg-[var(--ep-green)]/90"
                             onClick={() =>
                               approveMutation.mutate({
                                 id: item.id,
@@ -209,44 +215,44 @@ export default function ApprovalHub() {
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <ClipboardList className="h-5 w-5 text-primary" />
+          <ClipboardList className="h-4 w-4 text-primary" />
           <h1 className="font-semibold text-base">Tasdiqlash Markazi</h1>
           {pending.length > 0 && (
-            <Badge variant="destructive">{pending.length} kutmoqda</Badge>
+            <EPStatusPill tone="danger">{pending.length} kutmoqda</EPStatusPill>
           )}
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {([
             {
               label: "Kutmoqda",
               value: pending.length,
               icon: Clock,
-              color: "text-orange-600",
+              color: "text-[var(--ep-primary)]",
             },
             {
               label: "Tasdiqlangan",
               value: approved.length,
               icon: CheckCircle2,
-              color: "text-green-600",
+              color: "text-[var(--ep-green)]",
             },
             {
               label: "Rad etilgan",
               value: rejected.length,
               icon: XCircle,
-              color: "text-red-600",
+              color: "text-[var(--ep-red)]",
             },
           ]).map((stat) => (
             <Card key={stat.label}>

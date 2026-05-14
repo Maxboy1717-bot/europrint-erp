@@ -1,3 +1,8 @@
+/**
+ * @module ShiftReportsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,6 +19,7 @@ import { formatNum, formatDate, SHIFT_STATUS } from "./helpers";
 import { ShiftReport } from "./types";
 import { CreateShiftModal } from "./CreateShiftModal";
 import { ShiftDetailModal } from "./ShiftDetailModal";
+import { apiRequest } from '@/lib/queryClient';
 
 export function ShiftReportsTab() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -22,7 +28,7 @@ export function ShiftReportsTab() {
   const { data, isLoading, refetch } = useQuery<{ reports: ShiftReport[] }>({
     queryKey: ["/api/production/shift-reports"],
     queryFn: async () => {
-      const r = await fetch("/api/production/shift-reports");
+      const r = await apiRequest('GET', "/api/production/shift-reports");
       if (!r.ok) throw new Error("Xato");
       return r.json();
     },
@@ -49,7 +55,7 @@ export function ShiftReportsTab() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="pl-4">Raqam</TableHead>
@@ -67,9 +73,9 @@ export function ShiftReportsTab() {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={`k-${i}`}>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
                     {Array.from({ length: 10 }).map((_, j) => (
-                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell key={j}><Skeleton className="h-4 w-full rounded-lg" /></TableCell>
                     ))}
                   </TableRow>
                 ))
@@ -103,7 +109,7 @@ export function ShiftReportsTab() {
                 })
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 

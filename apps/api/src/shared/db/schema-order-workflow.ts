@@ -1,3 +1,8 @@
+/**
+ * @module schema-order-workflow
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, uuid, text, numeric, integer, boolean,
   timestamp, jsonb, index, uniqueIndex, check,

@@ -1,3 +1,8 @@
+/**
+ * @module create-production-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err } from '@common/result';
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';

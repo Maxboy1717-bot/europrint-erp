@@ -1,3 +1,8 @@
+/**
+ * @module TransactionDialog
+ * @description React UI component.
+ */
+
 import { ArrowUpCircle, ArrowDownCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,13 +52,13 @@ export function TransactionDialog({
   categories,
 }: TransactionDialogProps) {
   const { t } = useTranslation("finance");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tCommon } = useTranslation('common');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>{t("incomeExpense")}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("incomeExpense")}</DialogTitle>
           <DialogDescription>{tCommon("create")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -66,20 +71,20 @@ export function TransactionDialog({
                   <FormLabel>{tCommon("type")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-transaction-type">
+                      <SelectTrigger data-testid="select-transaction-type" className="h-9">
                         <SelectValue placeholder={tCommon("type")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="income">
                         <div className="flex items-center gap-2">
-                          <ArrowUpCircle className="h-4 w-4 text-green-500" />
+                          <ArrowUpCircle className="h-4 w-4 text-[var(--ep-green)]" />
                           {t("inflow")}
                         </div>
                       </SelectItem>
                       <SelectItem value="expense">
                         <div className="flex items-center gap-2">
-                          <ArrowDownCircle className="h-4 w-4 text-red-500" />
+                          <ArrowDownCircle className="h-4 w-4 text-[var(--ep-red)]" />
                           {t("outflow")}
                         </div>
                       </SelectItem>
@@ -112,7 +117,7 @@ export function TransactionDialog({
                   <FormLabel>{t("category")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-transaction-category">
+                      <SelectTrigger data-testid="select-transaction-category" className="h-9">
                         <SelectValue placeholder={t("category")} />
                       </SelectTrigger>
                     </FormControl>
@@ -196,7 +201,7 @@ export function TransactionDialog({
                   <FormLabel>{tCommon("status")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-transaction-status">
+                      <SelectTrigger data-testid="select-transaction-status" className="h-9">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>

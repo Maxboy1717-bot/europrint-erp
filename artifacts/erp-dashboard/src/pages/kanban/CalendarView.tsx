@@ -1,3 +1,8 @@
+/**
+ * @module CalendarView
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -71,7 +76,7 @@ export function CalendarView({
         </Button>
       </div>
       
-      <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden flex-1">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-px bg-border rounded-lg overflow-hidden flex-1">
         {(Array.isArray(weekDays) ? weekDays : []).map((day) => (
           <div key={day} className="bg-muted p-2 text-center text-sm font-medium">
             {day}

@@ -1,3 +1,8 @@
+/**
+ * @module ecommerce.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EcommerceService } from './ecommerce.service';

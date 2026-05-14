@@ -1,3 +1,8 @@
+/**
+ * @module ExceptionLog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +20,7 @@ import {
   FileWarning,
 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { EPStatusPill } from "@/components/ep";
 
 interface ExceptionStats {
   total: number;
@@ -60,10 +66,10 @@ const EXCEPTION_LABELS: Record<string, string> = {
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: "text-red-600 dark:text-red-400",
-  high: "text-orange-600 dark:text-orange-400",
-  medium: "text-yellow-600 dark:text-yellow-400",
-  low: "text-blue-600 dark:text-blue-400",
+  critical: "text-[var(--ep-red)] dark:text-red-400",
+  high: "text-[var(--ep-primary)] dark:text-orange-400",
+  medium: "text-[var(--ep-yellow)] dark:text-yellow-400",
+  low: "text-[var(--ep-blue)] dark:text-blue-400",
 };
 
 function StatCard({
@@ -85,7 +91,7 @@ function StatCard({
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
-          {loading ? <Skeleton className="h-7 w-16 mt-1" /> : <p className="text-2xl font-bold">{value}</p>}
+          {loading ? <Skeleton className="h-7 w-16 mt-1 rounded-lg" /> : <p className="text-2xl font-bold">{value}</p>}
         </div>
       </CardContent>
     </Card>
@@ -128,7 +134,7 @@ export default function ExceptionLog() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
@@ -152,7 +158,7 @@ export default function ExceptionLog() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard title="Jami istisno" value={s?.total ?? 0} icon={AlertOctagon} loading={statsLoading} />
         <StatCard title="Oxirgi hafta" value={s?.lastWeek ?? 0} icon={Activity} loading={statsLoading} />
         <StatCard title="Oxirgi oy" value={s?.lastMonth ?? 0} icon={TrendingUp} loading={statsLoading} />
@@ -184,7 +190,7 @@ export default function ExceptionLog() {
                     onClick={() => setTypeFilter(typeFilter === type ? "all" : type)}
                   >
                     <span className="text-muted-foreground">{EXCEPTION_LABELS[type] || type}</span>
-                    <Badge variant="secondary">{cnt}</Badge>
+                    <EPStatusPill tone="neutral">{cnt}</EPStatusPill>
                   </div>
                 ))}
             </div>
@@ -197,7 +203,7 @@ export default function ExceptionLog() {
           <CardTitle className="text-base">Barcha istisno holatlar</CardTitle>
           <div className="flex gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-44" data-testid="select-type-filter">
+              <SelectTrigger className="w-44 h-9" data-testid="select-type-filter">
                 <SelectValue placeholder="Tur bo'yicha" />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +214,7 @@ export default function ExceptionLog() {
               </SelectContent>
             </Select>
             <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger className="w-40" data-testid="select-severity-filter">
+              <SelectTrigger className="w-40 h-9" data-testid="select-severity-filter">
                 <SelectValue placeholder="Darajasi" />
               </SelectTrigger>
               <SelectContent>
@@ -225,11 +231,11 @@ export default function ExceptionLog() {
           {logsLoading ? (
             <div className="space-y-2">
               {([1, 2, 3, 4, 5]).map((i) => (
-                <Skeleton key={`k-${i}`} className="h-10 w-full" />
+                <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />
               ))}
             </div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Daraja</TableHead>
@@ -243,7 +249,7 @@ export default function ExceptionLog() {
               </TableHeader>
               <TableBody>
                 {(Array.isArray(logs?.data) ? logs.data : []).map((log) => (
-                  <TableRow key={log.id} data-testid={`row-log-${log.id}`}>
+                  <TableRow key={log.id} data-testid={`row-log-${log.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{severityBadge(log.severity)}</TableCell>
                     <TableCell className="text-sm">
                       {EXCEPTION_LABELS[log.exceptionType] || log.exceptionType}
@@ -257,9 +263,9 @@ export default function ExceptionLog() {
                     </TableCell>
                     <TableCell>
                       {log.resolvedAt ? (
-                        <Badge variant="default">Hal qilindi</Badge>
+                        <EPStatusPill tone="success">Hal qilindi</EPStatusPill>
                       ) : (
-                        <Badge variant="secondary">Ochiq</Badge>
+                        <EPStatusPill tone="neutral">Ochiq</EPStatusPill>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -281,7 +287,7 @@ export default function ExceptionLog() {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

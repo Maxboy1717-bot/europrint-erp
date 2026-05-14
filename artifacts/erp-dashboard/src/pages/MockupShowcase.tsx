@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 /**
  * MockupShowcase — barcha mockup komponentlarini ko'rsatadigan demo sahifa.
  *
@@ -18,8 +19,9 @@ import {
 } from "@/components/mockup";
 
 export default function MockupShowcase() {
+  const { t } = useTranslation('common');
   return (
-    <div className="ep-content p-6 max-w-[1400px] mx-auto space-y-6">
+    <div className="ep-content space-y-6">
       <div>
         <div className="text-xs text-[var(--ep-muted)] mb-1">Demo / Style Guide</div>
         <h1 className="text-xl font-semibold m-0">Mockup Komponentlar Showcase</h1>
@@ -37,7 +39,7 @@ export default function MockupShowcase() {
       {/* KPI Cards */}
       <section>
         <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">2. KPI Cards (8 rang)</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <KpiCardMockup icon={<Users className="h-5 w-5" />} iconColor="orange" label="Xodimlar" value={154} link="Ko'rish" />
           <KpiCardMockup icon={<UserCheck className="h-5 w-5" />} iconColor="green" label="Faol" value={142} link="Ro'yxat" />
           <KpiCardMockup icon={<UserPlus className="h-5 w-5" />} iconColor="blue" label="Yangi" value={8} link="Onboarding" />
@@ -51,7 +53,7 @@ export default function MockupShowcase() {
 
       {/* Status Pills */}
       <section>
-        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">3. Status Pills</h2>
+        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">{t('k3StatusPills')}</h2>
         <div className="flex flex-wrap gap-2">
           <StatusPill variant="success">Faol</StatusPill>
           <StatusPill variant="danger">Bloklangan</StatusPill>
@@ -69,8 +71,8 @@ export default function MockupShowcase() {
         <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">4. Job Tags</h2>
         <div className="flex flex-wrap gap-2">
           <JobTag variant="dark">Direktor</JobTag>
-          <JobTag variant="blue">Manager</JobTag>
-          <JobTag variant="purple">Designer</JobTag>
+          <JobTag variant="blue">{t('manager')}</JobTag>
+          <JobTag variant="purple">{t('designer')}</JobTag>
           <JobTag variant="pink">HR</JobTag>
           <JobTag variant="green">Mentor</JobTag>
           <JobTag variant="orange">Operator</JobTag>
@@ -96,7 +98,7 @@ export default function MockupShowcase() {
 
       {/* Cards */}
       <section>
-        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">6. Card with Header</h2>
+        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">{t('k6CardWithHeader')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <CardMockup
             title="Yangi xodimlar"
@@ -187,7 +189,7 @@ export default function MockupShowcase() {
 
       {/* Tabs */}
       <section>
-        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">10. Sub Navigation</h2>
+        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">{t('k10SubNavigation')}</h2>
         <div className="sub-nav">
           <button className="active">Umumiy</button>
           <button>Hujjatlar</button>
@@ -199,7 +201,7 @@ export default function MockupShowcase() {
       {/* Color palette */}
       <section>
         <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">11. Brand Color Palette</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           {[
             { name: 'Primary', value: '#FF902F', cssVar: 'var(--ep-primary)' },
             { name: 'Dark', value: '#1B2850', cssVar: 'var(--ep-dark)' },

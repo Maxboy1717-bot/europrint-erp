@@ -1,3 +1,8 @@
+/**
+ * @module OEELiveMonitorPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -24,10 +29,10 @@ const OEE_TARGET_GOOD = 70;
 const REFRESH_INTERVAL_MS = 15_000;
 
 const STATUS_CONFIG: Record<OEEMachine["status"], { label: string; className: string }> = {
-  running:     { label: "Ishlamoqda", className: "bg-emerald-100 text-emerald-700" },
+  running:     { label: "Ishlamoqda", className: "bg-emerald-100 text-[var(--ep-green)]" },
   idle:        { label: "Bo'sh",      className: "bg-slate-100 text-slate-700" },
-  stopped:     { label: "To'xtagan",  className: "bg-rose-100 text-rose-700" },
-  maintenance: { label: "TX",         className: "bg-yellow-100 text-yellow-700" },
+  stopped:     { label: "To'xtagan",  className: "bg-rose-100 text-[var(--ep-red)]" },
+  maintenance: { label: "TX",         className: "bg-yellow-100 text-[var(--ep-yellow)]" },
 };
 
 function getOeeVariant(oee: number): "success" | "warning" | "danger" {
@@ -67,7 +72,7 @@ export default function OEELiveMonitorPage() {
       <Section title={t('oeeLive.machineList', "Mashina holati")}>
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-32" />)}
+            {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
           </div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('oeeLive.empty', "Mashina yo'q")}</p>
@@ -92,7 +97,7 @@ export default function OEELiveMonitorPage() {
                       </div>
                       <Progress value={m.oee} />
                     </div>
-                    <div className="grid grid-cols-3 gap-1 text-xs text-center">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-center">
                       <div>
                         <p className="text-muted-foreground">A</p>
                         <p className="font-medium">{m.availability}%</p>

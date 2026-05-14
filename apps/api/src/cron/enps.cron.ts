@@ -1,3 +1,8 @@
+/**
+ * @module enps.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, Optional } from '@nestjs/common'

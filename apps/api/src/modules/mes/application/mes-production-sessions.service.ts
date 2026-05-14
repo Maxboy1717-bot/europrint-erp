@@ -1,3 +1,8 @@
+/**
+ * @module mes-production-sessions.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { MesProductionSessionsRepository } from '../infrastructure/repositories/mes-production-sessions.repo';

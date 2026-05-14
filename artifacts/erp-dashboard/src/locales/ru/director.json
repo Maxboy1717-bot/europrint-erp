@@ -102,5 +102,6 @@
   "gsdRevenueTarget": "800 000 000 сум",
   "executionDiaryEntry": "Добавить запись в дневник",
   "executionDiaryToday": "Состояние сегодня",
-  "executionDiaryHistory": "История предыдущих дней"
+  "executionDiaryHistory": "История предыдущих дней",
+  "directorExtended": "Директор расширенный"
 }

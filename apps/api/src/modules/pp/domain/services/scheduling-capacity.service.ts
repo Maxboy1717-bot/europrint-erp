@@ -1,3 +1,8 @@
+/**
+ * @module scheduling-capacity.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeDiv } from '@common/math/math-utils';
@@ -27,7 +32,7 @@ export class SchedulingCapacityService {
       }
     }
 
-    const all = (safeWC ?? []).map((wc) => ({
+    const all = (Array.isArray(safeWC) ? safeWC : []).map((wc) => ({
       workCenterId: wc.workCenterId,
       utilization: safeDiv(safeNum(wc.arrivalRate), safeNum(wc.serviceRate)),
     }));

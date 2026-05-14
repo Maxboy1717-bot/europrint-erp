@@ -1,16 +1,23 @@
+/**
+ * @module WarehouseDirectory
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Warehouse, Package, DollarSign, AlertTriangle, Layers, Grid3X3, ArrowRightLeft, ClipboardList } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
+import { Warehouse, Package, DollarSign, AlertTriangle, Layers, Grid3X3, ArrowRightLeft, ClipboardList, Archive } from "lucide-react";
 import { translations, WarehouseData, Lang } from "./warehouse/warehouse-types";
 import { WarehousesTab } from "./warehouse/WarehousesTab";
 import { ZonesTab } from "./warehouse/ZonesTab";
 import { BinsTab } from "./warehouse/BinsTab";
 import { TransfersTab } from "./warehouse/TransfersTab";
 import { InventarizatsiyaPanel } from "./warehouse/InventarizatsiyaPanel";
+import { LotsTab } from "./warehouse/LotsTab";
+import { apiRequest } from '@/lib/queryClient';
+import { EPErrorState } from "@/components/ep";
 
 export default function WarehouseDirectory() {
   const [lang, setLang] = useState<Lang>("uz");
@@ -29,7 +36,7 @@ export default function WarehouseDirectory() {
       let lowStockCount = 0;
       for (const wh of warehouses) {
         try {
-          const res = await fetch(`/api/warehouse/warehouses/${wh.id}/stats`, { credentials: "include" });
+          const res = await apiRequest('GET', `/api/warehouse/warehouses/${wh.id}/stats`);
           if (res.ok) {
             const stats = await res.json();
             totalMaterials += stats.materialCount || 0;
@@ -43,10 +50,10 @@ export default function WarehouseDirectory() {
     enabled: warehouses.length > 0,
   });
 
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch} />;
 
   return (
-    <div className="flex-1 overflow-auto p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold text-foreground" data-testid="page-title">{t.title}</h1>
@@ -59,37 +66,37 @@ export default function WarehouseDirectory() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/30">
+        <Card className="from-yellow-500/20 to-yellow-600/10 border-yellow-500/30">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t.stats.totalWarehouses}</CardTitle>
-            <Warehouse className="h-5 w-5 text-yellow-500" />
+            <Warehouse className="h-4 w-4 text-[var(--ep-yellow)]" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground" data-testid="stat-total-warehouses">{warehouses.length}</div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/30">
+        <Card className="from-yellow-500/20 to-yellow-600/10 border-yellow-500/30">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t.stats.totalMaterials}</CardTitle>
-            <Package className="h-5 w-5 text-yellow-500" />
+            <Package className="h-5 w-5 text-[var(--ep-yellow)]" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground" data-testid="stat-total-materials">{totalStats?.totalMaterials || 0}</div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/30">
+        <Card className="from-yellow-500/20 to-yellow-600/10 border-yellow-500/30">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t.stats.stockValue}</CardTitle>
-            <DollarSign className="h-5 w-5 text-yellow-500" />
+            <DollarSign className="h-5 w-5 text-[var(--ep-yellow)]" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground" data-testid="stat-stock-value">{(totalStats?.totalValue || 0).toLocaleString()}</div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/30">
+        <Card className="from-red-500/20 to-red-600/10 border-red-500/30">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t.stats.lowStock}</CardTitle>
-            <AlertTriangle className="h-5 w-5 text-red-500" />
+            <AlertTriangle className="h-5 w-5 text-[var(--ep-red)]" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground" data-testid="stat-low-stock">{totalStats?.lowStockCount || 0}</div>
@@ -111,6 +118,9 @@ export default function WarehouseDirectory() {
           <TabsTrigger value="transfers" className="gap-2" data-testid="tab-transfers">
             <ArrowRightLeft className="h-4 w-4" /><span className="hidden sm:inline">{t.transfers}</span>
           </TabsTrigger>
+          <TabsTrigger value="lots" className="gap-2" data-testid="tab-lots">
+            <Archive className="h-4 w-4" /><span className="hidden sm:inline">{lang === "uz" ? "Lotlar (FIFO)" : "Лоты (FIFO)"}</span>
+          </TabsTrigger>
           <TabsTrigger value="inventory" className="gap-2" data-testid="tab-inventory">
             <ClipboardList className="h-4 w-4" /><span className="hidden sm:inline">{lang === "uz" ? "Inventarizatsiya" : "Инвентаризация"}</span>
           </TabsTrigger>
@@ -127,6 +137,9 @@ export default function WarehouseDirectory() {
         </TabsContent>
         <TabsContent value="transfers" className="space-y-4">
           <TransfersTab lang={lang} t={t} />
+        </TabsContent>
+        <TabsContent value="lots" className="space-y-4">
+          <LotsTab lang={lang} t={t} />
         </TabsContent>
         <TabsContent value="inventory" className="space-y-4">
           <InventarizatsiyaPanel lang={lang} />

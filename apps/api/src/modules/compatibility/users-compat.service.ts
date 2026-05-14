@@ -1,3 +1,8 @@
+/**
+ * @module users-compat.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db,
   rawSql} from '@shared/db';
@@ -15,19 +20,19 @@ export class UsersCompatService {
     const offset = (pageNum - 1) * limitNum;
     const searchPattern = `%${search}%`;
     const result = await rawSql(sql`
-      SELECT u.id, u.username, u.email, u.role, u.created_at, u.updated_at,
-        COALESCE(NULLIF(TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), ''), u.full_name) AS full_name,
-        COALESCE(NULLIF(TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), ''), u.full_name) AS "fullName",
+      SELECT u.id, u.username, u.email, NULL::text AS role, u.created_at, u.updated_at,
+        COALESCE(NULLIF(TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), ''), (u.first_name || ' ' || u.last_name)) AS full_name,
+        COALESCE(NULLIF(TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), ''), (u.first_name || ' ' || u.last_name)) AS "fullName",
         e.department_id AS "departmentId", e.position_id AS "positionId", e.id AS employee_id
       FROM users u
       LEFT JOIN employees e ON e.user_id = u.id
-      WHERE (${search} = '' OR u.full_name ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.username ILIKE ${searchPattern})
+      WHERE (${search} = '' OR (u.first_name || ' ' || u.last_name) ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.username ILIKE ${searchPattern})
       ORDER BY u.created_at DESC
       LIMIT ${limitNum} OFFSET ${offset}
     `);
     const countResult = await rawSql(sql`
       SELECT COUNT(*) AS total FROM users u
-      WHERE (${search} = '' OR u.full_name ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.username ILIKE ${searchPattern})
+      WHERE (${search} = '' OR (u.first_name || ' ' || u.last_name) ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.username ILIKE ${searchPattern})
     `);
     const total = Number((dbRows(countResult)[0] as Record<string, unknown>)?.['total'] ?? 0);
     return { ok: true, data: dbRows(result), total, page: pageNum, limit: limitNum };

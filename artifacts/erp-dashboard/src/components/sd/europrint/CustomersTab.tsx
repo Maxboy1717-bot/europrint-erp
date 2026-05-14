@@ -1,3 +1,8 @@
+/**
+ * @module CustomersTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -69,7 +74,7 @@ export function CustomersTab() {
               <Button size="icon" data-testid="button-add-customer"><Plus className="w-4 h-4" /></Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Yangi mijoz</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi mijoz</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div><Label>Kompaniya nomi *</Label>
                   <Input data-testid="input-customer-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
@@ -77,7 +82,7 @@ export function CustomersTab() {
                   <Input data-testid="input-customer-stir" value={form.stir} onChange={e => setForm({ ...form, stir: e.target.value })} /></div>
                 <div><Label>Segment</Label>
                   <Select value={form.segment} onValueChange={v => setForm({ ...form, segment: v })}>
-                    <SelectTrigger data-testid="select-customer-segment"><SelectValue /></SelectTrigger>
+                    <SelectTrigger data-testid="select-customer-segment" className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {Object.entries(SEGMENT_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                     </SelectContent>
@@ -96,7 +101,7 @@ export function CustomersTab() {
         </div>
 
         <Select value={segment} onValueChange={setSegment}>
-          <SelectTrigger data-testid="select-segment-filter"><SelectValue placeholder="Segment" /></SelectTrigger>
+          <SelectTrigger data-testid="select-segment-filter" className="h-9"><SelectValue placeholder="Segment" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Barchasi</SelectItem>
             {Object.entries(SEGMENT_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
@@ -151,7 +156,7 @@ export function CustomersTab() {
                   </div>
                 )}
                 {detail?.notes && <div className="text-sm text-muted-foreground">{detail.notes}</div>}
-                <div className="grid grid-cols-3 gap-3 pt-2 border-t">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t">
                   <div className="text-center">
                     <div className="text-xl font-bold text-primary">{detail?.totalOrders || 0}</div>
                     <div className="text-xs text-muted-foreground">Buyurtmalar</div>

@@ -1,3 +1,8 @@
+/**
+ * @module exception-log.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
@@ -92,10 +97,35 @@ export class ExceptionLogRepository {
   }
 
   async getExpiringCerts(): Promise<Result<Row[]>>  {
-  try {  
+  try {
       return exec(sql`SELECT e.id, e.full_name, e.cert_expiry_date FROM employees e WHERE e.cert_expiry_date IS NOT NULL AND e.cert_expiry_date <= NOW() + INTERVAL '30 days' AND e.status = 'active' ORDER BY e.cert_expiry_date ASC`);  } catch (_e) {
     return Err(String(_e));
   }
 
+  }
+
+  async update(id: string, patch: Record<string, unknown>): Promise<Result<Row | null>> {
+    try {
+      const { status, description, meta } = patch;
+      const r = await exec(sql`
+        UPDATE exception_logs
+        SET status      = COALESCE(${status      ?? null}, status),
+            description = COALESCE(${description ?? null}, description),
+            meta        = COALESCE(${meta ? JSON.stringify(meta) : null}::jsonb, meta),
+            updated_at  = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+    } catch (_e) { return Err(String(_e)); }
+  }
+
+  async softDelete(id: string): Promise<Result<boolean>> {
+    try {
+      const r = await exec(sql`SELECT id FROM exception_logs WHERE id = ${id} LIMIT 1`);
+      if (!r.ok || !r.data[0]) return Ok(false);
+      await exec(sql`UPDATE exception_logs SET deleted_at = NOW() WHERE id = ${id}`);
+      return Ok(true);
+    } catch (_e) { return Err(String(_e)); }
   }
 }

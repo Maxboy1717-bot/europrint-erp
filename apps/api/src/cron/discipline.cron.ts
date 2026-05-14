@@ -1,3 +1,8 @@
+/**
+ * @module discipline.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { db, discipline_records } from '@shared/db'
