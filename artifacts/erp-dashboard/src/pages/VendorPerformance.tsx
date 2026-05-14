@@ -72,10 +72,10 @@ export default function VendorPerformance() {
   });
 
   const ratingBadge = (rating: number) => {
-    if (rating >= 90) return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><Award className="w-3 h-3 mr-1" />A'lo</Badge>;
-    if (rating >= 75) return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"><Star className="w-3 h-3 mr-1" />Yaxshi</Badge>;
-    if (rating >= 60) return <EPStatusPill tone="warning">O'rtacha</EPStatusPill>;
-    return <EPStatusPill tone="danger">Yomon</EPStatusPill>;
+    if (rating >= 90) return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><Award className="w-3 h-3 mr-1" />{t("alo")}</Badge>;
+    if (rating >= 75) return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"><Star className="w-3 h-3 mr-1" />{t("Yaxshi")}</Badge>;
+    if (rating >= 60) return <EPStatusPill tone="warning">{t("average")}</EPStatusPill>;
+    return <EPStatusPill tone="danger">{t("yomon")}</EPStatusPill>;
   };
 
   const totalVendors = (spendAnalysis || []).length;
@@ -92,9 +92,9 @@ export default function VendorPerformance() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-vendor-performance">
       <div className="flex items-center justify-between">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Taminotchi Samaradorligi</b></>}
-        title="Taminotchi Samaradorligi"
-        subtitle="Yetkazib berish, sifat, narx raqobatbardoshligi bo'yicha baholash"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("taminotchiSamaradorligi")}</b></>}
+        title={t("taminotchiSamaradorligi")}
+        subtitle={t("yetkazibBerishSifatNarxRaqobatbardoshligi")}
         data-testid="text-vendor-performance-title"
       />
         <div className="flex items-center gap-2">
@@ -102,16 +102,16 @@ export default function VendorPerformance() {
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" data-testid="button-add-rating">
                 <PlusCircle className="h-4 w-4 mr-2" />
-                Baho qo'shish
+                {t("bahoQoshish")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-6">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold">Taminotchi bahosi</DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold">{t("taminotchiBahosi")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-1">
-                  <Label htmlFor="vp-vendorId">Taminotchi ID</Label>
+                  <Label htmlFor="vp-vendorId">{t("taminotchiId")}</Label>
                   <Input
                     id="vp-vendorId"
                     placeholder={t('vendorId')}
@@ -134,10 +134,10 @@ export default function VendorPerformance() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="vp-comment">Izoh</Label>
+                  <Label htmlFor="vp-comment">{t("Izoh")}</Label>
                   <Input
                     id="vp-comment"
-                    placeholder="Izoh..."
+                    placeholder={t("izoh1")}
                     value={ratingForm.comment}
                     onChange={(e) => setRatingForm((f) => ({ ...f, comment: e.target.value }))}
                     data-testid="input-comment"
@@ -156,26 +156,26 @@ export default function VendorPerformance() {
           </Dialog>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Yangilash
+            {t("refresh")}
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Taminotchilar</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("taminotchilar")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{totalVendors}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">O'rtacha reyting</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("ortachaReyting")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{avgRating.toFixed(1)}%</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami xarid</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("jamiXarid")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{(totalSpend / 1000000).toFixed(1)}M</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Baholangan</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("baholangan")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{(metrics || []).length}</p>
         </div>
       </div>
@@ -184,24 +184,24 @@ export default function VendorPerformance() {
         <CardHeader>
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <BarChart3 className="w-4 h-4 inline mr-2 text-primary" />
-            Xarajat Tahlili
+            {t("xarajatTahlili1")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {(spendAnalysis || []).length === 0 ? (
             <div className="text-center py-12 text-[13px] text-muted-foreground">
               <Truck className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Hali taminotchi baholash mavjud emas</p>
+              <p>{t("haliTaminotchiBaholashMavjudEmas")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Taminotchi</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Jami xarid</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Buyurtmalar</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">O'rtacha reyting</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Daraja</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("taminotchi1")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("jamiXarid")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("buyurtmalar")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ortachaReyting")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("daraja")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -228,19 +228,19 @@ export default function VendorPerformance() {
       {(metrics || []).length > 0 && (
         <Card className="bg-card border-none rounded-xl" data-testid="card-detailed-metrics">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Batafsil Metrikalar</CardTitle>
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("batafsilMetrikalar")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Taminotchi</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Davr</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Buyurtmalar</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">O'z vaqtida</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Kechikkan</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sifat</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Umumiy</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("taminotchi1")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("period")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("buyurtmalar")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ozVaqtida")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("kechikkan")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Sifat")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("umumiy")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

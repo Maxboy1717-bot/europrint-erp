@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TrendingUp, Users, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 import type { SkillGap, MentorshipRecord, SkillGapData, MentorshipData } from "./profile-types";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // SkillGapCard
@@ -22,6 +23,7 @@ interface SkillGapCardProps {
 }
 
 export function SkillGapCard({ skillGapData, loadingSkillGap }: SkillGapCardProps) {
+  const { t } = useTranslation("common");
   if (!loadingSkillGap && !(skillGapData && Array.isArray(skillGapData.gaps) && skillGapData.gaps.length > 0)) {
     return null;
   }
@@ -32,7 +34,7 @@ export function SkillGapCard({ skillGapData, loadingSkillGap }: SkillGapCardProp
           <TrendingUp className="h-5 w-5 text-[var(--ep-primary)]" />
           Ko'nikma tahlili (Skill Gap)
         </CardTitle>
-        <CardDescription>Lavozim talablari va xodim ko'nikmalarini solishtirish</CardDescription>
+        <CardDescription>{t("lavozimTalablariVaXodimKonikmalarini")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loadingSkillGap ? (
@@ -42,26 +44,26 @@ export function SkillGapCard({ skillGapData, loadingSkillGap }: SkillGapCardProp
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="text-center">
                 <p className="text-2xl font-bold">{skillGapData.summary.totalRequired}</p>
-                <p className="text-xs text-muted-foreground">Jami talab</p>
+                <p className="text-xs text-muted-foreground">{t("jamiTalab")}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-[var(--ep-green)]">{skillGapData.summary.met}</p>
-                <p className="text-xs text-muted-foreground">Bajarilgan</p>
+                <p className="text-xs text-muted-foreground">{t("bajarilgan")}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-[var(--ep-yellow)]">{skillGapData.summary.gaps}</p>
-                <p className="text-xs text-muted-foreground">Etishmovchi</p>
+                <p className="text-xs text-muted-foreground">{t("etishmovchi")}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-[var(--ep-red)]">{skillGapData.summary.missing}</p>
-                <p className="text-xs text-muted-foreground">Mavjud emas</p>
+                <p className="text-xs text-muted-foreground">{t("mavjudEmas")}</p>
               </div>
             </div>
 
             {skillGapData.summary.gapPercent > 0 && (
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Ko'nikma bo'shlig'i</span>
+                  <span>{t("konikmaBoshligi")}</span>
                   <span className="font-medium text-[var(--ep-primary)]">{skillGapData.summary.gapPercent}%</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-2">
@@ -76,11 +78,11 @@ export function SkillGapCard({ skillGapData, loadingSkillGap }: SkillGapCardProp
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ko'nikma</TableHead>
-                  <TableHead>Kategoriya</TableHead>
-                  <TableHead>Talab</TableHead>
-                  <TableHead>Hozirgi</TableHead>
-                  <TableHead>Holat</TableHead>
+                  <TableHead>{t("konikma")}</TableHead>
+                  <TableHead>{t("category")}</TableHead>
+                  <TableHead>{t("talab1")}</TableHead>
+                  <TableHead>{t("hozirgi")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -89,7 +91,7 @@ export function SkillGapCard({ skillGapData, loadingSkillGap }: SkillGapCardProp
                     <TableCell>
                       <div className="font-medium">{gap.skillName}</div>
                       {gap.isMandatory && (
-                        <EPStatusPill tone="danger" className="text-xs mt-1">Majburiy</EPStatusPill>
+                        <EPStatusPill tone="danger" className="text-xs mt-1">{t("majburiy")}</EPStatusPill>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{gap.skillCategory}</TableCell>
@@ -111,7 +113,7 @@ export function SkillGapCard({ skillGapData, loadingSkillGap }: SkillGapCardProp
                       {gap.status === "met" && (
                         <div className="flex items-center gap-1 text-[var(--ep-green)]">
                           <CheckCircle2 className="h-4 w-4" />
-                          <span className="text-sm">Bajarilgan</span>
+                          <span className="text-sm">{t("bajarilgan")}</span>
                         </div>
                       )}
                       {gap.status === "gap" && (
@@ -123,7 +125,7 @@ export function SkillGapCard({ skillGapData, loadingSkillGap }: SkillGapCardProp
                       {gap.status === "missing" && (
                         <div className="flex items-center gap-1 text-[var(--ep-red)]">
                           <XCircle className="h-4 w-4" />
-                          <span className="text-sm">Mavjud emas</span>
+                          <span className="text-sm">{t("mavjudEmas")}</span>
                         </div>
                       )}
                     </TableCell>
@@ -155,7 +157,7 @@ export function MentorshipCard({ mentorshipData, loadingMentorship }: Mentorship
           <Users className="h-5 w-5 text-[var(--ep-blue)]" />
           Mentor / Mentee bog'liqligi
         </CardTitle>
-        <CardDescription>Mentorlik munosabatlari</CardDescription>
+        <CardDescription>{t("mentorlikMunosabatlari")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loadingMentorship ? (
@@ -164,7 +166,7 @@ export function MentorshipCard({ mentorshipData, loadingMentorship }: Mentorship
           <div className="space-y-4">
             {mentorshipData.asMentor.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-[var(--ep-blue)] mb-2">Mentor sifatida</p>
+                <p className="text-sm font-medium text-[var(--ep-blue)] mb-2">{t("mentorSifatida")}</p>
                 <div className="space-y-2">
                   {(Array.isArray(mentorshipData.asMentor) ? mentorshipData.asMentor : []).map((m: MentorshipRecord) => (
                     <div
@@ -189,7 +191,7 @@ export function MentorshipCard({ mentorshipData, loadingMentorship }: Mentorship
             )}
             {mentorshipData.asMentee.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-[var(--ep-purple)] mb-2">Mentee sifatida</p>
+                <p className="text-sm font-medium text-[var(--ep-purple)] mb-2">{t("menteeSifatida")}</p>
                 <div className="space-y-2">
                   {(Array.isArray(mentorshipData.asMentee) ? mentorshipData.asMentee : []).map((m: MentorshipRecord) => (
                     <div
@@ -215,7 +217,7 @@ export function MentorshipCard({ mentorshipData, loadingMentorship }: Mentorship
           </div>
         ) : (
           <p className="text-muted-foreground text-center py-8">
-            Mentorlik munosabatlari topilmadi
+            {t("mentorlikMunosabatlariTopilmadi")}
           </p>
         )}
       </CardContent>

@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { MessageSquareWarning, Plus } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const ConflictSchema = z.object({
   party1:      z.string().min(1, "1-tomon majburiy"),
@@ -43,6 +44,7 @@ const SEVERITY_LABELS: Record<string, string> = { low: "Past", medium: "O'rta", 
 const STATUS_LABELS: Record<string, string> = { open: "Ochiq", investigating: "Ko'rilmoqda", resolved: "Hal etilgan" };
 
 export default function HRConflict() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
@@ -74,11 +76,11 @@ export default function HRConflict() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MessageSquareWarning className="h-5 w-5 text-[var(--ep-blue)]" />
-          <h1 className="font-semibold text-base">HR — Konflikt Boshqaruvi</h1>
+          <h1 className="font-semibold text-base">{t("hrKonfliktBoshqaruvi")}</h1>
           {open > 0 && <EPStatusPill tone="danger">{open} ochiq</EPStatusPill>}
         </div>
         <Button size="sm" onClick={() => setShowDialog(true)} data-testid="button-add-conflict">
-          <Plus className="h-3.5 w-3.5 mr-1.5" />Hodisa Qayd Etish
+          <Plus className="h-3.5 w-3.5 mr-1.5" />{t("hodisaQaydEtish1")}
         </Button>
       </div>
 
@@ -103,20 +105,20 @@ export default function HRConflict() {
             <div className="ep-table-scroll"><Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Tomonlar</TableHead>
-                  <TableHead>Tavsif</TableHead>
-                  <TableHead>Og'irlik</TableHead>
-                  <TableHead>Sana</TableHead>
-                  <TableHead>Holati</TableHead>
+                  <TableHead>{t("tomonlar")}</TableHead>
+                  <TableHead>{t("progress.description")}</TableHead>
+                  <TableHead>{t("weight")}</TableHead>
+                  <TableHead>{t("date")}</TableHead>
+                  <TableHead>{t("holati")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
                 ) : (reports as ConflictReport[]).length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                      Kelishmovchiliklar qayd etilmagan
+                      {t("kelishmovchiliklarQaydEtilmagan")}
                     </TableCell>
                   </TableRow>
                 ) : (reports as ConflictReport[]).map((r) => (
@@ -144,38 +146,38 @@ export default function HRConflict() {
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Konflikt Hodisasini Qayd Etish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("konfliktHodisasiniQaydEtish")}</DialogTitle></DialogHeader>
           <form onSubmit={form.handleSubmit((d) => createReport.mutate(d))} className="space-y-4 py-2">
             <div className="space-y-1">
           <Label>1-tomon</Label>
-              <Input {...form.register("party1")} placeholder="Xodim ismi" data-testid="input-party1" />
+              <Input {...form.register("party1")} placeholder={t("xodimIsmi")} data-testid="input-party1" />
               {form.formState.errors.party1 && <p className="text-xs text-destructive">{form.formState.errors.party1.message}</p>}
             </div>
             <div className="space-y-1">
           <Label>2-tomon</Label>
-              <Input {...form.register("party2")} placeholder="Xodim ismi yoki bo'lim" />
+              <Input {...form.register("party2")} placeholder={t("xodimIsmiYokiBolim")} />
               {form.formState.errors.party2 && <p className="text-xs text-destructive">{form.formState.errors.party2.message}</p>}
             </div>
             <div className="space-y-1">
-          <Label>Holat tavsifi</Label>
+          <Label>{t("holatTavsifi")}</Label>
               <Input {...form.register("description")} />
               {form.formState.errors.description && <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>}
             </div>
             <div className="space-y-1">
-          <Label>Og'irlik darajasi</Label>
+          <Label>{t("ogirlikDarajasi")}</Label>
               <Controller control={form.control} name="severity" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Past</SelectItem>
-                    <SelectItem value="medium">O'rta</SelectItem>
-                    <SelectItem value="high">Yuqori</SelectItem>
+                    <SelectItem value="low">{t("low")}</SelectItem>
+                    <SelectItem value="medium">{t("medium")}</SelectItem>
+                    <SelectItem value="high">{t("high")}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
             </div>
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setShowDialog(false)}>Bekor</Button>
+              <Button variant="outline" type="button" onClick={() => setShowDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createReport.isPending}>
                 {createReport.isPending ? "Saqlanmoqda..." : "Saqlash"}
               </Button>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Search, Pencil, Trash2, Target } from "lucide-react";
 import { type Position, type Department, KPI_TEMPLATES } from "./PositionsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Filters bar
@@ -31,12 +32,13 @@ interface PositionsFiltersProps {
 export function PositionsFilters({
   search, onSearchChange, deptFilter, onDeptFilterChange, departments, filteredCount,
 }: PositionsFiltersProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="px-6 py-3 flex items-center gap-3 flex-wrap">
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Qidirish..."
+          placeholder={t("Qidirish...")}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-8 h-9"
@@ -44,10 +46,10 @@ export function PositionsFilters({
       </div>
       <Select value={deptFilter} onValueChange={onDeptFilterChange}>
         <SelectTrigger className="w-48 h-9">
-          <SelectValue placeholder="Barcha bo'limlar" />
+          <SelectValue placeholder={t("barchaBolimlar")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha bo'limlar</SelectItem>
+          <SelectItem value="all">{t("barchaBolimlar")}</SelectItem>
           {(Array.isArray(departments) ? departments : []).map((d) => (
             <SelectItem key={d.id} value={d.id}>{d.name_uz || d.name}</SelectItem>
           ))}
@@ -80,14 +82,14 @@ export function PositionsTable({
         <div className="ep-table-scroll"><Table>
           <TableHeader className="sticky top-0 z-10 bg-card">
             <TableRow>
-              <TableHead className="w-[80px]">Kod</TableHead>
-              <TableHead>Lavozim nomi</TableHead>
-              <TableHead>Bo'lim</TableHead>
-              <TableHead className="w-[90px]">Daraja</TableHead>
+              <TableHead className="w-[80px]">{t("code")}</TableHead>
+              <TableHead>{t("lavozimNomi1")}</TableHead>
+              <TableHead>{t("bolim1")}</TableHead>
+              <TableHead className="w-[90px]">{t("daraja")}</TableHead>
               <TableHead className="w-[90px]">Shtат</TableHead>
-              <TableHead className="w-[90px]">Holat</TableHead>
+              <TableHead className="w-[90px]">{t("status28")}</TableHead>
               <TableHead className="w-[100px]">KPI</TableHead>
-              <TableHead className="w-[100px] text-right">Amallar</TableHead>
+              <TableHead className="w-[100px] text-right">{t("Amallar")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -102,7 +104,7 @@ export function PositionsTable({
             ) : positions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12 text-[13px] text-muted-foreground">
-                  Lavozimlar topilmadi
+                  {t("lavozimlarTopilmadi")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -148,7 +150,7 @@ function PositionRow({ pos, getDeptName, onEdit, onDelete, onKpiClick }: Positio
         <div className="font-medium">{pos.name_uz || pos.name}</div>
         {pos.name_ru && <div className="text-xs text-muted-foreground">{pos.name_ru}</div>}
         {pos.is_management && (
-          <Badge variant="outline" className="text-xs mt-0.5">Boshqaruv</Badge>
+          <Badge variant="outline" className="text-xs mt-0.5">{t("boshqaruv")}</Badge>
         )}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">{getDeptName(pos.department_id)}</TableCell>
@@ -180,7 +182,7 @@ function PositionRow({ pos, getDeptName, onEdit, onDelete, onKpiClick }: Positio
             className="h-7 text-xs gap-1 text-muted-foreground"
             onClick={() => onKpiClick(pos, "")}
           >
-            <Target className="h-3 w-3" /> Biriktir
+            <Target className="h-3 w-3" /> {t("biriktir")}
           </Button>
         )}
       </TableCell>

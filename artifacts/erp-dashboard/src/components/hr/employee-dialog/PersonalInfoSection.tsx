@@ -7,8 +7,10 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { FormSectionProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function PersonalInfoSection({ form }: FormSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -17,7 +19,7 @@ export function PersonalInfoSection({ form }: FormSectionProps) {
           name="birthDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tug'ilgan sana</FormLabel>
+              <FormLabel>{t("tugilganSana")}</FormLabel>
               <FormControl>
                 <Input type="date" {...field} data-testid="input-birthDate" />
               </FormControl>
@@ -30,16 +32,16 @@ export function PersonalInfoSection({ form }: FormSectionProps) {
           name="gender"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Jinsi</FormLabel>
+              <FormLabel>{t("jinsi")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger data-testid="select-gender" className="h-9">
-                    <SelectValue placeholder="Jinsini tanlang" />
+                    <SelectValue placeholder={t("jinsiniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="erkak">Erkak</SelectItem>
-                  <SelectItem value="ayol">Ayol</SelectItem>
+                  <SelectItem value="erkak">{t("erkak")}</SelectItem>
+                  <SelectItem value="ayol">{t("ayol")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -52,9 +54,9 @@ export function PersonalInfoSection({ form }: FormSectionProps) {
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Yashash manzili</FormLabel>
+            <FormLabel>{t("yashashManzili")}</FormLabel>
             <FormControl>
-              <Input placeholder="To'liq manzil" {...field} data-testid="input-address" />
+              <Input placeholder={t("toliqManzil")} {...field} data-testid="input-address" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -66,17 +68,17 @@ export function PersonalInfoSection({ form }: FormSectionProps) {
           name="maritalStatus"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Oilaviy holati</FormLabel>
+              <FormLabel>{t("oilaviyHolati")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger data-testid="select-marital-status" className="h-9">
-                    <SelectValue placeholder="Oilaviy holatini tanlang" />
+                    <SelectValue placeholder={t("oilaviyHolatiniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="turmush qurmagan">Turmush qurmagan</SelectItem>
-                  <SelectItem value="turmush qurgan">Turmush qurgan</SelectItem>
-                  <SelectItem value="ajrashgan">Ajrashgan</SelectItem>
+                  <SelectItem value="turmush qurmagan">{t("turmushQurmagan")}</SelectItem>
+                  <SelectItem value="turmush qurgan">{t("turmushQurgan")}</SelectItem>
+                  <SelectItem value="ajrashgan">{t("ajrashgan")}</SelectItem>
                   <SelectItem value="beva/beva ayol">Beva/Beva ayol</SelectItem>
                 </SelectContent>
               </Select>
@@ -89,12 +91,12 @@ export function PersonalInfoSection({ form }: FormSectionProps) {
           name="childrenCount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Farzandlar soni</FormLabel>
+              <FormLabel>{t("farzandlarSoni")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="number"
-                  placeholder="Masalan: 2"
+                  placeholder={t("masalan2")}
                   data-testid="input-children-count"
                 />
               </FormControl>
@@ -108,19 +110,19 @@ export function PersonalInfoSection({ form }: FormSectionProps) {
         name="childrenEducation"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Farzandlarning ta'lim holati</FormLabel>
+            <FormLabel>{t("farzandlarningTalimHolati")}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger data-testid="select-children-education" className="h-9">
-                  <SelectValue placeholder="Farzandlar ta'limini tanlang" />
+                  <SelectValue placeholder={t("farzandlarTaliminiTanlang")} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="yo'q">Farzand yo'q</SelectItem>
-                <SelectItem value="maktabgacha">Maktabgacha</SelectItem>
-                <SelectItem value="maktabda">Maktabda</SelectItem>
-                <SelectItem value="oliy ta'lim">Oliy ta'limda</SelectItem>
-                <SelectItem value="bitirgan">Ta'limni bitirgan</SelectItem>
+                <SelectItem value="yo'q">{t("farzandYoq")}</SelectItem>
+                <SelectItem value="maktabgacha">{t("maktabgacha")}</SelectItem>
+                <SelectItem value="maktabda">{t("maktabda")}</SelectItem>
+                <SelectItem value="oliy ta'lim">{t("oliyTalimda")}</SelectItem>
+                <SelectItem value="bitirgan">{t("talimniBitirgan")}</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

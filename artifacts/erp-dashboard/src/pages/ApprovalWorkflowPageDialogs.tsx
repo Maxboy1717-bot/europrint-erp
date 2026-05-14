@@ -38,12 +38,12 @@ export function CreateWorkflowDialog({open,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi tasdiqlash so'rovi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiTasdiqlashSorovi")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Hujjat turi *</Label>
+              <Label>{t("hujjatTuri1")}</Label>
               <Input
                 value={form.documentType}
                 onChange={e => onFormChange(f => ({ ...f, documentType: e.target.value }))}
@@ -52,7 +52,7 @@ export function CreateWorkflowDialog({open,
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Hujjat ID *</Label>
+              <Label>{t("hujjatId")}</Label>
               <Input
                 value={form.documentId}
                 onChange={e => onFormChange(f => ({ ...f, documentId: e.target.value }))}
@@ -63,7 +63,7 @@ export function CreateWorkflowDialog({open,
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Miqdor</Label>
+              <Label>{t("quantity")}</Label>
               <Input
                 type="number"
                 value={form.amount}
@@ -73,28 +73,28 @@ export function CreateWorkflowDialog({open,
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Yuboruvchi *</Label>
+              <Label>{t("yuboruvchi")}</Label>
               <Input
                 value={form.requestedBy}
                 onChange={e => onFormChange(f => ({ ...f, requestedBy: e.target.value }))}
-                placeholder="Ism Familya"
+                placeholder={t("ismFamilya")}
                 data-testid="input-workflow-requester"
               />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Izoh</Label>
+            <Label>{t("Izoh")}</Label>
             <Textarea
               value={form.notes}
               onChange={e => onFormChange(f => ({ ...f, notes: e.target.value }))}
-              placeholder="Qo'shimcha izoh..."
+              placeholder={t("qoshimchaIzoh")}
               rows={2}
               data-testid="input-workflow-notes"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button
             onClick={onSubmit}
             disabled={
@@ -162,7 +162,7 @@ export function ActionWorkflowDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             variant={actionDialog?.type === "approve" ? "default" : "destructive"}
             onClick={onConfirm}

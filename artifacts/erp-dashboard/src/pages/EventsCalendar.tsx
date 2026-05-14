@@ -22,6 +22,7 @@ import {
 import { EventDialog } from "./EventsCalendarDialogs";
 import { EventsCalendarGrid } from "./EventsCalendarGrid";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Query keys
@@ -57,6 +58,7 @@ const DEFAULT_VALUES: EventFormValues = {
 // ---------------------------------------------------------------------------
 
 export default function EventsCalendar() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // Dialog / editing state
@@ -199,9 +201,9 @@ export default function EventsCalendar() {
       {/* Page header + create dialog trigger */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="ep-h1">Tadbirlar Kalendari</h1>
+          <h1 className="ep-h1">{t("tadbirlarKalendari")}</h1>
           <p className="text-muted-foreground">
-            O'quv tadbirlari va yig'ilishlarni boshqarish
+            {t("oquvTadbirlariVaYigilishlarniBoshqarish")}
           </p>
         </div>
         <EventDialog

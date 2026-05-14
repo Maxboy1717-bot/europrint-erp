@@ -23,8 +23,10 @@ import {
   SubscriptionsTable,
 } from "./ReportsHubSections";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ReportsHub() {
+  const { t } = useTranslation("common");
   const { language } = useLanguage();
   const { toast } = useToast();
   const lang = language === "ru" ? "ru" : "uz";
@@ -148,8 +150,8 @@ export default function ReportsHub() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Hisobotlar Markazi</b></>}
-        title="Hisobotlar Markazi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("hisobotlarMarkazi")}</b></>}
+        title={t("hisobotlarMarkazi")}
         subtitle={tr.subtitle}
       />
         </div>

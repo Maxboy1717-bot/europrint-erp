@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import { TimelineItem, Activity, Comment, PRIORITY_OPTIONS } from "./types";
 import { getActivityIcon, getActivityColor } from "./utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface ActivityFeedProps {
   entityType: string;
@@ -32,6 +33,7 @@ export function ActivityFeed({
   timeline,
   isLoading,
 }: ActivityFeedProps) {
+  const { t } = useTranslation("common");
   const [playingRecording, setPlayingRecording] = useState<number | null>(null);
   const { toast } = useToast();
 
@@ -63,7 +65,7 @@ export function ActivityFeed({
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-        Yuklanmoqda...
+        {t("Yuklanmoqda...")}
       </div>
     );
   }
@@ -74,7 +76,7 @@ export function ActivityFeed({
         <div className="p-4 space-y-4">
           {timeline.length === 0 ? (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
-              <p className="text-sm">Hozircha faoliyatlar yo'q</p>
+              <p className="text-sm">{t("hozirchaFaoliyatlarYoq")}</p>
             </div>
           ) : (
             (Array.isArray(timeline) ? timeline : []).map((item) => (
@@ -181,7 +183,7 @@ export function ActivityFeed({
                         )}
                         {(item.data as Activity).completed && (
                           <Badge variant="secondary" className="text-[10px] h-4 px-1.5 bg-green-500/10 text-[var(--ep-green)] border-green-200">
-                            Bajarilgan
+                            {t("bajarilgan")}
                           </Badge>
                         )}
                       </div>

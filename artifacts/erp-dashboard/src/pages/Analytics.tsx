@@ -67,9 +67,9 @@ export default function Analytics() {
 
   const pageHeader = (
     <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Statistika & Analitika</b></>}
-        title="Statistika & Analitika"
-        subtitle="Xodimlar natijalarini, kurs o'zlashtirish va testlar bo'yicha ma'lumotlar tahlili"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("statistikaAnalitika")}</b></>}
+        title={t("statistikaAnalitika")}
+        subtitle={t("xodimlarNatijalariniKursOzlashtirishVa")}
       />
   );
 
@@ -88,7 +88,7 @@ export default function Analytics() {
         {pageHeader}
         <Button variant="outline" size="sm" onClick={() => refetchStats()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
@@ -97,15 +97,15 @@ export default function Analytics() {
 
       <Tabs defaultValue="outcomes" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="outcomes" data-testid="tab-outcomes">Learning Outcomes</TabsTrigger>
-          <TabsTrigger value="system" data-testid="tab-system">Tizim Statistikasi</TabsTrigger>
-          <TabsTrigger value="leaderboard" data-testid="tab-leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="engagement" data-testid="tab-engagement">Engagement</TabsTrigger>
-          <TabsTrigger value="assessment" data-testid="tab-assessment">Test Sifati</TabsTrigger>
+          <TabsTrigger value="outcomes" data-testid="tab-outcomes">{t("learningOutcomes")}</TabsTrigger>
+          <TabsTrigger value="system" data-testid="tab-system">{t("tizimStatistikasi")}</TabsTrigger>
+          <TabsTrigger value="leaderboard" data-testid="tab-leaderboard">{t("leaderboard")}</TabsTrigger>
+          <TabsTrigger value="engagement" data-testid="tab-engagement">{t("engagement")}</TabsTrigger>
+          <TabsTrigger value="assessment" data-testid="tab-assessment">{t("testSifati")}</TabsTrigger>
           <TabsTrigger value="hr" data-testid="tab-hr">{t('hrDashboard2')}</TabsTrigger>
-          <TabsTrigger value="courses" data-testid="tab-courses">Kurslar</TabsTrigger>
-          <TabsTrigger value="users" data-testid="tab-users">Xodimlar</TabsTrigger>
-          <TabsTrigger value="tests" data-testid="tab-tests">Testlar</TabsTrigger>
+          <TabsTrigger value="courses" data-testid="tab-courses">{t("kurslar")}</TabsTrigger>
+          <TabsTrigger value="users" data-testid="tab-users">{t("xodimlar")}</TabsTrigger>
+          <TabsTrigger value="tests" data-testid="tab-tests">{t("testlar")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="outcomes" className="space-y-4">

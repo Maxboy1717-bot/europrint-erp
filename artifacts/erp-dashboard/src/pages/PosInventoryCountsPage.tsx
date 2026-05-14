@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface InventoryCount {
   id: string | number;
@@ -51,6 +52,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 const QUERY_KEY = ["/api/pos/inventory-counts"];
 
 export default function PosInventoryCountsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCreate, setShowCreate]     = useState(false);
@@ -91,12 +93,12 @@ export default function PosInventoryCountsPage() {
   return (
     <ModulePage
       module="pos"
-      title="Inventarizatsiyalar"
+      title={t("inventarizatsiyalar")}
       icon={<ClipboardCheck className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-count">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi inventarizatsiya
+          {t("yangiInventarizatsiya1")}
         </Button>
       }
     >
@@ -134,7 +136,7 @@ export default function PosInventoryCountsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <ClipboardCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Inventarizatsiyalar topilmadi</p>
+              <p className="text-muted-foreground">{t("inventarizatsiyalarTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -176,30 +178,30 @@ export default function PosInventoryCountsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi inventarizatsiya</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiInventarizatsiya1")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Sklad ID *</Label>
+              <Label>{t("skladId")}</Label>
               <Input
                 value={form.warehouse_id}
                 onChange={e => setForm(f => ({ ...f, warehouse_id: e.target.value }))}
-                placeholder="Sklad ID"
+                placeholder={t("skladId1")}
                 data-testid="input-count-warehouse"
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Izoh</Label>
+              <Label>{t("Izoh")}</Label>
               <Input
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Inventarizatsiya sababi..."
+                placeholder={t("inventarizatsiyaSababi")}
                 data-testid="input-count-notes"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.warehouse_id) createMutation.mutate(form); }}
               disabled={!form.warehouse_id || createMutation.isPending}

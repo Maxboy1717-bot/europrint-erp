@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { SEVERITY_CONFIG } from "./hr-dashboard/types";
 import type { EmployeeWithGrade } from "./hr-dashboard/types";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Shared helper: grade badge classname
@@ -50,6 +51,7 @@ interface AlertsTabProps {
 }
 
 export function AlertsTab({ alerts, alertStats, isLoadingAlerts }: AlertsTabProps) {
+  const { t } = useTranslation("common");
   const statCards = [
     { label: "Jami",          value: alertStats.total,    icon: Bell,          accent: "text-foreground", bg: "bg-card" },
     { label: "Kritik",        value: alertStats.critical, icon: XCircle,       accent: "text-[var(--ep-red)]",    bg: "bg-red-50" },
@@ -70,7 +72,7 @@ export function AlertsTab({ alerts, alertStats, isLoadingAlerts }: AlertsTabProp
       <div className="bg-card rounded-xl p-6">
         <CardHeader className="p-0 mb-4">
           <CardTitle className="flex items-center gap-2 text-sm text-foreground">
-            <Bell className="h-4 w-4 text-[var(--ep-yellow)]" />Barcha Alertlar
+            <Bell className="h-4 w-4 text-[var(--ep-yellow)]" />{t("barchaAlertlar")}
           </CardTitle>
         </CardHeader>
         {isLoadingAlerts ? (
@@ -78,7 +80,7 @@ export function AlertsTab({ alerts, alertStats, isLoadingAlerts }: AlertsTabProp
         ) : alerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
             <CheckCircle2 className="w-12 h-12 text-green-400" />
-            <p className="text-base font-medium">Hech qanday alert mavjud emas</p>
+            <p className="text-base font-medium">{t("hechQandayAlertMavjudEmas")}</p>
           </div>
         ) : (
           <div className="space-y-3">

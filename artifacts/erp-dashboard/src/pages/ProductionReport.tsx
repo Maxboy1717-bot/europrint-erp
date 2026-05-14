@@ -29,8 +29,10 @@ import {
 import { ShiftReportsTab } from "@/components/production/report/ShiftReportsTab";
 import { WeeklyReportsTab } from "@/components/production/report/WeeklyReportsTab";
 import { ProductionOrder, PaginationData } from "@/components/production/report/types";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ProductionReportPage() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { isAuthenticated } = useAuth();
   const [status, setStatus] = useState("all");
@@ -61,35 +63,35 @@ export default function ProductionReportPage() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="ep-h1">Ishlab Chiqarish Hisoboti</h1>
-            <p className="text-muted-foreground mt-1">Smena va haftalik ish unumdorligi tahlili</p>
+            <h1 className="ep-h1">{t("ishlabChiqarishHisoboti")}</h1>
+            <p className="text-muted-foreground mt-1">{t("smenaVaHaftalikIshUnumdorligi")}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => refetch()}><RefreshCw className="w-4 h-4 mr-2" /> Yangilash</Button>
-            <Button onClick={() => navigate("/production/orders/new")} className="bg-primary hover:bg-primary/90">Yangi Buyurtma</Button>
+            <Button variant="outline" onClick={() => refetch()}><RefreshCw className="w-4 h-4 mr-2" /> {t("refresh")}</Button>
+            <Button onClick={() => navigate("/production/orders/new")} className="bg-primary hover:bg-primary/90">{t("yangiBuyurtma")}</Button>
           </div>
         </div>
 
         <Tabs defaultValue="orders" className="space-y-4">
           <TabsList className="bg-muted/50 p-1">
-            <TabsTrigger value="orders" className="gap-2"><BarChart2 className="w-4 h-4" /> Buyurtmalar</TabsTrigger>
-            <TabsTrigger value="shifts" className="gap-2"><Clock className="w-4 h-4" /> Smena Xisoboti</TabsTrigger>
-            <TabsTrigger value="weekly" className="gap-2"><FileSpreadsheet className="w-4 h-4" /> Haftalik Tahlil</TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2"><BarChart2 className="w-4 h-4" /> {t("buyurtmalar")}</TabsTrigger>
+            <TabsTrigger value="shifts" className="gap-2"><Clock className="w-4 h-4" /> {t("smenaXisoboti")}</TabsTrigger>
+            <TabsTrigger value="weekly" className="gap-2"><FileSpreadsheet className="w-4 h-4" /> {t("haftalikTahlil")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-9"><SelectValue placeholder="Holat" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[180px] h-9"><SelectValue placeholder={t("status28")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Barcha holatlar</SelectItem>
+                    <SelectItem value="all">{t("barchaHolatlar")}</SelectItem>
                     {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <Button variant="outline" onClick={() => window.open(`/api/production/orders/report/excel?${status !== "all" ? `status=${status}` : ""}`, "_blank")} data-testid="button-export-excel">
-                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel
+                <FileSpreadsheet className="w-4 h-4 mr-2" /> {t("excel")}
               </Button>
             </div>
 
@@ -114,15 +116,15 @@ export default function ProductionReportPage() {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="pl-4">Raqam</TableHead>
-                      <TableHead>Holati</TableHead>
-                      <TableHead>Mahsulot</TableHead>
-                      <TableHead>Turi</TableHead>
-                      <TableHead className="text-right">Reja</TableHead>
-                      <TableHead className="text-right">Ishlab chiq.</TableHead>
+                      <TableHead className="pl-4">{t("raqam")}</TableHead>
+                      <TableHead>{t("holati")}</TableHead>
+                      <TableHead>{t("Mahsulot")}</TableHead>
+                      <TableHead>{t("type")}</TableHead>
+                      <TableHead className="text-right">{t("reja")}</TableHead>
+                      <TableHead className="text-right">{t("ishlabChiq")}</TableHead>
                       <TableHead className="text-right">Tannarx (reja)</TableHead>
-                      <TableHead>Mas'ul</TableHead>
-                      <TableHead>Sana</TableHead>
+                      <TableHead>{t("masul")}</TableHead>
+                      <TableHead>{t("date")}</TableHead>
                       <TableHead />
                     </TableRow>
                   </TableHeader>
@@ -132,7 +134,7 @@ export default function ProductionReportPage() {
                         <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">{Array.from({ length: 10 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full rounded-lg" /></TableCell>)}</TableRow>
                       ))
                     ) : orders.length === 0 ? (
-                      <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">Buyurtmalar topilmadi</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">{t("buyurtmalarTopilmadi")}</TableCell></TableRow>
                     ) : (
                       (Array.isArray(orders) ? orders : []).map((order) => {
                         const st = STATUS_LABELS[order.status] || { label: order.status, variant: "secondary" as const };

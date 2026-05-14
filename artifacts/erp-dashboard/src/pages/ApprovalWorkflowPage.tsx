@@ -16,8 +16,10 @@ import { Workflow, WorkflowForm, EMPTY_FORM } from "./ApprovalWorkflowPageTypes"
 import { WorkflowList } from "./ApprovalWorkflowPageSections";
 import { CreateWorkflowDialog, ActionWorkflowDialog } from "./ApprovalWorkflowPageDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ApprovalWorkflowPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("pending");
@@ -112,12 +114,12 @@ export default function ApprovalWorkflowPage() {
   return (
     <ModulePage
       module="finance"
-      title="Tasdiqlash Jarayoni"
+      title={t("tasdiqlashJarayoni")}
       icon={<ClipboardCheck className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-workflow">
           <Plus className="h-4 w-4 mr-2" />
-          So'rov yuborish
+          {t("sorovYuborish")}
         </Button>
       }
     >
@@ -126,7 +128,7 @@ export default function ApprovalWorkflowPage() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Hujjat qidirish..."
+              placeholder={t("hujjatQidirish")}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9"
@@ -137,8 +139,8 @@ export default function ApprovalWorkflowPage() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
-            <TabsTrigger value="pending">Kutilmoqda</TabsTrigger>
-            <TabsTrigger value="history">Tarix</TabsTrigger>
+            <TabsTrigger value="pending">{t("Kutilmoqda")}</TabsTrigger>
+            <TabsTrigger value="history">{t("tarix")}</TabsTrigger>
           </TabsList>
 
           {["pending", "history"].map(t => (

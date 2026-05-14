@@ -18,6 +18,7 @@ import {
 } from "./DocumentsTabTypes";
 import { FileIcon } from "./DocumentsTabSectionsA";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── FileFolderSection ────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ export function FileFolderSection({
   employeeFiles, totalFiles, activeFileCategory, onCategoryChange,
   deletingId, onDeleteFileClick, onUploadClick,
 }: FileFolderSectionProps) {
+  const { t } = useTranslation("common");
   const allFiles      = Array.isArray(employeeFiles) ? employeeFiles : [];
   const filteredFiles = activeFileCategory === "all"
     ? allFiles
@@ -47,9 +49,9 @@ export function FileFolderSection({
           <div>
             <CardTitle className="flex items-center gap-2">
               <FolderOpen className="h-5 w-5 text-[var(--ep-purple)]" />
-              Xodim Papkasi
+              {t("xodimPapkasi")}
             </CardTitle>
-            <CardDescription>Xodimning shaxsiy hujjatlari va fayllari</CardDescription>
+            <CardDescription>{t("xodimningShaxsiyHujjatlariVaFayllari")}</CardDescription>
           </div>
           <Button
             size="sm"
@@ -57,7 +59,7 @@ export function FileFolderSection({
             className="gap-2 bg-primary hover:bg-primary/90"
             data-testid="button-upload-file"
           >
-            <Upload className="h-4 w-4" /> Fayl yuklash
+            <Upload className="h-4 w-4" /> {t("faylYuklash")}
           </Button>
         </div>
       </CardHeader>
@@ -100,12 +102,12 @@ export function FileFolderSection({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-8"></TableHead>
-                <TableHead>Fayl nomi</TableHead>
-                <TableHead>Toifa</TableHead>
-                <TableHead>Izoh</TableHead>
-                <TableHead>Hajmi</TableHead>
-                <TableHead>Yuklagan</TableHead>
-                <TableHead>Sana</TableHead>
+                <TableHead>{t("faylNomi")}</TableHead>
+                <TableHead>{t("toifa")}</TableHead>
+                <TableHead>{t("Izoh")}</TableHead>
+                <TableHead>{t("hajmi")}</TableHead>
+                <TableHead>{t("yuklagan")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
@@ -143,7 +145,7 @@ export function FileFolderSection({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center rounded h-7 w-7 hover:bg-muted transition-colors"
-                          title="Yuklab olish"
+                          title={t("download")}
                         >
                           <Download className="h-3.5 w-3.5 text-muted-foreground" />
                         </a>
@@ -151,7 +153,7 @@ export function FileFolderSection({
                           onClick={() => onDeleteFileClick(file.id)}
                           disabled={deletingId === file.id}
                           className="inline-flex items-center justify-center rounded h-7 w-7 hover:bg-destructive/10 transition-colors"
-                          title="O'chirish"
+                          title={t("delete")}
                           data-testid={`button-delete-file-${file.id}`}
                         >
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -166,14 +168,14 @@ export function FileFolderSection({
         ) : (
           <div className="flex flex-col items-center py-12 text-muted-foreground">
             <FolderOpen className="h-12 w-12 mb-3 opacity-15" />
-            <p className="text-sm font-medium">Fayllar topilmadi</p>
+            <p className="text-sm font-medium">{t("fayllarTopilmadi")}</p>
             <p className="text-xs opacity-60 mt-1">
               {activeFileCategory === "all"
                 ? "Xodim papkasiga hali fayl yuklanmagan"
                 : `${FILE_CATEGORIES[activeFileCategory]?.label} toifasida fayllar yo'q`}
             </p>
             <Button size="sm" variant="outline" className="mt-4 gap-2" onClick={onUploadClick}>
-              <Upload className="h-3.5 w-3.5" /> Fayl yuklash
+              <Upload className="h-3.5 w-3.5" /> {t("faylYuklash")}
             </Button>
           </div>
         )}
@@ -194,21 +196,21 @@ export function ContractsSection({ contractsArr }: ContractsSectionProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ScrollText className="h-4 w-4 text-[var(--ep-blue)]" />
-          Mehnat shartnomalari
+          {t("mehnatShartnomalari")}
         </CardTitle>
-        <CardDescription>Xodim bilan tuzilgan barcha shartnomalar ro'yxati</CardDescription>
+        <CardDescription>{t("xodimBilanTuzilganBarchaShartnomalar")}</CardDescription>
       </CardHeader>
       <CardContent>
         {contractsArr.length > 0 ? (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Shartnoma №</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>Boshlanish sanasi</TableHead>
-                <TableHead>Tugash sanasi</TableHead>
-                <TableHead>Maosh</TableHead>
-                <TableHead>Holati</TableHead>
+                <TableHead>{t("shartnoma")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("startDate")}</TableHead>
+                <TableHead>{t("endDate")}</TableHead>
+                <TableHead>{t("maosh")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -246,10 +248,10 @@ export function ContractsSection({ contractsArr }: ContractsSectionProps) {
                     <TableCell>
                       {isActive ? (
                         <Badge className="bg-green-100 text-green-800 border-none text-xs gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Faol
+                          <CheckCircle2 className="h-3 w-3" /> {t("active")}
                         </Badge>
                       ) : (
-                        <EPStatusPill tone="neutral" className="text-xs">Yakunlangan</EPStatusPill>
+                        <EPStatusPill tone="neutral" className="text-xs">{t("yakunlangan")}</EPStatusPill>
                       )}
                     </TableCell>
                   </TableRow>
@@ -260,8 +262,8 @@ export function ContractsSection({ contractsArr }: ContractsSectionProps) {
         ) : (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
             <ScrollText className="h-10 w-10 mb-3 opacity-20" />
-            <p className="text-sm">Shartnomalar topilmadi</p>
-            <p className="text-xs opacity-60 mt-1">Hech qanday mehnat shartnomasi qayd etilmagan</p>
+            <p className="text-sm">{t("shartnomalarTopilmadi")}</p>
+            <p className="text-xs opacity-60 mt-1">{t("hechQandayMehnatShartnomasiQayd")}</p>
           </div>
         )}
       </CardContent>

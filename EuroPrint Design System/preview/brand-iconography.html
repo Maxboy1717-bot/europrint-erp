@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>html,body{margin:0;padding:0;background:var(--bg1);color:var(--fg1);font-family:var(--font-sans);}
+.wrap{padding:18px 24px;display:flex;flex-direction:column;gap:14px;}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+.icn-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:10px;}
+.icn{width:36px;height:36px;border-radius:8px;background:#FAF9F6;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--fg1);}
+.icn svg{width:18px;height:18px;}
+.icn.brand{background:#FF902F;color:#fff;border-color:#FF902F;}
+.icn.mod-sd{background:#EAF0FA;color:#3563AC;border-color:#EAF0FA;}
+.icn.mod-pp{background:#E6F4EC;color:#2E8A5A;border-color:#E6F4EC;}
+.icn.mod-hr{background:#F1EBF7;color:#7A4FB1;border-color:#F1EBF7;}
+.icn.mod-fi{background:#DDEFF4;color:#1A8FAF;border-color:#DDEFF4;}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--fg2);}</style></head>
+<body><div class="wrap">
+<div><div class="lbl" style="margin-bottom:8px">Lucide icons — 1.5–2px stroke, 18px in 36px tile</div>
+<div class="icn-grid">
+<div class="icn"><i data-lucide="home"></i></div>
+<div class="icn"><i data-lucide="users"></i></div>
+<div class="icn"><i data-lucide="factory"></i></div>
+<div class="icn"><i data-lucide="warehouse"></i></div>
+<div class="icn"><i data-lucide="printer"></i></div>
+<div class="icn"><i data-lucide="bar-chart-3"></i></div>
+<div class="icn"><i data-lucide="package"></i></div>
+<div class="icn"><i data-lucide="clipboard-list"></i></div>
+<div class="icn"><i data-lucide="settings"></i></div>
+<div class="icn"><i data-lucide="bell"></i></div>
+</div></div>
+<div><div class="lbl" style="margin-bottom:8px">Color usage</div>
+<div class="row">
+<div class="icn brand"><i data-lucide="plus"></i></div>
+<div class="icn mod-sd"><i data-lucide="trending-up"></i></div>
+<div class="icn mod-pp"><i data-lucide="factory"></i></div>
+<div class="icn mod-hr"><i data-lucide="users"></i></div>
+<div class="icn mod-fi"><i data-lucide="calculator"></i></div>
+<span style="font-size:11.5px;color:var(--fg2)">Brand → primary fill · Modules → soft tint + module color</span>
+</div></div>
+</div>
+<script>lucide.createIcons();</script>
+</body></html>

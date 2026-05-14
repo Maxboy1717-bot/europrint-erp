@@ -82,7 +82,7 @@ export function EventDialog({open,
       <DialogTrigger asChild>
         <Button data-testid="button-create-event">
           <Plus className="mr-2 h-4 w-4" />
-          Tadbir yaratish
+          {t("tadbirYaratish")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
@@ -105,7 +105,7 @@ export function EventDialog({open,
                   <FormItem>
                     <FormLabel>Sarlavha (O'zbekcha)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="O'quv mashg'uloti" data-testid="input-event-title-uz" />
+                      <Input {...field} placeholder={t("oquvMashguloti")} data-testid="input-event-title-uz" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -131,7 +131,7 @@ export function EventDialog({open,
                   <FormItem>
                     <FormLabel>Tavsif (O'zbekcha)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Tadbir tavsifi..." data-testid="input-event-desc-uz" />
+                      <Textarea {...field} placeholder={t("tadbirTavsifi")} data-testid="input-event-desc-uz" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -155,7 +155,7 @@ export function EventDialog({open,
               <FormField control={form.control} name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Boshlanish sanasi</FormLabel>
+                    <FormLabel>{t("startDate")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field}
                         min={new Date().toISOString().split("T")[0]}
@@ -214,7 +214,7 @@ export function EventDialog({open,
             <FormField control={form.control} name="eventType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Turi</FormLabel>
+                  <FormLabel>{t("type")}</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder={t('training')} data-testid="input-event-type" />
                   </FormControl>
@@ -274,7 +274,7 @@ export function EventDialog({open,
             {/* Form actions */}
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel">
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isPending} data-testid="button-submit">
                 {isEditing ? "Yangilash" : "Yaratish va xabarnoma yuborish"}

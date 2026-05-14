@@ -9,6 +9,7 @@ import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionTitle } from "@/components/director/helpers";
 import type { HRData } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface HRStatusCardProps {
   hr: HRData | undefined;
@@ -16,10 +17,11 @@ interface HRStatusCardProps {
 }
 
 export function HRStatusCard({ hr, hrLoad }: HRStatusCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-hr-status">
       <CardHeader className="pb-3">
-        <SectionTitle icon={Users} title="Xodimlar Holati" sub="Bugungi davomad" />
+        <SectionTitle icon={Users} title={t("xodimlarHolati")} sub="Bugungi davomad" />
       </CardHeader>
       <CardContent>
         {hrLoad ? <Skeleton className="h-32 rounded-lg" /> : (
@@ -39,7 +41,7 @@ export function HRStatusCard({ hr, hrLoad }: HRStatusCardProps) {
             </div>
             <div className="mt-2">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Davomad darajasi</span>
+                <span>{t("davomadDarajasi")}</span>
                 <span className="font-semibold text-foreground">{hr?.attendance?.attendanceRate ?? 0}%</span>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -48,7 +50,7 @@ export function HRStatusCard({ hr, hrLoad }: HRStatusCardProps) {
             </div>
             {(hr?.byDepartment?.length ?? 0) > 0 && (
               <div className="pt-2 border-t">
-                <p className="text-xs font-semibold text-muted-foreground mb-2">Bo'lim bo'yicha</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">{t("bolimBoyicha")}</p>
                 {hr?.byDepartment?.slice(0, 4).map((dept, i) => (
                   <div key={`k-${i}`} className="flex justify-between text-xs py-1">
                     <span className="text-muted-foreground truncate">{dept.department}</span>

@@ -15,8 +15,10 @@ import type { DailyOrder, MaterialKit, MaterialKitItem, Equipment } from "./Ware
 import { DateNavigator, OrdersList } from "./WarehouseDailyViewSections";
 import { CreateKitDialog, KitDetailsDialog } from "./WarehouseDailyViewDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseDailyView() {
+  const { t } = useTranslation("common");
   const [lang, setLang] = useState<"uz" | "ru">("uz");
   const [selectedDate, setSelectedDate] = useState<Date>(addDays(new Date(), 1));
   const [showCalendar, setShowCalendar] = useState(false);

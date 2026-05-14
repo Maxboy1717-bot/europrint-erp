@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LEAD_SOURCES, LEAD_PRIORITIES, leadFormSchema, type LeadFormValues } from "./lead-schema";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface LeadFormProps {
   users: Array<{ id: string; fullName: string }>;
   usersLoading: boolean;
@@ -39,6 +40,7 @@ interface LeadFormProps {
 }
 
 export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
@@ -102,7 +104,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1 h-4 rounded-full bg-primary" />
-            <h4 className="text-sm font-semibold">Asosiy ma'lumotlar</h4>
+            <h4 className="text-sm font-semibold">{t("asosiyMalumotlar")}</h4>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -113,11 +115,11 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem className="col-span-2">
                   <FormLabel>
-                    Lid nomi <span className="text-destructive">*</span>
+                    {t("lidNomi")}<span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Masalan: EuroPrint uchun matbaa uskunalari"
+                      placeholder={t("masalanEuroprintUchunMatbaaUskunalari")}
                       {...field}
                       data-testid="input-title"
                       autoFocus
@@ -135,10 +137,10 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" /> Ism
+                    <User className="h-3.5 w-3.5 text-muted-foreground" /> {t("ism1")}
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Ismini kiriting" {...field} data-testid="input-name" />
+                    <Input placeholder={t("isminiKiriting")} {...field} data-testid="input-name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,10 +154,10 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" /> Familiya
+                    <User className="h-3.5 w-3.5 text-muted-foreground" /> {t("familiya")}
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Familiyasini kiriting" {...field} data-testid="input-lastName" />
+                    <Input placeholder={t("familiyasiniKiriting")} {...field} data-testid="input-lastName" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -169,7 +171,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
-                    <Phone className="h-3.5 w-3.5 text-muted-foreground" /> Telefon
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground" /> {t("phone")}
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="+998 90 123 45 67" {...field} data-testid="input-phone" />
@@ -186,7 +188,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground" /> Email
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" /> {t("email1")}
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -208,11 +210,11 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem className="col-span-2">
                   <FormLabel className="flex items-center gap-1">
-                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" /> Kompaniya
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" /> {t("company")}
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Kompaniya nomini kiriting"
+                      placeholder={t("kompaniyaNominiKiriting")}
                       {...field}
                       data-testid="input-companyTitle"
                     />
@@ -228,7 +230,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1 h-4 rounded-full bg-emerald-500" />
-            <h4 className="text-sm font-semibold">Savdo ma'lumotlari</h4>
+            <h4 className="text-sm font-semibold">{t("savdoMalumotlari")}</h4>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -238,11 +240,11 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               name="source"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Manba</FormLabel>
+                  <FormLabel>{t("manba")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-source" className="h-9">
-                        <SelectValue placeholder="Manbani tanlang" />
+                        <SelectValue placeholder={t("manbaniTanlang")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -264,11 +266,11 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               name="priority"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ustuvorlik</FormLabel>
+                  <FormLabel>{t("ustuvorlik")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-priority" className="h-9">
-                        <SelectValue placeholder="Darajani tanlang" />
+                        <SelectValue placeholder={t("darajaniTanlang")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -291,7 +293,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
-                    <DollarSign className="h-3.5 w-3.5 text-muted-foreground" /> Kutilayotgan daromad
+                    <DollarSign className="h-3.5 w-3.5 text-muted-foreground" /> {t("kutilayotganDaromad")}
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -329,7 +331,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               name="assignedById"
               render={({ field }) => (
                 <FormItem className="col-span-2">
-                  <FormLabel>Mas'ul shaxs</FormLabel>
+                  <FormLabel>{t("masulShaxs")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-assignedById" className="h-9">
@@ -361,7 +363,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1 h-4 rounded-full bg-violet-500" />
-            <h4 className="text-sm font-semibold">Qo'shimcha</h4>
+            <h4 className="text-sm font-semibold">{t("qoshimcha")}</h4>
           </div>
 
           <div className="space-y-3">
@@ -373,7 +375,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
                   <FormLabel>Manba tavsifi / Qiziqish mahsuloti</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Masalan: offset bosma, A3 format, 1000 dona"
+                      placeholder={t("masalanOffsetBosmaA3Format")}
                       {...field}
                       data-testid="input-sourceDescription"
                     />
@@ -389,11 +391,11 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /> Izoh
+                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /> {t("Izoh")}
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Qo'shimcha izohlar, eslatmalar..."
+                      placeholder={t("qoshimchaIzohlarEslatmalar")}
                       className="resize-none"
                       rows={3}
                       {...field}
@@ -415,7 +417,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
             onClick={onClose}
             data-testid="button-cancel"
           >
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             type="submit"

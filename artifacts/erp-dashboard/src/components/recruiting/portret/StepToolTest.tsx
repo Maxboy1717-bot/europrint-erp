@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { TOOL_TRAITS, ToolTestReqs } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StepToolTestProps {
   toolReqs: ToolTestReqs;
@@ -15,10 +16,11 @@ interface StepToolTestProps {
 }
 
 export function StepToolTest({ toolReqs, onTraitChange, onOtherChange }: StepToolTestProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">Blok D: TOOL TEST talablari</h3>
+        <h3 className="font-semibold text-sm text-primary">{t("blokDToolTestTalablari1")}</h3>
         <Badge variant="outline" className="text-[9px]">A-J traitlar</Badge>
       </div>
 
@@ -64,7 +66,7 @@ export function StepToolTest({ toolReqs, onTraitChange, onOtherChange }: StepToo
           <span className="text-center text-xs font-bold">{toolReqs.leadership_min ?? 70}%</span>
         </div>
         <div className="flex flex-col gap-1">
-          <Label className="text-[11px]">Takrorlanuvchanlik</Label>
+          <Label className="text-[11px]">{t("takrorlanuvchanlik")}</Label>
           <Slider
             min={0} max={100} step={5}
             value={[toolReqs.replication_min ?? 70]}

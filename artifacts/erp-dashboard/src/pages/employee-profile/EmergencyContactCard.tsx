@@ -21,6 +21,7 @@ import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 
 export function EmergencyContactCard({ t, tCommon, emergencyContacts, loadingEmergency, emergencyDialogOpen, setEmergencyDialogOpen, emergencyForm, setEmergencyForm, saveEmergencyMutation, }: EmergencyCardProps) {
+  const { t } = useTranslation("common");
   const contacts = Array.isArray(emergencyContacts) ? emergencyContacts : [];
 
   return (
@@ -48,7 +49,7 @@ export function EmergencyContactCard({ t, tCommon, emergencyContacts, loadingEme
                   <Input
                     value={emergencyForm.contactName}
                     onChange={(e) => setEmergencyForm({ ...emergencyForm, contactName: e.target.value })}
-                    placeholder="Ism Familiya"
+                    placeholder={t("ismFamiliya")}
                     data-testid="input-emergency-name"
                   />
                 </div>
@@ -87,7 +88,7 @@ export function EmergencyContactCard({ t, tCommon, emergencyContacts, loadingEme
                 <Input
                   value={emergencyForm.address}
                   onChange={(e) => setEmergencyForm({ ...emergencyForm, address: e.target.value })}
-                  placeholder="Manzil"
+                  placeholder={t("address")}
                   data-testid="input-emergency-address"
                 />
               </div>

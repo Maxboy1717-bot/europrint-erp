@@ -23,6 +23,7 @@ import {
   type MarketingLead,
 } from "./MarketingLeadsTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Filter bar ──────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ interface FilterBarProps {
 }
 
 export function LeadFilterBar({ leads, overdueCount, filter, onFilterChange }: FilterBarProps) {
+  const { t } = useTranslation("common");
   const arr = Array.isArray(leads) ? leads : [];
   const filters: { key: FilterKey; label: string }[] = [
     { key: "all", label: `Hammasi (${arr.length})` },
@@ -71,7 +73,7 @@ export function LossAnalysisPanel({ lossAnalysis }: LossAnalysisPanelProps) {
   return (
     <div className="bg-card rounded-lg p-4 mb-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-        Yo'qotish sabablari tahlili
+        {t("yoqotishSabablariTahlili")}
       </p>
       <div className="flex gap-3 flex-wrap">
         {(Array.isArray(lossAnalysis?.breakdown) ? lossAnalysis.breakdown : []).map(b => (
@@ -113,7 +115,7 @@ export function LeadList({
   if (arr.length === 0) {
     return (
       <div className="bg-card rounded-xl p-6 text-center text-muted-foreground">
-        Hozircha lidlar yo'q
+        {t("hozirchaLidlarYoq")}
       </div>
     );
   }
@@ -142,7 +144,7 @@ export function LeadList({
                     className="bg-amber-100 text-amber-800 text-xs no-default-hover-elevate gap-1"
                     data-testid={`badge-overdue-${l.id}`}
                   >
-                    <AlertTriangle className="h-3 w-3" /> Muddati o'tgan
+                    <AlertTriangle className="h-3 w-3" /> {t("muddatiOtgan")}
                   </Badge>
                 )}
                 {l.crmLeadId && (
@@ -251,7 +253,7 @@ export function ContactLogPanel({
       data-testid="panel-contact-log"
     >
       <div className="flex items-center justify-between p-4 border-b border-border/30">
-        <h3 className="font-semibold text-foreground">Aloqa logi</h3>
+        <h3 className="font-semibold text-foreground">{t("aloqaLogi")}</h3>
         <Button size="icon" variant="ghost" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -259,7 +261,7 @@ export function ContactLogPanel({
 
       <div className="flex-1 overflow-auto p-4 space-y-3">
         {contacts.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Hozircha aloqa yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("hozirchaAloqaYoq")}</p>
         ) : (
           (Array.isArray(contacts) ? contacts : []).map(c => (
             <div key={c.id} className="bg-muted/60 rounded-lg p-3">
@@ -285,7 +287,7 @@ export function ContactLogPanel({
 
       <div className="p-4 border-t border-border/30 space-y-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Yangi aloqa qo'shish
+          {t("yangiAloqaQoshish")}
         </p>
         <Select
           value={contactForm.type}
@@ -299,7 +301,7 @@ export function ContactLogPanel({
           </SelectContent>
         </Select>
         <Textarea
-          placeholder="Qisqacha xulosa..."
+          placeholder={t("qisqachaXulosa")}
           value={contactForm.summary}
           onChange={e => onContactFormChange({ ...contactForm, summary: e.target.value })}
           className="resize-none"
@@ -321,7 +323,7 @@ export function ContactLogPanel({
           disabled={isAddPending}
           data-testid="button-add-contact"
         >
-          Qayd etish
+          {t("qaydEtish")}
         </Button>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { WarehouseStockData } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StockTableProps {
   loading: boolean;
@@ -15,6 +16,7 @@ interface StockTableProps {
 }
 
 export function StockTable({ loading, data }: StockTableProps) {
+  const { t } = useTranslation("common");
   if (loading) {
     return (
       <div className="space-y-3">
@@ -26,7 +28,7 @@ export function StockTable({ loading, data }: StockTableProps) {
   if (!data || data.items.length === 0) {
     return (
       <div className="text-center py-10 border border-dashed rounded-lg">
-        <p className="text-muted-foreground">Ma'lumot topilmadi</p>
+        <p className="text-muted-foreground">{t("noData")}</p>
       </div>
     );
   }
@@ -45,14 +47,14 @@ export function StockTable({ loading, data }: StockTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 w-8">#</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">Material nomi</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">Kategoriya</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">Birlik</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">Mavjud</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">Band</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">Jami</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">Holat</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">Minimal</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("materialNomi")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("category")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("unit")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("mavjud")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("band")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("total")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("status28")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("minimum")}</TableHead>
               <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4"></TableHead>
             </TableRow>
           </TableHeader>

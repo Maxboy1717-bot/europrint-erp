@@ -7,6 +7,7 @@ import { Users, BookOpen, Award, TrendingUp } from "lucide-react";
 import { StatsCard, StatsCardSkeleton } from "@/components/ui/stats-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AnalyticsStats } from "./analytics/analytics-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface KpiBarProps {
   stats: AnalyticsStats | undefined;
@@ -14,6 +15,7 @@ interface KpiBarProps {
 }
 
 export function AnalyticsKpiBar({ stats, statsLoading }: KpiBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div
       className="glass-kpi overflow-hidden"
@@ -74,15 +76,15 @@ export function AnalyticsLegacyStats({ stats, statsLoading }: LegacyStatsProps) 
       ) : (
         <>
           <StatsCard
-            title="Jami Xodimlar"
+            title={t("jamiXodimlar")}
             value={stats?.totalUsers || 0}
-            subtitle="Aktiv foydalanuvchilar"
+            subtitle={t("aktivFoydalanuvchilar")}
             icon={Users}
             variant="hr"
             data-testid="stat-card-users-hidden"
           />
           <StatsCard
-            title="Kurslar"
+            title={t("kurslar")}
             value={stats?.totalCourses || 0}
             subtitle={`${stats?.activeCourses || 0} ta aktiv`}
             icon={BookOpen}
@@ -90,7 +92,7 @@ export function AnalyticsLegacyStats({ stats, statsLoading }: LegacyStatsProps) 
             data-testid="stat-card-courses"
           />
           <StatsCard
-            title="Tugatilgan Kurslar"
+            title={t("tugatilganKurslar")}
             value={stats?.completedCourses || 0}
             subtitle={`${stats?.completionRate || 0}% yakunlangan`}
             icon={Award}
@@ -99,9 +101,9 @@ export function AnalyticsLegacyStats({ stats, statsLoading }: LegacyStatsProps) 
             data-testid="stat-card-completed"
           />
           <StatsCard
-            title="O'rtacha Ball"
+            title={t("ortachaBall")}
             value={`${stats?.averageScore || 0}%`}
-            subtitle="Test natijalari"
+            subtitle={t("testNatijalari1")}
             icon={TrendingUp}
             variant="warehouse"
             data-testid="stat-card-score"

@@ -121,7 +121,7 @@ export function ERPProductsTab() {
                     <FormField control={form.control} name="name" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('nameUz')} <span className="text-destructive">*</span></FormLabel>
-                        <FormControl><Input {...field} placeholder="Karton quti" data-testid="input-product-name" /></FormControl>
+                        <FormControl><Input {...field} placeholder={t("kartonQuti")} data-testid="input-product-name" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -135,7 +135,7 @@ export function ERPProductsTab() {
                     <FormField control={form.control} name="category" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{tCommon('category')}</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="Karton mahsulotlari" data-testid="input-product-category" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} placeholder={t("kartonMahsulotlari")} data-testid="input-product-category" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

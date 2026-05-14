@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { Target, TrendingUp, TrendingDown, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface GsdHistoryEntry {
   week_date: string;
@@ -71,6 +72,7 @@ function VarianceBadge({ variance }: { variance: number | null }) {
 }
 
 export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({ week_date: "", actual: "", note: "" });
@@ -155,23 +157,23 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
           {canEdit && (
             <Button size="sm" variant="outline" onClick={() => setAddOpen(!addOpen)}>
               <Plus className="w-3.5 h-3.5 mr-1" />
-              Natija kiritish
+              {t("natijaKiritish")}
             </Button>
           )}
         </div>
         {def?.gsd_formula && (
           <p className="text-xs text-muted-foreground mt-1">
-            Formula: <code className="bg-muted px-1 rounded">{def.gsd_formula}</code>
+            {t("formula")}<code className="bg-muted px-1 rounded">{def.gsd_formula}</code>
           </p>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
         {addOpen && canEdit && (
           <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
-            <p className="text-sm font-semibold">Haftalik natija kiritish</p>
+            <p className="text-sm font-semibold">{t("haftalikNatijaKiritish")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="gsd-week">Hafta sanasi</Label>
+                <Label htmlFor="gsd-week">{t("haftaSanasi")}</Label>
                 <Input
                   id="gsd-week"
                   type="date"
@@ -195,15 +197,15 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
                   id="gsd-note"
                   value={form.note}
                   onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
-                  placeholder="Qo'shimcha ma'lumot..."
+                  placeholder={t("qoshimchaMalumot")}
                 />
               </div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleSubmit} disabled={submitMutation.isPending}>
-                Saqlash
+                {t("Saqlash")}
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setAddOpen(false)}>Bekor qilish</Button>
+              <Button size="sm" variant="outline" onClick={() => setAddOpen(false)}>{t("cancel")}</Button>
             </div>
           </div>
         )}
@@ -215,7 +217,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
             {def ? (
               <p className="text-xs mt-1">Maqsad: {def.target_value} {def.unit}</p>
             ) : (
-              <p className="text-xs mt-1">Bu lavozim uchun GSD ta'rifi yo'q</p>
+              <p className="text-xs mt-1">{t("buLavozimUchunGsdTarifi")}</p>
             )}
           </div>
         ) : (
@@ -271,7 +273,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="rounded-xl bg-muted/40 p-3 text-center">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">O'tgan hafta</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t("otganHafta")}</p>
                 <p className="text-xl font-bold text-foreground">
                   {stats?.lastWeekActual !== null && stats?.lastWeekActual !== undefined
                     ? stats.lastWeekActual
@@ -280,7 +282,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
                 {def?.unit && <p className="text-[10px] text-muted-foreground">{def.unit}</p>}
               </div>
               <div className="rounded-xl bg-muted/40 p-3 text-center">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Maqsad</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t("Maqsad")}</p>
                 <p className="text-xl font-bold text-foreground">
                   {stats?.lastWeekTarget !== null && stats?.lastWeekTarget !== undefined
                     ? stats.lastWeekTarget
@@ -289,7 +291,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
                 {def?.unit && <p className="text-[10px] text-muted-foreground">{def.unit}</p>}
               </div>
               <div className="rounded-xl bg-muted/40 p-3 text-center">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Og'ish</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t("ogish")}</p>
                 <div className="mt-1 flex justify-center">
                   <VarianceBadge variance={stats?.lastWeekVariance ?? null} />
                 </div>

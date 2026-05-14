@@ -8,6 +8,7 @@
 
 import { X, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react";
 import { VIDEO_HEIGHT_EXPANDED } from "./ChatLayoutTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // VideoCallPanel
@@ -33,6 +34,7 @@ export function VideoCallPanel({
   onToggleMinimize,
   onToggleHeight,
 }: VideoCallPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div
       className="flex-shrink-0 border-t border-[var(--tg-border)] bg-[#0d1117] flex flex-col transition-all duration-200"
@@ -77,7 +79,7 @@ export function VideoCallPanel({
           <button
             onClick={onClose}
             className="p-1.5 rounded text-white/50 hover:text-red-400 hover:bg-[var(--ep-red)]/90/10 transition-colors"
-            title="Qo'ng'iroqni tugatish"
+            title={t("qongiroqniTugatish")}
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -90,7 +92,7 @@ export function VideoCallPanel({
           allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
           allowFullScreen
           className="flex-1 w-full border-0 min-h-0"
-          title="Video qo'ng'iroq"
+          title={t("videoQongiroq")}
         />
       )}
     </div>
@@ -111,7 +113,7 @@ export function EditIndicator({ content, onCancel }: EditIndicatorProps) {
   return (
     <div className="mx-3 mb-1 px-3 py-2 bg-[var(--tg-action-bar-bg)] border-l-2 border-[var(--tg-sidebar-active)] rounded-lg flex items-center justify-between shadow-sm">
       <div className="min-w-0">
-        <p className="text-xs text-[var(--tg-sidebar-active)] font-medium">Tahrirlash</p>
+        <p className="text-xs text-[var(--tg-sidebar-active)] font-medium">{t("edit")}</p>
         <p className="text-[13px] text-[var(--tg-text-primary)] truncate">{content}</p>
       </div>
       <button
@@ -130,6 +132,7 @@ export function EditIndicator({ content, onCancel }: EditIndicatorProps) {
 
 /** Full-panel placeholder rendered in the center column when no room is active. */
 export function EmptyState() {
+  const { t } = useTranslation("common");
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-5 bg-[var(--tg-chat-bg)]">
       <div className="w-full sm:w-[120px] h-[120px] rounded-full bg-[var(--tg-sidebar-active)]/10 flex items-center justify-center">
@@ -148,10 +151,10 @@ export function EmptyState() {
       </div>
       <div className="text-center">
         <p className="text-[17px] font-medium text-[var(--tg-text-primary)]/70">
-          Chatni tanlang
+          {t("chatniTanlang")}
         </p>
         <p className="text-[14px] text-[var(--tg-text-secondary)] mt-1">
-          Suhbatni boshlash uchun chap paneldan tanlang
+          {t("suhbatniBoshlashUchunChapPaneldan")}
         </p>
       </div>
       <a

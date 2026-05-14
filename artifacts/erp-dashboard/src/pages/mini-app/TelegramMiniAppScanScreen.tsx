@@ -4,6 +4,7 @@ import React from "react";
 import { UseMutationResult } from "@tanstack/react-query";
 import type { Screen, User, AppColors, MaterialResult, PendingApproval } from "./TelegramMiniAppTypes";
 import { AppLayout, LoadingSpinner, NavBtn } from "./TelegramMiniAppHelpers";
+import { useTranslation } from '@/lib/i18n';
 
 interface ScanScreenProps {
   screen: Screen;
@@ -80,6 +81,7 @@ export function ScanScreen({
   onNavApprovals,
   toast,
 }: ScanScreenProps) {
+  const { t } = useTranslation("common");
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "10px 12px",
@@ -107,7 +109,7 @@ export function ScanScreen({
   };
 
   return (
-    <AppLayout screen={screen} title="POS Skanerlash" colors={colors} isDark={isDark} user={user}>
+    <AppLayout screen={screen} title={t("posSkanerlash")} colors={colors} isDark={isDark} user={user}>
       <div style={{ padding: "0 16px 100px" }}>
         {warehouses.length > 0 && (
           <div style={{ marginBottom: 12 }}>
@@ -116,7 +118,7 @@ export function ScanScreen({
               value={selectedWarehouseId}
               onChange={(e) => onWarehouseChange(e.target.value)}
             >
-              <option value="">Barcha omborlar</option>
+              <option value="">{t("barchaOmborlar")}</option>
               {(Array.isArray(warehouses) ? warehouses : []).map((w) => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
@@ -131,7 +133,7 @@ export function ScanScreen({
               style={{ width: "100%", borderRadius: 12, aspectRatio: "4/3", objectFit: "cover", background: "#000" }}
             />
             <button style={{ ...secBtnStyle, marginTop: 8 }} onClick={onStopCamera}>
-              ❌ Kamerani yopish
+              {t("kameraniYopish")}
             </button>
           </div>
         ) : (
@@ -139,7 +141,7 @@ export function ScanScreen({
             <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
               <input
                 style={{ ...inputStyle, flex: 1 }}
-                placeholder="Barcode kiriting..."
+                placeholder={t("barcodeKiriting")}
                 value={barcodeInput}
                 onChange={(e) => onBarcodeChange(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && barcodeInput.trim()) onBarcodeScan(); }}
@@ -153,14 +155,14 @@ export function ScanScreen({
               </button>
             </div>
             <button style={{ ...secBtnStyle, marginBottom: 12 }} onClick={onStartCamera}>
-              📷 Kamera bilan skanerlash
+              {t("kameraBilanSkanerlash")}
             </button>
           </>
         )}
 
         <input
           style={{ ...inputStyle, marginBottom: 8 }}
-          placeholder="Material nomi bo'yicha qidirish..."
+          placeholder={t("materialNomiBoyichaQidirish")}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
         />
@@ -190,7 +192,7 @@ export function ScanScreen({
               style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, width: "100%", background: colors.button, color: colors.buttonText }}
               onClick={() => { onAddToCart(scanResult); onClearScanResult(); onNav("request"); }}
             >
-              ➕ So'rovga qo'shish
+              {t("sorovgaQoshish")}
             </button>
           </div>
         )}
@@ -210,7 +212,7 @@ export function ScanScreen({
                     style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: colors.button, color: colors.buttonText, cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}
                     onClick={() => { onAddToCart(m); onSearchChange(""); }}
                   >
-                    + Qo'shish
+                    {t("qoshish1")}
                   </button>
                 </div>
               </div>
@@ -220,20 +222,20 @@ export function ScanScreen({
 
         {searchQuery.length >= 2 && searchResults.length === 0 && (
           <div style={{ textAlign: "center", padding: 20, color: colors.hint, fontSize: 14 }}>
-            🔍 Material topilmadi
+            {t("materialTopilmadi1")}
           </div>
         )}
       </div>
 
       {/* Bottom navigation */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: colors.bg, borderTop: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`, display: "flex", justifyContent: "space-around", padding: "8px 0 max(8px, env(safe-area-inset-bottom))" }}>
-        <NavBtn icon="📷" label="Skan" active={screen === "scan"} onClick={() => onNav("scan")} color={colors.button} hint={colors.hint} text={colors.text} />
-        <NavBtn icon={`📤${cartCount > 0 ? ` (${cartCount})` : ""}`} label="So'rov" active={screen === "request"} onClick={() => onNav("request")} color={colors.button} hint={colors.hint} text={colors.text} />
-        <NavBtn icon="📋" label="Tarix" active={screen === "history"} onClick={onNavHistory} color={colors.button} hint={colors.hint} text={colors.text} />
+        <NavBtn icon="📷" label={t("skan")} active={screen === "scan"} onClick={() => onNav("scan")} color={colors.button} hint={colors.hint} text={colors.text} />
+        <NavBtn icon={`📤${cartCount > 0 ? ` (${cartCount})` : ""}`} label={t("sorov")} active={screen === "request"} onClick={() => onNav("request")} color={colors.button} hint={colors.hint} text={colors.text} />
+        <NavBtn icon="📋" label={t("tarix")} active={screen === "history"} onClick={onNavHistory} color={colors.button} hint={colors.hint} text={colors.text} />
         {isManager && (
           <NavBtn
             icon={`✅${pendingApprovals.length > 0 ? ` (${pendingApprovals.length})` : ""}`}
-            label="Tasdiqlash"
+            label={t("verify")}
             active={screen === "approvals"}
             onClick={onNavApprovals}
             color={colors.button} hint={colors.hint} text={colors.text}

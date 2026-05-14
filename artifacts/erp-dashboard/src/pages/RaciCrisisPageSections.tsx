@@ -10,12 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, AlertTriangle } from "lucide-react";
 import { RaciTask, Crisis, TASK_STATUS, RISK_COLORS, TabType } from "./RaciCrisisPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // LoadingSkeleton
 // ---------------------------------------------------------------------------
 
 export function LoadingSkeleton() {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-3">
       {[1, 2, 3].map(i => (
@@ -51,7 +53,7 @@ export function TabBar({ tab, onTabChange }: TabBarProps) {
         onClick={() => onTabChange("tasks")}
         data-testid="tab-tasks"
       >
-        RACI Vazifalar
+        {t("raciVazifalar")}
       </Button>
       <Button
         variant={tab === "crises" ? "default" : "outline"}
@@ -59,7 +61,7 @@ export function TabBar({ tab, onTabChange }: TabBarProps) {
         onClick={() => onTabChange("crises")}
         data-testid="tab-crises"
       >
-        Inqirozlar
+        {t("inqirozlar")}
       </Button>
     </div>
   );
@@ -164,7 +166,7 @@ export function CrisisList({ crises }: CrisisListProps) {
       <Card>
         <CardContent className="py-12 text-center">
           <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Inqirozlar topilmadi</p>
+          <p className="text-muted-foreground">{t("inqirozlarTopilmadi")}</p>
         </CardContent>
       </Card>
     );

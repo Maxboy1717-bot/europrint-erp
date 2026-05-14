@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Deal, Contact, AiScore } from "./AiCrmPageTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export const getScoreColor = (score?: number) => {
   if (!score) return "text-muted-foreground";
@@ -44,17 +45,18 @@ interface ScoringTabContentProps {
 }
 
 export function ScoringTabContent({ deals, dealsLoading, aiResults, scoringPending, scoringVariable, onScore }: ScoringTabContentProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><Target className="h-5 w-5 text-primary" />AI Lead Skoring</CardTitle>
-        <CardDescription>Har bir bitim uchun AI tomonidan 0–100 ball baholash</CardDescription>
+        <CardTitle className="flex items-center gap-2"><Target className="h-5 w-5 text-primary" />{t("aiLeadSkoring")}</CardTitle>
+        <CardDescription>{t("harBirBitimUchunAi")}</CardDescription>
       </CardHeader>
       <CardContent>
         {dealsLoading ? (
           <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
         ) : deals.length === 0 ? (
-          <div className="text-center py-8 text-[13px] text-muted-foreground"><Briefcase className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>Bitimlar topilmadi</p></div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground"><Briefcase className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>{t("bitimlarTopilmadi")}</p></div>
         ) : (
           <div className="space-y-3">
             {deals.map((deal) => {
@@ -103,14 +105,14 @@ export function ProbabilityTabContent({ deals, dealsLoading, aiResults, probabil
   return (
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" />Bitim yutish ehtimoli</CardTitle>
+        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" />{t("bitimYutishEhtimoli")}</CardTitle>
         <CardDescription>AI asosida har bir bitim uchun muvaffaqiyat ehtimoli</CardDescription>
       </CardHeader>
       <CardContent>
         {dealsLoading ? (
           <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
         ) : deals.length === 0 ? (
-          <div className="text-center py-8 text-[13px] text-muted-foreground"><TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>Bitimlar topilmadi</p></div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground"><TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>{t("bitimlarTopilmadi")}</p></div>
         ) : (
           <div className="space-y-3">
             {deals.map((deal) => {
@@ -132,7 +134,7 @@ export function ProbabilityTabContent({ deals, dealsLoading, aiResults, probabil
                   {prob !== undefined && (
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Muvaffaqiyat ehtimoli</span>
+                        <span className="text-muted-foreground">{t("muvaffaqiyatEhtimoli")}</span>
                         <span className={cn("font-semibold", getScoreColor(prob))}>{prob}%</span>
                       </div>
                       <Progress value={prob} className="h-2" />
@@ -163,14 +165,14 @@ export function ChurnTabContent({ contacts, contactsLoading, aiResults, churnPen
   return (
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-primary" />Mijoz churn xavfi</CardTitle>
-        <CardDescription>AI bilan mijozlar ketish xavfini aniqlash</CardDescription>
+        <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-primary" />{t("mijozChurnXavfi")}</CardTitle>
+        <CardDescription>{t("aiBilanMijozlarKetishXavfini")}</CardDescription>
       </CardHeader>
       <CardContent>
         {contactsLoading ? (
           <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
         ) : contacts.length === 0 ? (
-          <div className="text-center py-8 text-[13px] text-muted-foreground"><Users className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>Kontaktlar topilmadi</p></div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground"><Users className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>{t("kontaktlarTopilmadi")}</p></div>
         ) : (
           <div className="space-y-3">
             {contacts.map((contact) => {

@@ -120,9 +120,9 @@ export default function PPDashboard() {
           </div>
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Ishlab Chiqarish Rejasi</b></>}
-        title="Ishlab Chiqarish Rejasi"
-        subtitle="Buyurtmalar, stanoq vazifalari va ishlab chiqarish rejasi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("ishlabChiqarishRejasi")}</b></>}
+        title={t("ishlabChiqarishRejasi")}
+        subtitle={t("buyurtmalarStanoqVazifalariVaIshlab")}
       />
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function PPDashboard() {
             data-testid="button-refresh-pp"
           >
             <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-            Yangilash
+            {t("refresh")}
           </Button>
           <Button
             size="sm"
@@ -145,7 +145,7 @@ export default function PPDashboard() {
           >
             <Link href="/order-wizard">
               <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Yangi Buyurtma
+              {t("yangiBuyurtma")}
             </Link>
           </Button>
         </div>

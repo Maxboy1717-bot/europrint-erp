@@ -23,8 +23,10 @@ import {
 import { LoadingSkeleton, TabBar, StatusFilterBar, TaskList, CrisisList } from "./RaciCrisisPageSections";
 import { CreateTaskDialog } from "./RaciCrisisPageDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function RaciCrisisPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [tab, setTab]                     = useState<TabType>("tasks");
   const [statusFilter, setStatusFilter]   = useState("all");
@@ -93,13 +95,13 @@ export default function RaciCrisisPage() {
   return (
     <ModulePage
       module="security"
-      title="RACI & Inqirozlar"
+      title={t("raciInqirozlar")}
       icon={<Shield className="h-5 w-5" />}
       actions={
         tab === "tasks" ? (
           <Button onClick={() => setShowCreate(true)} data-testid="button-create-task">
             <Plus className="h-4 w-4 mr-2" />
-            Vazifa qo'shish
+            {t("vazifaQoshish")}
           </Button>
         ) : undefined
       }

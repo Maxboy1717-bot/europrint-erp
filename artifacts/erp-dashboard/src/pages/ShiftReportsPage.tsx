@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ShiftReport {
   id: string | number;
@@ -63,6 +64,7 @@ const SHIFT_LABELS: Record<string, string> = {
 const QUERY_KEY = ["/api/production/shift-reports"];
 
 export default function ShiftReportsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -115,12 +117,12 @@ export default function ShiftReportsPage() {
   return (
     <ModulePage
       module="production"
-      title="Smena Hisobotlari"
+      title={t("smenaHisobotlari")}
       icon={<FileText className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-shift-report">
           <Plus className="h-4 w-4 mr-2" />
-          Hisobot qo'shish
+          {t("hisobotQoshish")}
         </Button>
       }
     >
@@ -143,7 +145,7 @@ export default function ShiftReportsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Smena hisobotlari yo'q</p>
+              <p className="text-muted-foreground">{t("smenaHisobotlariYoq")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -202,12 +204,12 @@ export default function ShiftReportsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi smena hisoboti</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiSmenaHisoboti")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Sana</Label>
+                <Label>{t("date")}</Label>
                 <Input
                   type="date"
                   value={form.shift_date}
@@ -216,49 +218,49 @@ export default function ShiftReportsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Smena</Label>
+                <Label>{t("smena")}</Label>
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                   value={form.shift_type}
                   onChange={e => setForm(f => ({ ...f, shift_type: e.target.value }))}
                   data-testid="select-shift-type"
                 >
-                  <option value="day">Kunduz</option>
-                  <option value="evening">Kechqurun</option>
-                  <option value="night">Tun</option>
+                  <option value="day">{t("kunduz")}</option>
+                  <option value="evening">{t("kechqurun")}</option>
+                  <option value="night">{t("tun")}</option>
                 </select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Ish markazi</Label>
+              <Label>{t("ishMarkazi")}</Label>
               <Input
                 value={form.work_center}
                 onChange={e => setForm(f => ({ ...f, work_center: e.target.value }))}
-                placeholder="Ish markazi nomi"
+                placeholder={t("ishMarkaziNomi")}
                 data-testid="input-shift-wc"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Reja</Label>
+                <Label>{t("reja")}</Label>
                 <Input type="number" value={form.planned_qty} onChange={e => setForm(f => ({ ...f, planned_qty: e.target.value }))} placeholder="0" data-testid="input-shift-planned" />
               </div>
               <div className="space-y-1.5">
-                <Label>Fakt</Label>
+                <Label>{t("fakt")}</Label>
                 <Input type="number" value={form.actual_qty} onChange={e => setForm(f => ({ ...f, actual_qty: e.target.value }))} placeholder="0" data-testid="input-shift-actual" />
               </div>
               <div className="space-y-1.5">
-                <Label>Brak</Label>
+                <Label>{t("Brak")}</Label>
                 <Input type="number" value={form.defect_qty} onChange={e => setForm(f => ({ ...f, defect_qty: e.target.value }))} placeholder="0" data-testid="input-shift-defect" />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Izoh</Label>
-              <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} placeholder="Smena izohi..." data-testid="input-shift-notes" />
+              <Label>{t("Izoh")}</Label>
+              <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} placeholder={t("smenaIzohi")} data-testid="input-shift-notes" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => createMutation.mutate(form)}
               disabled={createMutation.isPending}

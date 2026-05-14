@@ -34,10 +34,12 @@ import {
 import { TaxTab, TaxCalendarTab, RiskAITab } from "./FinanceExtendedTabsExtra";
 import { CostCenterDialog } from "./FinanceExtendedDialogs";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 type CostCenterFormValues = z.infer<typeof CostCenterSchema>;
 
 export default function FinanceExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "costcenters");
 
@@ -104,8 +106,8 @@ export default function FinanceExtended() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
         <DollarSign className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-base">Moliya — Kengaytirilgan</h1>
-        {fiStats && <EPStatusPill tone="neutral" className="ml-2">Faol</EPStatusPill>}
+        <h1 className="font-semibold text-base">{t("moliyaKengaytirilgan")}</h1>
+        {fiStats && <EPStatusPill tone="neutral" className="ml-2">{t("active")}</EPStatusPill>}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">

@@ -44,6 +44,7 @@ export const invoices = pgTable(
       .references(() => users.id, { onDelete: 'restrict' }),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    deleted_at: timestamp('deleted_at', { withTimezone: true }),
   },
   (table) => [
     uniqueIndex('invoices_invoice_number_idx').on(table.invoice_number),

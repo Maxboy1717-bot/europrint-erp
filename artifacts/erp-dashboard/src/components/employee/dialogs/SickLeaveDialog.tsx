@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from '@/lib/i18n';
 
 interface SickLeaveForm {
   startDate: string;
@@ -37,6 +38,7 @@ export function SickLeaveDialog({
   onSave,
   isPending
 }: SickLeaveDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof SickLeaveForm, value: string | boolean) => {
     onChange({ ...form, [field]: value });
   };
@@ -45,12 +47,12 @@ export function SickLeaveDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Kasalik varaqasini qayd etish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("kasalikVaraqasiniQaydEtish")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="startDate">Boshlanish sanasi</Label>
+          <Label htmlFor="startDate">{t("startDate")}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -59,7 +61,7 @@ export function SickLeaveDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="endDate">Tugash sanasi</Label>
+          <Label htmlFor="endDate">{t("endDate")}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -69,7 +71,7 @@ export function SickLeaveDialog({
             </div>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="diagnosis">Tashxis</Label>
+          <Label htmlFor="diagnosis">{t("tashxis")}</Label>
             <Input
               id="diagnosis"
               value={form.diagnosis}
@@ -77,7 +79,7 @@ export function SickLeaveDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="hospital">Shifoxona nomi</Label>
+          <Label htmlFor="hospital">{t("shifoxonaNomi")}</Label>
             <Input
               id="hospital"
               value={form.hospitalName}
@@ -85,7 +87,7 @@ export function SickLeaveDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="doctor">Shifokor ismi</Label>
+          <Label htmlFor="doctor">{t("shifokorIsmi")}</Label>
             <Input
               id="doctor"
               value={form.doctorName}
@@ -93,7 +95,7 @@ export function SickLeaveDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="docNum">Hujjat raqami</Label>
+          <Label htmlFor="docNum">{t("hujjatRaqami")}</Label>
             <Input
               id="docNum"
               value={form.documentNumber}
@@ -107,11 +109,11 @@ export function SickLeaveDialog({
                 checked={form.isPaid}
                 onCheckedChange={(checked) => updateField("isPaid", checked)}
               />
-              <Label htmlFor="isPaid">To'lanadigan</Label>
+              <Label htmlFor="isPaid">{t("tolanadigan")}</Label>
             </div>
             {form.isPaid && (
               <div className="flex items-center gap-2">
-                <Label htmlFor="percent">To'lov %</Label>
+                <Label htmlFor="percent">{t("tolov")}</Label>
                 <Input
                   id="percent"
                   type="number"
@@ -124,7 +126,7 @@ export function SickLeaveDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

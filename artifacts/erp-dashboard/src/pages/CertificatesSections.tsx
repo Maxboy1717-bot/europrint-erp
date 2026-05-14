@@ -15,6 +15,7 @@ import {
 import { Download } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { Certificate } from "./CertificatesTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface CertificateTableProps {
   certificates: Certificate[];
@@ -29,10 +30,11 @@ export function CertificateTable({
   onDelete,
   isDeletePending,
 }: CertificateTableProps) {
+  const { t } = useTranslation("common");
   if (!certificates || certificates.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground font-medium">
-        Hali sertifikat berilmagan
+        {t("haliSertifikatBerilmagan")}
       </div>
     );
   }
@@ -43,25 +45,25 @@ export function CertificateTable({
         <TableHeader>
           <TableRow className="hover:bg-transparent border-none">
             <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 rounded-tl-lg">
-              Sertifikat №
+              {t("sertifikat1")}
             </TableHead>
             <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">
-              Xodim
+              {t("xodim1")}
             </TableHead>
             <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">
-              Kurs
+              {t("kurs")}
             </TableHead>
             <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">
-              Ball
+              {t("ball")}
             </TableHead>
             <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">
-              Bonus
+              {t("bonus")}
             </TableHead>
             <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">
-              Berilgan Sana
+              {t("berilganSana1")}
             </TableHead>
             <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right rounded-tr-lg">
-              Amallar
+              {t("Amallar")}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -95,7 +97,7 @@ export function CertificateTable({
                 {cert.bonusAmount ? (
                   <span className="text-[var(--ep-green)] font-bold">
                     {cert.bonusAmount.toLocaleString()}{" "}
-                    <span className="text-[10px] uppercase">so'm</span>
+                    <span className="text-[10px] uppercase">{t("som")}</span>
                   </span>
                 ) : (
                   <span className="text-muted-foreground">—</span>
@@ -114,11 +116,11 @@ export function CertificateTable({
                     className="text-primary hover:text-primary-dim"
                   >
                     <Download className="w-4 h-4 mr-1" />
-                    Yuklab olish
+                    {t("download")}
                   </Button>
                   <DeleteConfirmDialog
-                    title="Sertifikatni o'chirishni tasdiqlaysizmi?"
-                    description="Sertifikat butunlay o'chiriladi."
+                    title={t("sertifikatniOchirishniTasdiqlaysizmi")}
+                    description={t("sertifikatButunlayOchiriladi")}
                     onConfirm={() => onDelete(cert.id)}
                     isPending={isDeletePending}
                   />

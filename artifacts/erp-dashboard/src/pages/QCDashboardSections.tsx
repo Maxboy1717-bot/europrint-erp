@@ -39,11 +39,11 @@ export function KpiSection({stats, loading, passColor, passRate }: KpiSectionPro
   return (
     <section>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-        Hozirgi holat
+        {t("hozirgiHolat")}
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <KpiCard
-          title="Jami testlar"
+          title={t("jamiTestlar1")}
           value={stats?.tests?.total || 0}
           sub={`${stats?.tests?.passed || 0} ta o'tdi`}
           icon={FlaskConical}
@@ -51,7 +51,7 @@ export function KpiSection({stats, loading, passColor, passRate }: KpiSectionPro
           loading={loading}
         />
         <KpiCard
-          title="O'tish darajasi"
+          title={t("otishDarajasi")}
           value={`${passRate}%`}
           sub="passed / total"
           icon={Gauge}
@@ -59,7 +59,7 @@ export function KpiSection({stats, loading, passColor, passRate }: KpiSectionPro
           loading={loading}
         />
         <KpiCard
-          title="Braklar"
+          title={t("braklar")}
           value={stats?.braks?.count || 0}
           sub={`${stats?.braks?.totalQty || 0} dona`}
           icon={XCircle}
@@ -67,7 +67,7 @@ export function KpiSection({stats, loading, passColor, passRate }: KpiSectionPro
           loading={loading}
         />
         <KpiCard
-          title="Brak xarajat"
+          title={t("brakXarajat")}
           value={
             stats?.braks?.totalCostImpact
               ? `${Number(stats.braks.totalCostImpact).toLocaleString()} so'm`
@@ -79,7 +79,7 @@ export function KpiSection({stats, loading, passColor, passRate }: KpiSectionPro
           loading={loading}
         />
         <KpiCard
-          title="Reklamatsiyalar"
+          title={t("reklamatsiyalar")}
           value={stats?.reclamations?.total || 0}
           sub={`${stats?.reclamations?.open || 0} ta ochiq`}
           icon={AlertTriangle}
@@ -87,7 +87,7 @@ export function KpiSection({stats, loading, passColor, passRate }: KpiSectionPro
           loading={loading}
         />
         <KpiCard
-          title="Ochiq RCA"
+          title={t("ochiqRca")}
           value={stats?.openRca || 0}
           sub="ildiz sabab tahlil"
           icon={Search}
@@ -133,7 +133,7 @@ export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
           >
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Jami tekshiruvlar</span>
+                <span className="text-muted-foreground">{t("jamiTekshiruvlar")}</span>
                 <span className="font-semibold">{flow?.streams?.incoming?.total || 0}</span>
               </div>
               <div className="flex justify-between">
@@ -151,28 +151,28 @@ export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
 
           {/* 2-oqim: Inline nazorat */}
           <StreamCard
-            label="Inline nazorat"
+            label={t("inlineNazorat")}
             status={flow?.streams?.inline?.status || "active"}
             icon={Shield}
           >
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Ishlab chiqarishda</span>
+                <span className="text-muted-foreground">{t("ishlabChiqarishda")}</span>
                 <span className="font-semibold">{flow?.streams?.inline?.inProduction || 0}</span>
               </div>
-              <p className="text-xs text-muted-foreground pt-1">Kritik og'ish → QC hold avtomatik</p>
+              <p className="text-xs text-muted-foreground pt-1">{t("kritikOgishQcHoldAvtomatik")}</p>
             </div>
           </StreamCard>
 
           {/* 3-oqim: Final inspeksiya */}
           <StreamCard
-            label="Final inspeksiya"
+            label={t("finalInspeksiya1")}
             status={flow?.streams?.finalInspection?.status || "ok"}
             icon={ClipboardList}
           >
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Kutilmoqda</span>
+                <span className="text-muted-foreground">{t("Kutilmoqda")}</span>
                 <span className="font-semibold">
                   {flow?.streams?.finalInspection?.pendingOrders || 0}
                 </span>
@@ -196,13 +196,13 @@ export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
 
           {/* 4-oqim: Reklamatsiya */}
           <StreamCard
-            label="Reklamatsiyalar"
+            label={t("reklamatsiyalar")}
             status={flow?.streams?.reclamation?.status || "ok"}
             icon={FileWarning}
           >
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Yangi</span>
+                <span className="text-muted-foreground">{t("yangi")}</span>
                 <span className={cn(
                   "font-semibold",
                   (flow?.streams?.reclamation?.open || 0) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"
@@ -211,7 +211,7 @@ export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Ko'rib chiqilmoqda</span>
+                <span className="text-muted-foreground">{t("koribChiqilmoqda")}</span>
                 <span className="font-semibold text-[var(--ep-yellow)]">
                   {flow?.streams?.reclamation?.investigating || 0}
                 </span>

@@ -48,15 +48,15 @@ export function RoiSection({campaigns, totalBudget, totalSpent, roi }: RoiSectio
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami kampaniyalar</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiKampaniyalar")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{campaigns.length}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami byudjet</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiByudjet")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(totalBudget / 1_000_000).toFixed(1)}M</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sarflangan</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("sarflangan")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(totalSpent / 1_000_000).toFixed(1)}M</p>
         </div>
         <div className="bg-card rounded-lg p-5">
@@ -65,14 +65,14 @@ export function RoiSection({campaigns, totalBudget, totalSpent, roi }: RoiSectio
         </div>
       </div>
       <div className="bg-card rounded-xl p-6">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Kampaniyalar samaradorligi</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("kampaniyalarSamaradorligi")}</h3>
         {campaigns.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">Kampaniya ma'lumotlari yo'q</p>
+          <p className="text-center text-muted-foreground py-8">{t("kampaniyaMalumotlariYoq")}</p>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TH>Kampaniya</TH><TH>Tur</TH><TH right>Byudjet</TH><TH right>Sarflangan</TH><TH>Holat</TH>
+                <TH>{t("kampaniya")}</TH><TH>{t("tur")}</TH><TH right>{t("byudjet")}</TH><TH right>{t("sarflangan")}</TH><TH>{t("status28")}</TH>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -104,26 +104,26 @@ export function SeoSection() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">TOP 10 kalit so'zlar</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("top10KalitSozlar")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{keywords.filter(k => k.pos <= 10).length}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">O'rtacha pozitsiya</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("ortachaPozitsiya")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(keywords.reduce((s, k) => s + k.pos, 0) / keywords.length).toFixed(1)}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami oylik qidiruv</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiOylikQidiruv")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{keywords.reduce((s, k) => s + k.vol, 0).toLocaleString()}</p>
         </div>
       </div>
       <div className="bg-card rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Globe className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kalit so'zlar reytingi</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("kalitSozlarReytingi")}</h3>
         </div>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
-            <TableRow><TH>Kalit so'z</TH><TH right>Pozitsiya</TH><TH right>Oylik hajm</TH><TH>{t('trend3')}</TH></TableRow>
+            <TableRow><TH>{t("kalitSoz")}</TH><TH right>{t("position")}</TH><TH right>{t("oylikHajm")}</TH><TH>{t('trend3')}</TH></TableRow>
           </TableHeader>
           <TableBody>
             {keywords.map((k, i) => (
@@ -160,7 +160,7 @@ export function AbSection({ abTests }: { abTests: AbTest[] }) {
           : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
-              <TableRow><TH>Test nomi</TH><TH>Variant</TH><TH right>Konversiya %</TH><TH right>Tashrif</TH><TH>Holat</TH></TableRow>
+              <TableRow><TH>{t("testNomi")}</TH><TH>{t("variant")}</TH><TH right>{t("konversiya1")}</TH><TH right>{t("tashrif")}</TH><TH>{t("status28")}</TH></TableRow>
             </TableHeader>
             <TableBody>
               {(Array.isArray(abTests) ? abTests : []).map((t, i) => (
@@ -190,10 +190,10 @@ export function CompSection({ competitors }: { competitors: Competitor[] }) {
       <div className="bg-card rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Scale className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Bozor tahlili</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("bozorTahlili")}</h3>
         </div>
         {competitors.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">Raqobatchi ma'lumotlari kiritilmagan</p>
+          <p className="text-center text-muted-foreground py-8">{t("raqobatchiMalumotlariKiritilmagan")}</p>
         ) : (
           <>
             <div className="space-y-3 mb-6">
@@ -211,7 +211,7 @@ export function CompSection({ competitors }: { competitors: Competitor[] }) {
             </div>
             <div className="ep-table-scroll"><Table>
               <TableHeader>
-                <TableRow><TH>Kompaniya</TH><TH>Narx</TH><TH>Sifat</TH><TH>Yetkazish</TH><TH>Zaif tomon</TH></TableRow>
+                <TableRow><TH>{t("company")}</TH><TH>{t("price")}</TH><TH>{t("Sifat")}</TH><TH>{t("Yetkazish")}</TH><TH>{t("zaifTomon")}</TH></TableRow>
               </TableHeader>
               <TableBody>
                 {competitors.map((c, i) => (
@@ -253,7 +253,7 @@ export function NpsSection({ npsLoading, npsData, churnLoading, churnData }: Nps
         </div>
       ) : npsData.length === 0 ? (
         <div className="bg-card rounded-lg p-8 text-center text-muted-foreground">
-          Ma'lumot yo'q. NPS so'rovnomalar yaratilmagan.
+          {t("malumotYoqNpsSorovnomalarYaratilmagan")}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -274,7 +274,7 @@ export function NpsSection({ npsLoading, npsData, churnLoading, churnData }: Nps
       <div className="bg-card rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-4 h-4 text-[var(--ep-yellow)]" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Churn xavfi — Mijozlar</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("churnXavfiMijozlar")}</h3>
           {churnData?.riskCounts && (
             <div className="ml-auto flex gap-2">
               {churnData.riskCounts.critical > 0 && <Badge className="text-xs bg-red-100 text-[var(--ep-red)] no-default-hover-elevate">Kritik: {churnData.riskCounts.critical}</Badge>}
@@ -285,7 +285,7 @@ export function NpsSection({ npsLoading, npsData, churnLoading, churnData }: Nps
         {churnLoading ? (
           <div className="space-y-2">{[1,2,3].map(i=><Skeleton key={i} className="h-14 rounded-lg"/>)}</div>
         ) : !churnData || !Array.isArray(churnData.customers) || churnData.customers.length === 0 ? (
-          <p className="text-sm text-[var(--ep-green)] font-medium py-4">Barcha mijozlar faol — churn xavfi yo'q</p>
+          <p className="text-sm text-[var(--ep-green)] font-medium py-4">{t("barchaMijozlarFaolChurnXavfi")}</p>
         ) : (
           <div className="space-y-2">
             {churnData.customers.slice(0, 8).map((c) => (

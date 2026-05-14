@@ -14,6 +14,7 @@ import { Filter, Pencil, Trash2 } from "lucide-react";
 import { PageState } from "@/components/ui/page-state";
 import type { DailyReport } from "./ERPDailyReportsTypes";
 import { getPerformanceColor } from "./ERPDailyReportsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface FilterState {
   startDate: string;
@@ -27,18 +28,19 @@ interface FiltersCardProps {
 }
 
 export function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Filter className="h-5 w-5" />
-          Filtrlar
+          {t("filtrlar")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="startDate">Boshlanish sanasi</Label>
+            <Label htmlFor="startDate">{t("startDate")}</Label>
             <Input
               id="startDate"
               type="date"
@@ -48,7 +50,7 @@ export function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
             />
           </div>
           <div>
-            <Label htmlFor="endDate">Tugash sanasi</Label>
+            <Label htmlFor="endDate">{t("endDate")}</Label>
             <Input
               id="endDate"
               type="date"
@@ -58,16 +60,16 @@ export function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
             />
           </div>
           <div>
-            <Label htmlFor="filterShift">Smena</Label>
+            <Label htmlFor="filterShift">{t("smena")}</Label>
             <Select
               value={filters.shift || "all"}
               onValueChange={(value) => onFiltersChange({ ...filters, shift: value === "all" ? "" : value })}
             >
               <SelectTrigger id="filterShift" data-testid="select-filter-shift" className="h-9">
-                <SelectValue placeholder="Barcha smenalar" />
+                <SelectValue placeholder={t("barchaSmenalar")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha smenalar</SelectItem>
+                <SelectItem value="all">{t("barchaSmenalar")}</SelectItem>
                 <SelectItem value="1-smena">1-smena</SelectItem>
                 <SelectItem value="2-smena">2-smena</SelectItem>
                 <SelectItem value="3-smena">3-smena</SelectItem>
@@ -113,17 +115,17 @@ export function ReportsTableCard({ reports, isLoading, isError, onRetry, onEdit,
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sana</TableHead>
-                <TableHead>Smena</TableHead>
-                <TableHead>Xodim</TableHead>
-                <TableHead>Ish markazi</TableHead>
-                <TableHead>Buyurtma</TableHead>
-                <TableHead className="text-right">Reja</TableHead>
-                <TableHead className="text-right">Fakt</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("smena")}</TableHead>
+                <TableHead>{t("xodim1")}</TableHead>
+                <TableHead>{t("ishMarkazi")}</TableHead>
+                <TableHead>{t("Buyurtma")}</TableHead>
+                <TableHead className="text-right">{t("reja")}</TableHead>
+                <TableHead className="text-right">{t("fakt")}</TableHead>
                 <TableHead className="text-right">%</TableHead>
-                <TableHead className="text-right">Brak</TableHead>
-                <TableHead className="text-right">To'xtash</TableHead>
-                <TableHead className="text-center">Amallar</TableHead>
+                <TableHead className="text-right">{t("Brak")}</TableHead>
+                <TableHead className="text-right">{t("toxtash")}</TableHead>
+                <TableHead className="text-center">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

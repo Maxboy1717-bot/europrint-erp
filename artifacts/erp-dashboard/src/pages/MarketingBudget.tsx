@@ -20,11 +20,13 @@ import { Plus, DollarSign, Trash2 } from "lucide-react";
 import type { MarketingBudgetItem } from "@shared/schema";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const categoryLabels: Record<string, string> = { advertising: "Reklama", content: "Kontent", events: "Tadbirlar", pr: "PR", social: "Ijtimoiy tarmoq", tools: "Vositalar", other: "Boshqa" };
 const monthNames = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
 
 export default function MarketingBudget() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -75,8 +77,8 @@ export default function MarketingBudget() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-budget">
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing Byudjeti</b></>}
-        title="Marketing Byudjeti"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("marketingByudjeti")}</b></>}
+        title={t("marketingByudjeti")}
       />
         <div className="flex items-center gap-3">
           <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
@@ -87,24 +89,24 @@ export default function MarketingBudget() {
             <DialogTrigger asChild>
               <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-budget">
                 <Plus className="h-4 w-4" />
-                Yangi Yozuv
+                {t("yangiYozuv")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg bg-card border-none p-6">
-              <DialogHeader><DialogTitle className="text-foreground font-bold">Yangi Byudjet Yozuvi</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="text-foreground font-bold">{t("yangiByudjetYozuvi")}</DialogTitle></DialogHeader>
               <div className="space-y-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Nomi *</Label><Input className="bg-background border-border" data-testid="input-budget-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("nomi")}</Label><Input className="bg-background border-border" data-testid="input-budget-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5"><Label className="text-muted-foreground">Kategoriya</Label><Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(categoryLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="space-y-1.5"><Label className="text-muted-foreground">Yil</Label><Input className="bg-background border-border" type="number" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} /></div>
+                  <div className="space-y-1.5"><Label className="text-muted-foreground">{t("category")}</Label><Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(categoryLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-muted-foreground">{t("yil")}</Label><Input className="bg-background border-border" type="number" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5"><Label className="text-muted-foreground">Oy</Label><Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger><SelectContent className="bg-card border-border">{(Array.isArray(monthNames) ? monthNames : []).map((m, i) => <SelectItem key={`k-${i}`} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="space-y-1.5"><Label className="text-muted-foreground">Rejalashtirilgan</Label><Input className="bg-background border-border" value={form.plannedAmount} onChange={(e) => setForm({ ...form, plannedAmount: e.target.value })} placeholder="0" /></div>
+                  <div className="space-y-1.5"><Label className="text-muted-foreground">Oy</Label><Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger><SelectContent className="bg-card border-border">{(Array.isArray(monthNames) ? monthNames : []).map((m, i) => <SelectItem key={`k-${i}`} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-muted-foreground">{t("rejalashtirilgan")}</Label><Input className="bg-background border-border" value={form.plannedAmount} onChange={(e) => setForm({ ...form, plannedAmount: e.target.value })} placeholder="0" /></div>
                 </div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Haqiqiy sarflar</Label><Input className="bg-background border-border" value={form.actualAmount} onChange={(e) => setForm({ ...form, actualAmount: e.target.value })} placeholder="0" /></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Izoh</Label><Textarea className="bg-background border-border" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-                <Button onClick={handleSubmit} disabled={!form.name || !form.category || createMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-budget">Yaratish</Button>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("haqiqiySarflar")}</Label><Input className="bg-background border-border" value={form.actualAmount} onChange={(e) => setForm({ ...form, actualAmount: e.target.value })} placeholder="0" /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("Izoh")}</Label><Textarea className="bg-background border-border" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+                <Button onClick={handleSubmit} disabled={!form.name || !form.category || createMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-budget">{t("Yaratish")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -113,15 +115,15 @@ export default function MarketingBudget() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Rejalashtirilgan</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("rejalashtirilgan")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{totalPlanned.toLocaleString()} so'm</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Sarflangan</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("sarflangan")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{totalActual.toLocaleString()} so'm</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Qoldiq</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("qoldiq")}</p>
           <p className={`text-4xl font-bold tracking-tight ${(totalPlanned - totalActual) < 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}`}>
             {(totalPlanned - totalActual).toLocaleString()} so'm
           </p>
@@ -163,8 +165,8 @@ export default function MarketingBudget() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Byudjet yozuvini o'chirish"
-        description="Ushbu byudjet yozuvini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("byudjetYozuviniOchirish")}
+        description={t("ushbuByudjetYozuviniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

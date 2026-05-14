@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Award, CheckCircle2 } from "lucide-react";
 import { Assignment, Certificate } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface LearningHistoryTablesProps {
   assignments: Assignment[];
@@ -15,6 +16,7 @@ interface LearningHistoryTablesProps {
 }
 
 export function LearningHistoryTables({ assignments, certificates }: LearningHistoryTablesProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Course Assignments Table */}
@@ -22,17 +24,17 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
         <CardHeader>
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5" />
-            <CardTitle>Tayinlangan kurslar</CardTitle>
+            <CardTitle>{t("tayinlanganKurslar")}</CardTitle>
           </div>
-          <CardDescription>O'quv jarayoni holati</CardDescription>
+          <CardDescription>{t("oquvJarayoniHolati")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Kurs nomi</TableHead>
-                <TableHead>Tayinlangan</TableHead>
-                <TableHead>Holat</TableHead>
+                <TableHead>{t("kursNomi")}</TableHead>
+                <TableHead>{t("tayinlangan")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -42,9 +44,9 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
                   <TableCell>{assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString('uz-UZ') : "—"}</TableCell>
                   <TableCell>
                     {assignment.completedAt ? (
-                      <Badge variant="default">Tugallangan</Badge>
+                      <Badge variant="default">{t("completed")}</Badge>
                     ) : (
-                      <Badge variant="secondary">Jarayonda</Badge>
+                      <Badge variant="secondary">{t("inProgress")}</Badge>
                     )}
                   </TableCell>
                 </TableRow>
@@ -52,7 +54,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
               {assignments.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
-                    Ma'lumot topilmadi
+                    {t("noData")}
                   </TableCell>
                 </TableRow>
               )}
@@ -66,17 +68,17 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
         <CardHeader>
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5" />
-            <CardTitle>Sertifikatlar</CardTitle>
+            <CardTitle>{t("sertifikatlar")}</CardTitle>
           </div>
-          <CardDescription>Muvaffaqiyatli topshirilgan kurslar</CardDescription>
+          <CardDescription>{t("muvaffaqiyatliTopshirilganKurslar")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Kurs nomi</TableHead>
-                <TableHead>Sana</TableHead>
-                <TableHead>Raqami</TableHead>
+                <TableHead>{t("kursNomi")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("raqami")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -92,7 +94,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
               {certificates.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
-                    Ma'lumot topilmadi
+                    {t("noData")}
                   </TableCell>
                 </TableRow>
               )}

@@ -14,6 +14,7 @@ import {
 import type { RemainingTabsProps } from "./RemainingTabsTypes";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 export { UsersTab } from "./RemainingTabsUsers";
 
@@ -27,56 +28,57 @@ export function CoursesTab({
   activityTrend,
   COLORS,
 }: Pick<RemainingTabsProps, 'stats' | 'courseProgress' | 'activityTrend' | 'COLORS'>) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jami Kurslar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("jamiKurslar")}</CardTitle>
             <BookOpen className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalCourses || 0}</div>
-            <p className="text-xs text-muted-foreground">Barcha kurslar</p>
+            <p className="text-xs text-muted-foreground">{t("barchaKurslar")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'rtacha Tugatish</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("ortachaTugatish")}</CardTitle>
             <Target className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.completionRate || 0}%</div>
-            <p className="text-xs text-muted-foreground">Umumiy tugatish foizi</p>
+            <p className="text-xs text-muted-foreground">{t("umumiyTugatishFoizi")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jami Yozilganlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("jamiYozilganlar")}</CardTitle>
             <Users className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {(Array.isArray(courseProgress) ? courseProgress : []).reduce((sum, c) => sum + c.enrolled, 0)}
             </div>
-            <p className="text-xs text-muted-foreground">Tayinlanganlar soni</p>
+            <p className="text-xs text-muted-foreground">{t("tayinlanganlarSoni")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tugatganlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("tugatganlar")}</CardTitle>
             <CheckCircle className="w-4 h-4 text-[var(--ep-green)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--ep-green)]">
               {(Array.isArray(courseProgress) ? courseProgress : []).reduce((sum, c) => sum + c.completed, 0)}
             </div>
-            <p className="text-xs text-muted-foreground">Muvaffaqiyatli</p>
+            <p className="text-xs text-muted-foreground">{t("muvaffaqiyatli1")}</p>
           </CardContent>
         </Card>
       </div>
@@ -84,8 +86,8 @@ export function CoursesTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>📊 Kurs Tugatish Ko'rsatkichlari</CardTitle>
-            <CardDescription>Har bir kurs bo'yicha o'quvchilar progressi</CardDescription>
+            <CardTitle>{t("kursTugatishKorsatkichlari")}</CardTitle>
+            <CardDescription>{t("harBirKursBoyichaOquvchilar")}</CardDescription>
           </CardHeader>
           <CardContent>
             {courseProgress.length > 0 ? (
@@ -105,7 +107,7 @@ export function CoursesTab({
               </div>
             ) : (
               <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -113,8 +115,8 @@ export function CoursesTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>🔥 Eng Ommabop Kurslar</CardTitle>
-            <CardDescription>Eng ko'p xodim tayinlangan kurslar</CardDescription>
+            <CardTitle>{t("engOmmabopKurslar")}</CardTitle>
+            <CardDescription>{t("engKopXodimTayinlanganKurslar")}</CardDescription>
           </CardHeader>
           <CardContent>
             {courseProgress.length > 0 ? (
@@ -141,7 +143,7 @@ export function CoursesTab({
               </div>
             ) : (
               <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -150,8 +152,8 @@ export function CoursesTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🏅 Kurslar Reytingi</CardTitle>
-          <CardDescription>Tugatish foizi bo'yicha saralangan</CardDescription>
+          <CardTitle>{t("kurslarReytingi")}</CardTitle>
+          <CardDescription>{t("tugatishFoiziBoyichaSaralangan")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="glass-panel space-y-3 p-3">
@@ -182,7 +184,7 @@ export function CoursesTab({
                 );
               })}
             {courseProgress.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">Ma'lumot topilmadi</p>
+              <p className="text-center text-muted-foreground py-8">{t("noData")}</p>
             )}
           </div>
         </CardContent>
@@ -190,8 +192,8 @@ export function CoursesTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>📈 Kurs Yozilish Dinamikasi</CardTitle>
-          <CardDescription>Oxirgi 30 kun ichida kurs tayinlanishi</CardDescription>
+          <CardTitle>{t("kursYozilishDinamikasi")}</CardTitle>
+          <CardDescription>{t("oxirgi30KunIchidaKurs")}</CardDescription>
         </CardHeader>
         <CardContent>
           {activityTrend.length > 0 ? (
@@ -224,7 +226,7 @@ export function CoursesTab({
             </div>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Ma'lumot topilmadi
+              {t("noData")}
             </div>
           )}
         </CardContent>

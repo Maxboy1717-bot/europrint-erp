@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FolderPlus } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export { TaskDialog } from "./StrategicTasksPanelTaskDialog";
 
@@ -41,30 +42,31 @@ export function CategoryDialog({
   onSave,
   isPending,
 }: CategoryDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" data-testid="button-add-category">
           <FolderPlus className="h-4 w-4 mr-2" />
-          Kategoriya qo'shish
+          {t("kategoriyaQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi kategoriya</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiKategoriya")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Nomi</label>
+            <label className="text-sm font-medium">{t("name")}</label>
             <Input
               data-testid="input-category-name"
               value={categoryName}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="Kategoriya nomi"
+              placeholder={t("kategoriyaNomi")}
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Kod</label>
+            <label className="text-sm font-medium">{t("code")}</label>
             <Input
               data-testid="input-category-code"
               value={categoryCode}
@@ -74,14 +76,14 @@ export function CategoryDialog({
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               data-testid="button-save-category"
               onClick={onSave}
               disabled={!categoryName || !categoryCode || isPending}
             >
-              Saqlash
+              {t("Saqlash")}
             </Button>
           </div>
         </div>

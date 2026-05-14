@@ -60,15 +60,15 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
       {/* Qator 1: Lid statistikasi */}
       <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="text-center">
-          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><Users className="h-3 w-3" />Jami lidlar</p>
+          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><Users className="h-3 w-3" />{t("jamiLidlar")}</p>
           <p className="text-lg font-bold text-foreground">{stats.totalLeads}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><TrendingUp className="h-3 w-3" />CRM ga o'tgan</p>
+          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><TrendingUp className="h-3 w-3" />{t("crmGaOtgan")}</p>
           <p className="text-lg font-bold text-[var(--ep-green)]">{stats.convertedLeads}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><BarChart2 className="h-3 w-3" />Konversiya</p>
+          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><BarChart2 className="h-3 w-3" />{t("konversiya")}</p>
           <p className="text-lg font-bold text-[var(--ep-blue)]">{stats.conversionRate}%</p>
         </div>
         <div className="text-center">
@@ -92,14 +92,14 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
           <p className="text-base font-bold text-foreground">
             {stats.cpl !== null ? `${stats.cpl.toLocaleString()} so'm` : "—"}
           </p>
-          <p className="text-xs text-muted-foreground">Har 1 lid narxi</p>
+          <p className="text-xs text-muted-foreground">{t("har1LidNarxi")}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">CPA</p>
           <p className="text-base font-bold text-foreground">
             {stats.cpa !== null ? `${stats.cpa.toLocaleString()} so'm` : "—"}
           </p>
-          <p className="text-xs text-muted-foreground">Har 1 konversiya</p>
+          <p className="text-xs text-muted-foreground">{t("har1Konversiya")}</p>
         </div>
       </div>
       {stats.estimatedRevenue > 0 && (
@@ -177,32 +177,32 @@ export default function MarketingCampaigns() {
     <div className="space-y-6" data-testid="marketing-campaigns">
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Kampaniyalar Boshqaruvi</b></>}
-        title="Kampaniyalar Boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("kampaniyalarBoshqaruvi")}</b></>}
+        title={t("kampaniyalarBoshqaruvi")}
       />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-campaign">
               <Plus className="h-4 w-4" />
-              Yangi Kampaniya
+              {t("yangiKampaniya")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg bg-card border-none p-6">
             <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "Kampaniyani tahrirlash" : "Yangi Kampaniya"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Nomi *</Label><Input className="bg-background border-border" data-testid="input-campaign-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Tavsif</Label><Textarea className="bg-background border-border" data-testid="input-campaign-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("nomi")}</Label><Input className="bg-background border-border" data-testid="input-campaign-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("progress.description")}</Label><Textarea className="bg-background border-border" data-testid="input-campaign-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Turi</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-type"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Platforma</Label><Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-platform"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("type")}</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-type"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("platforma")}</Label><Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-platform"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Holat</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-status"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Byudjet</Label><Input className="bg-background border-border" data-testid="input-campaign-budget" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="0" /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("status28")}</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9" data-testid="select-campaign-status"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("byudjet")}</Label><Input className="bg-background border-border" data-testid="input-campaign-budget" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="0" /></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Boshlanish</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-start" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Tugash</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-end" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("boshlanish")}</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-start" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("tugash")}</Label><Input className="bg-background border-border" type="date" data-testid="input-campaign-end" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
               </div>
               <Button onClick={handleSubmit} disabled={!form.name || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-campaign">{editId ? "Saqlash" : "Yaratish"}</Button>
             </div>
@@ -211,7 +211,7 @@ export default function MarketingCampaigns() {
       </div>
 
       {campaigns?.length === 0 ? (
-        <div className="bg-card rounded-xl p-6 text-center text-muted-foreground">Hozircha kampaniyalar yo'q. Yangi kampaniya yarating.</div>
+        <div className="bg-card rounded-xl p-6 text-center text-muted-foreground">{t("hozirchaKampaniyalarYoqYangiKampaniya")}</div>
       ) : (
         <div className="grid gap-6">
           {campaigns?.map((c) => (
@@ -228,7 +228,7 @@ export default function MarketingCampaigns() {
                     className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate"
                     onClick={() => toggleStats(c.id)}
                     data-testid={`button-toggle-stats-${c.id}`}
-                    title="Statistika"
+                    title={t("statistika")}
                   >
                     {expandedStats.has(c.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
@@ -270,8 +270,8 @@ export default function MarketingCampaigns() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Kampaniyani o'chirish"
-        description="Ushbu marketing kampaniyani o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("kampaniyaniOchirish")}
+        description={t("ushbuMarketingKampaniyaniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

@@ -15,6 +15,7 @@ import type {
 import { SHIFT_COLORS, SHIFT_ICONS, SHIFT_TIMES, SHIFT_LABELS, PAGE_SIZE, DAY_NAMES } from "./ShiftScheduleTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ── Grid Tab ──────────────────────────────────────────────────────────────
 
 interface GridTabProps {
@@ -32,6 +33,7 @@ export function GridTab({
   departments, onSearchChange, onDeptChange, onPrevWeek, onNextWeek, onToday,
   onPrevPage, onNextPage, onAssign, onSwap, onDelete,
 }: GridTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -48,13 +50,13 @@ export function GridTab({
             <Button variant="outline" size="icon" onClick={onNextWeek} data-testid="button-next-week">
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={onToday} data-testid="button-today">Bugun</Button>
+            <Button variant="outline" size="sm" onClick={onToday} data-testid="button-today">{t("today")}</Button>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Xodim qidirish..."
+                placeholder={t("xodimQidirish")}
                 value={searchQuery}
                 onChange={e => onSearchChange(e.target.value)}
                 className="pl-8 w-44 h-9"
@@ -65,10 +67,10 @@ export function GridTab({
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={selectedDeptId} onValueChange={onDeptChange}>
                 <SelectTrigger className="w-44 h-9" data-testid="select-department">
-                  <SelectValue placeholder="Barcha bo'limlar" />
+                  <SelectValue placeholder={t("barchaBolimlar")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barcha bo'limlar</SelectItem>
+                  <SelectItem value="all">{t("barchaBolimlar")}</SelectItem>
                   {(Array.isArray(departments) ? departments : []).map(d => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
@@ -97,7 +99,7 @@ export function GridTab({
               <thead>
                 <tr>
                   <th className="text-left py-2 px-3 border-b bg-muted font-semibold text-sm min-w-[170px] sticky left-0 z-10 bg-background">
-                    Xodim
+                    {t("xodim1")}
                   </th>
                   {(Array.isArray(weekDates) ? weekDates : []).map((d, i) => {
                     const isToday = d.toISOString().slice(0, 10) === todayStr;
@@ -114,7 +116,7 @@ export function GridTab({
               <tbody>
                 {pagedEmployees.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-10 text-[13px] text-muted-foreground">Xodimlar topilmadi</td>
+                    <td colSpan={8} className="text-center py-10 text-[13px] text-muted-foreground">{t("xodimlarTopilmadi")}</td>
                   </tr>
                 ) : (
                   (Array.isArray(pagedEmployees) ? pagedEmployees : []).map(emp => (
@@ -142,13 +144,13 @@ export function GridTab({
                                 <span className="text-[10px] opacity-70">{entry.start_time}–{entry.end_time}</span>
                                 {canSwap && (
                                   <div className="absolute top-0 right-0 hidden group-hover:flex gap-0.5 bg-white rounded shadow p-0.5 z-10">
-                                    <button title="Almashish so'rovi" className="text-[var(--ep-primary)] hover:text-orange-700 p-0.5"
+                                    <button title={t("almashishSorovi")} className="text-[var(--ep-primary)] hover:text-orange-700 p-0.5"
                                       onClick={() => onSwap(emp.id, dateStr)}
                                       data-testid={`btn-swap-${emp.id}-${dateStr}`}>
                                       <ArrowRightLeft className="h-3 w-3" />
                                     </button>
                                     {isHR && (
-                                      <button title="O'chirish" className="text-[var(--ep-red)] hover:text-red-700 p-0.5"
+                                      <button title={t("delete")} className="text-[var(--ep-red)] hover:text-red-700 p-0.5"
                                         onClick={() => onDelete(entry.id)}
                                         data-testid={`btn-delete-${emp.id}-${dateStr}`}>
                                         <Trash2 className="h-3 w-3" />
@@ -180,11 +182,11 @@ export function GridTab({
         {totalPages > 1 && (
           <div className="mt-4 flex items-center justify-center gap-2">
             <Button variant="outline" size="sm" onClick={onPrevPage} disabled={page === 0} data-testid="btn-prev-page">
-              <ChevronLeft className="h-4 w-4" />Oldingi
+              <ChevronLeft className="h-4 w-4" />{t("previous")}
             </Button>
             <span className="text-sm text-muted-foreground">{page + 1} / {totalPages}</span>
             <Button variant="outline" size="sm" onClick={onNextPage} disabled={page >= totalPages - 1} data-testid="btn-next-page">
-              Keyingi<ChevronRight className="h-4 w-4" />
+              {t("nextBtn")}<ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         )}
@@ -225,7 +227,7 @@ export function SwapsTab({ swapLoading, swapRequests, pendingSwaps, isHR, isAppr
         ) : swapRequests.length === 0 ? (
           <div className="text-center py-10 text-[13px] text-muted-foreground">
             <ArrowRightLeft className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p>Hech qanday so'rov yo'q</p>
+            <p>{t("hechQandaySorovYoq")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -235,7 +237,7 @@ export function SwapsTab({ swapLoading, swapRequests, pendingSwaps, isHR, isAppr
                   {["So'rov beruvchi", "Kim bilan", "Sana", "Sabab", "Holat"].map(h => (
                     <th key={h} className="text-left py-2 px-3 font-semibold">{h}</th>
                   ))}
-                  {isHR && <th className="text-left py-2 px-3 font-semibold">Amallar</th>}
+                  {isHR && <th className="text-left py-2 px-3 font-semibold">{t("Amallar")}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -260,12 +262,12 @@ export function SwapsTab({ swapLoading, swapRequests, pendingSwaps, isHR, isAppr
                             <Button size="sm" variant="outline" className="text-[var(--ep-green)] border-green-300 hover:bg-green-50"
                               onClick={() => onApprove(req.id, "approve")} disabled={isApprovePending}
                               data-testid={`btn-approve-${req.id}`}>
-                              <CheckCircle className="h-4 w-4 mr-1" />Tasdiqlash
+                              <CheckCircle className="h-4 w-4 mr-1" />{t("verify")}
                             </Button>
                             <Button size="sm" variant="outline" className="text-[var(--ep-red)] border-red-300 hover:bg-red-50"
                               onClick={() => onApprove(req.id, "reject")} disabled={isApprovePending}
                               data-testid={`btn-reject-${req.id}`}>
-                              <XCircle className="h-4 w-4 mr-1" />Rad etish
+                              <XCircle className="h-4 w-4 mr-1" />{t("reject")}
                             </Button>
                           </div>
                         ) : (

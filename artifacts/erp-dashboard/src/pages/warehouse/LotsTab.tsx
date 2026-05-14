@@ -61,6 +61,7 @@ const STATUS_CONF: Record<string, { label: string; icon: React.ComponentType<{ c
 interface LotsTabProps { lang: Lang; t: Translations }
 
 export function LotsTab({lang, t }: LotsTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [warehouseId, setWarehouseId] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -105,7 +106,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={warehouseId} onValueChange={setWarehouseId}>
           <SelectTrigger className="w-full sm:w-[220px] h-9">
-            <SelectValue placeholder="Ombor tanlang" />
+            <SelectValue placeholder={t("omborTanlang")} />
           </SelectTrigger>
           <SelectContent>
             {(Array.isArray(warehouses) ? warehouses : []).map(wh => (
@@ -115,15 +116,15 @@ export function LotsTab({lang, t }: LotsTabProps) {
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[180px] h-9">
-            <SelectValue placeholder="Barcha statuslar" />
+            <SelectValue placeholder={t("barchaStatuslar")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Barchasi</SelectItem>
-            <SelectItem value="approved">Tasdiqlangan</SelectItem>
-            <SelectItem value="pending">Tekshiruvda</SelectItem>
-            <SelectItem value="quarantine">Karantin</SelectItem>
-            <SelectItem value="rejected">Rad etilgan</SelectItem>
-            <SelectItem value="defective">Brakli</SelectItem>
+            <SelectItem value="">{t("Barchasi")}</SelectItem>
+            <SelectItem value="approved">{t("approved")}</SelectItem>
+            <SelectItem value="pending">{t("tekshiruvda")}</SelectItem>
+            <SelectItem value="quarantine">{t("karantin")}</SelectItem>
+            <SelectItem value="rejected">{t("rejected")}</SelectItem>
+            <SelectItem value="defective">{t("brakli")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -134,7 +135,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
             <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 flex items-center gap-2.5">
               <Clock className="h-5 w-5 text-[var(--ep-yellow)] shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-[var(--ep-yellow)] dark:text-amber-400">FIFO Ogohlantirish</p>
+                <p className="text-sm font-semibold text-[var(--ep-yellow)] dark:text-amber-400">{t("fifoOgohlantirish")}</p>
                 <p className="text-xs text-[var(--ep-yellow)] dark:text-amber-500">{fifoWarnings} ta lot 30+ kun eski</p>
               </div>
             </div>
@@ -143,7 +144,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
             <div className="rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30 p-3 flex items-center gap-2.5">
               <AlertTriangle className="h-5 w-5 text-[var(--ep-red)] shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-[var(--ep-red)] dark:text-rose-400">Muddati tugayapti</p>
+                <p className="text-sm font-semibold text-[var(--ep-red)] dark:text-rose-400">{t("muddatiTugayapti")}</p>
                 <p className="text-xs text-[var(--ep-red)] dark:text-rose-500">{expiryWarnings} ta lot 30 kun ichida</p>
               </div>
             </div>
@@ -154,7 +155,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
       {!warehouseId ? (
         <Card className="p-8 text-center text-muted-foreground">
           <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Iltimos, omborni tanlang</p>
+          <p>{t("iltimosOmborniTanlang")}</p>
         </Card>
       ) : (
         <Card>
@@ -162,14 +163,14 @@ export function LotsTab({lang, t }: LotsTabProps) {
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Lot №</TableHead>
+                  <TableHead>{t("lot2")}</TableHead>
                   <TableHead>Материал</TableHead>
                   <TableHead>Miqdor / Mavjud</TableHead>
                   <TableHead>{t('status21')}</TableHead>
-                  <TableHead>Joylashuv</TableHead>
+                  <TableHead>{t("location")}</TableHead>
                   <TableHead>Yoshi (kun)</TableHead>
-                  <TableHead>Muddatgacha</TableHead>
-                  <TableHead className="text-right">Amallar</TableHead>
+                  <TableHead>{t("muddatgacha")}</TableHead>
+                  <TableHead className="text-right">{t("Amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -183,7 +184,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-12">
                       <Layers className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground">Lotlar topilmadi</p>
+                      <p className="text-muted-foreground">{t("lotlarTopilmadi")}</p>
                     </TableCell>
                   </TableRow>
                 ) : lots.map(lot => {
@@ -240,7 +241,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
                       <TableCell className="text-right">
                         <Button size="sm" variant="ghost" className="h-7 text-xs"
                           onClick={() => { setEditLot(lot); setEditForm({ quality_status: lot.status, defect_reason: lot.defect_reason ?? "", quarantine_reason: lot.quarantine_reason ?? "" }); }}>
-                          Tahrirlash
+                          {t("edit")}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -256,7 +257,7 @@ export function LotsTab({lang, t }: LotsTabProps) {
       <Dialog open={!!editLot} onOpenChange={() => setEditLot(null)}>
         <DialogContent className="max-w-sm p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Lot holatini yangilash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("lotHolatiniYangilash")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -264,30 +265,30 @@ export function LotsTab({lang, t }: LotsTabProps) {
               <Select value={editForm.quality_status} onValueChange={v => setEditForm(p => ({ ...p, quality_status: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="approved">Tasdiqlangan</SelectItem>
-                  <SelectItem value="pending">Tekshiruvda</SelectItem>
-                  <SelectItem value="quarantine">Karantin</SelectItem>
-                  <SelectItem value="rejected">Rad etilgan</SelectItem>
-                  <SelectItem value="defective">Brakli</SelectItem>
+                  <SelectItem value="approved">{t("approved")}</SelectItem>
+                  <SelectItem value="pending">{t("tekshiruvda")}</SelectItem>
+                  <SelectItem value="quarantine">{t("karantin")}</SelectItem>
+                  <SelectItem value="rejected">{t("rejected")}</SelectItem>
+                  <SelectItem value="defective">{t("brakli")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {(editForm.quality_status === "defective" || editForm.quality_status === "rejected") && (
               <div>
-                <p className="text-xs font-medium mb-1">Brak sababi</p>
-                <Input value={editForm.defect_reason} onChange={e => setEditForm(p => ({ ...p, defect_reason: e.target.value }))} placeholder="Nuqson sababi..." />
+                <p className="text-xs font-medium mb-1">{t("brakSababi")}</p>
+                <Input value={editForm.defect_reason} onChange={e => setEditForm(p => ({ ...p, defect_reason: e.target.value }))} placeholder={t("nuqsonSababi")} />
               </div>
             )}
             {editForm.quality_status === "quarantine" && (
               <div>
-                <p className="text-xs font-medium mb-1">Karantin sababi</p>
-                <Input value={editForm.quarantine_reason} onChange={e => setEditForm(p => ({ ...p, quarantine_reason: e.target.value }))} placeholder="Karantin sababi..." />
+                <p className="text-xs font-medium mb-1">{t("karantinSababi")}</p>
+                <Input value={editForm.quarantine_reason} onChange={e => setEditForm(p => ({ ...p, quarantine_reason: e.target.value }))} placeholder={t("karantinSababi1")} />
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditLot(null)}>Bekor</Button>
-            <Button onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>Saqlash</Button>
+            <Button variant="outline" onClick={() => setEditLot(null)}>{t("Bekor")}</Button>
+            <Button onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>{t("Saqlash")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

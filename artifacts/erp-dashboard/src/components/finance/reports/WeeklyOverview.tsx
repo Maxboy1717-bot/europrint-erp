@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { formatShortCurrency, formatPercent } from "./helpers";
 import { WeeklySummary } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface WeeklyOverviewProps {
   data: WeeklySummary | undefined;
@@ -15,11 +16,12 @@ interface WeeklyOverviewProps {
 }
 
 export function WeeklyOverview({ data, isLoading }: WeeklyOverviewProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <Card className="bg-[var(--ep-green)] text-white border-0" data-testid="card-weekly-revenue">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium opacity-90">Daromad</CardTitle>
+          <CardTitle className="text-sm font-medium opacity-90">{t("daromad")}</CardTitle>
           <TrendingUp className="h-5 w-5 opacity-80" />
         </CardHeader>
         <CardContent>
@@ -43,7 +45,7 @@ export function WeeklyOverview({ data, isLoading }: WeeklyOverviewProps) {
 
       <Card className="bg-[var(--ep-red)] text-white border-0" data-testid="card-weekly-expenses">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium opacity-90">Xarajatlar</CardTitle>
+          <CardTitle className="text-sm font-medium opacity-90">{t("xarajatlar")}</CardTitle>
           <TrendingDown className="h-5 w-5 opacity-80" />
         </CardHeader>
         <CardContent>
@@ -67,7 +69,7 @@ export function WeeklyOverview({ data, isLoading }: WeeklyOverviewProps) {
 
       <Card className={`${(data?.netProfit || 0) >= 0 ? "" : ""} text-white border-0`} data-testid="card-weekly-profit">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium opacity-90">Sof foyda</CardTitle>
+          <CardTitle className="text-sm font-medium opacity-90">{t("sofFoyda")}</CardTitle>
           <DollarSign className="h-5 w-5 opacity-80" />
         </CardHeader>
         <CardContent>

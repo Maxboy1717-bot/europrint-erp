@@ -13,6 +13,7 @@ import { safeStorage } from '@/lib/safeStorage';
 import { FloatingInput, LoginHeroPanel } from "./LoginSections";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface LoginProps {
@@ -37,6 +38,7 @@ const loginSchema = z.object({
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function Login({ onLoginSuccess }: LoginProps) {
+  const { t } = useTranslation("common");
   const [form, setForm] = useState<LoginFormState>({
     username: "",
     password: "",
@@ -108,7 +110,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     <div
       className="erp-auth-root min-h-screen flex overflow-hidden"
       role="main"
-      aria-label="Tizimga kirish sahifasi"
+      aria-label={t("tizimgaKirishSahifasi")}
     >
       {/* ── LEFT PANEL: Hero (60%) ── */}
       <LoginHeroPanel />
@@ -128,17 +130,17 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Tizimga kirish
+              {t("tizimgaKirish")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              EuroPrint ERP ga xush kelibsiz
+              {t("europrintErpGaXushKelibsiz")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <FloatingInput
               id="username"
-              label="Foydalanuvchi nomi"
+              label={t("username")}
               value={form.username}
               onChange={(v) => setField("username", v)}
               autoComplete="username"
@@ -147,7 +149,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
             <FloatingInput
               id="password"
-              label="Parol"
+              label={t("Parol")}
               type={form.showPassword ? "text" : "password"}
               value={form.password}
               onChange={(v) => setField("password", v)}
@@ -185,11 +187,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               {form.isLoading ? (
                 <>
                   <EPLoader className="w-4 h-4" />
-                  Kirilmoqda...
+                  {t("kirilmoqda")}
                 </>
               ) : (
                 <>
-                  Tizimga kirish
+                  {t("tizimgaKirish")}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

@@ -164,7 +164,7 @@ export function TransactionDialog({
                   <FormLabel>{t("customer")}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Kontragent nomi"
+                      placeholder={t("kontragentNomi")}
                       {...field}
                       data-testid="input-counterparty-name"
                     />
@@ -182,7 +182,7 @@ export function TransactionDialog({
                   <FormLabel>{tCommon("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Qo'shimcha izoh..."
+                      placeholder={t("qoshimchaIzoh")}
                       className="resize-none"
                       {...field}
                       data-testid="input-transaction-description"

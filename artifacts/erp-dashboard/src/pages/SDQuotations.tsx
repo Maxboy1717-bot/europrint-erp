@@ -27,12 +27,14 @@ import {
 import { useQuotationsData, useQuotationsMutations } from "./SDQuotationsHooks";
 import { apiRequest } from '@/lib/queryClient';
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function SDQuotations() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // UI state
@@ -179,7 +181,7 @@ export default function SDQuotations() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="error-state">
         <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-muted-foreground">Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+        <p className="text-muted-foreground">{t("malumotlarniYuklashdaXatolikYuzBerdi")}</p>
       </div>
     );
   }
@@ -188,8 +190,8 @@ export default function SDQuotations() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="empty-state">
         <Package className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium">Hozircha ma'lumot yo'q</p>
-        <p className="text-sm text-muted-foreground">Yangi yozuv qo'shish uchun yuqoridagi tugmani bosing</p>
+        <p className="text-lg font-medium">{t("hozirchaMalumotYoq")}</p>
+        <p className="text-sm text-muted-foreground">{t("yangiYozuvQoshishUchunYuqoridagi")}</p>
       </div>
     );
   }
@@ -204,9 +206,9 @@ export default function SDQuotations() {
       <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Taklifnomalar Boshqaruvi</b></>}
-        title="Taklifnomalar Boshqaruvi"
-        subtitle="SAP SD - Narx takliflarini boshqarish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("taklifnomalarBoshqaruvi")}</b></>}
+        title={t("taklifnomalarBoshqaruvi")}
+        subtitle={t("sapSdNarxTakliflariniBoshqarish")}
       />
         </div>
 

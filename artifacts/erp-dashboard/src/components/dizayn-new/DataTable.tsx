@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTranslation } from '@/lib/i18n';
 import {
   ChevronUp, ChevronDown, ChevronsUpDown,
   Search, ChevronLeft, ChevronRight,
@@ -56,6 +57,7 @@ export interface DataTableProps<T extends { id: string | number }> {
 // ─── Status Badge ──────────────────────────────────────────────────────────────
 
 export function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("common");
   const cfg = STATUS_CONFIG[status] ?? {
     label: status,
     color: "bg-muted text-muted-foreground border-border",
@@ -79,9 +81,9 @@ export function StatusBadge({ status }: { status: string }) {
 // ─── Sort icon ─────────────────────────────────────────────────────────────────
 
 function SortIcon({ dir }: { dir: SortDir }) {
-  if (dir === "asc")  return <ChevronUp  className="w-3.5 h-3.5 text-primary" aria-label="O'sish tartibida" />;
-  if (dir === "desc") return <ChevronDown className="w-3.5 h-3.5 text-primary" aria-label="Kamayish tartibida" />;
-  return <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground/50" aria-label="Saralash" />;
+  if (dir === "asc")  return <ChevronUp  className="w-3.5 h-3.5 text-primary" aria-label={t("ascending")} />;
+  if (dir === "desc") return <ChevronDown className="w-3.5 h-3.5 text-primary" aria-label={t("descending")} />;
+  return <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground/50" aria-label={t("sortBy")} />;
 }
 
 // ─── Row action menu ───────────────────────────────────────────────────────────
@@ -105,7 +107,7 @@ function RowActionMenu({
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen((p) => !p); }}
-        aria-label="Amallar menyusi"
+        aria-label={t("amallarMenyusi")}
         aria-expanded={open}
         aria-haspopup="menu"
         className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -254,7 +256,7 @@ export function DataTableRedesign<T extends { id: string | number }>({
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder={searchPlaceholder}
               className="pl-9 h-8 text-sm bg-background"
-              aria-label="Qidirish"
+              aria-label={t("search")}
             />
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
@@ -294,7 +296,7 @@ export function DataTableRedesign<T extends { id: string | number }>({
                   checked={allSelected}
                   indeterminate={someSelected && !allSelected}
                   onChange={toggleAll}
-                  aria-label="Barchasini tanlash"
+                  aria-label={t("barchasiniTanlash")}
                 />
               </th>
               {(Array.isArray(columns) ? columns : []).map((col) => (
@@ -320,7 +322,7 @@ export function DataTableRedesign<T extends { id: string | number }>({
                   </span>
                 </th>
               ))}
-              <th scope="col" className="w-12 px-4 py-3" aria-label="Amallar" />
+              <th scope="col" className="w-12 px-4 py-3" aria-label={t("Amallar")} />
             </tr>
           </thead>
           <tbody>
@@ -335,7 +337,7 @@ export function DataTableRedesign<T extends { id: string | number }>({
             ) : pageData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + 2} className="px-4 py-12 text-center text-muted-foreground text-sm">
-                  Natija topilmadi
+                  {t("noResults")}
                 </td>
               </tr>
             ) : (
@@ -380,14 +382,14 @@ export function DataTableRedesign<T extends { id: string | number }>({
           <span className="text-xs text-muted-foreground">
             {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, sorted.length)} / {sorted.length} ta
           </span>
-          <div className="flex items-center gap-1" role="navigation" aria-label="Sahifalash">
+          <div className="flex items-center gap-1" role="navigation" aria-label={t("sahifalash")}>
             <Button
               variant="ghost"
               size="icon"
               className="w-7 h-7"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              aria-label="Oldingi sahifa"
+              aria-label={t("previousPageAria")}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -419,7 +421,7 @@ export function DataTableRedesign<T extends { id: string | number }>({
               className="w-7 h-7"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              aria-label="Keyingi sahifa"
+              aria-label={t("nextPageAria")}
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -478,7 +480,7 @@ export function EmployeeTable({
 
   return (
     <DataTableRedesign
-      title="Xodimlar"
+      title={t("xodimlar")}
       columns={columns}
       data={data}
       onAdd={onAdd}

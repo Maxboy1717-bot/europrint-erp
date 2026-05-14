@@ -17,8 +17,10 @@ import { FileText, TrendingUp, BarChart2, Award, RefreshCw } from "lucide-react"
 import { URL_TAB_MAP, Invoice, ForecastHistory, AnalyticsMonthly, CommissionRecord, LeaderboardEntry } from "./SDSalesManagementTypes";
 import { InvoicesSection, ForecastSection, AnalyticsSection, CommissionSection } from "./SDSalesManagementSections";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function SDSalesManagement() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(() => URL_TAB_MAP[location] || "invoices");
@@ -84,9 +86,9 @@ export default function SDSalesManagement() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Savdo Boshqaruvi</b></>}
-        title="Savdo Boshqaruvi"
-        subtitle="Hisob-fakturalar · Prognoz · Analitika · Komissiya"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("savdoBoshqaruvi")}</b></>}
+        title={t("savdoBoshqaruvi")}
+        subtitle={t("hisobFakturalarPrognozAnalitikaKomissiya")}
         actions={
           <div className="flex items-center gap-2">
             <Badge className="bg-muted/60 text-foreground rounded-full px-3 py-0.5 text-xs font-semibold border-none">
@@ -109,16 +111,16 @@ export default function SDSalesManagement() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-muted/60 p-1 rounded-lg flex-wrap gap-1">
           <TabsTrigger value="invoices" data-testid="tab-invoices" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">
-            <FileText className="w-4 h-4 mr-1.5" />Hisob-fakturalar
+            <FileText className="w-4 h-4 mr-1.5" />{t("hisobFakturalar")}
           </TabsTrigger>
           <TabsTrigger value="forecast" data-testid="tab-forecast" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">
-            <TrendingUp className="w-4 h-4 mr-1.5" />AI Prognoz
+            <TrendingUp className="w-4 h-4 mr-1.5" />{t("aiPrognoz")}
           </TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-analytics" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">
-            <BarChart2 className="w-4 h-4 mr-1.5" />Analitika
+            <BarChart2 className="w-4 h-4 mr-1.5" />{t("analitika")}
           </TabsTrigger>
           <TabsTrigger value="commission" data-testid="tab-commission" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">
-            <Award className="w-4 h-4 mr-1.5" />Komissiya
+            <Award className="w-4 h-4 mr-1.5" />{t("komissiya")}
           </TabsTrigger>
         </TabsList>
 

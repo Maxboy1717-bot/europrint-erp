@@ -11,6 +11,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from '@/lib/i18n';
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -36,6 +37,7 @@ type CarouselContextProps = {
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
 
 function useCarousel() {
+  const { t } = useTranslation("common");
   const context = React.useContext(CarouselContext)
 
   if (!context) {
@@ -220,7 +222,7 @@ const CarouselPrevious = React.forwardRef<
       {...props}
     >
       <ArrowLeft className="h-4 w-4" />
-      <span className="sr-only">Oldingi slayd</span>
+      <span className="sr-only">{t("oldingiSlayd")}</span>
     </Button>
   )
 })
@@ -249,7 +251,7 @@ const CarouselNext = React.forwardRef<
       {...props}
     >
       <ArrowRight className="h-4 w-4" />
-      <span className="sr-only">Keyingi slayd</span>
+      <span className="sr-only">{t("keyingiSlayd")}</span>
     </Button>
   )
 })

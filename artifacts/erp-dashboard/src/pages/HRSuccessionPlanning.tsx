@@ -16,8 +16,10 @@ import { EMPTY_PLAN_FORM, type NewPlanForm } from "./HRSuccessionPlanningTypes";
 import { KeyPositionsTab, CareerPlansTab, CandidatesTab, NineBoxMatrixTab } from "./HRSuccessionPlanningSections";
 import { NewPlanDialog } from "./HRSuccessionPlanningDialogs";
 import { Card as CardPrimitive, CardContent } from "@/components/ui/card";
+import { useTranslation } from '@/lib/i18n';
 
 export default function HRSuccessionPlanning() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [newPlanOpen, setNewPlanOpen] = useState(false);
@@ -54,8 +56,8 @@ export default function HRSuccessionPlanning() {
   return (
     <ModulePage
       module="hr"
-      title="Vorislik Rejalash"
-      subtitle="Lavozim vorisligi va iste'dod zaxirasi boshqaruvi"
+      title={t("vorislikRejalash")}
+      subtitle={t("lavozimVorisligiVaIstedodZaxirasi")}
       icon={<Users className="h-6 w-6" />}
     >
       {/* KPI Summary */}
@@ -66,7 +68,7 @@ export default function HRSuccessionPlanning() {
               <AlertTriangle className="h-8 w-8 text-destructive" />
               <div>
                 {posLoading ? <Skeleton className="h-8 w-16 rounded-lg" /> : <p className="text-2xl font-bold" data-testid="stat-critical-positions">{criticalCount}</p>}
-                <p className="text-sm text-muted-foreground">Xavfli lavozimlar</p>
+                <p className="text-sm text-muted-foreground">{t("xavfliLavozimlar")}</p>
               </div>
             </div>
           </CardContent>
@@ -77,7 +79,7 @@ export default function HRSuccessionPlanning() {
               <UserCheck className="h-8 w-8 text-[var(--ep-green)]" />
               <div>
                 {candLoading ? <Skeleton className="h-8 w-16 rounded-lg" /> : <p className="text-2xl font-bold" data-testid="stat-candidates">{candidates.length}</p>}
-                <p className="text-sm text-muted-foreground">Potentsial nomzodlar</p>
+                <p className="text-sm text-muted-foreground">{t("potentsialNomzodlar")}</p>
               </div>
             </div>
           </CardContent>
@@ -88,7 +90,7 @@ export default function HRSuccessionPlanning() {
               <Star className="h-8 w-8 text-[var(--ep-yellow)]" />
               <div>
                 {plansLoading ? <Skeleton className="h-8 w-16 rounded-lg" /> : <p className="text-2xl font-bold" data-testid="stat-plans">{careerPlans.length}</p>}
-                <p className="text-sm text-muted-foreground">Faol vorislik rejalari</p>
+                <p className="text-sm text-muted-foreground">{t("faolVorislikRejalari")}</p>
               </div>
             </div>
           </CardContent>
@@ -97,10 +99,10 @@ export default function HRSuccessionPlanning() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4 flex-wrap h-auto gap-1">
-          <TabsTrigger value="overview" data-testid="tab-succession-overview">Asosiy Lavozimlar</TabsTrigger>
-          <TabsTrigger value="plans" data-testid="tab-succession-plans">Vorislik Rejalari</TabsTrigger>
-          <TabsTrigger value="candidates" data-testid="tab-succession-candidates">Nomzodlar</TabsTrigger>
-          <TabsTrigger value="matrix" data-testid="tab-succession-matrix">9-Blok Matrix</TabsTrigger>
+          <TabsTrigger value="overview" data-testid="tab-succession-overview">{t("asosiyLavozimlar")}</TabsTrigger>
+          <TabsTrigger value="plans" data-testid="tab-succession-plans">{t("vorislikRejalari")}</TabsTrigger>
+          <TabsTrigger value="candidates" data-testid="tab-succession-candidates">{t("nomzodlar")}</TabsTrigger>
+          <TabsTrigger value="matrix" data-testid="tab-succession-matrix">{t("k9BlokMatrix")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -111,8 +113,8 @@ export default function HRSuccessionPlanning() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2">
               <div>
-                <CardTitle>Vorislik Rejalari</CardTitle>
-                <CardDescription>Xodimlarning lavozimga tayyorlanish rejalari</CardDescription>
+                <CardTitle>{t("vorislikRejalari")}</CardTitle>
+                <CardDescription>{t("xodimlarningLavozimgaTayyorlanishRejalari")}</CardDescription>
               </div>
               <NewPlanDialog
                 open={newPlanOpen}

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Contact } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface ContactHeaderProps {
   contact: Contact | null;
@@ -17,6 +18,7 @@ interface ContactHeaderProps {
 }
 
 export function ContactHeader({ contact, isLoading, isEditing, onEdit }: ContactHeaderProps) {
+  const { t } = useTranslation("common");
   const getFullName = () => {
     if (!contact) return "";
     return [contact.lastName, contact.name, contact.secondName]
@@ -53,7 +55,7 @@ export function ContactHeader({ contact, isLoading, isEditing, onEdit }: Contact
             data-testid="button-edit-contact"
           >
             <Edit className="h-4 w-4 mr-2" />
-            Tahrirlash
+            {t("edit")}
           </Button>
         )}
       </div>

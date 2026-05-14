@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PinPromptModal } from "./PinPromptModal";
+import { useTranslation } from '@/lib/i18n';
 
 export interface BasketCard {
   id:                string;
@@ -60,6 +61,7 @@ export function BasketColumn({
   isLoading: boolean;
   onCardClick: (id: string) => void;
 }) {
+  const { t } = useTranslation("common");
   const c = COLOR_MAP[color];
   return (
     <Card className="flex flex-col min-h-[420px]">
@@ -85,12 +87,12 @@ export function BasketColumn({
         {isLoading ? (
           <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">
             <Loader2 className="animate-spin mr-2" size={14} />
-            Yuklanmoqda...
+            {t("Yuklanmoqda...")}
           </div>
         ) : cards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-xs text-muted-foreground/70 gap-2">
             <Inbox size={28} className="opacity-30" />
-            Savat bo'sh
+            {t("savatBosh")}
           </div>
         ) : (
           cards.map(card => (
@@ -162,34 +164,34 @@ function DocumentCard({ card, kind, onOpen }: { card: BasketCard; kind: BasketKi
         {kind === 'inbox' && (
           <>
             <ActionPill onClick={() => moveTo.mutate('pending')} tone="amber" disabled={moveTo.isPending}>
-              <ChevronRight size={11} /> Kutishga
+              <ChevronRight size={11} /> {t("kutishga")}
             </ActionPill>
             <ActionPill onClick={() => setPinModal({ action: 'approve', open: true })} tone="emerald">
-              <Check size={11} /> Tasdiq
+              <Check size={11} /> {t("tasdiq")}
             </ActionPill>
             <ActionPill onClick={() => setPinModal({ action: 'reject', open: true })} tone="red">
-              <X size={11} /> Rad
+              <X size={11} /> {t("rad")}
             </ActionPill>
           </>
         )}
         {kind === 'pending' && (
           <>
             <ActionPill onClick={() => setPinModal({ action: 'approve', open: true })} tone="emerald">
-              <Check size={11} /> Tasdiq
+              <Check size={11} /> {t("tasdiq")}
             </ActionPill>
             <ActionPill onClick={() => setPinModal({ action: 'reject', open: true })} tone="red">
-              <X size={11} /> Rad
+              <X size={11} /> {t("rad")}
             </ActionPill>
           </>
         )}
         {kind === 'outbox' && card.workflowState === 'rejected' && (
           <ActionPill onClick={onOpen} tone="blue">
-            <RotateCw size={11} /> Qayta yuborish
+            <RotateCw size={11} /> {t("qaytaYuborish")}
           </ActionPill>
         )}
         {kind === 'outbox' && card.workflowState === 'draft' && (
           <ActionPill onClick={onOpen} tone="blue">
-            <Send size={11} /> Yuborish
+            <Send size={11} /> {t("submitBtn")}
           </ActionPill>
         )}
       </div>

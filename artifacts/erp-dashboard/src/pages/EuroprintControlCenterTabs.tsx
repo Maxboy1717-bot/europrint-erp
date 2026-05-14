@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, CheckCircle, Database, Lock, TrendingUp } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import type {
   BusinessRule,
   KpiDefinition,
@@ -215,6 +216,7 @@ export function ControlCenterTabs({
   validationRules,
   kpis,
 }: ControlCenterTabsProps) {
+  const { t } = useTranslation("common");
   return (
     <Tabs defaultValue="rules" className="mt-10">
       <TabsList className="bg-muted/60 p-1 rounded-xl">
@@ -223,7 +225,7 @@ export function ControlCenterTabs({
           className="rounded-lg data-[state=active]:bg-card"
           data-testid="tab-rules"
         >
-          Biznes Qoidalar
+          {t("biznesQoidalar")}
         </TabsTrigger>
         <TabsTrigger
           value="units"
@@ -237,7 +239,7 @@ export function ControlCenterTabs({
           className="rounded-lg data-[state=active]:bg-card"
           data-testid="tab-validation"
         >
-          Tekshiruvlar
+          {t("tekshiruvlar")}
         </TabsTrigger>
         <TabsTrigger
           value="kpis"

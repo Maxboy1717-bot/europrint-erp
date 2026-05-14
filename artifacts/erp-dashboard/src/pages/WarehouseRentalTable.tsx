@@ -23,6 +23,7 @@ import {
   type RentalRecord,
 } from "./WarehouseRentalTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
@@ -30,18 +31,18 @@ function statusBadge(status: string) {
   if (status === "active")
     return (
       <EPStatusPill tone="info">
-        Aktiv
+        {t("aktiv")}
       </EPStatusPill>
     );
   if (status === "closed")
     return (
       <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300">
-        Yopildi
+        {t("yopildi")}
       </Badge>
     );
   return (
     <EPStatusPill tone="success">
-      To'langan
+      {t("tolangan")}
     </EPStatusPill>
   );
 }
@@ -71,6 +72,7 @@ export function RecordsTable({
   closePending,
   paidPending,
 }: RecordsTableProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       {/* Filters */}
@@ -97,22 +99,22 @@ export function RecordsTable({
       ) : records.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-md">
           <Warehouse className="h-10 w-10 mx-auto mb-2 opacity-40" />
-          <p>Hali ijara yozuvi yo'q. Yangi yozuv qo'shing.</p>
+          <p>{t("haliIjaraYozuviYoqYangi")}</p>
         </div>
       ) : (
         <div className="border rounded-md overflow-auto">
           <div className="ep-table-scroll"><Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
-                <TableHead>Raqam</TableHead>
-                <TableHead>Mahsulot</TableHead>
+                <TableHead>{t("raqam")}</TableHead>
+                <TableHead>{t("Mahsulot")}</TableHead>
                 <TableHead>Mijoz / Menejer</TableHead>
                 <TableHead>Maydon (m²)</TableHead>
-                <TableHead>Qabul sanasi</TableHead>
-                <TableHead>Jami kun</TableHead>
-                <TableHead>Pullik kun</TableHead>
-                <TableHead className="text-right">Summa</TableHead>
-                <TableHead>Holat</TableHead>
+                <TableHead>{t("qabulSanasi2")}</TableHead>
+                <TableHead>{t("jamiKun")}</TableHead>
+                <TableHead>{t("pullikKun")}</TableHead>
+                <TableHead className="text-right">{t("summa")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -167,7 +169,7 @@ export function RecordsTable({
                         {formatMoney(Number(r.totalAmount))}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">Bepul</span>
+                      <span className="text-muted-foreground">{t("bepul")}</span>
                     )}
                   </TableCell>
                   <TableCell>{statusBadge(r.status)}</TableCell>
@@ -181,7 +183,7 @@ export function RecordsTable({
                           disabled={closePending}
                           data-testid={`button-close-${r.id}`}
                         >
-                          Yopish
+                          {t("close2")}
                         </Button>
                       )}
                       {r.status === "closed" && (
@@ -192,7 +194,7 @@ export function RecordsTable({
                           disabled={paidPending}
                           data-testid={`button-paid-${r.id}`}
                         >
-                          To'landi
+                          {t("tolandi1")}
                         </Button>
                       )}
                     </div>

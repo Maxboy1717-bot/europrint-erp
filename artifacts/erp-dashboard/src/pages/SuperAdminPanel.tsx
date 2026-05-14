@@ -15,6 +15,7 @@ import { Shield, Globe, FileText, RefreshCw, Plus } from "lucide-react";
 import {
   Tenant, ModuleDef, PlatformStats, ExpiryAlertsData, AuditLogEntry, AuditFilters,
 } from "./SuperAdminPanelTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   PlatformStatsCards,
   ExpiryAlertsCard,
@@ -26,6 +27,7 @@ import {
 } from "./SuperAdminPanelSections";
 
 export default function SuperAdminPanel() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("tenants");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -159,9 +161,9 @@ export default function SuperAdminPanel() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />Super Admin Panel
+            <Shield className="w-6 h-6 text-primary" />{t("superAdminPanel")}
           </h1>
-          <p className="text-muted-foreground text-sm">SaaS platformasini boshqaring — tenantlar, modullar, litsenziyalar</p>
+          <p className="text-muted-foreground text-sm">{t("saasPlatformasiniBoshqaringTenantlarModullar")}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button size="icon" variant="ghost" onClick={() => activeTab === "audit" ? refetchAudit() : refetch()} data-testid="button-refresh-saas">
@@ -169,7 +171,7 @@ export default function SuperAdminPanel() {
           </Button>
           {activeTab === "tenants" && (
             <Button onClick={() => setAddDialogOpen(true)} data-testid="button-add-tenant">
-              <Plus className="w-4 h-4 mr-2" />Yangi Tenant
+              <Plus className="w-4 h-4 mr-2" />{t("yangiTenant")}
             </Button>
           )}
         </div>
@@ -188,10 +190,10 @@ export default function SuperAdminPanel() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="tenants" className="flex items-center gap-2">
-            <Globe className="w-4 h-4" />Tenantlar
+            <Globe className="w-4 h-4" />{t("tenantlar")}
           </TabsTrigger>
           <TabsTrigger value="audit" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />Audit Log
+            <FileText className="w-4 h-4" />{t("auditLog3")}
           </TabsTrigger>
         </TabsList>
 
@@ -251,8 +253,8 @@ export default function SuperAdminPanel() {
       <ConfirmDialog
         open={confirmDeleteTenantId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteTenantId(null); }}
-        title="Tenantni o'chirish"
-        description="Ushbu tenantni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("tenantniOchirish")}
+        description={t("ushbuTenantniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

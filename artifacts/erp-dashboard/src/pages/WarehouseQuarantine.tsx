@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Lock, ShieldCheck, AlertTriangle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface QuarantineItem {
   id: number;
@@ -31,6 +32,7 @@ function severityColor(hours: number): { bg: string; label: string } {
 }
 
 export default function WarehouseQuarantine() {
+  const { t } = useTranslation("common");
   const [items, setItems] = useState<QuarantineItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<number | null>(null);
@@ -71,17 +73,17 @@ export default function WarehouseQuarantine() {
         <Lock className="h-8 w-8 text-[var(--ep-yellow)]" />
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">KARANTIN</div>
-          <h1 className="text-2xl font-bold">Karantindagi materiallar</h1>
+          <h1 className="text-2xl font-bold">{t("karantindagiMateriallar")}</h1>
           <p className="text-sm text-gray-500">QC inspektor qarori kutmoqda — 48 soatdan oshgan harakatlar avtomatik eskalatsiya qilinadi</p>
         </div>
-        <Button onClick={load} variant="outline">🔄 Yangilash</Button>
+        <Button onClick={load} variant="outline">{t("yangilash")}</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="pt-6">
             <div className="text-3xl font-bold">{stats.total}</div>
-            <div className="text-xs text-gray-500">Jami karantinda</div>
+            <div className="text-xs text-gray-500">{t("jamiKarantinda")}</div>
           </CardContent>
         </Card>
         <Card>
@@ -102,16 +104,16 @@ export default function WarehouseQuarantine() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[var(--ep-blue)]" />
-            <CardTitle className="text-base">Karantin ro'yxati</CardTitle>
+            <CardTitle className="text-base">{t("karantinRoyxati")}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {loading && <div className="p-10 text-center text-gray-500">⏳ Yuklanmoqda...</div>}
+          {loading && <div className="p-10 text-center text-gray-500">{t("yuklanmoqda")}</div>}
 
           {!loading && items.length === 0 && (
             <div className="p-10 text-center text-gray-500">
               <ShieldCheck className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              Karantinda hech narsa yo'q
+              {t("karantindaHechNarsaYoq")}
             </div>
           )}
 
@@ -119,13 +121,13 @@ export default function WarehouseQuarantine() {
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Hujjat</TableHead>
-                  <TableHead>Ta'minotchi</TableHead>
-                  <TableHead>Shartnoma</TableHead>
-                  <TableHead className="text-right">Miqdor</TableHead>
-                  <TableHead>Soat</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>QC Qarori</TableHead>
+                  <TableHead>{t("hujjat")}</TableHead>
+                  <TableHead>{t("taminotchi")}</TableHead>
+                  <TableHead>{t("shartnoma1")}</TableHead>
+                  <TableHead className="text-right">{t("quantity")}</TableHead>
+                  <TableHead>{t("soat")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
+                  <TableHead>{t("qcQarori")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -193,7 +195,7 @@ export default function WarehouseQuarantine() {
           <div className="text-sm">
             <div className="font-semibold">QC qarorlari nima qiladi:</div>
             <ul className="mt-1 space-y-1 text-xs">
-              <li>✅ <b>QABUL</b> → material avtomatik <b>RM-MAIN</b> omborga ko'chiriladi va GL posting yaratiladi</li>
+              <li>✅ <b>QABUL</b> → material avtomatik <b>RM-MAIN</b> {t("omborgaKochiriladiVaGlPosting")}</li>
               <li>🔄 <b>REWORK</b> → MES moduliga signal yuboriladi (qayta ishlash kerak)</li>
               <li>❌ <b>CHIQARISH</b> → ta'minotchiga qaytarish hujjati yaratiladi, status='rejected'</li>
             </ul>

@@ -26,53 +26,55 @@ import {
 import { Plus, Check, X, Clock, Download } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { QuestionnaireQuestion, QuestionnaireResponse } from "./QuestionnaireTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // getStatusBadge — exported so QuestionnaireDialogs can reuse it
 // ---------------------------------------------------------------------------
 
 export function getStatusBadge(status: string) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "pending":
       return (
         <Badge variant="secondary" className="flex items-center gap-1" data-testid="badge-pending">
-          <Clock className="w-3 h-3" />Kutilmoqda
+          <Clock className="w-3 h-3" />{t("Kutilmoqda")}
         </Badge>
       );
     case "approved":
       return (
         <Badge variant="default" className="flex items-center gap-1 bg-green-600" data-testid="badge-approved">
-          <Check className="w-3 h-3" />Tasdiqlangan
+          <Check className="w-3 h-3" />{t("approved")}
         </Badge>
       );
     case "rejected":
       return (
         <Badge variant="destructive" className="flex items-center gap-1" data-testid="badge-rejected">
-          <X className="w-3 h-3" />Rad etilgan
+          <X className="w-3 h-3" />{t("rejected")}
         </Badge>
       );
     case "hired":
       return (
         <Badge variant="default" className="flex items-center gap-1 bg-blue-600" data-testid="badge-hired">
-          <Check className="w-3 h-3" />Ishga olindi
+          <Check className="w-3 h-3" />{t("ishgaOlindi")}
         </Badge>
       );
     case "not_hired":
       return (
         <Badge variant="destructive" className="flex items-center gap-1" data-testid="badge-not-hired">
-          <X className="w-3 h-3" />Ishga olinmadi
+          <X className="w-3 h-3" />{t("ishgaOlinmadi")}
         </Badge>
       );
     case "interviewed":
       return (
         <Badge variant="outline" className="flex items-center gap-1" data-testid="badge-interviewed">
-          <Clock className="w-3 h-3" />Intervyu qilindi
+          <Clock className="w-3 h-3" />{t("intervyuQilindi")}
         </Badge>
       );
     case "in_review":
       return (
         <Badge variant="outline" className="flex items-center gap-1" data-testid="badge-in-review">
-          <Clock className="w-3 h-3" />Ko'rib chiqilmoqda
+          <Clock className="w-3 h-3" />{t("koribChiqilmoqda")}
         </Badge>
       );
     default:
@@ -103,19 +105,19 @@ export function QuestionsSection({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <div>
-          <CardTitle>Anketa Savollari</CardTitle>
-          <CardDescription>Telegram botda ko'rsatiladigan savollar</CardDescription>
+          <CardTitle>{t("anketaSavollari")}</CardTitle>
+          <CardDescription>{t("telegramBotdaKorsatiladiganSavollar")}</CardDescription>
         </div>
         <Button onClick={onAddClick} data-testid="button-add-question">
           <Plus className="w-4 h-4 mr-2" />
-          Savol qo'shish
+          {t("savolQoshish")}
         </Button>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-8">Yuklanmoqda...</p>
+          <p className="text-center text-muted-foreground py-8">{t("Yuklanmoqda...")}</p>
         ) : questions.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">Hozircha savollar yo'q</p>
+          <p className="text-center text-muted-foreground py-8">{t("hozirchaSavollarYoq")}</p>
         ) : (
           <div className="space-y-4">
             {(Array.isArray(questions) ? questions : []).map((q) => (
@@ -125,17 +127,17 @@ export function QuestionsSection({
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">#{q.order}</Badge>
-                        <span className="font-semibold text-sm">O'zbek</span>
+                        <span className="font-semibold text-sm">{t("ozbek")}</span>
                       </div>
                       <p className="text-sm">{q.question}</p>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="font-semibold text-sm">Rus</span>
+                        <span className="font-semibold text-sm">{t("rus")}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{q.questionRu}</p>
                     </div>
                     <DeleteConfirmDialog
-                      title="Savolni o'chirishni tasdiqlaysizmi?"
-                      description="Savol butunlay o'chiriladi."
+                      title={t("savolniOchirishniTasdiqlaysizmi")}
+                      description={t("savolButunlayOchiriladi")}
                       onConfirm={() => onDelete(q.id)}
                       isPending={isDeleting}
                     />
@@ -174,24 +176,24 @@ export function ResponsesSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Xodim Arizalari</CardTitle>
-        <CardDescription>Yangi xodimlardan kelgan arizalar</CardDescription>
+        <CardTitle>{t("xodimArizalari")}</CardTitle>
+        <CardDescription>{t("yangiXodimlardanKelganArizalar")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-8">Yuklanmoqda...</p>
+          <p className="text-center text-muted-foreground py-8">{t("Yuklanmoqda...")}</p>
         ) : responses.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">Hozircha arizalar yo'q</p>
+          <p className="text-center text-muted-foreground py-8">{t("hozirchaArizalarYoq")}</p>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>To'liq ism</TableHead>
-                <TableHead>Telefon</TableHead>
-                <TableHead>Til</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead>Sana</TableHead>
-                <TableHead>Harakatlar</TableHead>
+                <TableHead>{t("toliqIsm")}</TableHead>
+                <TableHead>{t("phone")}</TableHead>
+                <TableHead>{t("language")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -218,7 +220,7 @@ export function ResponsesSection({
                         onClick={() => onView(response)}
                         data-testid={`button-view-${response.id}`}
                       >
-                        Ko'rish
+                        {t("view")}
                       </Button>
                       <Button
                         variant="ghost"
@@ -227,11 +229,11 @@ export function ResponsesSection({
                         data-testid={`button-download-${response.id}`}
                       >
                         <Download className="w-4 h-4 mr-1" />
-                        Yuklab olish
+                        {t("download")}
                       </Button>
                       <DeleteConfirmDialog
-                        title="Javobni o'chirishni tasdiqlaysizmi?"
-                        description="Javob butunlay o'chiriladi."
+                        title={t("javobniOchirishniTasdiqlaysizmi")}
+                        description={t("javobButunlayOchiriladi")}
                         onConfirm={() => onDelete(response.id)}
                         isPending={isDeleting}
                       />

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 
 import { FileText, Zap, Search, Download, TrendingDown, Eye } from "lucide-react";
 import type { TechCard, PapkaOrder } from "./TechCardsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // StatsBar
@@ -25,11 +26,12 @@ interface StatsBarProps {
 
 /** Displays three KPI chips: total cards, active cards, pending technologist orders. */
 export function StatsBar({ totalCards, activeCards, pendingOrders }: StatsBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="bg-card rounded-lg border-none shadow-none p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Jami kartalar
+          {t("jamiKartalar")}
         </p>
         <p
           className="text-4xl font-bold tracking-tight text-foreground"
@@ -41,7 +43,7 @@ export function StatsBar({ totalCards, activeCards, pendingOrders }: StatsBarPro
 
       <Card className="bg-card rounded-lg border-none shadow-none p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Faol
+          {t("active")}
         </p>
         <p
           className="text-4xl font-bold tracking-tight text-primary"
@@ -53,7 +55,7 @@ export function StatsBar({ totalCards, activeCards, pendingOrders }: StatsBarPro
 
       <Card className="bg-card rounded-lg border-none shadow-none p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Texnolog kutilmoqda
+          {t("texnologKutilmoqda")}
         </p>
         <p
           className="text-4xl font-bold tracking-tight text-[var(--ep-yellow)]"
@@ -82,7 +84,7 @@ export function PendingOrdersPanel({ orders, onGenerateClick }: PendingOrdersPan
   return (
     <div>
       <h2 className="text-lg font-semibold mb-3 text-foreground">
-        AI Karta Generatsiya qilish
+        {t("aiKartaGeneratsiyaQilish")}
       </h2>
       <div className="grid gap-2">
         {(Array.isArray(orders) ? orders : []).map((order) => (
@@ -108,7 +110,7 @@ export function PendingOrdersPanel({ orders, onGenerateClick }: PendingOrdersPan
                 data-testid={`btn-generate-card-${order.id}`}
               >
                 <Zap className="h-4 w-4 mr-1" />
-                AI Karta yaratish
+                {t("aiKartaYaratish")}
               </Button>
             </CardContent>
           </Card>
@@ -162,13 +164,13 @@ export function SingleTechCard({
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm mb-3">
           <div>
-            <span className="text-muted-foreground">Format: </span>
+            <span className="text-muted-foreground">{t("format1")}</span>
             <span className="font-medium text-foreground">
               {card.formatA || "-"} x {card.formatB || "-"}
             </span>
           </div>
           <div>
-            <span className="text-muted-foreground">Davomiylik: </span>
+            <span className="text-muted-foreground">{t("davomiylik1")}</span>
             <span className="font-medium text-foreground">
               {card.totalDurationMinutes || "-"} min
             </span>
@@ -190,7 +192,7 @@ export function SingleTechCard({
             data-testid={`btn-view-${card.id}`}
           >
             <Eye className="h-4 w-4 mr-1" />
-            Ko'rish
+            {t("view")}
           </Button>
 
           <Button
@@ -202,7 +204,7 @@ export function SingleTechCard({
             data-testid={`btn-optimize-${card.id}`}
           >
             <TrendingDown className="h-4 w-4 mr-1" />
-            Optimallashtirish
+            {t("optimallashtirish")}
           </Button>
 
           <Button
@@ -254,11 +256,11 @@ export function CardsGrid({
   return (
     <div>
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <h2 className="text-lg font-semibold text-foreground">Barcha kartalar</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("barchaKartalar")}</h2>
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Qidirish..."
+            placeholder={t("Qidirish...")}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-8 bg-card border-none"
@@ -272,7 +274,7 @@ export function CardsGrid({
           <CardContent className="py-10 text-center">
             <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground" data-testid="text-no-cards">
-              Texnologik kartalar topilmadi
+              {t("texnologikKartalarTopilmadi")}
             </p>
           </CardContent>
         </Card>

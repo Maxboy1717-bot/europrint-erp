@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface SystemHealth {
   uptime?: { formatted?: string };
@@ -32,13 +33,14 @@ interface CronJob { name?: string; schedule?: string; module?: string }
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "ok" || status === "running" || status === "active" || status === "connected")
-    return <Badge className="bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Faol</Badge>;
+    return <Badge className="bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />{t("active")}</Badge>;
   if (status === "warning" || status === "in_memory" || status === "default" || status === "default_key")
     return <Badge className="bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400"><AlertTriangle className="w-3 h-3 mr-1" />{status === "in_memory" ? "Xotirada" : "Ogohlantirish"}</Badge>;
-  return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Ulanmagan</Badge>;
+  return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />{t("ulanmagan")}</Badge>;
 }
 
 export default function SystemMonitor() {
+  const { t } = useTranslation("common");
   const { data: health, isLoading: loadingHealth, refetch: refetchHealth } = useQuery<SystemHealth>({
     queryKey: ["/api/system/health"],
     refetchInterval: 30000,
@@ -67,12 +69,12 @@ export default function SystemMonitor() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Tizim monitoring</b></>}
-        title="Tizim monitoring"
-        subtitle="Server holati, ma'lumotlar bazasi va integratsiyalar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("tizimMonitoring")}</b></>}
+        title={t("tizimMonitoring")}
+        subtitle={t("serverHolatiMalumotlarBazasiVa")}
         actions={
           <Button variant="outline" size="default" onClick={handleRefresh} data-testid="button-refresh-monitor">
-            <RefreshCw className="w-4 h-4 mr-2" />Yangilash
+            <RefreshCw className="w-4 h-4 mr-2" />{t("refresh")}
           </Button>
         }
       />
@@ -82,28 +84,28 @@ export default function SystemMonitor() {
         {loadingHealth ? Array(4).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />) : <>
           <Card data-testid="card-uptime">
             <CardContent className="pt-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Clock className="w-4 h-4" />Ishlash vaqti</div>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Clock className="w-4 h-4" />{t("ishlashVaqti")}</div>
               <div className="text-2xl font-bold">{health?.uptime?.formatted || "—"}</div>
               <div className="text-xs text-muted-foreground mt-1">Node {health?.nodeVersion}</div>
             </CardContent>
           </Card>
           <Card data-testid="card-memory">
             <CardContent className="pt-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><HardDrive className="w-4 h-4" />Heap xotira</div>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><HardDrive className="w-4 h-4" />{t("heapXotira")}</div>
               <div className="text-2xl font-bold">{health?.memory?.heapUsedMB || 0} <span className="text-sm font-normal">MB</span></div>
               <div className="text-xs text-muted-foreground mt-1">Jami: {health?.memory?.heapTotalMB} MB</div>
             </CardContent>
           </Card>
           <Card data-testid="card-cpu">
             <CardContent className="pt-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Cpu className="w-4 h-4" />CPU yuklanish</div>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Cpu className="w-4 h-4" />{t("cpuYuklanish")}</div>
               <div className="text-2xl font-bold">{health?.cpu?.load1 || "0.00"}</div>
               <div className="text-xs text-muted-foreground mt-1">{health?.cpu?.cores} yadrolar</div>
             </CardContent>
           </Card>
           <Card data-testid="card-database-status">
             <CardContent className="pt-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Database className="w-4 h-4" />Ma'lumotlar bazasi</div>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Database className="w-4 h-4" />{t("malumotlarBazasi")}</div>
               <div className="text-2xl font-bold">{health?.database?.latencyMs || 0} <span className="text-sm font-normal">ms</span></div>
               <div className="mt-1"><StatusBadge status={health?.database?.status || "error"} /></div>
             </CardContent>
@@ -115,7 +117,7 @@ export default function SystemMonitor() {
         {/* DB Stats */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base"><Database className="w-4 h-4" />Ma'lumotlar bazasi statistikasi</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base"><Database className="w-4 h-4" />{t("malumotlarBazasiStatistikasi")}</CardTitle>
           </CardHeader>
           <CardContent>
             {loadingDb ? <Skeleton className="h-40 rounded-lg" /> : (
@@ -125,7 +127,7 @@ export default function SystemMonitor() {
                   <span className="font-medium">{dbStats?.dbSize || "—"}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Jami xodimlar</span>
+                  <span className="text-muted-foreground">{t("jamiXodimlar1")}</span>
                   <span className="font-medium">{dbStats?.userCount || 0}</span>
                 </div>
                 {dbStats?.tables?.slice(0, 8).map((t: { table_name: string; live_rows?: number | string }) => (
@@ -142,7 +144,7 @@ export default function SystemMonitor() {
         {/* Integrations */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base"><Zap className="w-4 h-4" />Integratsiyalar holati</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base"><Zap className="w-4 h-4" />{t("integratsiyalarHolati")}</CardTitle>
           </CardHeader>
           <CardContent>
             {loadingIntegrations ? <Skeleton className="h-40 rounded-lg" /> : (

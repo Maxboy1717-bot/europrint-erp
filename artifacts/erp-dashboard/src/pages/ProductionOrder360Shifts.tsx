@@ -6,6 +6,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from '@/lib/i18n';
 
 function fmt(n: number | null | undefined, d = 0) {
   if (n == null) return "—";
@@ -59,24 +60,25 @@ export default function ProductionOrder360Shifts({
   totalRunningHours,
   totalStoppedHours,
 }: ProductionOrder360ShiftsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Smenalar soni</p>
+            <p className="text-xs text-muted-foreground">{t("smenalarSoni")}</p>
             <p className="text-2xl font-bold mt-0.5">{sessions?.length || 0}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Ishlagan vaqt</p>
+            <p className="text-xs text-muted-foreground">{t("ishlaganVaqt")}</p>
             <p className="text-2xl font-bold mt-0.5 text-[var(--ep-green)]">{totalRunningHours}s</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">To'xtash vaqti</p>
+            <p className="text-xs text-muted-foreground">{t("toxtashVaqti")}</p>
             <p className="text-2xl font-bold mt-0.5 text-[var(--ep-yellow)]">{totalStoppedHours}s</p>
           </CardContent>
         </Card>
@@ -108,15 +110,15 @@ export default function ProductionOrder360Shifts({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3 text-xs">
                 <div>
-                  <p className="text-muted-foreground">Reja</p>
+                  <p className="text-muted-foreground">{t("reja")}</p>
                   <p className="font-semibold">{fmt(sess.targetQuantity)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Ishlab chiq.</p>
+                  <p className="text-muted-foreground">{t("ishlabChiq")}</p>
                   <p className="font-semibold text-[var(--ep-green)]">{fmt(sess.actualQuantity)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Nosoz</p>
+                  <p className="text-muted-foreground">{t("nosoz")}</p>
                   <p className="font-semibold text-[var(--ep-primary)]">{fmt(sess.defectQuantity)}</p>
                 </div>
               </div>
@@ -151,7 +153,7 @@ export default function ProductionOrder360Shifts({
         {(!sessions || sessions.length === 0) && (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Smenalar ma'lumoti yo'q
+              {t("smenalarMalumotiYoq")}
             </CardContent>
           </Card>
         )}
@@ -160,7 +162,7 @@ export default function ProductionOrder360Shifts({
       {(downtimes?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">To'xtash sabablari</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t("toxtashSabablari")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {downtimes?.map((dt, i) => (

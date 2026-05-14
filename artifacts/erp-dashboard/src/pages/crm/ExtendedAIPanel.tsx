@@ -15,6 +15,7 @@ import type {
   AutoTask,
   SupervisorData,
 } from "./ExtendedAIPanelTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   VoicePanel,
   ChatPanel,
@@ -29,6 +30,7 @@ interface ExtendedAIPanelProps {
 }
 
 export function ExtendedAIPanel({ entityType, entityId }: ExtendedAIPanelProps) {
+  const { t } = useTranslation("common");
   const [activePanel, setActivePanel] = useState<ActivePanel>("voice");
   const { toast } = useToast();
 
@@ -55,7 +57,7 @@ export function ExtendedAIPanel({ entityType, entityId }: ExtendedAIPanelProps) 
   if (!entityId || entityId <= 0) {
     return (
       <div className="text-center py-4 text-muted-foreground text-sm">
-        Kengaytirilgan AI uchun avval elementni tanlang
+        {t("kengaytirilganAiUchunAvvalElementni")}
       </div>
     );
   }
@@ -63,7 +65,7 @@ export function ExtendedAIPanel({ entityType, entityId }: ExtendedAIPanelProps) 
   if (entityType !== "leads" && entityType !== "deals") {
     return (
       <div className="text-center py-8 text-[13px] text-muted-foreground">
-        Kengaytirilgan AI faqat lidlar va bitimlar uchun mavjud
+        {t("kengaytirilganAiFaqatLidlarVa")}
       </div>
     );
   }
@@ -171,23 +173,23 @@ export function ExtendedAIPanel({ entityType, entityId }: ExtendedAIPanelProps) 
       <div className="flex gap-1 flex-wrap">
         <Button variant={activePanel === "supervisor" ? "default" : "outline"} size="sm"
           onClick={() => setActivePanel("supervisor")} data-testid="btn-supervisor-ai">
-          <UserCog className="h-4 w-4 mr-1" />Supervisor
+          <UserCog className="h-4 w-4 mr-1" />{t("supervisor")}
         </Button>
         <Button variant={activePanel === "voice" ? "default" : "outline"} size="sm"
           onClick={() => setActivePanel("voice")} data-testid="btn-voice-ai">
-          <Mic className="h-4 w-4 mr-1" />Ovoz
+          <Mic className="h-4 w-4 mr-1" />{t("ovoz")}
         </Button>
         <Button variant={activePanel === "chat" ? "default" : "outline"} size="sm"
           onClick={() => setActivePanel("chat")} data-testid="btn-chat-ai">
-          <MessageCircle className="h-4 w-4 mr-1" />Chat
+          <MessageCircle className="h-4 w-4 mr-1" />{t("chat")}
         </Button>
         <Button variant={activePanel === "churn" ? "default" : "outline"} size="sm"
           onClick={() => setActivePanel("churn")} data-testid="btn-churn-ai">
-          <UserMinus className="h-4 w-4 mr-1" />Churn
+          <UserMinus className="h-4 w-4 mr-1" />{t("churn")}
         </Button>
         <Button variant={activePanel === "autotasks" ? "default" : "outline"} size="sm"
           onClick={() => setActivePanel("autotasks")} data-testid="btn-autotasks-ai">
-          <ListChecks className="h-4 w-4 mr-1" />Vazifalar
+          <ListChecks className="h-4 w-4 mr-1" />{t("vazifalar")}
         </Button>
       </div>
 

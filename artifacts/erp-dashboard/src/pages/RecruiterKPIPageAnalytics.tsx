@@ -9,6 +9,7 @@ import type { WorkerType } from "@/lib/workerType";
 import { ConversionChain } from "./RecruiterKPIPageCards";
 import { CONVERSION_TARGET, CHANNEL_META, WORKER_TYPE_PIE_COLORS } from "./RecruiterKPIPageTypes";
 import type { ChannelAnalyticsRow, WorkerTypeStatsRow } from "./RecruiterKPIPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── WorkerTypeSection ─────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ interface WorkerTypeSectionProps {
 }
 
 export function WorkerTypeSection({ workerTypeRows }: WorkerTypeSectionProps) {
+  const { t } = useTranslation("common");
   if (workerTypeRows.length === 0) return null;
 
   const WORKER_TYPES: WorkerType[] = ["FLAGMAN", "PROTSESSNIK", "TRABLDAYKER"];
@@ -38,8 +40,8 @@ export function WorkerTypeSection({ workerTypeRows }: WorkerTypeSectionProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" /> Xodim Turlari Bo'yicha Statistika
-          <Badge variant="outline" className="text-[10px] ml-2">HR Capital №9</Badge>
+          <Users className="w-4 h-4 text-primary" /> {t("xodimTurlariBoyichaStatistika")}
+          <Badge variant="outline" className="text-[10px] ml-2">{t("hrCapital9")}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -134,7 +136,7 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Radio className="w-4 h-4 text-primary" /> Jalb qilish kanallari bo'yicha samaradorlik
+          <Radio className="w-4 h-4 text-primary" /> {t("jalbQilishKanallariBoyichaSamaradorlik")}
           <span className="ml-auto text-xs font-normal text-muted-foreground">
             Maqsad: ≥{CONVERSION_TARGET}% konversiya
           </span>
@@ -145,7 +147,7 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
           {/* 60% rule visual header */}
           <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
             <p className="text-xs font-semibold text-muted-foreground mb-2">
-              60% Konversiya Qoidasi: Ariza → Telefon suhbat → Asosiy suhbat
+              {t("k60KonversiyaQoidasiArizaTelefon")}
             </p>
             <div className="flex items-center gap-3">
               {([
@@ -165,7 +167,7 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
                 </div>
               ))}
               <div className="ml-4 text-xs text-muted-foreground">
-                Maqsad: <span className="font-bold text-primary">{CONVERSION_TARGET}%</span> konversiya
+                {t("maqsad1")}<span className="font-bold text-primary">{CONVERSION_TARGET}%</span> konversiya
               </div>
             </div>
           </div>
@@ -175,11 +177,11 @@ export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSection
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-muted-foreground border-b border-border">
-                  <th className="text-left pb-2 font-medium">Kanal</th>
-                  <th className="text-right pb-2 font-medium">Vakansiyalar</th>
-                  <th className="text-right pb-2 font-medium">Ko'rishlar</th>
-                  <th className="text-left pb-2 pl-4 font-medium">Konversiya zanjiri</th>
-                  <th className="text-right pb-2 font-medium">Holat</th>
+                  <th className="text-left pb-2 font-medium">{t("kanal")}</th>
+                  <th className="text-right pb-2 font-medium">{t("vakansiyalar")}</th>
+                  <th className="text-right pb-2 font-medium">{t("korishlar")}</th>
+                  <th className="text-left pb-2 pl-4 font-medium">{t("konversiyaZanjiri")}</th>
+                  <th className="text-right pb-2 font-medium">{t("status28")}</th>
                 </tr>
               </thead>
               <tbody>

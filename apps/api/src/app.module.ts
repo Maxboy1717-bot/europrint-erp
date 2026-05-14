@@ -135,12 +135,7 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     ]),
 
     // ── Event-Driven (§10 — 20 trigger) ─────────────────────────────────────
-    EventEmitterModule.forRoot({
-      delimiter: '.',
-      maxListeners: 50,
-      verboseMemoryLeak: true,
-      ignoreErrors: false,
-    }),
+    EventEmitterModule.forRoot(),
 
     // ── Cron jobs (§22) ──────────────────────────────────────────────────────
     ScheduleModule.forRoot(),

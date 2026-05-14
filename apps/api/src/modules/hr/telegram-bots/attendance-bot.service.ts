@@ -14,6 +14,7 @@ import { TelegramBotsRepository } from './telegram-bots.repository';
 import { NotificationBotService } from './notification-bot.service';
 import type { Telegraf, Context } from 'telegraf';
 
+import { message } from 'telegraf/filters';
 type CtxWithChat = Context & { chat?: { id?: number } };
 type CtxWithMsg = CtxWithChat & { message?: { text?: string } };
 
@@ -42,7 +43,7 @@ export class AttendanceBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[attendance-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('Attendance Bot token not configured (TELEGRAM_ATTENDANCE_BOT_TOKEN missing) — skipping');
         return;
@@ -166,7 +167,7 @@ export class AttendanceBotService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       try {
         const chatId = (ctx as CtxWithChat).chat?.id;
         const text = ((ctx as CtxWithMsg).message?.text ?? '').trim();

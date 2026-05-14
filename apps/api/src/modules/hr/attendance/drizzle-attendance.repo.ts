@@ -9,13 +9,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { db, runQuery, hrEmployees } from '@shared/db';
 import { face_embeddings } from '@shared/db';
 import { attendance } from '@europrint/schemas';
-import { sql, eq, and, count, desc, gte, lte, isNotNull } from 'drizzle-orm';
+import { SQL, SQLWrapper, and, count, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IAttendanceRepository } from './i-attendance.repo';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

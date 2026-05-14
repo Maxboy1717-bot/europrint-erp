@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { AiSummaryData, DirectorDashboard } from "./DirectorExtendedTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function StatCard({
   icon: Icon,
@@ -28,6 +29,7 @@ export function StatCard({
   sub?: string;
   color?: string;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-lg p-5">
       <div className="flex items-center gap-2 mb-3">
@@ -70,12 +72,12 @@ export function AiSummaryTab({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard icon={Package} label="Oylik buyurtmalar" value={dashboardData?.orders?.month ?? 0} sub={`Bajarildi: ${dashboardData?.orders?.completed ?? 0}`} color="text-primary" />
-          <StatCard icon={Factory} label="Ishlab chiqarishda" value={dashboardData?.orders?.inProduction ?? 0} sub="Faol jarayon" color="text-primary" />
-          <StatCard icon={AlertTriangle} label="Kechikkan" value={dashboardData?.orders?.overdue ?? 0} sub="Buyurtmalar" color={(dashboardData?.orders?.overdue ?? 0) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"} />
-          <StatCard icon={Zap} label="OEE o'rtacha" value={dashboardData?.production?.oee ? `${dashboardData.production.oee}%` : "—"} sub="Bugungi" color="text-primary" />
-          <StatCard icon={Users} label="Davomad" value={`${dashboardData?.hr?.present ?? 0}/${dashboardData?.hr?.total ?? 0}`} sub={`${dashboardData?.hr?.attendanceRate ?? 0}%`} color="text-primary" />
-          <StatCard icon={ShieldAlert} label="Ogohlantirishlar" value={(dashboardData?.alerts?.iot ?? 0) + (dashboardData?.alerts?.minStock ?? 0)} sub="IoT + Ombor" color={((dashboardData?.alerts?.iot ?? 0) + (dashboardData?.alerts?.minStock ?? 0)) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"} />
+          <StatCard icon={Package} label={t("oylikBuyurtmalar")} value={dashboardData?.orders?.month ?? 0} sub={`Bajarildi: ${dashboardData?.orders?.completed ?? 0}`} color="text-primary" />
+          <StatCard icon={Factory} label={t("ishlabChiqarishda")} value={dashboardData?.orders?.inProduction ?? 0} sub="Faol jarayon" color="text-primary" />
+          <StatCard icon={AlertTriangle} label={t("kechikkan")} value={dashboardData?.orders?.overdue ?? 0} sub="Buyurtmalar" color={(dashboardData?.orders?.overdue ?? 0) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"} />
+          <StatCard icon={Zap} label={t("oeeOrtacha")} value={dashboardData?.production?.oee ? `${dashboardData.production.oee}%` : "—"} sub="Bugungi" color="text-primary" />
+          <StatCard icon={Users} label={t("davomad")} value={`${dashboardData?.hr?.present ?? 0}/${dashboardData?.hr?.total ?? 0}`} sub={`${dashboardData?.hr?.attendanceRate ?? 0}%`} color="text-primary" />
+          <StatCard icon={ShieldAlert} label={t("ogohlantirishlar")} value={(dashboardData?.alerts?.iot ?? 0) + (dashboardData?.alerts?.minStock ?? 0)} sub="IoT + Ombor" color={((dashboardData?.alerts?.iot ?? 0) + (dashboardData?.alerts?.minStock ?? 0)) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"} />
         </div>
       )}
 
@@ -104,7 +106,7 @@ export function AiSummaryTab({
       </div>
 
       <div className="bg-card rounded-xl p-6">
-        <h3 className="text-lg font-bold text-foreground mb-4">AI Tavsiyalar</h3>
+        <h3 className="text-lg font-bold text-foreground mb-4">{t("aiTavsiyalar")}</h3>
         <div className="space-y-3">
           {([
             { pri: "Kritik", text: "Kechikkan buyurtmalarni darhol ko'rib chiqing va mijozlarga xabar bering.", show: (dashboardData?.orders?.overdue || 0) > 0 },

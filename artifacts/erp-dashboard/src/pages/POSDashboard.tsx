@@ -34,12 +34,14 @@ import { POSPanel } from "./POSDashboardPOSPanel";
 import { SaleCountCard, RevenueCard, AvgSaleCard, LowStockCard } from "./POSDashboardCards";
 import { MonthlyChartCard, PaymentChartCard, DailySalesTable } from "./POSDashboardCharts";
 import { PaymentDialog, ReceiptDialog } from "./POSDashboardDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function POSDashboard() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const {
     isOnline, syncStatus, pendingCount, lastSyncAt,
@@ -185,7 +187,7 @@ export default function POSDashboard() {
       <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b shadow-sm">
         <div className="flex items-center gap-3">
           <ShoppingCart className="h-6 w-6 text-[var(--ep-blue)]" />
-          <h1 className="text-xl font-bold">POS Kassa</h1>
+          <h1 className="text-xl font-bold">{t("posKassa")}</h1>
           <OfflineHeaderBadge
             isOnline={isOnline} pendingCount={pendingCount} syncStatus={syncStatus}
           />
@@ -199,10 +201,10 @@ export default function POSDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="pos">
-              <ShoppingCart className="h-4 w-4 mr-1" />Kassa
+              <ShoppingCart className="h-4 w-4 mr-1" />{t("kassa")}
             </TabsTrigger>
             <TabsTrigger value="reports" disabled={!isOnline}>
-              <BarChart3 className="h-4 w-4 mr-1" />Hisobot
+              <BarChart3 className="h-4 w-4 mr-1" />{t("report")}
             </TabsTrigger>
           </TabsList>
         </Tabs>

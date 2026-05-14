@@ -5,6 +5,7 @@
 
 import { cn } from "@/lib/utils";
 import { LayoutDashboard } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface SidebarHeaderProps {
   icon: typeof LayoutDashboard;
@@ -13,6 +14,7 @@ interface SidebarHeaderProps {
 }
 
 export function SidebarHeader({ icon: Icon, title, accentBg }: SidebarHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="px-4 pt-4 pb-3 border-b border-sidebar-border">
       <div className="flex items-center gap-2.5">
@@ -21,7 +23,7 @@ export function SidebarHeader({ icon: Icon, title, accentBg }: SidebarHeaderProp
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-bold text-sidebar-foreground leading-tight">{title}</p>
-          <p className="text-[10px] font-medium mt-0.5 text-sidebar-foreground/50">EuroPrint ERP</p>
+          <p className="text-[10px] font-medium mt-0.5 text-sidebar-foreground/50">{t("europrintErp")}</p>
         </div>
       </div>
     </div>

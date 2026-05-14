@@ -31,8 +31,8 @@ export default function ProcurementDashboard() {
       <header className="flex items-center gap-3">
         <ShoppingCart className="h-7 w-7 text-[var(--ep-cyan)]" />
         <div>
-          <h1 className="text-2xl font-bold">Ta'minot AI</h1>
-          <p className="text-sm text-muted-foreground">Yetkazib beruvchilar reytingi + yetkazib berish xavfi</p>
+          <h1 className="text-2xl font-bold">{t("taminotAi")}</h1>
+          <p className="text-sm text-muted-foreground">{t("yetkazibBeruvchilarReytingiYetkazibBerish")}</p>
         </div>
       </header>
 
@@ -50,7 +50,7 @@ export default function ProcurementDashboard() {
         ) : (
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground uppercase border-b">
-              <tr><th className="text-left py-2">{t('supplierId')}</th><th className="text-center py-2">Ball</th><th className="text-center py-2">Reyting</th></tr>
+              <tr><th className="text-left py-2">{t('supplierId')}</th><th className="text-center py-2">{t("ball")}</th><th className="text-center py-2">{t("reyting")}</th></tr>
             </thead>
             <tbody>
               {scores.data?.map(s => (
@@ -77,7 +77,7 @@ export default function ProcurementDashboard() {
         </div>
         {risks.isLoading ? <EPLoader /> :
          (risks.data?.length ?? 0) === 0 ? (
-          <div className="text-center py-6 text-sm text-muted-foreground">✅ Xavf ostidagi yetkazib berish yo'q</div>
+          <div className="text-center py-6 text-sm text-muted-foreground">{t("xavfOstidagiYetkazibBerishYoq")}</div>
         ) : (
           <div className="space-y-2">
             {risks.data?.map(r => (

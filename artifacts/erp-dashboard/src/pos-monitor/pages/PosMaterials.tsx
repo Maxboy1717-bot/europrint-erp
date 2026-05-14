@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { materialsApi, barcodeApi } from "../api/pos-monitor.api";
 import PosBarcodeScanner from "../components/PosBarcodeScanner";
+import { useTranslation } from '@/lib/i18n';
 
 interface MaterialRow {
   id: string | number;
@@ -158,7 +159,7 @@ function MaterialCard({ mat, onClick, on360 }: { mat: MaterialRow; onClick: () =
           }}
           title="Material 360° profili (har omborda stok, harakatlar, narxlar)"
         >
-          🔭 360° Profil
+          {t("k360Profil")}
         </button>
       </div>
     </div>
@@ -167,6 +168,7 @@ function MaterialCard({ mat, onClick, on360 }: { mat: MaterialRow; onClick: () =
 
 // ── Main page ─────────────────────────────────────────────────────────────
 export default function PosMaterials() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t }        = usePosI18n();
 
@@ -237,7 +239,7 @@ export default function PosMaterials() {
         gap: 12, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10,
       }}>
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1F2937" }}>
-          Materiallar
+          {t("Materiallar")}
         </h2>
         <span style={{ fontSize: 12, color: "#9CA3AF" }}>{materials.length} ta</span>
         <div style={{ flex: 1 }} />
@@ -252,7 +254,7 @@ export default function PosMaterials() {
               border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 12px 8px 32px",
               fontSize: 13, outline: "none", width: 220, color: "#1F2937", background: "#F9FAFB",
             }}
-            placeholder="Kod, nom yoki barcode..."
+            placeholder={t("kodNomYokiBarcode")}
             value={search}
             onChange={e => handleSearch(e.target.value)}
           />
@@ -267,7 +269,7 @@ export default function PosMaterials() {
             fontWeight: 600, display: "flex", alignItems: "center", gap: 6,
           }}
         >
-          📷 Skan
+          {t("skan1")}
         </button>
 
         <button
@@ -278,7 +280,7 @@ export default function PosMaterials() {
             fontSize: 13, cursor: "pointer",
           }}
         >
-          ➕ Yangi Material
+          {t("yangiMaterial1")}
         </button>
       </div>
 
@@ -336,7 +338,7 @@ export default function PosMaterials() {
           <div style={{ textAlign: "center", padding: "80px 20px", color: "#9CA3AF" }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>📋</div>
             <div style={{ fontSize: 16, fontWeight: 600, color: "#374151", marginBottom: 8 }}>
-              Material topilmadi
+              {t("materialTopilmadi")}
             </div>
             <div style={{ fontSize: 13, marginBottom: 24 }}>
               {search ? `"${search}" bo'yicha natija yo'q` : "Hali material qo'shilmagan"}
@@ -349,7 +351,7 @@ export default function PosMaterials() {
                   borderRadius: 8, padding: "10px 24px", fontWeight: 700, cursor: "pointer",
                 }}
               >
-                Filterni tozalash
+                {t("filterniTozalash")}
               </button>
             )}
           </div>
@@ -378,7 +380,7 @@ export default function PosMaterials() {
         }}>
           <div style={{ background: "#FFF", borderRadius: 16, padding: 24, width: 380, maxWidth: "95vw" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>📷 Barcode Skan</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{t("barcodeSkan")}</h3>
               <button
                 onClick={() => setShowScanner(false)}
                 style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#6B7280" }}

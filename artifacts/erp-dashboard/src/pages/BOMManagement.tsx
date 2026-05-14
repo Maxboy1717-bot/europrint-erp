@@ -104,7 +104,7 @@ export default function BOMManagement() {
   if (!bomList || bomList.length === 0) return <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="empty-state"><Package className="h-12 w-12 text-muted-foreground" /><p className="text-lg font-medium">{tCommon("noData")}</p><p className="text-sm text-muted-foreground">{tCommon("noResults")}</p></div>;
 
   return (
-    <ModulePage module="pp" title="Materiallar spesifikatsiyasi" subtitle={`Bill of Materials - ${t("bom")}`} icon={<Package className="h-5 w-5 text-primary" />}
+    <ModulePage module="pp" title={t("materiallarSpesifikatsiyasi")} subtitle={`Bill of Materials - ${t("bom")}`} icon={<Package className="h-5 w-5 text-primary" />}
       actions={<Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold" onClick={() => setShowBOMDialog(true)} data-testid="button-create-bom"><Plus className="h-4 w-4 mr-2" />{t("createBom")}</Button>}
     >
       <div className="flex gap-2">
@@ -135,7 +135,7 @@ export default function BOMManagement() {
                     <CardDescription className="text-muted-foreground font-medium"><span className="font-bold text-foreground">{bomData.product?.name}</span> ({bomData.product?.code})</CardDescription>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none" onClick={() => explosionMutation.mutate(bomData.bom.id)} data-testid={`button-explode-${bomData.bom.id}`}><Package className="h-4 w-4 mr-2" />Explosion</Button>
+                    <Button size="sm" variant="outline" className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none" onClick={() => explosionMutation.mutate(bomData.bom.id)} data-testid={`button-explode-${bomData.bom.id}`}><Package className="h-4 w-4 mr-2" />{t("explosion")}</Button>
                     <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-muted-foreground hover:text-primary hover:bg-muted" onClick={() => setSelectedBOM({ header: bomData.bom, product: bomData.product })} data-testid={`button-manage-${bomData.bom.id}`}><Edit className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteBomId(bomData.bom.id)} data-testid={`button-delete-${bomData.bom.id}`}><Trash2 className="h-4 w-4" /></Button>
                   </div>

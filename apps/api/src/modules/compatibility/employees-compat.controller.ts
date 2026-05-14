@@ -11,6 +11,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { EmployeesCompatService } from './employees-compat.service';
+import { EmployeesCompatSubService } from './employees-compat-sub.service';
 import { EmployeesListExtendedService } from './employees-list-extended.service';
 import { CompatBodyDto, ImportEmployeesDto, OrgFunctionsDto, ProfileImageDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
@@ -25,6 +26,7 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 export class EmployeesCompatController {
   constructor(
     private readonly svc: EmployeesCompatService,
+    private readonly subSvc: EmployeesCompatSubService,
     private readonly extendedSvc: EmployeesListExtendedService,
   ) {}
 
@@ -54,7 +56,7 @@ export class EmployeesCompatController {
   @Post('import')
   @HttpCode(HttpStatus.CREATED)
   async importEmployees(@Body() body: ImportEmployeesDto) {
-    return unwrapOrInternal(await this.svc.importEmployees(body.employees ?? []));
+    return unwrapOrInternal(await this.subSvc.importEmployees(body.employees ?? []));
   }
 
   @Get('for-face')

@@ -151,26 +151,26 @@ export default function WMSMaterials() {
   return (
     <div className="space-y-6" data-testid="wms-materials-page">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Materiallar Ro'yxati</b></>}
-        title="Materiallar Ro'yxati"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("materiallarRoyxati")}</b></>}
+        title={t("materiallarRoyxati")}
       />
 
       <div className="flex justify-between items-center -mt-4 gap-4 flex-wrap">
-        <p className="text-muted-foreground">Xom ashyo va materiallar ombor holati</p>
+        <p className="text-muted-foreground">{t("xomAshyoVaMateriallarOmbor")}</p>
         <Button
           className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold"
           onClick={() => { setEditMaterial(null); setDialogOpen(true); }}
           data-testid="button-add-material"
         >
-          <Plus className="w-4 h-4 mr-2" />Material qo'shish
+          <Plus className="w-4 h-4 mr-2" />{t("materialQoshish")}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard icon={Package} label={t('jamiMaterial')} value={String(summary.totalMaterials || 0)} />
-        <KpiCard icon={AlertTriangle} label="Kritik" value={String(summary.criticalCount || 0)} color="text-[var(--ep-red)]" />
-        <KpiCard icon={Archive} label="Tugagan" value={String(summary.zeroCount || 0)} color="text-muted-foreground" />
-        <KpiCard icon={DollarSign} label="Ombor qiymati" value={fmtMoney(summary.totalStockValue)} color="text-[var(--ep-green)]" />
+        <KpiCard icon={AlertTriangle} label={t("kritik")} value={String(summary.criticalCount || 0)} color="text-[var(--ep-red)]" />
+        <KpiCard icon={Archive} label={t("tugagan")} value={String(summary.zeroCount || 0)} color="text-muted-foreground" />
+        <KpiCard icon={DollarSign} label={t("omborQiymati")} value={fmtMoney(summary.totalStockValue)} color="text-[var(--ep-green)]" />
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -186,7 +186,7 @@ export default function WMSMaterials() {
         </div>
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="select-category">
-            <SelectValue placeholder="Kategoriya" />
+            <SelectValue placeholder={t("category")} />
           </SelectTrigger>
           <SelectContent>
             {(Array.isArray(CATEGORIES) ? CATEGORIES : []).map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
@@ -194,14 +194,14 @@ export default function WMSMaterials() {
         </Select>
         <Select value={stockStatus} onValueChange={setStockStatus}>
           <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="select-stock-status">
-            <SelectValue placeholder="Holat" />
+            <SelectValue placeholder={t("status28")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barcha holat</SelectItem>
-            <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="low">Kam</SelectItem>
-            <SelectItem value="critical">Kritik</SelectItem>
-            <SelectItem value="zero">Tugagan</SelectItem>
+            <SelectItem value="all">{t("barchaHolat")}</SelectItem>
+            <SelectItem value="normal">{t("normal")}</SelectItem>
+            <SelectItem value="low">{t("kam")}</SelectItem>
+            <SelectItem value="critical">{t("kritik")}</SelectItem>
+            <SelectItem value="zero">{t("tugagan")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -213,7 +213,7 @@ export default function WMSMaterials() {
       ) : materials.length === 0 ? (
         <div className="text-center py-16 text-[13px] text-muted-foreground">
           <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="text-base">Material topilmadi</p>
+          <p className="text-base">{t("materialTopilmadi")}</p>
         </div>
       ) : (
         <div className="rounded-lg border border-border overflow-hidden">
@@ -259,14 +259,14 @@ export default function WMSMaterials() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuLabel>Harakatlar</DropdownMenuLabel>
+                        <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => navigate(`/inventory/materials/${m.id}`)} data-testid={`action-view-360-${m.id}`}>
                           <BarChart2 className="w-4 h-4 mr-2" />360° karta
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => { setEditMaterial(m); setDialogOpen(true); }} data-testid={`action-edit-${m.id}`}>
-                          <Pencil className="w-4 h-4 mr-2" />Tahrirlash
+                          <Pencil className="w-4 h-4 mr-2" />{t("edit")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

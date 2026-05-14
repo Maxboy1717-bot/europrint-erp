@@ -10,6 +10,7 @@ import { Mic, MicOff, Video, VideoOff, CheckCircle, ChevronRight, Wifi, WifiOff 
 import type { TranscriptEntry, Question } from "./AIInterviewPublicPageTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface TFn {
   (key: string): string;
 }
@@ -41,6 +42,7 @@ export function InterviewingSection({
   isPendingSubmit, onAnswerChange, onKeyDown, onSubmitAnswer,
   onToggleMic, onToggleCamera, onFinalSubmit,
 }: InterviewingSectionProps) {
+  const { t } = useTranslation("common");
   const currentQuestion = questions[currentQIndex];
   const isLast = currentQIndex >= questions.length - 1;
   const allDone = questions.length > 0 && currentQIndex >= questions.length;
@@ -51,8 +53,8 @@ export function InterviewingSection({
         <Card className="bg-[#161b22] border-[#30363d] max-w-lg w-full">
           <CardContent className="pt-8 space-y-4 text-center">
             <CheckCircle className="w-12 h-12 text-[var(--ep-green)] mx-auto" />
-            <h3 className="text-white font-semibold text-lg">Barcha savollar tugadi</h3>
-            <p className="text-slate-400 text-sm">Javoblaringizni yuborishingiz mumkin.</p>
+            <h3 className="text-white font-semibold text-lg">{t("barchaSavollarTugadi")}</h3>
+            <p className="text-slate-400 text-sm">{t("javoblaringizniYuborishingizMumkin")}</p>
             <Button
               onClick={onFinalSubmit}
               disabled={isPendingSubmit}
@@ -73,9 +75,9 @@ export function InterviewingSection({
       {/* Header */}
       <div className="flex items-center justify-between mb-4 max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-2">
-          <span className="text-primary font-bold text-sm">EuroPrint</span>
+          <span className="text-primary font-bold text-sm">{t("europrint1")}</span>
           <span className="text-slate-600">•</span>
-          <span className="text-slate-400 text-sm">AI Intervyu</span>
+          <span className="text-slate-400 text-sm">{t("aiIntervyu")}</span>
         </div>
         <div className="flex items-center gap-2">
           {wsConnected ? (
@@ -132,7 +134,7 @@ export function InterviewingSection({
                 ) : (
                   <div className="bg-[#0d1117] rounded-lg p-4 border border-[#30363d]">
                     <EPLoader className="w-5 h-5 mx-auto" />
-                    <p className="text-slate-400 text-sm text-center mt-2">Savollar yuklanmoqda...</p>
+                    <p className="text-slate-400 text-sm text-center mt-2">{t("savollarYuklanmoqda")}</p>
                   </div>
                 )}
                 {aiThinking && (

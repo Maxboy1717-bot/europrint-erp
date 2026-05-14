@@ -18,8 +18,10 @@ import { InternalVacancy } from "./InternalJobBoardTypes";
 import { VacancyCard } from "./InternalJobBoardSections";
 import { ApplyDialog } from "./InternalJobBoardDialogs";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function InternalJobBoard() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState<"all" | "urgent">("all");
@@ -54,7 +56,7 @@ export default function InternalJobBoard() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Briefcase className="h-5 w-5 text-primary" />
-          <h1 className="font-semibold text-base">Ichki Vakansiyalar</h1>
+          <h1 className="font-semibold text-base">{t("ichkiVakansiyalar")}</h1>
           <EPStatusPill tone="neutral">{vacancies.length} ta</EPStatusPill>
           {urgentCount > 0 && (
             <Badge className="bg-[var(--ep-red)] text-white gap-1">
@@ -78,7 +80,7 @@ export default function InternalJobBoard() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Vakansiya yoki bo'lim nomi..."
+              placeholder={t("vakansiyaYokiBolimNomi")}
               className="pl-8 h-9 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -88,10 +90,10 @@ export default function InternalJobBoard() {
           {departments.length > 0 && (
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" data-testid="select-dept-filter">
-                <SelectValue placeholder="Bo'lim" />
+                <SelectValue placeholder={t("bolim1")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha bo'limlar</SelectItem>
+                <SelectItem value="all">{t("barchaBolimlar")}</SelectItem>
                 {(Array.isArray(departments) ? departments : []).map(d => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
@@ -100,11 +102,11 @@ export default function InternalJobBoard() {
           )}
           <Select value={typeFilter} onValueChange={v => setTypeFilter(v as "all" | "urgent")}>
             <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm" data-testid="select-type-filter">
-              <SelectValue placeholder="Tur" />
+              <SelectValue placeholder={t("tur")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barcha turlar</SelectItem>
-              <SelectItem value="urgent">Faqat shoshilinch</SelectItem>
+              <SelectItem value="all">{t("barchaTurlar")}</SelectItem>
+              <SelectItem value="urgent">{t("faqatShoshilinch")}</SelectItem>
             </SelectContent>
           </Select>
           {(search || departmentFilter !== "all" || typeFilter !== "all") && (
@@ -117,7 +119,7 @@ export default function InternalJobBoard() {
           <div className="flex items-center justify-center py-12 text-muted-foreground">
             <div className="text-center">
               <Briefcase className="h-8 w-8 mx-auto mb-2 opacity-30 animate-pulse" />
-              <p className="text-sm">Yuklanmoqda...</p>
+              <p className="text-sm">{t("Yuklanmoqda...")}</p>
             </div>
           </div>
         ) : filtered.length === 0 ? (

@@ -1,0 +1,234 @@
+/**
+ * EuroPrint ERP — Base design tokens (Layer 1)
+ * Overridden by europrint-mockup-theme.css (Layer 2)
+ * Final design: EP Linear Soft (Direction A)
+ * Primary: #FF902F | Bg: #FAFAF9 | Font: Inter
+ */
+
+:root {
+  --button-outline: rgba(26, 26, 46, 0.10);
+  --badge-outline: rgba(26, 26, 46, 0.06);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(26, 26, 46, 0.03);
+  --elevate-2: rgba(26, 26, 46, 0.07);
+
+  /* === BASE SURFACES === */
+  --background: 220 20% 98%;         /* #f8f9fc */
+  --foreground: 240 30% 14%;         /* #1a1a2e */
+  --border: 240 9% 91%;              /* #e8e8ee */
+
+  --surface-container-lowest: 0 0% 100%;
+  --surface-container-low: 220 20% 97%;
+  --surface-container: 220 16% 95%;
+  --surface-container-high: 220 14% 92%;
+  --surface-container-highest: 220 12% 89%;
+
+  --on-surface: 240 30% 14%;
+  --on-surface-variant: 220 12% 40%;
+  --outline-variant: 220 10% 78%;
+
+  /* Card: pure white */
+  --card: 0 0% 100%;
+  --card-foreground: 240 30% 14%;
+  --card-border: 240 9% 91%;
+
+  /* Sidebar: always dark navy (Bitrix24 style) */
+  --sidebar: 240 30% 9%;
+  --sidebar-foreground: 220 22% 82%;
+  --sidebar-border: 225 30% 16%;
+
+  /* Primary: #ff5d2e orange-red */
+  --sidebar-primary: 14 100% 59%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 14 100% 95%;
+  --sidebar-accent-foreground: 14 100% 40%;
+  --sidebar-ring: 14 100% 59%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 30% 14%;
+  --popover-border: 240 9% 90%;
+
+  /* Primary: #ff5d2e */
+  --primary: 14 100% 59%;
+  --primary-dim: 14 100% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: soft gray */
+  --secondary: 220 14% 93%;
+  --secondary-foreground: 240 30% 20%;
+
+  --muted: 220 18% 95%;
+  --muted-foreground: 220 10% 46%;
+
+  /* Accent: #ff8c42 lighter orange */
+  --accent: 25 100% 63%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 80% 56%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 240 9% 90%;
+  --ring: 14 100% 59%;
+
+  /* ERP Module Colors */
+  --module-sd: 217 91% 58%;        /* Blue - Sales */
+  --module-sd-light: 217 91% 95%;
+  --module-sd-dark: 224 76% 46%;
+
+  --module-pp: 160 72% 38%;        /* Green - Production */
+  --module-pp-light: 160 50% 94%;
+  --module-pp-dark: 160 72% 28%;
+
+  --module-hr: 262 68% 56%;        /* Purple - HR */
+  --module-hr-light: 262 60% 95%;
+  --module-hr-dark: 262 68% 42%;
+
+  --module-warehouse: 38 92% 50%;  /* Amber - Warehouse */
+  --module-warehouse-light: 38 92% 93%;
+  --module-warehouse-dark: 38 92% 38%;
+
+  --module-fi: 188 78% 40%;        /* Cyan - Finance */
+  --module-fi-light: 188 60% 94%;
+  --module-fi-dark: 188 78% 30%;
+
+  --chart-1: 14 100% 59%;
+  --chart-2: 160 72% 38%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 262 68% 56%;
+  --chart-5: 188 78% 42%;
+
+  --success: 143 60% 38%;
+  --warning: 38 92% 50%;
+  --info: 199 89% 46%;
+  --error: 0 80% 56%;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* Layout */
+  --radius: 0.75rem;   /* 12px — Bitrix24 karta radiusi */
+  --spacing: 0.25rem;
+
+  /* Shadows */
+  --shadow-2xs: 0 1px 2px 0 rgb(26 26 46 / 0.04);
+  --shadow-xs: 0 1px 3px 0 rgb(26 26 46 / 0.06);
+  --shadow-sm: 0 1px 2px 0 rgb(26 26 46 / 0.05), 0 2px 6px -1px rgb(26 26 46 / 0.06);
+  --shadow: 0 4px 8px -2px rgb(26 26 46 / 0.08), 0 2px 4px -2px rgb(26 26 46 / 0.04);
+  --shadow-md: 0 8px 16px -4px rgb(26 26 46 / 0.10), 0 4px 6px -3px rgb(26 26 46 / 0.05);
+  --shadow-lg: 0 16px 32px -8px rgb(26 26 46 / 0.12), 0 8px 16px -6px rgb(26 26 46 / 0.06);
+  --shadow-xl: 0 24px 48px -12px rgb(26 26 46 / 0.15);
+  --shadow-2xl: 0 32px 64px -16px rgb(26 26 46 / 0.20);
+  --tracking-normal: 0em;
+
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --primary-border: hsl(var(--primary));
+  --secondary-border: hsl(var(--secondary));
+  --muted-border: hsl(var(--muted));
+  --accent-border: hsl(var(--accent));
+  --destructive-border: hsl(var(--destructive));
+}
+
+/* DARK MODE — Bitrix24 navy dark theme */
+.dark {
+  --button-outline: rgba(255, 255, 255, 0.10);
+  --badge-outline: rgba(255, 255, 255, 0.06);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.09);
+
+  /* Dark surfaces: #1a1a2e / #16213e / #0f3460 */
+  --background: 240 30% 14%;        /* #1a1a2e */
+  --foreground: 220 22% 86%;        /* #b0b8cc */
+  --border: 225 30% 22%;
+
+  --surface-container-lowest: 240 30% 12%;
+  --surface-container-low: 225 46% 13%;   /* #16213e zone */
+  --surface-container: 225 46% 15%;
+  --surface-container-high: 225 40% 18%;
+  --surface-container-highest: 225 34% 22%;
+
+  --on-surface: 220 22% 88%;
+  --on-surface-variant: 220 14% 62%;
+  --outline-variant: 225 20% 30%;
+
+  --card: 225 46% 13%;              /* #16213e */
+  --card-foreground: 220 22% 88%;
+  --card-border: 225 30% 20%;
+
+  --sidebar: 240 30% 9%;            /* #0f0f1a */
+  --sidebar-foreground: 220 22% 86%;
+  --sidebar-border: 225 30% 16%;
+
+  /* Primary stays orange but slightly brighter */
+  --sidebar-primary: 14 100% 63%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 225 30% 20%;
+  --sidebar-accent-foreground: 220 22% 88%;
+  --sidebar-ring: 14 100% 63%;
+
+  --popover: 225 46% 13%;
+  --popover-foreground: 220 22% 88%;
+  --popover-border: 225 30% 20%;
+
+  --primary: 14 100% 63%;
+  --primary-dim: 14 100% 53%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 225 30% 20%;
+  --secondary-foreground: 220 22% 86%;
+
+  --muted: 225 30% 18%;
+  --muted-foreground: 220 14% 58%;
+
+  --accent: 25 100% 62%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 76% 58%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 225 30% 22%;
+  --ring: 14 100% 63%;
+
+  --module-sd: 217 80% 62%;
+  --module-sd-light: 217 40% 20%;
+  --module-sd-dark: 217 80% 72%;
+
+  --module-pp: 160 65% 46%;
+  --module-pp-light: 160 40% 18%;
+  --module-pp-dark: 160 65% 56%;
+
+  --module-hr: 262 65% 64%;
+  --module-hr-light: 262 40% 20%;
+  --module-hr-dark: 262 65% 74%;
+
+  --module-warehouse: 38 92% 54%;
+  --module-warehouse-light: 38 40% 18%;
+  --module-warehouse-dark: 38 92% 64%;
+
+  --module-fi: 188 72% 48%;
+  --module-fi-light: 188 40% 18%;
+  --module-fi-dark: 188 72% 58%;
+
+  --chart-1: 14 100% 63%;
+  --chart-2: 160 65% 46%;
+  --chart-3: 38 92% 54%;
+  --chart-4: 262 65% 64%;
+  --chart-5: 188 72% 52%;
+
+  --success: 143 56% 44%;
+  --warning: 38 92% 54%;
+  --info: 199 80% 50%;
+  --error: 0 76% 60%;
+
+  --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.5);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5), 0 2px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow: 0 4px 8px -2px rgb(0 0 0 / 0.55), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 8px 16px -4px rgb(0 0 0 / 0.6), 0 4px 8px -4px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 16px 32px -8px rgb(0 0 0 / 0.6), 0 8px 16px -6px rgb(0 0 0 / 0.4);
+  --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.65);
+  --shadow-2xl: 0 32px 64px -16px rgb(0 0 0 / 0.70);
+}

@@ -9,6 +9,7 @@ import { DollarSign, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionTitle, formatMoney } from "@/components/director/helpers";
 import type { FinanceData } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface FinanceCardProps {
   fin: FinanceData | undefined;
@@ -16,6 +17,7 @@ interface FinanceCardProps {
 }
 
 export function FinanceCard({ fin, finLoad }: FinanceCardProps) {
+  const { t } = useTranslation("common");
   const items = [
     { label: "Jami debitorlik", amount: fin?.totalReceivable ?? 0, sub: `${fin?.invoices?.["pending"]?.count ?? 0} ta to'lov kutmoqda`, ok: (fin?.totalReceivable ?? 0) < 100_000_000, isMain: true },
     { label: "Muddati o'tgan", amount: fin?.overdueAmount ?? 0, sub: `${fin?.invoices?.["overdue"]?.count ?? 0} ta hisob-faktura`, ok: (fin?.overdueAmount ?? 0) === 0 },
@@ -25,7 +27,7 @@ export function FinanceCard({ fin, finLoad }: FinanceCardProps) {
   return (
     <Card data-testid="card-finance">
       <CardHeader className="pb-3">
-        <SectionTitle icon={DollarSign} title="Moliyaviy Ko'rinish" sub="Joriy oy" accent="text-[var(--ep-green)]" />
+        <SectionTitle icon={DollarSign} title={t("moliyaviyKorinish")} sub="Joriy oy" accent="text-[var(--ep-green)]" />
       </CardHeader>
       <CardContent>
         {finLoad ? <Skeleton className="h-40 rounded-lg" /> : (
@@ -43,7 +45,7 @@ export function FinanceCard({ fin, finLoad }: FinanceCardProps) {
               ))}
             </div>
             <div className="pt-2 border-t">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Hisob turlari</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">{t("hisobTurlari")}</p>
               {fin?.accounts?.slice(0, 4).map((acc, i) => (
                 <div key={`k-${i}`} className="flex justify-between text-xs py-1">
                   <span className="text-muted-foreground">{acc.type ?? "Boshqa"}</span>

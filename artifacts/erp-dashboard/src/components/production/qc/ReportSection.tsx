@@ -7,18 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart3, TrendingUp, TrendingDown, Target, Zap } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export function ReportSection() {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Tahliliy Hisobotlar</h2>
-          <p className="text-sm text-muted-foreground">Sifat nazorati bo'yicha yakuniy statistik ko'rsatkichlar</p>
+          <h2 className="text-lg font-semibold">{t("tahliliyHisobotlar")}</h2>
+          <p className="text-sm text-muted-foreground">{t("sifatNazoratiBoyichaYakuniyStatistik")}</p>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1 bg-blue-50 text-[var(--ep-blue)] border-blue-200">
-            Haftalik hisobot: 14.10 - 20.10
+            {t("haftalikHisobot141020")}
           </Badge>
         </div>
       </div>
@@ -60,11 +62,11 @@ export function ReportSection() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-sm">Top Defekt Turlari</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">{t("topDefektTurlari")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Defekt</TableHead>
+                <TableHead>{t("defekt")}</TableHead>
                 <TableHead className="text-right">%</TableHead>
               </TableRow></TableHeader>
               <TableBody>

@@ -21,8 +21,10 @@ import { AvgScoreCard, TotalEvaluationsCard, TopPerformerCard, FairnessIndexCard
 import { RadarChartSection, EvaluationsTableSection } from "./EmployeeDailyKPIPanelSections";
 import { KpiEvaluationDialog } from "./EmployeeDailyKPIPanelDialog";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function EmployeeDailyKPIPanel() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -136,9 +138,9 @@ export default function EmployeeDailyKPIPanel() {
               <BarChart3 className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold" data-testid="text-page-title">
-                  Kunlik KPI Baholash
+                  {t("kunlikKpiBaholash")}
                 </h1>
-                <p className="text-white/75 text-sm">Adolatli va shaffof baholash tizimi</p>
+                <p className="text-white/75 text-sm">{t("adolatliVaShaffofBaholashTizimi")}</p>
               </div>
             </div>
           </div>

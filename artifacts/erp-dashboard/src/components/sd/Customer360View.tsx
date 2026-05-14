@@ -24,6 +24,7 @@ import { CompetitorsTab } from "./CompetitorsTab";
 import { ContractsTab } from "./ContractsTab";
 import { LtvTab } from "./LtvTab";
 import { fmtMoney } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 const TABS = [
   { value: "basic", label: "Asosiy", icon: Building2 },
@@ -54,6 +55,7 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 };
 
 export function Customer360View({ customerId, onBack }: { customerId: number; onBack: () => void }) {
+  const { t } = useTranslation("common");
   const { data, isLoading } = useQuery({
     queryKey: ["/api/sd/customers", customerId, "360"],
     queryFn: () => apiRequest("GET", `/api/sd/customers/${customerId}/360`),
@@ -77,7 +79,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
         </div>
         <p className="text-muted-foreground font-medium">{data?.error || "Ma'lumot yuklanmadi"}</p>
         <Button variant="outline" className="mt-4" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-1.5" />Orqaga
+          <ArrowLeft className="h-4 w-4 mr-1.5" />{t("back")}
         </Button>
       </div>
     );
@@ -109,7 +111,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
           <div className="flex items-center justify-between mb-4">
             <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground hover:text-foreground -ml-2"
               data-testid="btn-back-to-list">
-              <ArrowLeft className="h-4 w-4 mr-1" />Ro'yxatga
+              <ArrowLeft className="h-4 w-4 mr-1" />{t("royxatga")}
             </Button>
             <div className="flex items-center gap-2">
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusConf.cls}`}>{statusConf.label}</span>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { InternalVacancy } from "./InternalJobBoardTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface VacancyCardProps {
   vacancy: InternalVacancy;
@@ -20,6 +21,7 @@ interface VacancyCardProps {
 }
 
 export function VacancyCard({ vacancy, onApply }: VacancyCardProps) {
+  const { t } = useTranslation("common");
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -38,7 +40,7 @@ export function VacancyCard({ vacancy, onApply }: VacancyCardProps) {
                   SHOSHILINCH
                 </Badge>
               )}
-              <EPStatusPill tone="neutral" className="text-xs">Ichki</EPStatusPill>
+              <EPStatusPill tone="neutral" className="text-xs">{t("ichki")}</EPStatusPill>
             </div>
             {vacancy.department_name && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
@@ -54,7 +56,7 @@ export function VacancyCard({ vacancy, onApply }: VacancyCardProps) {
             data-testid={`button-apply-${vacancy.id}`}
           >
             <Send className="w-3.5 h-3.5" />
-            Ariza berish
+            {t("arizaBerish")}
           </Button>
         </div>
 
@@ -94,7 +96,7 @@ export function VacancyCard({ vacancy, onApply }: VacancyCardProps) {
 
         {vacancy.requirements && expanded && (
           <div className="mb-2">
-            <p className="text-xs font-medium text-foreground mb-1">Talablar:</p>
+            <p className="text-xs font-medium text-foreground mb-1">{t("talablar")}</p>
             <p className="text-sm text-muted-foreground leading-relaxed">{vacancy.requirements}</p>
           </div>
         )}
@@ -103,13 +105,13 @@ export function VacancyCard({ vacancy, onApply }: VacancyCardProps) {
           <div className="bg-muted/30 rounded-lg p-2 mt-2 text-xs space-y-1">
             {vacancy.portret.main_purpose && (
               <div>
-                <span className="text-muted-foreground">Maqsad: </span>
+                <span className="text-muted-foreground">{t("maqsad1")}</span>
                 {String(vacancy.portret.main_purpose).slice(0, 150)}
               </div>
             )}
             {vacancy.portret.work_schedule && (
               <div>
-                <span className="text-muted-foreground">Grafik: </span>
+                <span className="text-muted-foreground">{t("grafik1")}</span>
                 {String(vacancy.portret.work_schedule)}
               </div>
             )}

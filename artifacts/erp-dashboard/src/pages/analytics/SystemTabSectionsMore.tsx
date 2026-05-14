@@ -19,11 +19,12 @@ interface BroadcastsCardProps {
 }
 
 export function BroadcastsCard({ stats, loading }: BroadcastsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-broadcasts-stats">
       <CardHeader>
-        <CardTitle className="text-[14px] font-semibold">Xabarlar</CardTitle>
-        <CardDescription>Broadcast tizimi statistikasi</CardDescription>
+        <CardTitle className="text-[14px] font-semibold">{t("xabarlar")}</CardTitle>
+        <CardDescription>{t("broadcastTizimiStatistikasi")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -33,25 +34,25 @@ export function BroadcastsCard({ stats, loading }: BroadcastsCardProps) {
         ) : (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Jami xabarlar:</span>
+              <span className="text-sm text-muted-foreground">{t("jamiXabarlar")}</span>
               <span className="text-xl font-bold" data-testid="text-total-broadcasts">{stats?.total || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Qabul qiluvchilar:</span>
+              <span className="text-sm text-muted-foreground">{t("qabulQiluvchilar")}</span>
               <span className="text-lg font-semibold" data-testid="text-total-recipients">{stats?.totalRecipients || 0}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
               <div className="text-center">
                 <EPStatusPill tone="success" className="w-full" data-testid="badge-total-success">{stats?.totalSuccess || 0}</EPStatusPill>
-                <p className="text-xs text-muted-foreground mt-1">Muvaffaqiyatli</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("muvaffaqiyatli1")}</p>
               </div>
               <div className="text-center">
                 <EPStatusPill tone="danger" className="w-full" data-testid="badge-total-failed">{stats?.totalFailed || 0}</EPStatusPill>
-                <p className="text-xs text-muted-foreground mt-1">Xato</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("error")}</p>
               </div>
             </div>
             <div className="flex justify-between items-center pt-2 border-t">
-              <span className="text-sm text-muted-foreground">Muvaffaqiyat darajasi:</span>
+              <span className="text-sm text-muted-foreground">{t("muvaffaqiyatDarajasi")}</span>
               <Badge variant="outline" data-testid="badge-success-rate">{stats?.successRate || 0}%</Badge>
             </div>
           </div>
@@ -72,8 +73,8 @@ export function SkillsCard({ stats, loading }: SkillsCardProps) {
   return (
     <Card data-testid="card-skills-stats">
       <CardHeader>
-        <CardTitle className="text-[14px] font-semibold">Ko'nikmalar</CardTitle>
-        <CardDescription>Ko'nikmalar matritsa statistikasi</CardDescription>
+        <CardTitle className="text-[14px] font-semibold">{t("konikmalar")}</CardTitle>
+        <CardDescription>{t("konikmalarMatritsaStatistikasi")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -83,20 +84,20 @@ export function SkillsCard({ stats, loading }: SkillsCardProps) {
         ) : (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Jami ko'nikmalar:</span>
+              <span className="text-sm text-muted-foreground">{t("jamiKonikmalar")}</span>
               <span className="text-xl font-bold" data-testid="text-total-skills">{stats?.totalSkills || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Xodim ko'nikmalari:</span>
+              <span className="text-sm text-muted-foreground">{t("xodimKonikmalari")}</span>
               <span className="text-lg font-semibold" data-testid="text-total-user-skills">{stats?.totalUserSkills || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Tasdiqlangan:</span>
+              <span className="text-sm text-muted-foreground">{t("tasdiqlangan")}</span>
               <EPStatusPill tone="success" data-testid="badge-verified-skills">{stats?.verifiedSkills || 0}</EPStatusPill>
             </div>
             {stats?.byCategory && stats.byCategory.length > 0 && (
               <div className="mt-4 pt-4 border-t">
-                <p className="text-sm font-medium mb-2">Kategoriya bo'yicha:</p>
+                <p className="text-sm font-medium mb-2">{t("kategoriyaBoyicha")}</p>
                 {(Array.isArray(stats.byCategory) ? stats.byCategory : []).map((item: SkillCategoryItem, idx: number) => (
                   <div key={idx} className="text-xs text-muted-foreground flex justify-between">
                     <span>{item.category}</span><span>{item.count}</span>
@@ -122,8 +123,8 @@ export function EmployeeStatsCard({ stats, loading }: EmployeeStatsCardProps) {
   return (
     <Card data-testid="card-employee-stats">
       <CardHeader>
-        <CardTitle className="text-[14px] font-semibold">Xodimlar Tahlili</CardTitle>
-        <CardDescription>Xodimlar harakati va statistikasi</CardDescription>
+        <CardTitle className="text-[14px] font-semibold">{t("xodimlarTahlili")}</CardTitle>
+        <CardDescription>{t("xodimlarHarakatiVaStatistikasi")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -138,19 +139,19 @@ export function EmployeeStatsCard({ stats, loading }: EmployeeStatsCardProps) {
               <EPStatusPill tone="success" data-testid="badge-new-employees">{stats?.newEmployees || 0}</EPStatusPill>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Ketgan xodimlar:</span>
+              <span className="text-sm text-muted-foreground">{t("ketganXodimlar")}</span>
               <EPStatusPill tone="danger" data-testid="badge-departed-employees">{stats?.departedEmployees || 0}</EPStatusPill>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Aktiv xodimlar:</span>
+              <span className="text-sm text-muted-foreground">{t("aktivXodimlar")}</span>
               <EPStatusPill tone="success" data-testid="badge-active-employees">{stats?.activeEmployees || 0}</EPStatusPill>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Qatnashmayotganlar:</span>
+              <span className="text-sm text-muted-foreground">{t("qatnashmayotganlar")}</span>
               <EPStatusPill tone="neutral" data-testid="badge-non-participating-employees">{stats?.nonParticipatingEmployees || 0}</EPStatusPill>
             </div>
             <div className="flex justify-between items-center pt-2 border-t">
-              <span className="text-sm text-muted-foreground">O'qiyotgan xodimlar:</span>
+              <span className="text-sm text-muted-foreground">{t("oqiyotganXodimlar")}</span>
               <span className="text-lg font-semibold" data-testid="text-studying-employees">{stats?.studyingEmployees || 0}</span>
             </div>
           </div>
@@ -209,3 +210,4 @@ export function AiAnalysisCard({ aiAnalysis, loading }: AiAnalysisCardProps) {
 }
 
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';

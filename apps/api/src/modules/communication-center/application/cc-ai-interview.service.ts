@@ -23,7 +23,7 @@ import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documen
 import { CcDocumentNumberService } from './cc-document-number.service';
 import type { Language } from '../domain/types';
 
-interface AiQuestion {
+export interface AiQuestion {
   key: string;
   qUz: string;
   qRu: string;

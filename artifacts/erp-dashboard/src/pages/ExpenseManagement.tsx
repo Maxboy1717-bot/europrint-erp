@@ -152,79 +152,79 @@ export default function ExpenseManagement() {
     <div className="space-y-6" data-testid="page-expense-management">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">Kassa Nazorat va Xarajatlar</h1>
-          <p className="text-muted-foreground">Multi-level tasdiqlash + xarajat monitoring</p>
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("kassaNazoratVaXarajatlar")}</h1>
+          <p className="text-muted-foreground">{t("multiLevelTasdiqlashXarajatMonitoring")}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="button-new-expense"><Plus className="w-4 h-4 mr-1" />Yangi so'rov</Button>
+            <Button data-testid="button-new-expense"><Plus className="w-4 h-4 mr-1" />{t("yangiSorov")}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-[18px] font-semibold">Yangi xarajat so'rovi</DialogTitle>
-              <DialogDescription>Xarajat uchun so'rov yarating</DialogDescription>
+              <DialogTitle className="text-[18px] font-semibold">{t("yangiXarajatSorovi")}</DialogTitle>
+              <DialogDescription>{t("xarajatUchunSorovYarating")}</DialogDescription>
             </DialogHeader>
             <form onSubmit={form.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
               <div>
-                <Label>Kategoriya</Label>
+                <Label>{t("category")}</Label>
                 <Select onValueChange={(v) => form.setValue("category", v)}>
-                  <SelectTrigger data-testid="select-category" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-category" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="office_supplies">Ofis jihozlari</SelectItem>
-                    <SelectItem value="production">Ishlab chiqarish</SelectItem>
-                    <SelectItem value="transport">Transport</SelectItem>
-                    <SelectItem value="maintenance">Ta'mirlash</SelectItem>
+                    <SelectItem value="office_supplies">{t("ofisJihozlari")}</SelectItem>
+                    <SelectItem value="production">{t("ishlabChiqarish2")}</SelectItem>
+                    <SelectItem value="transport">{t("transport")}</SelectItem>
+                    <SelectItem value="maintenance">{t("tamirlash")}</SelectItem>
                     <SelectItem value="marketing">{t('marketing')}</SelectItem>
-                    <SelectItem value="other">Boshqa</SelectItem>
+                    <SelectItem value="other">{t("boshqa")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Maqsad</Label>
-                <Input {...form.register("purpose")} placeholder="Xarajat maqsadini kiriting" data-testid="input-purpose" />
+                <Label>{t("Maqsad")}</Label>
+                <Input {...form.register("purpose")} placeholder={t("xarajatMaqsadiniKiriting")} data-testid="input-purpose" />
               </div>
               <div>
                 <Label>Summa (UZS)</Label>
                 <Input {...form.register("amount")} type="number" placeholder="0" data-testid="input-amount" />
               </div>
               <div>
-                <Label>Bo'lim</Label>
-                <Input {...form.register("department")} placeholder="Bo'lim nomi" data-testid="input-department" />
+                <Label>{t("bolim1")}</Label>
+                <Input {...form.register("department")} placeholder={t("bolimNomi")} data-testid="input-department" />
               </div>
               <div>
-                <Label>Izoh</Label>
-                <Textarea {...form.register("notes")} placeholder="Qo'shimcha ma'lumot" data-testid="input-notes" />
+                <Label>{t("Izoh")}</Label>
+                <Textarea {...form.register("notes")} placeholder={t("qoshimchaMalumot1")} data-testid="input-notes" />
               </div>
-              <Button type="submit" className="w-full" disabled={createMutation.isPending} data-testid="button-submit-expense">Yuborish</Button>
+              <Button type="submit" className="w-full" disabled={createMutation.isPending} data-testid="button-submit-expense">{t("submitBtn")}</Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900"><Send className="w-5 h-5 text-[var(--ep-blue)]" /></div><div><p className="text-sm text-muted-foreground">Yuborilgan</p><p className="text-2xl font-bold">{totalSubmitted}</p></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-green-100 dark:bg-green-900"><CheckCircle className="w-5 h-5 text-[var(--ep-green)]" /></div><div><p className="text-sm text-muted-foreground">Tasdiqlangan</p><p className="text-2xl font-bold">{totalApproved}</p></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900"><DollarSign className="w-5 h-5 text-[var(--ep-purple)]" /></div><div><p className="text-sm text-muted-foreground">Jami summa</p><p className="text-2xl font-bold">{(totalAmount / 1000000).toFixed(1)}M</p></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-orange-100 dark:bg-orange-900"><Receipt className="w-5 h-5 text-[var(--ep-primary)]" /></div><div><p className="text-sm text-muted-foreground">Avans to'lovlar</p><p className="text-2xl font-bold">{(advancePayments || []).length}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900"><Send className="w-5 h-5 text-[var(--ep-blue)]" /></div><div><p className="text-sm text-muted-foreground">{t("yuborilgan")}</p><p className="text-2xl font-bold">{totalSubmitted}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-green-100 dark:bg-green-900"><CheckCircle className="w-5 h-5 text-[var(--ep-green)]" /></div><div><p className="text-sm text-muted-foreground">{t("approved")}</p><p className="text-2xl font-bold">{totalApproved}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900"><DollarSign className="w-5 h-5 text-[var(--ep-purple)]" /></div><div><p className="text-sm text-muted-foreground">{t("jamiSumma")}</p><p className="text-2xl font-bold">{(totalAmount / 1000000).toFixed(1)}M</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-md bg-orange-100 dark:bg-orange-900"><Receipt className="w-5 h-5 text-[var(--ep-primary)]" /></div><div><p className="text-sm text-muted-foreground">{t("avansTolovlar")}</p><p className="text-2xl font-bold">{(advancePayments || []).length}</p></div></div></CardContent></Card>
       </div>
 
       <Tabs defaultValue="requests" className="w-full">
         <TabsList>
-          <TabsTrigger value="requests" data-testid="tab-requests">Xarajat so'rovlari</TabsTrigger>
-          <TabsTrigger value="advances" data-testid="tab-advances">Avans to'lovlar</TabsTrigger>
+          <TabsTrigger value="requests" data-testid="tab-requests">{t("xarajatSorovlari")}</TabsTrigger>
+          <TabsTrigger value="advances" data-testid="tab-advances">{t("avansTolovlar")}</TabsTrigger>
         </TabsList>
         <TabsContent value="requests">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-              <CardTitle className="text-[14px] font-semibold">So'rovlar</CardTitle>
+              <CardTitle className="text-[14px] font-semibold">{t("sorovlar")}</CardTitle>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-36 h-9" data-testid="select-status-filter"><SelectValue placeholder="Holat" /></SelectTrigger>
+                <SelectTrigger className="w-36 h-9" data-testid="select-status-filter"><SelectValue placeholder={t("status28")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barchasi</SelectItem>
-                  <SelectItem value="submitted">Yuborilgan</SelectItem>
-                  <SelectItem value="approved">Tasdiqlangan</SelectItem>
-                  <SelectItem value="rejected">Rad etilgan</SelectItem>
-                  <SelectItem value="disbursed">To'langan</SelectItem>
+                  <SelectItem value="all">{t("Barchasi")}</SelectItem>
+                  <SelectItem value="submitted">{t("yuborilgan")}</SelectItem>
+                  <SelectItem value="approved">{t("approved")}</SelectItem>
+                  <SelectItem value="rejected">{t("rejected")}</SelectItem>
+                  <SelectItem value="disbursed">{t("tolangan")}</SelectItem>
                 </SelectContent>
               </Select>
             </CardHeader>
@@ -246,12 +246,12 @@ export default function ExpenseManagement() {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Raqam</TableHead>
-                      <TableHead>So'rovchi</TableHead>
-                      <TableHead>Kategoriya</TableHead>
-                      <TableHead>Summa</TableHead>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Amallar</TableHead>
+                      <TableHead>{t("raqam")}</TableHead>
+                      <TableHead>{t("sorovchi")}</TableHead>
+                      <TableHead>{t("category")}</TableHead>
+                      <TableHead>{t("summa")}</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
+                      <TableHead>{t("Amallar")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -273,12 +273,12 @@ export default function ExpenseManagement() {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Tasdiqlashni xohlaysizmi?</AlertDialogTitle>
+                                    <AlertDialogTitle>{t("confirm.approve")}</AlertDialogTitle>
                                     <AlertDialogDescription>So'rov {r.requestNumber} tasdiqlanadi.</AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => approveMutation.mutate({ id: r.id, action: "approve" })}>Tasdiqlash</AlertDialogAction>
+                                    <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => approveMutation.mutate({ id: r.id, action: "approve" })}>{t("verify")}</AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
@@ -290,12 +290,12 @@ export default function ExpenseManagement() {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Rad etishni xohlaysizmi?</AlertDialogTitle>
+                                    <AlertDialogTitle>{t("radEtishniXohlaysizmi")}</AlertDialogTitle>
                                     <AlertDialogDescription>So'rov {r.requestNumber} rad etiladi.</AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => approveMutation.mutate({ id: r.id, action: "reject" })}>Rad etish</AlertDialogAction>
+                                    <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => approveMutation.mutate({ id: r.id, action: "reject" })}>{t("reject")}</AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
@@ -312,19 +312,19 @@ export default function ExpenseManagement() {
         </TabsContent>
         <TabsContent value="advances">
           <Card>
-            <CardHeader><CardTitle className="text-[14px] font-semibold">Avans to'lovlar</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-[14px] font-semibold">{t("avansTolovlar")}</CardTitle></CardHeader>
             <CardContent>
               {(advancePayments || []).length === 0 ? (
-                <div className="text-center py-8 text-[13px] text-muted-foreground">Hali avans to'lov mavjud emas</div>
+                <div className="text-center py-8 text-[13px] text-muted-foreground">{t("haliAvansTolovMavjudEmas")}</div>
               ) : (
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Raqam</TableHead>
-                      <TableHead>Turi</TableHead>
+                      <TableHead>{t("raqam")}</TableHead>
+                      <TableHead>{t("type")}</TableHead>
                       <TableHead>Taminotchi/Xodim</TableHead>
-                      <TableHead>Summa</TableHead>
-                      <TableHead>Holat</TableHead>
+                      <TableHead>{t("summa")}</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

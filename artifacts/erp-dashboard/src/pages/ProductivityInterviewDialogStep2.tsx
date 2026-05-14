@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { MOTIVATION_LEVELS } from "./ProductivityInterviewDialogTypes";
 import type { MotivationData } from "./ProductivityInterviewDialogTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface Step2Props {
   motivation: MotivationData;
@@ -12,21 +13,22 @@ interface Step2Props {
 }
 
 export function Step2Motivation({ motivation, onChange }: Step2Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">Bo'lim 2: Motivatsiya</h3>
+        <h3 className="font-semibold text-sm text-primary">{t("bolim2Motivatsiya")}</h3>
         <Badge variant="outline" className="text-[9px]">4 savol + oqim + daraja</Badge>
       </div>
 
       <div>
         <Label className="text-xs mb-1 block">
-          <span className="text-primary font-semibold">S1.</span> Bu ish sizga nima anglatadi?
+          <span className="text-primary font-semibold">S1.</span> {t("buIshSizgaNimaAnglatadi")}
         </Label>
         <Textarea
           rows={2}
           className="text-xs"
-          placeholder="Bu lavozimda ishlashning nima ma'nosi bor sizga?"
+          placeholder={t("buLavozimdaIshlashningNimaManosi")}
           value={motivation.q1_work_meaning}
           onChange={e => onChange("q1_work_meaning", e.target.value)}
         />
@@ -34,12 +36,12 @@ export function Step2Motivation({ motivation, onChange }: Step2Props) {
 
       <div>
         <Label className="text-xs mb-1 block">
-          <span className="text-primary font-semibold">S2.</span> Ideal ish muhiti qanday bo'lishi kerak?
+          <span className="text-primary font-semibold">S2.</span> {t("idealIshMuhitiQandayBolishi")}
         </Label>
         <Textarea
           rows={2}
           className="text-xs"
-          placeholder="Muhit, atmosfera, rahbar uslubi..."
+          placeholder={t("muhitAtmosferaRahbarUslubi")}
           value={motivation.q2_ideal_env}
           onChange={e => onChange("q2_ideal_env", e.target.value)}
         />
@@ -47,12 +49,12 @@ export function Step2Motivation({ motivation, onChange }: Step2Props) {
 
       <div>
         <Label className="text-xs mb-1 block">
-          <span className="text-primary font-semibold">S3.</span> Eng yaxshi natijangizni ayting?
+          <span className="text-primary font-semibold">S3.</span> {t("engYaxshiNatijangizniAyting")}
         </Label>
         <Textarea
           rows={2}
           className="text-xs"
-          placeholder="O'zingiz maqtanishingiz mumkin bo'lgan natija..."
+          placeholder={t("ozingizMaqtanishingizMumkinBolganNatija")}
           value={motivation.q3_achievement}
           onChange={e => onChange("q3_achievement", e.target.value)}
         />
@@ -60,12 +62,12 @@ export function Step2Motivation({ motivation, onChange }: Step2Props) {
 
       <div>
         <Label className="text-xs mb-1 block">
-          <span className="text-primary font-semibold">S4.</span> 3-5 yildan so'ng kim bo'lishni xohlaysiz?
+          <span className="text-primary font-semibold">S4.</span> {t("k35YildanSongKim")}
         </Label>
         <Textarea
           rows={2}
           className="text-xs"
-          placeholder="Karyera maqsadi, professional rivojlanish..."
+          placeholder={t("karyeraMaqsadiProfessionalRivojlanish")}
           value={motivation.q4_future_goal}
           onChange={e => onChange("q4_future_goal", e.target.value)}
         />
@@ -88,8 +90,8 @@ export function Step2Motivation({ motivation, onChange }: Step2Props) {
           >
             <span className="text-base">→</span>
             <div className="text-left">
-              <div className="font-semibold">Kiruvchi oqim</div>
-              <div className="text-[9px] opacity-70">Kompaniyaga kelmoqchi</div>
+              <div className="font-semibold">{t("kiruvchiOqim")}</div>
+              <div className="text-[9px] opacity-70">{t("kompaniyagaKelmoqchi")}</div>
             </div>
           </button>
           <button
@@ -103,8 +105,8 @@ export function Step2Motivation({ motivation, onChange }: Step2Props) {
           >
             <span className="text-base">←</span>
             <div className="text-left">
-              <div className="font-semibold">Chiquvchi oqim</div>
-              <div className="text-[9px] opacity-70">Hozirgi joydan ketmoqchi</div>
+              <div className="font-semibold">{t("chiquvchiOqim")}</div>
+              <div className="text-[9px] opacity-70">{t("hozirgiJoydanKetmoqchi")}</div>
             </div>
           </button>
         </div>
@@ -136,7 +138,7 @@ export function Step2Motivation({ motivation, onChange }: Step2Props) {
           ))}
         </div>
         <div className="mt-2 text-[10px] text-muted-foreground bg-muted/40 rounded p-2">
-          <strong>Ko'rsatma:</strong> 4=Burch (eng yuqori), 3=E'tiqod, 2=Manfaat, 1=Pul (eng past)
+          <strong>{t("korsatma")}</strong> 4=Burch (eng yuqori), 3=E'tiqod, 2=Manfaat, 1=Pul (eng past)
         </div>
       </div>
     </div>

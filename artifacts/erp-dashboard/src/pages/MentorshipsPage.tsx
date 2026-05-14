@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Mentorship {
   id: string | number;
@@ -54,6 +55,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 const QUERY_KEY = ["/api/mentorships"];
 
 export default function MentorshipsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCreate, setShowCreate]     = useState(false);
@@ -108,12 +110,12 @@ export default function MentorshipsPage() {
   return (
     <ModulePage
       module="hr"
-      title="Mentorliklar"
+      title={t("mentorliklar")}
       icon={<Users className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-mentorship">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi mentorlik
+          {t("yangiMentorlik")}
         </Button>
       }
     >
@@ -152,7 +154,7 @@ export default function MentorshipsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Mentorliklar topilmadi</p>
+              <p className="text-muted-foreground">{t("mentorliklarTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -200,40 +202,40 @@ export default function MentorshipsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi mentorlik</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiMentorlik")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Mentor ID *</Label>
+                <Label>{t("mentorId")}</Label>
                 <Input
                   value={form.mentor_id}
                   onChange={e => setForm(f => ({ ...f, mentor_id: e.target.value }))}
-                  placeholder="Mentor ID"
+                  placeholder={t("mentorId1")}
                   data-testid="input-mentorship-mentor"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Mentee ID *</Label>
+                <Label>{t("menteeId")}</Label>
                 <Input
                   value={form.mentee_id}
                   onChange={e => setForm(f => ({ ...f, mentee_id: e.target.value }))}
-                  placeholder="Mentee ID"
+                  placeholder={t("menteeId1")}
                   data-testid="input-mentorship-mentee"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Maqsad</Label>
+              <Label>{t("Maqsad")}</Label>
               <Input
                 value={form.goal}
                 onChange={e => setForm(f => ({ ...f, goal: e.target.value }))}
-                placeholder="Mentorlik maqsadi..."
+                placeholder={t("mentorlikMaqsadi")}
                 data-testid="input-mentorship-goal"
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Boshlanish sanasi</Label>
+              <Label>{t("startDate")}</Label>
               <Input
                 type="date"
                 value={form.start_date}
@@ -243,7 +245,7 @@ export default function MentorshipsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.mentor_id && form.mentee_id) createMutation.mutate(form); }}
               disabled={!form.mentor_id || !form.mentee_id || createMutation.isPending}
@@ -259,18 +261,18 @@ export default function MentorshipsPage() {
       <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Mentorlikni o'chirish</AlertDialogTitle>
+            <AlertDialogTitle>{t("mentorlikniOchirish")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu mentorlik yozuvini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.
+              {t("buMentorlikYozuviniOchirishniTasdiqlaysizmi")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor</AlertDialogCancel>
+            <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground"
               onClick={() => { if (deleteId !== null) deleteMutation.mutate(deleteId); }}
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

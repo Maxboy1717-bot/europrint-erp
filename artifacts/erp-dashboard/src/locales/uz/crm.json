@@ -394,5 +394,14 @@
   "frequencyLabel": "Frequency",
   "monetaryLabel": "Monetary",
   "deal001": "deal-001",
-  "winRate1": "Win Rate"
+  "winRate1": "Win Rate",
+  "activityType.call": "Qo'ng'iroq",
+  "activityType.meeting": "Uchrashuv",
+  "activityType.email": "Email",
+  "activityType.followUp": "Kuzatuv",
+  "activityType.other": "Boshqa",
+  "calendar.prevMonth": "Oldingi oy",
+  "calendar.nextMonth": "Keyingi oy",
+  "calendar.today": "Bugun",
+  "calendar.morePlus": "+{n} ta"
 }

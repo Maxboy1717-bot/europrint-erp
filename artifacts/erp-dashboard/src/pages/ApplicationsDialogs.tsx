@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Application, ApplicationResponse, UserStub } from "./ApplicationsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface ReviewDialogProps {
   open: boolean;
@@ -55,20 +56,21 @@ export function ReviewDialog({
   onReject,
   isPending,
 }: ReviewDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Arizani ko'rish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("arizaniKorish")}</DialogTitle>
           <DialogDescription>
-            Xodim tomonidan yuborilgan ariza tafsilotlari
+            {t("xodimTomonidanYuborilganArizaTafsilotlari")}
           </DialogDescription>
         </DialogHeader>
 
         {selectedResponse && (
           <div className="space-y-4">
             <div>
-              <h3 className="font-medium mb-2">Javoblar:</h3>
+              <h3 className="font-medium mb-2">{t("javoblar")}</h3>
               {(Array.isArray(selectedResponse.answers) ? selectedResponse.answers : []).map((ans, idx) => {
                 const application = (Array.isArray(applications) ? applications : []).find(
                   (a) => a.id === selectedResponse.applicationId
@@ -103,7 +105,7 @@ export function ReviewDialog({
                 id="reviewResponse"
                 value={reviewResponse}
                 onChange={(e) => onReviewResponseChange(e.target.value)}
-                placeholder="Xodimga ko'rinadigan javob yoki izoh..."
+                placeholder={t("xodimgaKorinadiganJavobYokiIzoh")}
                 rows={3}
                 data-testid="textarea-review-response"
               />
@@ -119,10 +121,10 @@ export function ReviewDialog({
                 }}
               >
                 <SelectTrigger data-testid="select-assigned-to" className="h-9">
-                  <SelectValue placeholder="Xodimni tanlang" />
+                  <SelectValue placeholder={t("xodimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Tanlangan xodim yo'q</SelectItem>
+                  <SelectItem value="none">{t("tanlanganXodimYoq")}</SelectItem>
                   {(Array.isArray(users) ? users : []).map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.fullName} ({user.employeeId})
@@ -140,7 +142,7 @@ export function ReviewDialog({
                 data-testid="button-reject-application"
               >
                 <XCircle className="w-4 h-4 mr-2" />
-                Rad etish
+                {t("reject")}
               </Button>
               <Button
                 onClick={onApprove}
@@ -148,7 +150,7 @@ export function ReviewDialog({
                 data-testid="button-approve-application"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Tasdiqlash
+                {t("verify")}
               </Button>
             </div>
           </div>

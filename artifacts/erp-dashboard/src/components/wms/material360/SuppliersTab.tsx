@@ -5,13 +5,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney, fmtDate, type SuppliersInfo, type BasicInfo } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function SuppliersTab({ suppliers, basic }: { suppliers: SuppliersInfo; basic: BasicInfo }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       {suppliers.primarySupplier ? (
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Asosiy yetkazib beruvchi</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">{t("asosiyYetkazibBeruvchi")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([["Nomi", suppliers.primarySupplier.name], ["Joriy narx", fmtMoney(suppliers.primarySupplier.currentPrice, suppliers.primarySupplier.currency || "UZS")], ["Oxirgi xarid", fmtDate(suppliers.primarySupplier.lastPurchaseDate)]]).map(([l, v]) => (
               <div key={l} className="flex justify-between text-sm">
@@ -22,11 +24,11 @@ export function SuppliersTab({ suppliers, basic }: { suppliers: SuppliersInfo; b
           </CardContent>
         </Card>
       ) : (
-        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Yetkazib beruvchi ma'lumoti kiritilmagan</CardContent></Card>
+        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">{t("yetkazibBeruvchiMalumotiKiritilmagan")}</CardContent></Card>
       )}
       {(suppliers.allSuppliers || []).length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Barcha yetkazib beruvchilar</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("barchaYetkazibBeruvchilar")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50">

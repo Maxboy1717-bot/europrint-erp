@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { ledgerApi, movementsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface LedgerItem { id: number; materialCardId: number; materialName?: string; qty: number; unit?: string; issuedDate: string; returnDeadline?: string; status: string; }
 interface BalanceSummary { totalItems?: number; totalValue?: number; expiringSoon?: number; items?: LedgerItem[]; }
@@ -24,6 +25,7 @@ const MOV_TYPE_COLOR: Record<string, string> = {
 };
 
 export default function PosLedger() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [data, setData]       = useState<BalanceSummary>({});
@@ -119,8 +121,8 @@ export default function PosLedger() {
                 <th>{t("common.qty")}</th>
                 <th>{t("ledger.issuedDate")}</th>
                 <th>{t("ledger.returnDeadline")}</th>
-                <th>Qolgan kun</th>
-                <th>Amal</th>
+                <th>{t("qolganKun")}</th>
+                <th>{t("amal")}</th>
               </tr>
             </thead>
             <tbody>
@@ -151,7 +153,7 @@ export default function PosLedger() {
       {!loading && tab === "returned" && (
         <div className="pos-card" style={{ overflowX: "auto" }}>
           <table className="pos-table">
-            <thead><tr><th>{t('common.Material')}</th><th>Miqdor</th><th>Qaytarilgan sana</th></tr></thead>
+            <thead><tr><th>{t('common.Material')}</th><th>{t("quantity")}</th><th>{t("qaytarilganSana")}</th></tr></thead>
             <tbody>
               {(Array.isArray(returned) ? returned : []).map(item => (
                 <tr key={item.id}>
@@ -169,11 +171,11 @@ export default function PosLedger() {
       {!loading && tab === "history" && (
         <div className="pos-card" style={{ overflowX: "auto" }}>
           {histLoading && (
-            <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>
+            <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda1")}</div>
           )}
           {!histLoading && history.length === 0 && (
             <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)", fontSize: 13 }}>
-              Yakunlangan harakatlar topilmadi
+              {t("yakunlanganHarakatlarTopilmadi")}
             </div>
           )}
           {!histLoading && history.length > 0 && (
@@ -181,10 +183,10 @@ export default function PosLedger() {
               <thead>
                 <tr>
                   <th>{t('common.docNo')}</th>
-                  <th>Tur</th>
+                  <th>{t("tur")}</th>
                   <th>{t('common.status1')}</th>
-                  <th style={{ textAlign: "right" }}>Summa</th>
-                  <th>Sana</th>
+                  <th style={{ textAlign: "right" }}>{t("summa")}</th>
+                  <th>{t("date")}</th>
                 </tr>
               </thead>
               <tbody>

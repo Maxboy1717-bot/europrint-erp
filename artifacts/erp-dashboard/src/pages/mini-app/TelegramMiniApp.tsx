@@ -18,6 +18,7 @@ import {
 import { LoadingSpinner } from "./TelegramMiniAppHelpers";
 import { HistoryScreen, ApprovalsScreen, ApprovalDetailScreen, RequestScreen } from "./TelegramMiniAppScreens";
 import { ScanScreen } from "./TelegramMiniAppScanScreen";
+import { useTranslation } from '@/lib/i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
@@ -26,6 +27,7 @@ const queryClient = new QueryClient({
 // ─── Inner component ──────────────────────────────────────────────────────────
 
 function TelegramMiniAppInner() {
+  const { t } = useTranslation("common");
   const tg = getTg();
 
   // Auth state
@@ -233,7 +235,7 @@ function TelegramMiniAppInner() {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: colors.bg, color: colors.text, gap: 16 }}>
         <div style={{ fontSize: 40 }}>📦</div>
-        <div style={{ fontSize: 16, fontWeight: 600 }}>POS Mini App yuklanmoqda...</div>
+        <div style={{ fontSize: 16, fontWeight: 600 }}>{t("posMiniAppYuklanmoqda")}</div>
         <LoadingSpinner color={colors.button} />
       </div>
     );
@@ -243,10 +245,10 @@ function TelegramMiniAppInner() {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: colors.bg, color: colors.text, padding: 24, gap: 16 }}>
         <div style={{ fontSize: 48 }}>🚫</div>
-        <h2 style={{ margin: 0, textAlign: "center" }}>Kirish muvaffaqiyatsiz</h2>
+        <h2 style={{ margin: 0, textAlign: "center" }}>{t("kirishMuvaffaqiyatsiz")}</h2>
         <p style={{ textAlign: "center", color: colors.hint, margin: 0 }}>{authError}</p>
         <button style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "12px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14, width: "100%", background: colors.button, color: colors.buttonText }} onClick={authenticate}>
-          Qayta urinish
+          {t("qaytaUrinish")}
         </button>
       </div>
     );
@@ -289,6 +291,7 @@ function TelegramMiniAppInner() {
 // ─── Public export ────────────────────────────────────────────────────────────
 
 export default function TelegramMiniApp() {
+  const { t } = useTranslation("common");
   return (
     <>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } } * { box-sizing: border-box; } body { margin: 0; }`}</style>

@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useNavigate } from "@/hooks/use-navigate";
 import { useChatStore } from "@/store/chatStore";
 import { getSharedSocket } from "@/hooks/chat/useChatSocket";
+import { useTranslation } from '@/lib/i18n';
 
 interface ChatNotification {
   id: string;
@@ -35,6 +36,7 @@ function timeAgo(iso: string): string {
 }
 
 export function ChatNotificationBell() {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<ChatNotification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -149,7 +151,7 @@ export function ChatNotificationBell() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold">Chat Bildirishnomalar</h2>
+                <h2 className="text-sm font-semibold">{t("chatBildirishnomalar")}</h2>
                 {unreadCount > 0 && (
                   <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                     {unreadCount} yangi
@@ -163,7 +165,7 @@ export function ChatNotificationBell() {
                     className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 px-2 py-1 rounded-md hover:bg-primary/5"
                   >
                     <CheckCheck className="w-3 h-3" />
-                    Barchasi
+                    {t("Barchasi")}
                   </button>
                 )}
                 <button
@@ -177,12 +179,12 @@ export function ChatNotificationBell() {
 
             {/* Notifications list */}
             {loading ? (
-              <div className="py-8 text-center text-xs text-muted-foreground">Yuklanmoqda...</div>
+              <div className="py-8 text-center text-xs text-muted-foreground">{t("Yuklanmoqda...")}</div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center py-8 text-center px-4">
                 <Bell className="w-8 h-8 text-muted-foreground/30 mb-2" />
-                <p className="text-sm font-medium">Yangi bildirishnoma yo'q</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Barcha xabarlar o'qildi</p>
+                <p className="text-sm font-medium">{t("yangiBildirishnomaYoq")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("barchaXabarlarOqildi")}</p>
               </div>
             ) : (
               <div className="max-h-72 overflow-y-auto divide-y divide-border/50">
@@ -230,7 +232,7 @@ export function ChatNotificationBell() {
                   className="text-xs text-primary hover:underline w-full text-center block"
                   onClick={() => setOpen(false)}
                 >
-                  Chat sahifasiga o'tish →
+                  {t("chatSahifasigaOtish")}
                 </a>
               </div>
             )}

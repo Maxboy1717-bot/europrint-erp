@@ -111,7 +111,7 @@ export function CategoryDialog({
                 name="sortOrder"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tartib</FormLabel>
+                    <FormLabel>{t("tartib")}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -133,7 +133,7 @@ export function CategoryDialog({
                   <FormLabel>{tCommon("name")} (UZ)</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Kategoriya nomi"
+                      placeholder={t("kategoriyaNomi")}
                       {...field}
                       data-testid="input-category-name"
                     />
@@ -166,7 +166,7 @@ export function CategoryDialog({
               name="parentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ota kategoriya</FormLabel>
+                  <FormLabel>{t("otaKategoriya")}</FormLabel>
                   <Select
                     onValueChange={(val) => field.onChange(val === "none" ? null : val)}
                     value={field.value || "none"}
@@ -177,7 +177,7 @@ export function CategoryDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">Asosiy kategoriya</SelectItem>
+                      <SelectItem value="none">{t("asosiyKategoriya")}</SelectItem>
                       {(Array.isArray(categories) ? categories : []).filter(
                           (c) =>
                             c.categoryType === form.watch("categoryType") &&
@@ -200,7 +200,7 @@ export function CategoryDialog({
               name="color"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Rang</FormLabel>
+                  <FormLabel>{t("rang")}</FormLabel>
                   <FormControl>
                     <div className="flex gap-2">
                       <Input

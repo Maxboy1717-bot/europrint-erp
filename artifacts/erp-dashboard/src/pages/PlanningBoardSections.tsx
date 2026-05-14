@@ -19,6 +19,7 @@ import { Plus, Filter, Calendar as CalendarIcon, Download, Pencil } from "lucide
 import type { PlanningOperation, PapkaOrder, Equipment, PlanningTranslationMap, PlanningFilters } from "./PlanningBoardTypes";
 import { exportOperationsCSV } from "./PlanningBoardTypes";
 import { EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // PlanningBoardHeader
@@ -41,6 +42,7 @@ export function PlanningBoardHeader({
   onExport,
   onAddOperation,
 }: PlanningBoardHeaderProps) {
+  const { t } = useTranslation("common");
   const handleExport = () => {
     exportOperationsCSV(operationsData);
     onExport();
@@ -54,7 +56,7 @@ export function PlanningBoardHeader({
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t.title}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t.title}</b></>}
         title={t.title}
         subtitle={t.subtitle}
       />

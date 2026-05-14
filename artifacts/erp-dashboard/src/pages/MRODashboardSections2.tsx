@@ -13,6 +13,7 @@ import {
   CheckCircle, Clock, Activity, Zap, Flame, Droplets, Building2, Shirt,
 } from "lucide-react";
 import { TH } from "./MRODashboardSections";
+import { useTranslation } from '@/lib/i18n';
 import type {
   MroItem, MroUtilityReading, MroFacility, MroCleaningSchedule,
 } from "./MRODashboardTypes";
@@ -24,6 +25,7 @@ interface UtilitiesTabProps {
 }
 
 export function UtilitiesTab({ utilityData, utilityLoading }: UtilitiesTabProps) {
+  const { t } = useTranslation("common");
   if (utilityLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -35,7 +37,7 @@ export function UtilitiesTab({ utilityData, utilityLoading }: UtilitiesTabProps)
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
         <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>Ma'lumot yo'q</p>
+        <p>{t("malumotYoq")}</p>
       </div>
     );
   }
@@ -60,12 +62,12 @@ export function UtilitiesTab({ utilityData, utilityLoading }: UtilitiesTabProps)
               </div>
             </div>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center"><span className="text-muted-foreground">Bugun:</span><span className="font-mono font-bold text-foreground">{(u.todayValue || 0).toLocaleString()}</span></div>
-              <div className="flex justify-between items-center"><span className="text-muted-foreground">Kecha:</span><span className="font-mono text-foreground">{(u.yesterdayValue || 0).toLocaleString()}</span></div>
-              <div className="flex justify-between items-center"><span className="text-muted-foreground">Bu oy:</span><span className="font-mono text-foreground">{monthTotal.toLocaleString()}</span></div>
-              <div className="flex justify-between items-center"><span className="text-muted-foreground">Byudjet:</span><span className="font-mono text-foreground">{(u.monthBudget || 0).toLocaleString()}</span></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">{t("bugun")}</span><span className="font-mono font-bold text-foreground">{(u.todayValue || 0).toLocaleString()}</span></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">{t("kecha")}</span><span className="font-mono text-foreground">{(u.yesterdayValue || 0).toLocaleString()}</span></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">{t("buOy1")}</span><span className="font-mono text-foreground">{monthTotal.toLocaleString()}</span></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">{t("byudjet1")}</span><span className="font-mono text-foreground">{(u.monthBudget || 0).toLocaleString()}</span></div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">O'zgarish:</span>
+                <span className="text-muted-foreground">{t("ozgarish1")}</span>
                 <span className={`text-xs font-bold ${trend < 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
                   {trend > 0 ? "+" : ""}{trend}%
                 </span>
@@ -73,7 +75,7 @@ export function UtilitiesTab({ utilityData, utilityLoading }: UtilitiesTabProps)
             </div>
             <div className="mt-4">
               <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-muted-foreground font-medium">Byudjet sarfi</span>
+                <span className="text-muted-foreground font-medium">{t("byudjetSarfi")}</span>
                 <span className="text-foreground font-bold">{Math.round((monthTotal / monthBudget) * 100)}%</span>
               </div>
               <div className="w-full bg-muted/60 rounded-full h-1.5">
@@ -104,7 +106,7 @@ export function BuildingTab({ buildingRooms, facilitiesLoading }: BuildingTabPro
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
         <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>Xonalar ma'lumoti mavjud emas</p>
+        <p>{t("xonalarMalumotiMavjudEmas")}</p>
       </div>
     );
   }
@@ -114,10 +116,10 @@ export function BuildingTab({ buildingRooms, facilitiesLoading }: BuildingTabPro
         <TableRow className="border-none hover:bg-transparent">
           <TH rounded="left">Xona/Zona</TH>
           <TH>Maydon (m²)</TH>
-          <TH>Sig'im</TH>
-          <TH>Oxirgi tekshiruv</TH>
-          <TH>Holat</TH>
-          <TH rounded="right">Izoh</TH>
+          <TH>{t("sigim")}</TH>
+          <TH>{t("oxirgiTekshiruv")}</TH>
+          <TH>{t("status28")}</TH>
+          <TH rounded="right">{t("Izoh")}</TH>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -149,12 +151,12 @@ export function CleaningTab({ cleaningSchedule }: { cleaningSchedule: MroCleanin
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow className="border-none hover:bg-transparent">
-          <TH rounded="left">Maydon</TH>
-          <TH>Chastota</TH>
-          <TH>Oxirgi tozalash</TH>
-          <TH>Keyingisi</TH>
-          <TH>Mas'ul</TH>
-          <TH rounded="right">Holat</TH>
+          <TH rounded="left">{t("maydon1")}</TH>
+          <TH>{t("chastota")}</TH>
+          <TH>{t("oxirgiTozalash")}</TH>
+          <TH>{t("next")}</TH>
+          <TH>{t("masul")}</TH>
+          <TH rounded="right">{t("status28")}</TH>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -191,7 +193,7 @@ export function UniformsTab({ ppeItems }: { ppeItems: MroItem[] }) {
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
         <Shirt className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>Ma'lumot yo'q</p>
+        <p>{t("malumotYoq")}</p>
       </div>
     );
   }
@@ -199,11 +201,11 @@ export function UniformsTab({ ppeItems }: { ppeItems: MroItem[] }) {
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow className="border-none hover:bg-transparent">
-          <TH rounded="left">Mahsulot</TH>
-          <TH>Birlik</TH>
-          <TH>Miqdor</TH>
-          <TH>Min</TH>
-          <TH rounded="right">Holat</TH>
+          <TH rounded="left">{t("Mahsulot")}</TH>
+          <TH>{t("unit")}</TH>
+          <TH>{t("quantity")}</TH>
+          <TH>{t("min1")}</TH>
+          <TH rounded="right">{t("status28")}</TH>
         </TableRow>
       </TableHeader>
       <TableBody>

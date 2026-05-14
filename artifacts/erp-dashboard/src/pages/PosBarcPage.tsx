@@ -11,8 +11,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { type ScanResult, type GenerateResult, type HistoryEntry } from "./PosBarcPageTypes";
 import { ScanPanel, GeneratePanel } from "./PosBarcPageSections";
+import { useTranslation } from '@/lib/i18n';
 
 export default function PosBarcPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [scanInput, setScanInput]   = useState("");
   const [genPrefix, setGenPrefix]   = useState("200");
@@ -80,7 +82,7 @@ export default function PosBarcPage() {
   return (
     <ModulePage
       module="pos"
-      title="Barcode Skanerlash"
+      title={t("barcodeSkanerlash")}
       icon={<Barcode className="h-5 w-5" />}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

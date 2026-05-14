@@ -37,25 +37,25 @@ export function VendorStats({total, active, inactive }: VendorStatsProps) {
     <div className="grid gap-4 md:grid-cols-3">
       <div className="bg-card rounded-lg p-5" data-testid="text-total-vendors">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-          Jami yetkazuvchilar
+          {t("jamiYetkazuvchilar")}
         </p>
         <p className="text-4xl font-bold tracking-tight text-foreground">{total}</p>
       </div>
 
       <div className="bg-card rounded-lg p-5" data-testid="text-active-vendors">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-          Faol
+          {t("active")}
         </p>
         <p className="text-4xl font-bold tracking-tight text-foreground">{active}</p>
-        <p className="text-xs text-[var(--ep-green)] mt-2 font-medium">Faol yetkazuvchilar</p>
+        <p className="text-xs text-[var(--ep-green)] mt-2 font-medium">{t("faolYetkazuvchilar")}</p>
       </div>
 
       <div className="bg-card rounded-lg p-5" data-testid="text-inactive-vendors">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-          Nofaol
+          {t("inactive")}
         </p>
         <p className="text-4xl font-bold tracking-tight text-foreground">{inactive}</p>
-        <p className="text-xs text-muted-foreground mt-2 font-medium">Nofaol yetkazuvchilar</p>
+        <p className="text-xs text-muted-foreground mt-2 font-medium">{t("nofaolYetkazuvchilar")}</p>
       </div>
     </div>
   );
@@ -89,13 +89,13 @@ export function VendorsTableCard({
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Yetkazuvchilar ro'yxati
+            {t("yetkazuvchilarRoyxati1")}
           </CardTitle>
           <div className="flex items-center gap-3">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Qidirish..."
+                placeholder={t("Qidirish...")}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 className="pl-10 bg-background border-border text-foreground"
@@ -104,7 +104,7 @@ export function VendorsTableCard({
             </div>
             <Button onClick={onCreateClick} data-testid="button-create-vendor">
               <Plus className="h-4 w-4 mr-2" />
-              Yangi Yetkazuvchi
+              {t("yangiYetkazuvchi")}
             </Button>
           </div>
         </div>
@@ -163,13 +163,13 @@ function VendorsTable({ vendors, onEditClick, onDeleteClick }: VendorsTableProps
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-          <TableHead className={headCls}>Kod</TableHead>
-          <TableHead className={headCls}>Nomi</TableHead>
-          <TableHead className={headCls}>Telefon</TableHead>
+          <TableHead className={headCls}>{t("code")}</TableHead>
+          <TableHead className={headCls}>{t("name")}</TableHead>
+          <TableHead className={headCls}>{t("phone")}</TableHead>
           <TableHead className={headCls}>{"Email"}</TableHead>
-          <TableHead className={headCls}>To'lov shartlari</TableHead>
-          <TableHead className={headCls}>Holat</TableHead>
-          <TableHead className={`${headCls} text-right`}>Amallar</TableHead>
+          <TableHead className={headCls}>{t("tolovShartlari")}</TableHead>
+          <TableHead className={headCls}>{t("status28")}</TableHead>
+          <TableHead className={`${headCls} text-right`}>{t("Amallar")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

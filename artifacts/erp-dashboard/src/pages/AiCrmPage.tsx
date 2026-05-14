@@ -28,6 +28,7 @@ import {
 } from "./AiCrmPageSections2";
 
 export default function AiCrmPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("scoring");
@@ -108,9 +109,9 @@ export default function AiCrmPage() {
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">AI CRM</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">AI CRM</b></>}
         title="AI CRM"
-        subtitle="Sun'iy intellekt bilan CRM tahlili va tavsiyalar"
+        subtitle={t("suniyIntellektBilanCrmTahlili")}
       />
         </div>
       </div>
@@ -134,19 +135,19 @@ export default function AiCrmPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-muted/40 p-1 rounded-xl">
           <TabsTrigger value="scoring" className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-            <Star className="h-4 w-4 mr-1.5" />Lead Skoring
+            <Star className="h-4 w-4 mr-1.5" />{t("leadSkoring")}
           </TabsTrigger>
           <TabsTrigger value="probability" className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-            <TrendingUp className="h-4 w-4 mr-1.5" />Bitim ehtimoli
+            <TrendingUp className="h-4 w-4 mr-1.5" />{t("bitimEhtimoli")}
           </TabsTrigger>
           <TabsTrigger value="churn" className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-            <AlertTriangle className="h-4 w-4 mr-1.5" />Churn xavfi
+            <AlertTriangle className="h-4 w-4 mr-1.5" />{t("churnXavfi")}
           </TabsTrigger>
           <TabsTrigger value="email" className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-            <Mail className="h-4 w-4 mr-1.5" />Email shablon
+            <Mail className="h-4 w-4 mr-1.5" />{t("emailShablon")}
           </TabsTrigger>
           <TabsTrigger value="actions" className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
-            <Zap className="h-4 w-4 mr-1.5" />Keyingi harakat
+            <Zap className="h-4 w-4 mr-1.5" />{t("keyingiHarakat")}
           </TabsTrigger>
         </TabsList>
 
@@ -218,3 +219,4 @@ export default function AiCrmPage() {
 }
 
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';

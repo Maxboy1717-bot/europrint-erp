@@ -15,6 +15,7 @@ import {
   Package, Search, RefreshCw, Filter,
   Eye, UserCheck, RotateCcw, AlertTriangle,
 } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   Asset, Department,
   CATEGORY_ICONS, CATEGORY_LABELS, STATUS_LABELS, STATUS_VARIANTS,
@@ -32,6 +33,7 @@ interface StatsProps {
 }
 
 export function AssetStats({ total, available, assigned, broken }: StatsProps) {
+  const { t } = useTranslation("common");
   const cards = [
     { label: "Jami",     value: total,     color: "text-[var(--ep-blue)]",  bg: "bg-blue-50 dark:bg-blue-950/20" },
     { label: "Bo'sh",    value: available, color: "text-[var(--ep-green)]", bg: "bg-green-50 dark:bg-green-950/20" },
@@ -83,7 +85,7 @@ export function AssetFilters({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Nomi yoki serial raqam bo'yicha qidirish..."
+          placeholder={t("nomiYokiSerialRaqamBoyicha")}
           value={search}
           onChange={e => onSearchChange(e.target.value)}
         />
@@ -92,10 +94,10 @@ export function AssetFilters({
       <Select value={filterCategory} onValueChange={onCategoryChange}>
         <SelectTrigger className="w-full sm:w-40 h-9">
           <Filter className="w-4 h-4 mr-2" />
-          <SelectValue placeholder="Tur" />
+          <SelectValue placeholder={t("tur")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha turlar</SelectItem>
+          <SelectItem value="all">{t("barchaTurlar")}</SelectItem>
           {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
             <SelectItem key={v} value={v}>{l}</SelectItem>
           ))}
@@ -104,10 +106,10 @@ export function AssetFilters({
 
       <Select value={filterStatus} onValueChange={onStatusChange}>
         <SelectTrigger className="w-full sm:w-40 h-9">
-          <SelectValue placeholder="Holat" />
+          <SelectValue placeholder={t("status28")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha holatlar</SelectItem>
+          <SelectItem value="all">{t("barchaHolatlar")}</SelectItem>
           {Object.entries(STATUS_LABELS).map(([v, l]) => (
             <SelectItem key={v} value={v}>{l}</SelectItem>
           ))}
@@ -116,10 +118,10 @@ export function AssetFilters({
 
       <Select value={filterDepartment} onValueChange={onDepartmentChange}>
         <SelectTrigger className="w-full sm:w-44 h-9">
-          <SelectValue placeholder="Bo'lim" />
+          <SelectValue placeholder={t("bolim1")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha bo'limlar</SelectItem>
+          <SelectItem value="all">{t("barchaBolimlar")}</SelectItem>
           {(Array.isArray(departments) ? departments : []).map(d => (
             <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
           ))}
@@ -156,13 +158,13 @@ export function AssetTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Jihoz</TableHead>
-                <TableHead>Serial raqam</TableHead>
-                <TableHead>Tur</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead>Xodim</TableHead>
-                <TableHead>Berilgan sana</TableHead>
-                <TableHead className="text-right">Amallar</TableHead>
+                <TableHead>{t("jihoz")}</TableHead>
+                <TableHead>{t("serialRaqam")}</TableHead>
+                <TableHead>{t("tur")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead>{t("xodim1")}</TableHead>
+                <TableHead>{t("berilganSana")}</TableHead>
+                <TableHead className="text-right">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -178,7 +180,7 @@ export function AssetTable({
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-[13px] text-muted-foreground">
                     <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                    <p>Aktivlar topilmadi</p>
+                    <p>{t("aktivlarTopilmadi")}</p>
                   </TableCell>
                 </TableRow>
               )}

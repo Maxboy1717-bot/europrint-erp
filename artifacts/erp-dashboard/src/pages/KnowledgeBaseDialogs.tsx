@@ -35,6 +35,7 @@ export interface KnowledgeBaseFormDialogProps {
 }
 
 export function KnowledgeBaseFormDialog({ open, onClose, editingItem, form, onSubmit, uploadMode, onUploadModeChange, selectedFile, onFileChange, categories, isPending, tCommon, tLms, }: KnowledgeBaseFormDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
@@ -142,7 +143,7 @@ export function KnowledgeBaseFormDialog({ open, onClose, editingItem, form, onSu
                           {...field}
                           rows={6}
                           data-testid="textarea-content"
-                          placeholder="Kompaniya haqida batafsil ma'lumot..."
+                          placeholder={t("kompaniyaHaqidaBatafsilMalumot")}
                         />
                       </FormControl>
                       <FormMessage />

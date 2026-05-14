@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CheckCircle, XCircle, AlertTriangle, Cpu, Zap, Info, History, ChevronRight } from "lucide-react";
 import { AiCheckPanel, ApprovalHistory, MaterialAlternatives } from "./TechApprovalSections";
 import type { TechOrderData, ApprovalTab, ReturnTarget } from "./TechApprovalTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Checkpoint Form (used only inside ApprovalDialog) ───────────────────────
 
@@ -39,33 +40,33 @@ function CheckpointForm({
   return (
     <div className="space-y-4">
       <div className="space-y-3 rounded-md border p-4 bg-muted/30">
-        <p className="text-sm font-medium text-muted-foreground">Barcha 3 ta checkpoint belgilanishi shart:</p>
+        <p className="text-sm font-medium text-muted-foreground">{t("barcha3TaCheckpointBelgilanishi")}</p>
         <div className="flex items-start gap-3">
           <Checkbox id="bom-approved" checked={bomApproved} onCheckedChange={(v) => onBomChange(!!v)} data-testid="checkbox-bom-approved" />
           <div>
-            <Label htmlFor="bom-approved" className="cursor-pointer font-medium">BOM — Material to'plami tekshirildi</Label>
-            <p className="text-xs text-muted-foreground">Barcha materiallar miqdori va normalar to'g'ri</p>
+            <Label htmlFor="bom-approved" className="cursor-pointer font-medium">{t("bomMaterialToplamiTekshirildi")}</Label>
+            <p className="text-xs text-muted-foreground">{t("barchaMateriallarMiqdoriVaNormalar")}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
           <Checkbox id="routing-approved" checked={routingApproved} onCheckedChange={(v) => onRoutingChange(!!v)} data-testid="checkbox-routing-approved" />
           <div>
-            <Label htmlFor="routing-approved" className="cursor-pointer font-medium">Routing — Operatsiyalar ketma-ketligi</Label>
-            <p className="text-xs text-muted-foreground">Ishlab chiqarish jarayoni bosqichlari to'g'ri</p>
+            <Label htmlFor="routing-approved" className="cursor-pointer font-medium">{t("routingOperatsiyalarKetmaKetligi")}</Label>
+            <p className="text-xs text-muted-foreground">{t("ishlabChiqarishJarayoniBosqichlariTogri")}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
           <Checkbox id="tech-card-approved" checked={techCardApproved} onCheckedChange={(v) => onTechCardChange(!!v)} data-testid="checkbox-tech-card-approved" />
           <div>
-            <Label htmlFor="tech-card-approved" className="cursor-pointer font-medium">Texnologik karta tayyorlandi</Label>
-            <p className="text-xs text-muted-foreground">AI karta generatsiya qilingan va to'g'ri</p>
+            <Label htmlFor="tech-card-approved" className="cursor-pointer font-medium">{t("texnologikKartaTayyorlandi")}</Label>
+            <p className="text-xs text-muted-foreground">{t("aiKartaGeneratsiyaQilinganVa")}</p>
           </div>
         </div>
       </div>
       {!allChecked && (
         <div className="flex items-center gap-2 text-sm text-[var(--ep-yellow)] bg-amber-50 p-3 rounded-md">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>Barcha 3 ta checkbox belgilanmasa backend tasdiqni rad etadi</span>
+          <span>{t("barcha3TaCheckboxBelgilanmasa")}</span>
         </div>
       )}
       <Textarea placeholder="Texnik izoh (ixtiyoriy)" value={comments} onChange={(e) => onCommentsChange(e.target.value)} data-testid="input-comments" rows={2} />
@@ -102,6 +103,7 @@ export function ApprovalDialog({
   comments, onCommentsChange,
   allChecked, isPending, onConfirm,
 }: ApprovalDialogProps) {
+  const { t } = useTranslation("common");
   const tabs = [
     { id: "ai"        as const, label: "AI Tahlil",         Icon: Zap         },
     { id: "approval"  as const, label: "3-Checkpoint",      Icon: CheckCircle },
@@ -141,7 +143,7 @@ export function ApprovalDialog({
             <div className="space-y-3">
               <AiCheckPanel orderId={selectedOrder.id} />
               <Button size="sm" variant="outline" className="w-full" onClick={() => onTabChange("approval")} data-testid="button-proceed-to-checkpoint">
-                Checkpoint ga o'tish <ChevronRight className="h-4 w-4 ml-1" />
+                {t("checkpointGaOtish")}<ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           )}
@@ -164,7 +166,7 @@ export function ApprovalDialog({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           {activeTab === "approval" && (
             <Button onClick={onConfirm} disabled={isPending || !allChecked} data-testid="btn-confirm-approve">
               {isPending ? "Saqlanmoqda..." : "3-Checkpoint Tasdiqlash"}
@@ -202,21 +204,21 @@ export function RejectDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[var(--ep-red)]">
             <XCircle className="h-4 w-4" />
-            Texnolog Rad etish — returned_for_fix
+            {t("texnologRadEtishReturnedFor")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Buyurtma: <strong>{selectedOrder?.papkaNo}</strong> — {selectedOrder?.mijozNomi}
+            {t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong> — {selectedOrder?.mijozNomi}
           </p>
           <div className="p-3 bg-amber-50 rounded-md text-xs text-[var(--ep-yellow)]">
-            Rad etgandan so'ng buyurtma <strong>returned_for_fix</strong> holati bilan
+            {t("radEtgandanSongBuyurtma")}<strong>returned_for_fix</strong> holati bilan
             menejerga qaytariladi va Telegram signal yuboriladi.
           </div>
           <div>
             <Label>Rad etish sababi (majburiy, kamida 5 belgi)</Label>
             <Textarea
-              placeholder="Nima xato? Nima tuzatish kerak?..."
+              placeholder={t("nimaXatoNimaTuzatishKerak")}
               value={rejectReason}
               onChange={(e) => onRejectReasonChange(e.target.value)}
               required
@@ -226,20 +228,20 @@ export function RejectDialog({
             />
           </div>
           <div>
-            <Label>Kimga qaytarish?</Label>
+            <Label>{t("kimgaQaytarish")}</Label>
             <Select value={returnTo} onValueChange={(v) => onReturnToChange(v as ReturnTarget)}>
               <SelectTrigger className="mt-1 h-9" data-testid="select-return-to">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="manager">Menejerga qaytarish</SelectItem>
-                <SelectItem value="designer">Dizaynerga qaytarish</SelectItem>
+                <SelectItem value="manager">{t("menejergaQaytarish")}</SelectItem>
+                <SelectItem value="designer">{t("dizaynergaQaytarish")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             variant="destructive"
             onClick={onConfirm}
@@ -275,10 +277,10 @@ export function HistoryDialog({ open, onOpenChange, selectedOrder }: HistoryDial
         {selectedOrder ? (
           <ApprovalHistory orderId={selectedOrder.id} />
         ) : (
-          <p className="text-sm text-muted-foreground">Buyurtma tanlanmagan</p>
+          <p className="text-sm text-muted-foreground">{t("buyurtmaTanlanmagan")}</p>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Yopish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("close2")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

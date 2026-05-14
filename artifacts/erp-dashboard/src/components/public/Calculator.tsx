@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { ArrowRight, ArrowLeft, Package, Layers, Hash, CheckCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
+import { useTranslation } from '@/lib/i18n';
 
 const materials = [
   { id: '3layer', name: '3 qatlamli', nameRu: '3-слойный', priceMultiplier: 1, icon: '📦' },
@@ -16,6 +17,7 @@ const materials = [
 const quantities = [100, 200, 500, 1000, 2000, 5000];
 
 export default function Calculator() {
+  const { t } = useTranslation("common");
   const { t, language } = useLanguage();
   const [step, setStep] = useState(1);
   const [length, setLength] = useState(30);
@@ -262,7 +264,7 @@ export default function Calculator() {
                     )}
                   </p>
                   <p className="text-4xl font-bold mt-1" style={{ color: '#F97316', fontFamily: "'Montserrat', sans-serif" }}>
-                    {formatPrice(calculatePrice())} <span className="text-lg font-medium" style={{ color: '#6B7280' }}>so'm</span>
+                    {formatPrice(calculatePrice())} <span className="text-lg font-medium" style={{ color: '#6B7280' }}>{t("som")}</span>
                   </p>
                 </div>
                 <div className="text-sm" style={{ color: '#6B7280' }}>

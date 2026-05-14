@@ -87,7 +87,7 @@ export default function DesignApproval() {
   });
 
   if (isLoading) {
-    return <div className="p-6">Yuklanmoqda...</div>;
+    return <div className="p-6">{t("Yuklanmoqda...")}</div>;
   }
 
   return (
@@ -95,9 +95,9 @@ export default function DesignApproval() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Dizayn Tasdiqlash</b></>}
-        title="Dizayn Tasdiqlash"
-        subtitle="Dizayn bo'limi uchun tasdiqlash kutayotgan buyurtmalar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("dizaynTasdiqlash")}</b></>}
+        title={t("dizaynTasdiqlash")}
+        subtitle={t("dizaynBolimiUchunTasdiqlashKutayotgan")}
       />
         </div>
       </div>
@@ -112,8 +112,8 @@ export default function DesignApproval() {
       {orders.length === 0 ? (
         <div className="bg-card rounded-xl p-6 text-center text-foreground">
           <CheckCircle className="h-12 w-12 mx-auto text-[var(--ep-green)] mb-4" />
-          <p className="text-lg font-medium">Tasdiqlash kutayotgan buyurtmalar yo'q</p>
-          <p className="text-muted-foreground">Barcha buyurtmalar ko'rib chiqilgan</p>
+          <p className="text-lg font-medium">{t("tasdiqlashKutayotganBuyurtmalarYoq")}</p>
+          <p className="text-muted-foreground">{t("barchaBuyurtmalarKoribChiqilgan")}</p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -126,24 +126,24 @@ export default function DesignApproval() {
                 </div>
                 <span className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  Dizayn kutilmoqda
+                  {t("dizaynKutilmoqda")}
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mahsulot</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("Mahsulot")}</p>
                   <p className="font-medium text-foreground">{order.mahsulotNomi}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tiraj</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("Tiraj")}</p>
                   <p className="font-medium text-foreground">{order.tiraj?.toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Format</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("format")}</p>
                   <p className="font-medium text-foreground">{order.formatA} x {order.formatB}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Muddat</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("muddat")}</p>
                   <p className="font-medium text-foreground">{order.tayyorBolishSanasi || "-"}</p>
                 </div>
               </div>
@@ -155,7 +155,7 @@ export default function DesignApproval() {
                   data-testid={`btn-view-${order.id}`}
                 >
                   <Eye className="h-4 w-4 mr-1" />
-                  Ko'rish
+                  {t("view")}
                 </Button>
                 <Button 
                   variant="destructive" 
@@ -164,7 +164,7 @@ export default function DesignApproval() {
                   data-testid={`btn-reject-${order.id}`}
                 >
                   <XCircle className="h-4 w-4 mr-1" />
-                  Rad etish
+                  {t("reject")}
                 </Button>
                 <Button 
                   size="sm"
@@ -172,7 +172,7 @@ export default function DesignApproval() {
                   data-testid={`btn-approve-${order.id}`}
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
-                  Tasdiqlash
+                  {t("verify")}
                 </Button>
               </div>
             </div>
@@ -183,18 +183,18 @@ export default function DesignApproval() {
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Buyurtma tafsilotlari</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("buyurtmaTafsilotlari")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            <p><span className="font-semibold">Papka №:</span> {selectedOrder?.papkaNo || "—"}</p>
-            <p><span className="font-semibold">Mijoz:</span> {selectedOrder?.mijozNomi || "—"}</p>
-            <p><span className="font-semibold">Mahsulot:</span> {selectedOrder?.mahsulotNomi || "—"}</p>
-            <p><span className="font-semibold">Tiraj:</span> {selectedOrder?.tiraj?.toLocaleString() || "—"}</p>
-            <p><span className="font-semibold">Format:</span> {selectedOrder?.formatA && selectedOrder?.formatB ? `${selectedOrder.formatA} × ${selectedOrder.formatB}` : "—"}</p>
-            <p><span className="font-semibold">Muddat:</span> {selectedOrder?.tayyorBolishSanasi || "—"}</p>
+            <p><span className="font-semibold">{t("papka")}</span> {selectedOrder?.papkaNo || "—"}</p>
+            <p><span className="font-semibold">{t("mijoz")}</span> {selectedOrder?.mijozNomi || "—"}</p>
+            <p><span className="font-semibold">{t("mahsulot")}</span> {selectedOrder?.mahsulotNomi || "—"}</p>
+            <p><span className="font-semibold">{t("tiraj")}</span> {selectedOrder?.tiraj?.toLocaleString() || "—"}</p>
+            <p><span className="font-semibold">{t("format1")}</span> {selectedOrder?.formatA && selectedOrder?.formatB ? `${selectedOrder.formatA} × ${selectedOrder.formatB}` : "—"}</p>
+            <p><span className="font-semibold">{t("muddat1")}</span> {selectedOrder?.tayyorBolishSanasi || "—"}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewDialog(false)}>Yopish</Button>
+            <Button variant="outline" onClick={() => setViewDialog(false)}>{t("close2")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -202,10 +202,10 @@ export default function DesignApproval() {
       <Dialog open={approvalDialog} onOpenChange={setApprovalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Dizaynni Tasdiqlash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("dizaynniTasdiqlash")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
+            <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
             <Textarea
               placeholder="Izoh (ixtiyoriy)"
               value={comments}
@@ -214,7 +214,7 @@ export default function DesignApproval() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApprovalDialog(false)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setApprovalDialog(false)}>{t("cancel")}</Button>
             <Button 
               onClick={() => selectedOrder && approveMutation.mutate(selectedOrder.id)}
               disabled={approveMutation.isPending}
@@ -229,10 +229,10 @@ export default function DesignApproval() {
       <Dialog open={rejectDialog} onOpenChange={setRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Dizaynni Rad etish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("dizaynniRadEtish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
+            <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
             <Textarea
               placeholder="Rad etish sababi (majburiy)"
               value={comments}
@@ -242,7 +242,7 @@ export default function DesignApproval() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialog(false)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setRejectDialog(false)}>{t("cancel")}</Button>
             <Button 
               variant="destructive"
               onClick={() => selectedOrder && rejectMutation.mutate(selectedOrder.id)}

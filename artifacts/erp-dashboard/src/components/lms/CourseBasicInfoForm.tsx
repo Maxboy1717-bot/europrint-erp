@@ -33,7 +33,7 @@ export function CourseBasicInfoForm({formData, setFormData, orgDepartments }: Co
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Label htmlFor="code">Kurs kodi *</Label>
+          <Label htmlFor="code">{t("kursKodi")}</Label>
           <Input
             id="code"
             placeholder={t('print101')}
@@ -45,13 +45,13 @@ export function CourseBasicInfoForm({formData, setFormData, orgDepartments }: Co
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="department">Tashkiliy tuzilma</Label>
+          <Label htmlFor="department">{t("tashkiliyTuzilma")}</Label>
           <Select value={formData.departmentId} onValueChange={(value) => setFormData({ ...formData, departmentId: value })}>
             <SelectTrigger data-testid="select-org-structure" className="h-9">
-              <SelectValue placeholder="Tashkiliy tuzilmani tanlang" />
+              <SelectValue placeholder={t("tashkiliyTuzilmaniTanlang")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barcha tashkiliy tuzilma</SelectItem>
+              <SelectItem value="all">{t("barchaTashkiliyTuzilma")}</SelectItem>
               {(Array.isArray(orgDepartments) ? orgDepartments : []).map(dept => (
                 <SelectItem key={dept.id} value={dept.id}>
                   {dept.name}
@@ -66,7 +66,7 @@ export function CourseBasicInfoForm({formData, setFormData, orgDepartments }: Co
           <Label htmlFor="title">Kurs nomi (O'zbek) *</Label>
         <Input
           id="title"
-          placeholder="Bosma mashinalarida ishlash asoslari"
+          placeholder={t("bosmaMashinalaridaIshlashAsoslari")}
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required

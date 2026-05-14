@@ -50,7 +50,7 @@ export function LeadFormDialog({open,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2" data-testid="button-create-lead">
-          <Plus className="h-4 w-4" /> Yangi Lid
+          <Plus className="h-4 w-4" /> {t("yangiLid")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
@@ -59,7 +59,7 @@ export function LeadFormDialog({open,
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Ism *</Label>
+            <Label>{t("ism")}</Label>
             <Input
               data-testid="input-lead-name"
               value={form.name}
@@ -67,7 +67,7 @@ export function LeadFormDialog({open,
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Kompaniya</Label>
+            <Label>{t("company")}</Label>
             <Input
               data-testid="input-lead-company"
               value={form.company}
@@ -76,7 +76,7 @@ export function LeadFormDialog({open,
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Telefon</Label>
+              <Label>{t("phone")}</Label>
               <Input
                 data-testid="input-lead-phone"
                 value={form.phone}
@@ -94,7 +94,7 @@ export function LeadFormDialog({open,
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Manba</Label>
+              <Label>{t("manba")}</Label>
               <Select
                 value={form.source}
                 onValueChange={v => onFormChange({ ...form, source: v })}
@@ -108,7 +108,7 @@ export function LeadFormDialog({open,
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Holat</Label>
+              <Label>{t("status28")}</Label>
               <Select
                 value={form.status}
                 onValueChange={v => onFormChange({ ...form, status: v })}
@@ -124,22 +124,22 @@ export function LeadFormDialog({open,
           </div>
           {form.status === "lost" && (
             <div className="space-y-1.5">
-              <Label>Yo'qotish sababi</Label>
+              <Label>{t("yoqotishSababi")}</Label>
               <Input
                 data-testid="input-lost-reason"
                 value={form.lostReason}
                 onChange={e => onFormChange({ ...form, lostReason: e.target.value })}
-                placeholder="Narx yuqori, raqobatchi, aloqa yo'q..."
+                placeholder={t("narxYuqoriRaqobatchiAloqaYoq")}
               />
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Kanal</Label>
+              <Label>{t("kanal")}</Label>
               <Input
                 value={form.channel}
                 onChange={e => onFormChange({ ...form, channel: e.target.value })}
-                placeholder="Telegram, Instagram..."
+                placeholder={t("telegramInstagram")}
               />
             </div>
             <div className="space-y-1.5">
@@ -154,7 +154,7 @@ export function LeadFormDialog({open,
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Izohlar</Label>
+            <Label>{t("notes")}</Label>
             <Textarea
               value={form.notes}
               onChange={e => onFormChange({ ...form, notes: e.target.value })}
@@ -211,7 +211,7 @@ export function FunnelDialog({ open, onOpenChange, funnelData }: FunnelDialogPro
           ))}
           {funnelData.length === 0 && (
             <p className="text-center text-muted-foreground py-4">
-              Ma'lumot yuklanmoqda...
+              {t("malumotYuklanmoqda")}
             </p>
           )}
         </div>
@@ -237,8 +237,8 @@ export function DeleteLeadConfirm({
     <ConfirmDialog
       open={!!deleteId}
       onOpenChange={onOpenChange}
-      title="Lidni o'chirish"
-      description="Ushbu marketing lidni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("lidniOchirish")}
+      description={t("ushbuMarketingLidniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       variant="destructive"
       onConfirm={onConfirm}

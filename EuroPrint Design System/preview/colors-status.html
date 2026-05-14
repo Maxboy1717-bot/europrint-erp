@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>html,body{margin:0;padding:0;background:var(--bg1);color:var(--fg1);font-family:var(--font-sans);}
+.wrap{padding:18px 22px;}
+.row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.sw{border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--bg2);}
+.chip{height:64px;display:flex;align-items:flex-end;padding:8px 10px;color:#fff;font-family:var(--font-mono);font-size:10.5px;font-weight:500;}
+.pill{height:30px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;gap:5px;}
+.pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.meta{padding:8px 10px;display:flex;flex-direction:column;gap:2px;}
+.meta b{font-size:12px;font-weight:600;}
+.meta span{font-size:10.5px;color:var(--fg2);font-family:var(--font-mono);}</style></head>
+<body><div class="wrap"><div class="row">
+<div class="sw"><div class="chip" style="background:#2E8A5A">#2E8A5A</div><div class="pill" style="background:rgba(0,192,135,.12);color:#2E8A5A">Faol</div><div class="meta"><b>Success</b><span>--ep-green</span></div></div>
+<div class="sw"><div class="chip" style="background:#B5891C">#B5891C</div><div class="pill" style="background:rgba(255,193,7,.18);color:#b58a00">Kutilmoqda</div><div class="meta"><b>Warning</b><span>--ep-yellow</span></div></div>
+<div class="sw"><div class="chip" style="background:#C0432F">#C0432F</div><div class="pill" style="background:rgba(255,82,82,.12);color:#C0432F">Bekor</div><div class="meta"><b>Error</b><span>--ep-red</span></div></div>
+<div class="sw"><div class="chip" style="background:#3563AC">#3563AC</div><div class="pill" style="background:rgba(40,201,232,.15);color:#0aa2c0">Maʼlumot</div><div class="meta"><b>Info</b><span>--ep-blue</span></div></div>
+</div></div></body></html>

@@ -27,12 +27,14 @@ import {
 import { CameraStatsCards, CameraTable } from "./cameras-management-sections";
 import { AddCameraDialog, EditCameraDialog } from "./cameras-management-dialogs";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function CamerasManagement() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [language, setLanguage] = useState<Language>("uz");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -200,7 +202,7 @@ export default function CamerasManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{language === "uz" ? "Kameralar boshqaruvi" : "Управление камерами"}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{language === "uz" ? "Kameralar boshqaruvi" : "Управление камерами"}</b></>}
         title={language === "uz" ? "Kameralar boshqaruvi" : "Управление камерами"}
         subtitle={t.subtitle}
       />

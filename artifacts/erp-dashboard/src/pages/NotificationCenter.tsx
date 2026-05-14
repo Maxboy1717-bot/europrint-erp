@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Check, CheckCheck, Filter } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Notification {
   id: number;
@@ -48,6 +49,7 @@ function fmtDate(iso: string): string {
 }
 
 export default function NotificationCenter() {
+  const { t } = useTranslation("common");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
@@ -102,7 +104,7 @@ export default function NotificationCenter() {
         <Bell className="h-8 w-8 text-[var(--ep-yellow)]" />
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">XABARNOMALAR MARKAZI</div>
-          <h1 className="text-2xl font-bold">Bildirishnomalar</h1>
+          <h1 className="text-2xl font-bold">{t("notifications")}</h1>
           <p className="text-sm text-gray-500">
             {stats.total} ta jami · <b className="text-[var(--ep-yellow)]">{stats.unread} ta o'qilmagan</b>
           </p>
@@ -110,7 +112,7 @@ export default function NotificationCenter() {
         <Button onClick={load} variant="outline">🔄</Button>
         {stats.unread > 0 && (
           <Button onClick={markAllRead} className="bg-emerald-600 hover:bg-[var(--ep-green)]/90">
-            <CheckCheck className="h-4 w-4 mr-1" /> Hammasini o'qilgan deb belgilash
+            <CheckCheck className="h-4 w-4 mr-1" /> {t("hammasiniOqilganDebBelgilash")}
           </Button>
         )}
       </div>
@@ -133,7 +135,7 @@ export default function NotificationCenter() {
         <div className="flex items-center gap-2 ml-auto">
           <Filter className="h-4 w-4 text-gray-400" />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-1.5 border rounded text-sm">
-            <option value="all">Barcha turlar</option>
+            <option value="all">{t("barchaTurlar")}</option>
             {types.map(t => <option key={t} value={t}>{TYPE_CONFIG[t]?.label ?? t}</option>)}
           </select>
         </div>
@@ -141,12 +143,12 @@ export default function NotificationCenter() {
 
       <Card>
         <CardContent className="p-0">
-          {loading && <div className="p-10 text-center text-gray-500">⏳ Yuklanmoqda...</div>}
+          {loading && <div className="p-10 text-center text-gray-500">{t("yuklanmoqda")}</div>}
 
           {!loading && filtered.length === 0 && (
             <div className="p-10 text-center text-gray-400">
               <Bell className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              Xabarnomalar yo'q
+              {t("xabarnomalarYoq")}
             </div>
           )}
 
@@ -165,7 +167,7 @@ export default function NotificationCenter() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="font-semibold text-sm">{n.title}</div>
-                          {!n.isRead && <EPStatusPill tone="info">Yangi</EPStatusPill>}
+                          {!n.isRead && <EPStatusPill tone="info">{t("yangi")}</EPStatusPill>}
                           <Badge variant="outline" className={`text-xs ${cfg.color}`}>{cfg.label}</Badge>
                         </div>
                         <div className="text-sm text-gray-600">{n.body}</div>

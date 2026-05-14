@@ -86,7 +86,7 @@ export function PinPromptModal({ documentId, action, open, onOpenChange, }: {
 
           {action === 'reject' && (
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Sabab</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("sabab")}</label>
               <select
                 value={reasonId ?? ""}
                 onChange={(e) => setReasonId(e.target.value || null)}
@@ -114,7 +114,7 @@ export function PinPromptModal({ documentId, action, open, onOpenChange, }: {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button
             variant={submitTone as "default" | "destructive" | "secondary"}
             onClick={() => submit.mutate()}

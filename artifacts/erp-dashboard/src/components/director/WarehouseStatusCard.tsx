@@ -9,6 +9,7 @@ import { AlertTriangle, Layers, Zap, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionTitle, formatMoney } from "@/components/director/helpers";
 import type { DirDashboard, WMSRentalData } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface WarehouseStatusCardProps {
   dash: DirDashboard | undefined;
@@ -19,6 +20,7 @@ interface WarehouseStatusCardProps {
 }
 
 export function WarehouseStatusCard({ dash, wmsRental, wmsRentalLoad, validationIssueCount = 0, totalRules = 0 }: WarehouseStatusCardProps) {
+  const { t } = useTranslation("common");
   const stats = [
     { label: "Kritik materiallar", value: dash?.alerts.minStock ?? 0, ok: (dash?.alerts.minStock ?? 0) === 0, icon: AlertTriangle, desc: "min-stock ogohlantirishlari" },
     { label: "IoT ogohlantirishlari", value: dash?.alerts.iot ?? 0, ok: (dash?.alerts.iot ?? 0) === 0, icon: Zap, desc: "so'nggi 8 soatda" },
@@ -28,7 +30,7 @@ export function WarehouseStatusCard({ dash, wmsRental, wmsRentalLoad, validation
   return (
     <Card data-testid="card-warehouse-status">
       <CardHeader className="pb-3">
-        <SectionTitle icon={Layers} title="Ombor va Ta'minot" sub="Stok va ogohlantirishlar" accent="text-[var(--ep-yellow)]" />
+        <SectionTitle icon={Layers} title={t("omborVaTaminot")} sub="Stok va ogohlantirishlar" accent="text-[var(--ep-yellow)]" />
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -69,7 +71,7 @@ export function WarehouseStatusCard({ dash, wmsRental, wmsRentalLoad, validation
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground py-2">Ombor ma'lumoti yo'q</p>
+            <p className="text-xs text-muted-foreground py-2">{t("omborMalumotiYoq")}</p>
           )}
         </div>
       </CardContent>

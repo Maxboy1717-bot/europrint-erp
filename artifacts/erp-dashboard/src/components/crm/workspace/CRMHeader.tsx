@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EntityType, ENTITY_CONFIG } from "@/pages/crm/crm-types";
 import { CRMHeaderProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 // Per-entity accent colours used for icon halos and active tab glow
 const ENTITY_GRADIENTS: Record<EntityType, { from: string; to: string; glow: string; bg: string }> = {
@@ -30,6 +31,7 @@ const ENTITY_GRADIENTS: Record<EntityType, { from: string; to: string; glow: str
 };
 
 export function CRMHeader({ activeEntity, onEntityChange, onQuickCreate }: CRMHeaderProps) {
+  const { t } = useTranslation("common");
   const active = ENTITY_GRADIENTS[activeEntity];
 
   return (
@@ -75,7 +77,7 @@ export function CRMHeader({ activeEntity, onEntityChange, onQuickCreate }: CRMHe
               CRM
             </h1>
             <p className="text-[11px] font-medium leading-tight" style={{ color: "#94a3b8" }}>
-              Mijozlar bilan ishlash
+              {t("mijozlarBilanIshlash")}
             </p>
           </div>
         </div>
@@ -94,7 +96,7 @@ export function CRMHeader({ activeEntity, onEntityChange, onQuickCreate }: CRMHe
                 data-testid="button-create-dropdown"
               >
                 <Plus className="h-4 w-4" />
-                Yaratish
+                {t("Yaratish")}
                 <ChevronDown className="h-3.5 w-3.5 opacity-80" />
               </Button>
             </motion.div>
@@ -108,7 +110,7 @@ export function CRMHeader({ activeEntity, onEntityChange, onQuickCreate }: CRMHe
             }}
           >
             <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-2 pb-1">
-              Yangi yaratish
+              {t("yangiYaratish")}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="mb-1 bg-slate-100" />
             {(Object.keys(ENTITY_CONFIG) as EntityType[]).map((entity) => {

@@ -49,11 +49,11 @@ export default function HRAIDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <EPStatusPill tone="success">Bajarildi</EPStatusPill>;
+        return <EPStatusPill tone="success">{t("Bajarildi")}</EPStatusPill>;
       case "pending":
-        return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">Kutilmoqda</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("Kutilmoqda")}</Badge>;
       case "failed":
-        return <EPStatusPill tone="danger">Xatolik</EPStatusPill>;
+        return <EPStatusPill tone="danger">{t("Xatolik")}</EPStatusPill>;
       default:
         return <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">{status}</Badge>;
     }
@@ -100,8 +100,8 @@ export default function HRAIDashboard() {
     return (
       <ModulePage
         module="ai"
-        title="HR AI Avtomatizatsiya"
-        subtitle="Sun'iy intellekt bilan HR jarayonlarini boshqarish"
+        title={t("hrAiAvtomatizatsiya")}
+        subtitle={t("suniyIntellektBilanHrJarayonlarini")}
         icon={<Brain className="h-5 w-5" />}
         actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
@@ -134,7 +134,7 @@ export default function HRAIDashboard() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between mb-6">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">HR AI {t('dashboard')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">HR AI {t('dashboard')}</b></>}
         title="HR AI {t('dashboard')}"
       />
         <div className="flex items-center gap-2">

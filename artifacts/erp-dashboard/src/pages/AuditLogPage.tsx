@@ -98,7 +98,7 @@ export default function AuditLogPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Yangilash
+            <RefreshCw className="h-4 w-4 mr-1" /> {t("refresh")}
           </Button>
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> CSV

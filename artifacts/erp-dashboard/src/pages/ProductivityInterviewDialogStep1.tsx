@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import type { WorkplaceEntry } from "./ProductivityInterviewDialogTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface Step1Props {
   workplaces: WorkplaceEntry[];
@@ -16,22 +17,23 @@ interface Step1Props {
 }
 
 export function Step1WorkExperience({ workplaces, onUpdate, onAdd, onRemove }: Step1Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-sm text-primary">Bo'lim 1: Har bir ish joyidan 4 savol</h3>
-          <Badge variant="outline" className="text-[9px]">Maks. 3 ish joyi</Badge>
+          <h3 className="font-semibold text-sm text-primary">{t("bolim1HarBirIsh")}</h3>
+          <Badge variant="outline" className="text-[9px]">{t("maks3IshJoyi")}</Badge>
         </div>
         {workplaces.length < 3 && (
           <Button size="sm" variant="outline" onClick={onAdd} className="h-7 text-xs gap-1">
             <Plus className="w-3 h-3" />
-            Ish joyi qo'shish
+            {t("ishJoyiQoshish")}
           </Button>
         )}
       </div>
       <p className="text-xs text-muted-foreground -mt-2">
-        Nomzodning oldingi har bir ish joyiga 4 ta asosiy savol beriladi.
+        {t("nomzodningOldingiHarBirIsh")}
       </p>
 
       {(Array.isArray(workplaces) ? workplaces : []).map((wp, idx) => (
@@ -55,28 +57,28 @@ export function Step1WorkExperience({ workplaces, onUpdate, onAdd, onRemove }: S
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div>
-              <Label className="text-[10px] mb-0.5 block text-muted-foreground">Kompaniya</Label>
+              <Label className="text-[10px] mb-0.5 block text-muted-foreground">{t("company")}</Label>
               <Input
                 className="h-7 text-xs"
-                placeholder="Kompaniya nomi"
+                placeholder={t("kompaniyaNomi1")}
                 value={wp.company}
                 onChange={e => onUpdate(wp.id, "company", e.target.value)}
               />
             </div>
             <div>
-              <Label className="text-[10px] mb-0.5 block text-muted-foreground">Lavozim</Label>
+              <Label className="text-[10px] mb-0.5 block text-muted-foreground">{t("lavozim1")}</Label>
               <Input
                 className="h-7 text-xs"
-                placeholder="Lavozim"
+                placeholder={t("lavozim1")}
                 value={wp.position}
                 onChange={e => onUpdate(wp.id, "position", e.target.value)}
               />
             </div>
             <div>
-              <Label className="text-[10px] mb-0.5 block text-muted-foreground">Davomiylik</Label>
+              <Label className="text-[10px] mb-0.5 block text-muted-foreground">{t("davomiylik")}</Label>
               <Input
                 className="h-7 text-xs"
-                placeholder="Masalan: 2 yil"
+                placeholder={t("masalan2Yil")}
                 value={wp.duration}
                 onChange={e => onUpdate(wp.id, "duration", e.target.value)}
               />
@@ -85,12 +87,12 @@ export function Step1WorkExperience({ workplaces, onUpdate, onAdd, onRemove }: S
 
           <div>
             <Label className="text-xs mb-1 block">
-              <span className="text-primary font-semibold">S1.</span> Eng murakkab vazifani ayting?
+              <span className="text-primary font-semibold">S1.</span> {t("engMurakkabVazifaniAyting")}
             </Label>
             <Textarea
               rows={2}
               className="text-xs"
-              placeholder="Qanday murakkab vazifa oldingizda turgan?"
+              placeholder={t("qandayMurakkabVazifaOldingizdaTurgan")}
               value={wp.hard_task}
               onChange={e => onUpdate(wp.id, "hard_task", e.target.value)}
             />
@@ -98,12 +100,12 @@ export function Step1WorkExperience({ workplaces, onUpdate, onAdd, onRemove }: S
 
           <div>
             <Label className="text-xs mb-1 block">
-              <span className="text-primary font-semibold">S2.</span> Uni qanday hal qildingiz?
+              <span className="text-primary font-semibold">S2.</span> {t("uniQandayHalQildingiz")}
             </Label>
             <Textarea
               rows={2}
               className="text-xs"
-              placeholder="Qanday yondashuv, nima natija chiqdi?"
+              placeholder={t("qandayYondashuvNimaNatijaChiqdi")}
               value={wp.how_solved}
               onChange={e => onUpdate(wp.id, "how_solved", e.target.value)}
             />
@@ -111,12 +113,12 @@ export function Step1WorkExperience({ workplaces, onUpdate, onAdd, onRemove }: S
 
           <div>
             <Label className="text-xs mb-1 block">
-              <span className="text-primary font-semibold">S3.</span> Tashabbuskorlik misoli?
+              <span className="text-primary font-semibold">S3.</span> {t("tashabbuskorlikMisoli")}
             </Label>
             <Textarea
               rows={2}
               className="text-xs"
-              placeholder="O'z tashabbusi bilan nima qildi? Birov so'ramasdan?"
+              placeholder={t("ozTashabbusiBilanNimaQildi")}
               value={wp.initiative}
               onChange={e => onUpdate(wp.id, "initiative", e.target.value)}
             />
@@ -124,12 +126,12 @@ export function Step1WorkExperience({ workplaces, onUpdate, onAdd, onRemove }: S
 
           <div>
             <Label className="text-xs mb-1 block">
-              <span className="text-primary font-semibold">S4.</span> Bu ish joyida nima o'rgandingiz?
+              <span className="text-primary font-semibold">S4.</span> {t("buIshJoyidaNimaOrgandingiz")}
             </Label>
             <Textarea
               rows={2}
               className="text-xs"
-              placeholder="Asosiy dars yoki ko'nikma?"
+              placeholder={t("asosiyDarsYokiKonikma")}
               value={wp.lesson}
               onChange={e => onUpdate(wp.id, "lesson", e.target.value)}
             />

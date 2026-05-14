@@ -11,6 +11,7 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
 } from "recharts";
 import { fmtNum, fmtDate } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 interface JourneyData {
   stage: string;
@@ -26,7 +27,8 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
   journey?: JourneyData;
   internalIntelligence?: SdInternalIntelligenceData;
 }) {
-  if (!segmentation) return <div className="text-sm text-muted-foreground py-8 text-center">Ma'lumot yuklanmadi</div>;
+  const { t } = useTranslation("common");
+  if (!segmentation) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
   const { abcScore, abcCategory, scoreBreakdown, recommendations, categoryLabel } = segmentation;
   const seg = abcCategory || segmentation.segment || "C";
@@ -94,7 +96,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
           <div className="rounded-xl border bg-card overflow-hidden">
             <div className="px-4 py-3 border-b bg-muted/30">
               <h3 className="text-sm font-semibold flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />Ball radar
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />{t("ballRadar")}
               </h3>
             </div>
             <div className="p-4">
@@ -114,7 +116,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
       {scoreBreakdown && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">Ball tafsiloti</h3>
+            <h3 className="text-sm font-semibold">{t("ballTafsiloti")}</h3>
           </div>
           <div className="p-4 space-y-3">
             {[
@@ -141,7 +143,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Target className="h-4 w-4 text-muted-foreground" />Tavsiyalar
+              <Target className="h-4 w-4 text-muted-foreground" />{t("tavsiyalar1")}
             </h3>
           </div>
           <div className="p-4">
@@ -168,7 +170,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
           <div className="p-4 space-y-3">
             {/* Relationship quality */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Munosabat sifati</span>
+              <span className="text-sm text-muted-foreground">{t("munosabatSifati")}</span>
               <Badge className={
                 internalIntelligence.relationshipQuality === 'excellent' ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
                 : internalIntelligence.relationshipQuality === 'good'    ? "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200"
@@ -180,7 +182,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
             {internalIntelligence.lastInteraction && (
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">So'nggi muloqot:</span>
+                <span className="text-muted-foreground">{t("songgiMuloqot")}</span>
                 <span className="font-medium">{internalIntelligence.lastInteraction.type}</span>
                 <span className="text-muted-foreground text-xs">{fmtDate(String(internalIntelligence.lastInteraction.date ?? ""))}</span>
                 {internalIntelligence.lastInteraction.by && (
@@ -191,7 +193,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
             {/* Key insights */}
             {(internalIntelligence.keyInsights || []).filter(Boolean).length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" />Asosiy xulosalar</p>
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" />{t("asosiyXulosalar")}</p>
                 {internalIntelligence.keyInsights.filter(Boolean).map((insight, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-3.5 w-3.5 text-[var(--ep-green)] shrink-0" />
@@ -203,7 +205,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
             {/* Next actions */}
             {(internalIntelligence.nextActions || []).length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Target className="h-3.5 w-3.5" />Keyingi amallar</p>
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Target className="h-3.5 w-3.5" />{t("keyingiAmallar")}</p>
                 {internalIntelligence.nextActions.slice(0, 3).map((a, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm rounded-lg bg-muted/40 px-2.5 py-1.5">
                     <Star className="h-3.5 w-3.5 text-[var(--ep-yellow)] shrink-0 mt-0.5" />
@@ -265,14 +267,14 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
                     {journey.daysSinceFirstOrder !== undefined && (
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="text-muted-foreground">Birinchi buyurtmadan:</span>
+                        <span className="text-muted-foreground">{t("birinchiBuyurtmadan")}</span>
                         <span className="font-medium">{journey.daysSinceFirstOrder} kun</span>
                       </div>
                     )}
                     {journey.daysSinceLastOrder !== undefined && (
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="text-muted-foreground">So'nggi buyurtmadan:</span>
+                        <span className="text-muted-foreground">{t("songgiBuyurtmadan")}</span>
                         <span className="font-medium">{journey.daysSinceLastOrder} kun</span>
                       </div>
                     )}

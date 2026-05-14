@@ -15,12 +15,14 @@ import { apiRequest } from "@/lib/queryClient";
 import { BasketColumn, type BasketCard } from "./BasketColumn";
 import { NewDocumentModal } from "./NewDocumentModal";
 import { DocumentDetailModal } from "./DocumentDetailModal";
+import { useTranslation } from '@/lib/i18n';
 
 interface BasketSummary {
   inbox: number; pending: number; outbox: number; inboxOverdue: number;
 }
 
 export function CommunicationCenter() {
+  const { t } = useTranslation("common");
   const [showNew, setShowNew]     = useState(false);
   const [openDocId, setOpenDocId] = useState<string | null>(null);
 
@@ -57,21 +59,21 @@ export function CommunicationCenter() {
             <FileText className="w-5 h-5 text-[var(--ep-blue)]" />
           </div>
           <div>
-            <h2 className="text-base font-semibold">Kommunikatsiya Markazi</h2>
-            <p className="text-xs text-muted-foreground">3 Savat Tizimi — hujjat oqimi</p>
+            <h2 className="text-base font-semibold">{t("kommunikatsiyaMarkazi")}</h2>
+            <p className="text-xs text-muted-foreground">{t("k3SavatTizimiHujjatOqimi")}</p>
           </div>
           {summary.isLoading && <Loader2 className="animate-spin text-muted-foreground" size={14} />}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge color="blue"  icon={<Inbox size={12} />}         count={s.inbox}   label="Kiruvchi" />
-          <Badge color="amber" icon={<Clock size={12} />}         count={s.pending} label="Kutish" />
-          <Badge color="emerald" icon={<Send size={12} />}        count={s.outbox}  label="Chiquvchi" />
+          <Badge color="blue"  icon={<Inbox size={12} />}         count={s.inbox}   label={t("kiruvchi")} />
+          <Badge color="amber" icon={<Clock size={12} />}         count={s.pending} label={t("kutish")} />
+          <Badge color="emerald" icon={<Send size={12} />}        count={s.outbox}  label={t("chiquvchi")} />
           {s.inboxOverdue > 0 && (
-            <Badge color="red" icon={<AlertTriangle size={12} />} count={s.inboxOverdue} label="Muddati o'tgan" />
+            <Badge color="red" icon={<AlertTriangle size={12} />} count={s.inboxOverdue} label={t("muddatiOtgan")} />
           )}
           <Button onClick={() => setShowNew(true)} size="sm" data-testid="button-new-document" className="ml-1">
-            <Plus className="h-4 w-4 mr-1" /> Yangi hujjat
+            <Plus className="h-4 w-4 mr-1" /> {t("yangiHujjat")}
           </Button>
         </div>
       </Card>
@@ -91,19 +93,19 @@ export function CommunicationCenter() {
       {/* ── 3 ustun ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <BasketColumn
-          title="Kiruvchi"      color="blue"
+          title={t("kiruvchi")}      color="blue"
           count={s.inbox}       overdue={s.inboxOverdue}
           cards={inbox.data ?? []} kind="inbox"
           isLoading={inbox.isLoading} onCardClick={setOpenDocId}
         />
         <BasketColumn
-          title="Kutish"        color="amber"
+          title={t("kutish")}        color="amber"
           count={s.pending}
           cards={pending.data ?? []} kind="pending"
           isLoading={pending.isLoading} onCardClick={setOpenDocId}
         />
         <BasketColumn
-          title="Chiquvchi"     color="emerald"
+          title={t("chiquvchi")}     color="emerald"
           count={s.outbox}
           cards={outbox.data ?? []} kind="outbox"
           isLoading={outbox.isLoading} onCardClick={setOpenDocId}

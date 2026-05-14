@@ -9,6 +9,7 @@ import { usePosI18n } from "../i18n/usePosI18n";
 import { reportsApi, stockApi, movementsApi } from "../api/pos-monitor.api";
 import { usePOSSocket } from "../hooks/usePOSSocket";
 import PosBarcodeScanner from "../components/PosBarcodeScanner";
+import { useTranslation } from '@/lib/i18n';
 
 interface KpiData { todayMovementsCount?: number; todayTotalAmount?: number; pendingApprovalCount?: number; lowStockCount?: number; }
 interface Movement { id: number; movementType: string; status: string; totalAmount?: number; createdAt: string; movementNumber?: string; }
@@ -41,6 +42,7 @@ const fmt  = (n: number) => new Intl.NumberFormat("uz-UZ").format(n);
 const fmtT = (d: string) => new Date(d).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
 
 export default function PosDashboard() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [kpi, setKpi]                   = useState<KpiData>({});
@@ -213,7 +215,7 @@ export default function PosDashboard() {
         <div className="pos-card" style={{ marginBottom: 24, borderColor: "rgba(255,184,0,0.3)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <span style={{ fontSize: 18 }}>🗓️</span>
-            <span style={{ fontWeight: 600, fontSize: 14, color: "var(--pos-warning)" }}>Muddat yaqinlashayotgan materiallar</span>
+            <span style={{ fontWeight: 600, fontSize: 14, color: "var(--pos-warning)" }}>{t("muddatYaqinlashayotganMateriallar")}</span>
             <span className="pos-badge pos-badge-yellow" style={{ fontSize: 10 }}>{expiry.length} ta</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 10 }}>
@@ -235,7 +237,7 @@ export default function PosDashboard() {
           <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={() => void loadData()}>🔄</button>
         </div>
         {pending.length === 0 ? (
-          <div style={{ color: "var(--pos-text-muted)", fontSize: 13, textAlign: "center", padding: "16px 0" }}>✅ Tasdiqlash kutayotgan harakatlar yo'q</div>
+          <div style={{ color: "var(--pos-text-muted)", fontSize: 13, textAlign: "center", padding: "16px 0" }}>{t("tasdiqlashKutayotganHarakatlarYoq")}</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {pending.slice(0, 5).map(m => (
@@ -245,7 +247,7 @@ export default function PosDashboard() {
                   <div className="pos-mono" style={{ fontSize: 13, fontWeight: 600, color: "var(--pos-accent)" }}>{m.movementNumber ?? `#${m.id}`}</div>
                   <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{m.movementType} · {fmtT(m.createdAt)}</div>
                 </div>
-                <span className="pos-badge pos-badge-yellow" style={{ fontSize: 10 }}>Kutilmoqda</span>
+                <span className="pos-badge pos-badge-yellow" style={{ fontSize: 10 }}>{t("Kutilmoqda")}</span>
                 {m.totalAmount != null && <div className="pos-mono" style={{ fontSize: 13, fontWeight: 600 }}>{fmt(m.totalAmount)}</div>}
                 <span style={{ color: "var(--pos-accent)", fontSize: 16 }}>›</span>
               </div>

@@ -37,7 +37,7 @@ function MessageBubble({ msg }: { msg: SocialMessage }) {
             {msg.mediaType?.startsWith("image") ? (
               <img src={msg.mediaUrl} alt={"media"} className="max-w-full rounded-md max-h-48 object-cover" />
             ) : (
-              <a href={msg.mediaUrl} target="_blank" rel="noopener noreferrer" className="text-xs underline">Faylni ko'rish</a>
+              <a href={msg.mediaUrl} target="_blank" rel="noopener noreferrer" className="text-xs underline">{t("faylniKorish")}</a>
             )}
           </div>
         )}
@@ -118,7 +118,7 @@ export function ConversationsPanel({mobileShowChat,
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Qidirish..."
+            placeholder={t("Qidirish...")}
             className="pl-8"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -143,7 +143,7 @@ export function ConversationsPanel({mobileShowChat,
         ) : !conversations || conversations.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground" data-testid="empty-conversations">
             <MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-40" />
-            <p className="text-sm">Suhbatlar topilmadi</p>
+            <p className="text-sm">{t("suhbatlarTopilmadi")}</p>
           </div>
         ) : (
           <div className="p-1">
@@ -184,9 +184,9 @@ function ChatHeader({ conv, onBackToList, onStatusChange }: ChatHeaderProps) {
       <Select value={conv.status} onValueChange={onStatusChange}>
         <SelectTrigger className="w-full sm:w-[130px] h-9" data-testid="select-change-status"><SelectValue /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="open">Ochiq</SelectItem>
-          <SelectItem value="assigned">Tayinlangan</SelectItem>
-          <SelectItem value="resolved">Hal qilingan</SelectItem>
+          <SelectItem value="open">{t("ochiq")}</SelectItem>
+          <SelectItem value="assigned">{t("tayinlangan")}</SelectItem>
+          <SelectItem value="resolved">{t("halQilingan")}</SelectItem>
         </SelectContent>
       </Select>
     </div>
@@ -238,7 +238,7 @@ export function ChatPanel({
         <div className="flex-1 flex items-center justify-center text-muted-foreground" data-testid="empty-chat">
           <div className="text-center">
             <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Suhbatni tanlang</p>
+            <p className="text-sm">{t("suhbatniTanlang")}</p>
           </div>
         </div>
       ) : (
@@ -258,7 +258,7 @@ export function ChatPanel({
               </div>
             ) : !messages || messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-12" data-testid="empty-messages">
-                <p className="text-sm">Xabarlar yo'q</p>
+                <p className="text-sm">{t("xabarlarYoq")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -273,7 +273,7 @@ export function ChatPanel({
           <div className="p-3 border-t">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="Xabar yozing..."
+                placeholder={t("xabarYozing")}
                 value={replyText}
                 onChange={(e) => onReplyTextChange(e.target.value)}
                 onKeyDown={onKeyDown}

@@ -2,9 +2,9 @@
   "title": "Заголовок",
   "empty": "Пусто",
   "emptyDesc": "Данные не найдены",
-  "hoursInQuarantine": "Hours In Карантин",
-  "qcDecision": "qc Decision",
-  "decision": "decision",
+  "hoursInQuarantine": "Часов в карантине",
+  "qcDecision": "Решение QC",
+  "decision": "Решение",
   "note": "Заметка",
-  "notePlaceholder": "Заметка Placeholder"
+  "notePlaceholder": "Введите заметку"
 }

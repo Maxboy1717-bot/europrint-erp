@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClipboardCheck, CheckCircle, XCircle, ChevronRight } from "lucide-react";
 import { Workflow, STATUS_MAP, fmtAmt } from "./ApprovalWorkflowPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface WorkflowListProps {
   isLoading: boolean;
@@ -19,6 +20,7 @@ interface WorkflowListProps {
 }
 
 export function WorkflowList({ isLoading, filtered, tab, onApprove, onReject }: WorkflowListProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -89,7 +91,7 @@ export function WorkflowList({ isLoading, filtered, tab, onApprove, onReject }: 
                         data-testid={`button-approve-workflow-${w.id}`}
                       >
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Tasdiqlash
+                        {t("verify")}
                       </Button>
                       <Button
                         size="sm"
@@ -99,7 +101,7 @@ export function WorkflowList({ isLoading, filtered, tab, onApprove, onReject }: 
                         data-testid={`button-reject-workflow-${w.id}`}
                       >
                         <XCircle className="h-3 w-3 mr-1" />
-                        Rad etish
+                        {t("reject")}
                       </Button>
                     </>
                   )}

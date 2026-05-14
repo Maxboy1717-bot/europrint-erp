@@ -114,7 +114,7 @@ export default function DesignOrderDetail() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Buyurtma topilmadi</p>
+              <p className="text-muted-foreground">{t("buyurtmaTopilmadi")}</p>
             </CardContent>
           </Card>
         </div>
@@ -127,7 +127,7 @@ export default function DesignOrderDetail() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Yuklanmoqda...</p>
+          <p className="mt-4 text-muted-foreground">{t("Yuklanmoqda...")}</p>
         </div>
       </div>
     );
@@ -176,11 +176,11 @@ export default function DesignOrderDetail() {
           <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Buyurtma Tafsilotlari</CardTitle>
+                <CardTitle>{t("buyurtmaTafsilotlari1")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-muted-foreground">Holat</Label>
+                  <Label className="text-muted-foreground">{t("status28")}</Label>
                   <div className="mt-1">
                     <Badge className={getStatusBadge(orderData.order.status)}>
                       {orderData.order.status}
@@ -189,56 +189,56 @@ export default function DesignOrderDetail() {
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Mahsulot</Label>
+                  <Label className="text-muted-foreground">{t("Mahsulot")}</Label>
                   <p className="font-medium">{orderData.order.productName}</p>
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Turi</Label>
+                  <Label className="text-muted-foreground">{t("type")}</Label>
                   <p className="capitalize">{orderData.order.productType}</p>
                 </div>
 
                 {orderData.order.brandName && (
                   <div>
-                    <Label className="text-muted-foreground">Brend</Label>
+                    <Label className="text-muted-foreground">{t("brend")}</Label>
                     <p>{orderData.order.brandName}</p>
                   </div>
                 )}
 
                 <div>
-                  <Label className="text-muted-foreground">Miqdor</Label>
+                  <Label className="text-muted-foreground">{t("quantity")}</Label>
                   <p>{orderData.order.quantity.toLocaleString()}</p>
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Ustuvorlik</Label>
+                  <Label className="text-muted-foreground">{t("ustuvorlik")}</Label>
                   <Badge variant="outline" className="capitalize">{orderData.order.priority}</Badge>
                 </div>
 
                 {orderData.order.deadline && (
                   <div>
-                    <Label className="text-muted-foreground">Muddat</Label>
+                    <Label className="text-muted-foreground">{t("muddat")}</Label>
                     <p>{orderData.order.deadline}</p>
                   </div>
                 )}
 
                 {orderData.designer && (
                   <div>
-                    <Label className="text-muted-foreground">Dizayner</Label>
+                    <Label className="text-muted-foreground">{t("designer")}</Label>
                     <p>{orderData.designer.fullName}</p>
                   </div>
                 )}
 
                 {orderData.order.description && (
                   <div>
-                    <Label className="text-muted-foreground">Tavsif</Label>
+                    <Label className="text-muted-foreground">{t("progress.description")}</Label>
                     <p className="text-sm">{orderData.order.description}</p>
                   </div>
                 )}
 
                 {orderData.order.requirements && (
                   <div>
-                    <Label className="text-muted-foreground">Maxsus Talablar</Label>
+                    <Label className="text-muted-foreground">{t("maxsusTalablar")}</Label>
                     <p className="text-sm">{orderData.order.requirements}</p>
                   </div>
                 )}
@@ -247,24 +247,24 @@ export default function DesignOrderDetail() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Mijoz Ma'lumotlari</CardTitle>
+                <CardTitle>{t("mijozMalumotlari")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <Label className="text-muted-foreground">Ism</Label>
+                  <Label className="text-muted-foreground">{t("ism1")}</Label>
                   <p>{orderData.order.clientName}</p>
                 </div>
 
                 {orderData.order.clientCompany && (
                   <div>
-                    <Label className="text-muted-foreground">Kompaniya</Label>
+                    <Label className="text-muted-foreground">{t("company")}</Label>
                     <p>{orderData.order.clientCompany}</p>
                   </div>
                 )}
 
                 {orderData.order.clientPhone && (
                   <div>
-                    <Label className="text-muted-foreground">Telefon</Label>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
                     <p>{orderData.order.clientPhone}</p>
                   </div>
                 )}
@@ -281,7 +281,7 @@ export default function DesignOrderDetail() {
                     <Label className="text-muted-foreground">{t('crmDeal')}</Label>
                     <Link href="/crm">
                       <Button variant="ghost" size="sm" className="p-0 h-auto mt-1" data-testid="link-crm-deal">
-                        CRM'ga o'tish
+                        {t("crmgaOtish")}
                         <ExternalLink className="ml-1 h-3 w-3" />
                       </Button>
                     </Link>
@@ -300,12 +300,12 @@ export default function DesignOrderDetail() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4" data-testid="chat-messages">
                   {messagesLoading ? (
                     <div className="text-center text-muted-foreground">
-                      <p>Xabarlar yuklanmoqda...</p>
+                      <p>{t("xabarlarYuklanmoqda")}</p>
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
-                      <p>Hozircha xabarlar yo'q</p>
-                      <p className="text-sm">Birinchi xabarni yuboring!</p>
+                      <p>{t("hozirchaXabarlarYoq")}</p>
+                      <p className="text-sm">{t("birinchiXabarniYuboring")}</p>
                     </div>
                   ) : (
                     (Array.isArray(messages) ? messages : []).map((msg) => (
@@ -343,7 +343,7 @@ export default function DesignOrderDetail() {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={handleKeyPress}
-                      placeholder="Xabar yozing..."
+                      placeholder={t("xabarYozing")}
                       className="resize-none"
                       rows={2}
                       data-testid="input-message"
@@ -368,7 +368,7 @@ export default function DesignOrderDetail() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Enter - yuborish, Shift+Enter - yangi qator
+                    {t("enterYuborishShiftEnterYangi1")}
                   </p>
                 </div>
               </CardContent>

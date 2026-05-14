@@ -32,7 +32,7 @@ interface DeptRow extends DbRow {
   children?: DeptRow[];
 }
 
-interface OrgTreeData {
+export interface OrgTreeData {
   tree: DeptRow[];
   stats: {
     totalDepartments: number;
@@ -41,7 +41,7 @@ interface OrgTreeData {
   };
 }
 
-interface FlatDept extends DbRow {
+export interface FlatDept extends DbRow {
   id: string;
   name: string;
   parentId: number | null;

@@ -52,9 +52,9 @@ export function SessionsTab({filteredSessions, sessionsLoading, filterType, setF
         <Card className="border-0 shadow-none bg-muted/40">
           <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Brain className="h-12 w-12 mb-3 opacity-30" />
-            <p>Hozircha test sessiyalari yo'q</p>
+            <p>{t("hozirchaTestSessiyalariYoq")}</p>
             <Button className="mt-4" size="sm" onClick={() => setShowCreateSessionDialog(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Yangi sessiya yaratish
+              <Plus className="w-4 h-4 mr-2" /> {t("yangiSessiyaYaratish")}
             </Button>
           </CardContent>
         </Card>
@@ -98,14 +98,14 @@ export function SessionsTab({filteredSessions, sessionsLoading, filterType, setF
                     )}
                     {session.status === "completed" ? (
                       <Button size="sm" variant="outline" onClick={() => setSelectedSession(session)} className="text-xs">
-                        Natija
+                        {t("natija")}
                       </Button>
                     ) : (
                       <Button size="sm" variant="outline" onClick={() => copyLink(session.session_token)} className="text-xs"
                         data-testid={`button-copy-link-${session.id}`}>
                         {copiedLink === session.session_token
-                          ? <><CheckCircle2 className="w-3.5 h-3.5 mr-1 text-[var(--ep-green)]" /> Nusxalandi</>
-                          : <><Copy className="w-3.5 h-3.5 mr-1" /> Link</>}
+                          ? <><CheckCircle2 className="w-3.5 h-3.5 mr-1 text-[var(--ep-green)]" /> {t("nusxalandi")}</>
+                          : <><Copy className="w-3.5 h-3.5 mr-1" /> {t("link")}</>}
                       </Button>
                     )}
                   </div>
@@ -141,7 +141,7 @@ export function ToolTestAdminTab({
           10 ta ko'rsatkich (A-J) uchun savollar boshqaruvi. Har bir savol -100 dan +100 gacha shkala.
         </p>
         <Button size="sm" onClick={onAddQuestion} data-testid="button-add-question">
-          <Plus className="w-4 h-4 mr-2" /> Savol qo'shish
+          <Plus className="w-4 h-4 mr-2" /> {t("savolQoshish")}
         </Button>
       </div>
 
@@ -186,7 +186,7 @@ export function ToolTestAdminTab({
                 ))}
                 {!(indicatorGroups[ind.key]?.length) && (
                   <div className="text-xs text-muted-foreground text-center py-2">
-                    Bu ko'rsatkich uchun savollar yo'q
+                    {t("buKorsatkichUchunSavollarYoq")}
                   </div>
                 )}
               </CardContent>
@@ -213,7 +213,7 @@ export function ResultsTab({ sessions, setSelectedSession }: ResultsTabProps) {
       <Card className="border-0 shadow-none bg-muted/40">
         <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <BarChart3 className="h-12 w-12 mb-3 opacity-30" />
-          <p>Hali tugallangan testlar yo'q</p>
+          <p>{t("haliTugallanganTestlarYoq")}</p>
         </CardContent>
       </Card>
     );
@@ -259,6 +259,7 @@ export function ResultsTab({ sessions, setSelectedSession }: ResultsTabProps) {
 // ─── MethodologyTab ───────────────────────────────────────────────────────────
 
 export function MethodologyTab() {
+  const { t } = useTranslation("common");
   return (
     <div className="grid md:grid-cols-2 gap-4">
       <Card className="border-0 bg-muted/40">
@@ -301,7 +302,7 @@ export function MethodologyTab() {
       <Card className="border-0 bg-muted/40">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <FlaskConical className="w-5 h-5 text-[var(--ep-blue)]" /> IQ Test darajalari
+            <FlaskConical className="w-5 h-5 text-[var(--ep-blue)]" /> {t("iqTestDarajalari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -316,14 +317,14 @@ export function MethodologyTab() {
       <Card className="border-0 bg-muted/40">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Target className="w-5 h-5 text-[var(--ep-primary)]" /> Test turlari maqsadi
+            <Target className="w-5 h-5 text-[var(--ep-primary)]" /> {t("testTurlariMaqsadi")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <div><span className="font-medium">TOOL TEST</span> — Shaxsiyat profili, A-J ko'rsatkichlari, sindrom tahlili</div>
-          <div><span className="font-medium">IQ Test</span> — Intellektual daraja, mantiqiy fikrlash qobiliyati</div>
-          <div><span className="font-medium">Liderlik testi</span> — Muammo kelib chiqish manbaini topish qobiliyati</div>
-          <div><span className="font-medium">Takrorlash testi</span> — Ko'rsatmani aniq bajarish qobiliyati (90-100% maqsad)</div>
+          <div><span className="font-medium">TOOL TEST</span> {t("shaxsiyatProfiliAJKorsatkichlari")}</div>
+          <div><span className="font-medium">{t("iqTest")}</span> {t("intellektualDarajaMantiqiyFikrlashQobiliyati")}</div>
+          <div><span className="font-medium">{t("liderlikTesti")}</span> {t("muammoKelibChiqishManbainiTopish")}</div>
+          <div><span className="font-medium">{t("takrorlashTesti")}</span> — Ko'rsatmani aniq bajarish qobiliyati (90-100% maqsad)</div>
         </CardContent>
       </Card>
     </div>

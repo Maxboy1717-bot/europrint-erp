@@ -8,7 +8,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, and, desc, eq, sql } from 'drizzle-orm';
 import { pgTable, uuid, text, integer, decimal, timestamp } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 import { Result, Err, Ok } from '@common/types/result.type';
@@ -41,7 +41,7 @@ const budgetLines = pgTable('budget_lines', {
 });
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

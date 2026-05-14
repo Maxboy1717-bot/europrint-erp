@@ -16,14 +16,15 @@ interface Props {
 }
 
 export function SettingsTabTax({ loading, form, onChange, onSave, isSaving }: Props) {
+  const { t } = useTranslation("common");
   const { t: tCommon } = useTranslation('common');
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Soliq va Moliya Sozlamalari</CardTitle>
+        <CardTitle>{t("soliqVaMoliyaSozlamalari")}</CardTitle>
         <CardDescription>
-          Davlat tomonidan belgilangan stavkalar o'zgarganda shu yerdan yangilang
+          {t("davlatTomonidanBelgilanganStavkalarOzgarganda")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

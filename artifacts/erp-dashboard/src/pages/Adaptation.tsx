@@ -16,6 +16,7 @@ import { NewEmployeesTab } from "./adaptation/NewEmployeesTab";
 import { FeedbackTab } from "./adaptation/FeedbackTab";
 import { WelcomeEventsTab } from "./adaptation/WelcomeEventsTab";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface NewEmployeeResponse {
   id: string;
@@ -72,6 +73,7 @@ interface PositionItem {
 }
 
 export default function Adaptation() {
+  const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState("programs");
 
   const { data: programs = [], isLoading: isLoadingPrograms, isError, refetch} = useQuery<AdaptationProgram[]>({
@@ -129,14 +131,14 @@ export default function Adaptation() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="ep-h1">Adaptatsiya</h1>
+          <h1 className="ep-h1">{t("adaptatsiya")}</h1>
           <p className="text-muted-foreground">
-            Yangi xodimlarni kompaniyaga moslashtirishni boshqarish
+            {t("yangiXodimlarniKompaniyagaMoslashtirishniBoshqarish")}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
@@ -144,19 +146,19 @@ export default function Adaptation() {
         <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="programs" data-testid="tab-programs">
             <FileText className="w-4 h-4 mr-2" />
-            Dasturlar
+            {t("dasturlar")}
           </TabsTrigger>
           <TabsTrigger value="employees" data-testid="tab-employees">
             <Users className="w-4 h-4 mr-2" />
-            Yangi xodimlar
+            {t("yangiXodimlar")}
           </TabsTrigger>
           <TabsTrigger value="feedback" data-testid="tab-feedback">
             <Calendar className="w-4 h-4 mr-2" />
-            Feedbacklar
+            {t("feedbacklar")}
           </TabsTrigger>
           <TabsTrigger value="events" data-testid="tab-events">
             <PartyPopper className="w-4 h-4 mr-2" />
-            Tadbirlar
+            {t("tadbirlar")}
           </TabsTrigger>
         </TabsList>
 

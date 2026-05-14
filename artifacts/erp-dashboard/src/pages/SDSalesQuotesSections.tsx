@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PageState } from "@/components/ui/page-state";
 import { FileText, Send, CheckCircle, Calculator, Package } from "lucide-react";
 import { fmt, QUOT_STATUS_LABELS, QUOT_STATUS_COLORS } from "@/lib/sd-helpers";
+import { useTranslation } from '@/lib/i18n';
 import {
   PAPER_TYPES,
   PRINT_COLORS,
@@ -46,6 +47,7 @@ export function QuotationList({
   isSendPending,
   isApprovePending,
 }: QuotationListProps) {
+  const { t } = useTranslation("common");
   return (
     <PageState
       isLoading={isLoading}
@@ -94,7 +96,7 @@ export function QuotationList({
                         disabled={isSendPending}
                         data-testid={`btn-send-${q.id}`}
                       >
-                        <Send className="w-3.5 h-3.5 mr-1" />Yuborish
+                        <Send className="w-3.5 h-3.5 mr-1" />{t("submitBtn")}
                       </Button>
                     )}
                     {(q.status === "sent" || q.status === "draft") && (
@@ -104,7 +106,7 @@ export function QuotationList({
                         disabled={isApprovePending}
                         data-testid={`btn-approve-${q.id}`}
                       >
-                        <CheckCircle className="w-3.5 h-3.5 mr-1" />Tasdiqlash
+                        <CheckCircle className="w-3.5 h-3.5 mr-1" />{t("verify")}
                       </Button>
                     )}
                   </div>
@@ -140,7 +142,7 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
   return (
     <div className="space-y-4">
       <h3 className="font-semibold text-sm flex items-center gap-2">
-        <Package className="w-4 h-4" />Mahsulot parametrlari
+        <Package className="w-4 h-4" />{t("mahsulotParametrlari")}
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -165,7 +167,7 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
       </div>
 
       <div>
-        <Label className="text-xs">Qog'oz turi</Label>
+        <Label className="text-xs">{t("qogozTuri")}</Label>
         <Select value={calcForm.paperType} onValueChange={v => onCalcFormChange(p => ({ ...p, paperType: v }))}>
           <SelectTrigger data-testid="select-paper-type" className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -177,7 +179,7 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
       </div>
 
       <div>
-        <Label className="text-xs">Bosma</Label>
+        <Label className="text-xs">{t("bosma1")}</Label>
         <Select value={String(calcForm.printColors)} onValueChange={v => onCalcFormChange(p => ({ ...p, printColors: +v }))}>
           <SelectTrigger data-testid="select-print" className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -196,7 +198,7 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
       </div>
 
       <div>
-        <Label className="text-xs">Yetkazish masofasi</Label>
+        <Label className="text-xs">{t("yetkazishMasofasi")}</Label>
         <Select value={String(calcForm.deliveryKm)} onValueChange={v => onCalcFormChange(p => ({ ...p, deliveryKm: +v }))}>
           <SelectTrigger data-testid="select-delivery" className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -208,7 +210,7 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
       </div>
 
       <div className="space-y-1">
-          <Label className="text-xs">Qo'shimcha ishlovlar</Label>
+          <Label className="text-xs">{t("qoshimchaIshlovlar")}</Label>
         {EXTRAS.map(opt => (
           <div key={opt.key} className="flex items-center gap-2">
             <Checkbox

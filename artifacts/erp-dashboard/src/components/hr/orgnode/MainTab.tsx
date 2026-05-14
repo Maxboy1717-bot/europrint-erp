@@ -7,12 +7,14 @@ import { Users, User, CheckCircle, UserX, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MainTabProps {
   node: NodeDetail;
 }
 
 export function MainTab({ node }: MainTabProps) {
+  const { t } = useTranslation("common");
   const isVacant = !node.headUserName;
 
   return (
@@ -20,7 +22,7 @@ export function MainTab({ node }: MainTabProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Building2 className="h-4 w-4" />Asosiy ma'lumot
+            <Building2 className="h-4 w-4" />{t("asosiyMalumot")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
@@ -44,7 +46,7 @@ export function MainTab({ node }: MainTabProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <User className="h-4 w-4" />Rahbar
+            <User className="h-4 w-4" />{t("rahbar")}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm">
@@ -55,7 +57,7 @@ export function MainTab({ node }: MainTabProps) {
                 <p className="text-muted-foreground">ID: {node.headUserEmployeeId}</p>
               )}
               <Badge className="bg-green-500/20 text-[var(--ep-green)] border-none">
-                <CheckCircle className="h-3 w-3 mr-1" />Tayinlangan
+                <CheckCircle className="h-3 w-3 mr-1" />{t("tayinlangan")}
               </Badge>
             </div>
           ) : (
@@ -64,7 +66,7 @@ export function MainTab({ node }: MainTabProps) {
                 <UserX className="h-4 w-4 text-[var(--ep-red)]" />
                 <span>Rahbar tayinlanmagan (vakant)</span>
               </div>
-              <Badge variant="destructive" className="w-fit">Vakant lavozim</Badge>
+              <Badge variant="destructive" className="w-fit">{t("vakantLavozim")}</Badge>
             </div>
           )}
         </CardContent>
@@ -85,7 +87,7 @@ export function MainTab({ node }: MainTabProps) {
       {node.description && (
         <Card className="md:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Tavsif</CardTitle>
+            <CardTitle className="text-sm">{t("progress.description")}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             {node.description}

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { Employee } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface EmployeeHeaderProps {
   employee: Employee;
@@ -15,6 +16,7 @@ interface EmployeeHeaderProps {
 }
 
 export function EmployeeHeader({ employee, getInitials, getStatusBadge }: EmployeeHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       <Card className="bg-card rounded-lg border border-border overflow-hidden shadow-none">
@@ -64,19 +66,19 @@ export function EmployeeHeader({ employee, getInitials, getStatusBadge }: Employ
         <CardContent className="p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <div className="text-sm text-muted-foreground">Tabel raqami</div>
+              <div className="text-sm text-muted-foreground">{t("tabelRaqami")}</div>
               <div className="font-medium" data-testid="text-employee-id">{employee.employeeId}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Telefon</div>
+              <div className="text-sm text-muted-foreground">{t("phone")}</div>
               <div className="font-medium" data-testid="text-phone">{employee.phone || "—"}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Tug'ilgan kun</div>
+              <div className="text-sm text-muted-foreground">{t("tugilganKun")}</div>
               <div className="font-medium" data-testid="text-birthdate">{employee.birthDate || "—"}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Manzil</div>
+              <div className="text-sm text-muted-foreground">{t("address")}</div>
               <div className="font-medium" data-testid="text-address">{employee.address || "—"}</div>
             </div>
           </div>

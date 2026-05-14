@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import { WarehouseData, ZoneData, BinData, BinFormData, Lang, Translations } from "./warehouse-types";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Create / Edit Dialog ─────────────────────────────────────────────────────
 
@@ -29,6 +30,7 @@ interface BinFormDialogProps {
 export function BinFormDialog({
   open, onOpenChange, editingBin, form, onSubmit, warehouses, zones, t,
 }: BinFormDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
@@ -153,7 +155,7 @@ export function BinDeleteDialog({ deleteId, onOpenChange, onConfirm, lang, t }: 
     <AlertDialog open={!!deleteId} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+          <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
           <AlertDialogDescription>
             {lang === "uz" ? "Bu amalni bekor qilib bo'lmaydi." : "Это действие нельзя отменить."}
           </AlertDialogDescription>

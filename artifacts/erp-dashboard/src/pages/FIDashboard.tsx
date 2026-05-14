@@ -61,9 +61,9 @@ export default function FIDashboard() {
   return (
     <div className="space-y-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Moliya Boshqaruvi</b></>}
-        title="Moliya Boshqaruvi"
-        subtitle="Daromad, xarajat, soliq va to'lov tahlili"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("moliyaBoshqaruvi")}</b></>}
+        title={t("moliyaBoshqaruvi")}
+        subtitle={t("daromadXarajatSoliqVaTolov")}
         data-testid="text-fi-dashboard-title"
       >
         <div className="flex gap-2">
@@ -121,7 +121,7 @@ export default function FIDashboard() {
                 {([1, 2, 3, 4]).map((i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}
               </div>
             ) : recentTransactions.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-8">Tranzaksiyalar yo'q</p>
+              <p className="text-center text-sm text-muted-foreground py-8">{t("tranzaksiyalarYoq")}</p>
             ) : (
               <div className="space-y-2">
                 {(Array.isArray(recentTransactions) ? recentTransactions : []).slice(0, 6).map((tx) => (
@@ -177,7 +177,7 @@ export default function FIDashboard() {
           <div className="bg-primary text-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4" />
-              <h3 className="font-bold">Tezkor Amallar</h3>
+              <h3 className="font-bold">{t("tezkorAmallar1")}</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {([

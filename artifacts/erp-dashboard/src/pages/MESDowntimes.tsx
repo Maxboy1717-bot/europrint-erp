@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Clock, CheckCircle, Calendar, Timer, Plus, StopCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Downtime {
   id: string;
@@ -50,6 +51,7 @@ const REASON_LABELS: Record<string, string> = {
 };
 
 export default function MESDowntimes() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [filter, setFilter] = useState<"all" | "planned" | "unplanned">("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -110,8 +112,8 @@ export default function MESDowntimes() {
     <div className="flex flex-col flex-1 overflow-auto p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">To'xtashlar</h1>
-          <p className="text-sm text-muted-foreground">Barcha to'xtash hodisalari va tahlili</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("toxtashlar")}</h1>
+          <p className="text-sm text-muted-foreground">{t("barchaToxtashHodisalariVaTahlili")}</p>
         </div>
         <div className="flex items-center gap-2">
           {activeDowntimes.length > 0 && (
@@ -122,7 +124,7 @@ export default function MESDowntimes() {
           )}
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            To'xtash qayd etish
+            {t("toxtashQaydEtish")}
           </Button>
         </div>
       </div>
@@ -150,7 +152,7 @@ export default function MESDowntimes() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Top sabablar</CardTitle>
+            <CardTitle className="text-sm">{t("topSabablar")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {(Array.isArray(topReasons) ? topReasons : []).map(([code, cnt]) => (
@@ -160,7 +162,7 @@ export default function MESDowntimes() {
               </div>
             ))}
             {topReasons.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">Ma'lumot yo'q</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("malumotYoq")}</p>
             )}
           </CardContent>
         </Card>
@@ -172,9 +174,9 @@ export default function MESDowntimes() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                <SelectItem value="planned">Rejalashtirilgan</SelectItem>
-                <SelectItem value="unplanned">Rejalanmagan</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
+                <SelectItem value="planned">{t("rejalashtirilgan")}</SelectItem>
+                <SelectItem value="unplanned">{t("rejalanmagan")}</SelectItem>
               </SelectContent>
             </Select>
             <span className="text-xs text-muted-foreground">{filtered.length} ta hodisa</span>
@@ -185,7 +187,7 @@ export default function MESDowntimes() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-[13px] text-muted-foreground">
               <CheckCircle className="w-10 h-10 mx-auto mb-2 text-emerald-400" />
-              <p>To'xtash topilmadi</p>
+              <p>{t("toxtashTopilmadi")}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -242,7 +244,7 @@ export default function MESDowntimes() {
                           disabled={endDowntimeMutation.isPending}
                         >
                           <StopCircle className="h-3 w-3 mr-1" />
-                          Tugatish
+                          {t("tugatish")}
                         </Button>
                       ) : (
                         <Badge variant="outline" className="text-[10px]">
@@ -262,19 +264,19 @@ export default function MESDowntimes() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">To'xtash hodisasini qayd etish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("toxtashHodisasiniQaydEtish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1">
-          <Label>Sessiya ID</Label>
+          <Label>{t("sessiyaId")}</Label>
               <Input
                 value={form.sessionId}
                 onChange={e => setForm(p => ({ ...p, sessionId: e.target.value }))}
-                placeholder="Sessiya raqami"
+                placeholder={t("sessiyaRaqami")}
               />
             </div>
             <div className="space-y-1">
-          <Label>Sabab</Label>
+          <Label>{t("sabab")}</Label>
               <Select value={form.reasonCode} onValueChange={v => setForm(p => ({ ...p, reasonCode: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -285,11 +287,11 @@ export default function MESDowntimes() {
               </Select>
             </div>
             <div className="space-y-1">
-          <Label>Izoh</Label>
+          <Label>{t("Izoh")}</Label>
               <Input
                 value={form.notes}
                 onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                placeholder="Qo'shimcha izoh..."
+                placeholder={t("qoshimchaIzoh")}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -300,16 +302,16 @@ export default function MESDowntimes() {
                 onChange={e => setForm(p => ({ ...p, isPlanned: e.target.checked }))}
                 className="h-4 w-4"
               />
-              <Label htmlFor="isPlanned">Rejalashtirilgan to'xtash</Label>
+              <Label htmlFor="isPlanned">{t("rejalashtirilganToxtash")}</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("cancel")}</Button>
             <Button
               onClick={() => startDowntimeMutation.mutate(form)}
               disabled={startDowntimeMutation.isPending || !form.sessionId}
             >
-              Qayd etish
+              {t("qaydEtish")}
             </Button>
           </DialogFooter>
         </DialogContent>

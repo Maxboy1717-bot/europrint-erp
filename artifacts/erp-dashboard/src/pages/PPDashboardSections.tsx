@@ -80,14 +80,14 @@ export function OrdersTable({ orders, ordersLoading }: OrdersTableProps) {
     <div className="bg-card rounded-xl p-6">
       <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-4">
         <ClipboardList className="h-4 w-4 text-primary" />
-        So'nggi Buyurtmalar
+        {t("songgiBuyurtmalar1")}
       </h3>
       <div className="overflow-hidden rounded-lg border border-border">
         <table className="w-full border-collapse">
           <thead>
             <tr>
               <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-left">
-                Order
+                {t("order")}
               </th>
               <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">
                 Status
@@ -177,10 +177,10 @@ export function MachineTasksTable({ machineTasks, tasksLoading }: MachineTasksTa
           <thead>
             <tr>
               <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-left">
-                Task
+                {t("task")}
               </th>
               <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">
-                Progress
+                {t("progress6")}
               </th>
             </tr>
           </thead>

@@ -13,6 +13,7 @@ import { Building2, AlertTriangle, TrendingUp, ArrowLeftRight, Camera } from 'lu
 import type { RoomRow, HistoryRow } from './InspectionPageTypes';
 import { ROOMS, apiFetch } from './InspectionPageTypes';
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function RoomDetailModal({
   open, roomCode, allRooms, onClose,
@@ -22,6 +23,7 @@ export function RoomDetailModal({
   allRooms: RoomRow[];
   onClose:  () => void;
 }) {
+  const { t } = useTranslation("common");
   const [history,        setHistory]        = useState<HistoryRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -57,14 +59,14 @@ export function RoomDetailModal({
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-[var(--ep-blue)]" />
             {roomMeta?.name ?? roomCode} — Batafsil
-            {hasAnomaly && <EPStatusPill tone="danger" className="ml-2">Anomaliya</EPStatusPill>}
+            {hasAnomaly && <EPStatusPill tone="danger" className="ml-2">{t("anomaliya")}</EPStatusPill>}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-2">
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <ArrowLeftRight className="w-4 h-4" />Ideal vs Joriy holat
+              <ArrowLeftRight className="w-4 h-4" />{t("idealVsJoriyHolat")}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {([
@@ -80,7 +82,7 @@ export function RoomDetailModal({
                                     justify-center bg-gray-50">
                       <div className="text-center">
                         <Camera className="w-8 h-8 text-gray-300 mx-auto mb-1" />
-                        <p className="text-xs text-gray-400">Rasm yo'q</p>
+                        <p className="text-xs text-gray-400">{t("rasmYoq")}</p>
                       </div>
                     </div>
                   )}
@@ -111,7 +113,7 @@ export function RoomDetailModal({
           {(latest?.anomalies ?? []).length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-1">
               <p className="text-sm font-semibold text-[var(--ep-red)] flex items-center gap-1">
-                <AlertTriangle className="w-4 h-4" />Aniqlangan muammolar
+                <AlertTriangle className="w-4 h-4" />{t("aniqlanganMuammolar")}
               </p>
               {(Array.isArray(latest?.anomalies) ? latest?.anomalies : []).map((a, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-[var(--ep-red)]">
@@ -136,11 +138,11 @@ export function RoomDetailModal({
             </h3>
             {loadingHistory ? (
               <div className="h-40 flex items-center justify-center text-gray-400 text-sm">
-                Yuklanmoqda...
+                {t("Yuklanmoqda...")}
               </div>
             ) : chartData.length === 0 ? (
               <div className="h-40 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400 text-sm">
-                Tarixiy ma'lumot yo'q
+                {t("tarixiyMalumotYoq")}
               </div>
             ) : (
               <div className="h-44">

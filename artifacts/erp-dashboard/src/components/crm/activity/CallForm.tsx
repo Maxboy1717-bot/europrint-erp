@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ACTIVITY_TYPE_OPTIONS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CallFormProps {
   entityType: string;
@@ -24,6 +25,7 @@ interface CallFormProps {
 }
 
 export function CallForm({ entityType, entityId, onActivityCreated }: CallFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activityForm, setActivityForm] = useState({
     subject: "",
@@ -58,7 +60,7 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
   return (
     <div className="space-y-3 p-4">
       <Input
-        placeholder="Nima qilish kerak?"
+        placeholder={t("nimaQilishKerak")}
         value={activityForm.subject}
         onChange={(e) => setActivityForm((prev) => ({ ...prev, subject: e.target.value }))}
         className="border-blue-500/30 focus:border-blue-500"
@@ -86,7 +88,7 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
           onClick={() => setActivityForm((prev) => ({ ...prev, deadline: new Date() }))}
           data-testid="button-today"
         >
-          Bugun
+          {t("today")}
         </Button>
         <Select
           value={activityForm.type}
@@ -108,7 +110,7 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
         </Select>
       </div>
       <Textarea
-        placeholder="Qo'shimcha ma'lumot..."
+        placeholder={t("qoshimchaMalumot")}
         value={activityForm.description}
         onChange={(e) => setActivityForm((prev) => ({ ...prev, description: e.target.value }))}
         className="min-h-[60px] resize-none"
@@ -121,7 +123,7 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
         data-testid="button-save-activity"
       >
         <Plus className="h-4 w-4 mr-2" />
-        Saqlash
+        {t("Saqlash")}
       </Button>
     </div>
   );

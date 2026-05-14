@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from '@/lib/i18n';
 
 interface PasswordForm {
   password: string;
@@ -30,6 +31,7 @@ export function PasswordDialog({
   onSave,
   isPending
 }: PasswordDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof PasswordForm, value: string) => {
     onChange({ ...form, [field]: value });
   };
@@ -38,26 +40,26 @@ export function PasswordDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Parol o'rnatish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("parolOrnatish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1">
-          <Label htmlFor="new-password">Yangi parol</Label>
+          <Label htmlFor="new-password">{t("yangiParol")}</Label>
             <Input
               id="new-password"
               type="password"
-              placeholder="Kamida 6 ta belgi"
+              placeholder={t("kamida6TaBelgi")}
               value={form.password}
               onChange={(e) => updateField("password", e.target.value)}
               data-testid="input-new-password"
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="confirm-password">Parolni tasdiqlang</Label>
+          <Label htmlFor="confirm-password">{t("parolniTasdiqlang")}</Label>
             <Input
               id="confirm-password"
               type="password"
-              placeholder="Parolni qayta kiriting"
+              placeholder={t("parolniQaytaKiriting")}
               value={form.confirmPassword}
               onChange={(e) => updateField("confirmPassword", e.target.value)}
               data-testid="input-confirm-password"
@@ -65,7 +67,7 @@ export function PasswordDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             onClick={onSave}
             disabled={isPending}

@@ -22,6 +22,7 @@ import { AssignAIExamDialog } from "@/components/AssignAIExamDialog";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface AIExamAttempt {
   id: string;
@@ -66,6 +67,7 @@ interface AIExamDetail {
 }
 
 export default function AIExams() {
+  const { t } = useTranslation("common");
   const [selectedAttempt, setSelectedAttempt] = useState<string | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -101,11 +103,11 @@ export default function AIExams() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "analyzed":
-        return <Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" /> Tahlil qilingan</Badge>;
+        return <Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" /> {t("tahlilQilingan")}</Badge>;
       case "completed":
-        return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" /> Tugallangan</Badge>;
+        return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" /> {t("completed")}</Badge>;
       case "in_progress":
-        return <Badge variant="outline" className="gap-1"><Clock className="h-3 w-3" /> Jarayonda</Badge>;
+        return <Badge variant="outline" className="gap-1"><Clock className="h-3 w-3" /> {t("inProgress")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -136,9 +138,9 @@ export default function AIExams() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">AI Imtixonlar</b></>}
-        title="AI Imtixonlar"
-        subtitle="Barcha AI imtixon natijalari va tahlillar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("aiImtixonlar")}</b></>}
+        title={t("aiImtixonlar")}
+        subtitle={t("barchaAiImtixonNatijalariVa")}
       />
         </div>
         <Button 
@@ -147,7 +149,7 @@ export default function AIExams() {
           className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
         >
           <Plus className="w-4 h-4 mr-2" />
-          AI Imtixon Tayinlash
+          {t("aiImtixonTayinlash")}
         </Button>
       </div>
 
@@ -156,7 +158,7 @@ export default function AIExams() {
           <Card className="bg-card border-border shadow-none">
             <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <XCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <p>Hozircha AI imtixon topshirilmagan</p>
+              <p>{t("hozirchaAiImtixonTopshirilmagan")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -196,7 +198,7 @@ export default function AIExams() {
                     className="bg-muted/60 text-foreground hover:bg-muted border-none rounded-lg px-4 py-2 font-medium"
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Batafsil ko'rish
+                    {t("batafsilKorish")}
                   </Button>
                   <Button
                     variant="destructive"
@@ -207,7 +209,7 @@ export default function AIExams() {
                     className="bg-red-100 text-red-800 hover:bg-red-200 border-none shadow-none rounded-lg px-4 py-2 font-semibold"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    O'chirish
+                    {t("delete")}
                   </Button>
                 </div>
               </CardContent>
@@ -219,7 +221,7 @@ export default function AIExams() {
       <Dialog open={!!selectedAttempt} onOpenChange={() => setSelectedAttempt(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">AI Imtixon Natijalari</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("aiImtixonNatijalari")}</DialogTitle>
             <DialogDescription>
               {attemptDetail && (
                 <div className="space-y-1 text-sm">
@@ -238,7 +240,7 @@ export default function AIExams() {
                   {attemptDetail.attempt.score !== null && (
                     <Card className="flex-1">
                       <CardHeader className="pb-3">
-                        <CardDescription>Umumiy ball</CardDescription>
+                        <CardDescription>{t("umumiyBall")}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className={`text-3xl font-bold ${getScoreColor(attemptDetail.attempt.score)}`}>
@@ -249,7 +251,7 @@ export default function AIExams() {
                   )}
                   <Card className="flex-1">
                     <CardHeader className="pb-3">
-                      <CardDescription>Holat</CardDescription>
+                      <CardDescription>{t("status28")}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {getStatusBadge(attemptDetail.attempt.status)}
@@ -261,7 +263,7 @@ export default function AIExams() {
                 {attemptDetail.attempt.evaluation && (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Kategoriyalar bo'yicha baholash</CardTitle>
+                      <CardTitle className="text-base">{t("kategoriyalarBoyichaBaholash")}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
@@ -300,7 +302,7 @@ export default function AIExams() {
                 {/* Questions and Answers */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Savollar va Javoblar</CardTitle>
+                    <CardTitle className="text-base">{t("savollarVaJavoblar")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -314,7 +316,7 @@ export default function AIExams() {
                               <div className="font-medium">Savol {index + 1}: {q.question}</div>
                               {attemptDetail.attempt.answers && attemptDetail.attempt.answers[index] && (
                                 <div className="mt-2 p-3 bg-muted/50 rounded text-sm">
-                                  <span className="font-medium">Javob: </span>
+                                  <span className="font-medium">{t("javob1")}</span>
                                   {attemptDetail.attempt.answers[index]}
                                 </div>
                               )}
@@ -340,8 +342,8 @@ export default function AIExams() {
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-        title="AI imtixonni o'chirish"
-        description="Ushbu AI imtixon urinishini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("aiImtixonniOchirish")}
+        description={t("ushbuAiImtixonUrinishiniOchirishni")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

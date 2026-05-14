@@ -28,8 +28,10 @@ import { useOrgNodeData } from "@/components/hr/orgnode/useOrgNodeData";
 import { NODE_TYPE_LABELS, LEVEL_COLORS } from "@/components/hr/orgnode/types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function OrgNodeDetail() {
+  const { t } = useTranslation("common");
   const { nodeId, node, isLoading, isError, deleteMutation, onRefresh, navigate } = useOrgNodeData();
   const [tab, setTab] = useState("main");
   const [editOpen, setEditOpen] = useState(false);
@@ -48,9 +50,9 @@ export default function OrgNodeDetail() {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Node topilmadi</p>
+        <p className="text-muted-foreground">{t("nodeTopilmadi")}</p>
         <Button variant="outline" onClick={() => navigate("/org-structure/hierarchy")}>
-          <ArrowLeft className="h-4 w-4 mr-1" />Ortga
+          <ArrowLeft className="h-4 w-4 mr-1" />{t("ortga")}
         </Button>
       </div>
     );
@@ -63,7 +65,7 @@ export default function OrgNodeDetail() {
     <div className="h-full flex flex-col">
       <div className="px-6 py-3 border-b flex items-center gap-1 text-sm text-muted-foreground shrink-0 flex-wrap">
         <button className="hover:text-foreground transition-colors flex items-center gap-1" onClick={() => navigate("/org-structure/hierarchy")}>
-          <Network className="h-3.5 w-3.5" />Tashkiliy Tuzilma
+          <Network className="h-3.5 w-3.5" />{t("tashkiliyTuzilma1")}
         </button>
         {node.parentId && (
           <>
@@ -83,18 +85,18 @@ export default function OrgNodeDetail() {
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Badge style={{ background: "rgba(255,255,255,0.25)", color: "white", border: "none" }}>{NODE_TYPE_LABELS[node.nodeType] || node.nodeType}</Badge>
               <span className="text-white/60 text-xs">#{node.id} · Daraja {node.hierarchyLevel}</span>
-              {!node.isActive && <EPStatusPill tone="danger" className="text-xs">Nofaol</EPStatusPill>}
-              {isVacant && <Badge className="text-xs bg-[var(--ep-red)]/30 text-white border-none flex items-center gap-1"><UserX className="h-3 w-3" />Vakant</Badge>}
+              {!node.isActive && <EPStatusPill tone="danger" className="text-xs">{t("inactive")}</EPStatusPill>}
+              {isVacant && <Badge className="text-xs bg-[var(--ep-red)]/30 text-white border-none flex items-center gap-1"><UserX className="h-3 w-3" />{t("vakant")}</Badge>}
             </div>
             <h1 className="text-2xl font-bold">{node.name}</h1>
             {node.nameRu && <p className="text-white/70 text-sm mt-0.5">{node.nameRu}</p>}
             {node.tskp && <p className="text-white/80 text-sm mt-2 max-w-lg italic">"{node.tskp}"</p>}
           </div>
           <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)} data-testid="button-edit-node"><Pencil className="h-3.5 w-3.5 mr-1" />Tahrirlash</Button>
-            <Button size="sm" className="bg-primary text-primary-foreground" style={{}} className="hover:opacity-90" onClick={() => setMoveOpen(true)} data-testid="button-move-node"><MoveRight className="h-3.5 w-3.5 mr-1" />Ko'chirish</Button>
-            <Button size="sm" variant="destructive" onClick={() => setDeleteConfirmOpen(true)} disabled={deleteMutation.isPending} data-testid="button-delete-node"><Trash2 className="h-3.5 w-3.5 mr-1" />O'chirish</Button>
-            <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20" onClick={() => navigate("/org-structure/hierarchy")}><ArrowLeft className="h-3.5 w-3.5 mr-1" />Ortga</Button>
+            <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)} data-testid="button-edit-node"><Pencil className="h-3.5 w-3.5 mr-1" />{t("edit")}</Button>
+            <Button size="sm" className="bg-primary text-primary-foreground" style={{}} className="hover:opacity-90" onClick={() => setMoveOpen(true)} data-testid="button-move-node"><MoveRight className="h-3.5 w-3.5 mr-1" />{t("move")}</Button>
+            <Button size="sm" variant="destructive" onClick={() => setDeleteConfirmOpen(true)} disabled={deleteMutation.isPending} data-testid="button-delete-node"><Trash2 className="h-3.5 w-3.5 mr-1" />{t("delete")}</Button>
+            <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20" onClick={() => navigate("/org-structure/hierarchy")}><ArrowLeft className="h-3.5 w-3.5 mr-1" />{t("ortga")}</Button>
           </div>
         </div>
         <div className="flex gap-5 mt-4 flex-wrap">
@@ -114,14 +116,14 @@ export default function OrgNodeDetail() {
       <div className="flex-1 overflow-auto px-6 py-4">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4 flex-wrap h-auto gap-1">
-            <TabsTrigger value="main">Asosiy</TabsTrigger>
+            <TabsTrigger value="main">{t("primary")}</TabsTrigger>
             <TabsTrigger value="employees">Xodimlar ({node.employeeCount})</TabsTrigger>
             <TabsTrigger value="children">Farzandlar ({node.childCount})</TabsTrigger>
-            <TabsTrigger value="vacant">Vakant</TabsTrigger>
-            <TabsTrigger value="folder" className="flex items-center gap-1"><FolderOpen className="h-3.5 w-3.5" />Papka</TabsTrigger>
-            <TabsTrigger value="stats">Statistika</TabsTrigger>
-            <TabsTrigger value="portret" className="flex items-center gap-1"><ClipboardList className="h-3.5 w-3.5" />Portret</TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-1"><History className="h-3.5 w-3.5" />Tarix</TabsTrigger>
+            <TabsTrigger value="vacant">{t("vakant")}</TabsTrigger>
+            <TabsTrigger value="folder" className="flex items-center gap-1"><FolderOpen className="h-3.5 w-3.5" />{t("papka3")}</TabsTrigger>
+            <TabsTrigger value="stats">{t("statistika")}</TabsTrigger>
+            <TabsTrigger value="portret" className="flex items-center gap-1"><ClipboardList className="h-3.5 w-3.5" />{t("portret")}</TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-1"><History className="h-3.5 w-3.5" />{t("tarix")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="main"><MainTab node={node} /></TabsContent>
@@ -140,7 +142,7 @@ export default function OrgNodeDetail() {
       <ConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
-        title="Bo'limni o'chirish"
+        title={t("bolimniOchirish")}
         description={`"${node.name}" bo'limini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.`}
         confirmText="O'chirish"
         variant="destructive"

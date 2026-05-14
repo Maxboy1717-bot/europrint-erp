@@ -10,6 +10,7 @@ import {
   Users, Award, AlertTriangle, Clock, ShieldAlert, Flame,
   Lock, FileText, Trophy, MessageSquare, Wrench, Gauge, ChevronRight,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 import type { DailyStats, GamLeaderboard } from "./HRDashboardTypes";
 
 // ---------------------------------------------------------------------------
@@ -47,13 +48,14 @@ export function KpiGrid({
   atRiskCount,
   rewardsSum,
 }: KpiGridProps) {
+  const { t } = useTranslation("hr");
   const kpiItems: KpiItem[] = [
-    { label: "Xodimlar",       value: employeeCount,                    icon: Users,        accent: "text-primary",    testId: "text-total-employees" },
-    { label: "Ogohlantirishlar", value: warningsCount,                  icon: AlertTriangle, accent: "text-[var(--ep-yellow)]",  testId: "text-warnings" },
-    { label: "Kech kelish",    value: lateArrivals,                     icon: Clock,        accent: "text-[var(--ep-primary)]", testId: "text-late" },
-    { label: "Kritik alertlar", value: criticalAlerts,                  icon: ShieldAlert,  accent: "text-[var(--ep-red)]",    testId: "text-critical-alerts" },
-    { label: "Xavf ostida",    value: atRiskCount,                      icon: Flame,        accent: "text-[var(--ep-red)]",    testId: "text-at-risk" },
-    { label: "Mukofot",        value: rewardsSum.toLocaleString(),       icon: Award,        accent: "text-[var(--ep-green)]",  testId: "text-rewards" },
+    { label: t("kpi.employees"),        value: employeeCount,               icon: Users,         accent: "text-primary",             testId: "text-total-employees" },
+    { label: t("kpi.warnings"),         value: warningsCount,               icon: AlertTriangle, accent: "text-[var(--ep-yellow)]",  testId: "text-warnings" },
+    { label: t("kpi.lateArrivals"),     value: lateArrivals,                icon: Clock,         accent: "text-[var(--ep-primary)]", testId: "text-late" },
+    { label: t("kpi.criticalAlerts"),   value: criticalAlerts,              icon: ShieldAlert,   accent: "text-[var(--ep-red)]",     testId: "text-critical-alerts" },
+    { label: t("kpi.atRisk"),           value: atRiskCount,                 icon: Flame,         accent: "text-[var(--ep-red)]",     testId: "text-at-risk" },
+    { label: t("kpi.rewards"),          value: rewardsSum.toLocaleString(), icon: Award,         accent: "text-[var(--ep-green)]",   testId: "text-rewards" },
   ];
 
   return (
@@ -93,45 +95,46 @@ export function HrV2QuickStats({
   topGamer,
   activeSurveys,
 }: HrV2QuickStatsProps) {
+  const { t } = useTranslation("hr");
   const cards = [
     {
-      label: "Bloklangan xodimlar",
+      label: t("hrV2.blockedEmployees"),
       value: blockedCount,
       icon: Lock,
       accent: blockedCount > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]",
       href: "/discipline",
-      desc: blockedCount > 0 ? "Faol bloklash" : "Bloklash yo'q",
+      desc: blockedCount > 0 ? t("hrV2.activeBlocking") : t("hrV2.noBlocking"),
     },
     {
-      label: "Faol PIP Rejalar",
+      label: t("hrV2.activePipPlans"),
       value: activePipCount,
       icon: FileText,
       accent: activePipCount > 0 ? "text-[var(--ep-yellow)]" : "text-slate-400",
       href: "/hr/pip",
-      desc: "Rivojlanish rejasi",
+      desc: t("hrV2.developmentPlan"),
     },
     {
-      label: "Reyting lideri",
+      label: t("hrV2.ratingLeader"),
       value: topGamer ? `${topGamer.first_name} ${topGamer.last_name}` : "—",
       icon: Trophy,
       accent: "text-[var(--ep-yellow)]",
       href: "/hr/gamification",
-      desc: topGamer ? `${topGamer.monthly_points || 0} ball (oylik)` : "Hali ma'lumot yo'q",
+      desc: topGamer ? t("hrV2.pointsMonthly", { points: String(topGamer.monthly_points || 0) }) : t("hrV2.noDataYet"),
     },
     {
-      label: "eNPS So'rovlar",
+      label: t("hrV2.enpsSurveys"),
       value: Array.isArray(activeSurveys) ? activeSurveys.length : 0,
       icon: MessageSquare,
       accent: "text-[var(--ep-blue)]",
       href: "/hr/enps",
-      desc: "Faol so'rovlar",
+      desc: t("hrV2.activeSurveys"),
     },
   ];
 
   return (
     <div>
       <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-        HR V2 Tizim
+        {t("hrV2.systemTitle")}
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {cards.map((card) => (
@@ -146,7 +149,7 @@ export function HrV2QuickStats({
               <div className="text-xl font-bold text-foreground truncate">{card.value}</div>
               <div className="text-xs text-muted-foreground mt-1">{card.desc}</div>
               <div className="flex items-center gap-1 mt-2 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                Batafsil <ChevronRight className="w-3 h-3" />
+                {t("hrV2.more")} <ChevronRight className="w-3 h-3" />
               </div>
             </div>
           </Link>
@@ -171,13 +174,14 @@ export function OperatorReportsWidget({
   operatorTotal,
   dailyStats,
 }: OperatorReportsWidgetProps) {
+  const { t } = useTranslation("hr");
   if (operatorTotal === 0) return null;
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4" data-testid="widget-operator-reports">
       <div className="flex items-center gap-2 mb-3">
         <Wrench className="h-4 w-4 text-[var(--ep-blue)]" />
-        <h2 className="text-sm font-semibold text-blue-800">Bugun operator hisobotlari</h2>
+        <h2 className="text-sm font-semibold text-blue-800">{t("operator.todayReports")}</h2>
         <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded-full">
           {operatorReportsToday}/{operatorTotal}
         </span>
@@ -185,20 +189,20 @@ export function OperatorReportsWidget({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="bg-white/70 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-[var(--ep-green)]">{operatorReportsToday}</p>
-          <p className="text-xs text-muted-foreground">Topshirdi</p>
+          <p className="text-xs text-muted-foreground">{t("operator.submitted")}</p>
         </div>
         <div className="bg-white/70 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-[var(--ep-red)]">
             {Math.max(0, operatorTotal - operatorReportsToday)}
           </p>
-          <p className="text-xs text-muted-foreground">Topshirmadi</p>
+          <p className="text-xs text-muted-foreground">{t("operator.notSubmitted")}</p>
         </div>
         <div className="bg-white/70 rounded-lg p-3 text-center">
           <Gauge className="h-5 w-5 mx-auto text-[var(--ep-blue)] mb-0.5" />
           <p className="text-xs font-semibold text-[var(--ep-blue)]">
             {dailyStats?.stats?.avg_operator_oee ? `${dailyStats.stats.avg_operator_oee}%` : "—"}
           </p>
-          <p className="text-xs text-muted-foreground">O'rtacha OEE</p>
+          <p className="text-xs text-muted-foreground">{t("operator.avgOee")}</p>
         </div>
       </div>
     </div>

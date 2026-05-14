@@ -8,6 +8,7 @@ import { Plus, UserX, Settings2, Users, ChevronUp, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { OrgNode, CARD_W, CARD_H, LEVEL_LABELS, HRC_INDICATORS } from "./types";
 import { getCardColor, getInitials } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function TreeNodeCard({
   node,
@@ -22,6 +23,7 @@ export function TreeNodeCard({
   isDragging?: boolean;
   isDragTarget?: boolean;
 }) {
+  const { t } = useTranslation("common");
   const [hrcExpanded, setHrcExpanded] = useState(false);
   const isVacant = !node.headUserName;
   const level = node.hierarchyLevel ?? 0;
@@ -55,7 +57,7 @@ export function TreeNodeCard({
           className="absolute top-1.5 right-1.5 z-20 rounded-full bg-white/20 hover:bg-white/40 transition-colors flex items-center justify-center"
           style={{ width: 20, height: 20 }}
           onClick={(e) => { e.stopPropagation(); onAdd(String(node.id)); }}
-          title="Pastki bo'lim qo'shish"
+          title={t("pastkiBolimQoshish")}
           data-testid={`button-add-child-${node.id}`}
         >
           <Plus className="h-3 w-3 text-white" />
@@ -65,14 +67,14 @@ export function TreeNodeCard({
           <div className="absolute top-1.5 left-1.5">
             <Badge variant="destructive" className="text-[9px] px-1 py-0 flex items-center gap-0.5">
               <UserX className="h-2 w-2" />
-              Vakant
+              {t("vakant")}
             </Badge>
           </div>
         )}
 
         {node.isMachineOperator && !isVacant && (
           <div className="absolute top-1.5 left-1.5">
-            <span title="Dastgoh operatori" className="text-[10px] bg-white/25 rounded px-1 py-0.5 flex items-center gap-0.5">
+            <span title={t("dastgohOperatori")} className="text-[10px] bg-white/25 rounded px-1 py-0.5 flex items-center gap-0.5">
               <Settings2 className="h-2.5 w-2.5" />
             </span>
           </div>
@@ -126,7 +128,7 @@ export function TreeNodeCard({
               {!isVacant && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setHrcExpanded(v => !v); }}
-                  title="HR Capital portret"
+                  title={t("hrCapitalPortret1")}
                   className="rounded flex items-center justify-center bg-white/15 hover:bg-white/35 transition-colors"
                   style={{ width: 16, height: 16 }}
                   data-testid={`button-hrc-toggle-${node.id}`}
@@ -150,11 +152,11 @@ export function TreeNodeCard({
         >
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-bold uppercase tracking-wider text-primary flex items-center gap-1">
-              <Brain className="h-2.5 w-2.5" />HR Capital Portret
+              <Brain className="h-2.5 w-2.5" />{t("hrCapitalPortret")}
             </span>
             {node.portretFilled
-              ? <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 rounded">✓ To'ldirilgan</span>
-              : <span className="text-[9px] bg-yellow-500/20 text-yellow-400 px-1.5 rounded">Portret yo'q</span>
+              ? <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 rounded">{t("toldirilgan")}</span>
+              : <span className="text-[9px] bg-yellow-500/20 text-yellow-400 px-1.5 rounded">{t("portretYoq")}</span>
             }
           </div>
 
@@ -201,7 +203,7 @@ export function TreeNodeCard({
               )}
             </>
           ) : (
-            <p className="text-[9px] text-white/40 text-center py-1">Test natijasi mavjud emas</p>
+            <p className="text-[9px] text-white/40 text-center py-1">{t("testNatijasiMavjudEmas")}</p>
           )}
 
           {node.headUserEmployeeId && (
@@ -210,7 +212,7 @@ export function TreeNodeCard({
               className="text-[9px] text-primary/70 hover:text-primary underline text-center block"
               onClick={(e) => e.stopPropagation()}
             >
-              To'liq portretni ko'rish →
+              {t("toliqPortretniKorish")}
             </a>
           )}
         </div>

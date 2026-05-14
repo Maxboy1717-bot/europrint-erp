@@ -10,6 +10,7 @@ import { BonusList, FineList, OvertimeTable, CashAdvanceList } from "./FinanceTa
 import { BonusDialog, FineDialog } from "./FinanceTabDialogsBF";
 import { OvertimeDialog, CashAdvanceDialog } from "./FinanceTabDialogsOA";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 export function FinanceTab({
   tCommon,
@@ -22,6 +23,7 @@ export function FinanceTab({
   overtimeDialogOpen, setOvertimeDialogOpen, overtimeForm, setOvertimeForm, saveOvertimeMutation, loadingOvertime, overtime,
   cashAdvanceDialogOpen, setCashAdvanceDialogOpen, cashAdvanceForm, setCashAdvanceForm, saveCashAdvanceMutation, loadingCashAdvances, cashAdvances,
 }: FinanceTabProps) {
+  const { t } = useTranslation("common");
   const now = new Date();
 
   const { data: salaryBenchmark, isLoading: loadingBenchmark } = useQuery<SalaryBenchmark>({
@@ -77,9 +79,9 @@ export function FinanceTab({
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5 text-[var(--ep-green)]" /> Bonuslar
+              <Gift className="h-5 w-5 text-[var(--ep-green)]" /> {t("bonuslar")}
             </CardTitle>
-            <CardDescription>Xodimga berilgan bonuslar</CardDescription>
+            <CardDescription>{t("xodimgaBerilganBonuslar")}</CardDescription>
           </div>
           <BonusDialog tCommon={tCommon} open={bonusDialogOpen} onOpenChange={setBonusDialogOpen}
             form={bonusForm} setForm={setBonusForm} mutation={saveBonusMutation} />
@@ -94,9 +96,9 @@ export function FinanceTab({
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-[var(--ep-red)]" /> Jarimalar
+              <AlertTriangle className="h-5 w-5 text-[var(--ep-red)]" /> {t("jarimalar")}
             </CardTitle>
-            <CardDescription>Xodimga berilgan jarimalar</CardDescription>
+            <CardDescription>{t("xodimgaBerilganJarimalar")}</CardDescription>
           </div>
           <FineDialog tCommon={tCommon} open={fineDialogOpen} onOpenChange={setFineDialogOpen}
             form={fineForm} setForm={setFineForm} mutation={saveFineMutation} />
@@ -111,9 +113,9 @@ export function FinanceTab({
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-[var(--ep-primary)]" /> Overtaym
+              <Clock className="h-5 w-5 text-[var(--ep-primary)]" /> {t("overtaym")}
             </CardTitle>
-            <CardDescription>Qo'shimcha ish vaqti to'lovlari</CardDescription>
+            <CardDescription>{t("qoshimchaIshVaqtiTolovlari")}</CardDescription>
           </div>
           <OvertimeDialog tCommon={tCommon} open={overtimeDialogOpen} onOpenChange={setOvertimeDialogOpen}
             form={overtimeForm} setForm={setOvertimeForm} mutation={saveOvertimeMutation} />
@@ -128,9 +130,9 @@ export function FinanceTab({
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-[var(--ep-blue)]" /> Avanslar
+              <Wallet className="h-5 w-5 text-[var(--ep-blue)]" /> {t("avanslar")}
             </CardTitle>
-            <CardDescription>Avans so'rovlari</CardDescription>
+            <CardDescription>{t("avansSorovlari")}</CardDescription>
           </div>
           <CashAdvanceDialog tCommon={tCommon} open={cashAdvanceDialogOpen} onOpenChange={setCashAdvanceDialogOpen}
             form={cashAdvanceForm} setForm={setCashAdvanceForm} mutation={saveCashAdvanceMutation} />

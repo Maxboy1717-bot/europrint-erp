@@ -89,13 +89,13 @@ export default function AgentsHub() {
         <div className="flex items-center gap-3">
           <Sparkles className="h-7 w-7 text-[var(--ep-blue)]" />
           <div>
-            <h1 className="text-2xl font-bold">AI Agentlar</h1>
-            <p className="text-sm text-muted-foreground">14 ta avtonom AI agent — Europrint ERP'ni real-time kuzatadi</p>
+            <h1 className="text-2xl font-bold">{t("aiAgentlar")}</h1>
+            <p className="text-sm text-muted-foreground">{t("k14TaAvtonomAiAgent")}</p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => { briefingQ.refetch(); healthQ.refetch(); }}>
-            <RefreshCw className="h-4 w-4 mr-1.5" /> Yangilash
+            <RefreshCw className="h-4 w-4 mr-1.5" /> {t("refresh")}
           </Button>
           <Button onClick={() => setAskOpen(true)}>
             <Brain className="h-4 w-4 mr-1.5" /> AI ga savol
@@ -108,7 +108,7 @@ export default function AgentsHub() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl">👔</span>
-            <h2 className="font-bold text-lg">Direktor brifing</h2>
+            <h2 className="font-bold text-lg">{t("direktorBrifing")}</h2>
             <span className="text-xs text-muted-foreground">{b?.date}</span>
           </div>
           {(b?.alerts?.length ?? 0) > 0 && (
@@ -118,16 +118,16 @@ export default function AgentsHub() {
           )}
         </div>
         {briefingQ.isLoading ? (
-          <p className="text-sm text-muted-foreground">Yuklanmoqda...</p>
+          <p className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</p>
         ) : briefingQ.isError ? (
           <p className="text-sm text-[var(--ep-red)]">AI brifing yuklab bo'lmadi (backend ulanishi tekshirilsin)</p>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <Stat label="Kechikkan buyurtmalar" value={b?.kpi.ordersDelayed ?? 0} color="amber" />
+              <Stat label={t("kechikkanBuyurtmalar")} value={b?.kpi.ordersDelayed ?? 0} color="amber" />
               <Stat label="24h SLA buzilgan" value={b?.kpi.ccInboxOverdue ?? 0} color="red" />
-              <Stat label="Kritik qoldiqlar" value={b?.kpi.criticalStockCount ?? 0} color="orange" />
-              <Stat label="Buyurtma qiymati" value={`${(b?.kpi.ordersDelayedAmount ?? 0).toLocaleString()} so'm`} color="blue" />
+              <Stat label={t("kritikQoldiqlar")} value={b?.kpi.criticalStockCount ?? 0} color="orange" />
+              <Stat label={t("buyurtmaQiymati")} value={`${(b?.kpi.ordersDelayedAmount ?? 0).toLocaleString()} so'm`} color="blue" />
             </div>
             <div className="bg-white rounded-lg border p-3 text-sm leading-relaxed">
               <span className="text-xs font-bold text-[var(--ep-blue)] uppercase tracking-wider">AI xulosa</span>
@@ -184,20 +184,20 @@ export default function AgentsHub() {
           <Card className="w-full max-w-2xl p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-4">
               <Brain className="h-4 w-4 text-[var(--ep-blue)]" />
-              <h3 className="font-bold text-lg">AI Maslahatchi</h3>
+              <h3 className="font-bold text-lg">{t("aiMaslahatchi")}</h3>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
-              Direktor uchun strategik savol bering — AI barcha ERP ma'lumotlarini hisobga olib javob beradi.
+              {t("direktorUchunStrategikSavolBering")}
             </p>
             <textarea
               className="w-full border rounded-md p-3 text-sm min-h-[100px]"
-              placeholder="Masalan: Bu hafta qaysi mijozga ko'proq e'tibor berishimiz kerak?"
+              placeholder={t("masalanBuHaftaQaysiMijozga")}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               autoFocus
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" onClick={() => setAskOpen(false)}>Yopish</Button>
+              <Button variant="outline" onClick={() => setAskOpen(false)}>{t("close2")}</Button>
               <Button onClick={ask} disabled={!question.trim() || askLoading}>
                 <Send className="h-4 w-4 mr-1.5" /> {askLoading ? 'AI fikrlamoqda...' : 'So\'rash'}
               </Button>

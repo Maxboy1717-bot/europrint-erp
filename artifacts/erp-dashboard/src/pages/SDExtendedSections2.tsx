@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { RentalRecord, PapkaOrder } from "./SDExtendedTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Rental Panel ─────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ interface RentalPanelProps {
 }
 
 export function RentalPanel({ rentalData, rentalLoading }: RentalPanelProps) {
+  const { t } = useTranslation("common");
   const safeRentals = Array.isArray(rentalData) ? rentalData : [];
 
   const totalArea = safeRentals.reduce((s, r) => s + Number(r.areaM2 || 0), 0);
@@ -38,19 +40,19 @@ export function RentalPanel({ rentalData, rentalLoading }: RentalPanelProps) {
       <Card className="bg-card border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-4 bg-muted/40/50">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <Package className="w-4 h-4 text-primary" />Faol ijara shartnomalari
+            <Package className="w-4 h-4 text-primary" />{t("faolIjaraShartnomalari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Mijoz</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("mijoz1")}</TableHead>
                 <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Maydon (m²)</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Boshlanish</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Tugash</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("boshlanish")}</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("tugash")}</TableHead>
                 <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Oylik (so'm)</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">To'lov</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("tolov1")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -63,7 +65,7 @@ export function RentalPanel({ rentalData, rentalLoading }: RentalPanelProps) {
               ) : safeRentals.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-12 italic">
-                    Faol ijara shartnomalari mavjud emas
+                    {t("faolIjaraShartnomalariMavjudEmas")}
                   </TableCell>
                 </TableRow>
               ) : safeRentals.map((r, i) => (
@@ -93,12 +95,12 @@ export function RentalPanel({ rentalData, rentalLoading }: RentalPanelProps) {
           <div className="p-6 bg-muted/40/30 border-t border-border/30">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Jami maydon</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("jamiMaydon")}</span>
                 <span className="text-lg font-bold text-foreground">{totalArea} m²</span>
               </div>
               <div className="w-px h-8 bg-outline-variant" />
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Jami tushum</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("jamiTushum")}</span>
                 <span className="text-lg font-bold text-primary">
                   {(totalMonthly / 1_000_000).toFixed(1)}M so'm/oy
                 </span>
@@ -129,7 +131,7 @@ export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
               <Clock className="w-6 h-6 text-[var(--ep-primary)]" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Avans kutilayotgan</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("avansKutilayotgan")}</p>
               <p className="text-3xl font-bold tracking-tight text-foreground">{safeOrders.length}</p>
             </div>
           </CardContent>
@@ -151,7 +153,7 @@ export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
               <CheckCircle2 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Bajarilgan avanslar</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("bajarilganAvanslar")}</p>
               <p className="text-3xl font-bold tracking-tight text-primary">0</p>
             </div>
           </CardContent>
@@ -160,24 +162,24 @@ export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
 
       <Card className="bg-card border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-4 bg-muted/40/50">
-          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">70% Avans kutilayotgan buyurtmalar</CardTitle>
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("k70AvansKutilayotganBuyurtmalar")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Papka №</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Mijoz</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Mahsulot</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Holat</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Sana</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("papka2")}</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("mijoz1")}</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("Mahsulot")}</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("status28")}</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("date")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {safeOrders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-12 italic">
-                    Avans kutilayotgan buyurtmalar yo'q
+                    {t("avansKutilayotganBuyurtmalarYoq")}
                   </TableCell>
                 </TableRow>
               ) : safeOrders.slice(0, 20).map((o: PapkaOrder) => (

@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AccessZoneCard, FireSensorCard } from "./SecurityDashboardCards";
+import { useTranslation } from '@/lib/i18n';
 import {
   INCIDENT_TYPE_LABEL,
   SEVERITY_VARIANT,
@@ -36,30 +37,31 @@ interface IncidentsTabProps {
 }
 
 export function IncidentsTab({ incidents, onAdd }: IncidentsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="incidents" className="space-y-4">
       <div className="bg-card rounded-xl p-6">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-6">
           <div>
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-[var(--ep-primary)]" />Xavfsizlik Hodisalari
+              <AlertTriangle className="w-5 h-5 text-[var(--ep-primary)]" />{t("xavfsizlikHodisalari")}
             </h2>
-            <p className="text-sm text-muted-foreground">Barcha qayd etilgan xavfsizlik hodisalari</p>
+            <p className="text-sm text-muted-foreground">{t("barchaQaydEtilganXavfsizlikHodisalari")}</p>
           </div>
           <Button onClick={onAdd} data-testid="button-add-incident">
-            <Plus className="w-4 h-4 mr-2" />Hodisa Qayd Et
+            <Plus className="w-4 h-4 mr-2" />{t("hodisaQaydEt")}
           </Button>
         </div>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow className="border-none hover:bg-transparent">
-              <TableHead className={`${TH} rounded-l-lg`}>Turi</TableHead>
-              <TableHead className={TH}>Tavsif</TableHead>
-              <TableHead className={TH}>Joylasuv</TableHead>
-              <TableHead className={TH}>Darajasi</TableHead>
-              <TableHead className={TH}>Qayd etgan</TableHead>
-              <TableHead className={TH}>Vaqt</TableHead>
-              <TableHead className={`${TH} rounded-r-lg`}>Holat</TableHead>
+              <TableHead className={`${TH} rounded-l-lg`}>{t("type")}</TableHead>
+              <TableHead className={TH}>{t("progress.description")}</TableHead>
+              <TableHead className={TH}>{t("joylasuv1")}</TableHead>
+              <TableHead className={TH}>{t("darajasi")}</TableHead>
+              <TableHead className={TH}>{t("qaydEtgan1")}</TableHead>
+              <TableHead className={TH}>{t("time")}</TableHead>
+              <TableHead className={`${TH} rounded-r-lg`}>{t("status28")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -91,7 +93,7 @@ export function IncidentsTab({ incidents, onAdd }: IncidentsTabProps) {
           </TableBody>
         </Table></div>
         {!incidents.length && (
-          <div className="text-center py-8 text-[13px] text-muted-foreground">Hodisalar yo'q</div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground">{t("hodisalarYoq")}</div>
         )}
       </div>
     </TabsContent>
@@ -116,23 +118,23 @@ export function PPETab({ ppeChecks, onAdd }: PPETabProps) {
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
               <HardHat className="w-5 h-5 text-primary" />Shaxsiy Himoya Vositalari (PPE)
             </h2>
-            <p className="text-sm text-muted-foreground">Xodimlarning PPE tekshiruvi natijalari</p>
+            <p className="text-sm text-muted-foreground">{t("xodimlarningPpeTekshiruviNatijalari")}</p>
           </div>
           <Button onClick={onAdd} data-testid="button-add-ppe">
-            <Plus className="w-4 h-4 mr-2" />Tekshiruv Qo'shish
+            <Plus className="w-4 h-4 mr-2" />{t("tekshiruvQoshish")}
           </Button>
         </div>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow className="border-none hover:bg-transparent">
-              <TableHead className={`${TH} rounded-l-lg`}>Xodim</TableHead>
-              <TableHead className={TH}>Bo'lim</TableHead>
-              <TableHead className={TH}>Kask</TableHead>
-              <TableHead className={TH}>Vest</TableHead>
-              <TableHead className={TH}>Qo'lqop</TableHead>
-              <TableHead className={TH}>Botinka</TableHead>
-              <TableHead className={TH}>Vaqt</TableHead>
-              <TableHead className={`${TH} rounded-r-lg`}>Izoh</TableHead>
+              <TableHead className={`${TH} rounded-l-lg`}>{t("xodim1")}</TableHead>
+              <TableHead className={TH}>{t("bolim1")}</TableHead>
+              <TableHead className={TH}>{t("kask")}</TableHead>
+              <TableHead className={TH}>{t("vest")}</TableHead>
+              <TableHead className={TH}>{t("qolqop")}</TableHead>
+              <TableHead className={TH}>{t("botinka")}</TableHead>
+              <TableHead className={TH}>{t("time")}</TableHead>
+              <TableHead className={`${TH} rounded-r-lg`}>{t("Izoh")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -161,7 +163,7 @@ export function PPETab({ ppeChecks, onAdd }: PPETabProps) {
           </TableBody>
         </Table></div>
         {!ppeChecks.length && (
-          <div className="text-center py-8 text-[13px] text-muted-foreground">PPE tekshiruvlari yo'q</div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground">{t("ppeTekshiruvlariYoq")}</div>
         )}
       </div>
     </TabsContent>
@@ -202,9 +204,9 @@ export function FireTab({ fireSensors }: FireTabProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-[var(--ep-primary)]" />Yong'in va Gaz Monitoring
+            <Flame className="w-5 h-5 text-[var(--ep-primary)]" />{t("yonginVaGazMonitoring")}
           </CardTitle>
-          <CardDescription>Hamma sensor va signal qurilmalari holati</CardDescription>
+          <CardDescription>{t("hammaSensorVaSignalQurilmalari")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -214,7 +216,7 @@ export function FireTab({ fireSensors }: FireTabProps) {
           </div>
           <div className="mt-6 p-4 bg-muted/30 rounded-md">
             <h3 className="font-medium mb-3 flex items-center gap-2">
-              <ClipboardList className="w-4 h-4" />Evakuatsiya Protokoli
+              <ClipboardList className="w-4 h-4" />{t("evakuatsiyaProtokoli")}
             </h3>
             <div className="space-y-2 text-sm">
               {EVACUATION_STEPS.map((step, i) => (

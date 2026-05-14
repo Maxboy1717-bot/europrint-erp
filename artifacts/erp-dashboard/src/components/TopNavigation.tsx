@@ -67,6 +67,7 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 import {
   Sheet,
   SheetContent,
@@ -356,6 +357,7 @@ const moduleColors: Record<string, { icon: string; bg: string; hover: string; bo
 
 export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation("navigation");
 
   return (
     <div className="flex items-center w-full">
@@ -377,13 +379,13 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                   data-testid={`dropdown-${key}`}
                 >
                   <group.icon className={cn("h-4 w-4 shrink-0", colors.icon)} />
-                  <span className="truncate">{group.title}</span>
+                  <span className="truncate">{t(group.title)}</span>
                   <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-full sm:w-[280px] max-h-[70vh] overflow-y-auto">
                 <div className={cn("px-3 py-2 mb-1 border-b border-border/50", colors.bg)}>
-                  <span className={cn("text-xs font-semibold", colors.icon)}>{group.title}</span>
+                  <span className={cn("text-xs font-semibold", colors.icon)}>{t(group.title)}</span>
                 </div>
                 {(Array.isArray(group.items) ? group.items : []).map((item) => (
                   <DropdownMenuItem key={item.url} asChild>
@@ -399,7 +401,7 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                         "h-4 w-4 flex-shrink-0",
                         activePage === item.url ? "text-inherit" : colors.icon
                       )} />
-                      <span className="text-sm">{item.title}</span>
+                      <span className="text-sm">{t(item.title)}</span>
                     </a>
                   </DropdownMenuItem>
                 ))}
@@ -430,7 +432,7 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                       )}>
                         <group.icon className={cn("h-4 w-4", colors.icon)} />
                         <h3 className="text-xs font-semibold uppercase tracking-wider">
-                          {group.title}
+                          {t(group.title)}
                         </h3>
                       </div>
                       <div className="space-y-0.5">
@@ -451,7 +453,7 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                               "h-4 w-4 flex-shrink-0",
                               activePage === item.url ? "text-inherit" : colors.icon
                             )} />
-                            <span>{item.title}</span>
+                            <span>{t(item.title)}</span>
                           </a>
                         ))}
                       </div>

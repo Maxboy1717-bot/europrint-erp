@@ -31,6 +31,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { Plus, Pencil } from "lucide-react";
 import type { CostCenter, Department, User } from "@shared/schema";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const costCenterFormSchema = z.object({
   code: z.string().min(1, "Kod talab qilinadi"),
@@ -44,6 +45,7 @@ const costCenterFormSchema = z.object({
 type CostCenterFormValues = z.infer<typeof costCenterFormSchema>;
 
 export function CostCentersTab() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CostCenter | null>(null);
@@ -140,27 +142,27 @@ export function CostCentersTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground" data-testid="text-cost-centers-title">
-          Xarajat Markazlari
+          {t("xarajatMarkazlari")}
         </h3>
         <Dialog open={isAddOpen || !!editingItem} onOpenChange={(open) => !open && closeDialog()}>
           <DialogTrigger asChild>
             <Button onClick={() => setIsAddOpen(true)} data-testid="button-add-cost-center" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
               <Plus className="mr-2 h-4 w-4" />
-              Yangi qo'shish
+              {t("yangiQoshish")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md bg-card border-none rounded-xl p-6">
             <DialogHeader>
               <DialogTitle className="text-foreground">{editingItem ? "Tahrirlash" : "Yangi xarajat markazi"}</DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                Xarajat markazi ma'lumotlarini kiriting
+                {t("xarajatMarkaziMalumotlariniKiriting")}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField control={form.control} name="code" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Kod</FormLabel>
+                    <FormLabel className="text-muted-foreground">{t("code")}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="CC001" data-testid="input-cost-center-code" className="bg-background border-border text-foreground" />
                     </FormControl>
@@ -171,7 +173,7 @@ export function CostCentersTab() {
                   <FormItem>
                     <FormLabel className="text-muted-foreground">Nomi (UZ)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ishlab chiqarish" data-testid="input-cost-center-name" className="bg-background border-border text-foreground" />
+                      <Input {...field} placeholder={t("ishlabChiqarish2")} data-testid="input-cost-center-name" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -187,11 +189,11 @@ export function CostCentersTab() {
                 )} />
                 <FormField control={form.control} name="departmentId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Bo'lim</FormLabel>
+                    <FormLabel className="text-muted-foreground">{t("bolim1")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-cost-center-department" className="bg-background border-border text-foreground h-9">
-                          <SelectValue placeholder="Bo'limni tanlang" />
+                          <SelectValue placeholder={t("bolimniTanlang")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-card border-none">
@@ -205,11 +207,11 @@ export function CostCentersTab() {
                 )} />
                 <FormField control={form.control} name="managerId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Rahbar</FormLabel>
+                    <FormLabel className="text-muted-foreground">{t("rahbar")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-cost-center-manager" className="bg-background border-border text-foreground h-9">
-                          <SelectValue placeholder="Rahbarni tanlang" />
+                          <SelectValue placeholder={t("rahbarniTanlang")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-card border-none">
@@ -223,7 +225,7 @@ export function CostCentersTab() {
                 )} />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={closeDialog} className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none">
-                    Bekor qilish
+                    {t("cancel")}
                   </Button>
                   <Button type="submit" data-testid="button-save-cost-center" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
                     {editingItem ? "Saqlash" : "Yaratish"}
@@ -240,22 +242,22 @@ export function CostCentersTab() {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Kod</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Nomi</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Bo'lim</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Rahbar</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holati</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("code")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("name")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("bolim1")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("rahbar")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("holati")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell>
                 </TableRow>
               ) : costCenters.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Xarajat markazlari topilmadi</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("xarajatMarkazlariTopilmadi")}</TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(costCenters) ? costCenters : []).map((item) => (
@@ -282,8 +284,8 @@ export function CostCentersTab() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <DeleteConfirmDialog
-                          title="Xarajat markazini o'chirishni tasdiqlaysizmi?"
-                          description="Xarajat markazi va unga bog'liq barcha ma'lumotlar o'chiriladi."
+                          title={t("xarajatMarkaziniOchirishniTasdiqlaysizmi")}
+                          description={t("xarajatMarkaziVaUngaBogliq")}
                           onConfirm={() => deleteMutation.mutate(item.id)}
                           isPending={deleteMutation.isPending}
                         />

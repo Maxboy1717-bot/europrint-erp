@@ -162,9 +162,9 @@ export default function TechApproval() {
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Texnolog Tasdiqlash</b></>}
-        title="Texnolog Tasdiqlash"
-        subtitle="3-checkpoint tasdiqlash · AI tahlil · Material muqobili"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("texnologTasdiqlash")}</b></>}
+        title={t("texnologTasdiqlash")}
+        subtitle={t("k3CheckpointTasdiqlashAiTahlil")}
       />
         </div>
       </div>
@@ -182,7 +182,7 @@ export default function TechApproval() {
           data-testid="button-view-history"
         >
           <History className="h-4 w-4 mr-1" />
-          Tarix ko'rish
+          {t("tarixKorish")}
         </Button>
       </div>
 
@@ -191,8 +191,8 @@ export default function TechApproval() {
         <Card className="bg-card rounded-lg border-none shadow-none">
           <CardContent className="py-12 text-center">
             <CheckCircle className="h-12 w-12 mx-auto text-[var(--ep-green)] mb-4" />
-            <p className="text-lg font-medium text-foreground">Tasdiqlash kutayotgan buyurtmalar yo'q</p>
-            <p className="text-muted-foreground">Barcha buyurtmalar ko'rib chiqilgan</p>
+            <p className="text-lg font-medium text-foreground">{t("tasdiqlashKutayotganBuyurtmalarYoq")}</p>
+            <p className="text-muted-foreground">{t("barchaBuyurtmalarKoribChiqilgan")}</p>
           </CardContent>
         </Card>
       ) : (

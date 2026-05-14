@@ -16,6 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 ;
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface EmployeePersonalInfo {
   age?: number | string;
   gender?: string;
@@ -35,6 +36,7 @@ interface EditPersonalInfoDialogProps {
 }
 
 export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }: EditPersonalInfoDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     age: employee?.age || "",
@@ -94,16 +96,16 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Shaxsiy ma'lumotlarni tahrirlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("shaxsiyMalumotlarniTahrirlash")}</DialogTitle>
           <DialogDescription>
-            ABC analiz uchun xodimning shaxsiy ma'lumotlarini yangilang
+            {t("abcAnalizUchunXodimningShaxsiy")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="age">Yoshi</Label>
+          <Label htmlFor="age">{t("yoshi")}</Label>
               <Input
                 id="age"
                 type="number"
@@ -116,14 +118,14 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="gender">Jinsi</Label>
+          <Label htmlFor="gender">{t("jinsi")}</Label>
               <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
                 <SelectTrigger data-testid="select-gender" className="h-9">
-                  <SelectValue placeholder="Tanlang" />
+                  <SelectValue placeholder={t("tanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="erkak">Erkak</SelectItem>
-                  <SelectItem value="ayol">Ayol</SelectItem>
+                  <SelectItem value="erkak">{t("erkak")}</SelectItem>
+                  <SelectItem value="ayol">{t("ayol")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -131,23 +133,23 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="maritalStatus">Oilaviy holat</Label>
+          <Label htmlFor="maritalStatus">{t("oilaviyHolat")}</Label>
               <Select value={formData.maritalStatus} onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}>
                 <SelectTrigger data-testid="select-marital-status" className="h-9">
-                  <SelectValue placeholder="Tanlang" />
+                  <SelectValue placeholder={t("tanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="oilali">Oilali</SelectItem>
-                  <SelectItem value="bo'ydoq">Bo'ydoq</SelectItem>
-                  <SelectItem value="turmushga_chiqqan">Turmushga chiqqan</SelectItem>
-                  <SelectItem value="turmushga_chiqmagan">Turmushga chiqmagan</SelectItem>
-                  <SelectItem value="ajrashgan">Ajrashgan</SelectItem>
+                  <SelectItem value="oilali">{t("oilali")}</SelectItem>
+                  <SelectItem value="bo'ydoq">{t("boydoq")}</SelectItem>
+                  <SelectItem value="turmushga_chiqqan">{t("turmushgaChiqqan")}</SelectItem>
+                  <SelectItem value="turmushga_chiqmagan">{t("turmushgaChiqmagan")}</SelectItem>
+                  <SelectItem value="ajrashgan">{t("ajrashgan")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="childrenCount">Farzandlar soni</Label>
+          <Label htmlFor="childrenCount">{t("farzandlarSoni")}</Label>
               <Input
                 id="childrenCount"
                 type="number"
@@ -161,17 +163,17 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="childrenEducation">Farzandlarning ta'lim holati</Label>
+          <Label htmlFor="childrenEducation">{t("farzandlarningTalimHolati")}</Label>
             <Select value={formData.childrenEducation} onValueChange={(value) => setFormData({ ...formData, childrenEducation: value })}>
               <SelectTrigger data-testid="select-children-education" className="h-9">
-                <SelectValue placeholder="Tanlang" />
+                <SelectValue placeholder={t("tanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="yo'q">Farzand yo'q</SelectItem>
-                <SelectItem value="maktabgacha">Maktabgacha</SelectItem>
-                <SelectItem value="maktabda">Maktabda</SelectItem>
-                <SelectItem value="oliy ta'lim">Oliy ta'limda</SelectItem>
-                <SelectItem value="bitirgan">Ta'limni bitirgan</SelectItem>
+                <SelectItem value="yo'q">{t("farzandYoq")}</SelectItem>
+                <SelectItem value="maktabgacha">{t("maktabgacha")}</SelectItem>
+                <SelectItem value="maktabda">{t("maktabda")}</SelectItem>
+                <SelectItem value="oliy ta'lim">{t("oliyTalimda")}</SelectItem>
+                <SelectItem value="bitirgan">{t("talimniBitirgan")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -184,17 +186,17 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
           <Label htmlFor="housingType">Uy turi</Label>
                 <Select value={formData.housingType} onValueChange={(value) => setFormData({ ...formData, housingType: value })}>
                   <SelectTrigger data-testid="select-housing-type" className="h-9">
-                    <SelectValue placeholder="Tanlang" />
+                    <SelectValue placeholder={t("tanlang")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="shaxsiy">Shaxsiy uy</SelectItem>
-                    <SelectItem value="ijara">Ijara</SelectItem>
+                    <SelectItem value="shaxsiy">{t("shaxsiyUy")}</SelectItem>
+                    <SelectItem value="ijara">{t("ijara")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-          <Label htmlFor="householdSize">Oilada necha kishi yashaydi</Label>
+          <Label htmlFor="householdSize">{t("oiladaNechaKishiYashaydi")}</Label>
                 <Input
                   id="householdSize"
                   type="number"
@@ -208,16 +210,16 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
             </div>
 
             <div className="space-y-2 mt-4">
-              <Label htmlFor="householdMembers">Kimlar bilan yashaydi</Label>
+              <Label htmlFor="householdMembers">{t("kimlarBilanYashaydi")}</Label>
               <Input
                 id="householdMembers"
-                placeholder="Masalan: turmush o'rtog'i, 2 ta farzand, qaynona, qaynota"
+                placeholder={t("masalanTurmushOrtogi2Ta")}
                 value={formData.householdMembers}
                 onChange={(e) => setFormData({ ...formData, householdMembers: e.target.value })}
                 data-testid="input-household-members"
               />
               <p className="text-xs text-muted-foreground">
-                Oila a'zolarini vergul bilan ajratib yozing
+                {t("oilaAzolariniVergulBilanAjratib")}
               </p>
             </div>
           </div>
@@ -230,7 +232,7 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
               disabled={updateMutation.isPending}
               data-testid="button-cancel"
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
@@ -240,7 +242,7 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
               {updateMutation.isPending ? (
                 <>
                   <EPLoader className="mr-2" />
-                  Saqlanmoqda...
+                  {t("saqlanmoqda")}
                 </>
               ) : (
                 "Saqlash"

@@ -135,7 +135,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-6">
           <div className="flex items-center justify-center py-12">
-            <div className="animate-pulse">Yuklanmoqda...</div>
+            <div className="animate-pulse">{t("Yuklanmoqda...")}</div>
           </div>
         </DialogContent>
       </Dialog>
@@ -149,7 +149,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl p-6">
           <div className="text-center py-8">
-            <p className="text-muted-foreground">Xodim ma'lumotlari topilmadi</p>
+            <p className="text-muted-foreground">{t("xodimMalumotlariTopilmadi")}</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -166,7 +166,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-6" data-testid="dialog-employee-detail">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Xodim Monitoring Ma'lumotlari</DialogTitle>
+          <DialogTitle className="text-2xl">{t("xodimMonitoringMalumotlari")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -190,12 +190,12 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Bo'lim:</span>
+                      <span className="text-muted-foreground">{t("bolim")}</span>
                       <span className="font-medium">{employee.department || 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Lavozim:</span>
+                      <span className="text-muted-foreground">{t("lavozim")}</span>
                       <span className="font-medium">{employee.position || 'N/A'}</span>
                     </div>
                   </div>
@@ -208,7 +208,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="hover-elevate" data-testid="card-total-events">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Jami Hodisalar</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("jamiHodisalar")}</CardTitle>
                 <Clock className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -218,7 +218,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
 
             <Card className="hover-elevate" data-testid="card-violations">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Intizom Buzilishlari</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("intizomBuzilishlari")}</CardTitle>
                 <AlertTriangle className="w-4 h-4 text-destructive" />
               </CardHeader>
               <CardContent>
@@ -228,7 +228,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
 
             <Card className="hover-elevate" data-testid="card-safety-alerts">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Xavfsizlik Alerts</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("xavfsizlikAlerts")}</CardTitle>
                 <Shield className="w-4 h-4 text-primary" />
               </CardHeader>
               <CardContent>
@@ -238,7 +238,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
 
             <Card className="hover-elevate" data-testid="card-critical">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Kritik Hodisalar</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("kritikHodisalar")}</CardTitle>
                 <AlertTriangle className="w-4 h-4 text-destructive" />
               </CardHeader>
               <CardContent>
@@ -250,9 +250,9 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
           {/* Charts & Data */}
           <Tabs defaultValue="timeline" className="w-full">
             <TabsList>
-              <TabsTrigger value="timeline" data-testid="tab-timeline">Tarix</TabsTrigger>
-              <TabsTrigger value="violations" data-testid="tab-violations">Buzilishlar</TabsTrigger>
-              <TabsTrigger value="alerts" data-testid="tab-alerts">Xavfsizlik</TabsTrigger>
+              <TabsTrigger value="timeline" data-testid="tab-timeline">{t("tarix")}</TabsTrigger>
+              <TabsTrigger value="violations" data-testid="tab-violations">{t("buzilishlar")}</TabsTrigger>
+              <TabsTrigger value="alerts" data-testid="tab-alerts">{t("xavfsizlik")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="timeline" className="space-y-4">
@@ -275,7 +275,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-[300px]">
-                      <p className="text-muted-foreground">Ma'lumot yo'q</p>
+                      <p className="text-muted-foreground">{t("malumotYoq")}</p>
                     </div>
                   )}
                 </CardContent>
@@ -284,7 +284,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
               {/* Recent Events Timeline */}
               <Card>
                 <CardHeader>
-                  <CardTitle>So'nggi Hodisalar</CardTitle>
+                  <CardTitle>{t("songgiHodisalar")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -315,7 +315,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
                         </div>
                       ))
                     ) : (
-                      <p className="text-muted-foreground text-center py-8">Ma'lumot yo'q</p>
+                      <p className="text-muted-foreground text-center py-8">{t("malumotYoq")}</p>
                     )}
                   </div>
                 </CardContent>
@@ -326,7 +326,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
               {/* Violations Chart */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Buzilishlar Taqsimoti</CardTitle>
+                  <CardTitle>{t("buzilishlarTaqsimoti")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {violationsChartData.length > 0 ? (
@@ -341,7 +341,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-[300px]">
-                      <p className="text-muted-foreground">Ma'lumot yo'q</p>
+                      <p className="text-muted-foreground">{t("malumotYoq")}</p>
                     </div>
                   )}
                 </CardContent>
@@ -350,7 +350,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
               {/* Violations List */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Intizom Buzilishlari Ro'yxati</CardTitle>
+                  <CardTitle>{t("intizomBuzilishlariRoyxati")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -382,7 +382,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
                         );
                       })
                     ) : (
-                      <p className="text-muted-foreground text-center py-8">Ma'lumot yo'q</p>
+                      <p className="text-muted-foreground text-center py-8">{t("malumotYoq")}</p>
                     )}
                   </div>
                 </CardContent>
@@ -392,7 +392,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
             <TabsContent value="alerts" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Xavfsizlik Alerts</CardTitle>
+                  <CardTitle>{t("xavfsizlikAlerts")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -433,7 +433,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
                         </div>
                       ))
                     ) : (
-                      <p className="text-muted-foreground text-center py-8">Ma'lumot yo'q</p>
+                      <p className="text-muted-foreground text-center py-8">{t("malumotYoq")}</p>
                     )}
                   </div>
                 </CardContent>

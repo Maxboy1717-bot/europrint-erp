@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, CheckCircle2, XCircle, Box } from "lucide-react";
 import { AiCheckPanel } from "./AIDesignGeneratorPanels";
+import { useTranslation } from '@/lib/i18n';
 import {
   GeneratedDesign, AiCheckResult,
   STATUS_COLORS, STATUS_LABELS,
@@ -31,13 +32,14 @@ export function ResultsTab({
   onApprove,
   onReject,
 }: ResultsTabProps) {
+  const { t } = useTranslation("common");
   if (generatedDesigns.length === 0) {
     return (
       <Card>
         <CardContent className="py-16 text-center">
           <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
           <p className="text-muted-foreground">
-            Hali dizayn yaratilmagan. "Generatsiya" tabiga o'ting va AI Dizayn Yaratish tugmasini bosing.
+            {t("haliDizaynYaratilmaganGeneratsiyaTabiga")}
           </p>
         </CardContent>
       </Card>
@@ -83,10 +85,10 @@ export function ResultsTab({
             {mockupMap[design.id] && (
               <div className="space-y-1">
                 <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                  <Box className="h-3 w-3" /> 3D Mockup
+                  <Box className="h-3 w-3" /> {t("k3dMockup")}
                 </div>
                 <div className="aspect-square max-h-48 bg-muted rounded-md overflow-hidden">
-                  <img src={mockupMap[design.id]} alt="3D Mockup" className="w-full h-full object-contain" />
+                  <img src={mockupMap[design.id]} alt={t("k3dMockup")} className="w-full h-full object-contain" />
                 </div>
               </div>
             )}
@@ -108,7 +110,7 @@ export function ResultsTab({
                 data-testid={`button-mockup-${design.id}`}
               >
                 <Box className="h-3 w-3 mr-1" />
-                3D Mockup
+                {t("k3dMockup")}
               </Button>
               <Button
                 size="sm"
@@ -117,7 +119,7 @@ export function ResultsTab({
                 data-testid={`button-approve-${design.id}`}
               >
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Tasdiqlash
+                {t("verify")}
               </Button>
               <Button
                 size="sm"
@@ -127,7 +129,7 @@ export function ResultsTab({
                 data-testid={`button-reject-${design.id}`}
               >
                 <XCircle className="h-3 w-3 mr-1" />
-                Rad etish
+                {t("reject")}
               </Button>
             </div>
           </CardContent>

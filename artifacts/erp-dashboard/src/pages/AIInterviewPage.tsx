@@ -17,8 +17,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AIInterview, InterviewsResponse, InterviewQuestion2, InterviewFormData, interviewSchema, getStatusBadge, getProviderBadge, formatDuration, InterviewCardSkeleton } from "./AIInterviewPageTypes";
 import { InterviewDetailView, AddQuestionForm, QuestionBankList, CreateInterviewForm } from "./AIInterviewPageSections";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function AIInterviewPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<AIInterview | null>(null);
@@ -129,8 +131,8 @@ export default function AIInterviewPage() {
     return (
       <ModulePage
         module="ai"
-        title="AI Intervyu"
-        subtitle="Sun'iy intellekt yordamida avtomatik intervyu o'tkazish"
+        title={t("aiIntervyu")}
+        subtitle={t("suniyIntellektYordamidaAvtomatikIntervyu")}
         icon={<Mic className="h-5 w-5" />}
         actions={<Skeleton className="h-9 w-36 rounded-lg" />}
       >
@@ -147,18 +149,18 @@ export default function AIInterviewPage() {
   return (
     <ModulePage
       module="ai"
-      title="AI Intervyu"
-      subtitle="Sun'iy intellekt yordamida avtomatik intervyu o'tkazish"
+      title={t("aiIntervyu")}
+      subtitle={t("suniyIntellektYordamidaAvtomatikIntervyu")}
       icon={<Mic className="h-5 w-5" />}
       actions={
         <div className="flex gap-2">
           {activeTab === "questions" ? (
             <Button data-testid="button-add-question" onClick={() => setShowAddQuestion(!showAddQuestion)}>
-              <Plus className="h-4 w-4 mr-2" /> Savol qo'shish
+              <Plus className="h-4 w-4 mr-2" /> {t("savolQoshish")}
             </Button>
           ) : (
             <Button data-testid="button-new-interview" onClick={() => setShowCreateForm(!showCreateForm)}>
-              <Plus className="h-4 w-4 mr-2" /> Yangi Intervyu
+              <Plus className="h-4 w-4 mr-2" /> {t("yangiIntervyu")}
             </Button>
           )}
         </div>
@@ -171,7 +173,7 @@ export default function AIInterviewPage() {
           data-testid="tab-interviews"
           onClick={() => setActiveTab("interviews")}
         >
-          <Mic className="h-4 w-4 mr-2" /> Intervyular
+          <Mic className="h-4 w-4 mr-2" /> {t("intervyular")}
         </Button>
         <Button
           variant={activeTab === "questions" ? "default" : "ghost"}
@@ -179,7 +181,7 @@ export default function AIInterviewPage() {
           data-testid="tab-questions"
           onClick={() => setActiveTab("questions")}
         >
-          <BookOpen className="h-4 w-4 mr-2" /> Savol Banki
+          <BookOpen className="h-4 w-4 mr-2" /> {t("savolBanki")}
         </Button>
       </div>
 
@@ -223,7 +225,7 @@ export default function AIInterviewPage() {
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Qidirish..."
+                  placeholder={t("Qidirish...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -316,7 +318,7 @@ export default function AIInterviewPage() {
                         data-testid={`button-view-interview-${interview.id}`}
                         onClick={() => setSelectedInterview(interview)}
                       >
-                        Ko'rish
+                        {t("view")}
                         <ChevronRight className="h-4 w-4 ml-2" />
                       </Button>
                     )}
@@ -331,8 +333,8 @@ export default function AIInterviewPage() {
       <ConfirmDialog
         open={confirmDeleteQId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteQId(null); }}
-        title="Savolni o'chirish"
-        description="Ushbu savolni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("savolniOchirish")}
+        description={t("ushbuSavolniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

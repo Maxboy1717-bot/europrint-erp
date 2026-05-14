@@ -149,10 +149,10 @@ export default function PosWarehousePage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Package className="h-6 w-6" />
-            POS — Warehouse
+            {t("posWarehouse")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Real-time stok va movement boshqaruvi
+            {t("realTimeStokVaMovement")}
           </p>
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function PosWarehousePage() {
           <p className="text-2xl font-bold">{kpis.itemCount}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <p className="text-xs text-muted-foreground">Jami miqdor</p>
+          <p className="text-xs text-muted-foreground">{t("jamiMiqdor")}</p>
           <p className="text-2xl font-bold">
             {kpis.totalQty.toLocaleString("uz-UZ", { maximumFractionDigits: 0 })}
           </p>
@@ -175,13 +175,13 @@ export default function PosWarehousePage() {
         </CardContent></Card>
         <Card className="border-orange-500/50"><CardContent className="p-4">
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> Kam qoldi
+            <AlertTriangle className="h-3 w-3" /> {t("kamQoldi")}
           </p>
           <p className="text-2xl font-bold text-[var(--ep-primary)]">{kpis.lowStock}</p>
         </CardContent></Card>
         <Card className="border-destructive/50"><CardContent className="p-4">
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> Tugadi
+            <AlertTriangle className="h-3 w-3" /> {t("tugadi")}
           </p>
           <p className="text-2xl font-bold text-destructive">{kpis.outOfStock}</p>
         </CardContent></Card>
@@ -190,13 +190,13 @@ export default function PosWarehousePage() {
       <Tabs defaultValue="stock">
         <TabsList>
           <TabsTrigger value="stock">
-            <Boxes className="h-4 w-4 mr-1" /> Stok
+            <Boxes className="h-4 w-4 mr-1" /> {t("stok")}
           </TabsTrigger>
           <TabsTrigger value="alerts">
             <AlertTriangle className="h-4 w-4 mr-1" /> Ogohlantirishlar ({alerts.length})
           </TabsTrigger>
           <TabsTrigger value="history">
-            <History className="h-4 w-4 mr-1" /> Tarix
+            <History className="h-4 w-4 mr-1" /> {t("tarix")}
           </TabsTrigger>
         </TabsList>
 

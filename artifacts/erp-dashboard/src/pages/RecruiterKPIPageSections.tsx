@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, AlertTriangle, Zap } from "lucide-react";
 import { STAGE_LABELS } from "./RecruiterKPIPageTypes";
 import type { KPIData, UrgentVacancy } from "./RecruiterKPIPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── UrgentVacanciesSection ────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ interface UrgentVacanciesSectionProps {
 }
 
 export function UrgentVacanciesSection({ urgentList }: UrgentVacanciesSectionProps) {
+  const { t } = useTranslation("common");
   if (urgentList.length === 0) return null;
   return (
     <Card className="border-red-500/40 bg-red-500/5">
@@ -25,7 +27,7 @@ export function UrgentVacanciesSection({ urgentList }: UrgentVacanciesSectionPro
           <AlertTriangle className="w-4 h-4" />
           Shoshilinch Vakansiyalar ({urgentList.length})
           <span className="text-xs font-normal text-muted-foreground ml-1">
-            — Tezkor e'tibor talab qiladi
+            {t("tezkorEtiborTalabQiladi")}
           </span>
         </CardTitle>
       </CardHeader>
@@ -106,7 +108,7 @@ export function MonthlyTrendSection({ trendData }: MonthlyTrendSectionProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" /> Oylik trend: Qabul va rad etish
+          <TrendingUp className="w-4 h-4 text-primary" /> {t("oylikTrendQabulVaRad")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -156,12 +158,12 @@ export function StageBreakdownSection({ kpi }: StageBreakdownSectionProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Target className="w-4 h-4 text-primary" /> Bosqichlar bo'yicha
+          <Target className="w-4 h-4 text-primary" /> {t("bosqichlarBoyicha")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {kpi.byStage.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">Ma'lumot yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("malumotYoq")}</p>
         )}
         <div className="space-y-2">
           {(Array.isArray(kpi.byStage) ? kpi.byStage : []).map(row => {

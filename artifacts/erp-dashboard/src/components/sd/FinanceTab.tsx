@@ -8,9 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { DollarSign, AlertTriangle, TrendingUp, Star, Wallet, CreditCard } from "lucide-react";
 import { KpiCard, PaymentRatingBadge, fmtMoney, fmtDate, fmtNum } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function FinanceTab({ finance }: { finance: SdFinanceData }) {
-  if (!finance) return <div className="text-muted-foreground text-sm py-8 text-center">Moliyaviy ma'lumotlar yo'q</div>;
+  const { t } = useTranslation("common");
+  if (!finance) return <div className="text-muted-foreground text-sm py-8 text-center">{t("moliyaviyMalumotlarYoq")}</div>;
 
   // Handle both old and new response shapes
   const totalDebt = finance.totalDebt ?? finance.openDebt ?? 0;
@@ -25,14 +27,14 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={DollarSign} label="Jami daromad" value={fmtMoney(totalRevenue)}
+        <KpiCard icon={DollarSign} label={t("jamiDaromad")} value={fmtMoney(totalRevenue)}
           color="text-[var(--ep-green)]" gradient="" />
-        <KpiCard icon={Wallet} label="To'langan" value={fmtMoney(totalPaid)}
+        <KpiCard icon={Wallet} label={t("tolangan")} value={fmtMoney(totalPaid)}
           color="text-[var(--ep-blue)]" gradient="" />
-        <KpiCard icon={AlertTriangle} label="Ochiq qarz" value={fmtMoney(totalDebt)}
+        <KpiCard icon={AlertTriangle} label={t("ochiqQarz")} value={fmtMoney(totalDebt)}
           color={Number(totalDebt) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}
           gradient="" />
-        <KpiCard icon={TrendingUp} label="O'rtacha buyurtma" value={fmtMoney(avgOrderValue)}
+        <KpiCard icon={TrendingUp} label={t("ortachaBuyurtma")} value={fmtMoney(avgOrderValue)}
           gradient="" />
       </div>
 
@@ -41,13 +43,13 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-muted-foreground" />Kredit limiti holati
+              <CreditCard className="h-4 w-4 text-muted-foreground" />{t("kreditLimitiHolati")}
             </h3>
           </div>
           <div className="p-4 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Ishlatilgan: <span className="font-medium text-foreground">{fmtMoney(totalDebt)}</span></span>
-              <span className="text-muted-foreground">Limit: <span className="font-medium text-foreground">{fmtMoney(creditLimit)}</span></span>
+              <span className="text-muted-foreground">{t("ishlatilgan")}<span className="font-medium text-foreground">{fmtMoney(totalDebt)}</span></span>
+              <span className="text-muted-foreground">{t("limit")}<span className="font-medium text-foreground">{fmtMoney(creditLimit)}</span></span>
             </div>
             <Progress value={debtPercent}
               className={`h-2.5 rounded-full ${debtPercent > 80 ? "[&>div]:bg-rose-500" : debtPercent > 60 ? "[&>div]:bg-amber-500" : "[&>div]:bg-emerald-500"}`} />
@@ -63,7 +65,7 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
         finance.overdueBreakdown?.days61_90 > 0 || finance.overdueBreakdown?.days90Plus > 0) && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">Muddati o'tgan qarzlar taqsimoti</h3>
+            <h3 className="text-sm font-semibold">{t("muddatiOtganQarzlarTaqsimoti")}</h3>
           </div>
           <div className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -87,22 +89,22 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
       <div className="rounded-xl border bg-card overflow-hidden">
         <div className="px-4 py-3 border-b bg-muted/30">
           <h3 className="text-sm font-semibold flex items-center gap-2">
-            <Star className="h-4 w-4 text-muted-foreground" />To'lov intizomi
+            <Star className="h-4 w-4 text-muted-foreground" />{t("tolovIntizomi")}
           </h3>
         </div>
         <div className="p-4 space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">To'lov reytingi</span>
+            <span className="text-sm text-muted-foreground">{t("tolovReytingi")}</span>
             <PaymentRatingBadge rating={finance.paymentRating || "A"} />
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">O'rtacha kechikish</span>
+            <span className="text-muted-foreground">{t("ortachaKechikish")}</span>
             <span className={Number(finance.averagePaymentDelayDays || 0) > 30 ? "text-destructive font-medium" : "font-medium"}>
               {Math.round(finance.averagePaymentDelayDays || 0)} kun
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">O'z vaqtida to'lagan</span>
+            <span className="text-muted-foreground">{t("ozVaqtidaTolagan")}</span>
             <span className="font-medium">{finance.onTimePaymentRate || 0}%</span>
           </div>
         </div>
@@ -112,7 +114,7 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
       {(finance.recentInvoices || []).length > 0 && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">So'nggi invoicelar</h3>
+            <h3 className="text-sm font-semibold">{t("songgiInvoicelar")}</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -153,7 +155,7 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
       {(finance.payments || []).length > 0 && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">To'lovlar tarixi</h3>
+            <h3 className="text-sm font-semibold">{t("tolovlarTarixi")}</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

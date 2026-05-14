@@ -79,10 +79,10 @@ export default function EmployeeRating() {
   };
 
   const scoreBadge = (score: number) => {
-    if (score >= 90) return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold"><Award className="w-3 h-3 mr-1" />A'lo</Badge>;
-    if (score >= 75) return <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold"><Star className="w-3 h-3 mr-1" />Yaxshi</Badge>;
-    if (score >= 50) return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">O'rtacha</Badge>;
-    return <EPStatusPill tone="danger">Yomon</EPStatusPill>;
+    if (score >= 90) return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold"><Award className="w-3 h-3 mr-1" />{t("alo")}</Badge>;
+    if (score >= 75) return <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold"><Star className="w-3 h-3 mr-1" />{t("Yaxshi")}</Badge>;
+    if (score >= 50) return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("average")}</Badge>;
+    return <EPStatusPill tone="danger">{t("yomon")}</EPStatusPill>;
   };
 
   const avgComposite = stats?.avgScores?.avgComposite || 0;
@@ -105,9 +105,9 @@ export default function EmployeeRating() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Xodim Reytingi</b></>}
-        title="Xodim Reytingi"
-        subtitle="KPI baholash, trend tahlili, maqsad monitoring"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimReytingi")}</b></>}
+        title={t("xodimReytingi")}
+        subtitle={t("kpiBaholashTrendTahliliMaqsad")}
       />
         </div>
         <div className="flex gap-2 bg-muted/60 p-1 rounded-lg">
@@ -124,7 +124,7 @@ export default function EmployeeRating() {
               {(Array.isArray(months) ? months : []).map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="sm" onClick={() => refetch()} title="Yangilash">
+          <Button variant="ghost" size="sm" onClick={() => refetch()} title={t("refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
@@ -132,15 +132,15 @@ export default function EmployeeRating() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Baholangan</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("baholangan")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{totalRated}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">O'rtacha ball</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("ortachaBall1")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{avgComposite.toString()}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Samaradorlik</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("samaradorlik")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{avgProductivity.toString()}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
@@ -151,7 +151,7 @@ export default function EmployeeRating() {
 
       <Tabs defaultValue="ratings" className="w-full">
         <TabsList>
-          <TabsTrigger value="ratings" data-testid="tab-ratings">Reytinglar</TabsTrigger>
+          <TabsTrigger value="ratings" data-testid="tab-ratings">{t("reytinglar")}</TabsTrigger>
           <TabsTrigger value="goals" data-testid="tab-goals">{t('kpiMaqsadlar')}</TabsTrigger>
         </TabsList>
         <TabsContent value="ratings">
@@ -175,14 +175,14 @@ export default function EmployeeRating() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">#</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Xodim</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Samaradorlik</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Intizom</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sifat</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Ko'nikmalar</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Umumiy ball</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("xodim1")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("samaradorlik")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("intizom")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Sifat")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("konikmalar")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("umumiyBall")}</TableHead>
                       <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('trend2')}</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Daraja</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("daraja")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -229,17 +229,17 @@ export default function EmployeeRating() {
           <Card>
             <CardContent className="p-0">
               {(goals || []).length === 0 ? (
-                <div className="text-center py-12 text-[13px] text-muted-foreground"><Target className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>Hali KPI maqsad belgilanmagan</p></div>
+                <div className="text-center py-12 text-[13px] text-muted-foreground"><Target className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>{t("haliKpiMaqsadBelgilanmagan")}</p></div>
               ) : (
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Xodim</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Maqsad</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Joriy</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Maqsad</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Bajarilish</TableHead>
-                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("xodim1")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Maqsad")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("joriy")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Maqsad")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("progress5")}</TableHead>
+                      <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

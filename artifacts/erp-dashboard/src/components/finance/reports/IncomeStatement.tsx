@@ -9,6 +9,7 @@ import { PieChart } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { formatPercent } from "./helpers";
 import { MonthlySummary } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface IncomeStatementProps {
   data: MonthlySummary | undefined;
@@ -16,6 +17,7 @@ interface IncomeStatementProps {
 }
 
 export function IncomeStatement({ data, isLoading }: IncomeStatementProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-profit-loss">
       <CardHeader>
@@ -23,7 +25,7 @@ export function IncomeStatement({ data, isLoading }: IncomeStatementProps) {
           <PieChart className="h-5 w-5" />
           Foyda va Zarar Hisoboti (P&L)
         </CardTitle>
-        <CardDescription>Joriy oy uchun to'liq P&L xulosasi</CardDescription>
+        <CardDescription>{t("joriyOyUchunToliqP")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -35,7 +37,7 @@ export function IncomeStatement({ data, isLoading }: IncomeStatementProps) {
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-              <span className="font-medium text-[var(--ep-green)]">Jami daromad</span>
+              <span className="font-medium text-[var(--ep-green)]">{t("jamiDaromad")}</span>
               <span className="font-bold text-[var(--ep-green)]">{formatCurrency(data?.profitLoss?.revenue || 0)}</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg border">
@@ -43,14 +45,14 @@ export function IncomeStatement({ data, isLoading }: IncomeStatementProps) {
               <span className="font-medium text-[var(--ep-red)]">-{formatCurrency(data?.profitLoss?.costOfGoodsSold || 0)}</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40/50">
-              <span className="font-bold">Yalpi foyda</span>
+              <span className="font-bold">{t("yalpiFoyda")}</span>
               <div className="text-right">
                 <div className="font-bold text-[var(--ep-green)]">{formatCurrency(data?.profitLoss?.grossProfit || 0)}</div>
                 <div className="text-xs text-muted-foreground">Marja: {formatPercent(data?.profitLoss?.grossMargin)}</div>
               </div>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg border">
-              <span>Operatsion xarajatlar</span>
+              <span>{t("operatsionXarajatlar")}</span>
               <span className="font-medium text-[var(--ep-red)]">-{formatCurrency(data?.profitLoss?.operatingExpenses || 0)}</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
@@ -61,7 +63,7 @@ export function IncomeStatement({ data, isLoading }: IncomeStatementProps) {
               </div>
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg bg-[var(--ep-green)] text-white">
-              <span className="font-bold text-lg">Sof foyda</span>
+              <span className="font-bold text-lg">{t("sofFoyda")}</span>
               <div className="text-right">
                 <div className="font-bold text-xl">{formatCurrency(data?.profitLoss?.netProfit || 0)}</div>
                 <div className="text-xs opacity-80">Sof marja: {formatPercent(data?.profitLoss?.netMargin)}</div>

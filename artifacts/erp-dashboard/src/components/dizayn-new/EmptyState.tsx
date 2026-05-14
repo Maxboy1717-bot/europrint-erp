@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from '@/lib/i18n';
 import {
   Search,
   FolderOpen,
@@ -71,6 +72,7 @@ export function EmptyState({
   className,
   size = "md",
 }: EmptyStateProps) {
+  const { t } = useTranslation("common");
   const preset = VARIANT_MAP[variant];
   const DefaultIcon = preset.icon;
   const sizes = SIZE_MAP[size];
@@ -150,7 +152,7 @@ export function TableSkeleton({
         className
       )}
       role="status"
-      aria-label="Ma'lumotlar yuklanmoqda"
+      aria-label={t("malumotlarYuklanmoqda")}
       aria-busy="true"
     >
       {/* Toolbar skeleton */}
@@ -215,7 +217,7 @@ export function CardSkeleton({ count = 1, className }: CardSkeletonProps) {
           key={`k-${i}`}
           className={cn("border border-border rounded-xl shadow-[var(--shadow-md)]", className)}
           role="status"
-          aria-label="Karta yuklanmoqda"
+          aria-label={t("kartaYuklanmoqda")}
           aria-busy="true"
         >
           <CardContent className="p-5">
@@ -253,8 +255,9 @@ export function StatsGridSkeleton() {
 // ─── Page Skeleton ────────────────────────────────────────────────────────────
 
 export function PageSkeleton() {
+  const { t } = useTranslation("common");
   return (
-    <div className="space-y-6 p-6" aria-busy="true" aria-label="Sahifa yuklanmoqda">
+    <div className="space-y-6 p-6" aria-busy="true" aria-label={t("sahifaYuklanmoqda")}>
       {/* Page header */}
       <div className="space-y-2">
         <Skeleton className="h-7 w-48 rounded rounded-lg" />

@@ -40,7 +40,7 @@ export function RoleChangeDialog({user, newRole, onRoleChange, onClose, onSave, 
           <DialogTitle className="text-[18px] font-semibold">Rolni o'zgartirish — @{user?.username}</DialogTitle>
         </DialogHeader>
         <div className="py-2">
-          <Label className="mb-2 block">Yangi rol</Label>
+          <Label className="mb-2 block">{t("yangiRol")}</Label>
           <Select value={newRole} onValueChange={onRoleChange}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -51,12 +51,12 @@ export function RoleChangeDialog({user, newRole, onRoleChange, onClose, onSave, 
           </Select>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             disabled={isPending || newRole === user?.role}
             onClick={onSave}
           >
-            Saqlash
+            {t("Saqlash")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -75,18 +75,18 @@ export function DeactivateAlert({ deleteId, onClose, onConfirm }: DeactivateAler
     <AlertDialog open={deleteId !== null} onOpenChange={open => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Foydalanuvchini nofaol qilish</AlertDialogTitle>
+          <AlertDialogTitle>{t("foydalanuvchiniNofaolQilish")}</AlertDialogTitle>
           <AlertDialogDescription>
-            Foydalanuvchi tizimga kira olmaydi. Keyinchalik tiklash mumkin.
+            {t("foydalanuvchiTizimgaKiraOlmaydiKeyinchalik")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Bekor</AlertDialogCancel>
+          <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-white hover:bg-destructive/90"
             onClick={onConfirm}
           >
-            Nofaol qilish
+            {t("nofaolQilish")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -111,7 +111,7 @@ export function CreateUserDialog({ open, onOpenChange, form, onChange, onSave, i
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi foydalanuvchi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiFoydalanuvchi")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div>
@@ -132,16 +132,16 @@ export function CreateUserDialog({ open, onOpenChange, form, onChange, onSave, i
             />
           </div>
           <div>
-            <Label>Parol</Label>
+            <Label>{t("Parol")}</Label>
             <Input
               type="password"
               value={form.password}
               onChange={e => set({ password: e.target.value })}
-              placeholder="Katta harf, raqam va belgi bo'lsin"
+              placeholder={t("kattaHarfRaqamVaBelgi")}
             />
           </div>
           <div>
-            <Label>Rol</Label>
+            <Label>{t("role")}</Label>
             <Select
               value={form.role}
               onValueChange={v => set({ role: v })}
@@ -156,7 +156,7 @@ export function CreateUserDialog({ open, onOpenChange, form, onChange, onSave, i
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button
             disabled={isPending || !form.username || !form.email || !form.password}
             onClick={onSave}

@@ -85,7 +85,7 @@ function RoomHeader({
           ) : activeRoom.type === "direct" ? (
             activeRoom.otherUserId != null &&
             onlineUserIds.has(Number(activeRoom.otherUserId)) ? (
-              <span className="text-[var(--ep-green)] font-medium">● Online</span>
+              <span className="text-[var(--ep-green)] font-medium">{t("online2")}</span>
             ) : (
               <span className="text-[var(--tg-text-secondary)]">{"Oflayn"}</span>
             )
@@ -104,7 +104,7 @@ function RoomHeader({
               ? "bg-[var(--tg-sidebar-active)]/10 text-[var(--tg-sidebar-active)]"
               : "text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)]"
           )}
-          title="Qidirish"
+          title={t("search")}
         >
           <Search className="w-[22px] h-[22px]" />
         </button>
@@ -135,7 +135,7 @@ function RoomHeader({
           <button
             onClick={onTaskFromLastMsg}
             className="p-2 rounded-full text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)] transition-colors"
-            title="Vazifa qo'shish"
+            title={t("vazifaQoshish")}
           >
             <CheckSquare className="w-[22px] h-[22px]" />
           </button>
@@ -149,7 +149,7 @@ function RoomHeader({
               ? "bg-[var(--tg-sidebar-active)]/10 text-[var(--tg-sidebar-active)]"
               : "text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)]"
           )}
-          title="Ma'lumot"
+          title={t("info")}
         >
           <MoreVertical className="w-[22px] h-[22px]" />
         </button>
@@ -171,7 +171,7 @@ function PinnedBanner({
       <Pin className="w-3.5 h-3.5 text-[var(--tg-sidebar-active)] flex-shrink-0 rotate-45" />
       <div className="flex-1 min-w-0 border-l-2 border-[var(--tg-sidebar-active)] pl-2">
         <span className="text-[11px] text-[var(--tg-sidebar-active)] font-medium">
-          Pinlangan xabar
+          {t("pinlanganXabar")}
         </span>
         <p className="text-[13px] text-[var(--tg-text-primary)] truncate">
           {pinnedMessage.content}
@@ -249,7 +249,7 @@ function VideoCallPanel({
           <button
             onClick={onClose}
             className="p-1.5 rounded text-white/50 hover:text-red-400 hover:bg-[var(--ep-red)]/90/10 transition-colors"
-            title="Qo'ng'iroqni tugatish"
+            title={t("qongiroqniTugatish")}
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -262,7 +262,7 @@ function VideoCallPanel({
           allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
           allowFullScreen
           className="flex-1 w-full border-0 min-h-0"
-          title="Video qo'ng'iroq"
+          title={t("videoQongiroq")}
         />
       )}
     </div>
@@ -280,7 +280,7 @@ function EditIndicator({
   return (
     <div className="mx-3 mb-1 px-3 py-2 bg-[var(--tg-action-bar-bg)] border-l-2 border-[var(--tg-sidebar-active)] rounded-lg flex items-center justify-between shadow-sm">
       <div className="min-w-0">
-        <p className="text-xs text-[var(--tg-sidebar-active)] font-medium">Tahrirlash</p>
+        <p className="text-xs text-[var(--tg-sidebar-active)] font-medium">{t("edit")}</p>
         <p className="text-[13px] text-[var(--tg-text-primary)] truncate">{content}</p>
       </div>
       <button
@@ -295,6 +295,7 @@ function EditIndicator({
 
 /** Empty state shown when no room is selected. */
 function EmptyState() {
+  const { t } = useTranslation("common");
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-5 bg-[var(--tg-chat-bg)]">
       <div className="w-full sm:w-[120px] h-[120px] rounded-full bg-[var(--tg-sidebar-active)]/10 flex items-center justify-center">
@@ -313,17 +314,17 @@ function EmptyState() {
       </div>
       <div className="text-center">
         <p className="text-[17px] font-medium text-[var(--tg-text-primary)]/70">
-          Chatni tanlang
+          {t("chatniTanlang")}
         </p>
         <p className="text-[14px] text-[var(--tg-text-secondary)] mt-1">
-          Suhbatni boshlash uchun chap paneldan tanlang
+          {t("suhbatniBoshlashUchunChapPaneldan")}
         </p>
       </div>
       <a
         href="/"
         className="mt-2 text-[13px] text-[var(--tg-sidebar-active)] hover:underline"
       >
-        ← ERP ga qaytish
+        {t("erpGaQaytish")}
       </a>
     </div>
   );

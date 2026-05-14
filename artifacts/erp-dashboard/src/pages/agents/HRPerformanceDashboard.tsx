@@ -9,11 +9,13 @@ import { Users, AlertTriangle, TrendingDown, RefreshCw, Search } from "lucide-re
 import { apiRequest } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface PerformanceRes { score: number; reasons: string[] }
 interface ChurnRes { risk: 'low' | 'medium' | 'high'; reasonsUz: string[] }
 interface BonusRes { bonus: number; details: { performanceScore: number; bonusPct: number; baseSalary: number } }
 
 export default function HRPerformanceDashboard() {
+  const { t } = useTranslation("common");
   const [employeeId, setEmployeeId] = useState('');
   const [activeId, setActiveId] = useState<number | null>(null);
   const [baseSalary, setBaseSalary] = useState('5000000');
@@ -51,8 +53,8 @@ export default function HRPerformanceDashboard() {
         <div className="flex items-center gap-3">
           <Users className="h-7 w-7 text-[var(--ep-red)]" />
           <div>
-            <h1 className="text-2xl font-bold">HR Performance AI</h1>
-            <p className="text-sm text-muted-foreground">Xodim samaradorligi + churn xavfi + bonus hisoblash</p>
+            <h1 className="text-2xl font-bold">{t("hrPerformanceAi")}</h1>
+            <p className="text-sm text-muted-foreground">{t("xodimSamaradorligiChurnXavfiBonus")}</p>
           </div>
         </div>
       </header>
@@ -60,7 +62,7 @@ export default function HRPerformanceDashboard() {
       <Card className="p-4">
         <div className="flex items-end gap-2">
           <div className="flex-1">
-            <label className="text-xs font-medium text-muted-foreground">Xodim ID</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("xodimId")}</label>
             <input type="number" className="w-full mt-1 px-3 py-2 border rounded-md text-sm" placeholder="masalan 1"
                    value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}
                    onKeyDown={(e) => e.key === 'Enter' && search()} />
@@ -71,7 +73,7 @@ export default function HRPerformanceDashboard() {
                    value={baseSalary} onChange={(e) => setBaseSalary(e.target.value)} />
           </div>
           <Button onClick={search} disabled={!employeeId}>
-            <Search className="h-4 w-4 mr-1.5" /> Qidirish
+            <Search className="h-4 w-4 mr-1.5" /> {t("search")}
           </Button>
         </div>
       </Card>
@@ -82,7 +84,7 @@ export default function HRPerformanceDashboard() {
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-3">
               <TrendingDown className="h-4 w-4 text-[var(--ep-blue)]" />
-              <h3 className="font-bold text-sm">Samaradorlik</h3>
+              <h3 className="font-bold text-sm">{t("samaradorlik")}</h3>
             </div>
             {performance.isLoading ? <EPLoader /> : performance.data && (
               <>
@@ -101,7 +103,7 @@ export default function HRPerformanceDashboard() {
           <Card className={`p-5 border-2 ${riskClass(churn.data?.risk)}`}>
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="h-4 w-4" />
-              <h3 className="font-bold text-sm">Chiqib ketish xavfi</h3>
+              <h3 className="font-bold text-sm">{t("chiqibKetishXavfi")}</h3>
             </div>
             {churn.isLoading ? <EPLoader /> : churn.data && (
               <>
@@ -132,7 +134,7 @@ export default function HRPerformanceDashboard() {
 
       {!activeId && (
         <Card className="p-12 text-center text-muted-foreground">
-          Yuqorida xodim ID kiriting va Qidirish tugmasini bosing
+          {t("yuqoridaXodimIdKiritingVa")}
         </Card>
       )}
     </div>

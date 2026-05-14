@@ -38,9 +38,9 @@ export function WmsSection({wmsSummary, loadingWms }: WmsSectionProps) {
         <Card>
           <CardContent className="py-10 flex flex-col items-center text-muted-foreground">
             <Package className="h-10 w-10 mb-3 opacity-20" />
-            <p className="text-sm font-medium">Bu xodim uchun material harakatlari topilmadi</p>
+            <p className="text-sm font-medium">{t("buXodimUchunMaterialHarakatlari")}</p>
             <p className="text-xs mt-1 opacity-60 text-center max-w-sm">
-              Xodim so'nggi 90 kun ichida WMS tizimida material olmagan yoki qaytarmagan.
+              {t("xodimSonggi90KunIchida")}
             </p>
           </CardContent>
         </Card>
@@ -65,7 +65,7 @@ function WmsKpiCards({ wmsSummary }: { wmsSummary: WmsSummary }) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-2 mb-1">
             <Package className="h-4 w-4 text-[var(--ep-blue)]" />
-            <p className="text-xs text-muted-foreground">Jami olingan</p>
+            <p className="text-xs text-muted-foreground">{t("jamiOlingan")}</p>
           </div>
           <p className="text-xl font-bold text-[var(--ep-blue)]">{summary.totalIssued.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">{summary.totalMovements} ta harakat</p>
@@ -75,7 +75,7 @@ function WmsKpiCards({ wmsSummary }: { wmsSummary: WmsSummary }) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-2 mb-1">
             <RotateCw className="h-4 w-4 text-[var(--ep-green)]" />
-            <p className="text-xs text-muted-foreground">Qaytarilgan</p>
+            <p className="text-xs text-muted-foreground">{t("qaytarilgan")}</p>
           </div>
           <p className="text-xl font-bold text-[var(--ep-green)]">{summary.totalReturned.toLocaleString()}</p>
         </CardContent>
@@ -84,7 +84,7 @@ function WmsKpiCards({ wmsSummary }: { wmsSummary: WmsSummary }) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-2 mb-1">
             <Trash2 className="h-4 w-4 text-[var(--ep-primary)]" />
-            <p className="text-xs text-muted-foreground">Isrof</p>
+            <p className="text-xs text-muted-foreground">{t("isrof")}</p>
           </div>
           <p className="text-xl font-bold text-[var(--ep-primary)]">{summary.totalWasted.toLocaleString()}</p>
         </CardContent>
@@ -93,12 +93,12 @@ function WmsKpiCards({ wmsSummary }: { wmsSummary: WmsSummary }) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center gap-2 mb-1">
             <RotateCcw className="h-4 w-4 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">Qaytarish foizi</p>
+            <p className="text-xs text-muted-foreground">{t("qaytarishFoizi")}</p>
           </div>
           <p className={`text-xl font-bold ${returnRate >= 20 ? "text-[var(--ep-green)]" : returnRate >= 10 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {returnRate}%
           </p>
-          <p className="text-xs text-muted-foreground">intizom ko'rsatkichi</p>
+          <p className="text-xs text-muted-foreground">{t("intizomKorsatkichi")}</p>
         </CardContent>
       </Card>
     </div>
@@ -111,19 +111,19 @@ function WmsMaterialsTable({ wmsSummary }: { wmsSummary: WmsSummary }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Package className="h-4 w-4" />
-          Materiallar bo'yicha tafsilot
+          {t("materiallarBoyichaTafsilot")}
         </CardTitle>
-        <CardDescription>Har bir material uchun olingan, qaytarilgan va qaytarish foizi</CardDescription>
+        <CardDescription>{t("harBirMaterialUchunOlingan")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>{"Material"}</TableHead>
-              <TableHead className="text-right">Olingan</TableHead>
-              <TableHead className="text-right">Qaytarilgan</TableHead>
-              <TableHead className="text-right">Isrof</TableHead>
-              <TableHead className="text-right">Qaytarish %</TableHead>
+              <TableHead className="text-right">{t("olingan")}</TableHead>
+              <TableHead className="text-right">{t("qaytarilgan")}</TableHead>
+              <TableHead className="text-right">{t("isrof")}</TableHead>
+              <TableHead className="text-right">{t("qaytarish")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -11,8 +11,10 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { useTranslation } from '@/lib/i18n';
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
+  const { t } = useTranslation("common");
   return (
     <fieldset
       data-slot="field-set"
@@ -87,7 +89,7 @@ function Field({
   className,
   orientation = "vertical",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+}: React.ComponentProps<"div"> {t("variantprops")}<typeof fieldVariants>) {
   return (
     <div
       role="group"

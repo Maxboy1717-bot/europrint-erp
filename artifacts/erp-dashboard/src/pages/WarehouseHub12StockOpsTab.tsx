@@ -69,11 +69,11 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('Material')}</TableHead>
-                    <TableHead>Kod</TableHead>
-                    <TableHead className="text-right">Mavjud</TableHead>
-                    <TableHead className="text-right">Bron</TableHead>
-                    <TableHead className="text-right">Jami</TableHead>
-                    <TableHead>Holat</TableHead>
+                    <TableHead>{t("code")}</TableHead>
+                    <TableHead className="text-right">{t("mavjud")}</TableHead>
+                    <TableHead className="text-right">{t("bron")}</TableHead>
+                    <TableHead className="text-right">{t("total")}</TableHead>
+                    <TableHead>{t("status28")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -113,7 +113,7 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
                 className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white shrink-0"
               >
                 <Truck className="h-3.5 w-3.5 mr-1" />
-                Yangi Kirim
+                {t("yangiKirim")}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">{cfg.receivingHint}</p>
@@ -130,11 +130,11 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
                 <TableHeader>
                   <TableRow>
                     <TableHead>GRN raqami</TableHead>
-                    <TableHead>Yetkazuvchi</TableHead>
+                    <TableHead>{t("yetkazuvchi")}</TableHead>
                     <TableHead>{t('Material')}</TableHead>
-                    <TableHead className="text-right">Miqdor</TableHead>
-                    <TableHead>Holat</TableHead>
-                    <TableHead>Sana</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
+                    <TableHead>{t("status28")}</TableHead>
+                    <TableHead>{t("date")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -180,11 +180,11 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Topshiriq</TableHead>
+                    <TableHead>{t("topshiriq")}</TableHead>
                     <TableHead>{t('Material')}</TableHead>
-                    <TableHead className="text-right">Miqdor</TableHead>
-                    <TableHead>Buyurtmachi</TableHead>
-                    <TableHead>Holat</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
+                    <TableHead>{t("buyurtmachi")}</TableHead>
+                    <TableHead>{t("status28")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -224,21 +224,21 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
                   <Card className="border-amber-200">
                     <CardContent className="p-4 text-center">
                       <ShieldCheck className="h-8 w-8 mx-auto mb-2 text-[var(--ep-yellow)]" />
-                      <p className="text-sm font-bold">Tekshiruv kutmoqda</p>
+                      <p className="text-sm font-bold">{t("tekshiruvKutmoqda")}</p>
                       <p className="text-2xl font-bold text-[var(--ep-yellow)]">{kpisTotal}</p>
                     </CardContent>
                   </Card>
                   <Card className="border-green-200">
                     <CardContent className="p-4 text-center">
                       <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-[var(--ep-green)]" />
-                      <p className="text-sm font-bold">Tasdiqlangan</p>
+                      <p className="text-sm font-bold">{t("approved")}</p>
                       <p className="text-2xl font-bold text-[var(--ep-green)]">—</p>
                     </CardContent>
                   </Card>
                   <Card className="border-red-200">
                     <CardContent className="p-4 text-center">
                       <Trash2 className="h-8 w-8 mx-auto mb-2 text-[var(--ep-red)]" />
-                      <p className="text-sm font-bold">Rad etilgan</p>
+                      <p className="text-sm font-bold">{t("rejected")}</p>
                       <p className="text-2xl font-bold text-[var(--ep-red)]">—</p>
                     </CardContent>
                   </Card>
@@ -250,10 +250,10 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
                   </h4>
                   <ol className="text-sm text-[var(--ep-yellow)] dark:text-amber-400 space-y-1 list-decimal list-inside">
                     <li>Material karantinga kiritiladi (GRN yoki ichki transfer)</li>
-                    <li>QC xodimi namunalarni oladi va testdan o'tkazadi</li>
+                    <li>{t("qcXodimiNamunalarniOladiVa")}</li>
                     <li>Natija kiritiladi: APPROVED (tasdiqlangan) yoki REJECTED (rad)</li>
                     <li>APPROVED — tegishli omborga chiqariladi</li>
-                    <li>REJECTED — SCRAP-MAIN omboriga o'tkaziladi</li>
+                    <li>{t("rejectedScrapMainOmborigaOtkaziladi")}</li>
                   </ol>
                 </div>
               </div>
@@ -261,11 +261,11 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
               /* Boshqa omborlar uchun oddiy QC */
               <div className="text-center py-6 text-[13px] text-muted-foreground">
                 <ShieldCheck className="h-10 w-10 mx-auto mb-2 text-[var(--ep-yellow)]" />
-                <p className="font-medium">Sifat nazorati sahifasi</p>
+                <p className="font-medium">{t("sifatNazoratiSahifasi")}</p>
                 <p className="text-xs mt-2">{cfg.qcHint}</p>
                 {activeWarehouse.code !== "SCRAP-MAIN" && (
                   <p className="text-xs mt-1">
-                    QC tekshiruviga muhtoj materiallar QC-HOLD omboriga o'tkaziladi.
+                    {t("qcTekshiruvigaMuhtojMateriallarQc")}
                   </p>
                 )}
               </div>

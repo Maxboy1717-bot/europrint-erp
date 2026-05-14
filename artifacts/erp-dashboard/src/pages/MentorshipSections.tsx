@@ -97,7 +97,7 @@ export function MentorshipTable({ mentorships, isLoading, onStatusChange, onDele
             <TableHeader>
               <TableRow className="border-none hover:bg-transparent">
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 rounded-l-lg">{t('mentor')}</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Mentee</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mentee")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('course')}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('deadline')}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{"Bonus"}</TableHead>

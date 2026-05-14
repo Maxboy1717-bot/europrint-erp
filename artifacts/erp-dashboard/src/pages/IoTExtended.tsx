@@ -21,8 +21,10 @@ import {
   PredictiveTabContent, DigitalTwinTabContent,
 } from "./IoTExtendedSections";
 import { AddSensorDialog } from "./IoTExtendedDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function IoTExtended() {
+  const { t } = useTranslation("common");
   const [location]          = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "sensors");
   const [showSensorDialog, setShowSensorDialog] = useState(false);
@@ -92,7 +94,7 @@ export default function IoTExtended() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
         <Activity className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-base">IoT + Sensor Monitoring</h1>
+        <h1 className="font-semibold text-base">{t("iotSensorMonitoring")}</h1>
         {criticalAlerts.length > 0 && (
           <Badge variant="destructive" className="ml-2">
             <AlertTriangle className="h-3 w-3 mr-1" />{criticalAlerts.length} Kritik

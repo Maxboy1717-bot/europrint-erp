@@ -14,6 +14,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import type { QuotationFormData, QuotationLineItem } from "./SDQuotationsTypes";
 import { QuotationFormFields } from "./SDQuotationFormFields";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -54,6 +55,7 @@ export function AddEditQuotationDialog({
   onRemoveItem,
   onNewClick,
 }: AddEditQuotationDialogProps) {
+  const { t } = useTranslation("common");
   const currency = form.watch("currency");
   const safeItems = Array.isArray(items) ? items : [];
   const safeProducts = Array.isArray(products) ? products : [];
@@ -72,14 +74,14 @@ export function AddEditQuotationDialog({
           className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2"
         >
           <Plus className="h-4 w-4" />
-          Yangi taklif
+          {t("yangiTaklif")}
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="text-[18px] font-semibold"> {isEditing ? "Taklifni tahrirlash" : "Yangi taklif yaratish"}</DialogTitle>
-          <DialogDescription>Mijozga narx taklifi yarating</DialogDescription>
+          <DialogDescription>{t("mijozgaNarxTaklifiYarating")}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -90,10 +92,10 @@ export function AddEditQuotationDialog({
             {/* Line items */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">Mahsulotlar</h3>
+                <h3 className="font-medium">{t("mahsulotlar")}</h3>
                 <Button type="button" variant="outline" size="sm" onClick={onAddItem} data-testid="button-add-item">
                   <Plus className="h-4 w-4 mr-1" />
-                  Mahsulot qo'shish
+                  {t("mahsulotQoshish")}
                 </Button>
               </div>
 
@@ -102,12 +104,12 @@ export function AddEditQuotationDialog({
                   <div className="ep-table-scroll"><Table>
                     <TableHeader className="sticky top-0 z-10 bg-card">
                       <TableRow>
-                        <TableHead>Mahsulot</TableHead>
-                        <TableHead>Tavsif</TableHead>
-                        <TableHead className="w-24">Miqdor</TableHead>
-                        <TableHead className="w-32">Narx</TableHead>
-                        <TableHead className="w-24">Chegirma %</TableHead>
-                        <TableHead className="w-32">Jami</TableHead>
+                        <TableHead>{t("Mahsulot")}</TableHead>
+                        <TableHead>{t("progress.description")}</TableHead>
+                        <TableHead className="w-24">{t("quantity")}</TableHead>
+                        <TableHead className="w-32">{t("price")}</TableHead>
+                        <TableHead className="w-24">{t("chegirma2")}</TableHead>
+                        <TableHead className="w-32">{t("total")}</TableHead>
                         <TableHead className="w-12"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -120,7 +122,7 @@ export function AddEditQuotationDialog({
                               onValueChange={(value) => onUpdateItem(index, "productId", value)}
                             >
                               <SelectTrigger className="w-full h-9" data-testid={`select-product-${index}`}>
-                                <SelectValue placeholder="Tanlang" />
+                                <SelectValue placeholder={t("tanlang")} />
                               </SelectTrigger>
                               <SelectContent>
                                 {safeProducts.map((product) => (
@@ -186,7 +188,7 @@ export function AddEditQuotationDialog({
                   <div className="p-4 border-t bg-muted/50">
                     <div className="flex justify-end">
                       <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Jami summa</p>
+                        <p className="text-sm text-muted-foreground">{t("jamiSumma")}</p>
                         <p className="text-xl font-bold" data-testid="text-total-amount">
                           {formatCurrency(lineTotal, currency)}
                         </p>
@@ -199,7 +201,7 @@ export function AddEditQuotationDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isSavePending} data-testid="button-save-quotation">
                 {isSavePending ? "Saqlanmoqda..." : isEditing ? "Saqlash" : "Yaratish"}

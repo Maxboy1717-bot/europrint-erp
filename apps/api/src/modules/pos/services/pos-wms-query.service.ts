@@ -74,7 +74,7 @@ interface WarehouseRow {
   total_qty:       string | number | null;
 }
 
-interface MaterialSearchRow {
+export interface MaterialSearchRow {
   id:                  string | number;
   code:                string | null;
   name:                string | null;

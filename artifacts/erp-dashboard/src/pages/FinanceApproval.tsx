@@ -80,7 +80,7 @@ export default function FinanceApproval() {
   });
 
   if (isLoading) {
-    return <div className="p-6">Yuklanmoqda...</div>;
+    return <div className="p-6">{t("Yuklanmoqda...")}</div>;
   }
 
   return (
@@ -88,8 +88,8 @@ export default function FinanceApproval() {
       <div className="flex items-center gap-3">
         <DollarSign className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Moliya Tasdiqlash</h1>
-          <p className="text-muted-foreground">Moliya bo'limi - avans, qarzdorlik va kredit limitini tekshirish</p>
+          <h1 className="text-2xl font-bold">{t("moliyaTasdiqlash")}</h1>
+          <p className="text-muted-foreground">{t("moliyaBolimiAvansQarzdorlikVa")}</p>
         </div>
       </div>
 
@@ -104,8 +104,8 @@ export default function FinanceApproval() {
         <Card>
           <CardContent className="py-12 text-center">
             <CheckCircle className="h-12 w-12 mx-auto text-[var(--ep-green)] mb-4" />
-            <p className="text-lg font-medium">Tasdiqlash kutayotgan buyurtmalar yo'q</p>
-            <p className="text-muted-foreground">Barcha buyurtmalar ko'rib chiqilgan</p>
+            <p className="text-lg font-medium">{t("tasdiqlashKutayotganBuyurtmalarYoq")}</p>
+            <p className="text-muted-foreground">{t("barchaBuyurtmalarKoribChiqilgan")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -120,51 +120,51 @@ export default function FinanceApproval() {
                 <div className="flex gap-2">
                   <Badge variant="outline">
                     <Clock className="h-3 w-3 mr-1" />
-                    Moliya kutilmoqda
+                    {t("moliyaKutilmoqda")}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Mahsulot</p>
+                    <p className="text-sm text-muted-foreground">{t("Mahsulot")}</p>
                     <p className="font-medium">{order.mahsulotNomi}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Tiraj</p>
+                    <p className="text-sm text-muted-foreground">{t("Tiraj")}</p>
                     <p className="font-medium">{order.tiraj?.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Format</p>
+                    <p className="text-sm text-muted-foreground">{t("format")}</p>
                     <p className="font-medium">{order.formatA} x {order.formatB}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Muddat</p>
+                    <p className="text-sm text-muted-foreground">{t("muddat")}</p>
                     <p className="font-medium">{order.tayyorBolishSanasi || "-"}</p>
                   </div>
                 </div>
 
                 <div className="bg-muted/50 p-3 rounded-md mb-4">
-                  <p className="text-sm font-medium mb-2">Moliyaviy ma'lumotlar:</p>
+                  <p className="text-sm font-medium mb-2">{t("moliyaviyMalumotlar1")}</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-xs text-muted-foreground">Kredit limiti</p>
+                        <p className="text-xs text-muted-foreground">{t("kreditLimiti")}</p>
                         <p className="font-medium">-</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Receipt className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-xs text-muted-foreground">Qarzdorlik</p>
+                        <p className="text-xs text-muted-foreground">{t("qarzdorlik")}</p>
                         <p className="font-medium">-</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-xs text-muted-foreground">Avans</p>
+                        <p className="text-xs text-muted-foreground">{t("avans")}</p>
                         <p className="font-medium">-</p>
                       </div>
                     </div>
@@ -179,7 +179,7 @@ export default function FinanceApproval() {
                     data-testid={`btn-view-${order.id}`}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Ko'rish
+                    {t("view")}
                   </Button>
                   <Button 
                     variant="destructive" 
@@ -188,7 +188,7 @@ export default function FinanceApproval() {
                     data-testid={`btn-reject-${order.id}`}
                   >
                     <XCircle className="h-4 w-4 mr-1" />
-                    Rad etish
+                    {t("reject")}
                   </Button>
                   <Button 
                     size="sm"
@@ -196,7 +196,7 @@ export default function FinanceApproval() {
                     data-testid={`btn-approve-${order.id}`}
                   >
                     <CheckCircle className="h-4 w-4 mr-1" />
-                    Tasdiqlash
+                    {t("verify")}
                   </Button>
                 </div>
               </CardContent>
@@ -208,17 +208,17 @@ export default function FinanceApproval() {
       <Dialog open={approvalDialog} onOpenChange={setApprovalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Moliya Tasdiqlash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("moliyaTasdiqlash")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
+            <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
             
             <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md flex items-start gap-2">
               <CheckCircle className="h-4 w-4 text-[var(--ep-green)] mt-0.5" />
               <div>
-                <p className="font-medium text-green-800 dark:text-green-200">Oxirgi bosqich</p>
+                <p className="font-medium text-green-800 dark:text-green-200">{t("oxirgiBosqich")}</p>
                 <p className="text-sm text-[var(--ep-green)] dark:text-green-300">
-                  Tasdiqlangandan so'ng buyurtma AI rejalashtirishga yuboriladi.
+                  {t("tasdiqlangandanSongBuyurtmaAiRejalashtirishga")}
                 </p>
               </div>
             </div>
@@ -231,7 +231,7 @@ export default function FinanceApproval() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApprovalDialog(false)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setApprovalDialog(false)}>{t("cancel")}</Button>
             <Button 
               onClick={() => selectedOrder && approveMutation.mutate(selectedOrder.id)}
               disabled={approveMutation.isPending}
@@ -246,16 +246,16 @@ export default function FinanceApproval() {
       <Dialog open={rejectDialog} onOpenChange={setRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Moliya Rad etish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("moliyaRadEtish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>Buyurtma: <strong>{selectedOrder?.papkaNo}</strong></p>
+            <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
             
             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] mt-0.5" />
               <div>
                 <p className="text-sm text-[var(--ep-yellow)] dark:text-yellow-300">
-                  Rad etish sababini ko'rsating: qarzdorlik, kredit limiti oshgan yoki avans yo'q.
+                  {t("radEtishSababiniKorsatingQarzdorlik")}
                 </p>
               </div>
             </div>
@@ -269,7 +269,7 @@ export default function FinanceApproval() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialog(false)}>Bekor qilish</Button>
+            <Button variant="outline" onClick={() => setRejectDialog(false)}>{t("cancel")}</Button>
             <Button 
               variant="destructive"
               onClick={() => selectedOrder && rejectMutation.mutate(selectedOrder.id)}

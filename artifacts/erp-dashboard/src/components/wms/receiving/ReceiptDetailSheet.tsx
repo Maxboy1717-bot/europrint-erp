@@ -25,6 +25,7 @@ import { GoodsReceipt, GoodsReceiptLine, STATUS_COLORS } from "./types";
 import { useGoodsReceivingTranslations } from "./useGoodsReceivingTranslations";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface ReceiptDetailSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,6 +45,7 @@ export function ReceiptDetailSheet({
   onComplete,
   isCompleting,
 }: ReceiptDetailSheetProps) {
+  const { t } = useTranslation("common");
   const t = useGoodsReceivingTranslations();
 
   const canComplete = useMemo(() => {
@@ -207,7 +209,7 @@ export function ReceiptDetailSheet({
               </div>
               <div>
                 <p className="font-bold text-lg">{t.complete}</p>
-                <p className="text-sm text-muted-foreground">Barcha materiallar QC tekshiruvidan o'tgandan so'ng qabulni yakunlang</p>
+                <p className="text-sm text-muted-foreground">{t("barchaMateriallarQcTekshiruvidanOtgandan")}</p>
               </div>
             </div>
             <Button
@@ -222,7 +224,7 @@ export function ReceiptDetailSheet({
             {!canComplete && (
               <p className="text-xs text-[var(--ep-red)] mt-2 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
-                Hali tekshirilmagan materiallar bor
+                {t("haliTekshirilmaganMateriallarBor")}
               </p>
             )}
           </div>

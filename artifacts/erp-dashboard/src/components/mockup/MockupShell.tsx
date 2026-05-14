@@ -232,13 +232,13 @@ export function MockupShell({children, onLogout: _onLogout }: MockupShellProps) 
 
         {tab === 'chat' && (
           <div className="p-4 text-sm text-[var(--ep-muted)]">
-            Chat ro'yxati keyinroq qo'shiladi
+            {t("chatRoyxatiKeyinroqQoshiladi")}
           </div>
         )}
 
         {tab === 'inbox' && (
           <div className="p-4 text-sm text-[var(--ep-muted)]">
-            Inbox xabarlar keyinroq qo'shiladi
+            {t("inboxXabarlarKeyinroqQoshiladi")}
           </div>
         )}
       </aside>
@@ -275,7 +275,7 @@ export function MockupShell({children, onLogout: _onLogout }: MockupShellProps) 
               >
                 <Printer className="h-4 w-4" />
               </span>
-              EuroPrint
+              {t("europrint1")}
             </div>
 
             {/* Search */}
@@ -283,7 +283,7 @@ export function MockupShell({children, onLogout: _onLogout }: MockupShellProps) 
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--ep-muted)]" />
               <input
                 type="search"
-                placeholder="ERP tizimida qidirish..."
+                placeholder={t("erpTizimidaQidirish")}
                 className="w-full pl-9 pr-16 py-2 rounded-lg text-sm"
                 style={{
                   background: 'hsl(var(--card))',
@@ -305,7 +305,7 @@ export function MockupShell({children, onLogout: _onLogout }: MockupShellProps) 
               onClick={toggleTheme}
               className="w-9 h-9 rounded-full inline-flex items-center justify-center"
               style={{ background: 'hsl(var(--muted))' }}
-              title="Theme"
+              title={t("theme")}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
@@ -333,7 +333,7 @@ export function MockupShell({children, onLogout: _onLogout }: MockupShellProps) 
             <button
               className="relative w-9 h-9 rounded-full inline-flex items-center justify-center"
               style={{ background: 'hsl(var(--muted))' }}
-              title="Bildirishnomalar"
+              title={t("notifications")}
             >
               <Bell className="h-4 w-4" />
               <span

@@ -264,8 +264,8 @@ export function ERPEmployeeTab() {
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-        title="Tayinlashni o'chirish"
-        description="Ushbu xodim tayinlashini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("tayinlashniOchirish")}
+        description={t("ushbuXodimTayinlashiniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

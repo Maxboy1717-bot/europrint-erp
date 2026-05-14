@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KanbanTranslations } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface KanbanMutation {
   mutate: (vars: Record<string, unknown>) => void;
@@ -78,6 +79,7 @@ export function BoardDialogs({
   setNewColumnName,
   createColumnMutation,
 }: BoardDialogsProps) {
+  const { t } = useTranslation("common");
   const [quickPriority, setQuickPriority] = useState<string>("normal");
   const [quickDueDate, setQuickDueDate]   = useState<string>("");
   const [quickAssignee, setQuickAssignee] = useState<string>("");
@@ -114,15 +116,15 @@ export function BoardDialogs({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-[18px] font-semibold">{t.board.newBoard}</DialogTitle>
-            <DialogDescription>Yangi doska nomi kiriting</DialogDescription>
+            <DialogDescription>{t("yangiDoskaNomiKiriting")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Nomi</Label>
+              <Label>{t("name")}</Label>
               <Input
                 value={newBoardName}
                 onChange={(e) => setNewBoardName(e.target.value)}
-                placeholder="Doska nomi"
+                placeholder={t("doskaNomi")}
                 data-testid="input-board-name"
               />
             </div>
@@ -161,7 +163,7 @@ export function BoardDialogs({
               <Input
                 value={quickTaskTitle}
                 onChange={(e) => setQuickTaskTitle(e.target.value)}
-                placeholder="Vazifa sarlavhasi"
+                placeholder={t("vazifaSarlavhasi")}
                 data-testid="input-quick-task-title"
                 disabled={columns.length === 0}
                 style={{ fontSize: 14 }}
@@ -172,7 +174,7 @@ export function BoardDialogs({
             {/* Column selector */}
             {columns.length > 1 && (
               <div>
-                <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>Ustun</Label>
+                <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>{t("ustun")}</Label>
                 <select
                   value={quickColumnId || String(columns[0]?.id ?? "")}
                   onChange={(e) => setQuickColumnId(e.target.value)}
@@ -193,7 +195,7 @@ export function BoardDialogs({
 
             {/* Priority */}
             <div>
-              <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>Muhimlik</Label>
+              <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>{t("priority")}</Label>
               <div style={{ display: "flex", gap: 6 }}>
                 {PRIORITY_OPTIONS.map(opt => (
                   <button
@@ -225,7 +227,7 @@ export function BoardDialogs({
             <div style={{ display: "flex", gap: 10 }}>
               {/* Due date */}
               <div style={{ flex: 1 }}>
-                <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>Muddat</Label>
+                <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>{t("muddat")}</Label>
                 <Input
                   type="datetime-local"
                   value={quickDueDate}
@@ -237,7 +239,7 @@ export function BoardDialogs({
               {/* Assignee */}
               {employees.length > 0 && (
                 <div style={{ flex: 1 }}>
-                  <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>Mas'ul</Label>
+                  <Label style={{ fontSize: 12, marginBottom: 4, display: "block" }}>{t("masul")}</Label>
                   <select
                     value={quickAssignee}
                     onChange={(e) => setQuickAssignee(e.target.value)}
@@ -247,7 +249,7 @@ export function BoardDialogs({
                       outline: "none", cursor: "pointer", height: 38,
                     }}
                   >
-                    <option value="">— Belgilanmagan —</option>
+                    <option value="">{t("belgilanmagan")}</option>
                     {employees.map(emp => (
                       <option key={emp.id} value={String(emp.id)}>
                         {emp.fullName}
@@ -260,7 +262,7 @@ export function BoardDialogs({
 
             {columns.length === 0 && (
               <p style={{ fontSize: 12, color: "#EF4444", margin: 0 }}>
-                Avval "Ustun qo'shish" orqali kamida bitta ustun yarating.
+                {t("avvalUstunQoshishOrqaliKamida")}
               </p>
             )}
           </div>
@@ -288,15 +290,15 @@ export function BoardDialogs({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-[18px] font-semibold">{t.board.newColumn}</DialogTitle>
-            <DialogDescription>Yangi ustun nomi kiriting</DialogDescription>
+            <DialogDescription>{t("yangiUstunNomiKiriting")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Nomi</Label>
+              <Label>{t("name")}</Label>
               <Input
                 value={newColumnName}
                 onChange={(e) => setNewColumnName(e.target.value)}
-                placeholder="Ustun nomi"
+                placeholder={t("ustunNomi")}
                 data-testid="input-column-name"
                 autoFocus
               />

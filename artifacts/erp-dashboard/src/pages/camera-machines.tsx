@@ -29,6 +29,7 @@ import {
 import { Link } from "wouter";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface MachineStatus {
   id: string;
   code: string;
@@ -69,6 +70,7 @@ const stopReasonLabels: Record<string, { uz: string; ru: string }> = {
 const COLORS = ['#22c55e', '#eab308', '#ef4444', '#3b82f6', '#dc2626'];
 
 export default function CameraMachines() {
+  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
   const { data: machines, isLoading: machinesLoading, isError, refetch} = useQuery<MachineStatus[]>({
@@ -143,8 +145,8 @@ export default function CameraMachines() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Mashina Holati</b></>}
-        title="Mashina Holati"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("mashinaHolati")}</b></>}
+        title={t("mashinaHolati")}
         subtitle={t.subtitle}
       />
         </div>

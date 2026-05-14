@@ -25,8 +25,10 @@ import {
   useGoodsReceivingLookups,
 } from "@/components/wms/receiving/useGoodsReceivingHooks";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function GoodsReceiving() {
+  const { t } = useTranslation("common");
   const { language, setLanguage } = useLanguage();
   const t = useGoodsReceivingTranslations();
 
@@ -106,7 +108,7 @@ export default function GoodsReceiving() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="error-state">
         <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-muted-foreground">Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+        <p className="text-muted-foreground">{t("malumotlarniYuklashdaXatolikYuzBerdi")}</p>
       </div>
     );
   }
@@ -116,8 +118,8 @@ export default function GoodsReceiving() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Tovarlar Qabuli</b></>}
-        title="Tovarlar Qabuli"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("tovarlarQabuli")}</b></>}
+        title={t("tovarlarQabuli")}
       />
           <p className="text-muted-foreground">{t.subtitle}</p>
         </div>

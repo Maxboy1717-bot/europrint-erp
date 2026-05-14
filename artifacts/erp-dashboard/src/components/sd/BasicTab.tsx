@@ -7,6 +7,7 @@ import { SdBasicData, SdContactItem, SdDecisionMaker } from "./sd-types";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Globe, MapPin, Mail, Phone, User, Hash, Tag, Linkedin, Crown, ShieldCheck } from "lucide-react";
 import { fmtMoney, fmtDate, fmtNum } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 const INFLUENCE_CONF: Record<number, { label: string; cls: string; ring: string }> = {
   1: { label: "Minimal",   cls: "text-gray-500",   ring: "border-gray-300 bg-gray-100" },
@@ -30,6 +31,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
   contacts: SdContactItem[];
   decisionMakers?: SdDecisionMaker[];
 }) {
+  const { t } = useTranslation("common");
   const d = data ?? ({} as Partial<SdBasicData>);
   const phones = (d.phones as { value: string; type: string }[] | null) || [];
   const emails = (d.emails as { value: string; type: string }[] | null) || [];
@@ -53,26 +55,26 @@ export function BasicTab({ data, contacts, decisionMakers }: {
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-muted-foreground" />Kompaniya ma'lumotlari
+              <Building2 className="h-4 w-4 text-muted-foreground" />{t("kompaniyaMalumotlari")}
             </h3>
           </div>
           <div className="p-4 space-y-3">
-            <InfoRow icon={Building2} label="Nomi" value={d.title || d.name || "—"} bold />
-            {d.customerCode && <InfoRow icon={Hash} label="Mijoz kodi" value={d.customerCode} mono />}
+            <InfoRow icon={Building2} label={t("name")} value={d.title || d.name || "—"} bold />
+            {d.customerCode && <InfoRow icon={Hash} label={t("mijozKodi")} value={d.customerCode} mono />}
             {d.stir && <InfoRow icon={Hash} label="STIR" value={d.stir} />}
-            {d.industry && <InfoRow icon={Tag} label="Soha" value={d.industry} />}
-            {d.address && <InfoRow icon={MapPin} label="Manzil" value={d.address} />}
+            {d.industry && <InfoRow icon={Tag} label={t("soha")} value={d.industry} />}
+            {d.address && <InfoRow icon={MapPin} label={t("address")} value={d.address} />}
             {d.companyStructure && d.companyStructure !== 'independent' && (
               <div className="flex items-center gap-3 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-xs text-muted-foreground w-20 shrink-0">Struktura</span>
+                <span className="text-xs text-muted-foreground w-20 shrink-0">{t("struktura")}</span>
                 <Badge variant="outline" className="text-[10px]">{structureLabel[d.companyStructure] || d.companyStructure}</Badge>
               </div>
             )}
             {websites.map((w, i) => (
               <div key={`w-${i}`} className="flex items-center gap-3 text-sm">
                 <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-xs text-muted-foreground w-20 shrink-0">Veb-sayt</span>
+                <span className="text-xs text-muted-foreground w-20 shrink-0">{t("vebSayt")}</span>
                 <a href={w.value} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">{w.value}</a>
               </div>
             ))}
@@ -83,7 +85,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />Aloqa ma'lumotlari
+              <Phone className="h-4 w-4 text-muted-foreground" />{t("aloqaMalumotlari")}
             </h3>
           </div>
           <div className="p-4 space-y-3">
@@ -94,7 +96,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
                 <Badge variant="outline" className="text-[10px] ml-auto">{p.type}</Badge>
               </div>
             )) : (
-              <p className="text-xs text-muted-foreground">Telefon ko'rsatilmagan</p>
+              <p className="text-xs text-muted-foreground">{t("telefonKorsatilmagan")}</p>
             )}
             {emails.map((e, i) => (
               <div key={`e-${i}`} className="flex items-center gap-3 text-sm">
@@ -103,11 +105,11 @@ export function BasicTab({ data, contacts, decisionMakers }: {
               </div>
             ))}
             <div className="pt-3 mt-3 border-t space-y-2.5">
-              <MiniRow label="Manbaa" value={d.source || "—"} />
-              <MiniRow label="Chegirma" value={`${fmtNum(d.discountRate)}%`} />
-              <MiniRow label="To'lov muddati" value={`${d.paymentTermsDays || 30} kun`} />
-              <MiniRow label="Kredit limiti" value={fmtMoney(d.creditLimit)} />
-              <MiniRow label="Ro'yxatdan" value={fmtDate(d.dateCreate)} />
+              <MiniRow label={t("manbaa")} value={d.source || "—"} />
+              <MiniRow label={t("chegirma1")} value={`${fmtNum(d.discountRate)}%`} />
+              <MiniRow label={t("tolovMuddati")} value={`${d.paymentTermsDays || 30} kun`} />
+              <MiniRow label={t("kreditLimiti")} value={fmtMoney(d.creditLimit)} />
+              <MiniRow label={t("royxatdan")} value={fmtDate(d.dateCreate)} />
             </div>
           </div>
         </div>
@@ -119,7 +121,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <Crown className="h-4 w-4 text-[var(--ep-yellow)]" />
-              Qaror qabul qiluvchilar
+              {t("qarorQabulQiluvchilar")}
               <Badge className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 ml-1" variant="outline">{safeDMs.length}</Badge>
             </h3>
           </div>
@@ -165,7 +167,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              Kontaktlar
+              {t("kontaktlar")}
               <Badge variant="outline" className="text-[10px] ml-1">{safeContacts.length}</Badge>
             </h3>
           </div>
@@ -185,7 +187,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-sm truncate">{c.fullName}</p>
                         {c.isPrimary && (
-                          <Badge className="text-[9px] bg-primary/10 text-primary border-primary/20" variant="outline">Asosiy</Badge>
+                          <Badge className="text-[9px] bg-primary/10 text-primary border-primary/20" variant="outline">{t("primary")}</Badge>
                         )}
                         {c.isDecisionMaker && (
                           <Badge className="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200" variant="outline">DM</Badge>
@@ -203,7 +205,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
                       {c.linkedinUrl && (
                         <a href={c.linkedinUrl} target="_blank" rel="noreferrer"
                           className="text-[11px] text-primary hover:underline flex items-center gap-1 mt-0.5">
-                          <Linkedin className="h-3 w-3" />LinkedIn
+                          <Linkedin className="h-3 w-3" />{t("linkedin")}
                         </a>
                       )}
                       {/* Influence dots */}
@@ -229,7 +231,7 @@ export function BasicTab({ data, contacts, decisionMakers }: {
       {d.comments && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">Izoh</h3>
+            <h3 className="text-sm font-semibold">{t("Izoh")}</h3>
           </div>
           <div className="p-4">
             <p className="text-sm text-muted-foreground leading-relaxed">{d.comments}</p>

@@ -82,14 +82,14 @@ export function FolderTab({nodeId }: FolderTabProps) {
         <div>
           <h3 className="font-semibold text-sm flex items-center gap-2">
             <FolderOpen className="h-4 w-4 text-primary" />
-            Lavozim Papkasi
+            {t("lavozimPapkasi")}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Bu lavozimga biriktirilgan hujjatlar, videolar va testlar
+            {t("buLavozimgaBiriktirilganHujjatlarVideolar")}
           </p>
         </div>
         <Button size="sm" onClick={() => setAddFolderOpen(true)} data-testid="button-add-folder-item">
-          <Plus className="h-3.5 w-3.5 mr-1" />Qo'shish
+          <Plus className="h-3.5 w-3.5 mr-1" />{t("add")}
         </Button>
       </div>
 
@@ -99,11 +99,11 @@ export function FolderTab({nodeId }: FolderTabProps) {
             <FolderOpen className="h-8 w-8" />
           </div>
           <div className="text-center">
-            <p className="font-medium text-foreground">Papka bo'sh</p>
-            <p className="text-sm mt-1">Bu lavozim uchun hujjat, video yoki test qo'shing</p>
+            <p className="font-medium text-foreground">{t("papkaBosh")}</p>
+            <p className="text-sm mt-1">{t("buLavozimUchunHujjatVideo")}</p>
           </div>
           <Button size="sm" onClick={() => setAddFolderOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1" />Birinchi elementni qo'shish
+            <Plus className="h-3.5 w-3.5 mr-1" />{t("birinchiElementniQoshish")}
           </Button>
         </div>
       ) : (
@@ -167,12 +167,12 @@ export function FolderTab({nodeId }: FolderTabProps) {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>O'chirishni tasdiqlang</AlertDialogTitle>
-                                <AlertDialogDescription>Ushbu element papkadan olib tashlanadi.</AlertDialogDescription>
+                                <AlertDialogTitle>{t("ochirishniTasdiqlang")}</AlertDialogTitle>
+                                <AlertDialogDescription>{t("ushbuElementPapkadanOlibTashlanadi")}</AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => removeFolderItemMutation.mutate(item.id)}>O'chirish</AlertDialogAction>
+                                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeFolderItemMutation.mutate(item.id)}>{t("delete")}</AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
@@ -192,12 +192,12 @@ export function FolderTab({nodeId }: FolderTabProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FolderOpen className="h-4 w-4 text-primary" />
-              Papkaga element qo'shish
+              {t("papkagaElementQoshish")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label>Tur</Label>
+              <Label>{t("tur")}</Label>
               <Select
                 value={folderForm.itemType}
                 onValueChange={(v) => setFolderForm((f) => ({ ...f, itemType: v as "document" | "video" | "test" }))}
@@ -207,7 +207,7 @@ export function FolderTab({nodeId }: FolderTabProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="document">
-                    <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" />Hujjat</span>
+                    <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" />{t("hujjat")}</span>
                   </SelectItem>
                   <SelectItem value="video">
                     <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5" />{t('video')}</span>
@@ -219,11 +219,11 @@ export function FolderTab({nodeId }: FolderTabProps) {
               </Select>
             </div>
             <div>
-              <Label>Nomi *</Label>
+              <Label>{t("nomi")}</Label>
               <Input
                 value={folderForm.title}
                 onChange={(e) => setFolderForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="Masalan: Texnika xavfsizligi bo'yicha yo'riqnoma"
+                placeholder={t("masalanTexnikaXavfsizligiBoyichaYoriqnoma")}
                 data-testid="input-folder-item-title"
               />
             </div>
@@ -237,17 +237,17 @@ export function FolderTab({nodeId }: FolderTabProps) {
               />
             </div>
             <div>
-              <Label>Tavsif</Label>
+              <Label>{t("progress.description")}</Label>
               <Input
                 value={folderForm.description}
                 onChange={(e) => setFolderForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Qisqacha tavsif..."
+                placeholder={t("qisqachaTavsif")}
                 data-testid="input-folder-item-description"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddFolderOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setAddFolderOpen(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => addFolderItemMutation.mutate(folderForm)}
               disabled={!folderForm.title || addFolderItemMutation.isPending}

@@ -7,6 +7,7 @@ import { useState, useCallback, useRef } from "react";
 import { barcodeApi, movementsApi, notificationsApi } from "../api/pos-monitor.api";
 import { useBarcode } from "../hooks/useBarcode";
 import PosBarcodeScanner from "./PosBarcodeScanner";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ export default function PosMovementChiqimModal({
   onClose,
   onSuccess,
 }: Props) {
+  const { t } = useTranslation("common");
   const [lines, setLines] = useState<ScannedLine[]>([]);
   const [fromWarehouseId, setFromWarehouseId] = useState(initialFromWarehouse);
   const [toWarehouseId, setToWarehouseId] = useState("");
@@ -288,9 +290,9 @@ export default function PosMovementChiqimModal({
         <div className="pos-modal-overlay" style={{ zIndex: 9998 }} onClick={() => setNoStockMat(null)}>
           <div className="pos-modal" style={{ maxWidth: 340, textAlign: "center" }} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: 44, marginBottom: 10 }}>🚫</div>
-            <div style={{ fontWeight: 700, color: "var(--pos-danger)", fontSize: 16, marginBottom: 8 }}>Qoldiq yo'q!</div>
+            <div style={{ fontWeight: 700, color: "var(--pos-danger)", fontSize: 16, marginBottom: 8 }}>{t("qoldiqYoq")}</div>
             <div style={{ color: "var(--pos-text-muted)", fontSize: 13, marginBottom: 16 }}>
-              <strong>{noStockMat}</strong> — omborda qoldiq yo'q.
+              <strong>{noStockMat}</strong> {t("ombordaQoldiqYoq")}
             </div>
             <button className="pos-btn pos-btn-danger" onClick={() => setNoStockMat(null)}>OK</button>
           </div>
@@ -314,8 +316,8 @@ export default function PosMovementChiqimModal({
           }}>
             <span style={{ fontSize: 20 }}>📤</span>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Tezkor chiqim</div>
-              <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>Barcode skaner orqali</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{t("tezkorChiqim")}</div>
+              <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("barcodeSkanerOrqali")}</div>
             </div>
             <span
               className="pos-badge"
@@ -399,7 +401,7 @@ export default function PosMovementChiqimModal({
                 </div>
                 {!fromWarehouseId && (
                   <div style={{ fontSize: 11, color: "rgba(255,200,0,0.8)", marginTop: 4 }}>
-                    Manba omborini kiriting
+                    {t("manbaOmboriniKiriting")}
                   </div>
                 )}
               </div>
@@ -409,7 +411,7 @@ export default function PosMovementChiqimModal({
                 disabled={!fromWarehouseId}
                 onClick={() => setShowCamera(true)}
               >
-                📷 Kamera
+                {t("kamera")}
               </button>
             </div>
 
@@ -432,7 +434,7 @@ export default function PosMovementChiqimModal({
                   display: "flex",
                   justifyContent: "space-between",
                 }}>
-                  <span>Skanerlangan mahsulotlar</span>
+                  <span>{t("skanerlanganMahsulotlar")}</span>
                   <span>{lines.length} ta · {totalItems.toLocaleString("uz-UZ")} dona</span>
                 </div>
                 <div style={{ maxHeight: 240, overflowY: "auto" }}>
@@ -497,19 +499,19 @@ export default function PosMovementChiqimModal({
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
                 <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 }}>
-                  Manba ombori *
+                  {t("manbaOmbori")}
                 </label>
                 <input className="pos-input" value={fromWarehouseId}
-                  onChange={e => setFromWarehouseId(e.target.value)} placeholder="Ombor ID" />
+                  onChange={e => setFromWarehouseId(e.target.value)} placeholder={t("omborId")} />
               </div>
 
               {needsToWarehouse && (
                 <div>
                   <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 }}>
-                    Manzil ombori *
+                    {t("manzilOmbori")}
                   </label>
                   <input className="pos-input" value={toWarehouseId}
-                    onChange={e => setToWarehouseId(e.target.value)} placeholder="Ombor ID" />
+                    onChange={e => setToWarehouseId(e.target.value)} placeholder={t("omborId")} />
                 </div>
               )}
             </div>
@@ -517,32 +519,32 @@ export default function PosMovementChiqimModal({
             {needsReturnReason && (
               <div>
                 <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 }}>
-                  Qaytarish sababi *
+                  {t("qaytarishSababi")}
                 </label>
                 <textarea className="pos-input" rows={2} value={returnReason}
                   onChange={e => setReturnReason(e.target.value)}
-                  placeholder="Qaytarish sababi..." style={{ resize: "vertical" }} />
+                  placeholder={t("qaytarishSababi1")} style={{ resize: "vertical" }} />
               </div>
             )}
 
             {needsDamageDesc && (
               <div>
                 <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 }}>
-                  Zarar tavsifi *
+                  {t("zararTavsifi")}
                 </label>
                 <textarea className="pos-input" rows={2} value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="Zarar turi va sababi..." style={{ resize: "vertical" }} />
+                  placeholder={t("zararTuriVaSababi")} style={{ resize: "vertical" }} />
               </div>
             )}
 
             {!needsDamageDesc && !needsReturnReason && (
               <div>
                 <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 }}>
-                  Izoh
+                  {t("Izoh")}
                 </label>
                 <input className="pos-input" value={notes}
-                  onChange={e => setNotes(e.target.value)} placeholder="Qo'shimcha izoh..." />
+                  onChange={e => setNotes(e.target.value)} placeholder={t("qoshimchaIzoh")} />
               </div>
             )}
 
@@ -563,7 +565,7 @@ export default function PosMovementChiqimModal({
               }}>
                 <div style={{ fontSize: 36, marginBottom: 8 }}>✅</div>
                 <div style={{ fontWeight: 700, color: "var(--pos-success)", fontSize: 15, marginBottom: 4 }}>
-                  Chiqim yaratildi!
+                  {t("chiqimYaratildi")}
                 </div>
                 {done.documentNumber && (
                   <div className="pos-mono" style={{ fontSize: 13, color: "var(--pos-text-muted)", marginBottom: 12 }}>
@@ -571,7 +573,7 @@ export default function PosMovementChiqimModal({
                   </div>
                 )}
                 <button className="pos-btn pos-btn-success" onClick={() => onSuccess(done.id)}>
-                  Yopish
+                  {t("close2")}
                 </button>
               </div>
             )}
@@ -589,7 +591,7 @@ export default function PosMovementChiqimModal({
               background: "var(--pos-card)",
             }}>
               <button className="pos-btn pos-btn-ghost" onClick={onClose} disabled={submitting}>
-                Bekor qilish
+                {t("cancel")}
               </button>
               <button
                 className="pos-btn pos-btn-ghost"

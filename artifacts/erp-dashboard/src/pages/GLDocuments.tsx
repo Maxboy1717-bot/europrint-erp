@@ -32,11 +32,11 @@ interface GLDocument {
 function getStatusBadge(status: string) {
   switch (status) {
     case "draft":
-      return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">Qoralama</Badge>;
+      return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("draft")}</Badge>;
     case "posted":
-      return <EPStatusPill tone="success">Tasdiqlangan</EPStatusPill>;
+      return <EPStatusPill tone="success">{t("approved")}</EPStatusPill>;
     case "reversed":
-      return <EPStatusPill tone="danger">Bekor qilingan</EPStatusPill>;
+      return <EPStatusPill tone="danger">{t("cancelledDesc")}</EPStatusPill>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -119,8 +119,8 @@ export default function GLDocuments() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="gl-documents-loading">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">GL Hujjatlar</b></>}
-        title="GL Hujjatlar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("glHujjatlar")}</b></>}
+        title={t("glHujjatlar")}
       />
         <div className="flex items-center justify-center h-64">
           <EPLoader size={32} tone="muted" />
@@ -139,10 +139,10 @@ export default function GLDocuments() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">GL Hujjatlar</b></>}
-        title="GL Hujjatlar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("glHujjatlar")}</b></>}
+        title={t("glHujjatlar")}
       />
-          <p className="text-muted-foreground mt-1">Bosh jurnal yozuvlari va hujjatlar</p>
+          <p className="text-muted-foreground mt-1">{t("boshJurnalYozuvlariVaHujjatlar")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button 
@@ -151,7 +151,7 @@ export default function GLDocuments() {
             data-testid="button-refresh"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Yangilash
+            {t("refresh")}
           </Button>
           <Button 
             variant="outline" 
@@ -169,7 +169,7 @@ export default function GLDocuments() {
             data-testid="button-export"
           >
             <Download className="h-4 w-4 mr-2" />
-            Excel
+            {t("excel")}
           </Button>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function GLDocuments() {
           <div className="flex flex-col gap-1 mb-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Filter className="h-4 w-4" />
-              Filterlar
+              {t("filterlar")}
             </h3>
           </div>
           <div className="flex flex-wrap items-end gap-4">
@@ -187,18 +187,18 @@ export default function GLDocuments() {
               <label className="text-sm text-muted-foreground">{t('status28')}</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-[180px] h-9" data-testid="select-status-filter">
-                  <SelectValue placeholder="Barchasi" />
+                  <SelectValue placeholder={t("Barchasi")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barchasi</SelectItem>
-                  <SelectItem value="draft">Qoralama</SelectItem>
-                  <SelectItem value="posted">Tasdiqlangan</SelectItem>
-                  <SelectItem value="reversed">Bekor qilingan</SelectItem>
+                  <SelectItem value="all">{t("Barchasi")}</SelectItem>
+                  <SelectItem value="draft">{t("draft")}</SelectItem>
+                  <SelectItem value="posted">{t("approved")}</SelectItem>
+                  <SelectItem value="reversed">{t("cancelledDesc")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Boshlanish sanasi</label>
+              <label className="text-sm text-muted-foreground">{t("startDate")}</label>
               <Input
                 type="date"
                 value={startDate}
@@ -208,7 +208,7 @@ export default function GLDocuments() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Tugash sanasi</label>
+              <label className="text-sm text-muted-foreground">{t("endDate")}</label>
               <Input
                 type="date"
                 value={endDate}
@@ -222,26 +222,26 @@ export default function GLDocuments() {
               onClick={clearFilters}
               data-testid="button-clear-filters"
             >
-              Tozalash
+              {t("tozalash")}
             </Button>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="bg-card rounded-lg p-5" data-testid="card-total-documents">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami hujjatlar</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiHujjatlar")}</p>
             <p className="text-4xl font-bold tracking-tight text-foreground mt-1" data-testid="text-total-documents">{documents.length}</p>
           </div>
 
           <div className="bg-card rounded-lg p-5" data-testid="card-total-debit">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami Debet</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiDebet")}</p>
             <p className="text-4xl font-bold tracking-tight text-primary mt-1" data-testid="text-total-debit">
               {formatCurrency(totalDebit)}
             </p>
           </div>
 
           <div className="bg-card rounded-lg p-5" data-testid="card-total-credit">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami Kredit</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiKredit")}</p>
             <p className="text-4xl font-bold tracking-tight text-[var(--ep-red)] mt-1" data-testid="text-total-credit">
               {formatCurrency(totalCredit)}
             </p>
@@ -252,12 +252,12 @@ export default function GLDocuments() {
           <div className="flex flex-col gap-1 mb-6">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              GL Hujjatlar ro'yxati
+              {t("glHujjatlarRoyxati")}
             </h3>
           </div>
           {sortedDocuments.length === 0 ? (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
-              Hujjatlar topilmadi.
+              {t("hujjatlarTopilmadi1")}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -280,18 +280,18 @@ export default function GLDocuments() {
                       data-testid="th-date"
                     >
                       <div className="flex items-center gap-1">
-                        Sana
+                        {t("date")}
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </TableHead>
-                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6" data-testid="th-description">Tavsif</TableHead>
+                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6" data-testid="th-description">{t("progress.description")}</TableHead>
                     <TableHead 
                       className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => handleSort("totalDebit")}
                       data-testid="th-debit"
                     >
                       <div className="flex items-center justify-end gap-1">
-                        Debet
+                        {t("debet")}
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </TableHead>
@@ -301,7 +301,7 @@ export default function GLDocuments() {
                       data-testid="th-credit"
                     >
                       <div className="flex items-center justify-end gap-1">
-                        Kredit
+                        {t("loan")}
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </TableHead>

@@ -71,7 +71,7 @@ export function SettingsTabContact({ loading, form, onChange, onSave, isSaving }
                 id="address"
                 value={form.address}
                 onChange={(e) => onChange({ address: e.target.value })}
-                placeholder="Toshkent shahar, Yashnobod tumani"
+                placeholder={t("toshkentShaharYashnobodTumani")}
                 data-testid="input-contact-address"
               />
             </div>

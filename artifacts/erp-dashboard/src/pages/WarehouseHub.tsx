@@ -37,8 +37,10 @@ import { OperatorDebtsPanel } from "@/components/wms/hub/OperatorDebtsPanel";
 import { RecentMovementsPanel } from "@/components/wms/hub/RecentMovementsPanel";
 import { ScanResultDialog } from "@/components/wms/hub/ScanResultDialog";
 import { EPErrorState, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseHub() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const params = useParams<{ code?: string }>();
   const [, navigate] = useLocation();
@@ -208,7 +210,7 @@ export default function WarehouseHub() {
         <div className="relative flex-1">
           <ScanBarcode className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
-            placeholder="Barcode skanerlang yoki qo'lda kiriting..."
+            placeholder={t("barcodeSkanerlangYokiQoldaKiriting")}
             value={scanInput}
             onChange={(e) => setScanInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleScan()}
@@ -221,7 +223,7 @@ export default function WarehouseHub() {
           disabled={isSyncing || !selectedWarehouse}
           variant="outline"
           className="h-14 px-4 rounded-xl border-border text-sm font-semibold"
-          title="POS Monitor terminallariga stok ma'lumotini yuborish"
+          title={t("posMonitorTerminallarigaStokMalumotini")}
           data-testid="button-sync-pos"
         >
           {isSyncing ? (
@@ -237,9 +239,9 @@ export default function WarehouseHub() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-muted/60 p-1 rounded-xl border border-border h-auto w-full grid grid-cols-1 md:grid-cols-3">
-          <TabsTrigger value="zaxira" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Boxes className="h-4 w-4 mr-2" />Zaxira</TabsTrigger>
-          <TabsTrigger value="jarayon" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><ArrowRightLeft className="h-4 w-4 mr-2" />Jarayon</TabsTrigger>
-          <TabsTrigger value="nazorat" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Eye className="h-4 w-4 mr-2" />Nazorat</TabsTrigger>
+          <TabsTrigger value="zaxira" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Boxes className="h-4 w-4 mr-2" />{t("zaxira1")}</TabsTrigger>
+          <TabsTrigger value="jarayon" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><ArrowRightLeft className="h-4 w-4 mr-2" />{t("jarayon")}</TabsTrigger>
+          <TabsTrigger value="nazorat" className="rounded-xl py-3 font-black text-xs uppercase tracking-wider"><Eye className="h-4 w-4 mr-2" />{t("nazorat")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="zaxira" className="space-y-4 focus-visible:outline-none">

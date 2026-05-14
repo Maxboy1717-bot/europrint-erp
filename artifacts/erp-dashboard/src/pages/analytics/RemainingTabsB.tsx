@@ -12,6 +12,7 @@ import {
   ResponsiveContainer, PieChart, Pie, ComposedChart, Line,
 } from "recharts";
 import type { RemainingTabsProps } from "./RemainingTabsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 export { HrTab } from "./RemainingTabsHr";
 
@@ -23,50 +24,51 @@ export function TestsTab({
   stats,
   testResults,
 }: Pick<RemainingTabsProps, 'stats' | 'testResults'>) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jami Testlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("jamiTestlar")}</CardTitle>
             <Target className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalTests || 0}</div>
-            <p className="text-xs text-muted-foreground">Barcha testlar</p>
+            <p className="text-xs text-muted-foreground">{t("barchaTestlar")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'tganlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("otganlar")}</CardTitle>
             <CheckCircle className="w-4 h-4 text-[var(--ep-green)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--ep-green)]">{stats?.passedTests || 0}</div>
-            <p className="text-xs text-muted-foreground">Muvaffaqiyatli</p>
+            <p className="text-xs text-muted-foreground">{t("muvaffaqiyatli1")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'tish Foizi</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("otishFoizi1")}</CardTitle>
             <Award className="w-4 h-4 text-[var(--ep-blue)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--ep-blue)]">{stats?.passRate || 0}%</div>
-            <p className="text-xs text-muted-foreground">Umumiy foiz</p>
+            <p className="text-xs text-muted-foreground">{t("umumiyFoiz")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'rtacha Vaqt</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("ortachaVaqt")}</CardTitle>
             <Clock className="w-4 h-4 text-[var(--ep-purple)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--ep-purple)]">{stats?.averageTestTime || 0}</div>
-            <p className="text-xs text-muted-foreground">Daqiqa</p>
+            <p className="text-xs text-muted-foreground">{t("daqiqa1")}</p>
           </CardContent>
         </Card>
       </div>
@@ -74,8 +76,8 @@ export function TestsTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>📊 Test Natijalari</CardTitle>
-            <CardDescription>Har bir test bo'yicha o'rtacha ball</CardDescription>
+            <CardTitle>{t("testNatijalari")}</CardTitle>
+            <CardDescription>{t("harBirTestBoyichaOrtacha")}</CardDescription>
           </CardHeader>
           <CardContent>
             {testResults.length > 0 ? (
@@ -93,7 +95,7 @@ export function TestsTab({
               </div>
             ) : (
               <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -101,8 +103,8 @@ export function TestsTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>🎯 O'tish Statistikasi</CardTitle>
-            <CardDescription>O'tgan va o'tmagan xodimlar nisbati</CardDescription>
+            <CardTitle>{t("otishStatistikasi")}</CardTitle>
+            <CardDescription>{t("otganVaOtmaganXodimlarNisbati")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="glass-chart">
@@ -132,8 +134,8 @@ export function TestsTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>❓ Savol Turi Taqsimoti</CardTitle>
-            <CardDescription>Savol turlariga ko'ra tahlil</CardDescription>
+            <CardTitle>{t("savolTuriTaqsimoti")}</CardTitle>
+            <CardDescription>{t("savolTurlarigaKoraTahlil")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="glass-chart">
@@ -162,7 +164,7 @@ export function TestsTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>⏱️ Har bir savolga ketgan vaqt</CardTitle>
+            <CardTitle>{t("harBirSavolgaKetganVaqt")}</CardTitle>
             <CardDescription>O'rtacha vaqt (soniyalarda)</CardDescription>
           </CardHeader>
           <CardContent>
@@ -189,8 +191,8 @@ export function TestsTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🔄 Qayta Urinishlar Tahlili</CardTitle>
-          <CardDescription>Xodimlarning qayta urinish naqshlari</CardDescription>
+          <CardTitle>{t("qaytaUrinishlarTahlili")}</CardTitle>
+          <CardDescription>{t("xodimlarningQaytaUrinishNaqshlari")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="glass-chart">
@@ -216,8 +218,8 @@ export function TestsTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>⭐ Testlar Qiyinlik Darajasi</CardTitle>
-          <CardDescription>Qiyinlik bo'yicha testlar taqsimoti</CardDescription>
+          <CardTitle>{t("testlarQiyinlikDarajasi")}</CardTitle>
+          <CardDescription>{t("qiyinlikBoyichaTestlarTaqsimoti")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

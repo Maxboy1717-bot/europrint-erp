@@ -21,6 +21,7 @@ import {
   CareerTransferHistory,
 } from "./CareerTabSections";
 import { CareerEditForm } from "./CareerTabDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 const INITIAL_FORM: CareerFormState = {
   nextRecommendedPosition: "",
@@ -32,6 +33,7 @@ const INITIAL_FORM: CareerFormState = {
 };
 
 export function CareerTab({ employeeId }: CareerTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<CareerFormState>(INITIAL_FORM);
@@ -90,9 +92,9 @@ export function CareerTab({ employeeId }: CareerTabProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Karera rejasi
+              {t("kareraRejasi")}
             </CardTitle>
-            <CardDescription>Succession planning va karera yo'nalishi</CardDescription>
+            <CardDescription>{t("successionPlanningVaKareraYonalishi")}</CardDescription>
           </div>
           <Button
             size="sm"
@@ -109,9 +111,9 @@ export function CareerTab({ employeeId }: CareerTabProps) {
             data-testid="button-edit-career"
           >
             {editing ? (
-              saveMutation.isPending ? "Saqlanmoqda..." : <><Check className="h-4 w-4 mr-1" />Saqlash</>
+              saveMutation.isPending ? "Saqlanmoqda..." : <><Check className="h-4 w-4 mr-1" />{t("Saqlash")}</>
             ) : (
-              <><Edit className="h-4 w-4 mr-1" />Tahrirlash</>
+              <><Edit className="h-4 w-4 mr-1" />{t("edit")}</>
             )}
           </Button>
         </CardHeader>

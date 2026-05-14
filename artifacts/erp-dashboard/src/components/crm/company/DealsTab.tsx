@@ -14,26 +14,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Deal, formatAmount } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface DealsTabProps {
   deals: Deal[];
 }
 
 export function DealsTab({ deals }: DealsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="mt-4">
       {deals.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">Bitimlar yo'q</p>
+          <p className="text-sm">{t("bitimlarYoq")}</p>
         </div>
       ) : (
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nomi</TableHead>
-              <TableHead>Summa</TableHead>
-              <TableHead>Bosqich</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("summa")}</TableHead>
+              <TableHead>{t("milestone1")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

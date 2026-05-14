@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, CheckCircle, Clock, Percent, ArrowLeftRight, LogOut } from "lucide-react";
 import type { AttendanceRecord, AttendanceStats, ShiftSwapRecord, ZoneTrackingLog, TranslationFn } from "./profile-types";
 import { getEarlyDepartures } from "./AttendanceTabTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   AttendanceViewCard,
   DetailedStatsCard,
@@ -35,6 +36,7 @@ export function AttendanceTab({
   t, tCommon, loadingAttendance, attendanceStats, attendancePieData, attendanceData,
   shiftSwaps, loadingShiftSwaps, zoneLogs, loadingZoneLogs,
 }: AttendanceTabProps) {
+  const { t } = useTranslation("common");
   const earlyDepartures = getEarlyDepartures(attendanceData);
   const [viewMode, setViewMode] = useState<"calendar" | "table">("calendar");
 
@@ -108,7 +110,7 @@ export function AttendanceTab({
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Erta ketishlar</p>
+                <p className="text-xs text-muted-foreground">{t("ertaKetishlar")}</p>
                 <p className="text-2xl font-bold text-[var(--ep-primary)]">{earlyDepartures.length}</p>
                 <p className="text-xs text-muted-foreground mt-1">17:00 dan oldin ketgan kunlar</p>
               </div>
@@ -120,7 +122,7 @@ export function AttendanceTab({
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Smena almashtirishlar</p>
+                <p className="text-xs text-muted-foreground">{t("smenaAlmashtirishlar")}</p>
                 <p className="text-2xl font-bold text-[var(--ep-cyan)]">{shiftSwaps.length}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {(Array.isArray(shiftSwaps) ? shiftSwaps : []).filter(s => s.status === "approved").length} ta tasdiqlangan

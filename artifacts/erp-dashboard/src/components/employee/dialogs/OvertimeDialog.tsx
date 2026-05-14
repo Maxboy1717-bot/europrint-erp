@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from '@/lib/i18n';
 
 interface OvertimeForm {
   workDate: string;
@@ -35,6 +36,7 @@ export function OvertimeDialog({
   onSave,
   isPending
 }: OvertimeDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof OvertimeForm, value: string) => {
     onChange({ ...form, [field]: value });
   };
@@ -43,11 +45,11 @@ export function OvertimeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Ish vaqtidan tashqari mehnatni qayd etish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("ishVaqtidanTashqariMehnatniQayd")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label htmlFor="workDate">Sana</Label>
+          <Label htmlFor="workDate">{t("date")}</Label>
             <Input
               id="workDate"
               type="date"
@@ -57,7 +59,7 @@ export function OvertimeDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="hours">Soatlar soni</Label>
+          <Label htmlFor="hours">{t("soatlarSoni")}</Label>
               <Input
                 id="hours"
                 type="number"
@@ -66,7 +68,7 @@ export function OvertimeDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="multiplier">Koeffitsient</Label>
+          <Label htmlFor="multiplier">{t("koeffitsient")}</Label>
               <Select
                 value={form.multiplier}
                 onValueChange={(val) => updateField("multiplier", val)}
@@ -91,7 +93,7 @@ export function OvertimeDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="reason">Sabab</Label>
+          <Label htmlFor="reason">{t("sabab")}</Label>
             <Textarea
               id="reason"
               value={form.reason}
@@ -100,7 +102,7 @@ export function OvertimeDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

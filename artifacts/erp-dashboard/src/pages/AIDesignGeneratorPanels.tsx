@@ -16,8 +16,10 @@ import {
 } from "./AIDesignGeneratorTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Status zanjiri komponenti ────────────────────────────────────────────────
 export function StatusChain({ current }: { current: string }) {
+  const { t } = useTranslation("common");
   const idx = STATUS_CHAIN.indexOf(current as typeof STATUS_CHAIN[number]);
   return (
     <div className="flex items-center gap-1 flex-wrap" data-testid="status-chain">
@@ -59,7 +61,7 @@ export function AiCheckPanel({
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-[var(--ep-blue)]" />
-          AI Sifat Tekshiruvi
+          {t("aiSifatTekshiruvi")}
         </h4>
         <Button
           size="sm"
@@ -126,6 +128,7 @@ export function AiCheckPanel({
 
 // ─── Tooling Tab komponenti ──────────────────────────────────────────────────
 export function ToolingTab() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [forecastId, setForecastId] = useState<string | null>(null);
   const [forecastData, setForecastData] = useState<Record<string, unknown> | null>(null);
@@ -159,8 +162,8 @@ export function ToolingTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold">Bosma Asboblar va Qoliplar</h3>
-          <p className="text-xs text-muted-foreground">10 tur — eskirish prognozi bilan</p>
+          <h3 className="text-base font-semibold">{t("bosmaAsboblarVaQoliplar")}</h3>
+          <p className="text-xs text-muted-foreground">{t("k10TurEskirishPrognoziBilan")}</p>
         </div>
         <Badge variant="outline">{toolingList.length} ta asbob</Badge>
       </div>
@@ -197,7 +200,7 @@ export function ToolingTab() {
 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Eskirish</span>
+                      <span className="text-muted-foreground">{t("eskirish")}</span>
                       <span className={`font-medium ${wear >= 90 ? "text-[var(--ep-red)]" : wear >= 70 ? "text-[var(--ep-primary)]" : "text-[var(--ep-green)]"}`}>
                         {wear.toFixed(1)}%
                       </span>
@@ -242,7 +245,7 @@ export function ToolingTab() {
                     data-testid={`button-forecast-${tool.id}`}
                   >
                     {forecastLoading && forecastId === tool.id ? (
-                      <><EPLoader size={12} className="mr-1" />Hisoblanmoqda...</>
+                      <><EPLoader size={12} className="mr-1" />{t("hisoblanmoqda")}</>
                     ) : (
                       <><AlertCircle className="h-3 w-3 mr-1" />Eskirish Prognozi (AI)</>
                     )}

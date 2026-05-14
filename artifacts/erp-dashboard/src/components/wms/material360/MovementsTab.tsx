@@ -13,8 +13,10 @@ import {
 } from "recharts";
 import { KpiCard } from "./KpiCard";
 import { fmtQty, fmtDate, type MovementsInfo, type BasicInfo } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function MovementsTab({ movements, basic }: { movements: MovementsInfo; basic: BasicInfo }) {
+  const { t } = useTranslation("common");
   const [filter, setFilter] = useState("all");
   const recent = (movements.recent || []).filter(t => filter === "all" || t.transactionType === filter);
   const monthlyData = (movements.monthlyTrend || []).map(m => ({ month: String(m.month).slice(5), kirim: m.totalIn, chiqim: m.totalOut }));
@@ -23,7 +25,7 @@ export function MovementsTab({ movements, basic }: { movements: MovementsInfo; b
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         <KpiCard icon={TrendingUp} label="30 kun kirim" value={fmtQty(movements.last30Days?.totalIn, basic.unitOfMeasure)} color="text-[var(--ep-green)]" />
         <KpiCard icon={TrendingDown} label="30 kun chiqim" value={fmtQty(movements.last30Days?.totalOut, basic.unitOfMeasure)} color="text-[var(--ep-red)]" />
-        <KpiCard icon={RefreshCw} label="Aylanma"
+        <KpiCard icon={RefreshCw} label={t("aylanma")}
           value={movements.last30Days?.turnoverDays != null ? `${movements.last30Days.turnoverDays} kun` : "Noma'lum"} />
       </div>
       {monthlyData.length > 0 && (
@@ -46,7 +48,7 @@ export function MovementsTab({ movements, basic }: { movements: MovementsInfo; b
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <CardTitle className="text-sm">So'nggi harakatlar</CardTitle>
+            <CardTitle className="text-sm">{t("songgiHarakatlar")}</CardTitle>
             <div className="flex gap-1">
               {([["all", "Barchasi"], ["kirim", "Kirim"], ["chiqim", "Chiqim"]]).map(([v, l]) => (
                 <Button key={v} size="sm" variant={filter === v ? "default" : "outline"}
@@ -64,7 +66,7 @@ export function MovementsTab({ movements, basic }: { movements: MovementsInfo; b
             </thead>
             <tbody>
               {recent.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">Ma'lumot yo'q</td></tr>
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">{t("malumotYoq")}</td></tr>
               ) : (Array.isArray(recent) ? recent : []).map(t => (
                 <tr key={t.id} className="border-b hover:bg-muted/50 transition-colors">
                   <td className="px-4 py-2">{fmtDate(t.transactionDate)}</td>

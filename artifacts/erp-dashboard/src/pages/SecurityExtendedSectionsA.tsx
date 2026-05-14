@@ -18,10 +18,12 @@ import {
   PPE_ZONES,
 } from "./SecurityExtendedTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── PPEMonitoring ────────────────────────────────────────────────────────
 
 export function PPEMonitoring() {
+  const { t } = useTranslation("common");
   const { data: statsData, isLoading: statsLoading } = useQuery<PPEStats>({
     queryKey: ["/api/security/ppe-stats"],
   });
@@ -38,7 +40,7 @@ export function PPEMonitoring() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">PPE (Shaxsiy Himoya Vositalari) Nazorati</h2>
         <Button variant="outline" size="sm" onClick={() => refetch()} data-testid="button-refresh-ppe">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> {t("refresh")}
         </Button>
       </div>
 
@@ -57,7 +59,7 @@ export function PPEMonitoring() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Zo'nalar bo'yicha PPE muvofiqlik</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("zonalarBoyichaPpeMuvofiqlik")}</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
             {PPE_ZONES.map((z, i) => (
@@ -67,7 +69,7 @@ export function PPEMonitoring() {
                   {z.compliance !== null ? (
                     <Badge variant={z.compliance >= 95 ? "default" : z.compliance >= 80 ? "secondary" : "destructive"}>{z.compliance}%</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">Ma'lumot yo'q</Badge>
+                    <Badge variant="outline" className="text-xs text-muted-foreground">{t("malumotYoq")}</Badge>
                   )}
                 </div>
                 <div className="flex flex-wrap gap-1">
@@ -88,10 +90,10 @@ export function PPEMonitoring() {
 
       {violations.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />Kamera tomonidan aniqlangan PPE buzilishlari</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />{t("kameraTomonidanAniqlanganPpeBuzilishlari")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
-              <TableHeader><TableRow><TableHead>Vaqt</TableHead><TableHead>Kamera</TableHead><TableHead>Xodim</TableHead><TableHead>Muammo</TableHead><TableHead>Ishonch</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("time")}</TableHead><TableHead>{t("camera")}</TableHead><TableHead>{t("xodim1")}</TableHead><TableHead>{t("muammo")}</TableHead><TableHead>{t("ishonch")}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {violations.slice(0, 10).map((v: { id: number | string; timestamp?: string; cameraName?: string; cameraId?: string | number; employeeName?: string; label?: string; confidence?: number }) => (
                   <TableRow key={v.id} data-testid={`row-ppe-violation-${v.id}`} className="hover:bg-muted/40 transition-colors">
@@ -112,8 +114,8 @@ export function PPEMonitoring() {
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
             <CheckCircle className="h-8 w-8 mx-auto mb-2 text-[var(--ep-green)]" />
-            <p>Hozircha kamera tomonidan PPE buzilishi aniqlanmagan</p>
-            <p className="text-xs mt-1">Kamera AI tomonidan buzilishlar aniqlanganda bu yerda ko'rinadi</p>
+            <p>{t("hozirchaKameraTomonidanPpeBuzilishi")}</p>
+            <p className="text-xs mt-1">{t("kameraAiTomonidanBuzilishlarAniqlanganda")}</p>
           </CardContent>
         </Card>
       )}
@@ -133,7 +135,7 @@ interface ZoneAccessSectionProps {
 export function ZoneAccessSection({ dailySummary, attendanceRecords, presentToday, activeVisitorsCount }: ZoneAccessSectionProps) {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-foreground">Kirish Zonalari Nazorati</h2>
+      <h2 className="text-xl font-bold text-foreground">{t("kirishZonalariNazorati")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "Bugun kirganlar", v: dailySummary?.totalEntries ?? attendanceRecords.length, c: "text-primary" },

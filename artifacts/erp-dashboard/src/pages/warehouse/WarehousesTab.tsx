@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Warehouse, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { WarehouseData, WarehouseFormData, Lang, Translations, warehouseSchema } from "./warehouse-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface WarehousesTabProps {
   lang: Lang;
@@ -30,6 +31,7 @@ interface WarehousesTabProps {
 }
 
 export function WarehousesTab({ lang, t }: WarehousesTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -236,7 +238,7 @@ export function WarehousesTab({ lang, t }: WarehousesTabProps) {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
             <AlertDialogDescription>{lang === "uz" ? "Bu amalni bekor qilib bo'lmaydi." : "Это действие нельзя отменить."}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

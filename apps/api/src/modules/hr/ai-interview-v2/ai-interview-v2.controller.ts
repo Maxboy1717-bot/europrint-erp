@@ -74,8 +74,8 @@ export class AiInterviewV2Controller {
   @Post('sessions')
   async create(@Body() body: CreateSessionDto) {
     return unwrapOrInternal(await this.svc.createSession({
-      candidateId: body.candidate_id,
-      vacancyId: body.vacancy_id,
+      candidateId: body.candidate_id ?? undefined,
+      vacancyId: body.vacancy_id ?? undefined,
       candidateName: body.candidate_name,
       candidateLanguage: body.candidate_language,
       scheduledAt: body.scheduled_at,

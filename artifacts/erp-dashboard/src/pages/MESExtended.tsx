@@ -31,10 +31,12 @@ import { ZonesTab, MaintenanceTab } from "./MESExtendedTabsB";
 import { GamificationTab } from "./MESExtendedTabsD";
 import { NormsTab, SmenaTab } from "./MESExtendedTabsC";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function MESExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "oee");
 
@@ -119,8 +121,8 @@ export default function MESExtended() {
   return (
     <div className="space-y-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">MES — Sex Boshqaruvi</b></>}
-        title="MES — Sex Boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("mesSexBoshqaruvi")}</b></>}
+        title={t("mesSexBoshqaruvi")}
         subtitle="OEE monitoring, smena boshqaruvi, texnik xizmat"
       >
         {currentShift && (
@@ -130,7 +132,7 @@ export default function MESExtended() {
           </Badge>
         )}
         <Button variant="outline" size="sm" onClick={() => refetchOee()}>
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </EPPageHeader>
 

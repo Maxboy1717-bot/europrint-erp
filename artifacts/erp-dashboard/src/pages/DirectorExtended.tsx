@@ -58,23 +58,23 @@ function exportDirectorSummaryToPDF(
     .badge-critical{background:#fef2f2;color:#dc2626}.badge-high{background:#fff7ed;color:#ea580c}.badge-medium{background:#f0fdf4;color:#16a34a}
     .footer{margin-top:30px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:10px}
     @media print{body{margin:15px}}</style></head><body>
-    <h1>Europrint — Direktor Kunlik Xulosa</h1>
+    <h1>{t("europrintDirektorKunlikXulosa")}</h1>
     <div class="subtitle">Sana: ${escHtml(date)} | Yaratilgan: ${escHtml(new Date().toLocaleTimeString("uz-UZ"))}</div>
-    <h2>Asosiy Ko'rsatkichlar</h2>
+    <h2>{t("asosiyKorsatkichlar")}</h2>
     <div class="grid">
-      <div class="card"><div class="card-label">Oylik buyurtmalar</div><div class="card-value">${escHtml(orders.month ?? 0)} ta</div></div>
-      <div class="card"><div class="card-label">Ishlab chiqarishda</div><div class="card-value">${escHtml(orders.inProduction ?? 0)} ta</div></div>
-      <div class="card"><div class="card-label">Kechikkan</div><div class="card-value" style="color:${(orders.overdue ?? 0) > 0 ? "#dc2626" : "#16a34a"}">${escHtml(orders.overdue ?? 0)} ta</div></div>
-      <div class="card"><div class="card-label">OEE o'rtacha</div><div class="card-value">${stats.oee ? escHtml(stats.oee) + "%" : "—"}</div></div>
-      <div class="card"><div class="card-label">Davomad</div><div class="card-value">${escHtml(hr.present ?? 0)}/${escHtml(hr.total ?? 0)} (${escHtml(hr.attendanceRate ?? 0)}%)</div></div>
-      <div class="card"><div class="card-label">Ogohlantirishlar</div><div class="card-value">${escHtml((alerts.iot ?? 0) + (alerts.minStock ?? 0))} ta</div></div>
+      <div class="card"><div class="card-label">{t("oylikBuyurtmalar")}</div><div class="card-value">${escHtml(orders.month ?? 0)} ta</div></div>
+      <div class="card"><div class="card-label">{t("ishlabChiqarishda")}</div><div class="card-value">${escHtml(orders.inProduction ?? 0)} ta</div></div>
+      <div class="card"><div class="card-label">{t("kechikkan")}</div><div class="card-value" style="color:${(orders.overdue ?? 0) > 0 ? "#dc2626" : "#16a34a"}">${escHtml(orders.overdue ?? 0)} ta</div></div>
+      <div class="card"><div class="card-label">{t("oeeOrtacha")}</div><div class="card-value">${stats.oee ? escHtml(stats.oee) + "%" : "—"}</div></div>
+      <div class="card"><div class="card-label">{t("davomad")}</div><div class="card-value">${escHtml(hr.present ?? 0)}/${escHtml(hr.total ?? 0)} (${escHtml(hr.attendanceRate ?? 0)}%)</div></div>
+      <div class="card"><div class="card-label">{t("ogohlantirishlar")}</div><div class="card-value">${escHtml((alerts.iot ?? 0) + (alerts.minStock ?? 0))} ta</div></div>
     </div>
-    <h2>AI Xulosa</h2>
+    <h2>{t("aiXulosa")}</h2>
     <div class="summary-box">${escHtml(aiData?.summary || "Ma'lumot mavjud emas.")}</div>
-    <h2>AI Tavsiyalar</h2>
-    ${(orders.overdue || 0) > 0 ? `<div class="rec"><span class="badge badge-critical">Kritik</span><span>Kechikkan buyurtmalarni darhol ko'rib chiqing va mijozlarga xabar bering.</span></div>` : ""}
-    ${((alerts.iot || 0) + (alerts.minStock || 0)) > 0 ? `<div class="rec"><span class="badge badge-high">Yuqori</span><span>IoT va ombor ogohlantirishlariga e'tibor bering — ${escHtml((alerts.iot || 0) + (alerts.minStock || 0))} ta faol signal.</span></div>` : ""}
-    <div class="rec"><span class="badge badge-medium">O'rta</span><span>OEE ko'rsatkichlarini tahlil qilib, past OEE li stanoqlarni optimallashtirish choralarini ko'ring.</span></div>
+    <h2>{t("aiTavsiyalar")}</h2>
+    ${(orders.overdue || 0) > 0 ? `<div class="rec"><span class="badge badge-critical">{t("kritik")}</span><span>{t("kechikkanBuyurtmalarniDarholKoribChiqing")}</span></div>` : ""}
+    ${((alerts.iot || 0) + (alerts.minStock || 0)) > 0 ? `<div class="rec"><span class="badge badge-high">{t("high")}</span><span>IoT va ombor ogohlantirishlariga e'tibor bering — ${escHtml((alerts.iot || 0) + (alerts.minStock || 0))} ta faol signal.</span></div>` : ""}
+    <div class="rec"><span class="badge badge-medium">{t("medium")}</span><span>{t("oeeKorsatkichlariniTahlilQilibPast")}</span></div>
     <div class="footer">Ushbu hujjat Europrint ERP tizimi tomonidan avtomatik yaratilgan. Sana: ${escHtml(date)}</div>
     </body></html>`);
   win.document.close();
@@ -137,7 +137,7 @@ export default function DirectorExtended() {
       <div className="border-b border-surface-container px-6 py-4 flex items-center justify-between bg-card">
         <div className="flex items-center gap-2">
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('directorExtended')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('directorExtended')}</b></>}
         title={t('directorExtended')}
       />
           {criticalAlerts.length > 0 && (
@@ -152,7 +152,7 @@ export default function DirectorExtended() {
           data-testid="button-refresh-all"
           className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none"
         >
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
 

@@ -50,7 +50,7 @@ export function TasksTable({tasks, isLoading, expandedTaskId, onToggleExpand }: 
   if (tasks.length === 0) {
     return (
       <div className="p-10 text-center text-muted-foreground" data-testid="text-no-tasks">
-        Vazifalar topilmadi
+        {t("vazifalarTopilmadi")}
       </div>
     );
   }
@@ -60,12 +60,12 @@ export function TasksTable({tasks, isLoading, expandedTaskId, onToggleExpand }: 
       <TableHeader>
         <TableRow>
           <TableHead className="w-[60px]">#</TableHead>
-          <TableHead>Sarlavha</TableHead>
-          <TableHead className="hidden md:table-cell">Kategoriya</TableHead>
-          <TableHead>Muhimlik</TableHead>
-          <TableHead>Holat</TableHead>
+          <TableHead>{t("progress.title")}</TableHead>
+          <TableHead className="hidden md:table-cell">{t("category")}</TableHead>
+          <TableHead>{t("priority")}</TableHead>
+          <TableHead>{t("status28")}</TableHead>
           <TableHead className="hidden lg:table-cell w-full sm:w-[120px]">{t('progress5')}</TableHead>
-          <TableHead className="hidden lg:table-cell">Maqsad sanasi</TableHead>
+          <TableHead className="hidden lg:table-cell">{t("maqsadSanasi")}</TableHead>
           <TableHead className="w-[40px]"></TableHead>
         </TableRow>
       </TableHeader>
@@ -120,47 +120,47 @@ export function TasksTable({tasks, isLoading, expandedTaskId, onToggleExpand }: 
                     )}
                     {task.description && (
                       <div>
-                        <span className="text-xs text-muted-foreground">Tavsif:</span>
+                        <span className="text-xs text-muted-foreground">{t("tavsif2")}</span>
                         <p className="text-sm">{task.description}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       {task.phase && (
                         <div>
-                          <span className="text-xs text-muted-foreground">Bosqich:</span>
+                          <span className="text-xs text-muted-foreground">{t("bosqich1")}</span>
                           <p>{task.phase}</p>
                         </div>
                       )}
                       {task.targetModule && (
                         <div>
-                          <span className="text-xs text-muted-foreground">Modul:</span>
+                          <span className="text-xs text-muted-foreground">{t("modul")}</span>
                           <p>{task.targetModule}</p>
                         </div>
                       )}
                       {task.startDate && (
                         <div>
-                          <span className="text-xs text-muted-foreground">Boshlanish:</span>
+                          <span className="text-xs text-muted-foreground">{t("boshlanish1")}</span>
                           <p>{task.startDate}</p>
                         </div>
                       )}
                       {task.estimatedHours && (
                         <div>
-                          <span className="text-xs text-muted-foreground">Taxminiy soatlar:</span>
+                          <span className="text-xs text-muted-foreground">{t("taxminiySoatlar")}</span>
                           <p>{task.estimatedHours} soat</p>
                         </div>
                       )}
                       <div>
-                        <span className="text-xs text-muted-foreground">Avtomatlashtirish:</span>
+                        <span className="text-xs text-muted-foreground">{t("avtomatlashtirish")}</span>
                         <p>{task.isAutomatable ? "Ha" : "Yo'q"}</p>
                       </div>
                       <div>
-                        <span className="text-xs text-muted-foreground">Sanoatga mos:</span>
+                        <span className="text-xs text-muted-foreground">{t("sanoatgaMos")}</span>
                         <p>{task.industryAdaptable ? "Ha" : "Yo'q"}</p>
                       </div>
                     </div>
                     {task.notes && (
                       <div>
-                        <span className="text-xs text-muted-foreground">Izohlar:</span>
+                        <span className="text-xs text-muted-foreground">{t("izohlar")}</span>
                         <p className="text-sm">{task.notes}</p>
                       </div>
                     )}

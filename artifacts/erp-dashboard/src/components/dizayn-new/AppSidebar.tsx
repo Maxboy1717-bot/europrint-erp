@@ -7,6 +7,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useRoleMenus } from "@/hooks/use-role-menus";
 import { useDefaultPanel } from "@/hooks/use-default-panel";
+import { useTranslation } from "@/lib/i18n";
 import {
   Sidebar,
   SidebarContent,
@@ -128,6 +129,8 @@ interface NavItemButtonProps {
 
 function NavItemButton({ item, isActive, isCollapsed, onClick }: NavItemButtonProps) {
   const Icon = item.icon;
+  const { t } = useTranslation("navigation");
+  const label = t(item.title);
 
   const button = (
     <SidebarMenuButton
@@ -150,7 +153,7 @@ function NavItemButton({ item, isActive, isCollapsed, onClick }: NavItemButtonPr
       >
         <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
         {!isCollapsed && (
-          <span className="flex-1 truncate">{item.title}</span>
+          <span className="flex-1 truncate">{label}</span>
         )}
         {!isCollapsed && item.badge && item.badge > 0 && (
           <Badge
@@ -169,7 +172,7 @@ function NavItemButton({ item, isActive, isCollapsed, onClick }: NavItemButtonPr
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent side="right" className="flex items-center gap-2">
-          {item.title}
+          {label}
           {item.badge && item.badge > 0 && (
             <Badge className="h-4 px-1 text-[10px]">{item.badge}</Badge>
           )}
@@ -186,8 +189,10 @@ function NavItemButton({ item, isActive, isCollapsed, onClick }: NavItemButtonPr
 export function AppSidebarRedesign({
   activePage,
   onNavigate,
-  user = { name: "Foydalanuvchi", role: "hr_specialist" },
+  user,
 }: AppSidebarRedesignProps) {
+  const { t } = useTranslation("navigation");
+  const resolvedUser = user ?? { name: t("Foydalanuvchi"), role: "hr_specialist" };
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [darkMode, setDarkMode] = useState(() =>
@@ -210,9 +215,9 @@ export function AppSidebarRedesign({
     safeStorage.setItem("theme", next ? "dark" : "light");
   };
 
-  const initials = user.name
+  const initials = resolvedUser.name
     .split(" ")
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
@@ -228,7 +233,7 @@ export function AppSidebarRedesign({
       <SidebarGroup key={section.label}>
         {!isCollapsed && (
           <SidebarGroupLabel className="uppercase text-[10px] tracking-widest font-medium text-muted-foreground px-3 mb-1">
-            {section.label}
+            {t(section.label)}
           </SidebarGroupLabel>
         )}
         <SidebarGroupContent>
@@ -260,7 +265,7 @@ export function AppSidebarRedesign({
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <EuroprintLogo height={18} />
-              <span className="text-[10px] text-muted-foreground">ERP System v2.0</span>
+              <span className="text-[10px] text-muted-foreground">{t("ERP System v2.0")}</span>
             </div>
           )}
         </div>
@@ -271,20 +276,20 @@ export function AppSidebarRedesign({
         <div className="px-3 py-3 border-b border-sidebar-border">
           <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-sidebar-accent transition-colors">
             <Avatar className="w-8 h-8 flex-shrink-0">
-              {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+              {resolvedUser.avatar && <AvatarImage src={resolvedUser.avatar} alt={resolvedUser.name} />}
               <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
+              <p className="text-sm font-medium text-sidebar-foreground truncate">{resolvedUser.name}</p>
               <span
                 className={cn(
                   "inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full border",
-                  getRoleBadgeClass(user.role)
+                  getRoleBadgeClass(resolvedUser.role)
                 )}
               >
-                {getRoleLabel(user.role)}
+                {t(getRoleLabel(resolvedUser.role))}
               </span>
             </div>
           </div>
@@ -306,7 +311,7 @@ export function AppSidebarRedesign({
         <button
           type="button"
           onClick={toggleDark}
-          aria-label={darkMode ? "Kunduzgi rejim" : "Tungi rejim"}
+          aria-label={darkMode ? t("Kunduzgi rejim") : t("Tungi rejim")}
           className={cn(
             "w-full flex items-center gap-2.5 px-3 h-9 rounded-lg text-sm font-medium",
             "text-sidebar-foreground hover:bg-sidebar-accent",
@@ -318,7 +323,7 @@ export function AppSidebarRedesign({
             : <Moon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           }
           {!isCollapsed && (
-            <span>{darkMode ? "Kunduzgi rejim" : "Tungi rejim"}</span>
+            <span>{darkMode ? t("Kunduzgi rejim") : t("Tungi rejim")}</span>
           )}
         </button>
 
@@ -329,7 +334,7 @@ export function AppSidebarRedesign({
             safeStorage.clear();
             window.location.href = "/";
           }}
-          aria-label="Tizimdan chiqish"
+          aria-label={t("Tizimdan chiqish")}
           className={cn(
             "w-full flex items-center gap-2.5 px-3 h-9 rounded-lg text-sm font-medium",
             "text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
@@ -337,7 +342,7 @@ export function AppSidebarRedesign({
           )}
         >
           <LogOut className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-          {!isCollapsed && <span>Chiqish</span>}
+          {!isCollapsed && <span>{t("Chiqish")}</span>}
         </button>
       </SidebarFooter>
     </Sidebar>

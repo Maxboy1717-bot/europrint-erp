@@ -133,7 +133,7 @@ export default function SevenFunctionsDashboard() {
     return (
       <ModulePage
         module="hr"
-        title="7 ta Asosiy Funksiya - Vysotskiy Modeli"
+        title={t("k7TaAsosiyFunksiyaVysotskiy")}
         icon={<BarChart3 className="h-5 w-5" />}
         actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
@@ -151,7 +151,7 @@ export default function SevenFunctionsDashboard() {
   return (
     <ModulePage
       module="hr"
-      title="7 ta Asosiy Funksiya - Vysotskiy Modeli"
+      title={t("k7TaAsosiyFunksiyaVysotskiy")}
       icon={<BarChart3 className="h-5 w-5" />}
       actions={
         <Button
@@ -171,7 +171,7 @@ export default function SevenFunctionsDashboard() {
           <div className="col-span-full text-center py-12">
             <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              Asosiy funksiyalar mavjud emas
+              {t("asosiyFunksiyalarMavjudEmas")}
             </p>
           </div>
         ) : (
@@ -239,7 +239,7 @@ export default function SevenFunctionsDashboard() {
                       setSelectedFunctionId(func.id);
                     }}
                   >
-                    Batafsil
+                    {t("Batafsil")}
                     <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>
                 </CardContent>
@@ -262,7 +262,7 @@ export default function SevenFunctionsDashboard() {
               onClick={() => setSelectedFunctionId(null)}
               data-testid="button-close-details"
             >
-              Yopish
+              {t("close2")}
             </Button>
           </div>
 
@@ -283,7 +283,7 @@ export default function SevenFunctionsDashboard() {
           ) : selectedFunction?.kpis && selectedFunction.kpis.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">KPI-lar ro'yxati</CardTitle>
+                <CardTitle className="text-base">{t("kpiLarRoyxati")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -341,7 +341,7 @@ export default function SevenFunctionsDashboard() {
               <CardContent className="p-6 text-center">
                 <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  Bu funksiya uchun KPI-lar mavjud emas
+                  {t("buFunksiyaUchunKpiLar")}
                 </p>
               </CardContent>
             </Card>

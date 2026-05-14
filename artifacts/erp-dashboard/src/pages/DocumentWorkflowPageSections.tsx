@@ -36,6 +36,7 @@ interface PendingApprovalsTabProps {
 }
 
 export function PendingApprovalsTab({ pending, rejectReasons, approveIsPending, rejectIsPending, t, onSelectDoc, onApprove, onRejectStart, onRejectSubmit, onRejectCancel, onRejectReasonChange, }: PendingApprovalsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="pending" className="mt-4">
       <div className="space-y-3">
@@ -93,12 +94,12 @@ export function PendingApprovalsTab({ pending, rejectReasons, approveIsPending, 
                     onClick={() => onRejectSubmit(step.id, rejectReasons[step.id])}
                     disabled={!rejectReasons[step.id]?.trim() || rejectIsPending}
                     className="bg-[var(--ep-red)] hover:bg-[var(--ep-red)]/90 text-white text-xs h-8 px-3">
-                    ❌ Rad et
+                    {t("radEt")}
                   </Button>
                   <Button size="sm" variant="ghost"
                     onClick={() => onRejectCancel(step.id)}
                     className="text-muted-foreground text-xs h-8 px-2">
-                    Bekor
+                    {t("Bekor")}
                   </Button>
                 </div>
               )}
@@ -155,7 +156,7 @@ export function MyDocumentsTab({ myDocs, t, onSelectDoc, onCreateClick }: MyDocu
                   </div>
                 )}
                 {doc.is_immutable && (
-                  <Badge className="bg-purple-800 text-white text-xs shrink-0">🔒 O'zgarmas</Badge>
+                  <Badge className="bg-purple-800 text-white text-xs shrink-0">{t("ozgarmas")}</Badge>
                 )}
               </div>
             </CardContent>

@@ -1,11 +1,12 @@
 /**
  * CardMockup — sahifaga ramka beradigan card komponent (mockup uslubi).
  *
- *   <CardMockup title="Yangi xodimlar" action={<button>Hammasi</button>}>
+ *   <CardMockup title={t("yangiXodimlar")} action={<button>{t("hammasi")}</button>}>
  *     ...
  *   </CardMockup>
  */
 import type { ReactNode } from "react";
+import { useTranslation } from '@/lib/i18n';
 
 interface CardMockupProps {
   title?: string;
@@ -16,6 +17,7 @@ interface CardMockupProps {
 }
 
 export function CardMockup({ title, action, children, className = '', bodyClass = '' }: CardMockupProps) {
+  const { t } = useTranslation("common");
   return (
     <div className={`ep-card ${className}`}>
       {(title || action) && (

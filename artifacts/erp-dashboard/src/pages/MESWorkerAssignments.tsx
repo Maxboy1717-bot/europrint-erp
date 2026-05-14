@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Factory, Gauge, Timer, CheckCircle, AlertTriangle, Play, PauseCircle, StopCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface Session {
   id: string;
@@ -63,6 +64,7 @@ function fmt(secs: number) {
 }
 
 export default function MESWorkerAssignments() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data: raw, isLoading } = useQuery<Session[]>({
@@ -128,8 +130,8 @@ export default function MESWorkerAssignments() {
     <div className="flex flex-col flex-1 overflow-auto p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Xodim tayinlashlari</h1>
-          <p className="text-sm text-muted-foreground">Xodimlarning joriy va o'tgan tayinlashlari</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("xodimTayinlashlari")}</h1>
+          <p className="text-sm text-muted-foreground">{t("xodimlarningJoriyVaOtganTayinlashlari")}</p>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="gap-1.5">
@@ -148,7 +150,7 @@ export default function MESWorkerAssignments() {
       ) : workerList.length === 0 ? (
         <div className="text-center py-20 text-[13px] text-muted-foreground">
           <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Tayinlash topilmadi</p>
+          <p>{t("tayinlashTopilmadi")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -207,7 +209,7 @@ export default function MESWorkerAssignments() {
 
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Bajarilish</span>
+                      <span className="text-muted-foreground">{t("progress5")}</span>
                       <span className="font-semibold">{w.progress}%</span>
                     </div>
                     <Progress value={w.progress} className="h-1.5" />
@@ -228,7 +230,7 @@ export default function MESWorkerAssignments() {
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-bold text-foreground">{fmt(w.totalRunning)}</p>
-                      <p className="text-[10px] text-muted-foreground">Ish vaqti</p>
+                      <p className="text-[10px] text-muted-foreground">{t("ishVaqti")}</p>
                     </div>
                     <div className="text-center">
                       <p className={cn("text-sm font-bold",
@@ -236,7 +238,7 @@ export default function MESWorkerAssignments() {
                       )}>
                         {defectRate}%
                       </p>
-                      <p className="text-[10px] text-muted-foreground">Brak</p>
+                      <p className="text-[10px] text-muted-foreground">{t("Brak")}</p>
                     </div>
                   </div>
 
@@ -256,7 +258,7 @@ export default function MESWorkerAssignments() {
                             disabled={pauseSessionMutation.isPending}
                           >
                             <PauseCircle className="h-3 w-3 mr-1" />
-                            To'xtat
+                            {t("toxtat")}
                           </Button>
                         )}
                         {isPaused && (
@@ -267,7 +269,7 @@ export default function MESWorkerAssignments() {
                             disabled={resumeSessionMutation.isPending}
                           >
                             <Play className="h-3 w-3 mr-1" />
-                            Davom ettir
+                            {t("davomEttir")}
                           </Button>
                         )}
                         <Button
@@ -278,7 +280,7 @@ export default function MESWorkerAssignments() {
                           disabled={completeSessionMutation.isPending}
                         >
                           <StopCircle className="h-3 w-3 mr-1" />
-                          Yakunla
+                          {t("yakunla")}
                         </Button>
                       </div>
                     );

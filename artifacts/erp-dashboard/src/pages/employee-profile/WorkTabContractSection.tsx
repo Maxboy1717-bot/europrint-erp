@@ -51,6 +51,7 @@ interface ContractSectionProps {
 }
 
 export function ContractSection({ t, tCommon, contractDialogOpen, setContractDialogOpen, contractForm, setContractForm, saveContractMutation, loadingContracts, contracts, }: ContractSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
@@ -99,10 +100,10 @@ export function ContractSection({ t, tCommon, contractDialogOpen, setContractDia
                       <SelectValue placeholder={tCommon("select")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="indefinite">Muddatsiz</SelectItem>
-                      <SelectItem value="fixed_term">Muddatli</SelectItem>
-                      <SelectItem value="probation">Sinov muddati</SelectItem>
-                      <SelectItem value="project">Loyiha asosida</SelectItem>
+                      <SelectItem value="indefinite">{t("muddatsiz")}</SelectItem>
+                      <SelectItem value="fixed_term">{t("muddatli")}</SelectItem>
+                      <SelectItem value="probation">{t("sinovMuddati")}</SelectItem>
+                      <SelectItem value="project">{t("loyihaAsosida")}</SelectItem>
                       <SelectItem value="seasonal">{t("seasonal")}</SelectItem>
                       <SelectItem value="part_time">{t("partTime")}</SelectItem>
                     </SelectContent>

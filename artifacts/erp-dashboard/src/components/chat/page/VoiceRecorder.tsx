@@ -6,6 +6,7 @@
 import { useState, useRef } from 'react';
 import { Mic, Square, Trash2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   onSend: (blob: Blob, durationSec: number, waveform: number[]) => void;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function VoiceRecorder({ onSend, onCancel }: Props) {
+  const { t } = useTranslation("common");
   const [isRecording, setIsRecording] = useState(false);
   const [durationSec, setDurationSec] = useState(0);
   const [waveform, setWaveform] = useState<number[]>([]);
@@ -76,10 +78,10 @@ export function VoiceRecorder({ onSend, onCancel }: Props) {
   return (
     <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
       {!isRecording ? (
-        <Button size="sm" onClick={start}><Mic className="h-4 w-4 mr-1" /> Yozish</Button>
+        <Button size="sm" onClick={start}><Mic className="h-4 w-4 mr-1" /> {t("yozish")}</Button>
       ) : (
         <>
-          <Button size="sm" variant="destructive" onClick={() => stop(false)} aria-label="Bekor qilish">
+          <Button size="sm" variant="destructive" onClick={() => stop(false)} aria-label={t("cancel")}>
             <Trash2 className="h-4 w-4" />
           </Button>
           <div className="flex-1 flex items-center gap-1">
@@ -91,7 +93,7 @@ export function VoiceRecorder({ onSend, onCancel }: Props) {
               ))}
             </div>
           </div>
-          <Button size="sm" onClick={() => stop(true)} aria-label="Yuborish">
+          <Button size="sm" onClick={() => stop(true)} aria-label={t("submitBtn")}>
             <Send className="h-4 w-4" />
           </Button>
         </>

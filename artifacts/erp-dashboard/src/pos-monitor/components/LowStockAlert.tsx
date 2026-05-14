@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { stockApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface LowStockItem {
   materialId: number;
@@ -88,7 +89,7 @@ export function LowStockAlert({ limit = 10, autoRefresh = true, onOrder }: LowSt
                       style={{ fontSize: 11, padding: "3px 8px", flexShrink: 0 }}
                       onClick={e => { e.stopPropagation(); onOrder(item.materialId); }}
                     >
-                      📋 So'rov
+                      {t("sorov1")}
                     </button>
                   )}
                 </div>

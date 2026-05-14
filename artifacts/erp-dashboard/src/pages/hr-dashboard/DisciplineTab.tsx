@@ -9,6 +9,7 @@ import { AlertTriangle, TrendingDown, Award, Clock, RefreshCw } from "lucide-rea
 import type { DisciplineRecord } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface DisciplineTabProps {
   disciplineRecords: DisciplineRecord[];
@@ -19,6 +20,7 @@ interface DisciplineTabProps {
 }
 
 export function DisciplineTab({ disciplineRecords, warningsCount, penaltiesSum, rewardsSum, lateArrivals }: DisciplineTabProps) {
+  const { t } = useTranslation("common");
   const stats = [
     { label: "Ogohlantirishlar", value: warningsCount, Icon: AlertTriangle, accent: "text-[var(--ep-yellow)]" },
     { label: "Jarima (so'm)", value: penaltiesSum.toLocaleString(), Icon: TrendingDown, accent: "text-[var(--ep-red)]" },
@@ -28,7 +30,7 @@ export function DisciplineTab({ disciplineRecords, warningsCount, penaltiesSum, 
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {(Array.isArray(stats) ? stats : []).map((item, i) => (
@@ -37,7 +39,7 @@ export function DisciplineTab({ disciplineRecords, warningsCount, penaltiesSum, 
             <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{item.value}</p>
             <div className="flex items-center gap-2 mt-2">
               <item.Icon className={`w-3.5 h-3.5 ${item.accent}`} />
-              <span className="text-xs text-muted-foreground">Bu oy</span>
+              <span className="text-xs text-muted-foreground">{t("buOy")}</span>
             </div>
           </div>
         ))}
@@ -47,23 +49,23 @@ export function DisciplineTab({ disciplineRecords, warningsCount, penaltiesSum, 
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)]" />
-            Intizom Yozuvlari
+            {t("intizomYozuvlari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tur</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Xodim</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Miqdor</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tur")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("xodim1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("quantity")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("date")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {disciplineRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm">Intizom yozuvlari yo'q</TableCell>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm">{t("intizomYozuvlariYoq")}</TableCell>
                 </TableRow>
               ) : (Array.isArray(disciplineRecords) ? disciplineRecords : []).slice(0, 10).map((rec, idx) => (
                 <TableRow key={idx} className="hover:bg-muted/40 transition-colors">

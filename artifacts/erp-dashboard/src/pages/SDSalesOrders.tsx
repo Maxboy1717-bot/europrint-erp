@@ -16,6 +16,7 @@ import {
   fmt, PAYMENT_STATUS_COLORS,
 } from "@/lib/sd-helpers";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface OrderTimelineItem {
   id: string;
@@ -101,6 +102,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function SDSalesOrders() {
+  const { t } = useTranslation("common");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<SalesOrderListItem | null>(null);
   const { toast } = useToast();
@@ -145,17 +147,17 @@ export default function SDSalesOrders() {
       <div className="flex items-center justify-between mb-6 gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Savdo Buyurtmalari</b></>}
-        title="Savdo Buyurtmalari"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("savdoBuyurtmalari")}</b></>}
+        title={t("savdoBuyurtmalari")}
         subtitle="13 bosqichli buyurtma zanjiri boshqaruvi"
       />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48 bg-card border-border h-9" data-testid="select-order-status-filter">
-            <SelectValue placeholder="Barcha holat" />
+            <SelectValue placeholder={t("barchaHolat")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -163,7 +165,7 @@ export default function SDSalesOrders() {
 
       <div className="flex gap-6 h-[calc(100vh-200px)]">
         <div className="w-80 flex flex-col gap-2 shrink-0 overflow-y-auto">
-          {isLoading && <div className="text-sm text-muted-foreground p-2">Yuklanmoqda...</div>}
+          {isLoading && <div className="text-sm text-muted-foreground p-2">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(orders) ? orders : []).map((o) => (
               <div key={o.id} data-testid={`card-order-${o.id}`}
                 className={`p-3 rounded-lg cursor-pointer hover:bg-muted/40 transition-colors ${selected?.id === o.id ? "bg-muted/40 border-primary" : ""}`}
@@ -179,14 +181,14 @@ export default function SDSalesOrders() {
               </div>
           ))}
           {!isLoading && orders.length === 0 && (
-            <div className="text-sm text-center text-muted-foreground py-4">Buyurtmalar yo'q</div>
+            <div className="text-sm text-center text-muted-foreground py-4">{t("buyurtmalarYoq")}</div>
           )}
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {!selected ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-              Buyurtmani tanlang
+              {t("buyurtmaniTanlang")}
             </div>
           ) : (
             <div className="space-y-4">
@@ -201,11 +203,11 @@ export default function SDSalesOrders() {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-                  <div><div className="text-xs text-muted-foreground uppercase">Jami</div>
+                  <div><div className="text-xs text-muted-foreground uppercase">{t("total")}</div>
                     <div className="font-bold text-lg">{fmt(detail?.totalValue || selected.totalValue)} so'm</div></div>
                   <div><div className="text-xs text-muted-foreground uppercase">To'landi (Avans)</div>
                     <div className="font-bold text-lg text-[var(--ep-green)]">{fmt(detail?.advancePaidAmount || 0)} so'm</div></div>
-                  <div><div className="text-xs text-muted-foreground uppercase">Qoldiq</div>
+                  <div><div className="text-xs text-muted-foreground uppercase">{t("qoldiq")}</div>
                     <div className="font-bold text-lg text-[var(--ep-red)]">{fmt(detail?.balanceDueAmount || 0)} so'm</div></div>
                 </div>
                 <div className="mt-4 space-y-2">
@@ -236,7 +238,7 @@ export default function SDSalesOrders() {
                         const reason = prompt("Bekor qilish sababi:");
                         if (reason && detail) cancelMut.mutate({ id: detail.id, reason });
                       }}>
-                      Bekor qilish
+                      {t("cancel")}
                     </Button>
                   )}
                 </div>
@@ -244,7 +246,7 @@ export default function SDSalesOrders() {
 
               {(detail?.timeline?.length ?? 0) > 0 && (
                 <div className="bg-card rounded-xl p-6">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Holat tarixi</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("holatTarixi")}</h3>
                   <div className="space-y-4">
                     {detail?.timeline?.map((t) => (
                       <div key={t.id} className="flex items-start gap-3 text-sm">
@@ -264,7 +266,7 @@ export default function SDSalesOrders() {
 
               {(detail?.payments?.length ?? 0) > 0 && (
                 <div className="bg-card rounded-xl p-6">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">To'lovlar</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("tolovlar")}</h3>
                   <div className="space-y-2">
                     {detail?.payments?.map((p) => (
                       <div key={p.id} className="flex items-center justify-between text-sm py-2 border-b last:border-0">

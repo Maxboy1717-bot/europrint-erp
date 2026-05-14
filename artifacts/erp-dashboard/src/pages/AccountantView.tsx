@@ -25,6 +25,7 @@ import {
 import { ErpRoadmapCard } from "./accountant/ErpRoadmapCard";
 import { AuditConsole } from "./accountant/AuditConsole";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface RoleDashboardWidget {
   id: string;
@@ -78,6 +79,7 @@ const summaryColors = [
 ];
 
 export default function AccountantView() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -138,19 +140,19 @@ export default function AccountantView() {
       <div className="flex items-center justify-between">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Buxgalter Ko'rinishi</b></>}
-        title="Buxgalter Ko'rinishi"
-        subtitle="Byudjet nazorati va to'lovlar boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("buxgalterKorinishi")}</b></>}
+        title={t("buxgalterKorinishi")}
+        subtitle={t("byudjetNazoratiVaTolovlarBoshqaruvi")}
       />
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none gap-2" onClick={() => { window.print(); toast({ title: "Hisobot", description: "Hisobot tayyorlanmoqda" }); }} data-testid="button-report">
             <FileText className="h-4 w-4" />
-            Hisobot
+            {t("report")}
           </Button>
           <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" onClick={() => setLocation("/income-expense")} data-testid="button-enter-payment">
             <CreditCard className="h-4 w-4" />
-            To'lov Kiritish
+            {t("tolovKiritish1")}
           </Button>
         </div>
       </div>
@@ -193,7 +195,7 @@ export default function AccountantView() {
         <div className="bg-card rounded-xl p-6">
           <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
             <PieChart className="h-4 w-4 text-primary" />
-            Byudjet Nazorati
+            {t("byudjetNazorati")}
           </h3>
           <div className="space-y-6">
             {budgetsLoading ? (
@@ -246,7 +248,7 @@ export default function AccountantView() {
         <div className="bg-card rounded-xl p-6">
           <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
-            Kutilayotgan To'lovlar
+            {t("kutilayotganTolovlar")}
           </h3>
           <div className="space-y-3">
             {paymentsLoading ? (
@@ -258,8 +260,8 @@ export default function AccountantView() {
             ) : pendingPayments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground" data-testid="empty-pending-payments">
                 <CreditCard className="h-12 w-12 mb-4" />
-                <p className="text-lg font-bold text-foreground">Kutilayotgan to'lovlar yo'q</p>
-                <p className="text-sm">Hozircha hech qanday to'lov kutilmayapti</p>
+                <p className="text-lg font-bold text-foreground">{t("kutilayotganTolovlarYoq")}</p>
+                <p className="text-sm">{t("hozirchaHechQandayTolovKutilmayapti")}</p>
               </div>
             ) : (
               (Array.isArray(pendingPayments) ? pendingPayments : []).map((payment) => (
@@ -286,7 +288,7 @@ export default function AccountantView() {
             )}
           </div>
           <Button variant="outline" className="w-full mt-6 bg-muted/60 text-foreground rounded-lg py-2 text-sm font-medium hover:bg-muted border-none" onClick={() => setLocation("/income-expense")} data-testid="button-view-all-payments">
-            Barcha to'lovlarni ko'rish
+            {t("barchaTolovlarniKorish")}
           </Button>
         </div>
       </div>
@@ -294,7 +296,7 @@ export default function AccountantView() {
       <div className="bg-card rounded-xl p-6">
         <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-primary" />
-          Moliyaviy KPI
+          {t("moliyaviyKpi")}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {kpisLoading ? (

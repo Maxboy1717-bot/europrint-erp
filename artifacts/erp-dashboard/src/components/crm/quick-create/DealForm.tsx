@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CURRENCIES, dealFormSchema, type DealFormValues } from "./deal-schema";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface DealFormProps {
   users: Array<{ id: string; fullName: string }>;
   usersLoading: boolean;
@@ -53,6 +54,7 @@ export function DealForm({
   onClose,
   onCreated,
 }: DealFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const form = useForm<DealFormValues>({
     resolver: zodResolver(dealFormSchema),
@@ -107,16 +109,16 @@ export function DealForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Asosiy ma'lumotlar</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t("asosiyMalumotlar")}</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem className="col-span-2">
-                  <FormLabel>Bitim nomi <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{t("bitimNomi")}<span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Bitim nomini kiriting" {...field} data-testid="input-title" autoFocus />
+                    <Input placeholder={t("bitimNominiKiriting")} {...field} data-testid="input-title" autoFocus />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -127,7 +129,7 @@ export function DealForm({
               name="assignedById"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mas'ul shaxs</FormLabel>
+                  <FormLabel>{t("masulShaxs")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-deal-assignedById" className="h-9">
@@ -164,7 +166,7 @@ export function DealForm({
               name="contactId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kontakt</FormLabel>
+                  <FormLabel>{t("kontakt")}</FormLabel>
                   <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value !== undefined ? String(field.value) : undefined}>
                     <FormControl>
                       <SelectTrigger data-testid="select-contactId" className="h-9">
@@ -188,7 +190,7 @@ export function DealForm({
               name="companyId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kompaniya</FormLabel>
+                  <FormLabel>{t("company")}</FormLabel>
                   <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value !== undefined ? String(field.value) : undefined}>
                     <FormControl>
                       <SelectTrigger data-testid="select-companyId" className="h-9">
@@ -213,14 +215,14 @@ export function DealForm({
         <Separator />
 
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Moliyaviy ma'lumotlar</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t("moliyaviyMalumotlar")}</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="opportunity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Umumiy summa <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{t("umumiySumma")}<span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="0" {...field} data-testid="input-opportunity" />
                   </FormControl>
@@ -233,11 +235,11 @@ export function DealForm({
               name="currencyId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valyuta</FormLabel>
+                  <FormLabel>{t("valyuta")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-currencyId" className="h-9">
-                        <SelectValue placeholder="Valyutani tanlang" />
+                        <SelectValue placeholder={t("valyutaniTanlang")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -257,7 +259,7 @@ export function DealForm({
               name="closeDate"
               render={({ field }) => (
                 <FormItem className="col-span-2">
-                  <FormLabel>Kutilayotgan yopilish sanasi</FormLabel>
+                  <FormLabel>{t("kutilayotganYopilishSanasi")}</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} data-testid="input-closeDate" />
                   </FormControl>
@@ -271,16 +273,16 @@ export function DealForm({
         <Separator />
 
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Qo'shimcha ma'lumotlar</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t("qoshimchaMalumotlar")}</h4>
           <div className="grid grid-cols-1 gap-4">
             <FormField
               control={form.control}
               name="comments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Izohlar</FormLabel>
+                  <FormLabel>{t("notes")}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Qo'shimcha izohlar..." className="resize-none" rows={3} {...field} data-testid="input-deal-comments" />
+                    <Textarea placeholder={t("qoshimchaIzohlar")} className="resize-none" rows={3} {...field} data-testid="input-deal-comments" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -291,7 +293,7 @@ export function DealForm({
 
         <DialogFooter className="gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onClose} data-testid="button-cancel">
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button type="submit" disabled={mutation.isPending} data-testid="button-submit">
             {mutation.isPending && <EPLoader className="mr-2" />}

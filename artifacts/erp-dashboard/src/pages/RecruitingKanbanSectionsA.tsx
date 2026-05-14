@@ -35,17 +35,18 @@ export function RecruitingStatsBar({
   aiSessionsCount,
   probationCount,
 }: StatsBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-wrap gap-3 mb-4">
-      <StatCard icon={Users} label="Jami nomzodlar" value={entries.length} />
-      <StatCard icon={TrendingUp} label="Faol jarayonlar" value={activeCount} />
-      <StatCard icon={CheckCircle} label="Qabul qilindi" value={hiredCount} color="bg-green-500" />
-      <StatCard icon={XCircle} label="Rad etildi" value={rejectedCount} color="bg-red-500" />
-      <StatCard icon={TrendingUp} label="Samaradorlik" value={`${conversionRate}%`} />
-      <StatCard icon={Briefcase} label="Ochiq vakansiya" value={openVacancies.length} color="bg-indigo-500" />
-      <StatCard icon={AlertTriangle} label="Shoshilinch" value={urgentVacancies.length} color="bg-red-500" />
-      <StatCard icon={Bot} label="AI Sessiyalar" value={aiSessionsCount} color="bg-violet-500" />
-      <StatCard icon={CalendarDays} label="Sinov davri" value={probationCount} color="bg-emerald-500" />
+      <StatCard icon={Users} label={t("jamiNomzodlar")} value={entries.length} />
+      <StatCard icon={TrendingUp} label={t("faolJarayonlar")} value={activeCount} />
+      <StatCard icon={CheckCircle} label={t("qabulQilindi")} value={hiredCount} color="bg-green-500" />
+      <StatCard icon={XCircle} label={t("radEtildi")} value={rejectedCount} color="bg-red-500" />
+      <StatCard icon={TrendingUp} label={t("samaradorlik")} value={`${conversionRate}%`} />
+      <StatCard icon={Briefcase} label={t("ochiqVakansiya")} value={openVacancies.length} color="bg-indigo-500" />
+      <StatCard icon={AlertTriangle} label={t("Shoshilinch")} value={urgentVacancies.length} color="bg-red-500" />
+      <StatCard icon={Bot} label={t("aiSessiyalar")} value={aiSessionsCount} color="bg-violet-500" />
+      <StatCard icon={CalendarDays} label={t("sinovDavri")} value={probationCount} color="bg-emerald-500" />
     </div>
   );
 }
@@ -78,7 +79,7 @@ export function RecruitingFilterBar({
       </Button>
       {showProbationOnly && (
         <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2 py-0.5">
-          Faqat sinov davrida
+          {t("faqatSinovDavrida")}
         </span>
       )}
     </div>
@@ -123,7 +124,7 @@ export function RecruitingVacancyPanel({
               onClick={() => setFilterVacancy("all")}
               data-testid="filter-vacancy-all"
             >
-              Hammasi
+              {t("hammasi")}
             </Button>
             {(Array.isArray(openVacancies) ? openVacancies : []).map(v => (
               <Button
@@ -139,7 +140,7 @@ export function RecruitingVacancyPanel({
               </Button>
             ))}
             {openVacancies.length === 0 && (
-              <span className="text-sm text-muted-foreground">Ochiq vakansiyalar yo'q</span>
+              <span className="text-sm text-muted-foreground">{t("ochiqVakansiyalarYoq")}</span>
             )}
           </div>
 
@@ -198,7 +199,7 @@ export function RecruitingVacancyPanel({
                           }}
                           data-testid={`button-channels-${v.id}`}
                         >
-                          <Globe className="w-2.5 h-2.5" />Kanallar
+                          <Globe className="w-2.5 h-2.5" />{t("kanallar")}
                         </Button>
                         <Button
                           size="sm"
@@ -235,7 +236,7 @@ export function RecruitingVacancyPanel({
             Filtr: {(Array.isArray(openVacancies) ? openVacancies : []).find(v => String(v.id) === filterVacancy)?.title}
           </EPStatusPill>
           <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setFilterVacancy("all")}>
-            × Tozalash
+            {t("tozalash1")}
           </Button>
         </div>
       )}
@@ -244,3 +245,4 @@ export function RecruitingVacancyPanel({
 }
 
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';

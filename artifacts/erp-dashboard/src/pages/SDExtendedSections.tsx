@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { ManagerStat } from "./SDExtendedTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Manager Panel ────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export function ManagerPanel({
   managersCount,
   managerStats,
 }: ManagerPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="manager" className="space-y-6 mt-0">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -40,7 +42,7 @@ export function ManagerPanel({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami bitimlar</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("jamiBitimlar")}</p>
                 <p className="text-3xl font-bold tracking-tight text-foreground">{dealsCount}</p>
               </div>
               <div className="p-3 bg-primary/10 rounded-xl">
@@ -53,7 +55,7 @@ export function ManagerPanel({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Yutilgan bitimlar</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("yutilganBitimlar")}</p>
                 <p className="text-3xl font-bold tracking-tight text-primary">{wonDealsCount}</p>
               </div>
               <div className="p-3 bg-primary/10 rounded-xl">
@@ -66,7 +68,7 @@ export function ManagerPanel({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami daromad</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("jamiDaromad")}</p>
                 <p className="text-3xl font-bold tracking-tight text-foreground">{(totalRevenue / 1_000_000).toFixed(1)}M</p>
               </div>
               <div className="p-3 bg-primary/10 rounded-xl">
@@ -79,7 +81,7 @@ export function ManagerPanel({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Menejerlar soni</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("menejerlarSoni")}</p>
                 <p className="text-3xl font-bold tracking-tight text-foreground">{managersCount}</p>
               </div>
               <div className="p-3 bg-primary/10 rounded-xl">
@@ -92,11 +94,11 @@ export function ManagerPanel({
 
       <Card className="bg-card border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-4 bg-muted/40/50">
-          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Menejer ko'rsatkichlari</CardTitle>
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("menejerKorsatkichlari")}</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           {managerStats.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12 italic">Menejer ma'lumotlari topilmadi</p>
+            <p className="text-center text-muted-foreground py-12 italic">{t("menejerMalumotlariTopilmadi")}</p>
           ) : (
             <div className="space-y-8">
               {(Array.isArray(managerStats) ? managerStats : []).map((m, i) => (
@@ -148,25 +150,25 @@ export function QuotaPanel({ managerStats }: QuotaPanelProps) {
       <Card className="bg-card border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-4 bg-muted/40/50">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />Kvota bajarilishi
+            <TrendingUp className="w-4 h-4 text-primary" />{t("kvotaBajarilishi")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Menejer</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("manager")}</TableHead>
                 <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Kvota (so'm)</TableHead>
-                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Haqiqiy</TableHead>
-                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Farq</TableHead>
+                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("Haqiqiy")}</TableHead>
+                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("farq")}</TableHead>
                 <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">%</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Holat</TableHead>
+                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("status28")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {managerStats.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-12 italic">Ma'lumot yo'q</TableCell>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-12 italic">{t("malumotYoq")}</TableCell>
                 </TableRow>
               ) : (Array.isArray(managerStats) ? managerStats : []).map((m, i) => (
                 <TableRow key={`k-${i}`} className="border-border hover:bg-muted/40/50">

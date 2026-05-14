@@ -2,12 +2,12 @@
   "title": "Заголовок",
   "getPdf": "Получить PDF",
   "totalItems": "Всего элементов",
-  "totalValue": "Всего Value",
-  "expiringSoon": "expiring Soon",
-  "history": "history",
-  "issuedDate": "Issued Дата",
-  "returnDeadline": "return Deadline",
-  "returnItem": "return Item",
-  "returnQty": "return Qty",
-  "returnReason": "return Reason"
+  "totalValue": "Общая стоимость",
+  "expiringSoon": "Скоро истекает",
+  "history": "История",
+  "issuedDate": "Дата выдачи",
+  "returnDeadline": "Срок возврата",
+  "returnItem": "Возвращаемый элемент",
+  "returnQty": "Кол-во возврата",
+  "returnReason": "Причина возврата"
 }

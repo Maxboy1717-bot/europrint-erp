@@ -26,6 +26,7 @@ interface CreateTransactionDialogProps {
 }
 
 export function CreateTransactionDialog({ open, onOpenChange, form, onSubmit, isPending, cashPosition, t, tCommon, }: CreateTransactionDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -149,7 +150,7 @@ export function CreateTransactionDialog({ open, onOpenChange, form, onSubmit, is
                 <FormItem>
                   <FormLabel className="text-muted-foreground">{tCommon('description')}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Qo'shimcha ma'lumot..." {...field} data-testid="input-description" className="bg-background border-border text-foreground min-h-[100px]" />
+                    <Textarea placeholder={t("qoshimchaMalumot")} {...field} data-testid="input-description" className="bg-background border-border text-foreground min-h-[100px]" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

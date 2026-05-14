@@ -25,8 +25,10 @@ import {
 import { BalanceSection, TransferSection, LotSection, RequestsSection, KpiSection, RentalSection } from "./WMSExtendedSections";
 import { TransferDialog, InternalRequestDialog } from "./WMSExtendedDialogs";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WMSExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "balance");
 
@@ -104,17 +106,17 @@ export default function WMSExtended() {
       <div className="flex items-center justify-between gap-4 mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Ombor Kengaytirilgan</b></>}
-        title="Ombor Kengaytirilgan"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("omborKengaytirilgan")}</b></>}
+        title={t("omborKengaytirilgan")}
       />
-          <p className="text-muted-foreground mt-1">Material balansi, ko'chirish, lot kuzatish va KPI</p>
+          <p className="text-muted-foreground mt-1">{t("materialBalansiKochirishLotKuzatish")}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => {
           queryClient.invalidateQueries({ queryKey: ["/api/warehouse/stock"] });
           queryClient.invalidateQueries({ queryKey: ["/api/warehouse/transfers"] });
         }} data-testid="button-refresh-wms">
           <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 

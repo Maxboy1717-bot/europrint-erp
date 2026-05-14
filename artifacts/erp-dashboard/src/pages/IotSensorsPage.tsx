@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Wifi, WifiOff, Activity } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Sensor {
   id: string | number;
   device_id?: string;
@@ -49,6 +50,7 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 export default function IotSensorsPage() {
+  const { t } = useTranslation("common");
   const { data: rawData, isLoading, isError, refetch } = useQuery<
     Sensor[] | { data?: Sensor[] }
   >({
@@ -72,16 +74,16 @@ export default function IotSensorsPage() {
   return (
     <ModulePage
       module="iot"
-      title="IoT Sensorlar"
+      title={t("iotSensorlar")}
       icon={<Activity className="h-5 w-5" />}
     >
       <div className="space-y-4">
         {/* Summary */}
         {!isLoading && sensors.length > 0 && (
           <div className="flex gap-4 text-sm">
-            <span className="text-muted-foreground">Jami: <strong>{sensors.length}</strong></span>
-            <span className="text-[var(--ep-green)]">Faol: <strong>{active}</strong></span>
-            {inactive > 0 && <span className="text-destructive">Nofaol: <strong>{inactive}</strong></span>}
+            <span className="text-muted-foreground">{t("jami")}<strong>{sensors.length}</strong></span>
+            <span className="text-[var(--ep-green)]">{t("faol")}<strong>{active}</strong></span>
+            {inactive > 0 && <span className="text-destructive">{t("nofaol")}<strong>{inactive}</strong></span>}
           </div>
         )}
 
@@ -106,7 +108,7 @@ export default function IotSensorsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Sensorlar topilmadi</p>
+              <p className="text-muted-foreground">{t("sensorlarTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (

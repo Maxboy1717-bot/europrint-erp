@@ -23,6 +23,7 @@ import { SalesOrdersStatsGrid, SalesOrdersTable } from "./SalesOrdersSections";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 export default function SalesOrders() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { showUndoToast } = useUndoDelete();
   const { t: tCommon } = useTranslation('common');
@@ -184,9 +185,9 @@ export default function SalesOrders() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Buyurtmalar Ro'yxati</b></>}
-        title="Buyurtmalar Ro'yxati"
-        subtitle="Sotuv va tarqatish - buyurtmalar boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("buyurtmalarRoyxati")}</b></>}
+        title={t("buyurtmalarRoyxati")}
+        subtitle={t("sotuvVaTarqatishBuyurtmalarBoshqaruvi")}
       />
         </div>
         <div className="flex gap-3">

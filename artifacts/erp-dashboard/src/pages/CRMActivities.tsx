@@ -118,8 +118,8 @@ export default function CRMActivities() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">CRM Faoliyatlar</b></>}
-        title="CRM Faoliyatlar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("crmFaoliyatlar")}</b></>}
+        title={t("crmFaoliyatlar")}
         subtitle={t("activitiesSubtitle")}
       />
         </div>

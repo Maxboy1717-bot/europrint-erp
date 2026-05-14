@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface AiTrendData {
   summary: { totalTests: number; totalBraks: number; avgPassRate: number; trend: string };
   weeklyTrend: Array<{ week: string; total: number; passed: number; failed: number; passRate: number }>;
@@ -22,6 +23,7 @@ interface AiTrendData {
 }
 
 export function QCAITrendTab() {
+  const { t } = useTranslation("common");
   const { data: aiTrendData, isLoading: aiTrendLoading } = useQuery<AiTrendData>({
     queryKey: ["/api/qc/ai-trend"],
   });
@@ -37,37 +39,37 @@ export function QCAITrendTab() {
   if (!aiTrendData) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">Ma'lumot yuklanmadi</CardContent>
+        <CardContent className="py-8 text-center text-muted-foreground">{t("malumotYuklanmadi")}</CardContent>
       </Card>
     );
   }
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">Jami testlar</p>
+            <p className="text-sm text-muted-foreground">{t("jamiTestlar1")}</p>
             <p className="text-2xl font-bold" data-testid="text-trend-total-tests">{aiTrendData.summary.totalTests}</p>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">Jami brak</p>
+            <p className="text-sm text-muted-foreground">{t("jamiBrak")}</p>
             <p className="text-2xl font-bold text-destructive" data-testid="text-trend-total-braks">{aiTrendData.summary.totalBraks}</p>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">O'rtacha o'tish</p>
+            <p className="text-sm text-muted-foreground">{t("ortachaOtish")}</p>
             <p className="text-2xl font-bold" data-testid="text-trend-pass-rate">{aiTrendData.summary.avgPassRate}%</p>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">Tendensiya</p>
+            <p className="text-sm text-muted-foreground">{t("trend3")}</p>
             <div className="mt-1">
               <Badge
                 variant={aiTrendData.summary.trend === "improving" ? "default" : aiTrendData.summary.trend === "declining" ? "destructive" : "secondary"}
@@ -84,7 +86,7 @@ export function QCAITrendTab() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Brain className="w-4 h-4" />
-            AI Tavsiyalari
+            {t("aiTavsiyalari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -99,7 +101,7 @@ export function QCAITrendTab() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-base">Haftalik sifat trendi</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("haftalikSifatTrendi")}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2">
               {(Array.isArray(aiTrendData.weeklyTrend) ? aiTrendData.weeklyTrend : []).map((w, i) => (
@@ -120,7 +122,7 @@ export function QCAITrendTab() {
           <CardHeader><CardTitle className="text-base">Brak sabablari (Top 10)</CardTitle></CardHeader>
           <CardContent>
             {aiTrendData.byReason.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Brak yozuvlari yo'q</p>
+              <p className="text-sm text-muted-foreground">{t("brakYozuvlariYoq")}</p>
             ) : (
               <div className="space-y-2">
                 {(Array.isArray(aiTrendData.byReason) ? aiTrendData.byReason : []).map((r, i) => {
@@ -141,16 +143,16 @@ export function QCAITrendTab() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Bosqich bo'yicha brak</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("bosqichBoyichaBrak")}</CardTitle></CardHeader>
           <CardContent>
             {aiTrendData.byStage.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>
+              <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Bosqich</TableHead>
-                    <TableHead className="text-right">Miqdor</TableHead>
+                    <TableHead>{t("milestone1")}</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -167,10 +169,10 @@ export function QCAITrendTab() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Kategoriya bo'yicha o'tish darajasi</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("kategoriyaBoyichaOtishDarajasi")}</CardTitle></CardHeader>
           <CardContent>
             {aiTrendData.categoryStats.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Ma'lumot yo'q</p>
+              <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>
             ) : (
               <div className="space-y-2">
                 {(Array.isArray(aiTrendData.categoryStats) ? aiTrendData.categoryStats : []).map((c, i) => (

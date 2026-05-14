@@ -6,6 +6,7 @@
 import { Lightbulb, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from '@/lib/i18n';
 
 interface RecommendationsSectionProps {
   recommendations: string;
@@ -14,12 +15,13 @@ interface RecommendationsSectionProps {
 }
 
 export function RecommendationsSection({ recommendations, setRecommendations, onGenerate }: RecommendationsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-yellow-400" />
-          Tavsiyalar
+          {t("tavsiyalar1")}
         </h3>
         <Button
           size="sm"
@@ -30,12 +32,12 @@ export function RecommendationsSection({ recommendations, setRecommendations, on
           data-testid="btn-generate-recommendations"
         >
           <AlertCircle className="w-3 h-3" />
-          Tizim tavsiya bersin
+          {t("tizimTavsiyaBersin")}
         </Button>
       </div>
       <Textarea
         className="text-xs min-h-[120px]"
-        placeholder="Tavsiyalar bu yerda paydo bo'ladi yoki qo'lda yozing..."
+        placeholder={t("tavsiyalarBuYerdaPaydoBoladi")}
         value={recommendations}
         onChange={e => setRecommendations(e.target.value)}
         data-testid="textarea-recommendations"

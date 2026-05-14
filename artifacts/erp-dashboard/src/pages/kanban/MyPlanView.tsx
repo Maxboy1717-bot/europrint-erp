@@ -13,6 +13,7 @@ import { ListTodo, CheckCircle2, AlertTriangle, Timer, Calendar } from "lucide-r
 import { format, isToday, isBefore, isThisWeek, startOfDay } from "date-fns";
 import { type CardWithOwner, type T, PRIORITY_CONFIG, formatTimeShort } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function MyPlanView({
   cards,
@@ -25,6 +26,7 @@ export function MyPlanView({
   onToggleComplete: (card: CardWithOwner) => void;
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const groupedTasks = useMemo(() => {
     const today: CardWithOwner[] = [];
     const thisWeek: CardWithOwner[] = [];
@@ -117,7 +119,7 @@ export function MyPlanView({
           );
         })}
         {tasks.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">Vazifalar yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("vazifalarYoq")}</p>
         )}
       </div>
     </div>
@@ -133,7 +135,7 @@ export function MyPlanView({
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.totalTasks}</p>
-              <p className="text-xs text-muted-foreground">Jami vazifalar</p>
+              <p className="text-xs text-muted-foreground">{t("jamiVazifalar")}</p>
             </div>
           </div>
         </Card>
@@ -144,7 +146,7 @@ export function MyPlanView({
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.completedTasks}</p>
-              <p className="text-xs text-muted-foreground">Bajarilgan</p>
+              <p className="text-xs text-muted-foreground">{t("bajarilgan")}</p>
             </div>
           </div>
         </Card>
@@ -155,7 +157,7 @@ export function MyPlanView({
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.overdueCount}</p>
-              <p className="text-xs text-muted-foreground">Kechikkan</p>
+              <p className="text-xs text-muted-foreground">{t("kechikkan")}</p>
             </div>
           </div>
         </Card>
@@ -166,7 +168,7 @@ export function MyPlanView({
             </div>
             <div>
               <p className="text-2xl font-bold">{formatTimeShort(stats.totalTrackedTime)}</p>
-              <p className="text-xs text-muted-foreground">Sarflangan vaqt</p>
+              <p className="text-xs text-muted-foreground">{t("sarflanganVaqt")}</p>
             </div>
           </div>
         </Card>
@@ -176,7 +178,7 @@ export function MyPlanView({
         <div className="max-w-3xl">
           <TaskGroup title={t.columns.today} tasks={groupedTasks.today} color="bg-orange-500" />
           <TaskGroup title={t.columns.thisWeek} tasks={groupedTasks.thisWeek} color="bg-yellow-500" />
-          <TaskGroup title="Keyinroq" tasks={groupedTasks.later} color="bg-gray-500" />
+          <TaskGroup title={t("keyinroq")} tasks={groupedTasks.later} color="bg-gray-500" />
         </div>
       </ScrollArea>
     </div>

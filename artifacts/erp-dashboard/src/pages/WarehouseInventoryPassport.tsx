@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { FileCheck, Search, Calendar } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface Passport {
   id: number;
@@ -50,6 +51,7 @@ function fmtDate(iso: string | null): string {
 }
 
 export default function WarehouseInventoryPassport() {
+  const { t } = useTranslation("common");
   const [passports, setPassports] = useState<Passport[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -103,16 +105,16 @@ export default function WarehouseInventoryPassport() {
         <FileCheck className="h-8 w-8 text-[var(--ep-blue)]" />
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">INVENTAR PASPORTLARI</div>
-          <h1 className="text-2xl font-bold">Karantin va QC tarixi</h1>
+          <h1 className="text-2xl font-bold">{t("karantinVaQcTarixi")}</h1>
           <p className="text-sm text-gray-500">EXTERNAL_IN harakatlari uchun inventar pasportlari va QC qarorlari</p>
         </div>
-        <Button onClick={load} variant="outline">🔄 Yangilash</Button>
+        <Button onClick={load} variant="outline">{t("yangilash")}</Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         <Card><CardContent className="pt-5">
           <div className="text-2xl font-bold">{stats.total}</div>
-          <div className="text-xs text-gray-500">Jami pasport</div>
+          <div className="text-xs text-gray-500">{t("jamiPasport")}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-5">
           <div className="text-2xl font-bold text-[var(--ep-yellow)]">{stats.pending}</div>
@@ -137,43 +139,43 @@ export default function WarehouseInventoryPassport() {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 flex-1 min-w-[300px]">
               <Search className="h-4 w-4 text-gray-400" />
-              <Input placeholder="Qidirish: hujjat, ta'minotchi, shartnoma, kod..." value={search} onChange={e => setSearch(e.target.value)} />
+              <Input placeholder={t("qidirishHujjatTaminotchiShartnomaKod")} value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <select value={qcFilter} onChange={e => setQcFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded text-sm">
-              <option value="all">Barcha QC qarorlar</option>
+              <option value="all">{t("barchaQcQarorlar")}</option>
               <option value="QABUL">QABUL</option>
               <option value="REWORK">REWORK</option>
               <option value="CHIQARISH">CHIQARISH</option>
             </select>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-40" placeholder="Dan" />
-              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-40" placeholder="Gacha" />
-              <Button onClick={load} size="sm" variant="outline">Filtr</Button>
+              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-40" placeholder={t("from")} />
+              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-40" placeholder={t("to")} />
+              <Button onClick={load} size="sm" variant="outline">{t("filter3")}</Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-gray-500">⏳ Yuklanmoqda...</div>
+            <div className="p-10 text-center text-gray-500">{t("yuklanmoqda")}</div>
           ) : filtered.length === 0 ? (
             <div className="p-10 text-center text-gray-500">
               <FileCheck className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              Pasport topilmadi
+              {t("pasportTopilmadi")}
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Hujjat</TableHead>
-                  <TableHead>Sana</TableHead>
-                  <TableHead>Ta'minotchi</TableHead>
-                  <TableHead>Shartnoma</TableHead>
-                  <TableHead className="text-right">Miqdor</TableHead>
+                  <TableHead>{t("hujjat")}</TableHead>
+                  <TableHead>{t("date")}</TableHead>
+                  <TableHead>{t("taminotchi")}</TableHead>
+                  <TableHead>{t("shartnoma1")}</TableHead>
+                  <TableHead className="text-right">{t("quantity")}</TableHead>
                   <TableHead className="text-right">Og'irlik (kg)</TableHead>
-                  <TableHead>Sertifikat</TableHead>
-                  <TableHead>QC Qarori</TableHead>
-                  <TableHead>O'tkazilgan</TableHead>
+                  <TableHead>{t("sertifikat")}</TableHead>
+                  <TableHead>{t("qcQarori")}</TableHead>
+                  <TableHead>{t("otkazilgan")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -192,7 +194,7 @@ export default function WarehouseInventoryPassport() {
                           {p.qc_result}
                         </Badge>
                       ) : (
-                        <Badge variant="outline">Kutmoqda</Badge>
+                        <Badge variant="outline">{t("kutmoqda1")}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-xs">{fmtDate(p.transferred_at)}</TableCell>

@@ -9,6 +9,7 @@ import { Plus, AlertTriangle, Clock, Trash2 } from "lucide-react";
 import { SortableTaskCard } from "./KanbanCard";
 import type { CardWithOwner } from "./kanban-types";
 import type { KanbanColumn as KanbanColumnType } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 // ── WIP limits ─────────────────────────────────────────────────────────────
 const WIP_LIMITS: Record<string, number> = {
@@ -68,6 +69,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteColumn }: KanbanColumnProps) {
+  const { t } = useTranslation("common");
   // String() conversion — column.id integer DB'dan kelganda dnd-kit matching to'g'ri ishlashi uchun
   const { setNodeRef, isOver } = useDroppable({ id: String(column.id) });
 
@@ -135,7 +137,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
             onClick={onAddCard}
             disabled={isOverWip}
             data-testid={`button-add-card-${column.id}`}
-            title="Vazifa qo'shish"
+            title={t("vazifaQoshish")}
             style={{
               width: 26, height: 26, borderRadius: 8,
               background: "rgba(163,177,198,0.10)",
@@ -156,7 +158,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
               if (window.confirm(`"${column.name}" ustunini o'chirasizmi? Barcha kartalar ham o'chadi.`))
                 onDeleteColumn(String(column.id));
             }}
-            title="Ustunni o'chirish"
+            title={t("ustunniOchirish")}
             data-testid={`button-delete-column-${column.id}`}
             style={{
               width: 26, height: 26, borderRadius: 8,

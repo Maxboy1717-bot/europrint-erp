@@ -34,7 +34,7 @@ export class AutoBarcodeService {
       this.logger.log(`[AutoBarcode] Movement ${movementId} uchun barkodlar yaratilmoqda...`);
 
       const movR = await this.repo.findMovement(movementId);
-      if (!movR.ok) return movR;
+      if (!movR.ok) return { ok: false, error: movR.error };
       const mov = movR.data;
       if (!mov) {
         return Err({ message: 'Harakat topilmadi', code: 'NOT_FOUND' });
@@ -45,7 +45,7 @@ export class AutoBarcodeService {
       }
 
       const linesR = await this.repo.findLines(movementId);
-      if (!linesR.ok) return linesR;
+      if (!linesR.ok) return { ok: false, error: linesR.error };
       const lines = linesR.data;
       if (lines.length === 0) return Ok({ created: 0 });
 

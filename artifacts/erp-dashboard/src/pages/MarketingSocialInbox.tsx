@@ -13,8 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MessageSquare } from "lucide-react";
 import type { InboxStats, SocialConversation, SocialMessage } from "./MarketingSocialInboxTypes";
 import { ConversationsPanel, ChatPanel } from "./MarketingSocialInboxSections";
+import { useTranslation } from '@/lib/i18n';
 
 export default function MarketingSocialInbox() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // — UI state —
@@ -142,7 +144,7 @@ export default function MarketingSocialInbox() {
               <div className="flex items-center gap-1.5" data-testid="stat-unread">
                 <span className="h-2 w-2 rounded-full bg-orange-500" />
                 <span className="text-sm font-medium">{stats.unreadCount}</span>
-                <span className="text-xs text-muted-foreground">o'qilmagan</span>
+                <span className="text-xs text-muted-foreground">{t("oqilmagan1")}</span>
               </div>
             </>
           )}
@@ -150,25 +152,25 @@ export default function MarketingSocialInbox() {
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           <Select value={platformFilter} onValueChange={setPlatformFilter}>
             <SelectTrigger className="w-full sm:w-[140px] h-9" data-testid="select-platform-filter">
-              <SelectValue placeholder="Platforma" />
+              <SelectValue placeholder={t("platforma")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              <SelectItem value="instagram">Instagram</SelectItem>
-              <SelectItem value="facebook">Facebook</SelectItem>
-              <SelectItem value="telegram">Telegram</SelectItem>
-              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="all">{t("Barchasi")}</SelectItem>
+              <SelectItem value="instagram">{t("instagram")}</SelectItem>
+              <SelectItem value="facebook">{t("facebook")}</SelectItem>
+              <SelectItem value="telegram">{t("telegram")}</SelectItem>
+              <SelectItem value="whatsapp">{t("whatsapp")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[140px] h-9" data-testid="select-status-filter">
-              <SelectValue placeholder="Holat" />
+              <SelectValue placeholder={t("status28")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              <SelectItem value="open">Ochiq</SelectItem>
-              <SelectItem value="assigned">Tayinlangan</SelectItem>
-              <SelectItem value="resolved">Hal qilingan</SelectItem>
+              <SelectItem value="all">{t("Barchasi")}</SelectItem>
+              <SelectItem value="open">{t("ochiq")}</SelectItem>
+              <SelectItem value="assigned">{t("tayinlangan")}</SelectItem>
+              <SelectItem value="resolved">{t("halQilingan")}</SelectItem>
             </SelectContent>
           </Select>
         </div>

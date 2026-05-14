@@ -17,8 +17,10 @@ import {
   StoppageAnalysis,
 } from "./MachineOperatorTabSections";
 import { RecentStoppages, OeeRatingCard } from "./MachineOperatorTabExtras";
+import { useTranslation } from '@/lib/i18n';
 
 export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
+  const { t } = useTranslation("common");
   const { data: mes, isLoading } = useQuery<MesSummary>({
     queryKey: ["/api/integration/employee-mes-summary", employeeId],
     queryFn: async () => {
@@ -74,7 +76,7 @@ export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
           <Settings2 className="h-5 w-5 text-[var(--ep-primary)]" />
         </div>
         <div>
-          <h2 className="text-lg font-bold">Dastgoh Operatori Profili</h2>
+          <h2 className="text-lg font-bold">{t("dastgohOperatoriProfili")}</h2>
           <p className="text-sm text-muted-foreground">
             So'nggi {mes?.periodMonths ?? 3} oy uchun ishlab chiqarish ko'rsatkichlari
           </p>
@@ -85,8 +87,8 @@ export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
         <Card className="border-dashed">
           <CardContent className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
             <Activity className="h-12 w-12 opacity-20" />
-            <p className="text-sm font-medium">Ishlab chiqarish ma'lumotlari topilmadi</p>
-            <p className="text-xs opacity-60">Dastgoh sessiyalari MES tizimida qayd etilmagan</p>
+            <p className="text-sm font-medium">{t("ishlabChiqarishMalumotlariTopilmadi")}</p>
+            <p className="text-xs opacity-60">{t("dastgohSessiyalariMesTizimidaQayd")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -100,7 +102,7 @@ export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
               subtitle={oee >= 80 ? "A'lo" : oee >= 60 ? "Qoniqarli" : "Past"}
             />
             <KpiCard
-              label="Maqsad bajarilishi"
+              label={t("maqsadBajarilishi")}
               value={`${productivity}%`}
               icon={Target}
               color="from-green-500/10 to-green-600/10"
@@ -108,7 +110,7 @@ export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
               trend={productivity >= 90 ? "up" : productivity < 70 ? "down" : "neutral"}
             />
             <KpiCard
-              label="Nuqson ulushi"
+              label={t("nuqsonUlushi")}
               value={`${defectPct}%`}
               icon={AlertTriangle}
               color={defectPct <= 2 ? "from-green-500/10 to-green-600/10" : defectPct <= 5 ? "from-amber-500/10 to-amber-600/10" : "from-red-500/10 to-red-600/10"}
@@ -116,7 +118,7 @@ export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
               trend={defectPct <= 2 ? "up" : defectPct > 5 ? "down" : "neutral"}
             />
             <KpiCard
-              label="Ish vaqti ulushi"
+              label={t("ishVaqtiUlushi")}
               value={`${uptime}%`}
               icon={Zap}
               color="from-purple-500/10 to-purple-600/10"

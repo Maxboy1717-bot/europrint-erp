@@ -66,6 +66,7 @@ const CATEGORY_OPTIONS = [
 ];
 
 export function QCStandardsTab() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { showUndoToast } = useUndoDelete();
   const { t: tCommon } = useTranslation('common');
@@ -161,7 +162,7 @@ export function QCStandardsTab() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5" />
-              Sifat Normalari
+              {t("sifatNormalari")}
             </CardTitle>
             <CardDescription>ISO, GOST va ichki standartlar</CardDescription>
           </div>
@@ -351,8 +352,8 @@ export function QCStandardsTab() {
     <ConfirmDialog
       open={confirmDeleteId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-      title="Standartni o'chirish"
-      description="Ushbu sifat standartini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("standartniOchirish")}
+      description={t("ushbuSifatStandartiniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

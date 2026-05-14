@@ -13,6 +13,7 @@ import { EuroprintLogo } from "@/components/EuroprintLogo";
 import { safeStorage } from '@/lib/safeStorage';
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface LoginRedesignProps {
@@ -113,6 +114,7 @@ function FloatingInput({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
+  const { t } = useTranslation("common");
   const [form, setForm] = useState<LoginFormState>({
     username: "",
     password: "",
@@ -180,7 +182,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
     <div
       className="min-h-screen flex overflow-hidden"
       role="main"
-      aria-label="Tizimga kirish sahifasi"
+      aria-label={t("tizimgaKirishSahifasi")}
     >
       {/* ── LEFT PANEL: Hero (60%) ── */}
       <div
@@ -200,7 +202,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
         <div className="relative z-10">
           <div className="inline-flex items-center gap-3 bg-white/15 rounded-xl px-4 py-2 backdrop-blur-sm">
             <EuroprintLogo height={28} />
-            <span className="text-white font-semibold text-sm tracking-wide">ERP System</span>
+            <span className="text-white font-semibold text-sm tracking-wide">{t("erpSystem")}</span>
           </div>
         </div>
 
@@ -208,7 +210,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
         <div className="relative z-10 space-y-8">
           <div className="space-y-3">
             <h1 className="text-4xl font-bold text-white leading-tight">
-              Zamonaviy ishlab chiqarish
+              {t("zamonaviyIshlabChiqarish")}
               <br />
               <span className="opacity-80">boshqaruv tizimi</span>
             </h1>
@@ -238,7 +240,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/40 text-xs">v2.0 | © 2026 Europrint LLC. Barcha huquqlar himoyalangan.</p>
+          <p className="text-white/40 text-xs">{t("v202026EuroprintLlc")}</p>
         </div>
       </div>
 
@@ -260,10 +262,10 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
           {/* Heading */}
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Tizimga kirish
+              {t("tizimgaKirish")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              EuroPrint ERP ga xush kelibsiz
+              {t("europrintErpGaXushKelibsiz")}
             </p>
           </div>
 
@@ -272,7 +274,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             {/* Username */}
             <FloatingInput
               id="username"
-              label="Foydalanuvchi nomi"
+              label={t("username")}
               value={form.username}
               onChange={(v) => setField("username", v)}
               autoComplete="username"
@@ -282,7 +284,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             {/* Password */}
             <FloatingInput
               id="password"
-              label="Parol"
+              label={t("Parol")}
               type={form.showPassword ? "text" : "password"}
               value={form.password}
               onChange={(v) => setField("password", v)}
@@ -332,11 +334,11 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
               {form.isLoading ? (
                 <>
                   <EPLoader className="w-4 h-4" />
-                  Kirilmoqda...
+                  {t("kirilmoqda")}
                 </>
               ) : (
                 <>
-                  Tizimga kirish
+                  {t("tizimgaKirish")}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

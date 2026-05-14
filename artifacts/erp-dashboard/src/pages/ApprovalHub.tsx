@@ -16,6 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Clock, ClipboardList } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ApprovalItem {
   id: string | number;
@@ -45,6 +46,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export default function ApprovalHub() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("pending");
@@ -105,13 +107,13 @@ export default function ApprovalHub() {
           <div className="ep-table-scroll"><Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
-                <TableHead>Tur</TableHead>
-                <TableHead>Nomi</TableHead>
-                <TableHead>So'rovchi</TableHead>
-                <TableHead>Miqdor</TableHead>
-                <TableHead>Muhimlik</TableHead>
-                <TableHead>Sana</TableHead>
-                {showActions && <TableHead>Amal</TableHead>}
+                <TableHead>{t("tur")}</TableHead>
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("sorovchi")}</TableHead>
+                <TableHead>{t("quantity")}</TableHead>
+                <TableHead>{t("priority")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                {showActions && <TableHead>{t("amal")}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -121,7 +123,7 @@ export default function ApprovalHub() {
                     colSpan={showActions ? 7 : 6}
                     className="text-center py-8 text-[13px] text-muted-foreground"
                   >
-                    Yuklanmoqda...
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : items.length === 0 ? (
@@ -130,7 +132,7 @@ export default function ApprovalHub() {
                     colSpan={showActions ? 7 : 6}
                     className="text-center py-10 text-[13px] text-muted-foreground"
                   >
-                    Tasdiqlash so'rovlari yo'q
+                    {t("tasdiqlashSorovlariYoq")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -191,7 +193,7 @@ export default function ApprovalHub() {
                             data-testid={`button-approve-${item.id}`}
                           >
                             <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Tasdiqlash
+                            {t("verify")}
                           </Button>
                           <Button
                             size="sm"
@@ -206,7 +208,7 @@ export default function ApprovalHub() {
                             disabled={rejectMutation.isPending}
                           >
                             <XCircle className="h-3 w-3 mr-1" />
-                            Rad
+                            {t("rad")}
                           </Button>
                         </div>
                       </TableCell>
@@ -226,7 +228,7 @@ export default function ApprovalHub() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ClipboardList className="h-4 w-4 text-primary" />
-          <h1 className="font-semibold text-base">Tasdiqlash Markazi</h1>
+          <h1 className="font-semibold text-base">{t("tasdiqlashMarkazi")}</h1>
           {pending.length > 0 && (
             <EPStatusPill tone="danger">{pending.length} kutmoqda</EPStatusPill>
           )}
@@ -279,10 +281,10 @@ export default function ApprovalHub() {
               Kutmoqda ({pending.length})
             </TabsTrigger>
             <TabsTrigger value="approved" data-testid="tab-approved">
-              Tasdiqlangan
+              {t("approved")}
             </TabsTrigger>
             <TabsTrigger value="rejected" data-testid="tab-rejected">
-              Rad etilgan
+              {t("rejected")}
             </TabsTrigger>
           </TabsList>
 

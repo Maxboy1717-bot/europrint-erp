@@ -11,6 +11,7 @@ import {
   Edit2, TrendingUp, Clock, CheckSquare, Star,
   Briefcase, Calendar, Target, Award, ChevronRight,
 } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import type {
   Employee, AbcAnalysis, OrgStructureAssignment,
   EmploymentContract, Certificate, SalaryHistoryRecord,
@@ -131,6 +132,7 @@ export function ProfileHeader({
   attendanceStats,
   attendanceData,
 }: ProfileHeaderProps) {
+  const { t } = useTranslation("common");
 
   const salary = fmtSalary(payrollSummary?.totalSalary)
     ?? fmtSalary(salaryHistory?.[0]?.newSalary)
@@ -329,8 +331,8 @@ export function ProfileHeader({
         <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#2d3748", margin: 0 }}>Ish faoliyati</p>
-              <p style={{ fontSize: 11, color: "#718096", margin: "2px 0 0" }}>Joriy hafta</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#2d3748", margin: 0 }}>{t("ishFaoliyati")}</p>
+              <p style={{ fontSize: 11, color: "#718096", margin: "2px 0 0" }}>{t("joriyHafta")}</p>
             </div>
             <div style={{ background: "#EBF4FF", borderRadius: 8, padding: "4px 8px", display: "flex", alignItems: "center", gap: 4 }}>
               <TrendingUp style={{ width: 12, height: 12, color: "#3b82f6" }} />
@@ -355,11 +357,11 @@ export function ProfileHeader({
 
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ flex: 1, background: "#F7FAFC", borderRadius: 10, padding: "8px 10px" }}>
-              <p style={{ fontSize: 10, color: "#718096", margin: 0 }}>Ish staji</p>
+              <p style={{ fontSize: 10, color: "#718096", margin: 0 }}>{t("ishStaji")}</p>
               <p style={{ fontSize: 13, fontWeight: 700, color: "#2d3748", margin: "2px 0 0" }}>{exp ?? "—"}</p>
             </div>
             <div style={{ flex: 1, background: "#F7FAFC", borderRadius: 10, padding: "8px 10px" }}>
-              <p style={{ fontSize: 10, color: "#718096", margin: 0 }}>Bo'lim</p>
+              <p style={{ fontSize: 10, color: "#718096", margin: 0 }}>{t("bolim1")}</p>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#2d3748", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{department || "—"}</p>
             </div>
           </div>
@@ -375,7 +377,7 @@ export function ProfileHeader({
         {/* ─ 3. ABC + Metrics widget ─────────────────────────────────────── */}
         <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#2d3748", margin: 0 }}>Samaradorlik</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#2d3748", margin: 0 }}>{t("samaradorlik")}</p>
             <Clock style={{ width: 15, height: 15, color: "#a0aec0" }} />
           </div>
 
@@ -383,11 +385,11 @@ export function ProfileHeader({
             {abcPct !== null && (
               <CircleProgress pct={abcPct} color={abcColor} size={76} label={`ABC: ${abcData?.grade ?? "—"}`} sub="Baholash" />
             )}
-            <CircleProgress pct={onboardingPct} color="#8b5cf6" size={76} label="Onboarding" sub={`${doneTasks}/${tasks.length} vazifa`} />
+            <CircleProgress pct={onboardingPct} color="#8b5cf6" size={76} label={t("onboarding")} sub={`${doneTasks}/${tasks.length} vazifa`} />
             {/* Real attendance % if data available, otherwise show placeholder */}
             {attendancePct !== null
-              ? <CircleProgress pct={attendancePct} color="#f59e0b" size={76} label="Davomat" sub={`${attendanceStats?.present ?? 0}/${attendanceStats?.total ?? 0} kun`} />
-              : <CircleProgress pct={0} color="#e2e8f0" size={76} label="Davomat" sub="Ma'lumot yo'q" />
+              ? <CircleProgress pct={attendancePct} color="#f59e0b" size={76} label={t("davomat")} sub={`${attendanceStats?.present ?? 0}/${attendanceStats?.total ?? 0} kun`} />
+              : <CircleProgress pct={0} color="#e2e8f0" size={76} label={t("davomat")} sub="Ma'lumot yo'q" />
             }
           </div>
 
@@ -395,11 +397,11 @@ export function ProfileHeader({
           <div style={{ display: "flex", gap: 6 }}>
             {employee.status === "active" ? (
               <Badge style={{ background: "#F0FFF4", color: "#276749", border: "none", fontSize: 10, gap: 3, padding: "4px 8px" }}>
-                <UserCheck style={{ width: 10, height: 10 }} /> Faol xodim
+                <UserCheck style={{ width: 10, height: 10 }} /> {t("faolXodim")}
               </Badge>
             ) : employee.status === "on_leave" ? (
               <Badge style={{ background: "#EBF8FF", color: "#2b6cb0", border: "none", fontSize: 10, padding: "4px 8px" }}>
-                Ta'tilda
+                {t("tatilda")}
               </Badge>
             ) : (
               <Badge style={{ background: "#FFFBEB", color: "#b7791f", border: "none", fontSize: 10, padding: "4px 8px" }}>
@@ -443,7 +445,7 @@ export function ProfileHeader({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <Target style={{ width: 13, height: 13, color: "#8b5cf6" }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#2d3748" }}>Onboarding</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#2d3748" }}>{t("onboarding")}</span>
               </div>
               <span style={{ fontSize: 11, fontWeight: 800, color: "#8b5cf6" }}>{doneTasks}/{tasks.length}</span>
             </div>

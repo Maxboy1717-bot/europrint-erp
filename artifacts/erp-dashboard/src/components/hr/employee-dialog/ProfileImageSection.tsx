@@ -45,16 +45,16 @@ export function ProfileImageSection({previewUrl,
         <AvatarFallback className="text-2xl">?</AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <p className="font-medium">Profil rasmi</p>
+        <p className="font-medium">{t("profilRasmi")}</p>
         <p className="text-sm text-muted-foreground">JPG, PNG (maks. 5MB)</p>
       </div>
       <div className="flex gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-          <Upload className="w-4 h-4 mr-2" /> Yuklash
+          <Upload className="w-4 h-4 mr-2" /> {t("upload")}
         </Button>
         {previewUrl && (
           <Button type="button" variant="outline" size="sm" onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}>
-            <X className="w-4 h-4 mr-2" /> O'chirish
+            <X className="w-4 h-4 mr-2" /> {t("delete")}
           </Button>
         )}
       </div>

@@ -11,8 +11,10 @@ import { Certificate, User, Course } from "./CertificatesTypes";
 import { CertificateTable } from "./CertificatesSections";
 import { CreateCertificateDialog } from "./CertificatesDialogs";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function Certificates() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -104,7 +106,7 @@ export default function Certificates() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-lg">Yuklanmoqda...</div>
+        <div className="text-lg">{t("Yuklanmoqda...")}</div>
       </div>
     );
   }
@@ -122,9 +124,9 @@ export default function Certificates() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Sertifikatlar Ro'yxati</b></>}
-        title="Sertifikatlar Ro'yxati"
-        subtitle="Kurs yakunlash sertifikatlarini boshqarish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("sertifikatlarRoyxati")}</b></>}
+        title={t("sertifikatlarRoyxati")}
+        subtitle={t("kursYakunlashSertifikatlariniBoshqarish")}
       />
         </div>
         <CreateCertificateDialog
@@ -149,9 +151,9 @@ export default function Certificates() {
 
       <div className="bg-card rounded-xl p-6 shadow-sm">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Barcha Sertifikatlar</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("barchaSertifikatlar")}</h2>
           <p className="text-sm text-muted-foreground">
-            Berilgan sertifikatlarni ko'rish va boshqarish
+            {t("berilganSertifikatlarniKorishVaBoshqarish")}
           </p>
         </div>
         <CertificateTable

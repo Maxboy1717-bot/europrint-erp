@@ -21,6 +21,7 @@ import { useTranslation } from "@/lib/i18n";
 // ─── Attendance Calendar ────────────────────────────────────────────────────
 
 export function AttendanceCalendar({ attendanceData }: { attendanceData: AttendanceRecord[] | undefined }) {
+  const { t } = useTranslation("common");
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -103,7 +104,7 @@ export function AttendanceViewCard({
       <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Calendar className="h-4 w-4" />
-          Davomat ko'rinishi
+          {t("davomatKorinishi")}
         </CardTitle>
         <div className="flex items-center gap-1">
           <Button

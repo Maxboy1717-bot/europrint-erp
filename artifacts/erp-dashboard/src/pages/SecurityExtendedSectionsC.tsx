@@ -8,13 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── HazmatSection ────────────────────────────────────────────────────────
 
 export function HazmatSection() {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Xavfli Moddalar Nazorati</h2>
+      <h2 className="text-lg font-semibold">{t("xavfliModdalarNazorati")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Kuzatilayotgan moddalar", v: "—", c: "text-[var(--ep-primary)]" },
@@ -32,11 +34,11 @@ export function HazmatSection() {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Modda</TableHead>
+                <TableHead>{t("modda")}</TableHead>
                 <TableHead>CAS №</TableHead>
-                <TableHead>Xavf darajasi</TableHead>
-                <TableHead>Miqdori</TableHead>
-                <TableHead>Saqlash joyi</TableHead>
+                <TableHead>{t("xavfDarajasi")}</TableHead>
+                <TableHead>{t("miqdori")}</TableHead>
+                <TableHead>{t("saqlashJoyi")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,14 +69,15 @@ export function HazmatSection() {
 // ─── EvacuationSection ────────────────────────────────────────────────────
 
 export function EvacuationSection() {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Evakuatsiya Protokoli</h2>
+      <h2 className="text-lg font-semibold">{t("evakuatsiyaProtokoli")}</h2>
       <div className="p-4 rounded-md bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 flex items-start gap-3">
         <AlertTriangle className="h-5 w-5 text-[var(--ep-yellow)] shrink-0 mt-0.5" />
         <div>
-          <div className="font-medium text-yellow-800 dark:text-yellow-300">Oxirgi mashq: 15 mart 2026</div>
-          <div className="text-sm text-[var(--ep-yellow)] dark:text-yellow-400 mt-0.5">Evakuatsiya vaqti: 4 daqiqa 12 soniya — Normaga muvofiq</div>
+          <div className="font-medium text-yellow-800 dark:text-yellow-300">{t("oxirgiMashq15Mart2026")}</div>
+          <div className="text-sm text-[var(--ep-yellow)] dark:text-yellow-400 mt-0.5">{t("evakuatsiyaVaqti4Daqiqa12")}</div>
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -91,10 +94,10 @@ export function EvacuationSection() {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Mas'ul xodimlar</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("masulXodimlar")}</CardTitle></CardHeader>
         <CardContent>
           <div className="text-center py-6 text-muted-foreground text-sm" data-testid="text-evacuation-empty">
-            Mas'ul xodimlar ro'yxati HR tizimida belgilanmagan
+            {t("masulXodimlarRoyxatiHrTizimida")}
           </div>
         </CardContent>
       </Card>
@@ -111,7 +114,7 @@ interface RatingSectionProps {
 export function RatingSection({ violationsCount }: RatingSectionProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Xavfsizlik Reytingi va KPI</h2>
+      <h2 className="text-lg font-semibold">{t("xavfsizlikReytingiVaKpi")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Umumiy xavfsizlik bali",  v: "—",             c: "text-[var(--ep-green)]" },
@@ -125,7 +128,7 @@ export function RatingSection({ violationsCount }: RatingSectionProps) {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Bo'limlar bo'yicha xavfsizlik reytingi</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("bolimlarBoyichaXavfsizlikReytingi")}</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
             {([

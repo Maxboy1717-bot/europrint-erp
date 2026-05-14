@@ -90,9 +90,9 @@ export default function GamificationPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-primary" /> Gamifikatsiya
+            <Trophy className="w-6 h-6 text-primary" /> {t("gamifikatsiya")}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">Reyting, badge va xodimlar mukofotlari</p>
+          <p className="text-muted-foreground text-sm mt-1">{t("reytingBadgeVaXodimlarMukofotlari")}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={period} onValueChange={setPeriod}>
@@ -110,19 +110,19 @@ export default function GamificationPage() {
           <Dialog open={awardBadgeOpen} onOpenChange={setAwardBadgeOpen}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 text-white gap-1">
-                <Medal className="w-4 h-4" /> Badge ber
+                <Medal className="w-4 h-4" /> {t("badgeBer")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md p-6">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold">🎖️ Xodimga Badge berish</DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold">{t("xodimgaBadgeBerish")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
-                  <Label className="text-muted-foreground">Xodim</Label>
+                  <Label className="text-muted-foreground">{t("xodim1")}</Label>
                   <Select value={badgeForm.employee_id} onValueChange={v => setBadgeForm(f => ({ ...f, employee_id: v }))}>
                     <SelectTrigger className="bg-input border-border mt-1 h-9">
-                      <SelectValue placeholder="Xodimni tanlang..." />
+                      <SelectValue placeholder={t("xodimniTanlang1")} />
                     </SelectTrigger>
                     <SelectContent className="max-h-48">
                       {empList.slice(0, 100).map((e) => (
@@ -134,10 +134,10 @@ export default function GamificationPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Badge</Label>
+                  <Label className="text-muted-foreground">{t("badge")}</Label>
                   <Select value={badgeForm.badge_code} onValueChange={v => setBadgeForm(f => ({ ...f, badge_code: v }))}>
                     <SelectTrigger className="bg-input border-border mt-1 h-9">
-                      <SelectValue placeholder="Badge tanlang..." />
+                      <SelectValue placeholder={t("badgeTanlang")} />
                     </SelectTrigger>
                     <SelectContent className="max-h-48">
                       {(catalog || []).map((b) => (
@@ -152,7 +152,7 @@ export default function GamificationPage() {
                   <Label className="text-muted-foreground">Sabab (ixtiyoriy)</Label>
                   <Textarea value={badgeForm.reason}
                     onChange={e => setBadgeForm(f => ({ ...f, reason: e.target.value }))}
-                    placeholder="Badge berilish sababi..."
+                    placeholder={t("badgeBerilishSababi")}
                     className="bg-input border-border mt-1" rows={2} />
                 </div>
                 <Button
@@ -169,19 +169,19 @@ export default function GamificationPage() {
           <Dialog open={awardPointsOpen} onOpenChange={setAwardPointsOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="border-border text-muted-foreground hover:text-foreground gap-1">
-                <Star className="w-4 h-4" /> Ball ber
+                <Star className="w-4 h-4" /> {t("ballBer")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md p-6">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold">⭐ Qo'shimcha ball berish</DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold">{t("qoshimchaBallBerish")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
-                  <Label className="text-muted-foreground">Xodim</Label>
+                  <Label className="text-muted-foreground">{t("xodim1")}</Label>
                   <Select value={pointsForm.employee_id} onValueChange={v => setPointsForm(f => ({ ...f, employee_id: v }))}>
                     <SelectTrigger className="bg-input border-border mt-1 h-9">
-                      <SelectValue placeholder="Xodimni tanlang..." />
+                      <SelectValue placeholder={t("xodimniTanlang1")} />
                     </SelectTrigger>
                     <SelectContent className="max-h-48">
                       {empList.slice(0, 100).map((e) => (
@@ -194,32 +194,32 @@ export default function GamificationPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-muted-foreground">Ball miqdori</Label>
+                    <Label className="text-muted-foreground">{t("ballMiqdori")}</Label>
                     <Input type="number" value={pointsForm.points}
                       onChange={e => setPointsForm(f => ({ ...f, points: e.target.value }))}
                       className="bg-input border-border mt-1" min={1} max={1000} />
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Tur</Label>
+                    <Label className="text-muted-foreground">{t("tur")}</Label>
                     <Select value={pointsForm.event_type} onValueChange={v => setPointsForm(f => ({ ...f, event_type: v }))}>
                       <SelectTrigger className="bg-input border-border mt-1 h-9">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="manual">Qo'lda</SelectItem>
+                        <SelectItem value="manual">{t("qolda")}</SelectItem>
                         <SelectItem value="kpi_bonus">{t('kpiBonusi')}</SelectItem>
-                        <SelectItem value="project_complete">Loyiha</SelectItem>
-                        <SelectItem value="training">O'qitish</SelectItem>
-                        <SelectItem value="innovation">Innovatsiya</SelectItem>
+                        <SelectItem value="project_complete">{t("loyiha")}</SelectItem>
+                        <SelectItem value="training">{t("oqitish1")}</SelectItem>
+                        <SelectItem value="innovation">{t("innovatsiya")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Izoh</Label>
+                  <Label className="text-muted-foreground">{t("Izoh")}</Label>
                   <Textarea value={pointsForm.description}
                     onChange={e => setPointsForm(f => ({ ...f, description: e.target.value }))}
-                    placeholder="Ball berilish sababi..." className="bg-input border-border mt-1" rows={2} />
+                    placeholder={t("ballBerilishSababi")} className="bg-input border-border mt-1" rows={2} />
                 </div>
                 <Button
                   onClick={() => awardPointsMut.mutate({ ...pointsForm, points: parseInt(pointsForm.points) })}
@@ -258,10 +258,10 @@ export default function GamificationPage() {
       <Tabs defaultValue="leaderboard">
         <TabsList className="bg-muted border-border">
           <TabsTrigger value="leaderboard" className="text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-card">
-            🏆 Reyting
+            {t("reyting1")}
           </TabsTrigger>
           <TabsTrigger value="badges" className="text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-card">
-            🎖️ Badge Katalog
+            {t("badgeKatalog")}
           </TabsTrigger>
         </TabsList>
 
@@ -276,11 +276,11 @@ export default function GamificationPage() {
             </CardHeader>
             <CardContent>
               {lbLoading ? (
-                <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>
+                <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>
               ) : lb.length === 0 ? (
                 <div className="text-center py-12 text-[13px] text-muted-foreground">
                   <div className="text-4xl mb-3">🏆</div>
-                  <p>Hali ma'lumot yo'q. Xodimlarga badge va ballar bering!</p>
+                  <p>{t("haliMalumotYoqXodimlargaBadge")}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -352,7 +352,7 @@ export default function GamificationPage() {
                   <Button size="sm" variant="ghost"
                     className="mt-2 w-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted h-7"
                     onClick={() => { setBadgeForm(f => ({ ...f, badge_code: badge.code })); setAwardBadgeOpen(true); }}>
-                    <Plus className="w-3 h-3 mr-1" /> Ber
+                    <Plus className="w-3 h-3 mr-1" /> {t("ber")}
                   </Button>
                 </CardContent>
               </Card>
@@ -360,7 +360,7 @@ export default function GamificationPage() {
             {(!catalog || catalog.length === 0) && (
               <div className="col-span-4 text-center py-12 text-muted-foreground">
                 <div className="text-4xl mb-3">🎖️</div>
-                <p>Badge katalogi bo'sh</p>
+                <p>{t("badgeKatalogiBosh")}</p>
               </div>
             )}
           </div>

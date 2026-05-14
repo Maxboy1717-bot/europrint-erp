@@ -24,6 +24,7 @@ import { AiTrendSection } from "@/components/production/qc/AiTrendSection";
 import { ReportSection } from "@/components/production/qc/ReportSection";
 import { IsoSettingsSection } from "@/components/production/qc/IsoSettingsSection";
 import { TabMeta } from "@/components/production/qc/types";
+import { useTranslation } from '@/lib/i18n';
 
 const URL_TAB_MAP: Record<string, string> = {
   "/qc/lab": "lab",
@@ -52,6 +53,7 @@ const tabMeta: TabMeta = {
 };
 
 export default function QCExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "vendor");
 
@@ -67,7 +69,7 @@ export default function QCExtended() {
       <div className="flex justify-end px-6 pt-3">
         <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">

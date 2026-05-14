@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const STATUS_COLORS: Record<string, string> = { draft: "bg-muted text-muted-foreground", active: "bg-green-700", closed: "bg-muted text-muted-foreground" };
 const STATUS_LABELS: Record<string, string> = { draft: "Qoralama", active: "Faol", closed: "Yopildi" };
@@ -27,6 +28,7 @@ function eNPSLabel(score: number) {
 }
 
 export default function ENPSPage() {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const currentUserId = user?.employeeId ?? user?.id ?? 0;
   const { toast } = useToast();
@@ -80,25 +82,25 @@ export default function ENPSPage() {
     <div className="p-6 space-y-6 bg-background min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">📊 eNPS — Xodimlar So'rovi</h1>
-          <p className="text-muted-foreground text-sm mt-1">Choraklik anonim xodim qoniqish so'rovi</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("enpsXodimlarSorovi")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("choraklikAnonimXodimQoniqishSorovi")}</p>
         </div>
         <Button onClick={() => setShowCreate(!showCreate)} className="bg-primary hover:bg-primary/90 text-white">
-          ➕ Yangi so'rov
+          {t("yangiSorov1")}
         </Button>
       </div>
 
       {showCreate && (
         <Card className="bg-card border-primary max-w-lg">
-          <CardHeader><CardTitle className="text-foreground">Yangi eNPS So'rov</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-foreground">{t("yangiEnpsSorov")}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-muted-foreground">Sarlavha</Label>
+              <Label className="text-muted-foreground">{t("progress.title")}</Label>
               <Input value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="Masalan: Q1 2026 Xodimlar so'rovi" className="bg-input border-border mt-1" />
+                placeholder={t("masalanQ12026XodimlarSorovi")} className="bg-input border-border mt-1" />
             </div>
             <div>
-              <Label className="text-muted-foreground">Davr</Label>
+              <Label className="text-muted-foreground">{t("period")}</Label>
               <Input value={createForm.period} onChange={e => setCreateForm(f => ({ ...f, period: e.target.value }))}
                 placeholder="Q1-2026" className="bg-input border-border mt-1" />
             </div>
@@ -107,7 +109,7 @@ export default function ENPSPage() {
                 className="bg-primary hover:bg-primary/90 text-white">
                 {create.isPending ? "Yaratilmoqda..." : "✅ Yaratish"}
               </Button>
-              <Button onClick={() => setShowCreate(false)} variant="outline" className="border-border text-muted-foreground">Bekor qilish</Button>
+              <Button onClick={() => setShowCreate(false)} variant="outline" className="border-border text-muted-foreground">{t("cancel")}</Button>
             </div>
           </CardContent>
         </Card>
@@ -131,13 +133,13 @@ export default function ENPSPage() {
                   {s.status === 'draft' && (
                     <Button size="sm" onClick={e => { e.stopPropagation(); launch.mutate(s.id); }}
                       className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white text-xs h-7">
-                      🚀 Ishga tushirish
+                      {t("ishgaTushirish")}
                     </Button>
                   )}
                   {s.status === 'active' && (
                     <Button size="sm" onClick={e => { e.stopPropagation(); close.mutate(s.id); }}
                       className="bg-muted hover:bg-muted text-foreground text-xs h-7">
-                      ✅ Yopish
+                      {t("yopish")}
                     </Button>
                   )}
                 </div>
@@ -145,7 +147,7 @@ export default function ENPSPage() {
             </Card>
           ))}
           {(!surveys || surveys.length === 0) && (
-            <div className="text-center py-8 text-muted-foreground text-sm">Hali so'rov yo'q</div>
+            <div className="text-center py-8 text-muted-foreground text-sm">{t("haliSorovYoq")}</div>
           )}
         </div>
 
@@ -188,7 +190,7 @@ export default function ENPSPage() {
                 {/* Department results */}
                 {results.by_department?.length > 0 && (
                   <Card className="bg-card border-border">
-                    <CardHeader><CardTitle className="text-foreground text-base">Bo'limlar bo'yicha</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-foreground text-base">{t("bolimlarBoyicha")}</CardTitle></CardHeader>
                     <CardContent>
                       <div className="space-y-2">
                         {(Array.isArray(results.by_department) ? results.by_department : []).map((d) => (
@@ -201,7 +203,7 @@ export default function ENPSPage() {
                             <div className={`w-12 text-right font-bold text-sm ${d.enps_score >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                               {d.enps_score > 0 ? "+" : ""}{d.enps_score}
                             </div>
-                            {d.needs_attention && <EPStatusPill tone="danger">⚠️ E'tibor</EPStatusPill>}
+                            {d.needs_attention && <EPStatusPill tone="danger">{t("etibor")}</EPStatusPill>}
                           </div>
                         ))}
                       </div>
@@ -227,7 +229,7 @@ export default function ENPSPage() {
                 )}
               </>
             ) : (
-              <div className="text-center py-12 text-[13px] text-muted-foreground">Yuklanmoqda...</div>
+              <div className="text-center py-12 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>
             )}
 
             {/* Respond form */}
@@ -248,8 +250,8 @@ export default function ENPSPage() {
                       ))}
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>Aslo tavsiya etmayman</span>
-                      <span>Albatta tavsiya qilaman</span>
+                      <span>{t("asloTavsiyaEtmayman")}</span>
+                      <span>{t("albattaTavsiyaQilaman")}</span>
                     </div>
                   </div>
                   <div>
@@ -266,7 +268,7 @@ export default function ENPSPage() {
                   <div>
                     <Label className="text-muted-foreground text-sm">Nima yaxshilanishi kerak? (ixtiyoriy)</Label>
                     <Textarea value={responseForm.feedback} onChange={e => setResponseForm(f => ({ ...f, feedback: e.target.value }))}
-                      placeholder="Fikringizni baham ko'ring..." className="bg-input border-border mt-1" />
+                      placeholder={t("fikringizniBahamKoring")} className="bg-input border-border mt-1" />
                   </div>
                   <Button onClick={() => respond.mutate({ id: selectedSurvey?.id ?? 0, data: responseForm })}
                     disabled={respond.isPending}

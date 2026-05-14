@@ -35,11 +35,13 @@ import {
   DeleteVendorAlert,
   EditVendorDialog,
 } from "./MMVendorsDialogs";
+import { useTranslation } from '@/lib/i18n';
 import {
   EPPageHeader, EPKpiCard, EPErrorState, EPSkeletonKpiRow,
 } from "@/components/ep";
 
 export default function MMVendors() {
+  const { t } = useTranslation("common");
   const [searchQuery, setSearchQuery] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -175,16 +177,16 @@ export default function MMVendors() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · MM · <b className="text-foreground">Yetkazuvchilar</b></>}
-        title="Yetkazuvchilar"
-        subtitle="Barcha yetkazuvchilar ro'yxati va boshqaruvi"
+        breadcrumb={<>{t("dashboardMm")}<b className="text-foreground">{t("yetkazuvchilar")}</b></>}
+        title={t("yetkazuvchilar")}
+        subtitle={t("barchaYetkazuvchilarRoyxatiVaBoshqaruvi")}
         actions={
           <Button
             onClick={() => setCreateDialogOpen(true)}
             className="ep-btn-primary-shimmer gap-1.5"
           >
             <Plus className="h-4 w-4" />
-            Yangi yetkazuvchi qo'shish
+            {t("yangiYetkazuvchiQoshish")}
           </Button>
         }
       />
@@ -194,21 +196,21 @@ export default function MMVendors() {
       ) : !isError && (
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
           <EPKpiCard
-            label="Jami yetkazuvchilar"
+            label={t("jamiYetkazuvchilar")}
             value={stats.total}
             icon={Truck}
             iconBg="warehouse"
             enterDelayMs={0}
           />
           <EPKpiCard
-            label="Faol"
+            label={t("active")}
             value={stats.active}
             icon={CheckCircle2}
             iconBg="var(--ep-green)"
             enterDelayMs={60}
           />
           <EPKpiCard
-            label="Nofaol"
+            label={t("inactive")}
             value={stats.inactive}
             icon={PauseCircle}
             iconBg="var(--ep-muted)"

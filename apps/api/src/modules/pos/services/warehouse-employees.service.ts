@@ -4,10 +4,10 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Err, AppError } from '@common/result';
-import { WarehouseEmployeesRepository } from '../repositories/warehouse-employees.repository';
+import { WarehouseEmployeesRepository, type WarehouseEmployee } from '../repositories/warehouse-employees.repository';
 
 // Re-export the interface so controllers/other services can import from here
-export type { WarehouseEmployee } from '../repositories/warehouse-employees.repository';
+export type { WarehouseEmployee };
 
 @Injectable()
 export class WarehouseEmployeesService {
@@ -32,7 +32,7 @@ export class WarehouseEmployeesService {
     notes?:      string;
   }): Promise<Result<{ id: number }, AppError>> {
     const conflictR = await this.repo.findConflict(dto.warehouseId, dto.userId);
-    if (!conflictR.ok) return conflictR;
+    if (!conflictR.ok) return { ok: false, error: conflictR.error };
     if (conflictR.data) {
       return Err({ message: 'Xodim allaqachon bu omborga biriktirilgan', code: 'CONFLICT' });
     }

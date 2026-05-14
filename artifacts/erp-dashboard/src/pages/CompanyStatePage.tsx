@@ -12,6 +12,7 @@ import { Building2, TrendingUp, TrendingDown, Users, ShoppingCart, RefreshCw } f
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface CompanyKpis {
   profit?: number;
   revenue?: number;
@@ -51,6 +52,7 @@ const STATE_COLORS: Record<string, { bg: string; text: string; border: string }>
 };
 
 export default function CompanyStatePage() {
+  const { t } = useTranslation("common");
   const { data, isLoading, isError, refetch } = useQuery<CompanyState>({
     queryKey: ["/api/company-state/current"],
     queryFn: async () => {
@@ -77,7 +79,7 @@ export default function CompanyStatePage() {
   return (
     <ModulePage
       module="finance"
-      title="Kompaniya Holati"
+      title={t("kompaniyaHolati")}
       icon={<Building2 className="h-5 w-5" />}
       actions={
         <Button
@@ -87,7 +89,7 @@ export default function CompanyStatePage() {
           data-testid="button-refresh-state"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       }
     >
@@ -184,7 +186,7 @@ export default function CompanyStatePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Xodimlar
+              {t("xodimlar")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -198,17 +200,17 @@ export default function CompanyStatePage() {
               <div className="flex flex-wrap gap-6">
                 <div>
                   <p className="text-2xl font-bold">{kpis.totalEmployees ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">Jami xodimlar</p>
+                  <p className="text-xs text-muted-foreground">{t("jamiXodimlar1")}</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[var(--ep-green)]">{kpis.activeEmployees ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">Faol xodimlar</p>
+                  <p className="text-xs text-muted-foreground">{t("faolXodimlar1")}</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[var(--ep-blue)]">
                     {kpis.retentionPct !== undefined ? `${kpis.retentionPct}%` : "—"}
                   </p>
-                  <p className="text-xs text-muted-foreground">Ushlab turish</p>
+                  <p className="text-xs text-muted-foreground">{t("ushlabTurish")}</p>
                 </div>
               </div>
             )}

@@ -22,11 +22,16 @@ export const appUsers = stub(pgTable('users', {
   email: varchar('email'),
   first_name: varchar('first_name'),
   last_name: varchar('last_name'),
+  full_name: varchar('full_name'),
   profile_image_url: text('profile_image_url'),
   phone: varchar('phone'),
   is_active: boolean('is_active'),
+  status: varchar('status'),
   department_id: integer('department_id'),
   position_id: integer('position_id'),
+  employee_id: integer('employee_id'),
+  birth_date: timestamp('birth_date'),
+  deleted_at: timestamp('deleted_at'),
 }));
 
 export const hrEmployees = stub(pgTable('employees', {

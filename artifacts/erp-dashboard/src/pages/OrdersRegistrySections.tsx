@@ -35,17 +35,17 @@ export function OrdersHeader({canCreate, onRefresh, onAdd }: OrdersHeaderProps) 
           <FileText className="w-5 h-5 text-[var(--ep-blue)]" />
         </div>
         <div>
-          <h1 className="text-xl font-bold">Buyruqlar Registri</h1>
-          <p className="text-sm text-muted-foreground">Markazlashgan rasmiy hujjatlar boshqaruvi</p>
+          <h1 className="text-xl font-bold">{t("buyruqlarRegistri")}</h1>
+          <p className="text-sm text-muted-foreground">{t("markazlashganRasmiyHujjatlarBoshqaruvi")}</p>
         </div>
       </div>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={onRefresh}>
-          <RefreshCw className="w-4 h-4 mr-1" /> Yangilash
+          <RefreshCw className="w-4 h-4 mr-1" /> {t("refresh")}
         </Button>
         {canCreate && (
           <Button size="sm" onClick={onAdd}>
-            <Plus className="w-4 h-4 mr-1" /> Yangi buyruq
+            <Plus className="w-4 h-4 mr-1" /> {t("yangiBuyruq")}
           </Button>
         )}
       </div>
@@ -100,23 +100,23 @@ export function OrdersFilters({ search, filterCategory, filterYear, filterStatus
       <CardContent className="py-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="space-y-1 flex-1 min-w-[200px]">
-            <Label className="text-xs">Qidirish</Label>
+            <Label className="text-xs">{t("search")}</Label>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
               <Input
                 className="pl-8"
-                placeholder="Sarlavha bo'yicha qidirish..."
+                placeholder={t("sarlavhaBoyichaQidirish")}
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
             </div>
           </div>
           <div className="space-y-1 min-w-[140px]">
-            <Label className="text-xs">Kategoriya</Label>
+            <Label className="text-xs">{t("category")}</Label>
             <Select value={filterCategory} onValueChange={onCategoryChange}>
-              <SelectTrigger><SelectValue placeholder="Barchasi" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("Barchasi")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
                 {(Array.isArray(CATEGORIES) ? CATEGORIES : []).map((c) => (
                   <SelectItem key={c} value={c}>{c} — {CATEGORY_LABELS[c]}</SelectItem>
                 ))}
@@ -124,11 +124,11 @@ export function OrdersFilters({ search, filterCategory, filterYear, filterStatus
             </Select>
           </div>
           <div className="space-y-1 min-w-[120px]">
-            <Label className="text-xs">Yil</Label>
+            <Label className="text-xs">{t("yil")}</Label>
             <Select value={filterYear || "all"} onValueChange={(v) => onYearChange(v === "all" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Barchasi" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("Barchasi")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
                 {(Array.isArray(years) ? years : []).map((y) => (
                   <SelectItem key={y} value={y}>{y}</SelectItem>
                 ))}
@@ -138,12 +138,12 @@ export function OrdersFilters({ search, filterCategory, filterYear, filterStatus
           <div className="space-y-1 min-w-[140px]">
             <Label className="text-xs">{t('status17')}</Label>
             <Select value={filterStatus} onValueChange={onStatusChange}>
-              <SelectTrigger><SelectValue placeholder="Barchasi" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("Barchasi")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                <SelectItem value="active">Faol</SelectItem>
-                <SelectItem value="cancelled">Bekor qilingan</SelectItem>
-                <SelectItem value="expired">Muddati o'tgan</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
+                <SelectItem value="active">{t("active")}</SelectItem>
+                <SelectItem value="cancelled">{t("cancelledDesc")}</SelectItem>
+                <SelectItem value="expired">{t("muddatiOtgan")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -194,12 +194,12 @@ export function OrdersTable({ entries, total, isLoading, isError, onRetry, onVie
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-32">Raqam</TableHead>
-                  <TableHead className="w-28">Kategoriya</TableHead>
-                  <TableHead>Sarlavha</TableHead>
-                  <TableHead className="w-28">Sana</TableHead>
+                  <TableHead className="w-32">{t("raqam")}</TableHead>
+                  <TableHead className="w-28">{t("category")}</TableHead>
+                  <TableHead>{t("progress.title")}</TableHead>
+                  <TableHead className="w-28">{t("date")}</TableHead>
                   <TableHead className="w-28">{"Holat"}</TableHead>
-                  <TableHead className="w-16 text-center">Ko'rish</TableHead>
+                  <TableHead className="w-16 text-center">{t("view")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -129,7 +129,7 @@ export default function OrderApprovalWorkflow() {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">Buyurtma tasdiqlash jarayoni</h1>
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("buyurtmaTasdiqlashJarayoni")}</h1>
           <p className="text-muted-foreground">Процесс утверждения заказов</p>
         </div>
       </div>

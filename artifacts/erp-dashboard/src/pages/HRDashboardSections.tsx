@@ -16,6 +16,7 @@ import {
   Bell, Award, ShieldAlert, AlertTriangle, CalendarClock, Cake,
   Flag, FileText, ChevronRight, CheckCircle2, XCircle, Info, Users,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 import { SEVERITY_CONFIG } from "./hr-dashboard/types";
 import type { EmployeeWithGrade } from "./hr-dashboard/types";
 import type { BirthdayEmployee, ExpiringContract, UpcomingMilestone } from "./HRDashboardTypes";
@@ -38,13 +39,14 @@ function getGradeBadge(grade: string | null | undefined): string | null {
 // ---------------------------------------------------------------------------
 
 export function ExpiringContractsWidget({ contracts }: { contracts: ExpiringContract[] }) {
+  const { t } = useTranslation("hr");
   if (contracts.length === 0) return null;
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4" data-testid="widget-expiring-contracts">
       <div className="flex items-center gap-2 mb-3">
         <CalendarClock className="h-4 w-4 text-[var(--ep-yellow)]" />
-        <h2 className="text-sm font-semibold text-amber-800">Muddati yaqin shartnomalar (30 kun ichida)</h2>
-        <span className="ml-auto bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full">{contracts.length} ta</span>
+        <h2 className="text-sm font-semibold text-amber-800">{t("contracts.expiringTitle")}</h2>
+        <span className="ml-auto bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full">{t("common.countItems", { n: String(contracts.length) })}</span>
       </div>
       <div className="space-y-2">
         {(Array.isArray(contracts) ? contracts : []).slice(0, 5).map((c) => (
@@ -56,14 +58,14 @@ export function ExpiringContractsWidget({ contracts }: { contracts: ExpiringCont
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className={`text-xs font-semibold ${c.daysLeft <= 7 ? "text-[var(--ep-red)]" : c.daysLeft <= 15 ? "text-[var(--ep-primary)]" : "text-[var(--ep-yellow)]"}`}>
-                {c.daysLeft} kun
+                {t("contracts.daysSuffix", { n: String(c.daysLeft) })}
               </span>
               <span className="text-xs text-muted-foreground">{c.endDate}</span>
             </div>
           </div>
         ))}
         {contracts.length > 5 && (
-          <p className="text-xs text-[var(--ep-yellow)] text-center pt-1">+ {contracts.length - 5} ta boshqa shartnoma</p>
+          <p className="text-xs text-[var(--ep-yellow)] text-center pt-1">{t("contracts.othersSuffix", { n: String(contracts.length - 5) })}</p>
         )}
       </div>
     </div>
@@ -81,6 +83,8 @@ interface BirthdayMilestoneProps {
 }
 
 export function BirthdayMilestoneWidgets({ todayBirthdays, upcomingBirthdays, upcomingMilestones }: BirthdayMilestoneProps) {
+  const { t, language } = useTranslation("hr");
+  const dateLocale = language === "ru" ? "ru-RU" : "uz-UZ";
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Birthday widget */}
@@ -88,15 +92,15 @@ export function BirthdayMilestoneWidgets({ todayBirthdays, upcomingBirthdays, up
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Cake className="h-4 w-4 text-pink-500" />
-            <h2 className="text-sm font-semibold text-pink-800">Tug'ilgan Kunlar</h2>
+            <h2 className="text-sm font-semibold text-pink-800">{t("birthdays.title")}</h2>
           </div>
           <Link href="/hr/birthdays">
-            <Button size="sm" variant="ghost" className="h-6 text-xs text-pink-600">Barchasi <ChevronRight className="w-3 h-3 ml-1" /></Button>
+            <Button size="sm" variant="ghost" className="h-6 text-xs text-pink-600">{t("common.all")} <ChevronRight className="w-3 h-3 ml-1" /></Button>
           </Link>
         </div>
         {todayBirthdays.length > 0 && (
           <div className="mb-2 space-y-1">
-            <p className="text-xs font-medium text-pink-700">🎂 Bugun:</p>
+            <p className="text-xs font-medium text-pink-700">🎂 {t("birthdays.today")}:</p>
             {(Array.isArray(todayBirthdays) ? todayBirthdays : []).slice(0, 3).map((emp) => (
               <div key={emp.id} className="flex items-center gap-2 bg-white/80 rounded px-2 py-1">
                 <div className="w-5 h-5 rounded-full bg-pink-200 flex items-center justify-center text-[10px] font-bold text-pink-700">{emp.full_name?.charAt(0)}</div>
@@ -108,18 +112,18 @@ export function BirthdayMilestoneWidgets({ todayBirthdays, upcomingBirthdays, up
         )}
         {upcomingBirthdays.length > 0 ? (
           <div className="space-y-1">
-            <p className="text-xs font-medium text-[var(--ep-purple)]">📅 7 kun ichida:</p>
+            <p className="text-xs font-medium text-[var(--ep-purple)]">📅 {t("birthdays.in7Days")}:</p>
             {(Array.isArray(upcomingBirthdays) ? upcomingBirthdays : []).slice(0, 3).map((emp) => (
               <div key={emp.id} className="flex items-center gap-2 bg-white/60 rounded px-2 py-1">
                 <span className="text-xs">{emp.full_name}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">
-                  {emp.birth_date ? new Date(emp.birth_date).toLocaleDateString("uz-UZ", { day: "numeric", month: "short" }) : ""}
+                  {emp.birth_date ? new Date(emp.birth_date).toLocaleDateString(dateLocale, { day: "numeric", month: "short" }) : ""}
                 </span>
               </div>
             ))}
           </div>
         ) : todayBirthdays.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-2">Yaqin tug'ilgan kun yo'q</p>
+          <p className="text-xs text-muted-foreground text-center py-2">{t("birthdays.empty")}</p>
         ) : null}
       </div>
 
@@ -128,17 +132,17 @@ export function BirthdayMilestoneWidgets({ todayBirthdays, upcomingBirthdays, up
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Flag className="h-4 w-4 text-[var(--ep-purple)]" />
-            <h2 className="text-sm font-semibold text-purple-800">Yaqin Milestonelar</h2>
+            <h2 className="text-sm font-semibold text-purple-800">{t("milestones.upcomingTitle")}</h2>
             {upcomingMilestones.length > 0 && (
-              <span className="bg-amber-100 text-[var(--ep-yellow)] text-[10px] font-bold px-1.5 py-0.5 rounded-full">{upcomingMilestones.length} ta</span>
+              <span className="bg-amber-100 text-[var(--ep-yellow)] text-[10px] font-bold px-1.5 py-0.5 rounded-full">{t("common.countItems", { n: String(upcomingMilestones.length) })}</span>
             )}
           </div>
           <Link href="/hr/milestones">
-            <Button size="sm" variant="ghost" className="h-6 text-xs text-[var(--ep-purple)]">Barchasi <ChevronRight className="w-3 h-3 ml-1" /></Button>
+            <Button size="sm" variant="ghost" className="h-6 text-xs text-[var(--ep-purple)]">{t("common.all")} <ChevronRight className="w-3 h-3 ml-1" /></Button>
           </Link>
         </div>
         {upcomingMilestones.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-2">Yaqin milestone yo'q</p>
+          <p className="text-xs text-muted-foreground text-center py-2">{t("milestones.empty")}</p>
         ) : (
           <div className="space-y-1">
             {(Array.isArray(upcomingMilestones) ? upcomingMilestones : []).slice(0, 4).map((m) => {
@@ -148,10 +152,10 @@ export function BirthdayMilestoneWidgets({ todayBirthdays, upcomingBirthdays, up
                   <span className="text-sm">{m.milestone_months === 1 ? "🌱" : m.milestone_months === 3 ? "🌿" : "🌳"}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{m.employee_name}</p>
-                    <p className="text-[10px] text-muted-foreground">{m.milestone_months} oylik milestone</p>
+                    <p className="text-[10px] text-muted-foreground">{t("milestones.monthsLabel", { n: String(m.milestone_months) })}</p>
                   </div>
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${daysLeft <= 0 ? "bg-red-100 text-[var(--ep-red)]" : daysLeft <= 3 ? "bg-amber-100 text-[var(--ep-yellow)]" : "bg-blue-100 text-[var(--ep-blue)]"}`}>
-                    {daysLeft <= 0 ? "Bugun!" : `${daysLeft}k`}
+                    {daysLeft <= 0 ? t("milestones.todayMark") : t("milestones.daysShort", { n: String(daysLeft) })}
                   </span>
                 </div>
               );
@@ -197,6 +201,13 @@ export function OverviewTab({
   isLoading, topPerformers, alerts, isLoadingAlerts,
   safetySummaryData, onViewAllAlerts, onViewSafety,
 }: OverviewTabProps) {
+  const { t } = useTranslation("hr");
+  const headers = [
+    { key: "#",        label: "#" },
+    { key: "employee", label: t("performers.employee") },
+    { key: "grade",    label: t("performers.grade") },
+    { key: "score",    label: t("performers.score") },
+  ];
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -204,7 +215,7 @@ export function OverviewTab({
         <div className="bg-card rounded-xl p-6">
           <CardHeader className="p-0 mb-4">
             <CardTitle className="flex items-center gap-2 text-sm text-foreground">
-              <Award className="h-4 w-4 text-[var(--ep-green)]" />Eng Samarali Xodimlar (Top 5)
+              <Award className="h-4 w-4 text-[var(--ep-green)]" />{t("performers.topTitle")}
             </CardTitle>
           </CardHeader>
           {isLoading ? (
@@ -213,14 +224,14 @@ export function OverviewTab({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  {["#","Xodim","Daraja","Ball"].map((h) => (
-                    <TableHead key={h} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h}</TableHead>
+                  {headers.map((h) => (
+                    <TableHead key={h.key} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h.label}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {topPerformers.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm" data-testid="text-no-top-performers">Ma'lumot yo'q</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm" data-testid="text-no-top-performers">{t("common.noData")}</TableCell></TableRow>
                 ) : (Array.isArray(topPerformers) ? topPerformers : []).slice(0, 5).map((emp, idx) => {
                   const cls = getGradeBadge(emp.grade);
                   return (
@@ -246,14 +257,14 @@ export function OverviewTab({
         <div className="bg-card rounded-xl p-6">
           <CardHeader className="p-0 mb-4">
             <CardTitle className="flex items-center justify-between gap-2 text-sm text-foreground">
-              <span className="flex items-center gap-2"><Bell className="h-4 w-4 text-[var(--ep-yellow)]" />So'nggi Alertlar</span>
-              <Button size="sm" variant="ghost" onClick={onViewAllAlerts} data-testid="button-view-all-alerts">Barchasi <ChevronRight className="w-3.5 h-3.5 ml-1" /></Button>
+              <span className="flex items-center gap-2"><Bell className="h-4 w-4 text-[var(--ep-yellow)]" />{t("alerts.recentTitle")}</span>
+              <Button size="sm" variant="ghost" onClick={onViewAllAlerts} data-testid="button-view-all-alerts">{t("common.all")} <ChevronRight className="w-3.5 h-3.5 ml-1" /></Button>
             </CardTitle>
           </CardHeader>
           {isLoadingAlerts ? (
             <div className="space-y-2">{[1,2,3].map((i) => <Skeleton key={`k-${i}`} className="h-14 w-full rounded-lg" />)}</div>
           ) : alerts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2"><CheckCircle2 className="w-8 h-8 text-[var(--ep-green)]" /><span className="text-sm">Hech qanday alert yo'q</span></div>
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2"><CheckCircle2 className="w-8 h-8 text-[var(--ep-green)]" /><span className="text-sm">{t("alerts.empty")}</span></div>
           ) : (
             <div className="space-y-2">
               {(Array.isArray(alerts) ? alerts : []).slice(0, 4).map((alert) => {
@@ -275,16 +286,16 @@ export function OverviewTab({
         <div className="lg:col-span-3 bg-card rounded-xl p-6">
           <CardHeader className="p-0 mb-4">
             <CardTitle className="flex items-center justify-between gap-2 text-sm text-foreground">
-              <span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-[var(--ep-red)]" />Xavfsizlik Holati</span>
-              <Button size="sm" variant="ghost" onClick={onViewSafety} data-testid="button-view-safety">Barchasi <ChevronRight className="w-3.5 h-3.5 ml-1" /></Button>
+              <span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-[var(--ep-red)]" />{t("safety.statusTitle")}</span>
+              <Button size="sm" variant="ghost" onClick={onViewSafety} data-testid="button-view-safety">{t("common.all")} <ChevronRight className="w-3.5 h-3.5 ml-1" /></Button>
             </CardTitle>
           </CardHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "Bu oydagi hodisalar",         value: safetySummaryData?.incidentsThisMonth ?? 0,              color: "text-[var(--ep-red)]" },
-              { label: "PPE Compliance",              value: safetySummaryData?.ppeCompliancePercent !== undefined ? `${safetySummaryData.ppeCompliancePercent}%` : "0%", color: "text-[var(--ep-green)]" },
-              { label: "Muddati tugayotgan treninglar", value: safetySummaryData?.expiringTrainings ?? 0,             color: "text-[var(--ep-primary)]" },
-              { label: "Ochiq hodisalar",             value: safetySummaryData?.openIncidents ?? 0,                   color: "text-[var(--ep-blue)]" },
+              { label: t("safety.incidentsThisMonth"),     value: safetySummaryData?.incidentsThisMonth ?? 0,              color: "text-[var(--ep-red)]" },
+              { label: t("safety.ppeCompliance"),          value: safetySummaryData?.ppeCompliancePercent !== undefined ? `${safetySummaryData.ppeCompliancePercent}%` : "0%", color: "text-[var(--ep-green)]" },
+              { label: t("safety.expiringTrainings"),      value: safetySummaryData?.expiringTrainings ?? 0,             color: "text-[var(--ep-primary)]" },
+              { label: t("safety.openIncidents"),          value: safetySummaryData?.openIncidents ?? 0,                   color: "text-[var(--ep-blue)]" },
             ].map((item, i) => (
               <div key={`k-${i}`} className="text-center p-3 rounded-lg bg-muted/60" data-testid={`overview-safety-${i}`}>
                 <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>

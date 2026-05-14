@@ -30,8 +30,8 @@ export default function QualityDashboard() {
       <header className="flex items-center gap-3">
         <CheckCircle className="h-7 w-7 text-[var(--ep-green)]" />
         <div>
-          <h1 className="text-2xl font-bold">Sifat AI Vision</h1>
-          <p className="text-sm text-muted-foreground">Brak trend + karantin + AI defekt aniqlash</p>
+          <h1 className="text-2xl font-bold">{t("sifatAiVision")}</h1>
+          <p className="text-sm text-muted-foreground">{t("brakTrendKarantinAiDefekt")}</p>
         </div>
       </header>
 
@@ -48,9 +48,9 @@ export default function QualityDashboard() {
         <Card className="p-4 border-2 border-amber-200 bg-amber-50/40">
           <div className="text-xs uppercase tracking-wider font-semibold text-[var(--ep-yellow)]">{t('trend')}</div>
           <div className="flex items-center gap-2 mt-1">
-            {trend.data?.trend === 'rising' && <><TrendingUp className="h-7 w-7 text-[var(--ep-red)]" /><span className="text-2xl font-bold text-[var(--ep-red)]">Oshmoqda</span></>}
-            {trend.data?.trend === 'falling' && <><TrendingDown className="h-7 w-7 text-[var(--ep-green)]" /><span className="text-2xl font-bold text-[var(--ep-green)]">Pasaymoqda</span></>}
-            {trend.data?.trend === 'stable' && <><Minus className="h-7 w-7 text-slate-500" /><span className="text-2xl font-bold text-slate-700">Barqaror</span></>}
+            {trend.data?.trend === 'rising' && <><TrendingUp className="h-7 w-7 text-[var(--ep-red)]" /><span className="text-2xl font-bold text-[var(--ep-red)]">{t("oshmoqda")}</span></>}
+            {trend.data?.trend === 'falling' && <><TrendingDown className="h-7 w-7 text-[var(--ep-green)]" /><span className="text-2xl font-bold text-[var(--ep-green)]">{t("pasaymoqda")}</span></>}
+            {trend.data?.trend === 'stable' && <><Minus className="h-7 w-7 text-slate-500" /><span className="text-2xl font-bold text-slate-700">{t("barqaror")}</span></>}
           </div>
         </Card>
       </div>
@@ -66,7 +66,7 @@ export default function QualityDashboard() {
         </div>
         {quarantine.isLoading ? <EPLoader /> :
          (quarantine.data?.length ?? 0) === 0 ? (
-          <div className="text-center py-8 text-sm text-muted-foreground">✅ Hozirda karantin bo'sh</div>
+          <div className="text-center py-8 text-sm text-muted-foreground">{t("hozirdaKarantinBosh")}</div>
         ) : (
           <div className="space-y-2">
             {quarantine.data?.map(b => (

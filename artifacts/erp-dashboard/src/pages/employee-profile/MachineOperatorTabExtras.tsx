@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Clock, Gauge } from "lucide-react";
 import type { MesSummary } from "./profile-types";
+import { useTranslation } from '@/lib/i18n';
 
 /* ------------------------------------------------------------------ */
 /* Recent Stoppages                                                     */
@@ -18,6 +19,7 @@ interface RecentStoppagesProps {
 }
 
 export function RecentStoppages({ mes }: RecentStoppagesProps) {
+  const { t } = useTranslation("common");
   const recent = mes?.recentStoppages ?? [];
   if (recent.length === 0) return null;
 
@@ -26,16 +28,16 @@ export function RecentStoppages({ mes }: RecentStoppagesProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
           <Clock className="h-4 w-4 text-[var(--ep-red)]" />
-          Oxirgi to'xtashlar
+          {t("oxirgiToxtashlar")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-xs">Sana</TableHead>
-              <TableHead className="text-xs">Sabab</TableHead>
-              <TableHead className="text-xs text-right">Davomiyligi</TableHead>
+              <TableHead className="text-xs">{t("date")}</TableHead>
+              <TableHead className="text-xs">{t("sabab")}</TableHead>
+              <TableHead className="text-xs text-right">{t("davomiyligi")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -76,9 +78,9 @@ export function OeeRatingCard({ oee }: OeeRatingProps) {
         <div className="flex items-center gap-3">
           <Gauge className="h-6 w-6 text-primary" />
           <div>
-            <p className="text-sm font-semibold">Umumiy OEE bahosi</p>
+            <p className="text-sm font-semibold">{t("umumiyOeeBahosi")}</p>
             <p className="text-xs text-muted-foreground">
-              Jahon standarti: A'lo ≥85%, Yaxshi ≥65%, Qoniqarli ≥50%
+              {t("jahonStandartiAlo85Yaxshi")}
             </p>
           </div>
         </div>

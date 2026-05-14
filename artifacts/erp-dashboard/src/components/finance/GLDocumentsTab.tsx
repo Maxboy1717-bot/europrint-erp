@@ -30,6 +30,7 @@ import { z } from "zod";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Check, X, FileText } from "lucide-react";
 import type { GlDocument } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 const glDocumentFormSchema = z.object({
   documentNumber: z.string().min(1, "Hujjat raqami talab qilinadi"),
@@ -43,6 +44,7 @@ const glDocumentFormSchema = z.object({
 type GlDocumentFormValues = z.infer<typeof glDocumentFormSchema>;
 
 export function GLDocumentsTab() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isAddOpen, setIsAddOpen] = useState(false);
 
@@ -101,11 +103,11 @@ export function GLDocumentsTab() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "posted":
-        return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"><Check className="mr-1 h-3 w-3" />Joylashtirilgan</Badge>;
+        return <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"><Check className="mr-1 h-3 w-3" />{t("joylashtirilgan")}</Badge>;
       case "reversed":
-        return <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"><X className="mr-1 h-3 w-3" />Bekor qilingan</Badge>;
+        return <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"><X className="mr-1 h-3 w-3" />{t("cancelledDesc")}</Badge>;
       default:
-        return <Badge className="bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"><FileText className="mr-1 h-3 w-3" />Qoralama</Badge>;
+        return <Badge className="bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold border-none"><FileText className="mr-1 h-3 w-3" />{t("draft")}</Badge>;
     }
   };
 
@@ -113,27 +115,27 @@ export function GLDocumentsTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground" data-testid="text-gl-documents-title">
-          Bosh Daftar Hujjatlari
+          {t("boshDaftarHujjatlari")}
         </h3>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setIsAddOpen(true)} data-testid="button-add-gl-document" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
               <Plus className="mr-2 h-4 w-4" />
-              Yangi hujjat
+              {t("yangiHujjat")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md bg-card border-none rounded-xl p-6">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Yangi GL hujjati</DialogTitle>
+              <DialogTitle className="text-foreground">{t("yangiGlHujjati")}</DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                Bosh daftar hujjati ma'lumotlarini kiriting
+                {t("boshDaftarHujjatiMalumotlariniKiriting")}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
                 <FormField control={form.control} name="documentNumber" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Hujjat raqami</FormLabel>
+                    <FormLabel className="text-muted-foreground">{t("hujjatRaqami")}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="GL-2024-001" data-testid="input-gl-document-number" className="bg-background border-border text-foreground" />
                     </FormControl>
@@ -143,7 +145,7 @@ export function GLDocumentsTab() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField control={form.control} name="documentDate" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground">Hujjat sanasi</FormLabel>
+                      <FormLabel className="text-muted-foreground">{t("hujjatSanasi")}</FormLabel>
                       <FormControl>
                         <Input {...field} type="date" data-testid="input-gl-document-date" className="bg-background border-border text-foreground" />
                       </FormControl>
@@ -152,7 +154,7 @@ export function GLDocumentsTab() {
                   )} />
                   <FormField control={form.control} name="postingDate" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground">Joylashtirish sanasi</FormLabel>
+                      <FormLabel className="text-muted-foreground">{t("joylashtirishSanasi")}</FormLabel>
                       <FormControl>
                         <Input {...field} type="date" data-testid="input-gl-posting-date" className="bg-background border-border text-foreground" />
                       </FormControl>
@@ -162,18 +164,18 @@ export function GLDocumentsTab() {
                 </div>
                 <FormField control={form.control} name="documentType" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Hujjat turi</FormLabel>
+                    <FormLabel className="text-muted-foreground">{t("hujjatTuri")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-gl-document-type" className="bg-background border-border text-foreground h-9">
-                          <SelectValue placeholder="Turni tanlang" />
+                          <SelectValue placeholder={t("turniTanlang")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-card border-none">
-                        <SelectItem value="invoice">Faktura</SelectItem>
-                        <SelectItem value="payment">To'lov</SelectItem>
-                        <SelectItem value="transfer">O'tkazma</SelectItem>
-                        <SelectItem value="adjustment">Tuzatish</SelectItem>
+                        <SelectItem value="invoice">{t("faktura")}</SelectItem>
+                        <SelectItem value="payment">{t("tolov1")}</SelectItem>
+                        <SelectItem value="transfer">{t("otkazma")}</SelectItem>
+                        <SelectItem value="adjustment">{t("tuzatish")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -181,19 +183,19 @@ export function GLDocumentsTab() {
                 )} />
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Tavsif</FormLabel>
+                    <FormLabel className="text-muted-foreground">{t("progress.description")}</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Hujjat haqida..." data-testid="input-gl-document-description" className="bg-background border-border text-foreground" />
+                      <Textarea {...field} placeholder={t("hujjatHaqida")} data-testid="input-gl-document-description" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={closeDialog} className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none">
-                    Bekor qilish
+                    {t("cancel")}
                   </Button>
                   <Button type="submit" data-testid="button-save-gl-document" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none">
-                    Yaratish
+                    {t("Yaratish")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -207,24 +209,24 @@ export function GLDocumentsTab() {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Hujjat raqami</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Turi</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tavsif</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Debet</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Kredit</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holati</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("hujjatRaqami")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("date")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("type")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("progress.description")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("debet")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("loan")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("holati")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell>
+                  <TableCell colSpan={8} className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell>
                 </TableRow>
               ) : glDocuments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-[13px] text-muted-foreground">Hujjatlar topilmadi</TableCell>
+                  <TableCell colSpan={8} className="text-center py-8 text-[13px] text-muted-foreground">{t("hujjatlarTopilmadi")}</TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(glDocuments) ? glDocuments : []).map((doc) => (
@@ -246,7 +248,7 @@ export function GLDocumentsTab() {
                           data-testid={`button-post-gl-document-${doc.id}`}
                           className="bg-primary text-white hover:bg-primary/90 border-none">
                           <Check className="mr-1 h-3 w-3" />
-                          Joylashtirish
+                          {t("joylashtirish")}
                         </Button>
                       )}
                     </TableCell>

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LeadCard } from "./LeadCard";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface Lead {
   id: number;
@@ -44,6 +45,7 @@ interface LeadKanbanColumnProps {
 }
 
 export function LeadKanbanColumn({ stage, leads, onLeadClick }: LeadKanbanColumnProps) {
+  const { t } = useTranslation("common");
   const { setNodeRef, isOver } = useDroppable({
     id: stage.stageId,
     data: {
@@ -93,7 +95,7 @@ export function LeadKanbanColumn({ stage, leads, onLeadClick }: LeadKanbanColumn
 
           {leads.length === 0 && (
             <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-              Bo'sh
+              {t("bosh")}
             </div>
           )}
         </ScrollArea>

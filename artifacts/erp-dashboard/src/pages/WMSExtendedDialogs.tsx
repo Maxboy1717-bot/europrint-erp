@@ -27,31 +27,31 @@ export function TransferDialog({open, onOpenChange, form, mutation }: TransferDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Ko'chirish Hujjati Yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("kochirishHujjatiYaratish")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
           <div className="space-y-1">
-          <Label>Qayerdan</Label>
-            <Input {...form.register("fromWarehouse")} placeholder="Xom ashyo ombori" data-testid="input-from-wh" />
+          <Label>{t("qayerdan")}</Label>
+            <Input {...form.register("fromWarehouse")} placeholder={t("xomAshyoOmbori")} data-testid="input-from-wh" />
           </div>
           <div className="space-y-1">
-          <Label>Qayerga</Label>
-            <Input {...form.register("toWarehouse")} placeholder="Sex ombori" />
+          <Label>{t("qayerga")}</Label>
+            <Input {...form.register("toWarehouse")} placeholder={t("sexOmbori")} />
           </div>
           <div className="space-y-1">
-          <Label>Material nomi</Label>
+          <Label>{t("materialNomi")}</Label>
             <Input {...form.register("materialName")} />
           </div>
           <div className="space-y-1">
-          <Label>Miqdor</Label>
+          <Label>{t("quantity")}</Label>
             <Input type="number" {...form.register("quantity", { valueAsNumber: true })} />
           </div>
           <DialogFooter>
             <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Bekor
+              {t("Bekor")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
-              Yaratish
+              {t("Yaratish")}
             </Button>
           </DialogFooter>
         </form>
@@ -74,31 +74,31 @@ export function InternalRequestDialog({ open, onOpenChange, form, mutation }: In
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Material So'rovi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("materialSorovi1")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
           <div className="space-y-1">
-          <Label>Bo'lim</Label>
-            <Input {...form.register("department")} placeholder="Bosma sexi" data-testid="input-department" />
+          <Label>{t("bolim1")}</Label>
+            <Input {...form.register("department")} placeholder={t("bosmaSexi")} data-testid="input-department" />
           </div>
           <div className="space-y-1">
           <Label>{"Material"}</Label>
             <Input {...form.register("materialName")} />
           </div>
           <div className="space-y-1">
-          <Label>Miqdor</Label>
+          <Label>{t("quantity")}</Label>
             <Input type="number" {...form.register("quantity", { valueAsNumber: true })} />
           </div>
           <div className="space-y-1">
-          <Label>Sabab</Label>
+          <Label>{t("sabab")}</Label>
             <Input {...form.register("reason")} />
           </div>
           <DialogFooter>
             <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Bekor
+              {t("Bekor")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
-              Yuborish
+              {t("submitBtn")}
             </Button>
           </DialogFooter>
         </form>

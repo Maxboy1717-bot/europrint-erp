@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { apiRequest, getAuthHeaders } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 import {
   type OffboardingCase,
   type Employee,
@@ -40,6 +41,7 @@ export function OffboardingCard({
   item: OffboardingCase;
   onOpenChecklist: (id: number) => void;
 }) {
+  const { t } = useTranslation("common");
   const [expanded, setExpanded] = useState(false);
 
   const pct =
@@ -142,7 +144,7 @@ export function OffboardingCard({
                   onClick={() => onOpenChecklist(item.id)}
                 >
                   <ClipboardList className="h-3 w-3 mr-1" />
-                  Chek-list
+                  {t("chekList1")}
                 </Button>
               )}
             </div>
@@ -227,19 +229,19 @@ export function CreateCaseDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserX className="h-4 w-4 text-[var(--ep-primary)]" />
-            Yangi Offboarding Jarayoni
+            {t("yangiOffboardingJarayoni")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label>Xodim</Label>
+            <Label>{t("xodim1")}</Label>
             <Select
               value={form.employeeId}
               onValueChange={v => setForm(f => ({ ...f, employeeId: v }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Xodimni tanlang..." />
+                <SelectValue placeholder={t("xodimniTanlang1")} />
               </SelectTrigger>
               <SelectContent className="max-h-60">
                 {empList.map(e => (
@@ -254,7 +256,7 @@ export function CreateCaseDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Ketish sababi</Label>
+            <Label>{t("ketishSababi")}</Label>
             <Select
               value={form.dismissalType}
               onValueChange={v => setForm(f => ({ ...f, dismissalType: v }))}
@@ -271,7 +273,7 @@ export function CreateCaseDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Oxirgi ish kuni</Label>
+            <Label>{t("oxirgiIshKuni")}</Label>
             <Input
               type="date"
               value={form.lastWorkingDay}
@@ -281,13 +283,13 @@ export function CreateCaseDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             onClick={() => create.mutate()}
             disabled={!form.employeeId || create.isPending}
             className="bg-[var(--ep-primary)] hover:bg-[var(--ep-primary)]/90 text-white"
           >
-            Boshlash
+            {t("boshlash")}
           </Button>
         </DialogFooter>
       </DialogContent>

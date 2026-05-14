@@ -46,12 +46,14 @@ import {
 } from "./EuroprintControlCenterSections";
 import { ControlCenterTabs } from "./EuroprintControlCenterTabs";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function EuroprintControlCenter() {
+  const { t } = useTranslation("common");
   const { data: businessRules = [], isLoading: rulesLoading, isError, refetch } =
     useQuery<BusinessRule[]>({ queryKey: ["/api/europrint-control/business-rules"] });
 
@@ -211,8 +213,8 @@ export default function EuroprintControlCenter() {
       <div className="flex items-center justify-between">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Europrint Nazorat Markazi</b></>}
-        title="Europrint Nazorat Markazi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("europrintNazoratMarkazi")}</b></>}
+        title={t("europrintNazoratMarkazi")}
         subtitle="21 ta modul (14 ta qat&apos;iy qoida) - &quot;Mashina inson o&apos;rniga ishlaydi&quot; falsafasi"
       />
         </div>
@@ -221,7 +223,7 @@ export default function EuroprintControlCenter() {
           className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none gap-2"
         >
           <RefreshCw className="h-4 w-4" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 

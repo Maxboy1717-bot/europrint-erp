@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1440,initial-scale=1"/>
+<title>EuroPrint ERP — UI Kit</title>
+<link rel="icon" href="../../assets/europrint-mark.png"/>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="kit.css"/>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="AppShell.jsx"></script>
+<script type="text/babel" src="DashboardPage.jsx"></script>
+<script type="text/babel" src="Pages.jsx"></script>
+<script type="text/babel" src="Templates.jsx"></script>
+<script type="text/babel" src="PosKanbanProfile.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ================================================================
+   Sahifa registri — har bir 260 sahifa shu 5 ta shablondan birini
+   ishlatadi. Yangi sahifa qo'shish uchun: shu yerga PROPS qo'shing.
+================================================================ */
+
+function OrdersList() {
+  return <ListPage
+    title="Buyurtmalar"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; Buyurtmalar</>}
+    primaryAction="Yangi buyurtma"
+    kpis={[
+      { label:'Jami buyurtmalar', value:'1,284', delta:'8.7%',  deltaTrend:'up', icon:'package',  iconBg:'var(--ep-primary)' },
+      { label:'Yoʻlda',          value:'586',    delta:'12%',   deltaTrend:'up', icon:'truck',    iconBg:'#15171A' },
+      { label:'Yetkazilgan',     value:'672',    delta:'3.4%',  deltaTrend:'up', icon:'check',    iconBg:'var(--accent-coral)' },
+      { label:'Kechikkan',       value:'26',     delta:'2 ta',  deltaTrend:'dn', icon:'clock',    iconBg:'#7A4FB1' },
+    ]}
+    statusKey="status"
+    statusMap={{
+      'new':      <span className="pill primary">Yangi</span>,
+      'progress': <span className="pill warning">Yoʻlda</span>,
+      'done':     <span className="pill success">Yetkazildi</span>,
+      'closed':   <span className="pill success">Yetkazildi</span>,
+    }}
+    columns={[
+      { key:'id',  label:'Buyurtma',  cellStyle:{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg2)'} },
+      { key:'customer', label:'Mijoz', render:r => <><span className="av" style={{background:r.avc}}>{r.av}</span><b>{r.customer}</b></> },
+      { key:'product', label:'Mahsulot', render:r => <>{r.product} <span style={{color:'var(--fg2)'}}>· ×{r.qty}</span></> },
+      { key:'route', label:'Yoʻnalish', cellStyle:{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg2)'} },
+      { key:'status', label:'Holat' },
+      { key:'total', label:'Summa', headStyle:{textAlign:'right'}, cellStyle:{textAlign:'right',fontFamily:'var(--font-mono)',fontWeight:600} },
+    ]}
+    rows={[
+      { id:'#EP-24108', av:'K', avc:'#3563AC', customer:'Korzinka Online',  product:'Banner 5×3m',     qty:12,    route:'TIY → MNZ', status:'progress', total:'4 800 000' },
+      { id:'#EP-24107', av:'A', avc:'#FF902F', customer:'Artel Electronics', product:'Karton qutilar',  qty:240,   route:'TIY → SAM', status:'done',     total:'18 200 000' },
+      { id:'#EP-24106', av:'U', avc:'#7A4FB1', customer:'Uzum Market',       product:'Flayer A5',       qty:5000,  route:'TIY → BUX', status:'new',      total:'2 100 000' },
+      { id:'#EP-24105', av:'B', avc:'#2E8A5A', customer:'Beeline',           product:'Roll-up 2m',      qty:8,     route:'TIY → AND', status:'progress', total:'3 600 000' },
+      { id:'#EP-24104', av:'D', avc:'#C45C7A', customer:'Davr Mobile',       product:'Vizit kartochka', qty:2000,  route:'TIY → NAM', status:'done',     total:'850 000' },
+      { id:'#EP-24103', av:'H', avc:'#1A8FAF', customer:'Hayot Group',       product:'Brendlangan paket',qty:1500, route:'TIY → FAR', status:'progress', total:'6 200 000' },
+      { id:'#EP-24102', av:'M', avc:'#B5891C', customer:'Makro',             product:'Etiket A4',        qty:8000, route:'TIY → SAM', status:'new',      total:'1 200 000' },
+    ]}
+  />;
+}
+
+function DriversList() {
+  return <ListPage
+    title="Haydovchilar"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; Haydovchilar</>}
+    primaryAction="Yangi haydovchi"
+    kpis={[
+      { label:'Jami haydovchilar', value:'42',  delta:'5%',  deltaTrend:'up', icon:'users',   iconBg:'var(--ep-primary)' },
+      { label:'Faol',              value:'36',  delta:'2',   deltaTrend:'up', icon:'check',   iconBg:'#15171A' },
+      { label:'Yoʻlda',            value:'24',  delta:'18%', deltaTrend:'up', icon:'truck',   iconBg:'var(--accent-coral)' },
+      { label:'Taʼtilda',          value:'4',                                   icon:'clock',  iconBg:'#7A4FB1' },
+    ]}
+    statusMap={{
+      'active':   <span className="pill success">Faol</span>,
+      'progress': <span className="pill warning">Yoʻlda</span>,
+      'pending':  <span className="pill neutral">Taʼtilda</span>,
+      'closed':   <span className="pill danger">Notaʼfaol</span>,
+    }}
+    columns={[
+      { key:'name', label:'Haydovchi', render:r => <><span className="av" style={{background:r.avc}}>{r.av}</span><b>{r.name}</b></> },
+      { key:'license', label:'Litsenziya', cellStyle:{fontFamily:'var(--font-mono)',fontSize:12} },
+      { key:'vehicle', label:'Mashina' },
+      { key:'route', label:'Yoʻnalish', cellStyle:{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg2)'} },
+      { key:'status', label:'Holat' },
+      { key:'rating', label:'Reyting', headStyle:{textAlign:'right'}, cellStyle:{textAlign:'right',fontWeight:700}, render:r => <>{r.rating} <span style={{color:'var(--ep-primary)'}}>★</span></> },
+    ]}
+    rows={[
+      { av:'A', avc:'#FF902F', name:'Akmal Yusupov',   license:'AC4828421', vehicle:'MAN TGS — 01A123BC', route:'TIY → BUX', status:'progress', rating:4.9 },
+      { av:'B', avc:'#15171A', name:'Bekzod Sodiqov',  license:'AC1948372', vehicle:'Isuzu NPR — 01B342DE',route:'TIY → SAM', status:'progress', rating:4.7 },
+      { av:'D', avc:'#7A4FB1', name:'Davron Yoʻldoshev',license:'AC8472619',vehicle:'KIA Bongo — 01C892KK',route:'—',         status:'active',   rating:4.8 },
+      { av:'F', avc:'#2E8A5A', name:'Farrux Karimov',  license:'AC2837461', vehicle:'MAN TGS — 01D746LM', route:'—',         status:'pending',  rating:4.6 },
+      { av:'I', avc:'#E94560', name:'Ilxom Tursunov',  license:'AC9182736', vehicle:'Isuzu NPR — 01E121FF',route:'TIY → AND', status:'progress', rating:4.9 },
+    ]}
+  />;
+}
+
+function OrderDetail() {
+  return <DetailPage
+    title="Buyurtma #EP-24108"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; <a>Buyurtmalar</a> &nbsp;/&nbsp; #EP-24108</>}
+    status="Yoʻlda · 65%"
+    statusCls="warning"
+    meta={[
+      { label:'Mijoz',        value:'Korzinka Online', sub:'B2B kontrakt #2024-018' },
+      { label:'Mahsulot',     value:'Banner 5×3m', sub:'×12 dona' },
+      { label:'Summa',        value:'₿ 4 800 000', sub:'NDS bilan' },
+      { label:'Yetkazish',    value:'14 May, 18:00', sub:'Kutilayotgan' },
+    ]}
+    sections={[
+      { title:'Mijoz maʼlumotlari', fields:[
+          { label:'Kompaniya nomi', value:'Korzinka Online MChJ' },
+          { label:'STIR',            value:'305128471' },
+          { label:'Telefon',         value:'+998 71 200 35 35' },
+          { label:'Email',           value:'orders@korzinka.uz' },
+          { label:'Manzil',          value:'Toshkent sh., Amir Temur 35' },
+          { label:'Kontakt shaxs',   value:'Sardor Yusupov' },
+      ]},
+      { title:'Buyurtma tafsiloti', fields:[
+          { label:'Mahsulot',       value:'Banner 5×3m, lateks bosma' },
+          { label:'Material',       value:'Frontlit 440 g/m²' },
+          { label:'Miqdor',         value:'12 ta' },
+          { label:'Dizayn fayl',    value:'KZ-banner-v3.pdf · 24 MB' },
+          { label:'Bosma sifati',   value:'1440 dpi' },
+          { label:'Tugatish',       value:'Lyuversa + chetlari koʻrsatilgan' },
+      ]},
+      { title:'Yetkazish', fields:[
+          { label:'Yoʻnalish',         value:'Toshkent → Marg\'ilon' },
+          { label:'Haydovchi',          value:'Akmal Yusupov' },
+          { label:'Transport',          value:'MAN TGS — 01A123BC' },
+          { label:'Joʻnatish vaqti',    value:'13 May, 10:30' },
+          { label:'Kutilayotgan vaqt',  value:'14 May, 18:00' },
+          { label:'Bojxona',            value:'Talab qilinmaydi' },
+      ]},
+    ]}
+    sidePanel={
+      <>
+        <div className="card hover-lift">
+          <div className="card-head"><div className="card-ttl">Asosiy</div></div>
+          <div className="card-body" style={{ paddingTop: 0 }}>
+            {[
+              ['ID',           '#EP-24108'],
+              ['Yaratildi',     '12 May, 09:15'],
+              ['Oxirgi yangilanish', '13 May, 14:32'],
+              ['Operator',      'Alisher Karimov'],
+              ['Manba',         'Veb-sayt'],
+              ['Toʻlov holati', 'Toʻlangan'],
+            ].map(([k,v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line-warm-dim)', fontSize: 13 }}>
+                <span style={{ color: 'var(--fg2)' }}>{k}</span>
+                <b>{v}</b>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card hover-lift" style={{ marginTop: 16 }}>
+          <div className="card-head"><div className="card-ttl">Tarix</div></div>
+          <div style={{ padding: '0 22px 18px' }}>
+            {[
+              { ic:'check',   bg:'#2E8A5A',  ttl:'Yetkazib berishga joʻnatildi', time:'13 May · 10:30' },
+              { ic:'package', bg:'var(--ep-primary)', ttl:'Ishlab chiqarish tugadi',      time:'12 May · 17:45' },
+              { ic:'edit',    bg:'#3563AC',  ttl:'Buyurtma tasdiqlandi',            time:'12 May · 09:15' },
+              { ic:'plus',    bg:'#7A4FB1',  ttl:'Buyurtma yaratildi',               time:'12 May · 09:00' },
+            ].map((h, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: i < 3 ? '1px solid var(--line-warm-dim)' : 'none' }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: h.bg, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name={h.ic} size={14}/>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 600 }}>{h.ttl}</div>
+                  <div style={{ fontSize: 11, color: 'var(--fg2)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>{h.time}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    }
+  />;
+}
+
+function CreateOrderForm() {
+  return <FormPage
+    title="Yangi buyurtma yaratish"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; <a>Buyurtmalar</a> &nbsp;/&nbsp; Yangi</>}
+    groups={[
+      { title:'Mijoz', sub:'Mavjud mijozni tanlang yoki yangisini qoʻshing.', columns: 2, fields:[
+        { label:'Mijoz',  required:true, type:'select', options:[
+          {value:'kzn',label:'Korzinka Online'},{value:'art',label:'Artel Electronics'},{value:'uzm',label:'Uzum Market'}
+        ]},
+        { label:'Kontakt shaxs', placeholder:'F.I.SH', value:'Sardor Yusupov' },
+        { label:'Telefon',       value:'+998 71 200 35 35' },
+        { label:'Email',         value:'orders@korzinka.uz', type:'email' },
+      ]},
+      { title:'Mahsulot & spetsifikatsiya', columns: 2, fields:[
+        { label:'Mahsulot turi', required:true, type:'select', options:[
+          {value:'banner',label:'Banner'},{value:'flayer',label:'Flayer'},{value:'roll',label:'Roll-up'},{value:'qadoq',label:'Qadoqlash'}
+        ]},
+        { label:'Material', type:'select', options:[
+          {value:'fr',label:'Frontlit 440 g/m²'},{value:'bl',label:'Backlit 510 g/m²'},{value:'me',label:'Mesh 270 g/m²'}
+        ]},
+        { label:'Oʻlcham (sm)', placeholder:'500 × 300', required:true },
+        { label:'Miqdor (dona)', required:true, value:'12', type:'number' },
+        { label:'Bosma sifati', type:'select', options:[
+          {value:'720',label:'720 dpi'},{value:'1080',label:'1080 dpi'},{value:'1440',label:'1440 dpi'}
+        ]},
+        { label:'Tugatish', placeholder:'Lyuversa, chet-yo\'l, va boshqalar' },
+      ]},
+      { title:'Yetkazish', columns: 2, fields:[
+        { label:'Manzil',         required:true, type:'textarea', rows:2, placeholder:'Yetkazib berish manzili' },
+        { label:'Kutilayotgan sana', required:true, type:'date' },
+        { label:'Yetkazish tezligi', type:'select', options:[
+          {value:'std',label:'Standart (2–3 kun)'},{value:'exp',label:'Express (24 soat)'},{value:'sd',label:'Bir kunda'}
+        ]},
+        { label:'Maxsus koʻrsatma', type:'textarea', rows:2, placeholder:'Qoʻshimcha eslatma…' },
+      ]},
+    ]}
+  />;
+}
+
+function CustomersList() {
+  return <ListPage
+    title="Mijozlar"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; CRM &nbsp;/&nbsp; Mijozlar</>}
+    primaryAction="Yangi mijoz"
+    kpis={[
+      { label:'Jami mijozlar', value:'2,500', delta:'5.3%', deltaTrend:'up', icon:'users',  iconBg:'var(--ep-primary)' },
+      { label:'B2B aktiv',     value:'1,840', delta:'2.1%', deltaTrend:'up', icon:'briefcase', iconBg:'#15171A' },
+      { label:'Yangi bu oy',   value:'78',    delta:'18%',  deltaTrend:'up', icon:'plus',    iconBg:'var(--accent-coral)' },
+      { label:'Risk zonasi',   value:'12',    delta:'3 ta', deltaTrend:'dn', icon:'shield', iconBg:'#7A4FB1' },
+    ]}
+    statusMap={{
+      'active':  <span className="pill success">Aktiv</span>,
+      'progress': <span className="pill warning">Bitim ochiq</span>,
+      'pending':  <span className="pill primary">Yangi</span>,
+      'closed':   <span className="pill neutral">Arxiv</span>,
+    }}
+    columns={[
+      { key:'name', label:'Mijoz', render:r => <><span className="av" style={{background:r.avc}}>{r.av}</span><b>{r.name}</b></> },
+      { key:'type', label:'Turi' },
+      { key:'stir', label:'STIR', cellStyle:{fontFamily:'var(--font-mono)',fontSize:12} },
+      { key:'orders', label:'Buyurtmalar', cellStyle:{fontWeight:600} },
+      { key:'status', label:'Holat' },
+      { key:'ltv', label:'LTV', headStyle:{textAlign:'right'}, cellStyle:{textAlign:'right',fontFamily:'var(--font-mono)',fontWeight:600} },
+    ]}
+    rows={[
+      { av:'K', avc:'#3563AC', name:'Korzinka Online',  type:'B2B · E-commerce',      stir:'305128471', orders:620, status:'active',   ltv:'₿ 245M' },
+      { av:'A', avc:'#FF902F', name:'Artel Electronics',type:'B2B · Ishlab chiqarish',stir:'304928142', orders:480, status:'active',   ltv:'₿ 198M' },
+      { av:'U', avc:'#7A4FB1', name:'Uzum Market',      type:'B2B · Marketplace',     stir:'307249181', orders:410, status:'progress', ltv:'₿ 156M' },
+      { av:'B', avc:'#E94560', name:'Beeline',          type:'B2B · Telekom',         stir:'302847261', orders:320, status:'active',   ltv:'₿ 142M' },
+      { av:'D', avc:'#2E8A5A', name:'Davr Mobile',      type:'B2B · Riteyl',          stir:'308172921', orders:290, status:'pending',  ltv:'₿ 88M'  },
+    ]}
+  />;
+}
+
+function InvoicesList() {
+  return <ListPage
+    title="Hisob-faktura & toʻlovlar"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; Moliya &nbsp;/&nbsp; Hisob-faktura</>}
+    primaryAction="Yangi hisob-faktura"
+    kpis={[
+      { label:'Jami hisob-fakturalar', value:'1,156', delta:'4.2%', deltaTrend:'up', icon:'doc',  iconBg:'var(--ep-primary)' },
+      { label:'Toʻlangan',             value:'892',   delta:'7%',   deltaTrend:'up', icon:'check', iconBg:'#15171A' },
+      { label:'Kutilmoqda',            value:'238',   delta:'2%',   deltaTrend:'up', icon:'clock', iconBg:'var(--accent-coral)' },
+      { label:'Muddati oʻtgan',        value:'26',    delta:'4 ta', deltaTrend:'dn', icon:'x',     iconBg:'#7A4FB1' },
+    ]}
+    statusMap={{
+      'done':     <span className="pill success">Toʻlangan</span>,
+      'progress': <span className="pill warning">Kutilmoqda</span>,
+      'pending':  <span className="pill primary">Yuborildi</span>,
+      'closed':   <span className="pill danger">Muddati oʻtgan</span>,
+    }}
+    columns={[
+      { key:'id', label:'Raqam', cellStyle:{fontFamily:'var(--font-mono)',fontSize:12,fontWeight:600} },
+      { key:'customer', label:'Mijoz', render:r => <><span className="av" style={{background:r.avc}}>{r.av}</span>{r.customer}</> },
+      { key:'date', label:'Sana', cellStyle:{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg2)'} },
+      { key:'due', label:'Muddat', cellStyle:{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--fg2)'} },
+      { key:'status', label:'Holat' },
+      { key:'amount', label:'Summa', headStyle:{textAlign:'right'}, cellStyle:{textAlign:'right',fontFamily:'var(--font-mono)',fontWeight:600} },
+    ]}
+    rows={[
+      { id:'INV-2024-1108', av:'K', avc:'#3563AC', customer:'Korzinka Online', date:'10 May', due:'25 May', status:'progress', amount:'₿ 4 800 000' },
+      { id:'INV-2024-1107', av:'A', avc:'#FF902F', customer:'Artel Electronics', date:'09 May', due:'24 May', status:'done',     amount:'₿ 18 200 000' },
+      { id:'INV-2024-1106', av:'U', avc:'#7A4FB1', customer:'Uzum Market',     date:'08 May', due:'23 May', status:'done',     amount:'₿ 2 100 000' },
+      { id:'INV-2024-1105', av:'B', avc:'#2E8A5A', customer:'Beeline',          date:'05 May', due:'20 May', status:'closed',   amount:'₿ 3 600 000' },
+      { id:'INV-2024-1104', av:'D', avc:'#C45C7A', customer:'Davr Mobile',      date:'04 May', due:'19 May', status:'pending',  amount:'₿ 850 000' },
+    ]}
+  />;
+}
+
+function CalendarEmpty() {
+  return <EmptyStatePage
+    title="Kalendar"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; Kalendar</>}
+    icon="calendar"
+    emptyTitle="Bu oyda hodisalar yoʻq"
+    emptyText="Yetkazib berish, ishlab chiqarish va uchrashuvlar shu yerda koʻrinadi. Birinchi hodisani qoʻshing yoki mavjud buyurtmadan eksport qiling."
+    ctaLabel="Hodisa qoʻshish"
+  />;
+}
+
+function MessagesEmpty() {
+  return <EmptyStatePage
+    title="Xabarlar"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; Xabarlar</>}
+    icon="message"
+    emptyTitle="Hali xabar yoʻq"
+    emptyText="Jamoa aʼzolari, mijozlar va yetkazib beruvchilar bilan suhbat shu yerda boshlanadi."
+    ctaLabel="Suhbat boshlash"
+  />;
+}
+
+function NotifEmpty() {
+  return <EmptyStatePage
+    title="Bildirishnomalar"
+    breadcrumb={<><b>Dashboard</b> &nbsp;/&nbsp; Bildirishnomalar</>}
+    icon="bell"
+    emptyTitle="Hammasi oʻqildi"
+    emptyText="Yangi bildirishnomalar bu yerda paydo boʻladi. Tizimda biror hodisa yuz berishi bilan xabar qilamiz."
+    ctaLabel="Filterlash"
+  />;
+}
+
+/* ================================================================ */
+function App() {
+  const [page, setPage] = useState('dashboard');
+
+  // POS Monitor is fullscreen — no sidebar
+  if (page === 'pos') {
+    return <PosMonitor onExit={() => setPage('dashboard')}/>;
+  }
+
+  const map = {
+    'dashboard':  <DashboardPage/>,
+    'analytics':  <AnalyticsPage/>,
+    'calendar':   <CalendarEmpty/>,
+    'orders':     <OrdersList/>,
+    'tracking':   <OrderDetail/>,
+    'warehouse':  <WarehousePage/>,
+    'fleets':     <CreateOrderForm/>,
+    'drivers':    <DriversList/>,
+    'kanban':     <CrmKanban/>,
+    'employee':   <EmployeeProfile/>,
+    'invoices':   <InvoicesList/>,
+    'messages':   <MessagesEmpty/>,
+    'notif':      <NotifEmpty/>,
+    'settings':   <SettingsPage/>,
+  };
+
+  return (
+    <div className="app">
+      <Sidebar active={page} onChange={(id) => setPage(id === 'pos' || map[id] ? id : 'dashboard')}/>
+      <main className="main">{map[page] || <DashboardPage/>}</main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from '@/lib/i18n';
 
 interface BusinessTripForm {
   destination: string;
@@ -36,6 +37,7 @@ export function BusinessTripDialog({
   onSave,
   isPending
 }: BusinessTripDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof BusinessTripForm, value: string) => {
     onChange({ ...form, [field]: value });
   };
@@ -48,7 +50,7 @@ export function BusinessTripDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label htmlFor="destination">Manzil</Label>
+          <Label htmlFor="destination">{t("address")}</Label>
             <Input
               id="destination"
               value={form.destination}
@@ -56,7 +58,7 @@ export function BusinessTripDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="purpose">Maqsad</Label>
+          <Label htmlFor="purpose">{t("Maqsad")}</Label>
             <Textarea
               id="purpose"
               value={form.purpose}
@@ -65,7 +67,7 @@ export function BusinessTripDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="startDate">Boshlanish sanasi</Label>
+          <Label htmlFor="startDate">{t("startDate")}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -74,7 +76,7 @@ export function BusinessTripDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="endDate">Tugash sanasi</Label>
+          <Label htmlFor="endDate">{t("endDate")}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -85,7 +87,7 @@ export function BusinessTripDialog({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div className="space-y-1">
-          <Label htmlFor="daily">Sutkalik</Label>
+          <Label htmlFor="daily">{t("sutkalik")}</Label>
               <Input
                 id="daily"
                 type="number"
@@ -94,7 +96,7 @@ export function BusinessTripDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="transport">Transport</Label>
+          <Label htmlFor="transport">{t("transport")}</Label>
               <Input
                 id="transport"
                 type="number"
@@ -103,7 +105,7 @@ export function BusinessTripDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="hotel">Turar joy</Label>
+          <Label htmlFor="hotel">{t("turarJoy")}</Label>
               <Input
                 id="hotel"
                 type="number"
@@ -114,7 +116,7 @@ export function BusinessTripDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

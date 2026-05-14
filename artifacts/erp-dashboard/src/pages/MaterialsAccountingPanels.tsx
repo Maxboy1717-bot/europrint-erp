@@ -32,15 +32,15 @@ export function OrderConsumptionCard({orderConsumptions,
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5" />
-          Buyurtma bo'yicha Sarflar
+          {t("buyurtmaBoyichaSarflar")}
         </CardTitle>
-        <CardDescription>Buyurtmalarga sarflangan materiallar</CardDescription>
+        <CardDescription>{t("buyurtmalargaSarflanganMateriallar")}</CardDescription>
       </CardHeader>
       <CardContent>
         {orderConsumptions.length === 0 ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
             <FileSpreadsheet className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Buyurtma ma'lumotlari mavjud emas</p>
+            <p>{t("buyurtmaMalumotlariMavjudEmas")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -75,11 +75,11 @@ export function OrderConsumptionCard({orderConsumptions,
                       <div className="ep-table-scroll"><Table>
                         <TableHeader className="sticky top-0 z-10 bg-card">
                           <TableRow>
-                            <TableHead>Kod</TableHead>
+                            <TableHead>{t("code")}</TableHead>
                             <TableHead>{t('Material')}</TableHead>
-                            <TableHead className="text-right">Miqdor</TableHead>
-                            <TableHead className="text-right">Narx</TableHead>
-                            <TableHead className="text-right">Jami</TableHead>
+                            <TableHead className="text-right">{t("quantity")}</TableHead>
+                            <TableHead className="text-right">{t("price")}</TableHead>
+                            <TableHead className="text-right">{t("total")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -121,9 +121,9 @@ export function InventoryValuationCard({ inventoryData, inventoryLoading }: Inve
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Layers className="h-5 w-5" />
-          Inventar Baholash
+          {t("inventarBaholash")}
         </CardTitle>
-        <CardDescription>Hozirgi zaxira qiymati</CardDescription>
+        <CardDescription>{t("hozirgiZaxiraQiymati")}</CardDescription>
       </CardHeader>
       <CardContent>
         {inventoryLoading ? (
@@ -135,7 +135,7 @@ export function InventoryValuationCard({ inventoryData, inventoryLoading }: Inve
         ) : !inventoryData?.materials || inventoryData.materials.length === 0 ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
             <Layers className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Inventar ma'lumotlari mavjud emas</p>
+            <p>{t("inventarMalumotlariMavjudEmas")}</p>
           </div>
         ) : (
           <>
@@ -144,10 +144,10 @@ export function InventoryValuationCard({ inventoryData, inventoryLoading }: Inve
                 <TableHeader className="sticky top-0 z-10 bg-card">
                   <TableRow>
                     <TableHead>{"Material"}</TableHead>
-                    <TableHead>Ombor</TableHead>
-                    <TableHead className="text-right">Miqdor</TableHead>
-                    <TableHead className="text-right">Narx</TableHead>
-                    <TableHead className="text-right">Jami</TableHead>
+                    <TableHead>{t("ombor")}</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
+                    <TableHead className="text-right">{t("price")}</TableHead>
+                    <TableHead className="text-right">{t("total")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -175,15 +175,15 @@ export function InventoryValuationCard({ inventoryData, inventoryLoading }: Inve
 
             <div className="mt-4 pt-4 border-t space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Jami turlar:</span>
+                <span className="text-muted-foreground">{t("jamiTurlar")}</span>
                 <span className="font-medium">{formatNumber(inventoryData.summary.totalItems)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Jami zaxira:</span>
+                <span className="text-muted-foreground">{t("jamiZaxira")}</span>
                 <span className="font-medium">{formatNumber(inventoryData.summary.totalStock)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold">
-                <span>Jami qiymat:</span>
+                <span>{t("jamiQiymat")}</span>
                 <span className="text-[var(--ep-yellow)]">{formatCurrency(inventoryData.summary.totalValue)}</span>
               </div>
             </div>

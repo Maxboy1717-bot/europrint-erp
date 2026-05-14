@@ -23,6 +23,7 @@ import {
   Smile, Meh, Frown, Star, ThumbsUp, ThumbsDown, TrendingUp,
 } from "lucide-react";
 import { fmtDate } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 interface SentimentData {
   score: number;
@@ -39,6 +40,7 @@ export function CommunicationsTab({
   sentiment?: SentimentData;
   nps?: SdNpsData;
 }) {
+  const { t } = useTranslation("common");
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [npsOpen, setNpsOpen] = useState(false);
@@ -136,7 +138,7 @@ export function CommunicationsTab({
                 <Star className="h-4 w-4" />NPS (Net Promoter Score)
               </h3>
               <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setNpsOpen(true)}>
-                <Plus className="h-3.5 w-3.5 mr-1" />NPS qo'shish
+                <Plus className="h-3.5 w-3.5 mr-1" />{t("npsQoshish")}
               </Button>
             </div>
           </div>
@@ -188,7 +190,7 @@ export function CommunicationsTab({
                       return (
                         <div key={r.id} className="flex items-start gap-2.5 text-sm">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${scoreCls}`}>{r.score}</span>
-                          <span className="text-muted-foreground text-xs flex-1">{r.comment || <span className="italic opacity-60">Izoh yo'q</span>}</span>
+                          <span className="text-muted-foreground text-xs flex-1">{r.comment || <span className="italic opacity-60">{t("izohYoq")}</span>}</span>
                           <span className="text-[10px] text-muted-foreground shrink-0">{fmtDate(r.createdAt)}</span>
                         </div>
                       );
@@ -197,7 +199,7 @@ export function CommunicationsTab({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Hali NPS baholash yo'q</p>
+              <p className="text-sm text-muted-foreground">{t("haliNpsBaholashYoq")}</p>
             )}
           </div>
         </div>
@@ -206,10 +208,10 @@ export function CommunicationsTab({
       {/* NPS Add Dialog */}
       <Dialog open={npsOpen} onOpenChange={setNpsOpen}>
         <DialogContent className="max-w-sm p-6">
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">NPS baholash qo'shish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("npsBaholashQoshish")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium mb-2">Mijoz sifatini 0–10 ball bilan baholang:</p>
+              <p className="text-sm font-medium mb-2">{t("mijozSifatini010Ball")}</p>
               <div className="grid grid-cols-11 gap-1">
                 {[0,1,2,3,4,5,6,7,8,9,10].map(s => (
                   <button key={s} type="button"
@@ -227,14 +229,14 @@ export function CommunicationsTab({
             </div>
             <div>
               <p className="text-sm font-medium mb-1">Izoh (ixtiyoriy)</p>
-              <Textarea value={npsComment} onChange={e => setNpsComment(e.target.value)} rows={2} placeholder="Mijoz izohi..." />
+              <Textarea value={npsComment} onChange={e => setNpsComment(e.target.value)} rows={2} placeholder={t("mijozIzohi")} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setNpsOpen(false)}>Bekor</Button>
+              <Button variant="outline" onClick={() => setNpsOpen(false)}>{t("Bekor")}</Button>
               <Button
                 disabled={npsScore === null || addNpsMutation.isPending}
                 onClick={() => addNpsMutation.mutate()}>
-                Saqlash
+                {t("Saqlash")}
               </Button>
             </div>
           </div>
@@ -258,7 +260,7 @@ export function CommunicationsTab({
               <p className={`text-2xl font-black ${sentConf.cls}`}>
                 {sentiment.score >= 0 ? "+" : ""}{Math.round(sentiment.score * 100)}
               </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Sentiment</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("sentiment")}</p>
             </div>
           </div>
         </div>
@@ -282,16 +284,16 @@ export function CommunicationsTab({
           <DialogTrigger asChild>
             <Button size="sm" className="bg-primary text-white border-0"
               data-testid="btn-add-interaction">
-              <Plus className="h-4 w-4 mr-1" />Yangi aloqa
+              <Plus className="h-4 w-4 mr-1" />{t("yangiAloqa")}
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi muloqot</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiMuloqot")}</DialogTitle></DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FormField control={form.control} name="type" render={({ field }) => (
-                    <FormItem><FormLabel>Tur</FormLabel>
+                    <FormItem><FormLabel>{t("tur")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger data-testid="select-interaction-type" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
@@ -300,32 +302,32 @@ export function CommunicationsTab({
                       </Select></FormItem>
                   )} />
                   <FormField control={form.control} name="direction" render={({ field }) => (
-                    <FormItem><FormLabel>Yo'nalish</FormLabel>
+                    <FormItem><FormLabel>{t("yonalish")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
-                          <SelectItem value="out">Chiquvchi</SelectItem>
-                          <SelectItem value="in">Kiruvchi</SelectItem>
+                          <SelectItem value="out">{t("chiquvchi")}</SelectItem>
+                          <SelectItem value="in">{t("kiruvchi")}</SelectItem>
                         </SelectContent>
                       </Select></FormItem>
                   )} />
                 </div>
                 <FormField control={form.control} name="subject" render={({ field }) => (
-                  <FormItem><FormLabel>Mavzu *</FormLabel>
+                  <FormItem><FormLabel>{t("mavzu1")}</FormLabel>
                     <FormControl><Input {...field} data-testid="input-subject" /></FormControl>
                     <FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="description" render={({ field }) => (
-                  <FormItem><FormLabel>Tafsilot</FormLabel>
+                  <FormItem><FormLabel>{t("tafsilot")}</FormLabel>
                     <FormControl><Textarea {...field} rows={3} /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="nextAction" render={({ field }) => (
-                  <FormItem><FormLabel>Keyingi qadam</FormLabel>
+                  <FormItem><FormLabel>{t("keyingiQadam")}</FormLabel>
                     <FormControl><Input {...field} /></FormControl></FormItem>
                 )} />
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>Bekor</Button>
-                  <Button type="submit" disabled={addMutation.isPending}>Saqlash</Button>
+                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>{t("Bekor")}</Button>
+                  <Button type="submit" disabled={addMutation.isPending}>{t("Saqlash")}</Button>
                 </div>
               </form>
             </Form>
@@ -338,7 +340,7 @@ export function CommunicationsTab({
         <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 overflow-hidden">
           <div className="px-4 py-3 border-b border-amber-200 dark:border-amber-800">
             <h3 className="text-sm font-semibold text-[var(--ep-yellow)] dark:text-amber-400 flex items-center gap-2">
-              <Clock className="h-4 w-4" />Yaqinlashayotgan amallar
+              <Clock className="h-4 w-4" />{t("yaqinlashayotganAmallar")}
             </h3>
           </div>
           <div className="p-4 space-y-2">
@@ -358,7 +360,7 @@ export function CommunicationsTab({
         {filtered.length === 0 ? (
           <div className="rounded-xl border bg-card py-10 text-center text-muted-foreground text-sm">
             <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            Muloqot tarixi yo'q
+            {t("muloqotTarixiYoq")}
           </div>
         ) : filtered.map((item) => {
           const Icon = typeIcon[item.type] || MessageSquare;
@@ -385,7 +387,7 @@ export function CommunicationsTab({
                     <p className="text-[11px] text-muted-foreground mt-1">Xodim: {item.employeeName}</p>
                   )}
                   {item.outcome && (
-                    <p className="text-xs mt-1"><span className="text-muted-foreground">Natija: </span>{item.outcome}</p>
+                    <p className="text-xs mt-1"><span className="text-muted-foreground">{t("natija1")}</span>{item.outcome}</p>
                   )}
                   {item.next_action && (
                     <p className="text-xs mt-1.5 text-[var(--ep-yellow)] dark:text-amber-400">

@@ -18,6 +18,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslation } from '@/lib/i18n';
 import {
   OrderCosting,
   ProfitableChartItem,
@@ -36,12 +37,13 @@ interface TopProfitableProps {
 }
 
 export function TopProfitableSection({ isLoading, topProfitable, chartData }: TopProfitableProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-top-profitable">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-[var(--ep-green)]">
           <TrendingUp className="h-5 w-5" />
-          Top 10 Foydali Mahsulotlar
+          {t("top10FoydaliMahsulotlar")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -76,11 +78,11 @@ export function TopProfitableSection({ isLoading, topProfitable, chartData }: To
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">#</TableHead>
-                  <TableHead>Mahsulot</TableHead>
-                  <TableHead className="text-right">Daromad</TableHead>
-                  <TableHead className="text-right">Xarajat</TableHead>
-                  <TableHead className="text-right">Foyda</TableHead>
-                  <TableHead className="text-right">Marja %</TableHead>
+                  <TableHead>{t("Mahsulot")}</TableHead>
+                  <TableHead className="text-right">{t("daromad")}</TableHead>
+                  <TableHead className="text-right">{t("xarajat1")}</TableHead>
+                  <TableHead className="text-right">{t("foyda")}</TableHead>
+                  <TableHead className="text-right">{t("marja")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -97,7 +99,7 @@ export function TopProfitableSection({ isLoading, topProfitable, chartData }: To
                 {topProfitable.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      Ma'lumot topilmadi
+                      {t("noData")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -126,7 +128,7 @@ export function TopLossSection({ isLoading, topLoss, chartData }: TopLossProps) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-[var(--ep-red)]">
           <TrendingDown className="h-5 w-5" />
-          Top 10 Zararli Mahsulotlar
+          {t("top10ZararliMahsulotlar")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -161,11 +163,11 @@ export function TopLossSection({ isLoading, topLoss, chartData }: TopLossProps) 
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">#</TableHead>
-                  <TableHead>Mahsulot</TableHead>
-                  <TableHead className="text-right">Daromad</TableHead>
-                  <TableHead className="text-right">Xarajat</TableHead>
-                  <TableHead className="text-right">Zarar</TableHead>
-                  <TableHead className="text-right">Marja %</TableHead>
+                  <TableHead>{t("Mahsulot")}</TableHead>
+                  <TableHead className="text-right">{t("daromad")}</TableHead>
+                  <TableHead className="text-right">{t("xarajat1")}</TableHead>
+                  <TableHead className="text-right">{t("zarar")}</TableHead>
+                  <TableHead className="text-right">{t("marja")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,7 +184,7 @@ export function TopLossSection({ isLoading, topLoss, chartData }: TopLossProps) 
                 {topLoss.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      Ma'lumot topilmadi
+                      {t("noData")}
                     </TableCell>
                   </TableRow>
                 )}

@@ -12,6 +12,7 @@ import { CheckCircle, XCircle, Clock, FileText, AlertTriangle, Gauge, Activity, 
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface DailyReport {
   id: number;
@@ -65,16 +66,16 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
 
   let statusBadge;
   if (report.is_auto_absent) {
-    statusBadge = <EPStatusPill tone="danger">❌ Sababsiz yo'qlik</EPStatusPill>;
+    statusBadge = <EPStatusPill tone="danger">{t("sababsizYoqlik1")}</EPStatusPill>;
   } else if (report.status === "submitted") {
-    statusBadge = <EPStatusPill tone="success">✅ Topshirildi</EPStatusPill>;
+    statusBadge = <EPStatusPill tone="success">{t("topshirildi1")}</EPStatusPill>;
   } else {
-    statusBadge = <EPStatusPill tone="warning">⏳ Kutilmoqda</EPStatusPill>;
+    statusBadge = <EPStatusPill tone="warning">{t("kutilmoqda")}</EPStatusPill>;
   }
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="p-4 rounded-lg border border-blue-200 bg-blue-50/30 dark:border-blue-800/40 dark:bg-blue-950/10">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
@@ -88,14 +89,14 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
         <div className="flex flex-col items-end gap-1">
           {statusBadge}
           {report.hr_user_id && (
-            <Badge variant="outline" className="text-xs text-[var(--ep-yellow)] border-amber-400">HR o'zgartirdi</Badge>
+            <Badge variant="outline" className="text-xs text-[var(--ep-yellow)] border-amber-400">{t("hrOzgartirdi")}</Badge>
           )}
         </div>
       </div>
 
       {machineName && (
         <p className="text-xs text-muted-foreground mb-2">
-          <span className="font-medium">Dastgoh:</span> {machineName}
+          <span className="font-medium">{t("dastgoh1")}</span> {machineName}
         </p>
       )}
 
@@ -131,7 +132,7 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
           <div className="bg-white/60 dark:bg-black/20 rounded-md p-2 text-center">
             <Clock className="w-4 h-4 mx-auto mb-0.5 text-[var(--ep-yellow)]" />
             <p className="font-bold text-[var(--ep-yellow)]">{downtime} daq</p>
-            <p className="text-[10px] text-muted-foreground">To'xtash</p>
+            <p className="text-[10px] text-muted-foreground">{t("toxtash")}</p>
           </div>
         )}
       </div>
@@ -143,7 +144,7 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
       )}
 
       {report.is_auto_absent && (
-        <p className="text-xs text-[var(--ep-red)] mt-2 italic">Hisobot topshirilmagan</p>
+        <p className="text-xs text-[var(--ep-red)] mt-2 italic">{t("hisobotTopshirilmagan")}</p>
       )}
     </div>
     </>
@@ -156,11 +157,11 @@ function OfficeReportCard({ report }: { report: DailyReport }) {
 
   let statusBadge;
   if (report.is_auto_absent) {
-    statusBadge = <EPStatusPill tone="danger">❌ Sababsiz yo'qlik</EPStatusPill>;
+    statusBadge = <EPStatusPill tone="danger">{t("sababsizYoqlik1")}</EPStatusPill>;
   } else if (report.status === "submitted") {
-    statusBadge = <EPStatusPill tone="success">✅ Topshirildi</EPStatusPill>;
+    statusBadge = <EPStatusPill tone="success">{t("topshirildi1")}</EPStatusPill>;
   } else {
-    statusBadge = <EPStatusPill tone="warning">⏳ Kutilmoqda</EPStatusPill>;
+    statusBadge = <EPStatusPill tone="warning">{t("kutilmoqda")}</EPStatusPill>;
   }
 
   return (
@@ -184,7 +185,7 @@ function OfficeReportCard({ report }: { report: DailyReport }) {
           {statusBadge}
           {report.hr_user_id && (
             <Badge variant="outline" className="text-xs text-[var(--ep-yellow)] border-amber-400">
-              HR o'zgartirdi
+              {t("hrOzgartirdi")}
             </Badge>
           )}
         </div>
@@ -220,6 +221,7 @@ function OfficeReportCard({ report }: { report: DailyReport }) {
 }
 
 export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
+  const { t } = useTranslation("common");
   const { data, isLoading } = useQuery({
     queryKey: ["/api/hr-v2/daily-reports/employee", employeeId],
     queryFn: () =>
@@ -242,7 +244,7 @@ export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-800/40">
           <Wrench className="w-4 h-4 text-[var(--ep-blue)] shrink-0" />
           <p className="text-xs text-[var(--ep-blue)] dark:text-blue-300 font-medium">
-            Dastgoh operatori — ishlab chiqarish hisobotlari ko'rsatilmoqda
+            {t("dastgohOperatoriIshlabChiqarishHisobotlari")}
           </p>
         </div>
       )}
@@ -270,9 +272,9 @@ export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             {isOperator ? (
-              <><Wrench className="w-4 h-4 text-[var(--ep-blue)]" />So'nggi 30 kun ishlab chiqarish hisobotlari</>
+              <><Wrench className="w-4 h-4 text-[var(--ep-blue)]" />{t("songgi30KunIshlabChiqarish")}</>
             ) : (
-              <><FileText className="w-4 h-4 text-primary" />So'nggi 30 kun hisobotlari</>
+              <><FileText className="w-4 h-4 text-primary" />{t("songgi30KunHisobotlari")}</>
             )}
           </CardTitle>
         </CardHeader>
@@ -284,7 +286,7 @@ export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
           {!isLoading && reports.length === 0 && (
             <div className="text-center py-12 text-[13px] text-muted-foreground">
               <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Hali kunlik hisobot yuborilmagan</p>
+              <p className="text-sm">{t("haliKunlikHisobotYuborilmagan")}</p>
             </div>
           )}
 

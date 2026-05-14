@@ -160,7 +160,7 @@ export function ERPOrdersTab() {
                     <FormField control={form.control} name="customerName" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('customerName')}</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="ABC Company" data-testid="input-order-customer" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} placeholder={t("abcCompany")} data-testid="input-order-customer" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

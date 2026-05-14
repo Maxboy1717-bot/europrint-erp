@@ -12,8 +12,10 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Activity, RefreshCw, Server } from "lucide-react";
 import { type QueueStatusResponse, type FailedJobsResponse } from "./QueueMonitorTypes";
 import { QueueGridPanel, FailedJobsPanel } from "./QueueMonitorSections";
+import { useTranslation } from '@/lib/i18n';
 
 export default function QueueMonitor() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [selectedQueue, setSelectedQueue] = useState<string | null>(null);
 
@@ -83,8 +85,8 @@ export default function QueueMonitor() {
         <div className="flex items-center gap-3">
           <Server className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Navbat Monitori</h1>
-            <p className="text-sm text-muted-foreground">BullMQ queue holati va xatoli joblar</p>
+            <h1 className="text-2xl font-bold">{t("navbatMonitori")}</h1>
+            <p className="text-sm text-muted-foreground">{t("bullmqQueueHolatiVaXatoli")}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -97,7 +99,7 @@ export default function QueueMonitor() {
           </Badge>
           <Button variant="outline" size="sm" onClick={() => refetchStatus()}>
             <RefreshCw className="h-4 w-4 mr-1" />
-            Yangilash
+            {t("refresh")}
           </Button>
         </div>
       </div>

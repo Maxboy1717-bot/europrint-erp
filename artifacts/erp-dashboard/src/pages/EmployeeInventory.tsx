@@ -85,28 +85,28 @@ export default function EmployeeInventory() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Menga berilgan materiallar</CardTitle>
+          <CardTitle className="text-base">{t("mengaBerilganMateriallar")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-gray-500">⏳ Yuklanmoqda...</div>
+            <div className="p-10 text-center text-gray-500">{t("yuklanmoqda")}</div>
           ) : items.length === 0 ? (
             <div className="p-10 text-center text-gray-400">
               <Backpack className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              Sizga hech narsa berilmagan
+              {t("sizgaHechNarsaBerilmagan")}
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('Material')}</TableHead>
-                  <TableHead>Kod</TableHead>
-                  <TableHead className="text-right">Berilgan</TableHead>
-                  <TableHead className="text-right">Qaytarilgan</TableHead>
-                  <TableHead className="text-right">Joriy balans</TableHead>
-                  <TableHead className="text-right">Qiymat</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>Oxirgi harakat</TableHead>
+                  <TableHead>{t("code")}</TableHead>
+                  <TableHead className="text-right">{t("Berilgan")}</TableHead>
+                  <TableHead className="text-right">{t("qaytarilgan")}</TableHead>
+                  <TableHead className="text-right">{t("joriyBalans")}</TableHead>
+                  <TableHead className="text-right">{t("qiymat")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
+                  <TableHead>{t("oxirgiHarakat")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

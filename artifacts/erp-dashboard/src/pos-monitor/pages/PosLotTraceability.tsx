@@ -114,13 +114,13 @@ export default function PosLotTraceability() {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>LOT TRACEABILITY</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>Partiyalar tarixi</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>{t("partiyalarTarixi")}</h1>
           <p style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>
             Har bir partiya raqami uchun barcha barkodlar va kirim/chiqim tarixi
           </p>
         </div>
         <button onClick={load} style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
-          🔄 Yangilash
+          {t("yangilash")}
         </button>
       </div>
 
@@ -139,7 +139,7 @@ export default function PosLotTraceability() {
 
       <div style={{ marginBottom: 16 }}>
         <input
-          placeholder="Partiya raqami qidirish..."
+          placeholder={t("partiyaRaqamiQidirish")}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{ width: "100%", padding: "10px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13 }}
@@ -148,23 +148,23 @@ export default function PosLotTraceability() {
 
       <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>⏳ Yuklanmoqda...</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>{t("yuklanmoqda")}</div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: 60, textAlign: "center", color: "#9CA3AF" }}>
             <div style={{ fontSize: 48 }}>📦</div>
-            <div style={{ marginTop: 8 }}>Partiyalar yo'q</div>
+            <div style={{ marginTop: 8 }}>{t("partiyalarYoq")}</div>
           </div>
         ) : (
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead style={{ background: "#F9FAFB" }}>
               <tr>
-                <th style={th}>Partiya №</th>
+                <th style={th}>{t("partiya")}</th>
                 <th style={th}>{t('Material')}</th>
-                <th style={{ ...th, textAlign: "right" }}>Miqdor</th>
-                <th style={th}>Birlik</th>
-                <th style={{ ...th, textAlign: "right" }}>Barkodlar</th>
-                <th style={th}>Birinchi</th>
-                <th style={th}>Oxirgi</th>
+                <th style={{ ...th, textAlign: "right" }}>{t("quantity")}</th>
+                <th style={th}>{t("unit")}</th>
+                <th style={{ ...th, textAlign: "right" }}>{t("barkodlar")}</th>
+                <th style={th}>{t("pagination.first")}</th>
+                <th style={th}>{t("pagination.last")}</th>
                 <th style={th}>{t('status25')}</th>
               </tr>
             </thead>

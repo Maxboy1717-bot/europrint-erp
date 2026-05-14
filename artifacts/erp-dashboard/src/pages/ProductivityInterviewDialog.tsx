@@ -31,10 +31,12 @@ import { Step1WorkExperience } from "./ProductivityInterviewDialogStep1";
 import { Step2Motivation }     from "./ProductivityInterviewDialogStep2";
 import { Step3Competency }     from "./ProductivityInterviewDialogStep3";
 import { Step4Summary }        from "./ProductivityInterviewDialogStep4";
+import { useTranslation } from '@/lib/i18n';
 
 export function ProductivityInterviewDialog({
   candidateId, candidateName, funnelId, open, onClose,
 }: ProductivityInterviewDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [step, setStep]           = useState(0);
   const [workplaces, setWorkplaces] = useState<WorkplaceEntry[]>([makeWorkplace()]);
@@ -144,9 +146,9 @@ export function ProductivityInterviewDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
-            <span>Produktivlik Suhbat Blanki</span>
+            <span>{t("produktivlikSuhbatBlanki")}</span>
             <span className="text-muted-foreground font-normal text-sm">— {candidateName}</span>
-            <Badge variant="outline" className="text-[10px] ml-auto">Material №46</Badge>
+            <Badge variant="outline" className="text-[10px] ml-auto">{t("material46")}</Badge>
           </DialogTitle>
         </DialogHeader>
 
@@ -204,7 +206,7 @@ export function ProductivityInterviewDialog({
             onClick={() => setStep(s => s - 1)}
           >
             <ChevronLeft className="w-3.5 h-3.5 mr-1" />
-            Orqaga
+            {t("back")}
           </Button>
           <div className="flex gap-2">
             {step === STEPS.length - 1 && (
@@ -220,7 +222,7 @@ export function ProductivityInterviewDialog({
             )}
             {step < STEPS.length - 1 && (
               <Button size="sm" onClick={() => setStep(s => s + 1)}>
-                Keyingi
+                {t("nextBtn")}
                 <ChevronRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             )}

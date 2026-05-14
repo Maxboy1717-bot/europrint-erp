@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Target, FileText, User, BarChart2, Zap } from "lucide-react";
 import { fmt } from "@/lib/sd-helpers";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 import {
   QuotaData,
   LEAD_STATUS_UZ,
@@ -29,6 +30,7 @@ interface QuotaPlanFactCardProps {
 }
 
 export function QuotaPlanFactCard({ quota: q, isOnTrack }: QuotaPlanFactCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-none shadow-sm">
       <CardHeader className="pb-2">
@@ -45,21 +47,21 @@ export function QuotaPlanFactCard({ quota: q, isOnTrack }: QuotaPlanFactCardProp
             <p className="text-3xl font-bold text-foreground" data-testid="text-quota-target">
               {fmt(q.target)}
             </p>
-            <p className="text-sm text-muted-foreground mt-0.5">so'm</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("som")}</p>
           </div>
           <div className={cn("text-center p-4 rounded-xl", isOnTrack ? "bg-green-50" : "bg-red-50")}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">FAKT (bajarilgan)</p>
             <p className={cn("text-3xl font-bold", isOnTrack ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]")} data-testid="text-quota-achieved">
               {fmt(q.achieved)}
             </p>
-            <p className="text-sm text-muted-foreground mt-0.5">so'm</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("som")}</p>
           </div>
           <div className="text-center p-4 bg-muted/40 rounded-xl">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">QOLDI</p>
             <p className="text-3xl font-bold text-[var(--ep-yellow)]" data-testid="text-quota-remaining">
               {fmt(q.remaining)}
             </p>
-            <p className="text-sm text-muted-foreground mt-0.5">so'm</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("som")}</p>
           </div>
         </div>
 
@@ -90,7 +92,7 @@ export function QuotaPlanFactCard({ quota: q, isOnTrack }: QuotaPlanFactCardProp
               <Target className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Kunlik reja</p>
+              <p className="text-xs text-muted-foreground">{t("kunlikReja")}</p>
               <p className="text-lg font-bold text-foreground">{fmt(q.dailyTarget)}</p>
             </div>
           </div>
@@ -99,7 +101,7 @@ export function QuotaPlanFactCard({ quota: q, isOnTrack }: QuotaPlanFactCardProp
               <BarChart2 className={cn("w-4 h-4", isOnTrack ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]")} />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Kunlik fakt</p>
+              <p className="text-xs text-muted-foreground">{t("kunlikFakt")}</p>
               <p className={cn("text-lg font-bold", isOnTrack ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]")}>
                 {fmt(q.dailyActual)}
               </p>
@@ -150,7 +152,7 @@ export function KpiStatsRow({
             <p className="text-2xl font-bold text-foreground" data-testid="text-orders-month">
               {ordersThisMonth}
             </p>
-            <p className="text-xs text-muted-foreground">Oylik buyurtmalar</p>
+            <p className="text-xs text-muted-foreground">{t("oylikBuyurtmalar")}</p>
           </div>
         </CardContent>
       </Card>
@@ -164,7 +166,7 @@ export function KpiStatsRow({
             <p className="text-2xl font-bold text-foreground" data-testid="text-leads-won">
               {leadsWon}
             </p>
-            <p className="text-xs text-muted-foreground">Yutilgan leadlar</p>
+            <p className="text-xs text-muted-foreground">{t("yutilganLeadlar")}</p>
           </div>
         </CardContent>
       </Card>
@@ -178,7 +180,7 @@ export function KpiStatsRow({
             <p className="text-2xl font-bold text-foreground" data-testid="text-conversion-rate">
               {conversionRate}%
             </p>
-            <p className="text-xs text-muted-foreground">Konversiya</p>
+            <p className="text-xs text-muted-foreground">{t("konversiya")}</p>
           </div>
         </CardContent>
       </Card>
@@ -192,7 +194,7 @@ export function KpiStatsRow({
             <p className="text-2xl font-bold text-foreground" data-testid="text-total-proposals">
               {totalProposals}
             </p>
-            <p className="text-xs text-muted-foreground">Oylik takliflar</p>
+            <p className="text-xs text-muted-foreground">{t("oylikTakliflar")}</p>
           </div>
         </CardContent>
       </Card>
@@ -215,12 +217,12 @@ export function LeadStatusCard({ leadsByStatus }: LeadStatusCardProps) {
     <Card className="bg-card border-none shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Lead holatlari
+          {t("leadHolatlari")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-3 pt-2">
         {entries.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">Ma'lumot yo'q</p>
+          <p className="text-sm text-muted-foreground py-2">{t("malumotYoq")}</p>
         ) : (
           entries.map(([status, cnt]) => (
             <div
@@ -260,7 +262,7 @@ export function ProposalStatusCard({ proposalsByStatus }: ProposalStatusCardProp
       </CardHeader>
       <CardContent className="flex flex-wrap gap-3 pt-2">
         {entries.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">Bu oyda taklif yaratilmagan</p>
+          <p className="text-sm text-muted-foreground py-2">{t("buOydaTaklifYaratilmagan")}</p>
         ) : (
           entries.map(([status, cnt]) => (
             <div

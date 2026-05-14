@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface WasteRecord {
   id: string | number;
@@ -57,6 +58,7 @@ const TYPE_LABELS: Record<string, string> = {
 const fmtMoney = (v?: number) => v !== undefined ? `${Number(v).toLocaleString("uz-UZ")} so'm` : "—";
 
 export default function WastePage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -118,12 +120,12 @@ export default function WastePage() {
   return (
     <ModulePage
       module="production"
-      title="Chiqindilar"
+      title={t("chiqindilar")}
       icon={<WasteIcon className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-waste">
           <Plus className="h-4 w-4 mr-2" />
-          Chiqindi qo'shish
+          {t("chiqindiQoshish")}
         </Button>
       }
     >
@@ -139,7 +141,7 @@ export default function WastePage() {
                   </div>
                   <div>
                     <p className="text-lg font-bold">{fmtMoney(dash.totalWasteCost)}</p>
-                    <p className="text-xs text-muted-foreground">Jami chiqindi qiymati</p>
+                    <p className="text-xs text-muted-foreground">{t("jamiChiqindiQiymati")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -152,7 +154,7 @@ export default function WastePage() {
                   </div>
                   <div>
                     <p className="text-lg font-bold">{dash.totalWasteQty ?? 0}</p>
-                    <p className="text-xs text-muted-foreground">Jami miqdor</p>
+                    <p className="text-xs text-muted-foreground">{t("jamiMiqdor")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -160,7 +162,7 @@ export default function WastePage() {
             {dash.wasteByType && dash.wasteByType.length > 0 && (
               <Card className="col-span-2 sm:col-span-1">
                 <CardHeader className="pb-1">
-                  <CardTitle className="text-xs text-muted-foreground">Tur bo'yicha</CardTitle>
+                  <CardTitle className="text-xs text-muted-foreground">{t("turBoyicha1")}</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-1">
                   {dash.wasteByType.slice(0, 3).map(wt => (
@@ -178,7 +180,7 @@ export default function WastePage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Material yoki bo'lim qidirish..."
+            placeholder={t("materialYokiBolimQidirish")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -246,21 +248,21 @@ export default function WastePage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi chiqindi yozuvi</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiChiqindiYozuvi")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Material nomi *</Label>
+              <Label>{t("materialNomi2")}</Label>
               <Input
                 value={form.material_name}
                 onChange={e => setForm(f => ({ ...f, material_name: e.target.value }))}
-                placeholder="Material nomi"
+                placeholder={t("materialNomi")}
                 data-testid="input-waste-material"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Miqdor</Label>
+                <Label>{t("quantity")}</Label>
                 <Input
                   type="number"
                   value={form.quantity}
@@ -270,7 +272,7 @@ export default function WastePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Birlik</Label>
+                <Label>{t("unit")}</Label>
                 <Input
                   value={form.unit}
                   onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
@@ -279,7 +281,7 @@ export default function WastePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Qiymati</Label>
+                <Label>{t("qiymati")}</Label>
                 <Input
                   type="number"
                   value={form.cost}
@@ -291,7 +293,7 @@ export default function WastePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Tur</Label>
+                <Label>{t("tur")}</Label>
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                   value={form.waste_type}
@@ -304,28 +306,28 @@ export default function WastePage() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label>Bo'lim</Label>
+                <Label>{t("bolim1")}</Label>
                 <Input
                   value={form.department}
                   onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-                  placeholder="Bo'lim nomi"
+                  placeholder={t("bolimNomi")}
                   data-testid="input-waste-department"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Sabab</Label>
+              <Label>{t("sabab")}</Label>
               <Textarea
                 value={form.reason}
                 onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
-                placeholder="Chiqindi sababi..."
+                placeholder={t("chiqindiSababi")}
                 rows={2}
                 data-testid="input-waste-reason"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.material_name.trim()) createMutation.mutate(form); }}
               disabled={!form.material_name.trim() || createMutation.isPending}

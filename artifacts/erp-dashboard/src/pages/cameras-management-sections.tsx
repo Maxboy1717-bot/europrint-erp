@@ -23,6 +23,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import type { CameraData, WorkCenter, Translations, Language } from "./cameras-management-types";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // CameraStatsCards
@@ -35,6 +36,7 @@ interface CameraStatsCardsProps {
 }
 
 export function CameraStatsCards({ total, active, t }: CameraStatsCardsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="bg-card border-none rounded-lg p-5">
@@ -243,8 +245,8 @@ function CameraRow({
             <Edit className="h-4 w-4" />
           </Button>
           <DeleteConfirmDialog
-            title="Kamerani o'chirishni tasdiqlaysizmi?"
-            description="Kamera va unga bog'liq barcha ma'lumotlar o'chiriladi."
+            title={t("kameraniOchirishniTasdiqlaysizmi")}
+            description={t("kameraVaUngaBogliqBarcha")}
             onConfirm={() => onDelete(camera.id)}
             isPending={isDeletePending}
           />

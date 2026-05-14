@@ -30,6 +30,7 @@ import { StepExperience } from "@/components/recruiting/portret/StepExperience";
 import { StepConditions } from "@/components/recruiting/portret/StepConditions";
 import { StepPresentation } from "@/components/recruiting/portret/StepPresentation";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const STEPS: Step[] = [
   { id: "A",   icon: Settings,      title: "Blok A",   full: "Lavozim tahlili"       },
@@ -75,6 +76,7 @@ interface VacancyPortretDialogProps {
 export function VacancyPortretDialog({
   vacancyId, vacancyTitle, isUrgent: initialUrgent, open, onClose,
 }: VacancyPortretDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [portret, setPortret] = useState<PortretData>(DEFAULT_PORTRET);
@@ -186,7 +188,7 @@ export function VacancyPortretDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap text-lg">
-            <span>Xodim Portreti</span>
+            <span>{t("xodimPortreti")}</span>
             <span className="text-muted-foreground font-normal text-sm">— {vacancyTitle}</span>
             {isUrgent && <EPStatusPill tone="danger">SHOSHILINCH</EPStatusPill>}
             <span className="ml-auto text-xs text-muted-foreground font-normal">
@@ -199,7 +201,7 @@ export function VacancyPortretDialog({
         </DialogHeader>
 
         <div className="flex items-center gap-2 py-1 border-b border-border/30">
-          <span className="text-xs text-muted-foreground">Shoshilinch vakansiya:</span>
+          <span className="text-xs text-muted-foreground">{t("shoshilinchVakansiya")}</span>
           <button
             onClick={() => setIsUrgent(v => !v)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${
@@ -251,11 +253,11 @@ export function VacancyPortretDialog({
         <DialogFooter className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-border/30">
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={step === 0} onClick={() => setStep(s => s - 1)}>
-              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Orqaga
+              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> {t("back")}
             </Button>
             {step < STEPS.length - 1 && (
               <Button size="sm" onClick={() => setStep(s => s + 1)}>
-                Keyingi <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                {t("nextBtn")}<ChevronRight className="h-3.5 w-3.5 ml-1" />
               </Button>
             )}
           </div>

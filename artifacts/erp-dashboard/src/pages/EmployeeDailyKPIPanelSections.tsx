@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { getScoreColor } from "./EmployeeDailyKPIPanelTypes";
 import type { KpiRecord } from "./EmployeeDailyKPIPanelTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface RadarDataPoint {
   dimension: string;
@@ -37,14 +38,15 @@ interface RadarChartSectionProps {
 }
 
 export function RadarChartSection({ radarData, isLoading, hasRecords }: RadarChartSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-radar-chart">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5 text-[var(--ep-green)]" />
-          KPI O'lchovlari
+          {t("kpiOlchovlari")}
         </CardTitle>
-        <CardDescription>6 ta asosiy KPI bo'yicha tahlil</CardDescription>
+        <CardDescription>{t("k6TaAsosiyKpiBoyicha")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -79,7 +81,7 @@ export function RadarChartSection({ radarData, isLoading, hasRecords }: RadarCha
         ) : (
           <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground">
             <Target className="h-12 w-12 mb-4 opacity-40" />
-            <p>Tanlangan sana uchun ma'lumot mavjud emas</p>
+            <p>{t("tanlanganSanaUchunMalumotMavjud")}</p>
           </div>
         )}
       </CardContent>
@@ -103,7 +105,7 @@ export function EvaluationsTableSection({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-[var(--ep-green)]" />
-          Baholashlar Jadvali
+          {t("baholashlarJadvali")}
         </CardTitle>
         <CardDescription>{selectedDate} sanasi uchun barcha baholashlar</CardDescription>
       </CardHeader>
@@ -119,18 +121,18 @@ export function EvaluationsTableSection({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead>Sana</TableHead>
-                  <TableHead className="text-center">Davomad</TableHead>
-                  <TableHead className="text-center">Vazifalar</TableHead>
-                  <TableHead className="text-center">Sifat</TableHead>
-                  <TableHead className="text-center">Samaradorlik</TableHead>
-                  <TableHead className="text-center">Jamoa</TableHead>
-                  <TableHead className="text-center">Intizom</TableHead>
-                  <TableHead className="text-center">Umumiy</TableHead>
-                  <TableHead className="text-center">Bonus%</TableHead>
-                  <TableHead className="text-center">Jarima%</TableHead>
-                  <TableHead className="text-center">Sof Ball</TableHead>
+                  <TableHead>{t("xodim1")}</TableHead>
+                  <TableHead>{t("date")}</TableHead>
+                  <TableHead className="text-center">{t("davomad")}</TableHead>
+                  <TableHead className="text-center">{t("vazifalar")}</TableHead>
+                  <TableHead className="text-center">{t("Sifat")}</TableHead>
+                  <TableHead className="text-center">{t("samaradorlik")}</TableHead>
+                  <TableHead className="text-center">{t("Jamoa")}</TableHead>
+                  <TableHead className="text-center">{t("intizom")}</TableHead>
+                  <TableHead className="text-center">{t("umumiy")}</TableHead>
+                  <TableHead className="text-center">{t("bonus2")}</TableHead>
+                  <TableHead className="text-center">{t("jarima2")}</TableHead>
+                  <TableHead className="text-center">{t("sofBall")}</TableHead>
                   <TableHead className="text-center">AI</TableHead>
                 </TableRow>
               </TableHeader>
@@ -208,7 +210,7 @@ export function EvaluationsTableSection({
         ) : (
           <div className="h-[150px] flex flex-col items-center justify-center text-muted-foreground">
             <Users className="h-12 w-12 mb-4 opacity-40" />
-            <p>Tanlangan sana uchun baholashlar mavjud emas</p>
+            <p>{t("tanlanganSanaUchunBaholashlarMavjud")}</p>
           </div>
         )}
       </CardContent>

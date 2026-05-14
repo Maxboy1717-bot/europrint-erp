@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
 import { CrmEntityLike, ListViewProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function ListView({
   items,
@@ -27,6 +28,7 @@ export function ListView({
   onToggleAll,
   onItemClick,
 }: ListViewProps) {
+  const { t } = useTranslation("common");
   return (
     <ScrollArea className="flex-1">
       <div className="ep-table-scroll"><Table>
@@ -40,15 +42,15 @@ export function ListView({
               />
             </TableHead>
             <TableHead className="w-12">№</TableHead>
-            <TableHead>Nomi</TableHead>
+            <TableHead>{t("name")}</TableHead>
             {activeEntity !== "contacts" && activeEntity !== "companies" && (
-              <TableHead>Bosqich</TableHead>
+              <TableHead>{t("milestone1")}</TableHead>
             )}
             {(activeEntity === "deals" ||
               activeEntity === "proposals" ||
-              activeEntity === "invoices") && <TableHead>Summa</TableHead>}
-            <TableHead>Mas'ul</TableHead>
-            <TableHead>Yaratilgan</TableHead>
+              activeEntity === "invoices") && <TableHead>{t("summa")}</TableHead>}
+            <TableHead>{t("masul")}</TableHead>
+            <TableHead>{t("Yaratilgan")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

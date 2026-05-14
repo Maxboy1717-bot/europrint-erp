@@ -6,6 +6,7 @@
 import { Link } from 'wouter';
 import { Package, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
+import { useTranslation } from '@/lib/i18n';
 
 interface Product {
   id: string;
@@ -23,6 +24,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { t } = useTranslation("common");
   const { language, t } = useLanguage();
 
   const formatPrice = (value: number) => {
@@ -66,7 +68,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         <div className="mt-4 flex items-center justify-between gap-3">
           <p className="text-lg font-bold" style={{ color: '#F97316' }}>
-            {formatPrice(product.price)} <span className="text-sm font-medium">so'm</span>
+            {formatPrice(product.price)} <span className="text-sm font-medium">{t("som")}</span>
           </p>
           <button 
             className="flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 active:scale-95"

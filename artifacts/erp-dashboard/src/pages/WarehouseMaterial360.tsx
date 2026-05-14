@@ -15,6 +15,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { warehouseFeaturesApi } from "@/lib/api/warehouse-features";
+import { useTranslation } from '@/lib/i18n';
 
 interface Material360 {
   material: {
@@ -80,6 +81,7 @@ function fmtDate(iso: string | null): string {
 }
 
 export default function WarehouseMaterial360() {
+  const { t } = useTranslation("common");
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const matId = parseInt(params.id ?? "0", 10);
@@ -107,7 +109,7 @@ export default function WarehouseMaterial360() {
   }, [matId]);
 
   if (loading) {
-    return <div className="p-10 text-center text-gray-500">⏳ Yuklanmoqda...</div>;
+    return <div className="p-10 text-center text-gray-500">{t("yuklanmoqda")}</div>;
   }
 
   if (error || !data) {
@@ -119,7 +121,7 @@ export default function WarehouseMaterial360() {
           onClick={() => navigate("/inventory/materials")}
           className="mt-4 px-4 py-2 bg-[var(--ep-yellow)] text-white rounded"
         >
-          ← Materiallar
+          {t("materiallar")}
         </button>
       </div>
     );
@@ -135,7 +137,7 @@ export default function WarehouseMaterial360() {
           onClick={() => navigate("/inventory/materials")}
           className="px-3 py-1.5 bg-gray-100 border border-gray-200 rounded text-sm hover:bg-gray-200"
         >
-          ← Orqaga
+          {t("orqaga")}
         </button>
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">MATERIAL 360°</div>
@@ -145,7 +147,7 @@ export default function WarehouseMaterial360() {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-gray-500">Joriy stok</div>
+          <div className="text-xs text-gray-500">{t("joriyStok")}</div>
           <div className={`text-2xl font-bold ${
             (material.currentStock ?? 0) < (material.minStock ?? 0) ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"
           }`}>
@@ -157,13 +159,13 @@ export default function WarehouseMaterial360() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
-        <KpiBox icon="📦" label="Kategoriya" value={material.category ?? "—"} />
-        <KpiBox icon="🏷️" label="Tur" value={material.materialType ?? "—"} />
-        <KpiBox icon="💰" label="Birlik narxi" value={fmtMoney(material.unitPrice, material.currency)} />
-        <KpiBox icon="⬇️" label="Jami kirim" value={fmt(totals?.totalInflow, material.unit)} color="text-[var(--ep-green)]" />
-        <KpiBox icon="⬆️" label="Jami chiqim" value={fmt(totals?.totalOutflow, material.unit)} color="text-[var(--ep-red)]" />
-        <KpiBox icon="🏭" label="Omborlar" value={String(totals?.distinctWarehouses ?? 0)} />
-        <KpiBox icon="🔄" label="Harakatlar" value={String(totals?.movementCount ?? 0)} />
+        <KpiBox icon="📦" label={t("category")} value={material.category ?? "—"} />
+        <KpiBox icon="🏷️" label={t("tur")} value={material.materialType ?? "—"} />
+        <KpiBox icon="💰" label={t("birlikNarxi")} value={fmtMoney(material.unitPrice, material.currency)} />
+        <KpiBox icon="⬇️" label={t("jamiKirim")} value={fmt(totals?.totalInflow, material.unit)} color="text-[var(--ep-green)]" />
+        <KpiBox icon="⬆️" label={t("jamiChiqim")} value={fmt(totals?.totalOutflow, material.unit)} color="text-[var(--ep-red)]" />
+        <KpiBox icon="🏭" label={t("omborlar")} value={String(totals?.distinctWarehouses ?? 0)} />
+        <KpiBox icon="🔄" label={t("actions")} value={String(totals?.movementCount ?? 0)} />
       </div>
 
       {/* Tabs */}
@@ -193,9 +195,9 @@ export default function WarehouseMaterial360() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <Th>Ombor</Th><Th>Kod</Th><Th>Tur</Th>
-                <Th align="right">Mavjud</Th><Th align="right">Band</Th><Th align="right">Jami</Th>
-                <Th>Yangilangan</Th>
+                <Th>{t("ombor")}</Th><Th>{t("code")}</Th><Th>{t("tur")}</Th>
+                <Th align="right">{t("mavjud")}</Th><Th align="right">{t("band")}</Th><Th align="right">{t("total")}</Th>
+                <Th>{t("updated")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -213,7 +215,7 @@ export default function WarehouseMaterial360() {
                 </tr>
               ))}
               {(stockByWarehouse ?? []).length === 0 && (
-                <tr><Td colSpan={7} className="text-center text-gray-400 py-6">Hech qaysi omborda stok yo'q</Td></tr>
+                <tr><Td colSpan={7} className="text-center text-gray-400 py-6">{t("hechQaysiOmbordaStokYoq")}</Td></tr>
               )}
             </tbody>
           </table>
@@ -223,8 +225,8 @@ export default function WarehouseMaterial360() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <Th>Raqam</Th><Th>Sana</Th><Th>Turi</Th><Th>Holat</Th>
-                <Th align="right">Miqdor</Th><Th align="right">Narx</Th><Th>Kim</Th>
+                <Th>{t("raqam")}</Th><Th>{t("date")}</Th><Th>{t("type")}</Th><Th>{t("status28")}</Th>
+                <Th align="right">{t("quantity")}</Th><Th align="right">{t("price")}</Th><Th>{t("kim1")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -243,7 +245,7 @@ export default function WarehouseMaterial360() {
                 );
               })}
               {(recentMovements ?? []).length === 0 && (
-                <tr><Td colSpan={7} className="text-center text-gray-400 py-6">Harakatlar yo'q</Td></tr>
+                <tr><Td colSpan={7} className="text-center text-gray-400 py-6">{t("harakatlarYoq")}</Td></tr>
               )}
             </tbody>
           </table>
@@ -253,7 +255,7 @@ export default function WarehouseMaterial360() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <Th>Sana</Th><Th align="right">Narx</Th><Th>Valyuta</Th><Th>Ta'minotchi</Th>
+                <Th>{t("date")}</Th><Th align="right">{t("price")}</Th><Th>{t("valyuta")}</Th><Th>{t("taminotchi")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -266,7 +268,7 @@ export default function WarehouseMaterial360() {
                 </tr>
               ))}
               {(priceHistory ?? []).length === 0 && (
-                <tr><Td colSpan={4} className="text-center text-gray-400 py-6">Narx tarixi yo'q</Td></tr>
+                <tr><Td colSpan={4} className="text-center text-gray-400 py-6">{t("narxTarixiYoq")}</Td></tr>
               )}
             </tbody>
           </table>
@@ -276,8 +278,8 @@ export default function WarehouseMaterial360() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <Th>Ta'minotchi</Th><Th align="right">Oxirgi narx</Th>
-                <Th>Oxirgi yetkazib berish</Th><Th align="right">Marotaba</Th>
+                <Th>{t("taminotchi")}</Th><Th align="right">{t("oxirgiNarx")}</Th>
+                <Th>{t("oxirgiYetkazibBerish")}</Th><Th align="right">{t("marotaba")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -290,7 +292,7 @@ export default function WarehouseMaterial360() {
                 </tr>
               ))}
               {(suppliers ?? []).length === 0 && (
-                <tr><Td colSpan={4} className="text-center text-gray-400 py-6">Ta'minotchilar yo'q</Td></tr>
+                <tr><Td colSpan={4} className="text-center text-gray-400 py-6">{t("taminotchilarYoq")}</Td></tr>
               )}
             </tbody>
           </table>
@@ -300,8 +302,8 @@ export default function WarehouseMaterial360() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <Th>Barkod</Th><Th>Turi</Th><Th>Partiya</Th>
-                <Th align="right">Miqdor</Th><Th>Holat</Th><Th>Yaratilgan</Th>
+                <Th>{t("barkod")}</Th><Th>{t("type")}</Th><Th>{t("partiya1")}</Th>
+                <Th align="right">{t("quantity")}</Th><Th>{t("status28")}</Th><Th>{t("Yaratilgan")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -322,7 +324,7 @@ export default function WarehouseMaterial360() {
                 </tr>
               ))}
               {(barcodes ?? []).length === 0 && (
-                <tr><Td colSpan={6} className="text-center text-gray-400 py-6">Barkodlar yo'q</Td></tr>
+                <tr><Td colSpan={6} className="text-center text-gray-400 py-6">{t("barkodlarYoq")}</Td></tr>
               )}
             </tbody>
           </table>

@@ -89,7 +89,7 @@ export default function MilestonePage() {
           <EPStatusPill tone="neutral">{upcoming.length} yaqin</EPStatusPill>
         </div>
         <Button size="sm" onClick={() => setGenerateOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" />Milestone yaratish
+          <Plus className="h-3.5 w-3.5 mr-1" />{t("milestoneYaratish")}
         </Button>
       </div>
 
@@ -100,7 +100,7 @@ export default function MilestonePage() {
               <Clock className="h-4 w-4 text-[var(--ep-yellow)]" />
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-yellow)]">{pending.length}</div>
-                <div className="text-xs text-muted-foreground">Kutilayotgan</div>
+                <div className="text-xs text-muted-foreground">{t("kutilayotgan")}</div>
               </div>
             </CardContent>
           </Card>
@@ -109,7 +109,7 @@ export default function MilestonePage() {
               <CheckCircle2 className="h-5 w-5 text-[var(--ep-green)]" />
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-green)]">{completed.length}</div>
-                <div className="text-xs text-muted-foreground">Yakunlangan</div>
+                <div className="text-xs text-muted-foreground">{t("yakunlangan")}</div>
               </div>
             </CardContent>
           </Card>
@@ -120,7 +120,7 @@ export default function MilestonePage() {
                 <div className="text-2xl font-bold text-[var(--ep-yellow)]">
                   {(Array.isArray(allMilestones) ? allMilestones : []).filter((m) => m.badge_awarded).length}
                 </div>
-                <div className="text-xs text-muted-foreground">Badge berilgan</div>
+                <div className="text-xs text-muted-foreground">{t("badgeBerilgan")}</div>
               </div>
             </CardContent>
           </Card>
@@ -157,7 +157,7 @@ export default function MilestonePage() {
                           className="h-7 text-xs"
                           onClick={() => setCompleteTarget(m)}
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Yakunlash
+                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />{t("finishBtn")}
                         </Button>
                       </div>
                     </div>
@@ -180,18 +180,18 @@ export default function MilestonePage() {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead>Xodim</TableHead>
+                      <TableHead>{t("xodim1")}</TableHead>
                       <TableHead>{t('milestone1')}</TableHead>
-                      <TableHead>Sana</TableHead>
-                      <TableHead>Qoldi</TableHead>
-                      <TableHead className="text-right">Amal</TableHead>
+                      <TableHead>{t("date")}</TableHead>
+                      <TableHead>{t("Qoldi")}</TableHead>
+                      <TableHead className="text-right">{t("amal")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {allLoading ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-6">{t("Yuklanmoqda...")}</TableCell></TableRow>
                     ) : pending.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Kutilayotgan milestone yo'q</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("kutilayotganMilestoneYoq")}</TableCell></TableRow>
                     ) : (Array.isArray(pending) ? pending : []).map((m) => {
                       const info = MILESTONE_INFO[m.milestone_months] || { label: `${m.milestone_months} oy`, icon: "🏁", color: "text-gray-600" };
                       const days = daysUntil(m.due_date);
@@ -213,7 +213,7 @@ export default function MilestonePage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setCompleteTarget(m)}>
-                              Yakunlash
+                              {t("finishBtn")}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -231,16 +231,16 @@ export default function MilestonePage() {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead>Xodim</TableHead>
+                      <TableHead>{t("xodim1")}</TableHead>
                       <TableHead>{t('milestone')}</TableHead>
-                      <TableHead>Yakunlangan</TableHead>
-                      <TableHead>Badge</TableHead>
-                      <TableHead>Baholovchi</TableHead>
+                      <TableHead>{t("yakunlangan")}</TableHead>
+                      <TableHead>{t("badge")}</TableHead>
+                      <TableHead>{t("baholovchi")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {completed.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Hali yakunlangan milestone yo'q</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("haliYakunlanganMilestoneYoq")}</TableCell></TableRow>
                     ) : (Array.isArray(completed) ? completed : []).map((m) => {
                       const info = MILESTONE_INFO[m.milestone_months] || { label: `${m.milestone_months} oy`, icon: "🏁", color: "text-gray-600" };
                       return (
@@ -256,7 +256,7 @@ export default function MilestonePage() {
                           </TableCell>
                           <TableCell>
                             {m.badge_awarded ? (
-                              <EPStatusPill tone="warning">🏅 Berildi</EPStatusPill>
+                              <EPStatusPill tone="warning">{t("berildi")}</EPStatusPill>
                             ) : "—"}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">{m.assessor_name || "—"}</TableCell>
@@ -274,20 +274,20 @@ export default function MilestonePage() {
       {/* Generate milestones dialog */}
       <Dialog open={generateOpen} onOpenChange={setGenerateOpen}>
         <DialogContent className="max-w-sm p-6">
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Xodim uchun milestone yaratish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("xodimUchunMilestoneYaratish")}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Xodim ID</Label>
-              <Input type="number" value={genForm.employee_id} onChange={e => setGenForm(f => ({ ...f, employee_id: e.target.value }))} placeholder="Xodim ID" className="mt-1" />
+              <Label>{t("xodimId")}</Label>
+              <Input type="number" value={genForm.employee_id} onChange={e => setGenForm(f => ({ ...f, employee_id: e.target.value }))} placeholder={t("xodimId")} className="mt-1" />
             </div>
             <div>
-              <Label>Ishga kirish sanasi</Label>
+              <Label>{t("ishgaKirishSanasi")}</Label>
               <Input type="date" value={genForm.hire_date} onChange={e => setGenForm(f => ({ ...f, hire_date: e.target.value }))} className="mt-1" />
             </div>
             <p className="text-xs text-muted-foreground">1 oy, 3 oy va 6 oylik milestonelar avtomatik yaratiladi</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setGenerateOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setGenerateOpen(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => generateMut.mutate(genForm)}
               disabled={!genForm.employee_id || !genForm.hire_date || generateMut.isPending}
@@ -302,7 +302,7 @@ export default function MilestonePage() {
       <Dialog open={!!completeTarget} onOpenChange={() => setCompleteTarget(null)}>
         <DialogContent className="max-w-md p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Milestone yakunlash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("milestoneYakunlash")}</DialogTitle>
           </DialogHeader>
           {completeTarget && (
             <div className="py-2 space-y-4">
@@ -313,20 +313,20 @@ export default function MilestonePage() {
                 </p>
               </div>
               <div>
-                <Label>Baholash izohi</Label>
+                <Label>{t("baholashIzohi")}</Label>
                 <Textarea
                   value={completeForm.notes}
                   onChange={e => setCompleteForm({ notes: e.target.value })}
-                  placeholder="Xodim haqida fikr, natijalar..."
+                  placeholder={t("xodimHaqidaFikrNatijalar")}
                   rows={3}
                   className="mt-1"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Yakunlaganda 🏅 badge avtomatik beriladi</p>
+              <p className="text-xs text-muted-foreground">{t("yakunlagandaBadgeAvtomatikBeriladi")}</p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCompleteTarget(null)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setCompleteTarget(null)}>{t("Bekor")}</Button>
             <Button
               onClick={() => completeMut.mutate({ id: completeTarget?.id ?? 0, body: { assessor_id: 1, notes: completeForm.notes } })}
               disabled={completeMut.isPending}

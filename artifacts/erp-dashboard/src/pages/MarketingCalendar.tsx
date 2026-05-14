@@ -20,11 +20,13 @@ import { Plus, Calendar, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucid
 import type { ContentCalendar } from "@shared/schema";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const statusLabels: Record<string, string> = { planned: "Rejalashtirilgan", in_progress: "Jarayonda", completed: "Tugallangan", cancelled: "Bekor qilingan" };
 const platformLabels: Record<string, string> = { telegram: "Telegram", instagram: "Instagram", facebook: "Facebook", website: "Veb-sayt" };
 
 export default function MarketingCalendar() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -92,27 +94,27 @@ export default function MarketingCalendar() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-calendar">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing Taqvim</b></>}
-        title="Marketing Taqvim"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("marketingTaqvim")}</b></>}
+        title={t("marketingTaqvim")}
       />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-calendar">
               <Plus className="h-4 w-4" />
-              Yangi Reja
+              {t("yangiReja1")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg bg-card border-none p-6">
-            <DialogHeader><DialogTitle className="text-foreground font-bold">Yangi Taqvim Yozuvi</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-foreground font-bold">{t("yangiTaqvimYozuvi")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Sarlavha *</Label><Input className="bg-background border-border" data-testid="input-calendar-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Tavsif</Label><Textarea className="bg-background border-border" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sarlavha")}</Label><Input className="bg-background border-border" data-testid="input-calendar-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("progress.description")}</Label><Textarea className="bg-background border-border" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Platforma</Label><Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Holat</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("platforma")}</Label><Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("status28")}</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
               </div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Sana *</Label><Input className="bg-background border-border" type="date" data-testid="input-calendar-date" value={form.scheduledDate} onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })} /></div>
-              <Button onClick={handleSubmit} disabled={!form.title || !form.scheduledDate || createMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-calendar">Yaratish</Button>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sana")}</Label><Input className="bg-background border-border" type="date" data-testid="input-calendar-date" value={form.scheduledDate} onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })} /></div>
+              <Button onClick={handleSubmit} disabled={!form.title || !form.scheduledDate || createMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-calendar">{t("Yaratish")}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -154,8 +156,8 @@ export default function MarketingCalendar() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Taqvim yozuvini o'chirish"
-        description="Ushbu taqvim yozuvini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("taqvimYozuviniOchirish")}
+        description={t("ushbuTaqvimYozuviniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

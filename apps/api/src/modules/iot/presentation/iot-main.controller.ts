@@ -3,10 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import {
-  Controller, Get, Param, Post, Query, Patch, Delete, Body, UseGuards, UseInterceptors,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';

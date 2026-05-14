@@ -98,7 +98,7 @@ export function RoomHeader({activeRoom,
           ) : activeRoom.type === "direct" ? (
             activeRoom.otherUserId != null &&
             onlineUserIds.has(Number(activeRoom.otherUserId)) ? (
-              <span className="text-[var(--ep-green)] font-medium">● Online</span>
+              <span className="text-[var(--ep-green)] font-medium">{t("online2")}</span>
             ) : (
               <span className="text-[var(--tg-text-secondary)]">{t('offline1')}</span>
             )
@@ -117,7 +117,7 @@ export function RoomHeader({activeRoom,
               ? "bg-[var(--tg-sidebar-active)]/10 text-[var(--tg-sidebar-active)]"
               : "text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)]"
           )}
-          title="Qidirish"
+          title={t("search")}
         >
           <Search className="w-[22px] h-[22px]" />
         </button>
@@ -146,7 +146,7 @@ export function RoomHeader({activeRoom,
           <button
             onClick={onTaskFromLastMsg}
             className="p-2 rounded-full text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)] transition-colors"
-            title="Vazifa qo'shish"
+            title={t("vazifaQoshish")}
           >
             <CheckSquare className="w-[22px] h-[22px]" />
           </button>
@@ -160,7 +160,7 @@ export function RoomHeader({activeRoom,
               ? "bg-[var(--tg-sidebar-active)]/10 text-[var(--tg-sidebar-active)]"
               : "text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)]"
           )}
-          title="Ma'lumot"
+          title={t("info")}
         >
           <MoreVertical className="w-[22px] h-[22px]" />
         </button>
@@ -182,7 +182,7 @@ export function PinnedBanner({ pinnedMessage, onUnpin }: PinnedBannerProps) {
       <Pin className="w-3.5 h-3.5 text-[var(--tg-sidebar-active)] flex-shrink-0 rotate-45" />
       <div className="flex-1 min-w-0 border-l-2 border-[var(--tg-sidebar-active)] pl-2">
         <span className="text-[11px] text-[var(--tg-sidebar-active)] font-medium">
-          Pinlangan xabar
+          {t("pinlanganXabar")}
         </span>
         <p className="text-[13px] text-[var(--tg-text-primary)] truncate">
           {pinnedMessage.content}

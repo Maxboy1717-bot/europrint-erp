@@ -10,14 +10,16 @@ import { AnomalyTab, CashflowTab } from "./AIFinancePageSections";
 import { BudgetVarianceTab, InvoiceTab } from "./AIFinancePageSections2";
 import { FraudTab } from "./AIFinanceFraudTab";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function AIFinancePage() {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">AI Moliya Tahlili</b></>}
-        title="AI Moliya Tahlili"
-        subtitle="Sun'iy intellekt yordamida anomaliya aniqlash, pul oqimi bashorati, byudjet tahlili va fraud nazorat"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("aiMoliyaTahlili")}</b></>}
+        title={t("aiMoliyaTahlili")}
+        subtitle={t("suniyIntellektYordamidaAnomaliyaAniqlash")}
         icon={<Brain className="h-6 w-6 text-primary"
       />}
       />
@@ -26,23 +28,23 @@ export default function AIFinancePage() {
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-6">
           <TabsTrigger value="anomalies" className="flex items-center gap-1.5 text-xs">
             <AlertTriangle className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Anomaliyalar</span>
+            <span className="hidden sm:inline">{t("anomaliyalar")}</span>
           </TabsTrigger>
           <TabsTrigger value="cashflow" className="flex items-center gap-1.5 text-xs">
             <TrendingUp className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Pul Oqimi</span>
+            <span className="hidden sm:inline">{t("pulOqimi")}</span>
           </TabsTrigger>
           <TabsTrigger value="budget" className="flex items-center gap-1.5 text-xs">
             <BarChart3 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Byudjet</span>
+            <span className="hidden sm:inline">{t("byudjet")}</span>
           </TabsTrigger>
           <TabsTrigger value="invoice" className="flex items-center gap-1.5 text-xs">
             <FileText className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Faktura</span>
+            <span className="hidden sm:inline">{t("faktura")}</span>
           </TabsTrigger>
           <TabsTrigger value="fraud" className="flex items-center gap-1.5 text-xs">
             <ShieldAlert className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Fraud</span>
+            <span className="hidden sm:inline">{t("fraud")}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -51,10 +53,10 @@ export default function AIFinancePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-[var(--ep-yellow)]" />
-                Moliyaviy Anomaliyalarni Aniqlash
+                {t("moliyaviyAnomaliyalarniAniqlash")}
               </CardTitle>
               <CardDescription>
-                GL yozuvlari va moliyaviy operatsiyalar tahlili asosida anomaliyalarni aniqlash
+                {t("glYozuvlariVaMoliyaviyOperatsiyalar")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -68,7 +70,7 @@ export default function AIFinancePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-[var(--ep-green)]" />
-                Pul Oqimi Bashorati
+                {t("pulOqimiBashorati")}
               </CardTitle>
               <CardDescription>
                 Tarixiy ma'lumotlar asosida keyingi oy uchun kirim/chiqim bashorati
@@ -85,10 +87,10 @@ export default function AIFinancePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-[var(--ep-blue)]" />
-                Byudjet Farqi Tahlili
+                {t("byudjetFarqiTahlili")}
               </CardTitle>
               <CardDescription>
-                Rejalashtirilgan va haqiqiy xarajatlar o'rtasidagi farqni tushuntirish
+                {t("rejalashtirilganVaHaqiqiyXarajatlarOrtasidagi")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -102,10 +104,10 @@ export default function AIFinancePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-[var(--ep-primary)]" />
-                Faktura Tasnifi
+                {t("fakturaTasnifi")}
               </CardTitle>
               <CardDescription>
-                Faktura ma'lumotlari asosida avtomatik kategoriya va soliq kodi aniqlash
+                {t("fakturaMalumotlariAsosidaAvtomatikKategoriya")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -119,10 +121,10 @@ export default function AIFinancePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShieldAlert className="h-5 w-5 text-[var(--ep-red)]" />
-                Fraud Xavfini Baholash
+                {t("fraudXavfiniBaholash")}
               </CardTitle>
               <CardDescription>
-                Shubhali tranzaksiyalarni AI yordamida tekshirish va fraud belgilarini aniqlash
+                {t("shubhaliTranzaksiyalarniAiYordamidaTekshirish")}
               </CardDescription>
             </CardHeader>
             <CardContent>

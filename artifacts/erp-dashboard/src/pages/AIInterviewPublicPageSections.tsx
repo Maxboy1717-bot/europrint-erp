@@ -10,6 +10,7 @@ import { Mic, Video, CheckCircle, XCircle, Clock, AlertTriangle, ChevronRight, G
 import type { SessionInfo, Language } from "./AIInterviewPublicPageTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface TFn {
   (key: string): string;
 }
@@ -19,11 +20,12 @@ interface TFn {
 // ---------------------------------------------------------------------------
 
 export function ValidatingScreen() {
+  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
       <div className="text-center space-y-4">
         <EPLoader className="w-12 h-12 mx-auto" />
-        <p className="text-white text-lg">Intervyu sessiyasi tekshirilmoqda...</p>
+        <p className="text-white text-lg">{t("intervyuSessiyasiTekshirilmoqda")}</p>
       </div>
     </div>
   );
@@ -38,7 +40,7 @@ export function ExpiredScreen({ t }: { t: TFn }) {
           <h2 className="text-xl font-bold text-white">{t("expired")}</h2>
           <p className="text-slate-400">{t("expiredDesc")}</p>
           <p className="text-slate-500 text-sm">{t("hrEmail")}</p>
-          <Badge className="bg-red-900/50 text-red-300 border-red-700">Muddati tugagan</Badge>
+          <Badge className="bg-red-900/50 text-red-300 border-red-700">{t("muddatiTugagan")}</Badge>
         </CardContent>
       </Card>
     </div>
@@ -54,7 +56,7 @@ export function InvalidScreen({ t }: { t: TFn }) {
           <h2 className="text-xl font-bold text-white">{t("invalid")}</h2>
           <p className="text-slate-400">{t("invalidDesc")}</p>
           <p className="text-slate-500 text-sm">{t("newHrLink")}</p>
-          <Badge className="bg-amber-900/50 text-amber-300 border-amber-700">Noto'g'ri havola</Badge>
+          <Badge className="bg-amber-900/50 text-amber-300 border-amber-700">{t("notogriHavola")}</Badge>
         </CardContent>
       </Card>
     </div>
@@ -70,7 +72,7 @@ export function CancelledScreen({ t, cancelledReason }: { t: TFn; cancelledReaso
           <h2 className="text-xl font-bold text-white">{t("cancelled")}</h2>
           <p className="text-slate-400">{cancelledReason || t("cancelledDesc")}</p>
           <p className="text-slate-500 text-sm">{t("hrEmail")}</p>
-          <Badge className="bg-red-900/50 text-red-300 border-red-700">Bekor qilindi</Badge>
+          <Badge className="bg-red-900/50 text-red-300 border-red-700">{t("bekorQilindi")}</Badge>
         </CardContent>
       </Card>
     </div>
@@ -89,7 +91,7 @@ export function CompletedScreen({ t }: { t: TFn }) {
           <p className="text-slate-400">{t("completedDesc")}</p>
           <p className="text-slate-500 text-sm">{t("hrContact")}</p>
           <Badge className="bg-green-900/50 text-green-300 border-green-700 text-sm px-3 py-1">
-            ✓ Muvaffaqiyatli
+            {t("muvaffaqiyatli")}
           </Badge>
         </CardContent>
       </Card>
@@ -124,13 +126,13 @@ export function CameraCheckSection({
               <span className="text-2xl">🎯</span>
             </div>
             <CardTitle className="text-white">{t("title")}</CardTitle>
-            <p className="text-slate-400 text-sm mt-1">Qurilmalarni tekshirish</p>
+            <p className="text-slate-400 text-sm mt-1">{t("checkDevices")}</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
           {session?.candidate_name && (
             <div className="text-center py-2 px-4 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-slate-400 text-xs">Xush kelibsiz,</p>
+              <p className="text-slate-400 text-xs">{t("xushKelibsiz")}</p>
               <p className="text-white font-semibold text-lg">{session.candidate_name}</p>
             </div>
           )}

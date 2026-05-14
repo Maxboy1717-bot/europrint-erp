@@ -11,6 +11,7 @@ import { Package, Monitor, Smartphone, Car, Wrench, CheckCircle, Clock, Laptop, 
 import { Button } from "@/components/ui/button";
 import { queryClient, getAuthHeaders } from "@/lib/queryClient";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 interface AssetAssignment {
   id: string;
@@ -64,6 +65,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export function AssetsTab({ employeeId }: Props) {
+  const { t } = useTranslation("common");
   const { data, isLoading } = useQuery<AssetAssignment[]>({
     queryKey: ["/api/assets/employee", employeeId],
     queryFn: async () => {
@@ -81,7 +83,7 @@ export function AssetsTab({ employeeId }: Props) {
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-5">
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-3">
@@ -119,7 +121,7 @@ export function AssetsTab({ employeeId }: Props) {
           {!isLoading && active.length === 0 && (
             <div className="text-center py-10 text-[13px] text-muted-foreground">
               <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">Hozirda berilgan jixoz yo'q</p>
+              <p className="text-sm">{t("hozirdaBerilganJixozYoq")}</p>
             </div>
           )}
           <div className="space-y-2">

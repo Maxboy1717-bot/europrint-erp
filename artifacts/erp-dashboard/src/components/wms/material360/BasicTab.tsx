@@ -15,14 +15,14 @@ export function BasicTab({ basic }: { basic: BasicInfo }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard icon={Package} label={t('materialKodi')} value={basic.kod || "—"} />
-        <KpiCard icon={Layers} label="Kategoriya" value={basic.category || "—"} />
-        <KpiCard icon={Box} label="O'lchov birligi" value={basic.unitOfMeasure || "—"} />
-        <KpiCard icon={CheckCircle} label="Holat" value={basic.isActive ? "Aktiv" : "Arxiv"}
+        <KpiCard icon={Layers} label={t("category")} value={basic.category || "—"} />
+        <KpiCard icon={Box} label={t("olchovBirligi")} value={basic.unitOfMeasure || "—"} />
+        <KpiCard icon={CheckCircle} label={t("status28")} value={basic.isActive ? "Aktiv" : "Arxiv"}
           color={basic.isActive ? "text-[var(--ep-green)]" : "text-muted-foreground"} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Material haqida</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">{t("materialHaqida")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([["Nomi (O'zbek)", basic.xomAshyo], ["Nomi (Rus)", basic.xomAshyoRu], ["Kategoriya", basic.category], ["O'lchov", basic.unitOfMeasure]] as [string, string | null | undefined][])
               .filter(([, v]) => v).map(([l, v]) => (
@@ -34,7 +34,7 @@ export function BasicTab({ basic }: { basic: BasicInfo }) {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Texnik ma'lumotlar</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">{t("texnikMalumotlar")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([
               ["Format A", basic.formatA ? `${basic.formatA} mm` : null],
@@ -50,7 +50,7 @@ export function BasicTab({ basic }: { basic: BasicInfo }) {
             ))}
             {basic.description && (
               <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground mb-1">Tavsif</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("progress.description")}</p>
                 <p className="text-sm">{basic.description}</p>
               </div>
             )}

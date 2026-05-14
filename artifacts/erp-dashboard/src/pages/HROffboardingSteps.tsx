@@ -22,6 +22,7 @@ import {
   DISMISSAL_MAP,
 } from "./HROffboardingTypes";
 import { ExitInterviewForm } from "./HROffboardingInterview";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Local types ───────────────────────────────────────────────────────────────
 
@@ -44,6 +45,7 @@ export function ChecklistPanel({
   caseId: number;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -195,7 +197,7 @@ export function ChecklistPanel({
                     size="sm" variant="outline" className="h-6 text-xs px-2"
                     onClick={() => setShowInterviewForm(true)}
                   >
-                    Yozuv qo'shish
+                    {t("yozuvQoshish")}
                   </Button>
                 ) : (
                   <Button
@@ -203,7 +205,7 @@ export function ChecklistPanel({
                     onClick={() => markItem.mutate({ itemId: item.id, done: true })}
                     disabled={markItem.isPending}
                   >
-                    Bajarildi
+                    {t("Bajarildi")}
                   </Button>
                 )}
               </div>
@@ -231,7 +233,7 @@ export function ChecklistPanel({
           disabled={completeCase.isPending}
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />
-          Offboardingni yakunlash
+          {t("offboardingniYakunlash")}
         </Button>
       )}
     </div>

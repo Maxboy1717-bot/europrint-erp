@@ -6,6 +6,7 @@
 import { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface DedicatedPageShellProps {
   title: string;
@@ -24,10 +25,11 @@ export function DedicatedPageShell({
   actions,
   children,
 }: DedicatedPageShellProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{title}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{title}</b></>}
         title={title}
         subtitle={description}
         actions={actions}

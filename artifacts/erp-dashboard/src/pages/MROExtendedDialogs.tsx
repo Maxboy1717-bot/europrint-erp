@@ -24,35 +24,35 @@ export function AddEquipDialog({open, onOpenChange, form, onSubmit, isPending }:
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Jihoz Qo'shish</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("jihozQoshish")}</DialogTitle></DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-          <Label>Nomi</Label>
-            <Input {...form.register("name")} placeholder="Jihoz nomi" data-testid="input-equip-name" />
+          <Label>{t("name")}</Label>
+            <Input {...form.register("name")} placeholder={t("jihozNomi")} data-testid="input-equip-name" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-          <Label>Turi</Label>
+          <Label>{t("type")}</Label>
               <Input {...form.register("type")} placeholder={t('machine')} />
             </div>
             <div className="space-y-1">
-          <Label>Joylashuvi</Label>
+          <Label>{t("joylashuvi")}</Label>
               <Input {...form.register("location")} placeholder="1-sex" />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-          <Label>Xarid sanasi</Label>
+          <Label>{t("xaridSanasi")}</Label>
               <Input type="date" {...form.register("purchaseDate")} />
             </div>
             <div className="space-y-1">
-          <Label>Kafolat muddati</Label>
+          <Label>{t("kafolatMuddati")}</Label>
               <Input type="date" {...form.register("warrantyExpiry")} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Bekor</Button>
-            <Button type="submit" disabled={isPending}>Saqlash</Button>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
+            <Button type="submit" disabled={isPending}>{t("Saqlash")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -74,48 +74,48 @@ export function AddRequestDialog({ open, onOpenChange, form, onSubmit, isPending
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Texnik Xizmat So'rovi</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("texnikXizmatSorovi")}</DialogTitle></DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-          <Label>Tavsif</Label>
-            <Input {...form.register("description")} placeholder="Muammo tavsifi" data-testid="input-req-desc" />
+          <Label>{t("progress.description")}</Label>
+            <Input {...form.register("description")} placeholder={t("muammoTavsifi1")} data-testid="input-req-desc" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-          <Label>Tur</Label>
+          <Label>{t("tur")}</Label>
               <Controller control={form.control} name="type" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="preventive">Profilaktik</SelectItem>
-                    <SelectItem value="corrective">Ta'mirlash</SelectItem>
-                    <SelectItem value="inspection">Tekshiruv</SelectItem>
+                    <SelectItem value="preventive">{t("profilaktik")}</SelectItem>
+                    <SelectItem value="corrective">{t("tamirlash")}</SelectItem>
+                    <SelectItem value="inspection">{t("tekshiruv")}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
             </div>
             <div className="space-y-1">
-          <Label>Ustuvorlik</Label>
+          <Label>{t("ustuvorlik")}</Label>
               <Controller control={form.control} name="priority" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Past</SelectItem>
-                    <SelectItem value="medium">O'rta</SelectItem>
-                    <SelectItem value="high">Yuqori</SelectItem>
-                    <SelectItem value="critical">Kritik</SelectItem>
+                    <SelectItem value="low">{t("low")}</SelectItem>
+                    <SelectItem value="medium">{t("medium")}</SelectItem>
+                    <SelectItem value="high">{t("high")}</SelectItem>
+                    <SelectItem value="critical">{t("kritik")}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Mas'ul</Label>
-            <Input {...form.register("assignedTo")} placeholder="Texnik ismi" />
+          <Label>{t("masul")}</Label>
+            <Input {...form.register("assignedTo")} placeholder={t("texnikIsmi")} />
           </div>
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Bekor</Button>
-            <Button type="submit" disabled={isPending}>Yuborish</Button>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
+            <Button type="submit" disabled={isPending}>{t("submitBtn")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -141,31 +141,31 @@ export function AddItemDialog({ open, onOpenChange, form, onSubmit, isPending }:
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-          <Label>Kod</Label>
+          <Label>{t("code")}</Label>
               <Input {...form.register("itemCode")} placeholder="MRO-001" data-testid="input-item-code" />
             </div>
             <div className="space-y-1">
-          <Label>Nomi</Label>
-              <Input {...form.register("name")} placeholder="Material nomi" />
+          <Label>{t("name")}</Label>
+              <Input {...form.register("name")} placeholder={t("materialNomi")} />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-          <Label>Miqdor</Label>
+          <Label>{t("quantity")}</Label>
               <Input type="number" {...form.register("quantity", { valueAsNumber: true })} />
             </div>
             <div className="space-y-1">
-          <Label>Birlik</Label>
+          <Label>{t("unit")}</Label>
               <Input {...form.register("unit")} placeholder="dona" />
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Joylashuvi</Label>
-            <Input {...form.register("location")} placeholder="1-saqlash" />
+          <Label>{t("joylashuvi")}</Label>
+            <Input {...form.register("location")} placeholder={t("k1Saqlash")} />
           </div>
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Bekor</Button>
-            <Button type="submit" disabled={isPending}>Saqlash</Button>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
+            <Button type="submit" disabled={isPending}>{t("Saqlash")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

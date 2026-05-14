@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, ClipboardCheck } from "lucide-react";
 import { PapkaOrder, FinalInspection, STATUS_MAP } from "./QCFinalInspectionTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Stats panel
@@ -21,21 +22,22 @@ interface StatsProps {
 }
 
 export function InspectionStats({ ordersCount, inspections }: StatsProps) {
+  const { t } = useTranslation("common");
   const safeInspections = Array.isArray(inspections) ? inspections : [];
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="bg-card rounded-lg border-none shadow-none p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kutilmoqda</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("Kutilmoqda")}</p>
         <p className="text-4xl font-bold tracking-tight text-foreground">{ordersCount}</p>
       </Card>
       <Card className="bg-card rounded-lg border-none shadow-none p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">O'tdi</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("otdi")}</p>
         <p className="text-4xl font-bold tracking-tight text-[var(--ep-green)]">
           {safeInspections.filter(i => i.status === "passed").length}
         </p>
       </Card>
       <Card className="bg-card rounded-lg border-none shadow-none p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rad etildi</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("radEtildi")}</p>
         <p className="text-4xl font-bold tracking-tight text-[var(--ep-red)]">
           {safeInspections.filter(i => i.status === "failed").length}
         </p>
@@ -57,12 +59,12 @@ export function PendingOrdersList({ orders, onInspect }: PendingOrdersProps) {
   const safeOrders = Array.isArray(orders) ? orders : [];
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3 text-foreground">Tekshirish kutilmoqda</h2>
+      <h2 className="text-lg font-semibold mb-3 text-foreground">{t("tekshirishKutilmoqda")}</h2>
       {safeOrders.length === 0 ? (
         <Card className="bg-card rounded-lg border-none shadow-none">
           <CardContent className="py-10 text-center">
             <CheckCircle className="h-10 w-10 mx-auto text-[var(--ep-green)] mb-3" />
-            <p className="font-medium text-foreground">Yakuniy tekshiruv kutayotgan buyurtmalar yo'q</p>
+            <p className="font-medium text-foreground">{t("yakuniyTekshiruvKutayotganBuyurtmalarYoq")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -94,7 +96,7 @@ export function PendingOrdersList({ orders, onInspect }: PendingOrdersProps) {
                     data-testid={`btn-inspect-${order.id}`}
                   >
                     <ClipboardCheck className="h-4 w-4 mr-1" />
-                    Tekshiruv o'tkazish
+                    {t("tekshiruvOtkazish")}
                   </Button>
                 </div>
               </CardContent>
@@ -121,7 +123,7 @@ export function RecentInspectionsList({ inspections, completeMutation }: RecentI
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3 text-foreground">So'nggi tekshiruvlar</h2>
+      <h2 className="text-lg font-semibold mb-3 text-foreground">{t("songgiTekshiruvlar")}</h2>
       <div className="grid gap-2">
         {safeInspections.slice(0, 10).map(insp => (
           <Card
@@ -160,7 +162,7 @@ export function RecentInspectionsList({ inspections, completeMutation }: RecentI
                     disabled={completeMutation.isPending}
                     data-testid={`btn-complete-${insp.id}`}
                   >
-                    Tugatish
+                    {t("tugatish")}
                   </Button>
                 )}
               </div>

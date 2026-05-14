@@ -6,8 +6,10 @@
 import { useState, useCallback } from "react";
 import { REPORTS, ReportType } from "./WarehouseReportsAllTypes";
 import { FiltersBar, ReportList, ReportViewer } from "./WarehouseReportsAllSections";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseReportsAll() {
+  const { t } = useTranslation("common");
   const [selected, setSelected] = useState<ReportType | null>(null);
   const [data, setData] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ export default function WarehouseReportsAll() {
         <div className="text-xs text-gray-500 font-semibold">OMBOR HISOBOTLAR MARKAZI</div>
         <h1 className="text-2xl font-bold text-gray-900">22 ta turdagi hisobot</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Hisobot turini tanlang — ma'lumotlar real-time yuklanadi
+          {t("hisobotTuriniTanlangMalumotlarReal")}
         </p>
       </div>
 

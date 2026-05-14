@@ -113,11 +113,11 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <CardTitle className="flex items-center gap-2"><Package className="w-5 h-5" />Yetkazish Jadvali</CardTitle>
-                <CardDescription>Faol va rejalashtirilgan yetkazishlar</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Package className="w-5 h-5" />{t("yetkazishJadvali")}</CardTitle>
+                <CardDescription>{t("faolVaRejalashtirilganYetkazishlar")}</CardDescription>
               </div>
               <Button onClick={onAddDelivery} data-testid="button-add-delivery">
-                <Plus className="w-4 h-4 mr-2" />Yetkazish Qo'sh
+                <Plus className="w-4 h-4 mr-2" />{t("yetkazishQosh")}
               </Button>
             </div>
           </CardHeader>
@@ -127,20 +127,20 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
             ) : deliveries.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Hali yetkazish qo'shilmagan</p>
+                <p>{t("haliYetkazishQoshilmagan")}</p>
               </div>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Buyurtma</TableHead>
-                    <TableHead>Mijoz</TableHead>
-                    <TableHead>Manzil</TableHead>
-                    <TableHead>Haydovchi</TableHead>
-                    <TableHead>Mashina</TableHead>
+                    <TableHead>{t("Buyurtma")}</TableHead>
+                    <TableHead>{t("mijoz1")}</TableHead>
+                    <TableHead>{t("address")}</TableHead>
+                    <TableHead>{t("haydovchi")}</TableHead>
+                    <TableHead>{t("mashina")}</TableHead>
                     <TableHead>ETA</TableHead>
-                    <TableHead>Og'irlik</TableHead>
-                    <TableHead>Holat</TableHead>
+                    <TableHead>{t("weight")}</TableHead>
+                    <TableHead>{t("status28")}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -160,12 +160,12 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
                       <TableCell>
                         {d.status === "planned" && (
                           <Button size="sm" variant="outline" onClick={() => onUpdateDeliveryStatus(d.id, "in_transit")} disabled={isUpdatingDelivery} data-testid={`button-start-delivery-${d.id}`}>
-                            Yo'lga chiq
+                            {t("yolgaChiq")}
                           </Button>
                         )}
                         {d.status === "in_transit" && (
                           <Button size="sm" variant="secondary" onClick={() => onUpdateDeliveryStatus(d.id, "delivered")} disabled={isUpdatingDelivery} data-testid={`button-complete-delivery-${d.id}`}>
-                            Yetkazildi
+                            {t("Yetkazildi")}
                           </Button>
                         )}
                       </TableCell>
@@ -185,7 +185,7 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
             <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <Navigation className="w-5 h-5 text-primary" />
-                GPS Monitoring — Jonli Joylashuv
+                {t("gpsMonitoringJonliJoylashuv")}
               </CardTitle>
               <Badge className="bg-primary/10 text-primary rounded-full px-3 py-0.5 text-xs border-none">
                 {gpsLocations.length} mashina
@@ -198,19 +198,19 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
             ) : gpsLocations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="font-medium">GPS ma'lumotlari mavjud emas</p>
-                <p className="text-sm mt-1 opacity-70">Mashinalar GPS qurilmasi orqali ulanganda joylashuv ko'rinadi</p>
+                <p className="font-medium">{t("gpsMalumotlariMavjudEmas")}</p>
+                <p className="text-sm mt-1 opacity-70">{t("mashinalarGpsQurilmasiOrqaliUlanganda")}</p>
               </div>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Mashina</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Kenglik</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Uzunlik</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tezlik</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Vaqt</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mashina")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("width")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("length")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tezlik")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("time")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -249,7 +249,7 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
             <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
-                Haydovchi Xarajatlari
+                {t("haydovchiXarajatlari")}
               </CardTitle>
               <div className="text-sm font-semibold text-muted-foreground">
                 Jami: {((Array.isArray(driverExpenses) ? driverExpenses : []).reduce((s, e) => s + (Number(e.amount) || 0), 0)).toLocaleString()} so'm
@@ -262,19 +262,19 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
             ) : driverExpenses.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="font-medium">Haydovchi xarajatlari yo'q</p>
-                <p className="text-sm mt-1 opacity-70">Haydovchilar xarajatlari qayd etilmagan</p>
+                <p className="font-medium">{t("haydovchiXarajatlariYoq")}</p>
+                <p className="text-sm mt-1 opacity-70">{t("haydovchilarXarajatlariQaydEtilmagan")}</p>
               </div>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Haydovchi</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Mashina</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Xarajat turi</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Miqdor</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Izoh</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("haydovchi")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("mashina")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("xarajatTuri")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("quantity")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("date")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Izoh")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -305,26 +305,26 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
           <CardHeader>
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary" />
-              Vendor Fakturalari — 3-Way Match
+              {t("vendorFakturalari3WayMatch")}
             </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">PO + GR + Faktura moslik tekshiruvi va kreditor qarz boshqaruvi</CardDescription>
+            <CardDescription className="text-xs text-muted-foreground">{t("poGrFakturaMoslikTekshiruvi")}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {viLoading ? (
               <div className="p-4 space-y-2">{([...Array(4)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />)}</div>
             ) : vendorInvoiceList.length === 0 ? (
-              <div className="text-center py-12 text-[13px] text-muted-foreground">Vendor fakturalar topilmadi</div>
+              <div className="text-center py-12 text-[13px] text-muted-foreground">{t("vendorFakturalarTopilmadi")}</div>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Faktura #</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Yetkazuvchi</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Summa</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("faktura1")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("yetkazuvchi")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("date")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("summa")}</TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('status13')}</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Match</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Amallar</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("match")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Amallar")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -365,7 +365,7 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
                               data-testid={`button-approve-invoice-${inv.id}`}
                             >
                               <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                              Tasdiqlash
+                              {t("verify")}
                             </Button>
                           )}
                           {inv.purchaseOrderId && inv.matchStatus !== "matched" && (
@@ -376,7 +376,7 @@ export function LogisticsDashboardLogisticsTab({deliveries, gpsLocations, driver
                               disabled={isMatchingInvoice}
                               data-testid={`button-match-invoice-${inv.id}`}
                             >
-                              3-Way Match
+                              {t("k3WayMatch")}
                             </Button>
                           )}
                         </div>

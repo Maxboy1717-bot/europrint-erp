@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { requestsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 function NewRequestModal({ onClose, onCreated, t }: { onClose: () => void; onCreated: () => void; t: (k: string) => string }) {
   const [justification, setJustification] = useState("");
@@ -35,22 +36,22 @@ function NewRequestModal({ onClose, onCreated, t }: { onClose: () => void; onCre
         <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 16 }}>📋 {t("requests.newRequest")}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>Ustuvorlik</label>
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("ustuvorlik")}</label>
             <select className="pos-input" value={priority} onChange={e => setPriority(e.target.value)}>
               {["LOW","MEDIUM","HIGH","URGENT"].map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
           <div>
             <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t('common.materialId')}</label>
-            <input className="pos-input" placeholder="Material karta ID" value={materialId} onChange={e => setMaterialId(e.target.value)} />
+            <input className="pos-input" placeholder={t("materialKartaId")} value={materialId} onChange={e => setMaterialId(e.target.value)} />
           </div>
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>Miqdor *</label>
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("miqdor1")}</label>
             <input className="pos-input" type="number" min={0} placeholder="0" value={qty} onChange={e => setQty(e.target.value)} />
           </div>
           <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>Asoslama</label>
-            <textarea className="pos-input" rows={2} placeholder="Izoh..." value={justification} onChange={e => setJustification(e.target.value)} style={{ resize: "vertical" }} />
+            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("asoslama")}</label>
+            <textarea className="pos-input" rows={2} placeholder={t("izoh1")} value={justification} onChange={e => setJustification(e.target.value)} style={{ resize: "vertical" }} />
           </div>
           {error && <div style={{ color: "var(--pos-danger)", fontSize: 12 }}>{error}</div>}
         </div>
@@ -77,6 +78,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function PosRequests() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [activeTab, setActiveTab] = useState<"my" | "approve" | "fulfill">("my");

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { MROEquipment, MROItem, MROBudget } from "./MROExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---- ExpensesTab ----
 
@@ -13,9 +14,10 @@ interface ExpensesTabProps {
 }
 
 export function ExpensesTab({ budgets }: ExpensesTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="expenses" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">MRO Xarajat Nazorati</h2>
+      <h2 className="text-lg font-semibold">{t("mroXarajatNazorati")}</h2>
       {budgets ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {(Array.isArray(budgets) ? budgets : []).slice(0, 6).map((b, i) => {
@@ -39,7 +41,7 @@ export function ExpensesTab({ budgets }: ExpensesTabProps) {
           })}
         </div>
       ) : (
-        <div className="p-6 text-center text-muted-foreground text-sm">Byudjet ma'lumotlari mavjud emas</div>
+        <div className="p-6 text-center text-muted-foreground text-sm">{t("byudjetMalumotlariMavjudEmas")}</div>
       )}
     </TabsContent>
   );
@@ -47,9 +49,10 @@ export function ExpensesTab({ budgets }: ExpensesTabProps) {
 
 // ---- KitchenTab ----
 export function KitchenTab() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="kitchen" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Korporativ Oshxona Boshqaruvi</h2>
+      <h2 className="text-lg font-semibold">{t("korporativOshxonaBoshqaruvi")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Bugungi ovqatlanuvchilar", v: "—", c: "text-primary"    },
@@ -63,7 +66,7 @@ export function KitchenTab() {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Haftalik menyu</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("haftalikMenyu")}</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-2">
             {(["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma"]).map((day, i) => (
@@ -91,7 +94,7 @@ export function UniformsTab({ ppeItems }: UniformsTabProps) {
   const items = Array.isArray(ppeItems) ? ppeItems : [];
   return (
     <TabsContent value="uniforms" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Korporativ Forma Boshqaruvi</h2>
+      <h2 className="text-lg font-semibold">{t("korporativFormaBoshqaruvi")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "PPE buyumlar soni",      v: items.length,                                                              c: "text-primary"    },
@@ -109,8 +112,8 @@ export function UniformsTab({ ppeItems }: UniformsTabProps) {
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Buyum</TableHead><TableHead>Birlik</TableHead>
-              <TableHead>Joriy zaxira</TableHead><TableHead>Min. zaxira</TableHead><TableHead>Holati</TableHead>
+              <TableHead>{t("buyum1")}</TableHead><TableHead>{t("unit")}</TableHead>
+              <TableHead>{t("joriyZaxira")}</TableHead><TableHead>{t("minZaxira1")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {items.length === 0 ? (
@@ -144,16 +147,16 @@ interface OfficeTabProps {
 export function OfficeTab({ equipment }: OfficeTabProps) {
   return (
     <TabsContent value="office" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Ofis Inventar Nazorati</h2>
+      <h2 className="text-lg font-semibold">{t("ofisInventarNazorati")}</h2>
       <Card>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Uskuna</TableHead><TableHead>Soni</TableHead><TableHead>Holati</TableHead><TableHead>Mas'ul</TableHead>
+              <TableHead>{t("Uskuna")}</TableHead><TableHead>{t("count")}</TableHead><TableHead>{t("holati")}</TableHead><TableHead>{t("masul")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {equipment.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm">Jihozlar ma'lumotlari mavjud emas</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm">{t("jihozlarMalumotlariMavjudEmas")}</TableCell></TableRow>
               ) : (Array.isArray(equipment) ? equipment : []).slice(0, 10).map((r, i) => (
                 <TableRow key={r.id} data-testid={`row-office-${i}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{r.name || "—"}</TableCell>
@@ -183,7 +186,7 @@ export function CleaningTab({ cleaningSchedule }: CleaningTabProps) {
   const schedule = Array.isArray(cleaningSchedule) ? cleaningSchedule : [];
   return (
     <TabsContent value="cleaning" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Tozalash Xizmati Jadvali</h2>
+      <h2 className="text-lg font-semibold">{t("tozalashXizmatiJadvali")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Jami zonalar", v: `${schedule.length} zona`,                                           c: "text-[var(--ep-green)]"  },
@@ -197,10 +200,10 @@ export function CleaningTab({ cleaningSchedule }: CleaningTabProps) {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Kunlik tozalash jadvali</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("kunlikTozalashJadvali")}</CardTitle></CardHeader>
         <CardContent>
           {schedule.length === 0 ? (
-            <p className="text-center py-6 text-muted-foreground text-sm">Tozalash jadvali mavjud emas</p>
+            <p className="text-center py-6 text-muted-foreground text-sm">{t("tozalashJadvaliMavjudEmas")}</p>
           ) : (
             <div className="space-y-2">
               {schedule.map((r, i) => (
@@ -225,9 +228,10 @@ export function CleaningTab({ cleaningSchedule }: CleaningTabProps) {
 // ---- SanitationTab ----
 
 export function SanitationTab() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="sanitation" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Sanitariya va Dezinfeksiya</h2>
+      <h2 className="text-lg font-semibold">{t("sanitariyaVaDezinfeksiya")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Oxirgi tekshiruv",    v: "—", c: "text-[var(--ep-green)]"  },
@@ -253,7 +257,7 @@ interface BuildingTabProps {
 export function BuildingTab({ equipment }: BuildingTabProps) {
   return (
     <TabsContent value="building" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Bino va Inshoot Inventari</h2>
+      <h2 className="text-lg font-semibold">{t("binoVaInshootInventari")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "Binolar soni",     v: "—", c: "text-primary"    },
@@ -269,12 +273,12 @@ export function BuildingTab({ equipment }: BuildingTabProps) {
       </div>
       {equipment.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Jihozlar ro'yxati</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("jihozlarRoyxati")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Nomi</TableHead><TableHead>Turi</TableHead>
-                <TableHead>Joylashuvi</TableHead><TableHead>Holati</TableHead>
+                <TableHead>{t("name")}</TableHead><TableHead>{t("type")}</TableHead>
+                <TableHead>{t("joylashuvi")}</TableHead><TableHead>{t("holati")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(equipment) ? equipment : []).slice(0, 8).map((eq) => (

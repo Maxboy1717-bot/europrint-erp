@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { DOC_TYPES_KEYS } from "./DocumentWorkflowPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // DeadlineBadge
@@ -13,12 +14,13 @@ interface DeadlineBadgeProps {
 }
 
 export function DeadlineBadge({ deadlineAt }: DeadlineBadgeProps) {
+  const { t } = useTranslation("common");
   if (!deadlineAt) return null;
   const ms    = new Date(deadlineAt).getTime() - Date.now();
   const mins  = Math.round(ms / 60000);
   const hours = Math.round(ms / 3600000);
 
-  if (ms < 0)      return <Badge className="bg-red-800 text-white text-xs">⏰ Muddat o'tgan</Badge>;
+  if (ms < 0)      return <Badge className="bg-red-800 text-white text-xs">{t("muddatOtgan")}</Badge>;
   if (hours < 2)   return <Badge className="bg-[var(--ep-primary)] text-white text-xs">⚡ {mins} daq qoldi</Badge>;
   if (hours < 24)  return <EPStatusPill tone="warning">⏳ {hours} soat qoldi</EPStatusPill>;
   return null;

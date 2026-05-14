@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { CostingFormData, SalesOrder } from "./OrderCostingTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface CreateCostingDialogProps {
   open: boolean;
@@ -32,13 +33,14 @@ export function CreateCostingDialog({
   grossProfit,
   profitMargin,
 }: CreateCostingDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi Buyurtma Tannarxi Yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiBuyurtmaTannarxiYaratish")}</DialogTitle>
           <DialogDescription>
-            Sotish buyurtmasini tanlang va xarajatlarni kiriting
+            {t("sotishBuyurtmasiniTanlangVaXarajatlarni")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -48,11 +50,11 @@ export function CreateCostingDialog({
               name="salesOrderId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sotish Buyurtmasi</FormLabel>
+                  <FormLabel>{t("sotishBuyurtmasi")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-sales-order" className="h-9">
-                        <SelectValue placeholder="Buyurtmani tanlang" />
+                        <SelectValue placeholder={t("buyurtmaniTanlang")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -149,17 +151,17 @@ export function CreateCostingDialog({
             </div>
             <div className="p-4 rounded-lg bg-muted space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Umumiy Xarajat:</span>
+                <span>{t("umumiyXarajat1")}</span>
                 <span className="font-medium">{formatCurrency(totalCost)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Yalpi Foyda:</span>
+                <span>{t("yalpiFoyda2")}</span>
                 <span className={`font-medium ${grossProfit >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
                   {formatCurrency(grossProfit)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Foyda Marjasi:</span>
+                <span>{t("foydaMarjasi2")}</span>
                 <span className={`font-medium ${profitMargin >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
                   {profitMargin.toFixed(1)}%
                 </span>
@@ -172,7 +174,7 @@ export function CreateCostingDialog({
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel"
               >
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isPending} data-testid="button-submit">
                 {isPending ? "Yaratilmoqda..." : "Yaratish"}

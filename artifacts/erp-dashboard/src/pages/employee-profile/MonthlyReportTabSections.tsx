@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { MonthlyReport } from "./MonthlyReportTabTypes";
 import { UZ_MONTHS } from "./MonthlyReportTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── MetricCard ────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ label, value, icon: Icon, color }: MetricCardProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-lg p-4">
       <div className="flex items-center gap-1.5 mb-1">
@@ -80,18 +82,18 @@ export function AttendanceSection({ report }: { report: MonthlyReport }) {
     <div>
       <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
         <Clock className="h-4 w-4 text-[var(--ep-blue)]" />
-        Davomat
+        {t("davomat")}
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-        <MetricCard label="Jami kunlar"  value={attendance.totalDays}   icon={Calendar}       color="text-[var(--ep-blue)]" />
-        <MetricCard label="Kelgan"        value={attendance.presentDays}  icon={CheckCircle}    color="text-[var(--ep-green)]" />
-        <MetricCard label="Kelmagan"      value={attendance.absentDays}   icon={AlertTriangle}  color="text-[var(--ep-red)]" />
-        <MetricCard label="Kech kelgan"   value={attendance.lateDays}     icon={Clock}          color="text-[var(--ep-yellow)]" />
-        <MetricCard label="Davomat %"     value={`${attendance.attendanceRate}%`} icon={TrendingUp} color={rateColor} />
+        <MetricCard label={t("jamiKunlar")}  value={attendance.totalDays}   icon={Calendar}       color="text-[var(--ep-blue)]" />
+        <MetricCard label={t("kelgan")}        value={attendance.presentDays}  icon={CheckCircle}    color="text-[var(--ep-green)]" />
+        <MetricCard label={t("kelmagan")}      value={attendance.absentDays}   icon={AlertTriangle}  color="text-[var(--ep-red)]" />
+        <MetricCard label={t("kechKelgan")}   value={attendance.lateDays}     icon={Clock}          color="text-[var(--ep-yellow)]" />
+        <MetricCard label={t("davomat1")}     value={`${attendance.attendanceRate}%`} icon={TrendingUp} color={rateColor} />
       </div>
       <div className="mt-3">
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>Davomat darajasi</span>
+          <span>{t("davomatDarajasi")}</span>
           <span className="font-semibold">{attendance.attendanceRate}%</span>
         </div>
         <div className="w-full h-2 bg-muted/60 rounded-full overflow-hidden">
@@ -113,19 +115,19 @@ export function DisciplineSection({ report }: { report: MonthlyReport }) {
     <div>
       <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
         <Award className="h-4 w-4 text-[var(--ep-yellow)]" />
-        Intizom ko'rsatkichlari
+        {t("intizomKorsatkichlari")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="bg-amber-50 rounded-lg p-3 text-center">
-          <p className="text-xs font-semibold text-[var(--ep-yellow)] uppercase tracking-wider">Ogohlantirishlar</p>
+          <p className="text-xs font-semibold text-[var(--ep-yellow)] uppercase tracking-wider">{t("ogohlantirishlar")}</p>
           <p className="text-2xl font-bold text-amber-800 mt-1">{discipline.warnings}</p>
         </div>
         <div className="bg-red-50 rounded-lg p-3 text-center">
-          <p className="text-xs font-semibold text-[var(--ep-red)] uppercase tracking-wider">Jarimalar</p>
+          <p className="text-xs font-semibold text-[var(--ep-red)] uppercase tracking-wider">{t("jarimalar")}</p>
           <p className="text-2xl font-bold text-red-800 mt-1">{discipline.penalties}</p>
         </div>
         <div className="bg-green-50 rounded-lg p-3 text-center">
-          <p className="text-xs font-semibold text-[var(--ep-green)] uppercase tracking-wider">Mukofotlar</p>
+          <p className="text-xs font-semibold text-[var(--ep-green)] uppercase tracking-wider">{t("mukofotlar")}</p>
           <p className="text-2xl font-bold text-green-800 mt-1">{discipline.rewards}</p>
         </div>
       </div>
@@ -141,23 +143,23 @@ export function FinanceSection({ report }: { report: MonthlyReport }) {
     <div>
       <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
         <DollarSign className="h-4 w-4 text-[var(--ep-green)]" />
-        Moliyaviy holat
+        {t("moliyaviyHolat")}
       </h3>
       <div className="ep-table-scroll"><Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Ko'rsatkich</TableHead>
-            <TableHead className="text-right">Summa</TableHead>
+            <TableHead>{t("korsatkich")}</TableHead>
+            <TableHead className="text-right">{t("summa")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell className="text-sm">Asosiy maosh</TableCell>
+            <TableCell className="text-sm">{t("asosiyMaosh1")}</TableCell>
             <TableCell className="text-right font-medium">{finance.baseSalary.toLocaleString()} so'm</TableCell>
           </TableRow>
           {finance.totalBonus > 0 && (
             <TableRow>
-              <TableCell className="text-sm text-[var(--ep-green)]">+ Mukofot</TableCell>
+              <TableCell className="text-sm text-[var(--ep-green)]">{t("mukofot1")}</TableCell>
               <TableCell className="text-right font-medium text-[var(--ep-green)]">+{finance.totalBonus.toLocaleString()} so'm</TableCell>
             </TableRow>
           )}
@@ -195,7 +197,7 @@ export function InventorySection({ report }: { report: MonthlyReport }) {
         Korporativ inventar (faol)
       </h3>
       {report.inventory.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">Faol inventar yo'q</p>
+        <p className="text-sm text-muted-foreground text-center py-4">{t("faolInventarYoq")}</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {(Array.isArray(report.inventory) ? report.inventory : []).map((item) => (

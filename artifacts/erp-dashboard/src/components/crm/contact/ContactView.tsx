@@ -28,7 +28,7 @@ export function ContactView({contact }: ContactViewProps) {
         <div className="flex items-start gap-3">
           <User className="h-5 w-5 text-muted-foreground mt-0.5" />
           <div className="flex-1">
-            <div className="text-sm text-muted-foreground">To'liq ism</div>
+            <div className="text-sm text-muted-foreground">{t("toliqIsm")}</div>
             <div className="font-medium" data-testid="text-view-fullname">
               {getFullName()}
             </div>
@@ -39,7 +39,7 @@ export function ContactView({contact }: ContactViewProps) {
           <div className="flex items-start gap-3">
             <Briefcase className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
-              <div className="text-sm text-muted-foreground">Lavozim</div>
+              <div className="text-sm text-muted-foreground">{t("lavozim1")}</div>
               <div className="font-medium" data-testid="text-view-post">
                 {contact.post}
               </div>
@@ -51,7 +51,7 @@ export function ContactView({contact }: ContactViewProps) {
           <div className="flex items-start gap-3">
             <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
-              <div className="text-sm text-muted-foreground">Kompaniya</div>
+              <div className="text-sm text-muted-foreground">{t("company")}</div>
               <div className="font-medium" data-testid="text-view-company">
                 {contact.companyTitle}
               </div>
@@ -63,7 +63,7 @@ export function ContactView({contact }: ContactViewProps) {
           <div className="flex items-start gap-3">
             <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
-              <div className="text-sm text-muted-foreground">Telefonlar</div>
+              <div className="text-sm text-muted-foreground">{t("telefonlar")}</div>
               <div className="space-y-1">
                 {(Array.isArray(contact.phones) ? contact.phones : []).map((phone, idx) => (
                   <div key={idx} className="font-medium" data-testid={`text-view-phone-${idx}`}>
@@ -95,7 +95,7 @@ export function ContactView({contact }: ContactViewProps) {
           <div className="flex items-start gap-3">
             <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
-              <div className="text-sm text-muted-foreground">Tug'ilgan sana</div>
+              <div className="text-sm text-muted-foreground">{t("tugilganSana")}</div>
               <div className="font-medium" data-testid="text-view-birthdate">
                 {new Date(contact.birthdate).toLocaleDateString("uz-UZ")}
               </div>
@@ -108,7 +108,7 @@ export function ContactView({contact }: ContactViewProps) {
         <>
           <Separator />
           <div>
-            <div className="text-sm text-muted-foreground mb-2">Izohlar</div>
+            <div className="text-sm text-muted-foreground mb-2">{t("notes")}</div>
             <div className="text-sm" data-testid="text-view-comments">
               {contact.comments}
             </div>
@@ -120,13 +120,13 @@ export function ContactView({contact }: ContactViewProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div>
-          <div className="text-muted-foreground">Yaratilgan</div>
+          <div className="text-muted-foreground">{t("Yaratilgan")}</div>
           <div data-testid="text-view-created">
             {contact?.dateCreate ? new Date(contact.dateCreate).toLocaleDateString("uz-UZ") : "—"}
           </div>
         </div>
         <div>
-          <div className="text-muted-foreground">O'zgartirilgan</div>
+          <div className="text-muted-foreground">{t("ozgartirilgan")}</div>
           <div data-testid="text-view-modified">
             {contact?.dateModify ? new Date(contact.dateModify).toLocaleDateString("uz-UZ") : "—"}
           </div>

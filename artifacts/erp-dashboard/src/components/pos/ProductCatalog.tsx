@@ -53,7 +53,7 @@ export function ProductCatalog({
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
               onKeyDown={handleBarcodeScan}
-              placeholder="Shtrix-kodni skanerlang yoki kiriting..."
+              placeholder={t("shtrixKodniSkanerlangYokiKiriting")}
               className="pl-9"
               autoFocus
               data-testid="input-barcode-scanner"
@@ -74,7 +74,7 @@ export function ProductCatalog({
             <Input
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
-              placeholder="Mahsulot qidirish..."
+              placeholder={t("mahsulotQidirish")}
               className="mb-2"
               data-testid="input-product-search"
             />

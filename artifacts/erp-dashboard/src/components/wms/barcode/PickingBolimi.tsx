@@ -13,8 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ClipboardCheck, CheckCircle2 } from "lucide-react";
 import { PickingTask } from "./types";
 import { statusRangi, statusNomi } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 export function PickingBolimi() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data: topshiriqlar, isLoading } = useQuery<PickingTask[]>({
@@ -43,12 +45,12 @@ export function PickingBolimi() {
       <CardHeader className="p-3 pb-1">
         <CardTitle className="text-sm flex items-center gap-2">
           <ClipboardCheck className="h-4 w-4" />
-          Picking topshiriqlari
+          {t("pickingTopshiriqlari")}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {!topshiriqlar || topshiriqlar.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Topshiriqlar yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("topshiriqlarYoq")}</p>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(topshiriqlar) ? topshiriqlar : []).map((item: PickingTask) => (
@@ -73,7 +75,7 @@ export function PickingBolimi() {
                     disabled={pickMutation.isPending}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Yakunlash
+                    {t("finishBtn")}
                   </Button>
                 )}
               </div>

@@ -22,10 +22,10 @@ export class PosInventoryPassportService {
   async createPassport(dto: CreatePassportDto, userId: number): Promise<Result<PassportRow, AppError>> {
     return safeCall(async () => {
       const r = await this.repo.create(dto);
-      if (!r.ok) throw new Error(r.error);
+      if (!r.ok) throw new Error(r.error.message);
       await this.audit.log({
         userId, action: 'pos.passport.created', entityType: 'pos_inventory_passport',
-        entityId: r.data.id, newValue: dto,
+        entityId: r.data.id, newValue: dto as unknown as Record<string, unknown>,
       });
       return r.data;
     });
@@ -34,7 +34,7 @@ export class PosInventoryPassportService {
   async getPassport(movementId: number): Promise<Result<PassportRow | null, AppError>> {
     return safeCall(async () => {
       const r = await this.repo.findByMovement(movementId);
-      if (!r.ok) throw new Error(r.error);
+      if (!r.ok) throw new Error(r.error.message);
       return r.data;
     });
   }
@@ -42,7 +42,7 @@ export class PosInventoryPassportService {
   async listPassports(opts: { fromDate?: string; toDate?: string; qcResult?: string; limit?: number; offset?: number }): Promise<Result<{ rows: PassportRow[]; total: number }, AppError>> {
     return safeCall(async () => {
       const r = await this.repo.findAll(opts);
-      if (!r.ok) throw new Error(r.error);
+      if (!r.ok) throw new Error(r.error.message);
       return r.data;
     });
   }
@@ -50,7 +50,7 @@ export class PosInventoryPassportService {
   async recordQcDecision(movementId: number, qcResult: 'QABUL' | 'REWORK' | 'CHIQARISH', qcNote: string | undefined, userId: number): Promise<Result<PassportRow, AppError>> {
     return safeCall(async () => {
       const r = await this.repo.updateQcResult(movementId, qcResult, qcNote);
-      if (!r.ok) throw new Error(r.error);
+      if (!r.ok) throw new Error(r.error.message);
       if (qcResult === 'REWORK' || qcResult === 'CHIQARISH') {
         await this.telegram.sendAlert({ title: `QC: ${qcResult}`, body: `Harakat #${movementId} — ${qcResult}. ${qcNote ?? ''}`, severity: 'warning' }).catch(() => null);
       }
@@ -65,7 +65,7 @@ export class PosInventoryPassportService {
   async getQuarantineList(): Promise<Result<PassportRow[], AppError>> {
     return safeCall(async () => {
       const r = await this.repo.getQuarantineList();
-      if (!r.ok) throw new Error(r.error);
+      if (!r.ok) throw new Error(r.error.message);
       return r.data;
     });
   }
@@ -78,7 +78,7 @@ export class PosInventoryPassportService {
       await this.telegram.sendAlert({
         title: 'Karantin muddati tugadi',
         body: `Harakat #${p.movementId} uchun inventar pasporti 48 soatdan ko'p karantinda`,
-        severity: 'urgent',
+        severity: 'critical',
       }).catch(() => null);
     }
   }

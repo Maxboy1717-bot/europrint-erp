@@ -68,14 +68,14 @@ export default function HRDashboardMockup() {
         <KpiCardMockup
           icon={<Users className="h-5 w-5" />}
           iconColor="orange"
-          label="Jami xodimlar"
+          label={t("jamiXodimlar1")}
           value={stats.totalEmployees ?? 0}
           link="Ko'rish"
         />
         <KpiCardMockup
           icon={<UserCheck className="h-5 w-5" />}
           iconColor="green"
-          label="Faol xodimlar"
+          label={t("faolXodimlar1")}
           value={stats.activeEmployees ?? 0}
           link="Ro'yxat"
         />
@@ -89,35 +89,35 @@ export default function HRDashboardMockup() {
         <KpiCardMockup
           icon={<UserX className="h-5 w-5" />}
           iconColor="red"
-          label="Bugun yo'q"
+          label={t("bugunYoq")}
           value={stats.todaysAbsences ?? 0}
           link="Davomat"
         />
         <KpiCardMockup
           icon={<Briefcase className="h-5 w-5" />}
           iconColor="purple"
-          label="Vakant lavozim"
+          label={t("vakantLavozim")}
           value={stats.openVacancies ?? 0}
           link="Recruiting"
         />
         <KpiCardMockup
           icon={<TrendingUp className="h-5 w-5" />}
           iconColor="pink"
-          label="Attrition"
+          label={t("attrition")}
           value={`${stats.attritionRate ?? 0}%`}
           link="Tahlil"
         />
         <KpiCardMockup
           icon={<Calendar className="h-5 w-5" />}
           iconColor="dark"
-          label="Ta'til kutilmoqda"
+          label={t("tatilKutilmoqda")}
           value={stats.pendingLeaves ?? 0}
           link="Approve"
         />
         <KpiCardMockup
           icon={<CheckCircle2 className="h-5 w-5" />}
           iconColor="green"
-          label="Bugun smenada"
+          label={t("bugunSmenada")}
           value={(stats.activeEmployees ?? 0) - (stats.todaysAbsences ?? 0)}
           link="Smena"
         />
@@ -128,24 +128,24 @@ export default function HRDashboardMockup() {
         {/* Recent Hires (2 columns) */}
         <div className="ep-card lg:col-span-2">
           <div className="ep-card-header">
-            <h6>Yangi xodimlar</h6>
+            <h6>{t("yangiXodimlar")}</h6>
             <button className="text-xs text-[hsl(var(--primary))] hover:underline">
-              Hammasini ko'rish →
+              {t("hammasiniKorish")}
             </button>
           </div>
           <div className="ep-card-body">
             {recentHires.length === 0 ? (
               <div className="text-center py-8 text-sm text-muted-foreground">
-                Yangi xodimlar yo'q
+                {t("yangiXodimlarYoq")}
               </div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-xs uppercase text-muted-foreground border-b">
-                    <th className="text-left py-2 px-3">Xodim</th>
-                    <th className="text-left py-2 px-3">Lavozim</th>
-                    <th className="text-left py-2 px-3">Sana</th>
-                    <th className="text-right py-2 px-3">Holat</th>
+                    <th className="text-left py-2 px-3">{t("xodim1")}</th>
+                    <th className="text-left py-2 px-3">{t("lavozim1")}</th>
+                    <th className="text-left py-2 px-3">{t("date")}</th>
+                    <th className="text-right py-2 px-3">{t("status28")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -166,7 +166,7 @@ export default function HRDashboardMockup() {
                         <td className="py-3 px-3 text-muted-foreground">{h.positionName ?? '—'}</td>
                         <td className="py-3 px-3 text-muted-foreground">{h.hireDate ?? '—'}</td>
                         <td className="py-3 px-3 text-right">
-                          <StatusPill variant="success">Faol</StatusPill>
+                          <StatusPill variant="success">{t("active")}</StatusPill>
                         </td>
                       </tr>
                     );
@@ -180,13 +180,13 @@ export default function HRDashboardMockup() {
         {/* Birthdays (1 column) */}
         <div className="ep-card">
           <div className="ep-card-header">
-            <h6>🎂 Tug'ilgan kunlar</h6>
+            <h6>{t("tugilganKunlar2")}</h6>
             <span className="text-xs text-muted-foreground">{birthdays.length} ta</span>
           </div>
           <div className="ep-card-body">
             {birthdays.length === 0 ? (
               <div className="text-center py-6 text-sm text-muted-foreground">
-                Bugun tug'ilgan kun yo'q
+                {t("bugunTugilganKunYoq")}
               </div>
             ) : (
               <div className="space-y-2">
@@ -204,7 +204,7 @@ export default function HRDashboardMockup() {
                         <div className="text-xs text-muted-foreground truncate">{b.department_name ?? '—'}</div>
                       </div>
                       <button className="text-xs px-2 py-1 border border-[hsl(var(--border))] rounded hover:bg-[hsl(var(--primary))] hover:text-white hover:border-[hsl(var(--primary))]">
-                        Tabriklash
+                        {t("tabriklash")}
                       </button>
                     </div>
                   );
@@ -219,18 +219,18 @@ export default function HRDashboardMockup() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <div className="card-dark-grad">
           <div className="text-3xl font-bold">{stats.activeEmployees ?? 0}</div>
-          <div className="text-xs opacity-80 mt-1">Aktiv xodimlar</div>
-          <div className="text-xs mt-3 opacity-90">EuroPrint jamoasi</div>
+          <div className="text-xs opacity-80 mt-1">{t("aktivXodimlar1")}</div>
+          <div className="text-xs mt-3 opacity-90">{t("europrintJamoasi")}</div>
         </div>
         <div className="card-yellow">
           <div className="text-3xl font-bold">{stats.newHires30d ?? 0}</div>
           <div className="text-xs opacity-80 mt-1">Yangi qo'shildi (30 kun)</div>
-          <div className="text-xs mt-3">Onboarding davom etmoqda</div>
+          <div className="text-xs mt-3">{t("onboardingDavomEtmoqda")}</div>
         </div>
         <div className="card-teal">
           <div className="text-3xl font-bold">{stats.openVacancies ?? 0}</div>
-          <div className="text-xs opacity-80 mt-1">Vakant lavozim</div>
-          <div className="text-xs mt-3 opacity-90">Recruiting funnel'ni ko'ring</div>
+          <div className="text-xs opacity-80 mt-1">{t("vakantLavozim")}</div>
+          <div className="text-xs mt-3 opacity-90">{t("recruitingFunnelniKoring")}</div>
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   Plus, MessageSquare, Send, Target, Bot, Paperclip, File, X, MoreVertical,
 } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from '@/lib/i18n';
 import {
   type ChatMessageWithUser,
   type Employee,
@@ -47,6 +48,7 @@ export function ChatPanel({
   employees = [],
   t,
 }: ChatPanelProps) {
+  const { t } = useTranslation("common");
   const [mentionQuery, setMentionQuery]   = useState<string | null>(null);
   const [mentionOpen,  setMentionOpen]    = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -161,7 +163,7 @@ export function ChatPanel({
                               <DropdownMenuContent>
                                 <DropdownMenuItem onClick={() => onCreateTaskFromMessage(msg)}>
                                   <Plus className="h-4 w-4 mr-2" />
-                                  Vazifa yaratish
+                                  {t("vazifaYaratish")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -207,7 +209,7 @@ export function ChatPanel({
           })()}
 
           {chatMessages.length === 0 && (
-            <p className="text-center text-muted-foreground text-sm py-4">Xabarlar yo'q</p>
+            <p className="text-center text-muted-foreground text-sm py-4">{t("xabarlarYoq")}</p>
           )}
         </div>
       </ScrollArea>

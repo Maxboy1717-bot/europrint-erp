@@ -15,6 +15,7 @@ import { MoveRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { NodeDetail } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface MoveDialogProps {
   node: NodeDetail;
@@ -26,6 +27,7 @@ interface MoveDialogProps {
 export function MoveDialog({
   node, open, onClose, onSuccess,
 }: MoveDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [newParentId, setNewParentId] = useState(node.parentId ? String(node.parentId) : "");
 
@@ -55,20 +57,20 @@ export function MoveDialog({
             Bu bo'limni boshqa ota-nodega o'tkazing. Hozirgi ota: #{node.parentId ?? "—"}
           </p>
           <div>
-            <Label>Yangi ota node ID</Label>
+            <Label>{t("yangiOtaNodeId")}</Label>
             <Input
               type="number"
               value={newParentId}
               onChange={(e) => setNewParentId(e.target.value)}
-              placeholder="Bo'sh qoldirsa — ildiz darajaga"
+              placeholder={t("boshQoldirsaIldizDarajaga")}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Ildiz darajaga ko'chirish uchun bo'sh qoldiring
+              {t("ildizDarajagaKochirishUchunBosh")}
             </p>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => mutation.mutate()}

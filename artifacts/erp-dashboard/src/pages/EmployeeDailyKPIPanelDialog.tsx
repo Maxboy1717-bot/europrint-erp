@@ -24,6 +24,7 @@ import { Plus } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import type { InsertEmployeeDailyKpi } from "@shared/schema";
 import { getScoreColor, getScoreBg } from "./EmployeeDailyKPIPanelTypes";
+import { useTranslation } from '@/lib/i18n';
 
 const SCORE_SLIDERS = [
   { name: "attendanceScore" as const, label: "Davomad (Attendance)", testId: "slider-attendance" },
@@ -63,6 +64,7 @@ export function KpiEvaluationDialog({
   isPending,
   onSubmit,
 }: KpiEvaluationDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -86,12 +88,12 @@ export function KpiEvaluationDialog({
           }
         >
           <Plus className="h-4 w-4 mr-2" />
-          Baholash qo'shish
+          {t("baholashQoshish1")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi KPI Baholash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiKpiBaholash")}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -101,11 +103,11 @@ export function KpiEvaluationDialog({
                 name="userId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Xodim</FormLabel>
+                    <FormLabel>{t("xodim1")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger data-testid="select-employee" className="h-9">
-                          <SelectValue placeholder="Xodim tanlang" />
+                          <SelectValue placeholder={t("xodimTanlang")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -124,7 +126,7 @@ export function KpiEvaluationDialog({
                 name="evaluationDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sana</FormLabel>
+                    <FormLabel>{t("date")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} data-testid="input-form-date" />
                     </FormControl>
@@ -169,7 +171,7 @@ export function KpiEvaluationDialog({
                 name="bonusPercent"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bonus %</FormLabel>
+                    <FormLabel>{t("bonus1")}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -188,7 +190,7 @@ export function KpiEvaluationDialog({
                 name="penaltyPercent"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Jarima %</FormLabel>
+                    <FormLabel>{t("jarima1")}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -209,12 +211,12 @@ export function KpiEvaluationDialog({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Izohlar</FormLabel>
+                  <FormLabel>{t("notes")}</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       value={field.value || ""}
-                      placeholder="Qo'shimcha izohlar..."
+                      placeholder={t("qoshimchaIzohlar")}
                       rows={3}
                       data-testid="textarea-notes"
                     />
@@ -226,7 +228,7 @@ export function KpiEvaluationDialog({
             <Card className={getScoreBg(overallPreview)}>
               <CardContent className="py-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Umumiy ball</span>
+                  <span className="text-sm font-medium">{t("umumiyBall")}</span>
                   <span
                     className={`text-lg font-bold ${getScoreColor(overallPreview)}`}
                     data-testid="text-overall-preview"
@@ -255,7 +257,7 @@ export function KpiEvaluationDialog({
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel"
               >
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isPending} data-testid="button-submit-evaluation">
                 {isPending ? "Saqlanmoqda..." : "Saqlash"}

@@ -33,8 +33,10 @@ import {
   LeadFormDialog,
 } from "./MarketingLeadsDialogs";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function MarketingLeads() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // ── Dialog / panel state ────────────────────────────────────────────────────
@@ -200,8 +202,8 @@ export default function MarketingLeads() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Liderlar Boshqaruvi</b></>}
-        title="Liderlar Boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("liderlarBoshqaruvi")}</b></>}
+        title={t("liderlarBoshqaruvi")}
       />
         <div className="flex items-center gap-2 flex-wrap">
           <Button
@@ -211,7 +213,7 @@ export default function MarketingLeads() {
             data-testid="button-open-funnel"
             className="gap-1.5"
           >
-            <BarChart2 className="h-4 w-4" /> Funnel
+            <BarChart2 className="h-4 w-4" /> {t("funnel")}
           </Button>
           <Button
             variant="outline"
@@ -221,7 +223,7 @@ export default function MarketingLeads() {
             data-testid="button-recalc-scores"
             className="gap-1.5"
           >
-            <RefreshCw className="h-4 w-4" /> Ballarni yangilash
+            <RefreshCw className="h-4 w-4" /> {t("ballarniYangilash")}
           </Button>
           <LeadFormDialog
             open={open}

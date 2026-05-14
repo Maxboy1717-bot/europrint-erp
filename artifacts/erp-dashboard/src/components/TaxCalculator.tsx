@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 /**
  * @module TaxCalculator
  * @description React UI component.
@@ -18,6 +19,7 @@ function fmt(n: number) {
 }
 
 export function TaxCalculator({ grossSalary, className }: TaxCalculatorProps) {
+  const { t } = useTranslation("common");
   const incomeTax = Math.round(grossSalary * INCOME_TAX);
   const pension = Math.round(grossSalary * PENSION);
   const employerPension = Math.round(grossSalary * EMPLOYER_PENSION);
@@ -30,10 +32,10 @@ export function TaxCalculator({ grossSalary, className }: TaxCalculatorProps) {
   return (
     <div className={`rounded-lg border bg-muted/30 p-3 space-y-1.5 text-sm ${className ?? ""}`}>
       <div className="font-medium text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-        Soliq hisob-kitobi
+        {t("soliqHisobKitobi")}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-        <span className="text-muted-foreground">Yalpi maosh:</span>
+        <span className="text-muted-foreground">{t("yalpiMaosh")}</span>
         <span className="font-medium text-right">{fmt(grossSalary)}</span>
 
         <span className="text-muted-foreground">Daromad solig'i (12%):</span>
@@ -44,7 +46,7 @@ export function TaxCalculator({ grossSalary, className }: TaxCalculatorProps) {
 
         <div className="col-span-2 border-t my-1" />
 
-        <span className="font-semibold">Sof maosh:</span>
+        <span className="font-semibold">{t("sofMaosh")}</span>
         <span className="font-bold text-[var(--ep-green)] text-right">{fmt(net)}</span>
 
         <div className="col-span-2 border-t my-1" />
@@ -55,7 +57,7 @@ export function TaxCalculator({ grossSalary, className }: TaxCalculatorProps) {
         <span className="text-xs text-muted-foreground">INPS (5%):</span>
         <span className="text-xs text-right text-[var(--ep-primary)]">{fmt(inps)}</span>
 
-        <span className="text-xs text-muted-foreground">Jami ish beruvchi xarajati:</span>
+        <span className="text-xs text-muted-foreground">{t("jamiIshBeruvchiXarajati")}</span>
         <span className="text-xs font-medium text-right">{fmt(totalEmployerCost)}</span>
       </div>
     </div>

@@ -28,8 +28,10 @@ const VendorQualitySchema = z.object({
 type VendorQualityData = z.infer<typeof VendorQualitySchema>;
 import { format } from "date-fns";
 import { QCVendor } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function VendorSection() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showVendorDialog, setShowVendorDialog] = useState(false);
   const [searchQ, setSearchQ] = useState("");
@@ -52,11 +54,11 @@ export function VendorSection() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Yetkazuvchi Sifat Reytingi</h2>
-          <p className="text-sm text-muted-foreground">Materiallar sifati bo'yicha yetkazuvchilar baholash</p>
+          <h2 className="text-lg font-semibold">{t("yetkazuvchiSifatReytingi")}</h2>
+          <p className="text-sm text-muted-foreground">{t("materiallarSifatiBoyichaYetkazuvchilarBaholash")}</p>
         </div>
         <Button onClick={() => setShowVendorDialog(true)} data-testid="button-add-vendor">
-          <Plus className="h-4 w-4 mr-2" />Baholash Qo'shish
+          <Plus className="h-4 w-4 mr-2" />{t("baholashQoshish")}
         </Button>
       </div>
 
@@ -86,7 +88,7 @@ export function VendorSection() {
           <div className="flex items-center gap-2">
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Yetkazuvchi qidirish..." className="pl-8" value={searchQ} onChange={e => setSearchQ(e.target.value)} data-testid="input-vendor-search" />
+              <Input placeholder={t("yetkazuvchiQidirish")} className="pl-8" value={searchQ} onChange={e => setSearchQ(e.target.value)} data-testid="input-vendor-search" />
             </div>
           </div>
         </CardHeader>
@@ -94,18 +96,18 @@ export function VendorSection() {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Yetkazuvchi</TableHead>
-                <TableHead>Material turi</TableHead>
-                <TableHead>Sifat bali</TableHead>
-                <TableHead>Holati</TableHead>
-                <TableHead>Sana</TableHead>
+                <TableHead>{t("yetkazuvchi")}</TableHead>
+                <TableHead>{t("materialTuri")}</TableHead>
+                <TableHead>{t("sifatBali")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vLoad ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : (Array.isArray(vendorList) ? vendorList : []).filter((v: QCVendor) => !searchQ || v.supplierName?.toLowerCase().includes(searchQ.toLowerCase())).length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Yetkazuvchi ma'lumotlari topilmadi</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("yetkazuvchiMalumotlariTopilmadi")}</TableCell></TableRow>
               ) : (Array.isArray(vendorList) ? vendorList : []).filter((v: QCVendor) => !searchQ || v.supplierName?.toLowerCase().includes(searchQ.toLowerCase())).map((v: QCVendor) => (
                 <TableRow key={v.id} data-testid={`row-vendor-${v.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{v.supplierName}</TableCell>
@@ -131,17 +133,17 @@ export function VendorSection() {
 
       <Dialog open={showVendorDialog} onOpenChange={setShowVendorDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yetkazuvchi Sifatini Baholash</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yetkazuvchiSifatiniBaholash")}</DialogTitle></DialogHeader>
           <form onSubmit={vendorForm.handleSubmit(d => createVendor.mutate(d))} className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Yetkazuvchi nomi</Label>
-              <Input {...vendorForm.register("supplierName")} placeholder="EuroPrint Paper..." data-testid="input-vendor-name" />
+              <Label>{t("yetkazuvchiNomi")}</Label>
+              <Input {...vendorForm.register("supplierName")} placeholder={t("europrintPaper")} data-testid="input-vendor-name" />
               {vendorForm.formState.errors.supplierName && <p className="text-xs text-destructive">{vendorForm.formState.errors.supplierName.message}</p>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Material turi</Label>
-                <Input {...vendorForm.register("materialType")} placeholder="Kraft, Testliner..." data-testid="input-vendor-material" />
+                <Label>{t("materialTuri")}</Label>
+                <Input {...vendorForm.register("materialType")} placeholder={t("kraftTestliner")} data-testid="input-vendor-material" />
                 {vendorForm.formState.errors.materialType && <p className="text-xs text-destructive">{vendorForm.formState.errors.materialType.message}</p>}
               </div>
               <div className="space-y-1.5">
@@ -151,7 +153,7 @@ export function VendorSection() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowVendorDialog(false)}>Bekor</Button>
+              <Button type="button" variant="outline" onClick={() => setShowVendorDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createVendor.isPending} data-testid="button-save-vendor">
                 {createVendor.isPending ? "Saqlanmoqda..." : "Saqlash"}
               </Button>

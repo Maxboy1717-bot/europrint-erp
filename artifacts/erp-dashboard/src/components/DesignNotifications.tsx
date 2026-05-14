@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface DesignOrderNotification {
   id: number;
@@ -29,6 +30,7 @@ interface DesignOrderNotification {
 }
 
 export function DesignNotifications() {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
 
   const { data: notifications = [] } = useQuery<DesignOrderNotification[]>({
@@ -84,10 +86,10 @@ export function DesignNotifications() {
       </PopoverTrigger>
       <PopoverContent className="w-80 max-h-96 overflow-y-auto" align="end" data-testid="popover-notifications">
         <div className="space-y-2">
-          <h4 className="font-semibold text-sm">Bildirishnomalar</h4>
+          <h4 className="font-semibold text-sm">{t("notifications")}</h4>
           {notifications.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Bildirishnomalar yo'q
+              {t("bildirishnomalarYoq")}
             </p>
           ) : (
             <div className="space-y-2">

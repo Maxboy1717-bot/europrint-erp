@@ -15,6 +15,7 @@ import {
 import { Clock, Check, Calendar, X } from "lucide-react";
 import { format } from "date-fns";
 import type { UseMutationResult } from "@tanstack/react-query";
+import { useTranslation } from '@/lib/i18n';
 import {
   type Activity,
   priorityColors,
@@ -37,6 +38,7 @@ export function PendingActivitiesSection({
   cancelActivityMutation,
   t,
 }: PendingActivitiesSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -104,17 +106,17 @@ export function PendingActivitiesSection({
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Bekor qilishni tasdiqlang</AlertDialogTitle>
+                                <AlertDialogTitle>{t("bekorQilishniTasdiqlang")}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Faoliyat bekor qilinadi va qayta tiklanmaydi.
+                                  {t("faoliyatBekorQilinadiVaQayta")}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Yopish</AlertDialogCancel>
+                                <AlertDialogCancel>{t("close2")}</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => cancelActivityMutation.mutate(activity.id)}
                                 >
-                                  Bekor qilish
+                                  {t("cancel")}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

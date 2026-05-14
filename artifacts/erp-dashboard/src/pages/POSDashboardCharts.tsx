@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from '@/lib/i18n';
 import {
   formatUZS,
   type DailyData,
@@ -25,6 +26,7 @@ import {
 // ---------------------------------------------------------------------------
 
 export function buildMonthlyChartData(rows: MonthlySummaryRow[] | undefined) {
+  const { t } = useTranslation("common");
   return (Array.isArray(rows) ? rows : []).map(row => ({
     day: new Date(row.day).toLocaleDateString("uz-UZ", {
       month: "short",
@@ -92,7 +94,7 @@ export function PaymentChartCard({ rows }: PaymentChartCardProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">To'lov usullari bo'yicha</CardTitle>
+        <CardTitle className="text-base">{t("tolovUsullariBoyicha")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={200}>
@@ -128,17 +130,17 @@ export function DailySalesTable({ daily }: DailySalesTableProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Bugungi sotuvlar ro'yxati</CardTitle>
+        <CardTitle className="text-base">{t("bugungiSotuvlarRoyxati")}</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Raqam</TableHead>
-              <TableHead>Kassir</TableHead>
-              <TableHead>Mijoz</TableHead>
-              <TableHead>To'lov</TableHead>
-              <TableHead className="text-right">Jami</TableHead>
+              <TableHead>{t("raqam")}</TableHead>
+              <TableHead>{t("kassir")}</TableHead>
+              <TableHead>{t("mijoz1")}</TableHead>
+              <TableHead>{t("tolov1")}</TableHead>
+              <TableHead className="text-right">{t("total")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -148,7 +150,7 @@ export function DailySalesTable({ daily }: DailySalesTableProps) {
                   colSpan={5}
                   className="text-center text-gray-400 py-8"
                 >
-                  Bugun sotuv yo'q
+                  {t("bugunSotuvYoq")}
                 </TableCell>
               </TableRow>
             ) : (

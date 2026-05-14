@@ -55,9 +55,9 @@ export function TenantsSection({tenants,
   return (
     <TabsContent value="tenants" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Barcha Tenantlar</h2>
+        <h2 className="text-lg font-semibold">{t("barchaTenantlar")}</h2>
         <Button onClick={() => setShowAddDialog(true)} data-testid="button-add-tenant">
-          <Plus className="h-4 w-4 mr-2" />Yangi Tenant
+          <Plus className="h-4 w-4 mr-2" />{t("yangiTenant")}
         </Button>
       </div>
 
@@ -78,17 +78,17 @@ export function TenantsSection({tenants,
       <Card>
         <CardContent className="p-0">
           {tenantsLoading ? (
-            <div className="p-8 text-center text-muted-foreground animate-pulse">Yuklanmoqda...</div>
+            <div className="p-8 text-center text-muted-foreground animate-pulse">{t("Yuklanmoqda...")}</div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tenant</TableHead>
-                  <TableHead>Domen</TableHead>
-                  <TableHead>Tarif</TableHead>
-                  <TableHead>Foydalanuvchilar</TableHead>
-                  <TableHead>Muddat</TableHead>
-                  <TableHead>Holati</TableHead>
+                  <TableHead>{t("tenant")}</TableHead>
+                  <TableHead>{t("domen1")}</TableHead>
+                  <TableHead>{t("tarif1")}</TableHead>
+                  <TableHead>{t("foydalanuvchilar")}</TableHead>
+                  <TableHead>{t("muddat")}</TableHead>
+                  <TableHead>{t("holati")}</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
@@ -116,12 +116,12 @@ export function TenantsSection({tenants,
                       <div className="flex items-center gap-1">
                         {t.status === "active" && (
                           <Button variant="ghost" size="sm" onClick={() => onSuspend(String(t.id))} data-testid={`button-suspend-${t.id}`}>
-                            Bloklash
+                            {t("bloklash")}
                           </Button>
                         )}
                         {t.status === "suspended" && (
                           <Button variant="ghost" size="sm" onClick={() => onActivate(String(t.id))} data-testid={`button-activate-${t.id}`}>
-                            Faollashtirish
+                            {t("faollashtirish")}
                           </Button>
                         )}
                         <Button variant="ghost" size="sm" data-testid={`button-manage-${t.id}`}>
@@ -132,7 +132,7 @@ export function TenantsSection({tenants,
                   </TableRow>
                 ))}
                 {tenants.length === 0 && (
-                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Tenantlar yo'q</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{t("tenantlarYoq")}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table></div>
@@ -161,14 +161,14 @@ interface OnboardingSectionProps {
 export function OnboardingSection({ tenants, onTenantChange }: OnboardingSectionProps) {
   return (
     <TabsContent value="onboarding" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Yangi Zavod Onboarding</h2>
+      <h2 className="text-lg font-semibold">{t("yangiZavodOnboarding")}</h2>
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Onboarding jarayoni bosqichlari</CardTitle>
+            <CardTitle className="text-base">{t("onboardingJarayoniBosqichlari")}</CardTitle>
             <Select defaultValue={tenants[0]?.id as string | undefined} onValueChange={onTenantChange}>
               <SelectTrigger className="w-56 h-9" data-testid="select-onboard-tenant">
-                <SelectValue placeholder="Tenant tanlang" />
+                <SelectValue placeholder={t("tenantTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(tenants) ? tenants : []).map((t: SaaSTenant) => (
@@ -199,14 +199,14 @@ export function OnboardingSection({ tenants, onTenantChange }: OnboardingSection
                 <span className={`text-sm flex-1 ${s.status === "done" ? "text-muted-foreground line-through" : s.status === "current" ? "font-medium" : "text-muted-foreground"}`}>
                   {s.step}. {s.title}
                 </span>
-                {s.status === "current" && <EPStatusPill tone="neutral">Davom etmoqda</EPStatusPill>}
-                {s.status === "done" && <EPStatusPill tone="success">Bajarildi</EPStatusPill>}
+                {s.status === "current" && <EPStatusPill tone="neutral">{t("davomEtmoqda")}</EPStatusPill>}
+                {s.status === "done" && <EPStatusPill tone="success">{t("Bajarildi")}</EPStatusPill>}
               </div>
             ))}
           </div>
           <div className="mt-4 flex gap-2">
-            <Button variant="outline" size="sm" data-testid="button-onboard-next">Keyingi bosqich</Button>
-            <Button variant="outline" size="sm" data-testid="button-onboard-complete">Go-live qilish</Button>
+            <Button variant="outline" size="sm" data-testid="button-onboard-next">{t("keyingiBosqich")}</Button>
+            <Button variant="outline" size="sm" data-testid="button-onboard-complete">{t("goLiveQilish")}</Button>
           </div>
         </CardContent>
       </Card>
@@ -223,7 +223,7 @@ interface LicensingSectionProps {
 export function LicensingSection({ tenants }: LicensingSectionProps) {
   return (
     <TabsContent value="licensing" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Tarif Rejalari va Litsenziyalar</h2>
+      <h2 className="text-lg font-semibold">{t("tarifRejalariVaLitsenziyalar")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { plan: "Basic", price: "$199/oy", users: "30 nafar", modules: "5 modul (CRM, WMS, QC, HR, SD)", color: "border-muted", highlight: false },
@@ -233,7 +233,7 @@ export function LicensingSection({ tenants }: LicensingSectionProps) {
         ]).map(p => (
           <Card key={p.plan} className={`border-2 ${p.color} ${p.highlight ? "shadow-md" : ""}`}>
             <CardContent className="pt-5 pb-4">
-              {p.highlight && <Badge className="mb-2 w-full justify-center">Tavsiya etilgan</Badge>}
+              {p.highlight && <Badge className="mb-2 w-full justify-center">{t("tavsiyaEtilgan")}</Badge>}
               <div className="text-center">
                 <div className="font-bold text-lg">{p.plan}</div>
                 <div className="text-2xl font-bold text-primary mt-1">{p.price}</div>
@@ -252,15 +252,15 @@ export function LicensingSection({ tenants }: LicensingSectionProps) {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Tenant Tarif Holati</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("tenantTarifHolati")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Tenant</TableHead>
-                <TableHead>Tarif</TableHead>
-                <TableHead>Oylik to'lov</TableHead>
-                <TableHead>Muddati</TableHead>
+                <TableHead>{t("tenant")}</TableHead>
+                <TableHead>{t("tarif1")}</TableHead>
+                <TableHead>{t("oylikTolov")}</TableHead>
+                <TableHead>{t("muddati")}</TableHead>
                 <TableHead>{"Holat"}</TableHead>
               </TableRow>
             </TableHeader>

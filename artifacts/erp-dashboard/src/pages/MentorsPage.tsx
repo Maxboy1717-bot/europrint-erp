@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GraduationCap, Search, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Mentor {
   id: string | number;
   name?: string;
@@ -36,6 +37,7 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
 };
 
 export default function MentorsPage() {
+  const { t } = useTranslation("common");
   const [specialization, setSpecialization] = useState("");
 
   const { data: rawData, isLoading, isError, refetch } = useQuery<
@@ -59,14 +61,14 @@ export default function MentorsPage() {
   return (
     <ModulePage
       module="hr"
-      title="Mentorlar"
+      title={t("mentorlar")}
       icon={<GraduationCap className="h-5 w-5" />}
     >
       <div className="space-y-4">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Ixtisoslik bo'yicha qidirish..."
+            placeholder={t("ixtisoslikBoyichaQidirish")}
             value={specialization}
             onChange={e => setSpecialization(e.target.value)}
             className="pl-9"

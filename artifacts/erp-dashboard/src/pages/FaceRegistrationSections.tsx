@@ -9,6 +9,7 @@ import { User, Search, CheckCircle } from 'lucide-react';
 import type { Employee, FaceEmbedding, FaceRegTranslations } from './FaceRegistrationTypes';
 import { DeleteFaceDialog } from './FaceRegistrationDialogs';
 import { EPPageHeader, EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // PageHeader
@@ -22,11 +23,12 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ text, modelsLoaded, lang, onToggleLang }: PageHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Yuz Ro&apos;yxatdan O&apos;tkazish</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Yuz Ro&apos;yxatdan O&apos;tkazish</b></>}
         title="Yuz Ro&apos;yxatdan O&apos;tkazish"
         subtitle={text.subtitle}
       />

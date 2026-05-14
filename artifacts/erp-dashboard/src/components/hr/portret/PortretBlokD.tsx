@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ToolTestReqs } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 const TOOL_TRAITS = [
   { key: "A", label: "A — Diqqat (Внимание)",         description: "Tafsilotlarga e'tibor, ziyraklik" },
@@ -28,11 +29,12 @@ interface PortretBlokDProps {
 }
 
 export function PortretBlokD({ toolReqs, onTraitChange, onOtherChange }: PortretBlokDProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <h4 className="font-semibold text-sm text-primary">Blok D: TOOL TEST Talablari</h4>
-        <Badge variant="outline" className="text-[9px]">Material №25-42</Badge>
+        <h4 className="font-semibold text-sm text-primary">{t("blokDToolTestTalablari")}</h4>
+        <Badge variant="outline" className="text-[9px]">{t("material2542")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">

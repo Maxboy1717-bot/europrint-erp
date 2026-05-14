@@ -10,6 +10,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { KpiCard, fmtMoney, fmtDate, fmtNum } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   completed: { label: "Bajarildi", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200" },
@@ -21,7 +22,8 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
 };
 
 export function OrdersTab({ orders }: { orders: SdOrdersData }) {
-  if (!orders) return <div className="text-muted-foreground text-sm py-8 text-center">Buyurtma ma'lumotlari yo'q</div>;
+  const { t } = useTranslation("common");
+  if (!orders) return <div className="text-muted-foreground text-sm py-8 text-center">{t("buyurtmaMalumotlariYoq")}</div>;
 
   // Handle both direct arrays and wrapped objects
   const totalCount = orders.totalCount ?? (Array.isArray(orders) ? (orders as unknown[]).length : 0);
@@ -38,13 +40,13 @@ export function OrdersTab({ orders }: { orders: SdOrdersData }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={ShoppingCart} label="Jami buyurtmalar" value={String(totalCount)}
+        <KpiCard icon={ShoppingCart} label={t("jamiBuyurtmalar")} value={String(totalCount)}
           gradient="" />
-        <KpiCard icon={DollarSign} label="Jami summa" value={fmtMoney(totalAmount)}
+        <KpiCard icon={DollarSign} label={t("jamiSumma")} value={fmtMoney(totalAmount)}
           gradient="" />
-        <KpiCard icon={BarChart2} label="O'rtacha buyurtma" value={fmtMoney(avgAmount)}
+        <KpiCard icon={BarChart2} label={t("ortachaBuyurtma")} value={fmtMoney(avgAmount)}
           gradient="" />
-        <KpiCard icon={Calendar} label="Mijozlik davri" value={`${monthsAs} oy`}
+        <KpiCard icon={Calendar} label={t("mijozlikDavri")} value={`${monthsAs} oy`}
           sub={orders.firstOrderDate ? `${fmtDate(orders.firstOrderDate)} dan` : undefined}
           gradient="" />
       </div>
@@ -71,7 +73,7 @@ export function OrdersTab({ orders }: { orders: SdOrdersData }) {
       {recentOrders.length > 0 && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="text-sm font-semibold">So'nggi buyurtmalar</h3>
+            <h3 className="text-sm font-semibold">{t("songgiBuyurtmalar")}</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

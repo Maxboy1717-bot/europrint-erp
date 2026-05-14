@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type OperationFormState, type WorkCenter } from "./RoutingConfigurationTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // Barrel re-exports so callers use a single import path
 export { CreateRoutingDialog } from "./RoutingConfigurationCreateDialog";
@@ -76,6 +77,7 @@ export function AddOperationDialog({
   onSubmit,
   labels,
 }: AddOperationDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="dialog-add-operation" className="p-6">
@@ -100,7 +102,7 @@ export function AddOperationDialog({
               <Input
                 value={form.operationName}
                 onChange={(e) => onFormChange({ ...form, operationName: e.target.value })}
-                placeholder="Kesish"
+                placeholder={t("kesish")}
                 data-testid="input-operation-name"
               />
             </div>

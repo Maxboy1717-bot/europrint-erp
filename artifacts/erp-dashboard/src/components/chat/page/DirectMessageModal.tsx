@@ -16,6 +16,7 @@ import { useChatStore, ChatRoom } from "@/store/chatStore";
 import { getAuthHeaders } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Employee {
   id: number;
   fullName: string;
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export function DirectMessageModal({ open, onClose }: Props) {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState<number | null>(null);
@@ -91,7 +93,7 @@ export function DirectMessageModal({ open, onClose }: Props) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-sm p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi Direct Xabar</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiDirectXabar")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -100,7 +102,7 @@ export function DirectMessageModal({ open, onClose }: Props) {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Xodimni qidirish..."
+              placeholder={t("xodimniQidirish")}
               className="pl-8 h-9 text-sm"
               autoFocus
             />

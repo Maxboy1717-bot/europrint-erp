@@ -122,8 +122,8 @@ export default function AccountsReceivable() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="accounts-receivable-loading">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Keladigan Hisoblar</b></>}
-        title="Keladigan Hisoblar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("keladiganHisoblar")}</b></>}
+        title={t("keladiganHisoblar")}
       />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {([1, 2, 3, 4]).map((i) => <Skeleton key={`k-${i}`} className="h-32 w-full rounded-lg" />)}
@@ -137,8 +137,8 @@ export default function AccountsReceivable() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Keladigan Hisoblar</b></>}
-        title="Keladigan Hisoblar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("keladiganHisoblar")}</b></>}
+        title={t("keladiganHisoblar")}
       />
           <p className="text-muted-foreground mt-1">{t('accountsReceivable')}</p>
         </div>
@@ -157,7 +157,7 @@ export default function AccountsReceivable() {
           </Button>
           <Button variant="outline" onClick={handleExport} data-testid="button-export">
             <Download className="h-4 w-4 mr-2" />
-            Excel
+            {t("excel")}
           </Button>
         </div>
       </div>

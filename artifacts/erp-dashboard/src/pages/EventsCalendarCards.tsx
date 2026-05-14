@@ -26,6 +26,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { Calendar, MapPin, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { CalendarEvent, getEventTypeBadge } from "./EventsCalendarTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Shared prop shape used by both cards
@@ -51,16 +52,17 @@ export function UpcomingEventsCard({
   onEdit,
   onDelete,
 }: UpcomingEventsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Kelgusi tadbirlar</CardTitle>
-        <CardDescription>Rejalashtirilgan tadbirlar</CardDescription>
+        <CardTitle>{t("kelgusiTadbirlar")}</CardTitle>
+        <CardDescription>{t("rejalashtirilganTadbirlar")}</CardDescription>
       </CardHeader>
       <CardContent>
         {!upcomingEvents.length ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
-            Kelgusi tadbirlar yo'q
+            {t("kelgusiTadbirlarYoq")}
           </div>
         ) : (
           <div className="space-y-3">
@@ -107,8 +109,8 @@ export function UpcomingEventsCard({
                       <Edit className="h-4 w-4" />
                     </Button>
                     <DeleteConfirmDialog
-                      title="Tadbirni o'chirishni tasdiqlaysizmi?"
-                      description="Tadbir va unga bog'liq barcha ma'lumotlar o'chiriladi."
+                      title={t("tadbirniOchirishniTasdiqlaysizmi")}
+                      description={t("tadbirVaUngaBogliqBarcha")}
                       onConfirm={() => onDelete(event.id)}
                       isPending={isDeletePending}
                     />
@@ -142,26 +144,26 @@ export function AllEventsTableCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Barcha tadbirlar</CardTitle>
-        <CardDescription>To'liq tadbirlar ro'yxati</CardDescription>
+        <CardTitle>{t("barchaTadbirlar")}</CardTitle>
+        <CardDescription>{t("toliqTadbirlarRoyxati")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loadingEvents ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
-            Yuklanmoqda...
+            {t("Yuklanmoqda...")}
           </div>
         ) : !events.length ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
-            Hozircha tadbirlar yo'q
+            {t("hozirchaTadbirlarYoq")}
           </div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sarlavha</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>Sana</TableHead>
-                <TableHead className="text-right">Harakatlar</TableHead>
+                <TableHead>{t("progress.title")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -191,8 +193,8 @@ export function AllEventsTableCard({
                           <Edit className="h-4 w-4" />
                         </Button>
                         <DeleteConfirmDialog
-                          title="Tadbirni o'chirishni tasdiqlaysizmi?"
-                          description="Tadbir va unga bog'liq barcha ma'lumotlar o'chiriladi."
+                          title={t("tadbirniOchirishniTasdiqlaysizmi")}
+                          description={t("tadbirVaUngaBogliqBarcha")}
                           onConfirm={() => onDelete(event.id)}
                           isPending={isDeletePending}
                         />

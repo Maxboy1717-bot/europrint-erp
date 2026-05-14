@@ -10,8 +10,10 @@ import {
 } from 'lucide-react';
 import type { RoomRow, AlertRow } from './InspectionPageTypes';
 import { ROOMS } from './InspectionPageTypes';
+import { useTranslation } from '@/lib/i18n';
 
 export function ScoreBar({ value = 0, label }: { value?: number; label: string }) {
+  const { t } = useTranslation("common");
   const pct   = Math.round((value ?? 0) * 100);
   const color = pct >= 70 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500';
   return (
@@ -62,16 +64,16 @@ export function RoomCard({
           ? <AlertTriangle className="w-5 h-5 text-[var(--ep-red)] shrink-0 mt-0.5" />
           : hasData
             ? <CheckCircle2 className="w-5 h-5 text-[var(--ep-green)] shrink-0 mt-0.5" />
-            : <Badge variant="outline" className="text-xs">Ma'lumot yo'q</Badge>
+            : <Badge variant="outline" className="text-xs">{t("malumotYoq")}</Badge>
         }
       </div>
 
       {hasData ? (
         <div className="space-y-1.5">
-          <ScoreBar value={cs} label="Tozalik" />
-          <ScoreBar value={os} label="Tartib" />
+          <ScoreBar value={cs} label={t("tozalik1")} />
+          <ScoreBar value={os} label={t("tartib")} />
           <div className="flex items-center gap-1 text-xs">
-            <span className="text-gray-500">Jihozlar:</span>
+            <span className="text-gray-500">{t("jihozlar1")}</span>
             <span className={eq ? 'text-[var(--ep-green)] font-medium' : 'text-[var(--ep-red)] font-medium'}>
               {eq ? '✓ Joyida' : '✗ Muammo'}
             </span>
@@ -87,7 +89,7 @@ export function RoomCard({
           )}
         </div>
       ) : (
-        <p className="text-xs text-gray-400 italic">Hali inspeksiya o'tkazilmagan</p>
+        <p className="text-xs text-gray-400 italic">{t("haliInspeksiyaOtkazilmagan")}</p>
       )}
 
       <div className="flex gap-1.5 pt-1">
@@ -95,17 +97,17 @@ export function RoomCard({
           size="sm" variant="ghost" className="flex-1 h-7 text-xs"
           onClick={() => onDetails(room.code)}
         >
-          <ArrowLeftRight className="w-3 h-3 mr-1" />Taqqoslash
+          <ArrowLeftRight className="w-3 h-3 mr-1" />{t("taqqoslash")}
         </Button>
         {canUpload && (
           <Button size="sm" variant="ghost" className="h-7 text-xs px-2"
-                  onClick={() => onUpload(room.code)} title="Referans rasm yuklash">
+                  onClick={() => onUpload(room.code)} title={t("referansRasmYuklash")}>
             <Image className="w-3 h-3" />
           </Button>
         )}
         {canInspect && (
           <Button size="sm" variant="ghost" className="h-7 text-xs px-2"
-                  onClick={() => onInspect(room.code)} title="Qo'lda inspeksiya">
+                  onClick={() => onInspect(room.code)} title={t("qoldaInspeksiya")}>
             <ClipboardCheck className="w-3 h-3" />
           </Button>
         )}
@@ -129,7 +131,7 @@ export function AlertsTabContent({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
         <CheckCircle2 className="w-12 h-12 text-green-300" />
-        <p className="text-base font-medium text-gray-500">So'nggi 48 soatda muammo aniqlanmadi</p>
+        <p className="text-base font-medium text-gray-500">{t("songgi48SoatdaMuammoAniqlanmadi")}</p>
       </div>
     );
   }
@@ -158,9 +160,9 @@ export function AlertsTabContent({
                 <span className="text-xs text-gray-400">{r.code}</span>
               </div>
               <div className="flex gap-3 mt-1 text-xs text-gray-600">
-                <span>Tozalik: <b>{cs}%</b></span>
-                <span>Tartib: <b>{os}%</b></span>
-                <span>Jihozlar: <b>{a.equipment_ok ? '✓' : '✗'}</b></span>
+                <span>{t("tozalik")}<b>{cs}%</b></span>
+                <span>{t("tartib1")}<b>{os}%</b></span>
+                <span>{t("jihozlar1")}<b>{a.equipment_ok ? '✓' : '✗'}</b></span>
               </div>
               {(a.anomalies ?? []).length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1">
@@ -182,7 +184,7 @@ export function AlertsTabContent({
                 size="sm" variant="ghost" className="h-6 text-xs mt-1"
                 onClick={() => onDetail(a.room_code)}
               >
-                Batafsil
+                {t("Batafsil")}
               </Button>
             </div>
           </div>

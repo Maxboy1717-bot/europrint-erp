@@ -10,6 +10,7 @@ import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Le
 import { formatCurrency } from "@/lib/format";
 import { formatShortCurrency } from "./helpers";
 import { WeeklySummary } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface WeeklyRevenueChartProps {
   data: WeeklySummary | undefined;
@@ -17,12 +18,13 @@ interface WeeklyRevenueChartProps {
 }
 
 export function WeeklyRevenueChart({ data, isLoading }: WeeklyRevenueChartProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-daily-revenue-chart">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
-          Kunlik daromad va xarajatlar
+          {t("kunlikDaromadVaXarajatlar")}
         </CardTitle>
       </CardHeader>
       <CardContent>

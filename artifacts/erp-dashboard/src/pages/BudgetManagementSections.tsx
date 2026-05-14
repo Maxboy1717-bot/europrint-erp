@@ -230,7 +230,7 @@ export function BudgetListTable({
         <div className="w-full md:w-48">
           <Select value={filterYear} onValueChange={setFilterYear}>
             <SelectTrigger className="bg-background border-border text-foreground h-9" data-testid="select-filter-year">
-              <SelectValue placeholder="Yil" />
+              <SelectValue placeholder={t("yil")} />
             </SelectTrigger>
             <SelectContent className="bg-card border-none">
               <SelectItem value="all">{"Barchasi"}</SelectItem>

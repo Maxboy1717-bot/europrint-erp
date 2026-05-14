@@ -31,9 +31,9 @@ export function ProblemsTab({ alerts, alertsLoading, onRefresh, }: {
   return (
     <TabsContent value="problems" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Muammoli Nuqtalar va Ogohlantirishlar</h2>
+        <h2 className="text-lg font-semibold">{t("muammoliNuqtalarVaOgohlantirishlar")}</h2>
         <Button variant="outline" size="sm" onClick={onRefresh} data-testid="button-refresh-alerts">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
       {alertsLoading ? (
@@ -42,7 +42,7 @@ export function ProblemsTab({ alerts, alertsLoading, onRefresh, }: {
         <Card>
           <CardContent className="pt-8 pb-8 text-center">
             <CheckCircle2 className="h-10 w-10 text-[var(--ep-green)] mx-auto mb-3" />
-            <p className="text-muted-foreground">Hozircha hech qanday muammo yo'q</p>
+            <p className="text-muted-foreground">{t("hozirchaHechQandayMuammoYoq")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -61,7 +61,7 @@ export function ProblemsTab({ alerts, alertsLoading, onRefresh, }: {
                     <p className="text-sm font-medium">{a.title}</p>
                     <p className="text-xs text-muted-foreground mt-1">{a.message}</p>
                   </div>
-                  <Button variant="outline" size="sm" data-testid={`button-resolve-${i}`}>Hal qilish</Button>
+                  <Button variant="outline" size="sm" data-testid={`button-resolve-${i}`}>{t("halQilish")}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -75,7 +75,7 @@ export function ProblemsTab({ alerts, alertsLoading, onRefresh, }: {
 export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | undefined; prodLoading: boolean }) {
   return (
     <TabsContent value="production" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Ishlab Chiqarish Holati</h2>
+      <h2 className="text-lg font-semibold">{t("ishlabChiqarishHolati")}</h2>
       {prodLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{([...Array(3)]).map((_, i) => <Card key={`k-${i}`}><CardContent className="pt-4 pb-3 h-16 animate-pulse bg-muted/30 rounded" /></Card>)}</div>
       ) : (
@@ -83,12 +83,12 @@ export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | 
           {Object.entries(prodData?.orderBreakdown || {}).map(([status, cnt]: [string, number]) => (
             <StatCard key={status} icon={Package} label={status} value={cnt} color={status === "completed" ? "text-[var(--ep-green)]" : status === "production" ? "text-[var(--ep-blue)]" : "text-[var(--ep-primary)]"} />
           ))}
-          {!prodData?.orderBreakdown && <p className="text-muted-foreground col-span-4 text-center py-4">Buyurtmalar yo'q</p>}
+          {!prodData?.orderBreakdown && <p className="text-muted-foreground col-span-4 text-center py-4">{t("buyurtmalarYoq")}</p>}
         </div>
       )}
       {prodData?.oeeToday && (
         <Card>
-          <CardHeader><CardTitle className="text-base">OEE Bugun</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("oeeBugun")}</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {([
@@ -108,10 +108,10 @@ export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | 
       )}
       {(prodData?.overdueOrders?.length || 0) > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base text-[var(--ep-red)]">Kechikkan Buyurtmalar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base text-[var(--ep-red)]">{t("kechikkanBuyurtmalar1")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
-              <TableHeader><TableRow><TableHead>Papka #</TableHead><TableHead>{"Holat"}</TableHead><TableHead>Muddati</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("papka1")}</TableHead><TableHead>{"Holat"}</TableHead><TableHead>{t("muddati")}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {prodData?.overdueOrders?.map((o: ProductionOrder) => (
                   <TableRow key={o.id} data-testid={`row-overdue-${o.id}`} className="hover:bg-muted/40 transition-colors">
@@ -127,10 +127,10 @@ export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | 
       )}
       {(prodData?.sessionsToday?.length || 0) > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Bugungi Sessiyalar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("bugungiSessiyalar")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
-              <TableHeader><TableRow><TableHead>Stanoq</TableHead><TableHead>{"Holat"}</TableHead><TableHead>Maqsad</TableHead><TableHead>Bajarildi</TableHead><TableHead>Brak</TableHead><TableHead>OEE</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("stanoq")}</TableHead><TableHead>{"Holat"}</TableHead><TableHead>{t("Maqsad")}</TableHead><TableHead>{t("Bajarildi")}</TableHead><TableHead>{t("Brak")}</TableHead><TableHead>OEE</TableHead></TableRow></TableHeader>
               <TableBody>
                 {prodData?.sessionsToday?.map((s: ProductionSession) => (
                   <TableRow key={s.id} className="hover:bg-muted/40 transition-colors">
@@ -154,23 +154,23 @@ export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | 
 export function HrTab({ hrData, hrLoading }: { hrData: HrData | undefined; hrLoading: boolean }) {
   return (
     <TabsContent value="hr" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">HR va Davomad Holati</h2>
+      <h2 className="text-lg font-semibold">{t("hrVaDavomadHolati")}</h2>
       {hrLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{([...Array(6)]).map((_, i) => <Card key={`k-${i}`}><CardContent className="pt-4 pb-3 h-16 animate-pulse bg-muted/30 rounded" /></Card>)}</div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={Users} label="Jami xodimlar" value={hrData?.employees?.total ?? 0} sub="Ro'yxatdagi" color="text-primary" />
-            <StatCard icon={CheckCircle2} label="Keldi" value={hrData?.attendance?.present ?? 0} sub={`${hrData?.attendance?.attendanceRate ?? 0}%`} color="text-[var(--ep-green)]" />
-            <StatCard icon={XCircle} label="Kelmadi" value={hrData?.attendance?.absent ?? 0} sub="Bugun" color="text-[var(--ep-red)]" />
-            <StatCard icon={Clock} label="Kechikkan" value={hrData?.attendance?.late ?? 0} sub="Bugun" color="text-[var(--ep-primary)]" />
+            <StatCard icon={Users} label={t("jamiXodimlar1")} value={hrData?.employees?.total ?? 0} sub="Ro'yxatdagi" color="text-primary" />
+            <StatCard icon={CheckCircle2} label={t("keldi")} value={hrData?.attendance?.present ?? 0} sub={`${hrData?.attendance?.attendanceRate ?? 0}%`} color="text-[var(--ep-green)]" />
+            <StatCard icon={XCircle} label={t("kelmadi")} value={hrData?.attendance?.absent ?? 0} sub="Bugun" color="text-[var(--ep-red)]" />
+            <StatCard icon={Clock} label={t("kechikkan")} value={hrData?.attendance?.late ?? 0} sub="Bugun" color="text-[var(--ep-primary)]" />
           </div>
           {(hrData?.byDepartment?.length || 0) > 0 && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Bo'limlar bo'yicha</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">{t("bolimlarBoyicha")}</CardTitle></CardHeader>
               <CardContent className="p-0">
                 <div className="ep-table-scroll"><Table>
-                  <TableHeader><TableRow><TableHead>Bo'lim</TableHead><TableHead>Xodimlar soni</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>{t("bolim1")}</TableHead><TableHead>{t("xodimlarSoni")}</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {hrData?.byDepartment?.map((d: HRDepartment) => (
                       <TableRow key={d.department} data-testid={`row-dept-${d.department}`} className="hover:bg-muted/40 transition-colors">
@@ -192,22 +192,22 @@ export function HrTab({ hrData, hrLoading }: { hrData: HrData | undefined; hrLoa
 export function FinanceTab({ finData, finLoading }: { finData: FinData | undefined; finLoading: boolean }) {
   return (
     <TabsContent value="finance" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Moliya Holati</h2>
+      <h2 className="text-lg font-semibold">{t("moliyaHolati")}</h2>
       {finLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{([...Array(3)]).map((_, i) => <Card key={`k-${i}`}><CardContent className="pt-4 pb-3 h-16 animate-pulse bg-muted/30 rounded" /></Card>)}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard icon={DollarSign} label="Jami debitorlik" value={`${(finData?.totalReceivable || 0).toLocaleString()} so'm`} sub="To'lanmagan" color="text-[var(--ep-primary)]" />
-          <StatCard icon={AlertTriangle} label="Muddati o'tgan" value={`${(finData?.overdueAmount || 0).toLocaleString()} so'm`} sub="Overdue" color="text-[var(--ep-red)]" />
-          <StatCard icon={Clock} label="Kutilayotgan" value={`${(finData?.pendingAmount || 0).toLocaleString()} so'm`} sub="Pending" color="text-[var(--ep-yellow)]" />
+          <StatCard icon={DollarSign} label={t("jamiDebitorlik")} value={`${(finData?.totalReceivable || 0).toLocaleString()} so'm`} sub="To'lanmagan" color="text-[var(--ep-primary)]" />
+          <StatCard icon={AlertTriangle} label={t("muddatiOtgan")} value={`${(finData?.overdueAmount || 0).toLocaleString()} so'm`} sub="Overdue" color="text-[var(--ep-red)]" />
+          <StatCard icon={Clock} label={t("kutilayotgan")} value={`${(finData?.pendingAmount || 0).toLocaleString()} so'm`} sub="Pending" color="text-[var(--ep-yellow)]" />
         </div>
       )}
       {finData?.invoices && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Hisob-fakturalar holati</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("hisobFakturalarHolati")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
-              <TableHeader><TableRow><TableHead>{"Holat"}</TableHead><TableHead>Soni</TableHead><TableHead>Summa</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{"Holat"}</TableHead><TableHead>{t("count")}</TableHead><TableHead>{t("summa")}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {Object.entries(finData.invoices).map(([status, data]: [string, { count?: number; amount?: number }]) => (
                   <TableRow key={status} data-testid={`row-invoice-${status}`} className="hover:bg-muted/40 transition-colors">
@@ -246,10 +246,10 @@ export function KpisTab({ kpiList, kpiData }: { kpiList: KpiListItem[]; kpiData:
       </Card>
       {(kpiData?.oeeByEquipment?.length ?? 0) > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">OEE Stanoqlar bo'yicha</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("oeeStanoqlarBoyicha")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
-              <TableHeader><TableRow><TableHead>Stanoq</TableHead><TableHead>OEE</TableHead><TableHead>Mavjudlik</TableHead><TableHead>Unumdorlik</TableHead><TableHead>Sifat</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("stanoq")}</TableHead><TableHead>OEE</TableHead><TableHead>{t("Mavjudlik")}</TableHead><TableHead>{t("Unumdorlik")}</TableHead><TableHead>{t("Sifat")}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {kpiData?.oeeByEquipment?.map((o: KPIEquipment) => (
                   <TableRow key={o.equipmentId} data-testid={`row-oee-${o.equipmentId}`} className="hover:bg-muted/40 transition-colors">

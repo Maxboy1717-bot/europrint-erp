@@ -77,9 +77,9 @@ export default function FacilityInventoryPage() {
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
-                    <span>Maydon: <strong>{f.totalAreaSqm?.toLocaleString() ?? '—'} m²</strong></span>
-                    <span>Inventar: <strong>{f.itemsCount}</strong></span>
-                    <span>Mas'ul: <strong>{f.responsibleEmployee ?? '—'}</strong></span>
+                    <span>{t("maydon")}<strong>{f.totalAreaSqm?.toLocaleString() ?? '—'} m²</strong></span>
+                    <span>{t("inventar2")}<strong>{f.itemsCount}</strong></span>
+                    <span>{t("masul1")}<strong>{f.responsibleEmployee ?? '—'}</strong></span>
                   </div>
                 </div>
               );

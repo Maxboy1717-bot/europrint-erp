@@ -15,6 +15,7 @@ import {
   URL_TAB_MAP, tabMeta, TECH_TABS, PP_TABS,
   type ProductionOrder, type TechCard, type OeeData, type ShiftRequirement,
 } from "./TechPPExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   TechMaterialsSection, TechMachinesSection, TechTimeSection,
   TechCostSection, TechClientsSection, TechHistorySection, TechParallelSection,
@@ -23,6 +24,7 @@ import {
 } from "./TechPPExtendedSections";
 
 export default function TechPPExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "tech-materials");
 
@@ -47,7 +49,7 @@ export default function TechPPExtended() {
           <Cpu className="h-5 w-5 text-primary" />
         </div>
         <h1 className="text-xl font-light tracking-tight text-foreground">
-          Texnolog <span className="font-bold text-primary">BOM/Routing</span> va AI Rejalashtirish
+          {t("texnolog")}<span className="font-bold text-primary">BOM/Routing</span> {t("vaAiRejalashtirish")}
         </h1>
       </div>
 

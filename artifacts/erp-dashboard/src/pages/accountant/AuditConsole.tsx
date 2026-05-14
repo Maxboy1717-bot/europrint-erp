@@ -24,8 +24,10 @@ import {
 } from "./AuditConsoleSections";
 import { ExportTab } from "./AuditConsoleExportTab";
 import { AuditLogDetailDialog } from "./AuditConsoleDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export function AuditConsole({ onExportCSV, onExportExcel, onExportPDF }: AuditConsoleProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [docSearchQuery, setDocSearchQuery] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -68,7 +70,7 @@ export function AuditConsole({ onExportCSV, onExportExcel, onExportPDF }: AuditC
       <CardHeader className="bg-blue-500/5 border-b border-blue-500/20">
         <CardTitle className="flex items-center gap-2 text-[var(--ep-blue)] dark:text-blue-400">
           <History className="h-6 w-6" />
-          AUDIT CONSOLE — 100% Qamrovli
+          {t("auditConsole100Qamrovli")}
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-2">
           Tizimda har qanday o'zgarish bu yerda ko'rinadi (immutable)
@@ -81,15 +83,15 @@ export function AuditConsole({ onExportCSV, onExportExcel, onExportPDF }: AuditC
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-4">
             <TabsTrigger value="timeline" data-testid="audit-tab-timeline">
               <Clock className="h-4 w-4 mr-1" />
-              Timeline
+              {t("timeline")}
             </TabsTrigger>
             <TabsTrigger value="search" data-testid="audit-tab-search">
               <Search className="h-4 w-4 mr-1" />
-              Qidirish
+              {t("search")}
             </TabsTrigger>
             <TabsTrigger value="document" data-testid="audit-tab-document">
               <FileText className="h-4 w-4 mr-1" />
-              Hujjat Trace
+              {t("hujjatTrace")}
             </TabsTrigger>
             <TabsTrigger value="export" data-testid="audit-tab-export">
               <Download className="h-4 w-4 mr-1" />

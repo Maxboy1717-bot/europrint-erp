@@ -135,20 +135,20 @@ export default function MarketingSettings() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-settings">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing Sozlamalar</b></>}
-        title="Marketing Sozlamalar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("marketingSozlamalar")}</b></>}
+        title={t("marketingSozlamalar")}
       />
 
       <Tabs defaultValue="api" className="space-y-6">
         <TabsList className="bg-muted/40 p-1 rounded-lg">
           <TabsTrigger value="api" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md gap-2"><Key className="h-4 w-4" />{t('socialApi')}</TabsTrigger>
-          <TabsTrigger value="webhooks" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md gap-2"><Webhook className="h-4 w-4" />Webhook'lar</TabsTrigger>
-          <TabsTrigger value="general" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md gap-2"><Settings className="h-4 w-4" />Umumiy</TabsTrigger>
+          <TabsTrigger value="webhooks" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md gap-2"><Webhook className="h-4 w-4" />{t("webhooklar")}</TabsTrigger>
+          <TabsTrigger value="general" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md gap-2"><Settings className="h-4 w-4" />{t("umumiy")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="api" className="space-y-6 mt-0">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <p className="text-sm text-muted-foreground">Ijtimoiy tarmoq API tokenlarini boshqaring</p>
+            <p className="text-sm text-muted-foreground">{t("ijtimoiyTarmoqApiTokenlariniBoshqaring")}</p>
             <ApiDialog
               open={apiOpen}
               onOpenChange={(v) => { setApiOpen(v); if (!v) resetApiForm(); }}

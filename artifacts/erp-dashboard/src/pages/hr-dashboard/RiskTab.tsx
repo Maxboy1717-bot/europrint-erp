@@ -28,7 +28,7 @@ export function RiskTab({riskEmployees, riskSummary, isLoading }: RiskTabProps) 
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {(["critical", "high", "medium", "low"] as const).map((level) => {
@@ -46,7 +46,7 @@ export function RiskTab({riskEmployees, riskSummary, isLoading }: RiskTabProps) 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="bg-card rounded-xl p-6">
           <CardHeader className="p-0 mb-4">
-            <CardTitle className="flex items-center gap-2 text-sm"><Brain className="h-4 w-4 text-[var(--ep-purple)]" />Xavf taqsimoti</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-sm"><Brain className="h-4 w-4 text-[var(--ep-purple)]" />{t("xavfTaqsimoti")}</CardTitle>
           </CardHeader>
           {isLoading ? (
             <Skeleton className="h-48 w-full rounded-lg" />
@@ -81,16 +81,16 @@ export function RiskTab({riskEmployees, riskSummary, isLoading }: RiskTabProps) 
           ) : highRisk.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
               <CheckCircle2 className="w-10 h-10 text-green-400" />
-              <p className="text-sm">Yuqori xavfli xodimlar yo'q</p>
+              <p className="text-sm">{t("yuqoriXavfliXodimlarYoq")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Xodim</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Bo'lim</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Ball</TableHead>
-                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Daraja</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("xodim1")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("bolim1")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("ball")}</TableHead>
+                  <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("daraja")}</TableHead>
                   <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t('progress2')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -119,22 +119,22 @@ export function RiskTab({riskEmployees, riskSummary, isLoading }: RiskTabProps) 
 
       <div className="bg-card rounded-xl p-6">
         <CardHeader className="p-0 mb-4">
-          <CardTitle className="flex items-center gap-2 text-sm"><BarChart3 className="h-4 w-4 text-[var(--ep-blue)]" />Barcha xodimlar xavf reytingi</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-sm"><BarChart3 className="h-4 w-4 text-[var(--ep-blue)]" />{t("barchaXodimlarXavfReytingi")}</CardTitle>
         </CardHeader>
         {isLoading ? (
           <div className="space-y-2">{([1,2,3,4,5]).map(i => <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />)}</div>
         ) : riskEmployees.length === 0 ? (
-          <p className="text-sm text-center text-muted-foreground py-8">Ma'lumot yo'q</p>
+          <p className="text-sm text-center text-muted-foreground py-8">{t("malumotYoq")}</p>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Xodim</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Davomat riski</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Intizom riski</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Burnout riski</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Umumiy ball</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">Daraja</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("xodim1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("davomatRiski")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("intizomRiski")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("burnoutRiski")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("umumiyBall")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase py-3 px-4">{t("daraja")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

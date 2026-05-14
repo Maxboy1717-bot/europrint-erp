@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Send, CheckCircle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import { 
   SdQuotation, SdCustomer, SdPriceResult, SdQuotationItem,
   fmt 
@@ -31,6 +32,7 @@ const QUOT_STATUS_COLORS: Record<string, string> = {
 };
 
 export function QuotationsTab() {
+  const { t } = useTranslation("common");
   const [isNew, setIsNew] = useState(false);
   const [priceResult, setPriceResult] = useState<SdPriceResult | null>(null);
   const [calcForm, setCalcForm] = useState({
@@ -91,14 +93,14 @@ export function QuotationsTab() {
         <h3 className="font-semibold">Taklifnomalar ({quotations.length})</h3>
         <Dialog open={isNew} onOpenChange={setIsNew}>
           <DialogTrigger asChild>
-            <Button data-testid="button-add-quotation"><Plus className="w-4 h-4 mr-1" />Yangi taklifnoma</Button>
+            <Button data-testid="button-add-quotation"><Plus className="w-4 h-4 mr-1" />{t("yangiTaklifnoma")}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl p-6">
-            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Taklifnoma + narx hisoblash</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("taklifnomaNarxHisoblash")}</DialogTitle></DialogHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-3">
-                <h4 className="font-medium text-sm">Mahsulot parametrlari</h4>
-                <div><Label>Mahsulot turi</Label>
+                <h4 className="font-medium text-sm">{t("mahsulotParametrlari")}</h4>
+                <div><Label>{t("mahsulotTuri")}</Label>
                   <Select value={calcForm.productType} onValueChange={v => setCalcForm({ ...calcForm, productType: v })}>
                     <SelectTrigger data-testid="select-product-type" className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -120,7 +122,7 @@ export function QuotationsTab() {
                     <Input data-testid="input-thickness" type="number" value={calcForm.thicknessMm}
                       onChange={e => setCalcForm({ ...calcForm, thicknessMm: +e.target.value })} /></div>
                 </div>
-                <div><Label>Bosma ranglari</Label>
+                <div><Label>{t("bosmaRanglari")}</Label>
                   <Select value={String(calcForm.printColors)} onValueChange={v => setCalcForm({ ...calcForm, printColors: +v })}>
                     <SelectTrigger data-testid="select-print-colors" className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -134,7 +136,7 @@ export function QuotationsTab() {
                 <div className="flex items-center gap-2">
                   <input type="checkbox" id="newDie" checked={calcForm.isNewDie}
                     onChange={e => setCalcForm({ ...calcForm, isNewDie: e.target.checked })} />
-                  <Label htmlFor="newDie">Yangi qolip kerak</Label>
+                  <Label htmlFor="newDie">{t("yangiQolipKerak")}</Label>
                 </div>
                 <Button data-testid="button-calculate-price" className="w-full"
                   onClick={() => calcMut.mutate(calcForm)} disabled={calcMut.isPending}>
@@ -146,14 +148,14 @@ export function QuotationsTab() {
                 {priceResult && (
                   <Card className="bg-primary/5">
                     <CardContent className="p-3 space-y-1.5 text-sm">
-                      <h4 className="font-semibold text-primary">Narx tahlili</h4>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Qog'oz:</span><span>{fmt(priceResult.paperCost || 0)} so'm</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Ishlab chiqarish:</span><span>{fmt(priceResult.productionCost || 0)} so'm</span></div>
-                      {(priceResult.printCost || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Bosma:</span><span>{fmt(priceResult.printCost || 0)} so'm</span></div>}
-                      {(priceResult.dieCost || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Qolip:</span><span>{fmt(priceResult.dieCost || 0)} so'm</span></div>}
-                      <div className="flex justify-between"><span className="text-muted-foreground">Yetkazish:</span><span>{fmt(priceResult.deliveryCost || 0)} so'm</span></div>
-                      <div className="border-t pt-1.5 flex justify-between font-medium"><span>Tannarx:</span><span>{fmt(priceResult.costPrice || 0)} so'm</span></div>
-                      <div className="flex justify-between font-bold text-primary"><span>Jami narx:</span><span>{fmt(priceResult.totalPrice || 0)} so'm</span></div>
+                      <h4 className="font-semibold text-primary">{t("narxTahlili")}</h4>
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("qogoz")}</span><span>{fmt(priceResult.paperCost || 0)} so'm</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("ishlabChiqarish3")}</span><span>{fmt(priceResult.productionCost || 0)} so'm</span></div>
+                      {(priceResult.printCost || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("bosma")}</span><span>{fmt(priceResult.printCost || 0)} so'm</span></div>}
+                      {(priceResult.dieCost || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("qolip")}</span><span>{fmt(priceResult.dieCost || 0)} so'm</span></div>}
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("yetkazish")}</span><span>{fmt(priceResult.deliveryCost || 0)} so'm</span></div>
+                      <div className="border-t pt-1.5 flex justify-between font-medium"><span>{t("tannarx")}</span><span>{fmt(priceResult.costPrice || 0)} so'm</span></div>
+                      <div className="flex justify-between font-bold text-primary"><span>{t("jamiNarx")}</span><span>{fmt(priceResult.totalPrice || 0)} so'm</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">1 dona:</span><span className="font-semibold">{fmt(priceResult.unitPrice || 0)} so'm</span></div>
                       <div className="text-xs text-muted-foreground">Margin: {priceResult.margin}%</div>
                     </CardContent>
@@ -162,18 +164,18 @@ export function QuotationsTab() {
 
                 {priceResult && (
                   <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Taklifnoma ma'lumotlari</h4>
-                    <div><Label>Mijoz</Label>
+                    <h4 className="font-medium text-sm">{t("taklifnomaMalumotlari")}</h4>
+                    <div><Label>{t("mijoz1")}</Label>
                       <Select value={form.customerId} onValueChange={v => setForm({ ...form, customerId: v })}>
-                        <SelectTrigger data-testid="select-quotation-customer" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                        <SelectTrigger data-testid="select-quotation-customer" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                         <SelectContent>
                           {customers?.data?.map((c: SdCustomer) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
-                    <div><Label>Amal qilish muddati</Label>
+                    <div><Label>{t("amalQilishMuddati")}</Label>
                       <Input type="date" value={form.validUntil} onChange={e => setForm({ ...form, validUntil: e.target.value })} /></div>
-                    <div><Label>Izoh</Label>
+                    <div><Label>{t("Izoh")}</Label>
                       <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
                     <Button data-testid="button-save-quotation" className="w-full"
                       onClick={() => createMut.mutate({
@@ -192,7 +194,7 @@ export function QuotationsTab() {
       </div>
 
       <div className="space-y-2">
-        {isLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+        {isLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
         {(Array.isArray(quotations) ? quotations : []).map((q: SdQuotation) => (
           <Card key={q.id} data-testid={`card-quotation-${q.id}`}>
             <CardContent className="p-4 flex items-center justify-between gap-3 flex-wrap">
@@ -211,13 +213,13 @@ export function QuotationsTab() {
                 {q.status === "draft" && (
                   <Button size="sm" variant="outline" data-testid={`button-send-quotation-${q.id}`}
                     onClick={() => sendMut.mutate(q.id)} disabled={sendMut.isPending}>
-                    <Send className="w-3 h-3 mr-1" />Yuborish
+                    <Send className="w-3 h-3 mr-1" />{t("submitBtn")}
                   </Button>
                 )}
                 {(q.status === "sent" || q.status === "viewed") && (
                   <Button size="sm" data-testid={`button-approve-quotation-${q.id}`}
                     onClick={() => approveMut.mutate(q.id)} disabled={approveMut.isPending}>
-                    <CheckCircle className="w-3 h-3 mr-1" />Tasdiqlash
+                    <CheckCircle className="w-3 h-3 mr-1" />{t("verify")}
                   </Button>
                 )}
               </div>
@@ -225,7 +227,7 @@ export function QuotationsTab() {
           </Card>
         ))}
         {!isLoading && quotations.length === 0 && (
-          <div className="text-center text-muted-foreground py-8 text-sm">Taklifnomalar yo'q</div>
+          <div className="text-center text-muted-foreground py-8 text-sm">{t("taklifnomalarYoq")}</div>
         )}
       </div>
     </div>

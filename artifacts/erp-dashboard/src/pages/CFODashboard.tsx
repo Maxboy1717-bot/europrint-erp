@@ -5,7 +5,7 @@
  *   Migrated to the EuroPrint design system:
  *     - <EPPageHeader> replaces the "CFO Panel" split-typography heading
  *       (no more `text-4xl font-light` + `font-bold text-primary` mix)
- *     - <EPErrorState> for fetch failures, <EPEmptyState> for "no financial
+ *     - <EPErrorState> {t("forFetchFailures")}<EPEmptyState> for "no financial
  *       data yet", and skeleton helpers for the loading branch
  *     - Inline dynamic apiRequest import is preserved (the queryFn is still
  *       dynamic for code-splitting reasons)
@@ -124,7 +124,7 @@ export default function CFODashboard() {
       <Link href="/cfo/config">
         <Button variant="outline" className="gap-1.5">
           <Settings className="h-4 w-4" />
-          Sozlamalar
+          {t("settings")}
         </Button>
       </Link>
     </>
@@ -135,9 +135,9 @@ export default function CFODashboard() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
         <EPPageHeader
-          breadcrumb={<>Dashboard · <b className="text-foreground">{t('cfoPanel')}</b></>}
+          breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('cfoPanel')}</b></>}
           title={t('cfoPanel')}
-          subtitle="Moliyaviy ko'rsatkichlar va xavf tahlili"
+          subtitle={t("moliyaviyKorsatkichlarVaXavfTahlili")}
           status={periodBadge}
           actions={headerActions}
         />
@@ -151,9 +151,9 @@ export default function CFODashboard() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="cfo-dashboard-loading">
         <EPPageHeader
-          breadcrumb={<>Dashboard · <b className="text-foreground">{t('cfoPanel')}</b></>}
+          breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('cfoPanel')}</b></>}
           title={t('cfoPanel')}
-          subtitle="Moliyaviy ko'rsatkichlar va xavf tahlili"
+          subtitle={t("moliyaviyKorsatkichlarVaXavfTahlili")}
           status={periodBadge}
           actions={headerActions}
         />
@@ -179,9 +179,9 @@ export default function CFODashboard() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="cfo-dashboard-empty">
         <EPPageHeader
-          breadcrumb={<>Dashboard · <b className="text-foreground">{t('cfoPanel')}</b></>}
+          breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('cfoPanel')}</b></>}
           title={t('cfoPanel')}
-          subtitle="Moliyaviy ko'rsatkichlar va xavf tahlili"
+          subtitle={t("moliyaviyKorsatkichlarVaXavfTahlili")}
           status={periodBadge}
           actions={headerActions}
         />
@@ -198,9 +198,9 @@ export default function CFODashboard() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="cfo-dashboard">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('cfoPanel')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('cfoPanel')}</b></>}
         title={t('cfoPanel')}
-        subtitle="Moliyaviy ko'rsatkichlar va xavf tahlili"
+        subtitle={t("moliyaviyKorsatkichlarVaXavfTahlili")}
         status={periodBadge}
         actions={headerActions}
       />

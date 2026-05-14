@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeaveRequestForm {
   leaveType: string;
@@ -35,6 +36,7 @@ export function LeaveRequestDialog({
   onSave,
   isPending
 }: LeaveRequestDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const updateField = (field: keyof LeaveRequestForm, value: string) => {
@@ -55,29 +57,29 @@ export function LeaveRequestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Mehnat ta'tili so'rovi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("mehnatTatiliSorovi")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label>Ta'til turi</Label>
+          <Label>{t("tatilTuri")}</Label>
             <Select
               value={form.leaveType}
               onValueChange={(val) => updateField("leaveType", val)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Tanlang" />
+                <SelectValue placeholder={t("tanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="annual">Yillik mehnat ta'tili</SelectItem>
-                <SelectItem value="unpaid">Oylik saqlanmagan holda</SelectItem>
-                <SelectItem value="study">O'quv ta'tili</SelectItem>
-                <SelectItem value="maternity">Dekret ta'tili</SelectItem>
+                <SelectItem value="annual">{t("yillikMehnatTatili")}</SelectItem>
+                <SelectItem value="unpaid">{t("oylikSaqlanmaganHolda")}</SelectItem>
+                <SelectItem value="study">{t("oquvTatili")}</SelectItem>
+                <SelectItem value="maternity">{t("dekretTatili")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="startDate">Boshlanish sanasi</Label>
+          <Label htmlFor="startDate">{t("startDate")}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -86,7 +88,7 @@ export function LeaveRequestDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="endDate">Tugash sanasi</Label>
+          <Label htmlFor="endDate">{t("endDate")}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -96,7 +98,7 @@ export function LeaveRequestDialog({
             </div>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="reason">Sabab</Label>
+          <Label htmlFor="reason">{t("sabab")}</Label>
             <Textarea
               id="reason"
               value={form.reason}
@@ -105,7 +107,7 @@ export function LeaveRequestDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             onClick={handleSubmit}
             disabled={!form.startDate || !form.endDate || isPending}

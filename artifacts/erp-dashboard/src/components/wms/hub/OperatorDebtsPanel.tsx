@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
 import { OperatorDebt } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface OperatorDebtsProps {
   count: number;
@@ -14,6 +15,7 @@ interface OperatorDebtsProps {
 }
 
 export function OperatorDebtsPanel({ count, debts }: OperatorDebtsProps) {
+  const { t } = useTranslation("common");
   const openDebts = (Array.isArray(debts) ? debts : []).filter(d => d.status === "open");
 
   return (
@@ -28,7 +30,7 @@ export function OperatorDebtsPanel({ count, debts }: OperatorDebtsProps) {
       <CardContent>
         {openDebts.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Ochiq qarz yo'q
+            {t("ochiqQarzYoq")}
           </p>
         ) : (
           <div className="space-y-2">

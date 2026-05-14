@@ -5,6 +5,7 @@
  *   <WelcomeBanner userName="Sardor" tasksToday={5} />
  */
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from '@/lib/i18n';
 
 export function WelcomeBanner({
   userName,
@@ -13,6 +14,7 @@ export function WelcomeBanner({
   userName?: string;
   tasksToday?: number;
 }) {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const displayName = userName ?? user?.full_name ?? user?.username ?? "Foydalanuvchi";
   const initials = displayName
@@ -39,7 +41,7 @@ export function WelcomeBanner({
           <div className="text-xs text-muted-foreground mt-0.5">
             {tasksToday !== undefined && tasksToday > 0 ? (
               <>
-                Bugun sizda <strong className="text-[hsl(var(--primary))] underline">{tasksToday} ta vazifa</strong> bor
+                {t("bugunSizda")}<strong className="text-[hsl(var(--primary))] underline">{tasksToday} ta vazifa</strong> bor
               </>
             ) : (
               "Bugun sizga muvaffaqiyatlar tilaymiz"
@@ -48,7 +50,7 @@ export function WelcomeBanner({
         </div>
       </div>
       <button className="px-4 py-2 rounded-lg bg-[hsl(var(--primary))] text-white text-sm font-medium hover:opacity-90">
-        + Yangi vazifa
+        {t("yangiVazifa")}
       </button>
     </div>
   );

@@ -6,6 +6,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Activity, RefreshCw } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface HeaderControlsProps {
   autoRefresh: boolean;
@@ -14,6 +15,7 @@ interface HeaderControlsProps {
 }
 
 export function HeaderControls({ autoRefresh, onToggleAutoRefresh, onRefresh }: HeaderControlsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-3">
       <Button
@@ -34,7 +36,7 @@ export function HeaderControls({ autoRefresh, onToggleAutoRefresh, onRefresh }: 
         data-testid="button-manual-refresh"
       >
         <RefreshCw className="h-4 w-4" />
-        Yangilash
+        {t("refresh")}
       </Button>
     </div>
   );
@@ -57,7 +59,7 @@ export function StatsCards({
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card className="bg-card border-none rounded-lg p-5">
         <div className="flex flex-col">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Faol Kameralar</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("faolKameralar")}</span>
           <span className="text-4xl font-bold tracking-tight text-foreground" data-testid="stat-active-cameras">
             {activeCamerasCount}
           </span>
@@ -65,7 +67,7 @@ export function StatsCards({
       </Card>
       <Card className="bg-card border-none rounded-lg p-5">
         <div className="flex flex-col">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Bugungi Aniqlashlar</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("bugungiAniqlashlar")}</span>
           <span className="text-4xl font-bold tracking-tight text-foreground" data-testid="stat-today-detections">
             {todayDetectionsCount}
           </span>
@@ -73,7 +75,7 @@ export function StatsCards({
       </Card>
       <Card className="bg-card border-none rounded-lg p-5">
         <div className="flex flex-col">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami Aniqlashlar</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("jamiAniqlashlar")}</span>
           <span className="text-4xl font-bold tracking-tight text-foreground" data-testid="stat-total-detections">
             {totalDetectionsCount}
           </span>
@@ -81,7 +83,7 @@ export function StatsCards({
       </Card>
       <Card className="bg-card border-none rounded-lg p-5">
         <div className="flex flex-col">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">O'rtacha Ishonch</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("ortachaIshonch")}</span>
           <span className="text-4xl font-bold tracking-tight text-primary" data-testid="stat-avg-confidence">
             {avgConfidence}%
           </span>

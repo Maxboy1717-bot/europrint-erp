@@ -7,8 +7,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import AIDesignGenerator from "./AIDesignGenerator";
+import { useTranslation } from '@/lib/i18n';
 
 export default function DesignGenerator() {
+  const { t } = useTranslation("common");
   const [refreshKey, setRefreshKey] = useState(0);
   return (
     <>
@@ -17,7 +19,7 @@ export default function DesignGenerator() {
         size="sm"
         onClick={() => setRefreshKey(k => k + 1)}
         className="sr-only"
-        aria-label="Yangilash"
+        aria-label={t("refresh")}
       >
         <RefreshCw className="h-4 w-4" />
       </Button>

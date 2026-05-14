@@ -20,12 +20,14 @@ import {
 import { AssetStats, AssetFilters, AssetTable } from "./HRAssetManagementSections";
 import { AddAssetDialog, AssignDialog } from "./HRAssetManagementDialogs";
 import { ReturnDialog, ReportDialog, DetailDialog } from "./HRAssetManagementActionsDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function HRAssetManagement() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // --- filter state ---
@@ -180,14 +182,14 @@ export default function HRAssetManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Aktivlar Boshqaruvi</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("aktivlarBoshqaruvi")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Xodimlarga berilgan jihozlar, kalitlar va forma kiyimlar
+            {t("xodimlargaBerilganJihozlarKalitlarVa")}
           </p>
         </div>
         <Button onClick={() => setAddOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
-          Yangi jihoz
+          {t("yangiJihoz")}
         </Button>
       </div>
 

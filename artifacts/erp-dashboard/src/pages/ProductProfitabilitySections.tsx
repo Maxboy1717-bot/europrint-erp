@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { DistributionItem, formatPercent } from "./ProductProfitabilityTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // KPI Summary Cards
@@ -33,11 +34,12 @@ interface KpiSummaryProps {
 }
 
 export function KpiSummaryCards({ isLoading, totalProducts, avgMargin, totalProfitLoss }: KpiSummaryProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <Card data-testid="card-total-products">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Tahlil Qilingan Mahsulotlar</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("tahlilQilinganMahsulotlar")}</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -46,13 +48,13 @@ export function KpiSummaryCards({ isLoading, totalProducts, avgMargin, totalProf
           ) : (
             <div className="text-2xl font-bold">{totalProducts}</div>
           )}
-          <p className="text-xs text-muted-foreground mt-1">Jami mahsulotlar soni</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("jamiMahsulotlarSoni")}</p>
         </CardContent>
       </Card>
 
       <Card data-testid="card-avg-margin">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">O'rtacha Foyda Marjasi</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("ortachaFoydaMarjasi")}</CardTitle>
           <Percent className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -63,7 +65,7 @@ export function KpiSummaryCards({ isLoading, totalProducts, avgMargin, totalProf
               {formatPercent(avgMargin)}
             </div>
           )}
-          <p className="text-xs text-muted-foreground mt-1">Barcha mahsulotlar bo'yicha</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("barchaMahsulotlarBoyicha")}</p>
         </CardContent>
       </Card>
 
@@ -84,7 +86,7 @@ export function KpiSummaryCards({ isLoading, totalProducts, avgMargin, totalProf
               {formatCurrency(totalProfitLoss)}
             </div>
           )}
-          <p className="text-xs text-muted-foreground mt-1">Umumiy natija</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("umumiyNatija")}</p>
         </CardContent>
       </Card>
     </div>
@@ -106,7 +108,7 @@ export function DistributionSection({ isLoading, distributionData }: Distributio
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
-          Rentabellik Taqsimoti
+          {t("rentabellikTaqsimoti")}
         </CardTitle>
       </CardHeader>
       <CardContent>
