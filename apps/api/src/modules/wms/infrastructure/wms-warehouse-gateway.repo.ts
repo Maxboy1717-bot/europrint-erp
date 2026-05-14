@@ -1,4 +1,14 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   nested scalar subqueries in SELECT for multi-source KPI rollup (active
+ *   warehouses, total stock qty, total stock value, low-stock alerts, today's
+ *   movements in one round-trip), COUNT(*) FILTER (WHERE ...) aggregate-filter
+ *   tallies for goods-receipt status breakdown, conditional ${param ?? null}::int
+ *   IS NULL OR column = ${param} optional-filter pattern, and INSERT ...
+ *   ON CONFLICT DO NOTHING for pos_sync_events idempotency.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module wms-warehouse-gateway.repo
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
@@ -97,7 +107,7 @@ export class WmsWarehouseGatewayRepo {
                 from_warehouse_id AS "fromWarehouseId", to_warehouse_id AS "toWarehouseId",
                 status, created_at AS "createdAt"
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getInternalRequests(status?: string): Promise<Row[]> {
@@ -120,7 +130,7 @@ export class WmsWarehouseGatewayRepo {
       VALUES (${whId}, ${matId}, ${body.quantity ?? 0}, ${userId}, ${body.notes ?? null}, 'pending')
       RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getGoodsReceipts(status?: string): Promise<Row[]> {
@@ -141,7 +151,7 @@ export class WmsWarehouseGatewayRepo {
       VALUES (${body.purchaseOrderId ?? body.purchase_order_id ?? null}, ${userId}, 'draft', ${body.notes ?? null}, NOW())
       RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getGoodsReceiptStats(): Promise<Row> {
@@ -169,7 +179,7 @@ export class WmsWarehouseGatewayRepo {
       UPDATE mm_goods_receipt_lines SET qc_status = ${passed ? 'passed' : 'failed'}, qc_notes = ${notes}, qc_by = ${userId}, qc_at = NOW()
       WHERE id = ${lineId} RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async completeGoodsReceipt(receiptId: number, userId: number | null): Promise<Row> {
@@ -177,7 +187,7 @@ export class WmsWarehouseGatewayRepo {
       UPDATE mm_goods_receipts SET status = 'completed', completed_by = ${userId}, completed_at = NOW()
       WHERE id = ${receiptId} RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getLowStock(): Promise<Row[]> {

@@ -6,7 +6,7 @@
  * QC kutmoqda statusidagi barcha materiallarni ko'rsatadi, har biri uchun
  * tafsilotli ko'rinish va QABUL / REWORK / CHIQARISH qarorlari.
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,16 +53,16 @@ export default function WarehouseQCReview() {
   const [qcNote, setQcNote] = useState("");
   const [processing, setProcessing] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const r = await apiRequest<QcMovement[]>("GET", "/api/pos/wh-features/quarantine");
       setItems(Array.isArray(r) ? r : []);
     } catch { setItems([]); }
     finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const loadLines = async (movement: QcMovement) => {
     setSelected(movement);

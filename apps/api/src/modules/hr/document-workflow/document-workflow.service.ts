@@ -66,7 +66,17 @@ export class DocumentWorkflowService {
       return;
     }
 
-    const steps = Array.isArray(routeData['steps']) ? routeData['steps'] as Record<string, unknown>[] : JSON.parse(String(routeData['steps'] ?? '[]')) as Record<string, unknown>[];
+    let steps: Record<string, unknown>[];
+    if (Array.isArray(routeData['steps'])) {
+      steps = routeData['steps'] as Record<string, unknown>[];
+    } else {
+      try {
+        steps = JSON.parse(String(routeData['steps'] ?? '[]')) as Record<string, unknown>[];
+      } catch {
+        this.logger.warn(`Document workflow steps JSON parse failed for documentId=${documentId}`);
+        steps = [];
+      }
+    }
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i] as Record<string, unknown>;
       await this.repo.insertApprovalStep(documentId, i + 1, String(step['approver_role'] || ''), step['approver_id'] != null ? step['approver_id'] : null);

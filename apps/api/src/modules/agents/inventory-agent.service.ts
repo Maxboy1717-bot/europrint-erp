@@ -1,6 +1,18 @@
 /**
  * AGENT 4: Ombor — Zaxira bashorat + Roll boshqaruv
  */
+
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: nested subquery with GROUP BY DATE(created_at) for moving-average
+ *   demand forecast, `HAVING SUM(balance) < COALESCE(MAX(reorder_point), 0)`
+ *   aggregate filter, `INTERVAL '90 days'` date arithmetic, `ON CONFLICT
+ *   (roll_id) DO NOTHING ... RETURNING`, and `SELECT ... FOR UPDATE` row-level
+ *   locking for atomic roll-usage decrement. Target tables (warehouse_rolls,
+ *   warehouse_roll_usage, warehouse_stock_balance, warehouse_transactions) are
+ *   not in the Drizzle schema barrel.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
@@ -132,36 +144,45 @@ export class InventoryAgentService {
   }
 
   /** Roll skanerlash + qabul qilish */
+  private buildRollQrPayload(args: { rollId: string; articleCode: string; initialWeightKg: number; supplierName?: string }): string {
+    return JSON.stringify({
+      rollId:       args.rollId,
+      articleCode:  args.articleCode,
+      weight:       args.initialWeightKg,
+      supplier:     args.supplierName,
+      receivedAt:   new Date().toISOString(),
+    });
+  }
+
+  private async insertRoll(args: { rollId: string; articleCode: string; supplierId?: number; supplierName?: string; initialWeightKg: number; warehouseId?: string; binLocation?: string }, qrPayload: string) {
+    return runQuery<{ id: string }>(sql`
+      INSERT INTO warehouse_rolls (
+        roll_id, article_code, supplier_id, supplier_name,
+        initial_weight_kg, remaining_weight_kg, warehouse_id, bin_location,
+        qr_code_payload, is_critical, status
+      )
+      VALUES (
+        ${args.rollId}, ${args.articleCode}, ${args.supplierId ?? null}, ${args.supplierName ?? null},
+        ${args.initialWeightKg}, ${args.initialWeightKg}, ${args.warehouseId ?? null}, ${args.binLocation ?? null},
+        ${qrPayload}, ${args.initialWeightKg < 50}, 'available'
+      )
+      ON CONFLICT (roll_id) DO NOTHING
+      RETURNING id::text AS id
+    `);
+  }
+
   async scanRoll(args: {
     rollId: string; articleCode: string; supplierId?: number; supplierName?: string;
     initialWeightKg: number; warehouseId?: string; binLocation?: string;
   }): Promise<{ id: string; qrPayload: string }> {
     return this.audit.wrap({ agentName: this.AGENT, action: 'scan_roll', targetType: 'roll', targetId: args.rollId }, async () => {
-      const qrPayload = JSON.stringify({
-        rollId:       args.rollId,
-        articleCode:  args.articleCode,
-        weight:       args.initialWeightKg,
-        supplier:     args.supplierName,
-        receivedAt:   new Date().toISOString(),
-      });
-      const r = await runQuery<{ id: string }>(sql`
-        INSERT INTO warehouse_rolls (
-          roll_id, article_code, supplier_id, supplier_name,
-          initial_weight_kg, remaining_weight_kg, warehouse_id, bin_location,
-          qr_code_payload, is_critical, status
-        )
-        VALUES (
-          ${args.rollId}, ${args.articleCode}, ${args.supplierId ?? null}, ${args.supplierName ?? null},
-          ${args.initialWeightKg}, ${args.initialWeightKg}, ${args.warehouseId ?? null}, ${args.binLocation ?? null},
-          ${qrPayload}, ${args.initialWeightKg < 50}, 'available'
-        )
-        ON CONFLICT (roll_id) DO NOTHING
-        RETURNING id::text AS id
-      `);
-      if (!r.rows[0]) {
+      const qrPayload = this.buildRollQrPayload(args);
+      const r = await this.insertRoll(args, qrPayload);
+      const row = r.rows[0];
+      if (!row) {
         throw new BadRequestException("Bu roll allaqachon ro'yxatga olingan: " + args.rollId);
       }
-      return { id: r.rows[0].id, qrPayload };
+      return { id: row.id, qrPayload };
     });
   }
 
@@ -174,8 +195,9 @@ export class InventoryAgentService {
       const cur = await runQuery<{ remaining: string; status: string }>(sql`
         SELECT remaining_weight_kg::text AS remaining, status FROM warehouse_rolls WHERE id = ${args.rollDbId} FOR UPDATE
       `);
-      if (!cur.rows[0]) throw new Error('Roll topilmadi');
-      const oldRemaining = Number(cur.rows[0].remaining);
+      const curRow = cur.rows[0];
+      if (!curRow) throw new Error('Roll topilmadi');
+      const oldRemaining = Number(curRow.remaining);
       const newRemaining = Math.max(0, oldRemaining - args.usedWeightKg);
       const isLow   = newRemaining < 20 && newRemaining > 0;
       const isEmpty = newRemaining === 0;

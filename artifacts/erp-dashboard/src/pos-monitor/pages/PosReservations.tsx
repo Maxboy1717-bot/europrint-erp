@@ -3,7 +3,7 @@
  * POS Monitor — Bron qilingan stoklar
  * URL: /pos-monitor/reservations
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useTranslation } from '@/lib/i18n';
 interface Reservation {
@@ -35,7 +35,7 @@ export default function PosReservations() {
   const [items, setItems] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const token = JSON.parse(localStorage.getItem("pos_session") ?? "{}")?.token ?? "";
@@ -62,9 +62,9 @@ export default function PosReservations() {
       console.error(e);
       setItems([]);
     } finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const totalReserved = items.reduce((s, i) => s + (i.reserved_qty ?? 0), 0);
 

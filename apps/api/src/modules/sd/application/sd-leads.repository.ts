@@ -88,7 +88,7 @@ export class SdLeadsRepository {
         VALUES (${body.title}, ${body.customer_id ?? null}, ${body.assigned_to ?? null}, ${body.expected_amount ?? 0}, ${body.notes ?? null}, ${body.source ?? 'manual'}, 'new')
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -145,7 +145,7 @@ export class SdLeadsRepository {
         VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -166,7 +166,7 @@ export class SdLeadsRepository {
         VALUES (${lid}, ${type}, ${subject}, ${notes ?? null}, ${employee_id ?? null})
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 

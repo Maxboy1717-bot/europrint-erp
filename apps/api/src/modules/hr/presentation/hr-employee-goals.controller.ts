@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   COALESCE-based partial UPDATE pattern (`field = COALESCE(${dto.field ?? null},
+ *   field)`) that preserves existing column values when the DTO key is omitted —
+ *   used here to avoid building a dynamic SET clause for 7 optional goal fields in
+ *   a single round-trip; plus inline `::date`/`::timestamptz` casts on parameters.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * @module hr-employee-goals.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -181,7 +190,7 @@ export class HrEmployeeGoalsController {
         )
         RETURNING *
       `);
-      return { data: result.rows[0] };
+      return { data: result.rows[0] ?? null };
     } catch (e: unknown) {
       throw new InternalServerErrorException((e as Error).message);
     }

@@ -64,6 +64,17 @@ export function MentionInput({
     ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
   }, [text]);
 
+  // Cancel any pending typing-stop timeout when the component unmounts so we
+  // don't fire onTypingStop on a stale closure after unmount.
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setText(val);

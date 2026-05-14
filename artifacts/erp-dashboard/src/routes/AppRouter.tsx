@@ -125,8 +125,16 @@ export function AppRouter() {
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={STUB_ROUTES}            />
 
       {/* ── Redirect aliases ── */}
-      <Route path="/departments"><RoleRoute roles={HR_ROLES}><DepartmentsPage /></RoleRoute></Route>
-      <Route path="/positions"><RoleRoute roles={HR_ROLES}><PositionsPage /></RoleRoute></Route>
+      <Route path="/departments">
+        <RoleRoute roles={HR_ROLES}>
+          <ErrorBoundary><Suspense fallback={<PageLoader />}><DepartmentsPage /></Suspense></ErrorBoundary>
+        </RoleRoute>
+      </Route>
+      <Route path="/positions">
+        <RoleRoute roles={HR_ROLES}>
+          <ErrorBoundary><Suspense fallback={<PageLoader />}><PositionsPage /></Suspense></ErrorBoundary>
+        </RoleRoute>
+      </Route>
       <Route path="/orgstructure"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/builder"><RoleRoute roles={HR_ROLES}><Redirect to="/org-chart" /></RoleRoute></Route>
       <Route path="/org-structure/view"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>

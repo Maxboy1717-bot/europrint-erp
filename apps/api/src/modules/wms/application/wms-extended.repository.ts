@@ -75,7 +75,7 @@ export class WmsExtendedRepository {
         VALUES (${safeInt(String(warehouse_id), 0)}, ${safeInt(String(material_id), 0)}, ${type}, ${quantity ?? 0}, ${unit_cost ?? null}, ${batch_number ?? null}, ${reference_id ?? null}, ${userId}, ${notes ?? null})
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 

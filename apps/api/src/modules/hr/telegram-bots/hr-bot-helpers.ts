@@ -71,8 +71,9 @@ export async function getDailyReportStatus(employeeId: number): Promise<string> 
   try {
     const today = _time.now().toISOString().split('T')[0];
     const rows = await runQuery<{ status: string }>(sql`SELECT status FROM hr_daily_reports WHERE employee_id = ${employeeId} AND report_date::date = ${today}::date LIMIT 1`);
-    if (!rows.rows[0]) return 'not_submitted';
-    return String(rows.rows[0].status);
+    const row = rows.rows[0];
+    if (!row) return 'not_submitted';
+    return String(row.status);
   } catch { return 'unknown'; }
 }
 

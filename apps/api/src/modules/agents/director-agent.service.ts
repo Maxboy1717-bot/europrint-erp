@@ -45,58 +45,77 @@ export class DirectorAgentService {
     private readonly configService: ConfigService,
   ) {}
 
+  private async fetchKpiCounts() {
+    return Promise.all([
+      this.fetchOverdueDeals(),
+      this.fetchCcOverdue(),
+      this.fetchCriticalStock(),
+      this.fetchOverdueDebt(),
+      this.fetchAbsentToday(),
+      this.fetchProductionProgress(),
+    ]);
+  }
+
+  private fetchOverdueDeals() {
+    return runQuery<{ c: string; amt: string }>(sql`
+      SELECT COUNT(*)::text AS c, COALESCE(SUM(opportunity::numeric), 0)::text AS amt
+      FROM crm_deals WHERE deleted_at IS NULL AND close_date < NOW() AND status NOT IN ('won','lost')
+    `).catch(() => ({ rows: [{ c: '0', amt: '0' }] }));
+  }
+
+  private fetchCcOverdue() {
+    return runQuery<{ c: string }>(sql`
+      SELECT COUNT(*)::text AS c FROM cc_documents WHERE basket_state='inbox' AND is_inbox_overdue=true
+    `).catch(() => ({ rows: [{ c: '0' }] }));
+  }
+
+  private fetchCriticalStock() {
+    return runQuery<{ c: string }>(sql`
+      SELECT COUNT(*)::text AS c FROM warehouse_rolls
+      WHERE remaining_weight_kg < 50 AND (status IS NULL OR status != 'used')
+    `).catch(() => ({ rows: [{ c: '0' }] }));
+  }
+
+  private fetchOverdueDebt() {
+    return runQuery<{ amt: string }>(sql`
+      SELECT COALESCE(SUM(total_amount::numeric), 0)::text AS amt
+      FROM sales_orders
+      WHERE deleted_at IS NULL
+        AND status NOT IN ('completed', 'cancelled')
+        AND COALESCE(total_amount::numeric, 0) > 0
+        AND updated_at < NOW() - INTERVAL '30 days'
+    `).catch(() => ({ rows: [{ amt: '0' }] }));
+  }
+
+  private fetchAbsentToday() {
+    return runQuery<{ c: string }>(sql`
+      SELECT COUNT(*)::text AS c FROM hr_ai_attendance
+      WHERE DATE(created_at) = CURRENT_DATE AND type = 'absent'
+    `).catch(() => ({ rows: [{ c: '0' }] }));
+  }
+
+  private fetchProductionProgress() {
+    return runQuery<{ done: string; total: string }>(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'completed')::text AS done,
+        NULLIF(COUNT(*), 0)::text                          AS total
+      FROM production_sessions
+      WHERE DATE(started_at) = CURRENT_DATE
+    `).catch(() => ({ rows: [{ done: '0', total: null }] }));
+  }
+
   /** KPI snapshot — barcha modullardan asosiy ko'rsatkichlar */
   private async snapshotKpi(): Promise<KpiSnapshot> {
-    const [dealsR, ccR, stockR, debtR, absR, ppR] = await Promise.all([
-      runQuery<{ c: string; amt: string }>(sql`
-        SELECT COUNT(*)::text AS c, COALESCE(SUM(opportunity::numeric), 0)::text AS amt
-        FROM crm_deals WHERE deleted_at IS NULL AND close_date < NOW() AND status NOT IN ('won','lost')
-      `).catch(() => ({ rows: [{ c: '0', amt: '0' }] })),
-
-      runQuery<{ c: string }>(sql`
-        SELECT COUNT(*)::text AS c FROM cc_documents WHERE basket_state='inbox' AND is_inbox_overdue=true
-      `).catch(() => ({ rows: [{ c: '0' }] })),
-
-      // criticalStockCount — warehouse_rolls dan
-      runQuery<{ c: string }>(sql`
-        SELECT COUNT(*)::text AS c FROM warehouse_rolls
-        WHERE remaining_weight_kg < 50 AND (status IS NULL OR status != 'used')
-      `).catch(() => ({ rows: [{ c: '0' }] })),
-
-      // overdueDebt — sales_orders dan (30 kundan oshgan)
-      // balance_due computed as total_amount for non-completed orders (no paid_amount column on this table)
-      runQuery<{ amt: string }>(sql`
-        SELECT COALESCE(SUM(total_amount::numeric), 0)::text AS amt
-        FROM sales_orders
-        WHERE deleted_at IS NULL
-          AND status NOT IN ('completed', 'cancelled')
-          AND COALESCE(total_amount::numeric, 0) > 0
-          AND updated_at < NOW() - INTERVAL '30 days'
-      `).catch(() => ({ rows: [{ amt: '0' }] })),
-
-      // absentToday — hr_ai_attendance dan
-      runQuery<{ c: string }>(sql`
-        SELECT COUNT(*)::text AS c FROM hr_ai_attendance
-        WHERE DATE(created_at) = CURRENT_DATE AND type = 'absent'
-      `).catch(() => ({ rows: [{ c: '0' }] })),
-
-      // productionPlanPct — bugungi production_sessions: completed / total (%)
-      runQuery<{ done: string; total: string }>(sql`
-        SELECT
-          COUNT(*) FILTER (WHERE status = 'completed')::text AS done,
-          NULLIF(COUNT(*), 0)::text                          AS total
-        FROM production_sessions
-        WHERE DATE(started_at) = CURRENT_DATE
-      `).catch(() => ({ rows: [{ done: '0', total: null }] })),
-    ]);
-
+    const [dealsR, ccR, stockR, debtR, absR, ppR] = await this.fetchKpiCounts();
+    const ppRow = ppR.rows[0];
+    const productionPlanPct = ppRow?.total
+      ? Math.round((Number(ppRow.done) / Number(ppRow.total)) * 100)
+      : 0;
     return {
       overdueDeals:         Number(dealsR.rows[0]?.c ?? 0),
       overdueDealsAmount:   Number(dealsR.rows[0]?.amt ?? 0),
       criticalStockCount:   Number(stockR.rows[0]?.c ?? 0),
-      productionPlanPct:    ppR.rows[0]?.total
-        ? Math.round((Number(ppR.rows[0].done) / Number(ppR.rows[0].total)) * 100)
-        : 0,
+      productionPlanPct,
       overdueDebt:          Number(debtR.rows[0]?.amt ?? 0),
       absentToday:          Number(absR.rows[0]?.c ?? 0),
       ccInboxOverdue:       Number(ccR.rows[0]?.c ?? 0),

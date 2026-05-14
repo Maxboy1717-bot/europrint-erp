@@ -49,7 +49,9 @@ export function VoiceMessagePlayer({ src, isMe }: Props) {
       document.querySelectorAll("audio").forEach((el) => {
         if (el !== a) el.pause();
       });
-      a.play().then(() => setPlaying(true)).catch(() => {});
+      a.play().then(() => setPlaying(true)).catch(e => {
+        console.warn('Audio playback failed:', e);
+      });
     }
   }, [playing]);
 

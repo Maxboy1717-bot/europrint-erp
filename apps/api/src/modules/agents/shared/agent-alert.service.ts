@@ -4,6 +4,16 @@
  * - Telegram ga yuboriladi (agar TELEGRAM_AGENTS_BOT_TOKEN bo'lsa)
  * - Socket.IO orqali real-time yuboriladi (agar gateway mavjud bo'lsa)
  */
+
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: dynamic SQL fragment composition (conditional `target_role = ${role}`
+ *   vs `false` literal embedded inside an OR clause), `::jsonb` cast on the
+ *   JSON.stringify result, `RETURNING id::text`, and target tables
+ *   (agent_alerts, employees.telegram_chat_id lookup) are not present in the
+ *   Drizzle schema barrel.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { sql } from 'drizzle-orm';
@@ -35,20 +45,8 @@ export class AgentAlertService {
 
   async send(alert: AgentAlert): Promise<string | null> {
     try {
-      const r = await runQuery<{ id: string }>(sql`
-        INSERT INTO agent_alerts
-          (agent_name, severity, title, message, target_user_id, target_role,
-           module, related_id, action_required, actions)
-        VALUES
-          (${alert.agentName}, ${alert.severity}, ${alert.title}, ${alert.message},
-           ${alert.targetUserId ?? null}, ${alert.targetRole ?? null},
-           ${alert.module ?? null}, ${alert.relatedId ?? null},
-           ${alert.actionRequired ?? false}, ${JSON.stringify(alert.actions ?? [])}::jsonb)
-        RETURNING id::text AS id
-      `);
-      const alertId = r.rows[0].id;
-
-      // Telegram (background)
+      const alertId = await this.insertAlert(alert);
+      if (!alertId) return null;
       if (alert.targetUserId) {
         this.sendToTelegram(alert.targetUserId, alert).catch((e) =>
           this.logger.warn(`Telegram send failed: ${(e as Error).message}`),
@@ -59,6 +57,26 @@ export class AgentAlertService {
       this.logger.error(`Alert send failed: ${(err as Error).message}`);
       return null;
     }
+  }
+
+  private async insertAlert(alert: AgentAlert): Promise<string | null> {
+    const r = await runQuery<{ id: string }>(sql`
+      INSERT INTO agent_alerts
+        (agent_name, severity, title, message, target_user_id, target_role,
+         module, related_id, action_required, actions)
+      VALUES
+        (${alert.agentName}, ${alert.severity}, ${alert.title}, ${alert.message},
+         ${alert.targetUserId ?? null}, ${alert.targetRole ?? null},
+         ${alert.module ?? null}, ${alert.relatedId ?? null},
+         ${alert.actionRequired ?? false}, ${JSON.stringify(alert.actions ?? [])}::jsonb)
+      RETURNING id::text AS id
+    `);
+    const alertRow = r.rows[0];
+    if (!alertRow) {
+      this.logger.warn('Alert insert returned no row');
+      return null;
+    }
+    return alertRow.id;
   }
 
   /** Severity emoji */

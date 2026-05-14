@@ -3,7 +3,7 @@
  * POS Monitor — partiya/lot traceability sahifasi.
  * URL: /pos-monitor/lots
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { warehouseFeaturesApi } from "../api/pos-monitor.api";
 
@@ -52,7 +52,7 @@ export default function PosLotTraceability() {
   const [search, setSearch] = useState("");
 
   // Lot ma'lumotini barkod print queue dan yig'amiz (batch_number bo'yicha)
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const movements = await fetch("/api/pos/movements?limit=100", {
@@ -99,9 +99,9 @@ export default function PosLotTraceability() {
       console.error(e);
       setLots([]);
     } finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const filtered = lots.filter(l => {
     if (!search) return true;

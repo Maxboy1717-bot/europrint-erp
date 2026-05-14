@@ -3,7 +3,7 @@
  * ERP — Xodimning shaxsiy invertar balansi.
  * URL: /wms/employee-inventory
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,7 +30,7 @@ export default function EmployeeInventory() {
   const [loading, setLoading] = useState(true);
   const [me, setMe] = useState<{ id: number; fullName: string; username: string } | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [meR, invR] = await Promise.all([
@@ -45,9 +45,9 @@ export default function EmployeeInventory() {
       setItems(Array.isArray(invR) ? invR : []);
     } catch { /* noop */ }
     finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const totalValue = items.reduce((s, i) => s + (i.totalValue ?? 0), 0);
   const activeItems = items.filter(i => i.status === "ACTIVE" || (i.currentBalance ?? 0) > 0);

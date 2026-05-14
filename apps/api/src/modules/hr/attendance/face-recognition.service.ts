@@ -178,11 +178,11 @@ export class FaceRecognitionService {
           continue;
         }
         const faces = recResult.data.faces ?? [];
-        if (faces.length === 0) {
+        const face = faces[0];
+        if (!face) {
           this.logger.warn('Enrollment image #%d: no faces detected for employee %s', idx + 1, employeeId);
           continue;
         }
-        const face = faces[0]!;
         embeddings.push(face.embedding);
         if (face.confidence > maxConfidence) maxConfidence = face.confidence;
       }

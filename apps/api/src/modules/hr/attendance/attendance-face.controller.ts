@@ -65,15 +65,16 @@ export class AttendanceFaceController {
   @HttpCode(HttpStatus.OK)
   async registerFace(@Body() raw: unknown) {
     const dto: RegisterFaceDto = RegisterFaceSchema.parse(raw);
-    if ((dto.images ?? []).length > 0) {
-      if (dto.images!.length !== 3) {
+    const images = dto.images ?? [];
+    if (images.length > 0) {
+      if (images.length !== 3) {
         throw new BadRequestException(
-          `Face enrollment requires exactly 3 images; received ${dto.images!.length}`,
+          `Face enrollment requires exactly 3 images; received ${images.length}`,
         );
       }
       const result = await this.faceRec.registerEmbeddingFromImages(
         dto.employee_id,
-        dto.images!,
+        images,
       );
       if (!result.ok) {
         return { ok: false, error: String(result.error) };

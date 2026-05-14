@@ -316,7 +316,9 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
       queryClient.invalidateQueries({ queryKey: ["/api/hr/ai-interview/sessions"] });
       const link = data?.interview_link || "";
       if (link) {
-        navigator.clipboard.writeText(link).catch(() => {});
+        navigator.clipboard.writeText(link).catch(e => {
+          console.warn('Clipboard write failed:', e);
+        });
         toast({ title: "Havola yaratildi", description: "Havola clipboard ga nusxalandi" });
       } else {
         toast({ title: "Sessiya yaratildi" });
@@ -383,7 +385,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
                 <p className="text-xs text-muted-foreground">{t("intervyuHavolasi")}</p>
                 <div className="flex gap-2">
                   <Input readOnly value={interviewLink} className="text-xs h-9 flex-1" />
-                  <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => { navigator.clipboard.writeText(interviewLink).catch(() => {}); toast({ title: "Nusxalandi!" }); }}>
+                  <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => { navigator.clipboard.writeText(interviewLink).catch(e => { console.warn('Clipboard write failed:', e); }); toast({ title: "Nusxalandi!" }); }}>
                     <Copy className="w-3.5 h-3.5" />
                   </Button>
                   <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => window.open(interviewLink, "_blank")}>

@@ -3,8 +3,17 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: dynamic SQL fragment composition (variable WHERE clause built at
+ *   runtime from optional action/tableName/userId/from/to/search filters with
+ *   ILIKE-escaped wildcards) combined with LEFT JOIN to users + TRIM/COALESCE
+ *   computed user_display_name column, plus `sql.raw` literal DISTINCT query.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
-import { Result, safeCall } from '@common/result';
+import { Result, safeCall, Err, AppErr } from '@common/result';
 import { db } from '@shared/db';
 import { sql, desc, eq } from 'drizzle-orm';
 import { pgTable, varchar, text, jsonb, timestamp, integer, boolean, serial } from 'drizzle-orm/pg-core';
@@ -81,13 +90,32 @@ export class AdminExtraRepository {
     // Escape LIKE metacharacters so user input doesn't accidentally match everything
     const esc = (s: string) => `%${s.replace(/[\\%_]/g, '\\$&')}%`;
 
+    // Validate user-supplied date strings before constructing Date objects.
+    // Invalid input would otherwise produce `Invalid Date` and a 500 from the DB driver.
+    let fromDate: Date | null = null;
+    if (from) {
+      const d = new Date(from);
+      if (isNaN(d.getTime())) {
+        return Err(AppErr('VALIDATION', `Invalid 'from' date: ${from}`));
+      }
+      fromDate = d;
+    }
+    let toDate: Date | null = null;
+    if (to) {
+      const d = new Date(to + 'T23:59:59.999Z');
+      if (isNaN(d.getTime())) {
+        return Err(AppErr('VALIDATION', `Invalid 'to' date: ${to}`));
+      }
+      toDate = d;
+    }
+
     return safeCall(async () => {
       const whereParts    = sql`1=1`;
       const actionPart    = action    ? sql` AND al.action     ILIKE ${esc(action)}`                                                                                              : sql``;
       const tableNamePart = tableName ? sql` AND al.table_name ILIKE ${esc(tableName)}`                                                                                           : sql``;
       const userIdPart    = userId    ? sql` AND al.user_id    = ${userId}`                                                                                                       : sql``;
-      const fromPart      = from      ? sql` AND al.created_at >= ${new Date(from)}`                                                                                              : sql``;
-      const toPart        = to        ? sql` AND al.created_at <= ${new Date(to + 'T23:59:59.999Z')}`                                                                             : sql``;
+      const fromPart      = fromDate  ? sql` AND al.created_at >= ${fromDate}`                                                                                                    : sql``;
+      const toPart        = toDate    ? sql` AND al.created_at <= ${toDate}`                                                                                                      : sql``;
       const searchPart    = search    ? sql` AND (al.table_name ILIKE ${esc(search)} OR al.record_id ILIKE ${esc(search)} OR al.user_id ILIKE ${esc(search)})`                   : sql``;
 
       const [rows, countRows] = await Promise.all([
