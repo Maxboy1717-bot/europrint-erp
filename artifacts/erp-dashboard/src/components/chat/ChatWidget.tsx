@@ -107,6 +107,19 @@ export function ChatWidget() {
     scrollToBottom();
   }, [messages.length, scrollToBottom]);
 
+  // Clear any pending typing timers when the widget unmounts so we don't leak
+  // setTimeout handles or call state setters on an unmounted component.
+  useEffect(() => {
+    return () => {
+      typingTimers.current.forEach((timer) => clearTimeout(timer));
+      typingTimers.current.clear();
+      if (typingTimeout.current) {
+        clearTimeout(typingTimeout.current);
+        typingTimeout.current = null;
+      }
+    };
+  }, []);
+
   // Listen for widget-specific typing (local state)
   useEffect(() => {
     if (!isAuthenticated) return;

@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   CREATE UNIQUE INDEX ... WHERE status = 'running' (partial unique index DDL),
+ *   EXTRACT(DAY FROM (date1 - date2))::integer / 7 period-offset math for
+ *   scheduled-receipts bucketing, ROW_NUMBER() OVER (ORDER BY ...) window
+ *   for MPS row-indexing, and INSERT ... ON CONFLICT DO NOTHING with
+ *   multi-column natural keys for MRP line idempotency.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module pp-intelligence.service
  * @description Production-planning orchestrator that wraps the pure MRP
  *   handler with the *plumbing* needed for a real MRP run:
@@ -117,7 +126,9 @@ export class PpIntelligenceService implements OnModuleInit {
         VALUES (${method}, 'running', ${horizon}, NOW())
         RETURNING id
       `);
-      return r.rows[0]['id'];
+      const row = r.rows[0];
+      if (!row) throw Object.assign(new Error('MRP run yaratilmadi'), { code: 'INTERNAL' });
+      return row['id'];
     } catch {
       throw Object.assign(new Error('MRP hisoblash allaqachon bajarilmoqda'), { code: 'CONFLICT' });
     }

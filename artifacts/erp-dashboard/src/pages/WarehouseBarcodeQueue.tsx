@@ -2,7 +2,7 @@
  * WarehouseBarcodeQueue.tsx
  * ERP — Auto-generated barkodlar navbati va chop etish.
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export default function WarehouseBarcodeQueue() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       // GET all barcodes from print queue (faqat oxirgi 500)
@@ -56,9 +56,9 @@ export default function WarehouseBarcodeQueue() {
     } catch (e) {
       console.error(e);
     } finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const filtered = items.filter(b => {
     if (statusFilter !== "all" && b.status !== statusFilter) return false;

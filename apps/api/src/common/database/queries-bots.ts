@@ -24,13 +24,19 @@ export async function execBotCandidateUpsert(
   name: string, chatId: string, vacancyId: number | null,
   cvFileId: string | null, cvFileName: string | null, answersJson: string, lang: string,
 ): Promise<void> {
+  let screeningAnswers: unknown;
+  try {
+    screeningAnswers = JSON.parse(answersJson);
+  } catch {
+    screeningAnswers = {};
+  }
   await db.insert(bot_candidates).values({
     full_name: name,
     telegram_chat_id: chatId,
     vacancy_id: vacancyId,
     cv_file_id: cvFileId ?? null,
     cv_file_name: cvFileName ?? null,
-    screening_answers: JSON.parse(answersJson),
+    screening_answers: screeningAnswers,
     lang,
     status: 'new',
   }).onConflictDoUpdate({

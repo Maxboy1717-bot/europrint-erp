@@ -78,7 +78,9 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
       const rows = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO kanban_boards (name, type, description) VALUES (${input.name}, ${input.type}, ${input.description}) RETURNING *
       `);
-      return Ok(castTo<KanbanBoard>(rows.rows[0]));
+      const row = rows.rows[0];
+      if (!row) return Err({ message: 'Board yaratilmadi', code: 'DB_ERROR' });
+      return Ok(castTo<KanbanBoard>(row));
     } catch (error) {
       this.logger.error('createBoard: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
@@ -114,7 +116,9 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
       const rows = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO kanban_columns (board_id, name, sort_order, color) VALUES (${input.board_id}, ${input.name}, ${input.sort_order}, ${input.color}) RETURNING *
       `);
-      return Ok(castTo<KanbanColumn>(rows.rows[0]));
+      const row = rows.rows[0];
+      if (!row) return Err({ message: 'Column yaratilmadi', code: 'DB_ERROR' });
+      return Ok(castTo<KanbanColumn>(row));
     } catch (error) {
       this.logger.error('addColumn: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
@@ -163,7 +167,9 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
         )
         RETURNING *
       `);
-      return Ok(castTo<KanbanCard>(rows.rows[0]));
+      const row = rows.rows[0];
+      if (!row) return Err({ message: 'Card yaratilmadi', code: 'DB_ERROR' });
+      return Ok(castTo<KanbanCard>(row));
     } catch (error) {
       this.logger.error('addCard: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });

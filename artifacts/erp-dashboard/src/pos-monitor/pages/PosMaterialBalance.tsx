@@ -3,7 +3,7 @@
  * POS Monitor — Material Balans (aggregat, qiymat bo'yicha)
  * URL: /pos-monitor/material-balance
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { materialsApi } from "../api/pos-monitor.api";
 
@@ -38,16 +38,16 @@ export default function PosMaterialBalance() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const r = await materialsApi.getAll({ limit: 500 });
       setMaterials(Array.isArray(r) ? (r as Material[]) : []);
     } catch { setMaterials([]); }
     finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const categories = Array.from(new Set(materials.map(m => m.category).filter(Boolean))) as string[];
 

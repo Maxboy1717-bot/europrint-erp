@@ -97,7 +97,11 @@ export async function getObjectAclPolicy(
   if (!aclPolicy) {
     return null;
   }
-  return JSON.parse(aclPolicy as string);
+  try {
+    return JSON.parse(aclPolicy as string) as ObjectAclPolicy;
+  } catch {
+    return null;
+  }
 }
 
 export async function canAccessObject({

@@ -87,7 +87,7 @@ export class DrizzleFinanceAccountingRepo {
       VALUES (${documentNumber}, ${document_type}, ${document_date}, ${posting_date || document_date}, ${description}, ${currency}, ${reference_type || null}, ${reference_id || null}, ${cost_center_id || null}, ${profit_center_id || null}, 'draft')
       RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async insertGlLine(docId: number, lineNumber: number, line: Row): Promise<void> {
@@ -108,7 +108,7 @@ export class DrizzleFinanceAccountingRepo {
     const rows = await runQuery<Row>(sql`
       UPDATE accounting_periods SET status = 'closed', closed_by = ${closedBy}, closed_at = NOW() WHERE id = ${id} RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getMaterials(where: SQL, limitVal: number, offsetVal: number): Promise<Row[]> {

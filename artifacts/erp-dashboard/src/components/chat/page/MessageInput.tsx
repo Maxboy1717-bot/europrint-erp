@@ -43,6 +43,16 @@ export function MessageInput({
     ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
   }, [text]);
 
+  // Cancel pending typing-stop timeout when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setText(val);

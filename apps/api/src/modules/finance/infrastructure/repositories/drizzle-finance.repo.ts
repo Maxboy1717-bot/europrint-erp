@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   schema-resilient fallback chains (try `payment_date` column → on error retry
+ *   with `created_at`; try `account_type/account_code` → fall back to `source_type`),
+ *   and multi-table compatibility selects (fi_invoices, gl_journal_entries,
+ *   payroll, payroll_advances) whose Drizzle schemas are not unified.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * @module drizzle-finance.repo
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
@@ -25,7 +34,8 @@ export class FinanceRepository implements IFinanceRepo {
   async getSettingValue(settingKey: string): Promise<number> {
     try {
       const r = await runQuery<{ value: string }>(sql`SELECT value FROM settings WHERE key = ${settingKey} LIMIT 1`);
-      return r.rows[0]?.value ? parseInt(r.rows[0].value, 10) : 70;
+      const row = r.rows[0];
+      return row?.value ? parseInt(row.value, 10) : 70;
     } catch (error: unknown) {
       this.logger.error(`Error fetching setting ${settingKey}: ${(error as Error).message}`);
       return 70;
@@ -35,8 +45,9 @@ export class FinanceRepository implements IFinanceRepo {
   async findEmployeeBalance(employeeId: number): Promise<{ baseSalary: number } | null> {
     try {
       const r = await runQuery<{ base_salary: string }>(sql`SELECT base_salary FROM employees WHERE id = ${employeeId} LIMIT 1`);
-      if (!r.rows[0]) return null;
-      return { baseSalary: parseFloat(r.rows[0].base_salary ?? '0') };
+      const row = r.rows[0];
+      if (!row) return null;
+      return { baseSalary: parseFloat(row.base_salary ?? '0') };
     } catch (error: unknown) {
       this.logger.error(`Error finding employee: ${(error as Error).message}`);
       throw error;

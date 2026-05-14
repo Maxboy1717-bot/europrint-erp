@@ -12,6 +12,16 @@
  *   intervyu o'tkaziladi va yakuniy hujjat ko'rinishi qaytariladi.
  */
 
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: `NOW() + INTERVAL '2 hours'` server-side timestamp expression for
+ *   session expiry, `::jsonb` cast on JSON.stringify answers payload, multiple
+ *   `::text` UUID column casts in SELECT projections, `RETURNING id::text`,
+ *   and target tables (cc_ai_sessions, cc_document_templates) are not present
+ *   in the Drizzle schema barrel.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
 import {
   Injectable, Logger, BadRequestException, ForbiddenException, NotFoundException, InternalServerErrorException,
 } from '@nestjs/common';
@@ -20,30 +30,13 @@ import { runQuery } from '@shared/db';
 import { isOk } from '@common/result';
 import { AiRouterCallService } from '../../ai/application/services/ai-router-call.service';
 import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
+import type { TemplateRow } from '../infrastructure/repositories/cc-documents/types';
 import { CcDocumentNumberService } from './cc-document-number.service';
 import type { Language } from '../domain/types';
+import { AiQuestion, SessionRow, buildFinalizePrompts, extractSubject } from './cc-ai-interview.types';
 
-export interface AiQuestion {
-  key: string;
-  qUz: string;
-  qRu: string;
-  required: boolean;
-  type: 'text' | 'choice' | 'date' | 'number';
-  choices?: string[];
-}
-
-interface SessionRow {
-  id:                 string;
-  user_id:            number;
-  template_id:        string;
-  channel:            'web' | 'telegram';
-  current_question_idx: number;
-  answers:            Record<string, unknown>;
-  language:           Language;
-  is_completed:       boolean;
-  draft_document_id:  string | null;
-  expires_at:         string | null;
-}
+// Re-export the public types so existing imports keep working
+export { AiQuestion } from './cc-ai-interview.types';
 
 @Injectable()
 export class CcAiInterviewService {
@@ -68,41 +61,45 @@ export class CcAiInterviewService {
     if (!isOk(tmplRes) || !tmplRes.data) throw new NotFoundException('Hujjat shabloni topilmadi');
     if (!tmplRes.data.isActive) throw new BadRequestException('Bu shablon faol emas');
 
-    // Mavjud tugatilmagan sessiya bo'lsa qayta foydalanish (faqat muddati o'tmagan)
-    const existing = await runQuery<SessionRow>(sql`
-      SELECT id::text, user_id, template_id::text, channel, current_question_idx,
-             answers, language, is_completed, draft_document_id::text
-      FROM cc_ai_sessions
-      WHERE user_id = ${args.userId}
-        AND template_id = ${args.templateId}
-        AND is_completed = false
-        AND expires_at > NOW()
-      ORDER BY started_at DESC LIMIT 1
-    `);
-
-    let sessionId: string;
-    let questionIdx: number;
-
-    if (existing.rows[0]) {
-      sessionId = existing.rows[0].id;
-      questionIdx = existing.rows[0].current_question_idx;
-    } else {
-      const r = await runQuery<{ id: string }>(sql`
-        INSERT INTO cc_ai_sessions
-          (user_id, template_id, channel, current_question_idx, answers, language, expires_at)
-        VALUES
-          (${args.userId}, ${args.templateId}, ${args.channel ?? 'web'},
-           0, '{}'::jsonb, ${args.language ?? 'uz'},
-           NOW() + INTERVAL '2 hours')
-        RETURNING id::text AS id
-      `);
-      sessionId = r.rows[0].id;
-      questionIdx = 0;
-    }
+    const existing = await this.findExistingSession(args.userId, args.templateId);
+    const { sessionId, questionIdx } = existing
+      ? { sessionId: existing.id, questionIdx: existing.current_question_idx }
+      : await this.createNewSession(args);
 
     const questions = await this.loadQuestions(args.templateId);
     const q = questions[questionIdx] ?? null;
     return { sessionId, question: q, total: questions.length };
+  }
+
+  private async findExistingSession(userId: number, templateId: string): Promise<SessionRow | undefined> {
+    const existing = await runQuery<SessionRow>(sql`
+      SELECT id::text, user_id, template_id::text, channel, current_question_idx,
+             answers, language, is_completed, draft_document_id::text
+      FROM cc_ai_sessions
+      WHERE user_id = ${userId}
+        AND template_id = ${templateId}
+        AND is_completed = false
+        AND expires_at > NOW()
+      ORDER BY started_at DESC LIMIT 1
+    `);
+    return existing.rows[0];
+  }
+
+  private async createNewSession(args: {
+    userId: number; templateId: string; language?: Language; channel?: 'web' | 'telegram';
+  }): Promise<{ sessionId: string; questionIdx: number }> {
+    const r = await runQuery<{ id: string }>(sql`
+      INSERT INTO cc_ai_sessions
+        (user_id, template_id, channel, current_question_idx, answers, language, expires_at)
+      VALUES
+        (${args.userId}, ${args.templateId}, ${args.channel ?? 'web'},
+         0, '{}'::jsonb, ${args.language ?? 'uz'},
+         NOW() + INTERVAL '2 hours')
+      RETURNING id::text AS id
+    `);
+    const row = r.rows[0];
+    if (!row) throw new InternalServerErrorException('Sessiya yaratilmadi');
+    return { sessionId: row.id, questionIdx: 0 };
   }
 
   // ─────────────────────────────────────────────────────────────────────
@@ -120,31 +117,13 @@ export class CcAiInterviewService {
     const cur = questions[sess.current_question_idx];
     if (!cur) throw new InternalServerErrorException('Joriy savol topilmadi');
 
-    // Validate required + type
-    if (cur.required && (args.value === null || args.value === undefined || args.value === '')) {
-      throw new BadRequestException(`"${cur.qUz}" maydon majburiy`);
-    }
-    if (cur.type === 'number' && args.value !== null && args.value !== '' && Number.isNaN(Number(args.value))) {
-      throw new BadRequestException(`"${cur.qUz}" raqam bo'lishi kerak`);
-    }
-    if (cur.type === 'choice' && cur.choices && cur.choices.length > 0
-        && !cur.choices.includes(String(args.value))) {
-      throw new BadRequestException(`Tanlangan qiymat ruxsat etilgan ro'yxatda yo'q`);
-    }
+    this.validateAnswer(cur, args.value);
 
-    // Save answer + advance index
     const newAnswers = { ...sess.answers, [cur.key]: args.value };
     const newIdx     = sess.current_question_idx + 1;
     const completed  = newIdx >= questions.length;
 
-    await runQuery(sql`
-      UPDATE cc_ai_sessions
-      SET answers              = ${JSON.stringify(newAnswers)}::jsonb,
-          current_question_idx = ${newIdx},
-          is_completed         = ${completed},
-          completed_at         = ${completed ? new Date() : null}
-      WHERE id = ${args.sessionId}
-    `);
+    await this.persistAnswer(args.sessionId, newAnswers, newIdx, completed);
 
     return {
       question:    completed ? null : questions[newIdx],
@@ -152,6 +131,35 @@ export class CcAiInterviewService {
       total:       questions.length,
       index:       newIdx,
     };
+  }
+
+  private validateAnswer(cur: AiQuestion, value: unknown): void {
+    if (cur.required && (value === null || value === undefined || value === '')) {
+      throw new BadRequestException(`"${cur.qUz}" maydon majburiy`);
+    }
+    if (cur.type === 'number' && value !== null && value !== '' && Number.isNaN(Number(value))) {
+      throw new BadRequestException(`"${cur.qUz}" raqam bo'lishi kerak`);
+    }
+    if (cur.type === 'choice' && cur.choices && cur.choices.length > 0
+        && !cur.choices.includes(String(value))) {
+      throw new BadRequestException(`Tanlangan qiymat ruxsat etilgan ro'yxatda yo'q`);
+    }
+  }
+
+  private async persistAnswer(
+    sessionId: string,
+    newAnswers: Record<string, unknown>,
+    newIdx: number,
+    completed: boolean,
+  ): Promise<void> {
+    await runQuery(sql`
+      UPDATE cc_ai_sessions
+      SET answers              = ${JSON.stringify(newAnswers)}::jsonb,
+          current_question_idx = ${newIdx},
+          is_completed         = ${completed},
+          completed_at         = ${completed ? new Date() : null}
+      WHERE id = ${sessionId}
+    `);
   }
 
   // ─────────────────────────────────────────────────────────────────────
@@ -164,98 +172,83 @@ export class CcAiInterviewService {
     senderPosition?: string;
   }): Promise<{ sessionId: string; draftDocumentId: string; aiBody: string; subject: string }> {
     const sess = await this.getSession(args.sessionId, args.userId);
-    if (!sess.is_completed) {
-      throw new BadRequestException('Avval barcha savollarga javob bering');
-    }
-    if (sess.draft_document_id) {
-      // Allaqachon yaratilgan — qaytaramiz
-      const docRes = await this.docs.getById(sess.draft_document_id);
-      if (isOk(docRes) && docRes.data) {
-        return {
-          sessionId:       sess.id,
-          draftDocumentId: docRes.data.id,
-          aiBody:          docRes.data.aiBody,
-          subject:         docRes.data.subject,
-        };
-      }
-    }
+    if (!sess.is_completed) throw new BadRequestException('Avval barcha savollarga javob bering');
+
+    const cached = await this.findCachedDraft(sess);
+    if (cached) return cached;
 
     const tmplRes = await this.docs.getTemplate(sess.template_id);
     if (!isOk(tmplRes) || !tmplRes.data) throw new NotFoundException('Shablon topilmadi');
     const tmpl = tmplRes.data;
 
-    // ── Claude'ga so'rov ─────────────────────────────────────────────
+    const aiText = await this.generateAiText(sess, tmpl, args);
+    const { subject, body } = extractSubject(aiText, tmpl.nameUz);
+
+    const draftId = await this.persistDraft(sess, tmpl, subject, body);
+    return { sessionId: sess.id, draftDocumentId: draftId, aiBody: body, subject };
+  }
+
+  private async findCachedDraft(sess: SessionRow): Promise<{
+    sessionId: string; draftDocumentId: string; aiBody: string; subject: string;
+  } | null> {
+    if (!sess.draft_document_id) return null;
+    const docRes = await this.docs.getById(sess.draft_document_id);
+    if (!isOk(docRes) || !docRes.data) return null;
+    return {
+      sessionId:       sess.id,
+      draftDocumentId: docRes.data.id,
+      aiBody:          docRes.data.aiBody,
+      subject:         docRes.data.subject,
+    };
+  }
+
+  private async generateAiText(
+    sess: SessionRow,
+    tmpl: TemplateRow,
+    args: { userId: number; senderName?: string; senderPosition?: string },
+  ): Promise<string> {
     const language = sess.language;
-    const langName = language === 'ru' ? 'rus tilida' : "o'zbek tilida";
-    const orgName  = 'Europrint';
+    const { systemPrompt, userPrompt, answersList } = buildFinalizePrompts({
+      language,
+      tmplNameUz:     tmpl.nameUz,
+      tmplCode:       tmpl.code,
+      senderName:     args.senderName,
+      senderPosition: args.senderPosition,
+      answers:        sess.answers,
+    });
 
-    const systemPrompt =
-`Sen Europrint korxonasi ichki kommunikatsiya tizimining hujjat yordamchisi sen.
-Vazifang — xodim bergan ma'lumotlar asosida rasmiy, professional uslubdagi
-hujjat matnini yaratish. Matn ${langName} bo'lishi kerak.
-
-Qoidalar:
-- Faqat hujjat matnini ber, izoh yoki tushuntirish qo'shma.
-- Sarlavha (mavzu) "MAVZU:" yorlig'i bilan birinchi qatorda bo'lsin.
-- Bo'sh joylar va shablon yorliqlari yo'q (masalan {{ism}} kabi).
-- Real ma'lumotlardan boshqa hech nima ixtiro qilma.
-- 2-4 ta qisqa abzas bo'lsin, paragrafda 5 dan oshmagan jumla.`;
-
-    const answersList = Object.entries(sess.answers)
-      .map(([k, v]) => `- ${k}: ${JSON.stringify(v)}`)
-      .join('\n');
-
-    const userPrompt =
-`Hujjat turi: ${tmpl.nameUz} (kod: ${tmpl.code})
-Tashkilot: ${orgName}
-Xodim ismi: ${args.senderName ?? '(belgilanmagan)'}
-Lavozimi:   ${args.senderPosition ?? '(belgilanmagan)'}
-
-Xodimning javoblari:
-${answersList}
-
-Endi shu ma'lumotlar asosida ${tmpl.nameUz} hujjatini ${langName} yoz.
-Birinchi qatorda "MAVZU: <qisqa mavzu>" formatida sarlavha bo'lsin.`;
-
-    let aiText: string;
     if (tmpl.numberFormat.includes('TEST') || (tmpl as { testMode?: boolean }).testMode) {
-      // Test rejim
-      aiText = `MAVZU: TEST — ${tmpl.nameUz}\n\n[Test rejimida AI chaqirilmadi]\n\nJavoblar:\n${answersList}`;
-    } else {
-      const r = await this.ai.callClaude({
-        taskType:     'cc.generate_document',
-        systemPrompt,
-        prompt:       userPrompt,
-        temperature:  0.4,
-        maxTokens:    1500,
-        userId:       args.userId,
-        sessionId:    sess.id,
-        metadata:     { templateCode: tmpl.code, language },
-      });
-      if (!isOk(r)) {
-        throw new InternalServerErrorException(`Claude xatosi: ${r.error.message}`);
-      }
-      aiText = r.data.text.trim();
+      return `MAVZU: TEST — ${tmpl.nameUz}\n\n[Test rejimida AI chaqirilmadi]\n\nJavoblar:\n${answersList}`;
     }
+    const r = await this.ai.callClaude({
+      taskType:    'cc.generate_document',
+      systemPrompt, prompt: userPrompt,
+      temperature: 0.4, maxTokens: 1500,
+      userId:      args.userId, sessionId: sess.id,
+      metadata:    { templateCode: tmpl.code, language },
+    });
+    if (!isOk(r)) throw new InternalServerErrorException(`Claude xatosi: ${r.error.message}`);
+    return r.data.text.trim();
+  }
 
-    // Sarlavhani matndan ajratib olish
-    const subjectMatch = aiText.match(/^MAVZU:\s*(.+?)$/im);
-    const subject = subjectMatch?.[1]?.trim()?.slice(0, 500) || tmpl.nameUz;
-    const body = aiText.replace(/^MAVZU:.+\n+/im, '').trim() || aiText;
-
-    // ── Draft yaratamiz ─────────────────────────────────────────────
+  private async persistDraft(
+    sess: SessionRow,
+    tmpl: TemplateRow,
+    subject: string,
+    body: string,
+  ): Promise<string> {
     const documentNumber = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
     const draftRes = await this.docs.createDraft({
       templateId:      tmpl.id,
       templateVersion: tmpl.version,
-      senderUserId:    args.userId,
+      senderUserId:    sess.user_id,
       branchId:        null,
       subject,
       aiBody:          body,
       aiAnswers:       sess.answers,
       senderComment:   null,
       priority:        tmpl.defaultPriority,
-      language,
+      language:        sess.language,
       documentNumber,
     });
     if (!isOk(draftRes)) throw new InternalServerErrorException(draftRes.error.message);
@@ -265,13 +258,7 @@ Birinchi qatorda "MAVZU: <qisqa mavzu>" formatida sarlavha bo'lsin.`;
       SET draft_document_id = ${draftRes.data.id}, completed_at = NOW()
       WHERE id = ${sess.id}
     `);
-
-    return {
-      sessionId:       sess.id,
-      draftDocumentId: draftRes.data.id,
-      aiBody:          body,
-      subject,
-    };
+    return draftRes.data.id;
   }
 
   // ─────────────────────────────────────────────────────────────────────

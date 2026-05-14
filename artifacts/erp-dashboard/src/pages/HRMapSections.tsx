@@ -61,7 +61,7 @@ export const homeIcon = (color: string) => L.divIcon({
 export function MapCenterController({ center }: { center: [number, number] }) {
   const { t } = useTranslation("common");
   const map = useMap();
-  useEffect(() => { map.setView(center, 13); }, []);
+  useEffect(() => { map.setView(center, 13); }, [map, center]);
   return null;
 }
 

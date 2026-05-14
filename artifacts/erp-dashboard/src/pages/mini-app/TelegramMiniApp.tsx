@@ -80,7 +80,15 @@ function TelegramMiniAppInner() {
       const devToken = sessionStorage.getItem("tg_session_token");
       if (devToken) {
         const stored = sessionStorage.getItem("tg_user");
-        if (stored) { setUser(JSON.parse(stored)); setScreen("scan"); return; }
+        if (stored) {
+          try {
+            setUser(JSON.parse(stored));
+            setScreen("scan");
+            return;
+          } catch {
+            // invalid stored user — fall through to mock user
+          }
+        }
       }
       const mockUser: User = {
         id: 1, firstName: "Demo", lastName: "User", username: "demo",

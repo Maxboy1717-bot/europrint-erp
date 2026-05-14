@@ -64,7 +64,7 @@ function useWarehouses(enabled: boolean): WarehouseRow[] {
           : [];
         setWarehouses((rows as WarehouseRow[]).filter(w => w.code && w.isActive !== false));
       })
-      .catch(() => {});
+      .catch(e => console.error('Failed to load warehouses:', e));
     return () => { cancelled = true; };
   }, [enabled]);
 

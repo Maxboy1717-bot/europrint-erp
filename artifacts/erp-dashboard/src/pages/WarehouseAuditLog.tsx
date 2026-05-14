@@ -5,7 +5,7 @@
  *
  * 7 yil saqlash — O'zbekiston soliq talabi.
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ export default function WarehouseAuditLog() {
   const [dateTo, setDateTo] = useState("");
   const [selected, setSelected] = useState<AuditLog | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -68,9 +68,9 @@ export default function WarehouseAuditLog() {
       setLogs(list);
     } catch { setLogs([]); }
     finally { setLoading(false); }
-  };
+  }, [dateFrom, dateTo]);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const filtered = logs.filter(l => {
     if (actionFilter !== "all" && l.action !== actionFilter) return false;

@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   conditional WHERE clause with dynamic owner column switch (outbox vs inbox/pending),
+ *   COUNT(*) FILTER (WHERE ...) aggregate per basket-state in a single scan,
+ *   priority-CASE ordering combined with FOR UPDATE row locking and multi-statement
+ *   transactions (UPDATE + INSERT into basket_history + INSERT into audit_trail).
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * Communication Center — 3-Savat ma'lumotlari repository.
  * Raw `runQuery(sql\`...\`)` ishlatiladi (drizzle-orm dist'da kolonna refs
  * ba'zan undefined bo'lganligi sababli, joriy KanbanRepo va CRMRepo bilan
@@ -162,6 +171,7 @@ export class CcBasketsRepository {
       `);
 
       const updated = upd.rows[0];
+      if (!updated) return Err({ message: `Hujjat ${documentId} yangilanmadi`, code: 'NOT_FOUND' });
       return Ok({
         id:                updated.id,
         basketState:       updated.basket_state,

@@ -3,7 +3,7 @@
  * @description React UI component.
  */
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Mic, Square, Trash2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
@@ -21,6 +21,13 @@ export function VoiceRecorder({ onSend, onCancel }: Props) {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Ensure the duration interval is cleared if the component unmounts while recording.
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const start = async () => {
     try {

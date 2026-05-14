@@ -22,6 +22,7 @@ import { safeStorage } from "@/lib/safeStorage";
 import { ChatLayoutSidebar } from "./ChatLayoutSidebar";
 import { ChatLayoutMessages } from "./ChatLayoutMessages";
 import { useTranslation } from '@/lib/i18n';
+import { useToast } from "@/hooks/use-toast";
 import {
   EMPTY_MESSAGES,
   VIDEO_HEIGHT_DEFAULT,
@@ -35,6 +36,7 @@ import {
 
 export function ChatLayout() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
   const { joinRoom, sendMessage, sendTypingStart, sendTypingStop, editMsg, deleteMsg } =
     useChatSocket();
 
@@ -135,9 +137,12 @@ export function ChatLayout() {
             }
           }
         })
-        .catch(() => {});
+        .catch(e => {
+          console.error('Failed to load pinned message:', e);
+          toast({ title: 'Xato', description: String(e), variant: 'destructive' });
+        });
     },
-    [joinRoom, setActiveRoomId, setInfoOpen, setThreadRootId]
+    [joinRoom, setActiveRoomId, setInfoOpen, setThreadRootId, toast]
   );
 
   const handleSend = useCallback(
@@ -174,8 +179,11 @@ export function ChatLayout() {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ emoji }),
-    }).catch(() => {});
-  }, []);
+    }).catch(e => {
+      console.error('Failed to send reaction:', e);
+      toast({ title: 'Xato', description: String(e), variant: 'destructive' });
+    });
+  }, [toast]);
 
   const handleThread = useCallback(
     (msg: ChatMessage) => {
@@ -195,8 +203,11 @@ export function ChatLayout() {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ pin: !msg.isPinned }),
-    }).catch(() => {});
-  }, []);
+    }).catch(e => {
+      console.error('Failed to pin message:', e);
+      toast({ title: 'Xato', description: String(e), variant: 'destructive' });
+    });
+  }, [toast]);
 
   const handleUploadFile = useCallback(
     async (file: File) => {

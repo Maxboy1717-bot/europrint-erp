@@ -135,8 +135,8 @@ export class KanbanBoardsService {
       owner_user_id: ownerUserId,
     });
 
-    if (result.ok && columnId) {
-      this.robotSvc.onCardCreated({ cardId: result.data.id!, boardId, columnId, ownerUserId }).catch(() => {});
+    if (result.ok && columnId && result.data?.id) {
+      this.robotSvc.onCardCreated({ cardId: result.data.id, boardId, columnId, ownerUserId }).catch(() => {});
     }
     return result;
   }

@@ -3,7 +3,7 @@
  * ERP — Karantindagi materiallar sahifasi.
  * QC inspektor uchun QABUL / REWORK / CHIQARISH qarorlari.
  */
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default function WarehouseQuarantine() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<number | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const r = await apiRequest<QuarantineItem[]>("GET", "/api/pos/wh-features/quarantine");
@@ -45,9 +45,9 @@ export default function WarehouseQuarantine() {
     } catch {
       setItems([]);
     } finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
 
   async function qcDecide(id: number, decision: "QABUL" | "REWORK" | "CHIQARISH") {
     const note = prompt(`QC izoh (ixtiyoriy):`) ?? undefined;

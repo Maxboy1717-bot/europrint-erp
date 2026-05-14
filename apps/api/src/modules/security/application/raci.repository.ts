@@ -35,7 +35,7 @@ export class RaciRepository {
         VALUES (${title}, ${description}, ${responsibleId}, ${accountableId}, ${createdBy}, ${deadline}, 'pending')
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -64,7 +64,7 @@ export class RaciRepository {
         ON CONFLICT (task_id, employee_id) DO UPDATE SET role = EXCLUDED.role
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -123,7 +123,7 @@ export class RaciRepository {
         VALUES (${title}, ${riskLevel}, ${description}, ${likelihood}, ${impact}, ${assessorId}, 'open')
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 

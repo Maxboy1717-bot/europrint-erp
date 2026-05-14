@@ -42,7 +42,7 @@ export class MmVendorsPrRepository {
         VALUES (${body.name}, ${body.code ?? null}, ${body.contact_person ?? null}, ${body.phone ?? null}, ${body.email ?? null}, ${body.address ?? null}, ${body.payment_terms ?? 30}, ${body.currency ?? 'UZS'})
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -126,7 +126,7 @@ export class MmVendorsPrRepository {
         VALUES (${title}, ${requested_by}, ${needed_by ?? null}, ${notes ?? null}, 'pending')
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);  } catch (_e) {
+      return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
   }
 

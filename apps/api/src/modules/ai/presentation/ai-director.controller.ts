@@ -69,7 +69,7 @@ export class AiDirectorController {
     @Body() body: AiDirectorStrategicDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return unwrapOrInternal(await this.directorStrategy.generateStrategicRecommendations(body.businessContext as Parameters<typeof this.directorStrategy.generateStrategicRecommendations>[0], user.id));
+    return unwrapOrInternal(await this.directorStrategy.generateStrategicRecommendations(body.businessContext as unknown as Parameters<typeof this.directorStrategy.generateStrategicRecommendations>[0], user.id));
   }
 
   @Get('executive-summary')

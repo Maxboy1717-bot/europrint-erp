@@ -78,15 +78,26 @@ export class PpIntelligenceController {
     const byMaterial = new Map<string, PeriodCell[]>();
 
     for (const nr of result.netRequirements ?? []) {
-      if (!byMaterial.has(nr.materialId)) byMaterial.set(nr.materialId, emptyPeriods());
+      let periods = byMaterial.get(nr.materialId);
+      if (!periods) {
+        periods = emptyPeriods();
+        byMaterial.set(nr.materialId, periods);
+      }
       const idx = Math.min(Math.max(0, nr.period), horizon - 1);
-      const p = byMaterial.get(nr.materialId)![idx];
+      const p = periods[idx];
+      if (!p) continue;
       p.grossReq = nr.gr; p.netReq = nr.nr; p.scheduledReceipts += nr.sr;
     }
     for (const po of result.plannedOrders ?? []) {
-      if (!byMaterial.has(po.materialId)) byMaterial.set(po.materialId, emptyPeriods());
+      let periods = byMaterial.get(po.materialId);
+      if (!periods) {
+        periods = emptyPeriods();
+        byMaterial.set(po.materialId, periods);
+      }
       const idx = Math.min(Math.max(0, po.periodIndex), horizon - 1);
-      byMaterial.get(po.materialId)![idx].plannedOrders += po.qty;
+      const p = periods[idx];
+      if (!p) continue;
+      p.plannedOrders += po.qty;
     }
     for (const [materialId, periods] of byMaterial) {
       let poh = result.openingOnHand[materialId] ?? 0;
