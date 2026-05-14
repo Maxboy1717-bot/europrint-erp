@@ -1,0 +1,295 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$metadata": {
+    "name": "EuroPrint ERP — EP Linear Soft",
+    "version": "1.0.0",
+    "extractedFrom": [
+      "EuroPrint Design System/README.md",
+      "EuroPrint Design System/SKILL.md",
+      "EuroPrint Design System/PAGE-TEMPLATES.md",
+      "EuroPrint Design System/colors_and_type.css",
+      "EuroPrint Design System/ui_kits/erp-dashboard/kit.css"
+    ],
+    "extractedAt": "2026-05-14",
+    "primaryProduct": "ERP Dashboard",
+    "secondaryProduct": "Public marketing site (europrint.uz)"
+  },
+  "colors": {
+    "brand": {
+      "primary":        { "value": "#FF902F", "css": "--ep-primary",       "role": "Brand orange (ERP, canonical)" },
+      "primary-dark":   { "value": "#F07F1B", "css": "--ep-primary-dark",  "role": "Hover state of primary" },
+      "primary-soft":   { "value": "rgba(255,144,47,0.10)", "css": "--ep-primary-soft", "role": "Soft brand tint background" },
+      "primary-alt":    { "value": "#FF5D2E", "css": "--ep-primary-alt",   "role": "Public site primary (older Bitrix24 variant)" },
+      "navy":           { "value": "#1a1a2e", "css": "--ep-navy",          "role": "Marketing hero, footer, dark CTAs" },
+      "navy-2":         { "value": "#16213e", "css": "--ep-navy-2",        "role": "Marketing hero gradient stop" },
+      "navy-3":         { "value": "#0f3460", "css": "--ep-navy-3",        "role": "Marketing hero gradient end" },
+      "accent-coral":   { "value": "#E94560", "css": "--accent-coral",     "role": "Secondary accent for data viz" }
+    },
+    "neutrals": {
+      "dark":     { "value": "#15171A", "css": "--ep-dark" },
+      "text":     { "value": "#15171A", "css": "--ep-text",    "role": "Near-black warm body text" },
+      "muted":    { "value": "#6B6E72", "css": "--ep-muted",   "role": "Secondary text" },
+      "subtle":   { "value": "#9A9CA0", "css": "--ep-subtle",  "role": "Tertiary text/captions" },
+      "bg":       { "value": "#FAFAF9", "css": "--ep-bg",      "role": "Warm off-white page bg" },
+      "surface":  { "value": "#FFFFFF", "css": "--ep-surface", "role": "Card surface" },
+      "border":   { "value": "#EBEAE6", "css": "--ep-border",  "role": "Warm subtle border (NOT cool grey)" },
+      "bg-cool":  { "value": "#f8f9fc", "css": "--ep-bg-cool", "role": "Alt cool off-white (public site)" }
+    },
+    "status": {
+      "green":  { "value": "#2E8A5A", "css": "--ep-green",  "soft": "rgba(0,192,135,0.12)",   "softVar": "--ep-green-soft" },
+      "yellow": { "value": "#B5891C", "css": "--ep-yellow", "soft": "rgba(255,193,7,0.18)",   "softVar": "--ep-yellow-soft" },
+      "red":    { "value": "#C0432F", "css": "--ep-red",    "soft": "rgba(255,82,82,0.12)",   "softVar": "--ep-red-soft" },
+      "blue":   { "value": "#3563AC", "css": "--ep-blue",   "soft": "rgba(40,201,232,0.15)",  "softVar": "--ep-blue-soft" },
+      "purple": { "value": "#7A4FB1", "css": "--ep-purple", "soft": "rgba(132,94,230,0.15)",  "softVar": "--ep-purple-soft" },
+      "cyan":   { "value": "#1A8FAF", "css": "--ep-cyan" },
+      "pink":   { "value": "#C45C7A", "css": "--ep-pink",   "soft": "rgba(255,111,145,0.15)", "softVar": "--ep-pink-soft" }
+    },
+    "modules": {
+      "sd":        { "value": "#3563AC", "light": "#EAF0FA", "css": "--mod-sd",        "name": "Sales / Distribution" },
+      "pp":        { "value": "#2E8A5A", "light": "#E6F4EC", "css": "--mod-pp",        "name": "Production Planning" },
+      "hr":        { "value": "#7A4FB1", "light": "#F1EBF7", "css": "--mod-hr",        "name": "Human Resources" },
+      "warehouse": { "value": "#B5891C", "light": "#F8F1DD", "css": "--mod-warehouse", "name": "Warehouse / WMS" },
+      "fi":        { "value": "#1A8FAF", "light": "#DDEFF4", "css": "--mod-fi",        "name": "Finance" }
+    }
+  },
+  "typography": {
+    "families": {
+      "sans": { "value": "'Inter', -apple-system, 'SF Pro Text', system-ui, BlinkMacSystemFont, sans-serif", "css": "--font-sans" },
+      "mono": { "value": "'JetBrains Mono', 'SF Mono', ui-monospace, monospace",                            "css": "--font-mono" },
+      "site": { "value": "'Segoe UI', Arial, -apple-system, BlinkMacSystemFont, sans-serif",                "css": "--font-site", "note": "Legacy fallback for europrint.uz" }
+    },
+    "sizes": {
+      "xs":   { "value": "11px", "css": "--fs-xs",   "useFor": "Eyebrow labels, captions" },
+      "sm":   { "value": "12px", "css": "--fs-sm",   "useFor": "Form labels, secondary text" },
+      "base": { "value": "13px", "css": "--fs-base", "useFor": "Dashboard body default" },
+      "md":   { "value": "14px", "css": "--fs-md",   "useFor": "Card title" },
+      "lg":   { "value": "16px", "css": "--fs-lg",   "useFor": "h3" },
+      "xl":   { "value": "18px", "css": "--fs-xl",   "useFor": "h2" },
+      "2xl":  { "value": "20px", "css": "--fs-2xl",  "useFor": "Page title (dashboard)" },
+      "3xl":  { "value": "24px", "css": "--fs-3xl" },
+      "4xl":  { "value": "30px", "css": "--fs-4xl",  "useFor": "Marketing h2" },
+      "5xl":  { "value": "36px", "css": "--fs-5xl",  "useFor": "Marketing hero h1" },
+      "6xl":  { "value": "48px", "css": "--fs-6xl" }
+    },
+    "weights": {
+      "light":    { "value": 300, "css": "--fw-light" },
+      "regular":  { "value": 400, "css": "--fw-regular" },
+      "medium":   { "value": 500, "css": "--fw-medium" },
+      "semibold": { "value": 600, "css": "--fw-semibold" },
+      "bold":     { "value": 700, "css": "--fw-bold" },
+      "black":    { "value": 800, "css": "--fw-black" }
+    },
+    "lineHeights": {
+      "tight":   { "value": 1.15, "css": "--lh-tight" },
+      "snug":    { "value": 1.3,  "css": "--lh-snug" },
+      "normal":  { "value": 1.5,  "css": "--lh-normal" },
+      "relaxed": { "value": 1.65, "css": "--lh-relaxed" }
+    },
+    "letterSpacing": {
+      "tight":   { "value": "-0.02em", "css": "--tracking-tight" },
+      "normal":  { "value": "0",       "css": "--tracking-normal" },
+      "wide":    { "value": "0.3px",   "css": "--tracking-wide" },
+      "wider":   { "value": "0.6px",   "css": "--tracking-wider",  "useFor": "Uppercase section labels" },
+      "widest":  { "value": "1.2px",   "css": "--tracking-widest" }
+    },
+    "semanticHelpers": [
+      ".ep-display", ".ep-h1", ".ep-h1-marketing", ".ep-h2", ".ep-h3",
+      ".ep-card-title", ".ep-body", ".ep-muted", ".ep-eyebrow",
+      ".ep-caption", ".ep-label", ".ep-kpi-value", ".ep-mono"
+    ]
+  },
+  "spacing": {
+    "scale": "4px base",
+    "values": {
+      "0":  "0",
+      "1":  "4px",
+      "2":  "8px",
+      "3":  "12px",
+      "4":  "14px",
+      "5":  "16px",
+      "6":  "20px",
+      "7":  "24px",
+      "8":  "32px",
+      "10": "40px",
+      "12": "56px",
+      "16": "80px",
+      "20": "96px"
+    },
+    "paddings": {
+      "card-outer":     "14px",
+      "card-content":   "16-18px",
+      "page-outer":     "20-24px",
+      "marketing-vert": "96px (py-24)"
+    }
+  },
+  "radius": {
+    "xs":   { "value": "4px",  "css": "--r-xs" },
+    "sm":   { "value": "6px",  "css": "--r-sm",  "useFor": "Small chips, micro buttons, status pills" },
+    "md":   { "value": "8px",  "css": "--r-md",  "useFor": "Buttons, inputs, default controls" },
+    "lg":   { "value": "10px", "css": "--r-lg",  "useFor": "Cards, modals" },
+    "xl":   { "value": "12px", "css": "--r-xl",  "useFor": "Hero CTAs, large cards" },
+    "2xl":  { "value": "16px", "css": "--r-2xl" },
+    "3xl":  { "value": "24px", "css": "--r-3xl" },
+    "pill": { "value": "9999px", "css": "--r-pill", "useFor": "Status pills, avatar circles only" }
+  },
+  "shadows": {
+    "philosophy": "Linear-style very soft shadows on near-black base (rgba(15,17,21,…))",
+    "2xs": { "value": "0 1px 2px rgba(15,17,21,.04)",                                           "css": "--sh-2xs" },
+    "xs":  { "value": "0 1px 3px rgba(15,17,21,.06)",                                           "css": "--sh-xs" },
+    "sm":  { "value": "0 2px 6px rgba(15,17,21,.06), 0 1px 2px rgba(15,17,21,.04)",             "css": "--sh-sm" },
+    "md":  { "value": "0 4px 12px rgba(15,17,21,.07), 0 2px 4px rgba(15,17,21,.04)",            "css": "--sh-md" },
+    "lg":  { "value": "0 8px 20px rgba(15,17,21,.08), 0 3px 6px rgba(15,17,21,.04)",            "css": "--sh-lg" },
+    "xl":  { "value": "0 16px 32px rgba(15,17,21,.09), 0 6px 12px rgba(15,17,21,.04)",          "css": "--sh-xl" },
+    "2xl": { "value": "0 24px 48px rgba(15,17,21,.10)",                                         "css": "--sh-2xl" },
+    "primary": { "value": "0 4px 14px rgba(255,144,47,.30)", "css": "--sh-primary", "useFor": "Brand-tinted primary CTA shadow" }
+  },
+  "motion": {
+    "easings": {
+      "out-quart":  { "value": "cubic-bezier(.25,1,.5,1)",      "css": "--ease-out-quart",  "useFor": "Default hover transforms" },
+      "out-back":   { "value": "cubic-bezier(.34,1.56,.64,1)",  "css": "--ease-out-back",   "useFor": "Icon scale/rotate" },
+      "in-out":     { "value": "cubic-bezier(.65,0,.35,1)",     "css": "--ease-in-out",     "useFor": "Continuous loops" },
+      "out-soft":   { "value": "cubic-bezier(.2,.8,.2,1)",      "css": "--ease-out-soft",   "useFor": "Bar chart growth" }
+    },
+    "durations": {
+      "fast":  { "value": ".18s", "css": "--d-fast" },
+      "base":  { "value": ".28s", "css": "--d" },
+      "slow":  { "value": ".48s", "css": "--d-slow" },
+      "xslow": { "value": ".9s",  "css": "--d-xslow" }
+    },
+    "keyframes": [
+      { "name": "ep-float",          "use": "Logo mark, hero stat icons",         "duration": "5–6s · ease-in-out · infinite" },
+      { "name": "ep-pulse",          "use": "Live status dots, eyebrow ribbon",   "duration": "1.5s · infinite" },
+      { "name": "ep-breathe",        "use": "Soft glows on factory card, CTA orbs", "duration": "2.4–6s · infinite" },
+      { "name": "ep-drift-a",        "use": "Hero blur orbs slow parallax",       "duration": "10–14s · infinite" },
+      { "name": "ep-drift-b",        "use": "Hero blur orbs slow parallax",       "duration": "10–14s · infinite" },
+      { "name": "ep-shimmer",        "use": "Primary CTA hover sweep",            "duration": "1.0–1.2s · once-on-hover" },
+      { "name": "ep-fade-up",        "use": "Page-enter stagger",                 "duration": "0.55–0.8s · backwards" },
+      { "name": "ep-scale-in",       "use": "Factory card, hero stat entrance",   "duration": "0.7–0.8s · backwards" },
+      { "name": "ep-bar-grow",       "use": "Bar chart growth from baseline",     "duration": "0.8s staggered · once" },
+      { "name": "ep-gradient-shift", "use": "Hero headline gradient text",        "duration": "6–10s · infinite" },
+      { "name": "ep-rotate-slow",    "use": "Loading spinner",                    "duration": "1.6s · linear · infinite" }
+    ]
+  },
+  "layout": {
+    "topbar-h":             "56–60px",
+    "sidebar-w":            "260px (expanded) / 72px (collapsed)",
+    "site-nav-h":           "64px",
+    "content-max-marketing": "1280px (max-w-7xl)",
+    "content-erp":           "fills viewport",
+    "mobile-breakpoint":     "lg: 1024px"
+  },
+  "components": {
+    "button": {
+      "philosophy": "Always full opacity, brand-tinted shadow on primary, shimmer on hover",
+      "variants": {
+        "primary":   { "bg": "var(--ep-primary)", "color": "#fff", "shadow": "0 6px 18px rgba(255,144,47,.32)", "hover": "var(--ep-primary-dark)" },
+        "dark":      { "bg": "#15171A", "color": "#fff", "hover": "#2A2D33" },
+        "secondary": { "bg": "#fff", "border": "1px solid var(--line-warm)", "hoverBg": "var(--bg-blush-soft)" },
+        "outline":   { "bg": "#fff", "border": "1px solid var(--ep-primary)", "color": "var(--ep-primary)", "hoverBg": "var(--ep-primary)", "hoverColor": "#fff" },
+        "ghost":     { "bg": "transparent", "color": "var(--fg2)", "hoverBg": "var(--bg-blush-soft)" }
+      },
+      "sizes": {
+        "default": { "padding": "10px 18px", "fontSize": "13px" },
+        "sm":      { "padding": "7px 12px",  "fontSize": "12px" }
+      },
+      "radius": "10px",
+      "shimmer": "::after with translateX(-160% → 220%) on hover (1s ease-in-out)"
+    },
+    "card": {
+      "bg":     "#FFFFFF",
+      "border": "1px solid #EBEAE6",
+      "radius": "10–18px (10 = ERP card, 18 = KPI/feature card)",
+      "shadow": "none by default, --sh-sm on focus/hover",
+      "padding": { "head": "14–18px", "body": "18px" },
+      "title":   { "size": "14px", "weight": "600 (or 16/700 for feature cards)" },
+      "hoverLift": "translateY(-3px to -6px) + tinted border + shadow"
+    },
+    "kpiCard": {
+      "iconCircle":  "42–56px filled with module color or brand orange",
+      "value":       "20px / 700 (or 28px / 800 for hero KPI)",
+      "label":       "11px muted uppercase eyebrow",
+      "countUp":     "0 → target over ~1.1–1.4s on mount (cubic-out)"
+    },
+    "table": {
+      "thFontSize":     "11px",
+      "thWeight":       "700",
+      "thColor":        "var(--fg2) muted",
+      "thTextTransform": "uppercase",
+      "thLetterSpacing": "0.7px",
+      "thPadding":      "14px 22px",
+      "thBorderBottom": "1px solid var(--line-warm)",
+      "tdFontSize":     "13px",
+      "tdPadding":      "16px 22px",
+      "tdBorderBottom": "1px solid var(--line-warm-dim)",
+      "rowHoverBg":     "var(--bg-blush-soft)"
+    },
+    "pill": {
+      "padding": "4px 11px",
+      "fontSize": "11.5px",
+      "fontWeight": "600",
+      "radius": "9999px",
+      "leadingDot": "6px circle in currentColor",
+      "variants": ["success", "warning", "danger", "info", "primary", "coral", "purple", "neutral"]
+    },
+    "input": {
+      "bg": "#fff",
+      "border": "1px solid var(--line-warm)",
+      "radius": "10px (containers) / 8px (form inputs)",
+      "padding": "10px 14px (default), height ~42px",
+      "focus": "border-color var(--ep-primary) + box-shadow 0 0 0 3px rgba(255,144,47,.10)"
+    },
+    "modal": {
+      "scrim": "rgba(0, 0, 0, 0.5) flat (no blur)",
+      "card": "1px solid border, 10–12px radius, --sh-md shadow"
+    },
+    "sidebar": {
+      "width": "260px",
+      "bg": "#FFFFFF",
+      "borderRight": "1px solid var(--line-warm)",
+      "itemPadding": "10px 12px",
+      "itemFontSize": "13.5px",
+      "itemRadius": "10px",
+      "activeState": "4-6% primary tint bg + 3px left-border (--ep-primary) + orange text",
+      "hoverState": "4% primary tint",
+      "iconSize": "15–18px Lucide, currentColor",
+      "section": "10px uppercase eyebrow, padding 16px 8px 6px"
+    },
+    "topbar": {
+      "height": "56–72px",
+      "bg": "var(--bg-card) or backdrop-blur",
+      "borderBottom": "1px solid var(--line-warm)",
+      "iconButton": "42px square, 12px radius, border 1px var(--line-warm)"
+    },
+    "tabs": {
+      "container": "padding-bottom 18px, 1px bottom border",
+      "tabPadding": "10px 16px",
+      "tabFontSize": "13.5px",
+      "tabRadius": "10px 10px 0 0 (top corners only)",
+      "activeIndicator": "2px bottom bar in --ep-primary (12px inset)"
+    }
+  },
+  "iconography": {
+    "primary": "Lucide React (production)",
+    "stroke": "1.5–2px, rounded line caps, 24px viewbox",
+    "sizes": {
+      "sidebar": "15px",
+      "kpi": "18–24px",
+      "inline": "14–16px",
+      "buttonInline": "13–15px"
+    },
+    "emoji": "FORBIDDEN — never use in product UI"
+  },
+  "pageTemplates": [
+    { "name": "ListPage",       "usage": "~60% of pages",  "purpose": "CRUD list views" },
+    { "name": "DetailPage",     "usage": "~25%",            "purpose": "Single record detail" },
+    { "name": "FormPage",       "usage": "~10%",            "purpose": "Create/edit forms" },
+    { "name": "SettingsPage",   "usage": "~3%",             "purpose": "Configuration screens" },
+    { "name": "EmptyStatePage", "usage": "~2%",             "purpose": "No data placeholders" }
+  ],
+  "tone": {
+    "language": "Uzbek-first (Russian as secondary)",
+    "casing": "Sentence case for UI labels (NOT Title Case)",
+    "moduleAbbreviations": "ALL CAPS: SD, HR, WMS, MES, PP, FI, QC, POS",
+    "emojis": "Never used in any EuroPrint surface"
+  }
+}
