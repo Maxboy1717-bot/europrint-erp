@@ -59,7 +59,7 @@ export function GanttView({
     const left = Math.max(0, taskStartOffset * dayWidth);
     const width = task.duration * dayWidth;
     const clippedLeft = taskStartOffset < 0 ? Math.abs(taskStartOffset) * dayWidth : 0;
-    return { left, width: width - clippedLeft, visible: taskStartOffset + task.duration > {t("k0Taskstartoffset")}< daysToShow };
+    return { left, width: width - clippedLeft, visible: taskStartOffset + task.duration > 0 && taskStartOffset < daysToShow };
   };
 
   return (

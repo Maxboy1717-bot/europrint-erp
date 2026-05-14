@@ -109,7 +109,7 @@ export default function TelegramBotAdmin() {
               <Textarea
                 id="broadcast-msg"
                 data-testid="input-broadcast-message"
-                placeholder="<b>{t("muhimXabar")}</b> Barcha xodimlarga..."
+                placeholder={`<b>${t("muhimXabar")}</b> Barcha xodimlarga...`}
                 value={broadcastMsg}
                 onChange={(e) => setBroadcastMsg(e.target.value)}
                 rows={5}
