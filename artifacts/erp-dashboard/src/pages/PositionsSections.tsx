@@ -76,6 +76,7 @@ interface PositionsTableProps {
 export function PositionsTable({
   positions, isLoading, getDeptName, onEdit, onDelete, onKpiClick,
 }: PositionsTableProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex-1 overflow-auto px-6 pb-6">
       <div className="rounded-lg border bg-card overflow-hidden">
@@ -139,6 +140,7 @@ interface PositionRowProps {
 }
 
 function PositionRow({ pos, getDeptName, onEdit, onDelete, onKpiClick }: PositionRowProps) {
+  const { t } = useTranslation("common");
   const kpiMatch = pos.description?.match(/^\[KPI:([^\]]+)\]/);
   const kpiKey = kpiMatch ? kpiMatch[1] : "";
   const kpiTpl = kpiKey ? KPI_TEMPLATES.find((t) => t.key === kpiKey) : null;

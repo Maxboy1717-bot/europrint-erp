@@ -69,6 +69,7 @@ export function MaterialSearch({
   name: string;
   onChange: (id: string, name: string, materialType?: string | null, category?: string | null) => void;
 }) {
+  const { t } = useTranslation("common");
   const [query, setQuery]           = useState(name || value);
   const [suggestions, setSuggestions] = useState<MaterialSuggestion[]>([]);
   const [open, setOpen]             = useState(false);

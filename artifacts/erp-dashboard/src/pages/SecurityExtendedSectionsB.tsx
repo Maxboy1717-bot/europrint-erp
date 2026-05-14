@@ -108,6 +108,7 @@ interface AttendanceSectionProps {
 }
 
 export function AttendanceSection({ attendanceRecords, attendanceLoading, dailySummary }: AttendanceSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-foreground">Xodimlar Davomati (Bugun)</h2>

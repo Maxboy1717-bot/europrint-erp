@@ -102,7 +102,6 @@ function fmtDate(iso: string | null | undefined): string {
 }
 
 export default function PosWarehouseDetail() {
-  const { t } = useTranslation("common");
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
@@ -458,6 +457,7 @@ function MovementsTable({ movements, title, color, onClick, emptyMessage }: {
   onClick: (id: number) => void;
   emptyMessage: string;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card" style={{ overflow: "hidden" }}>
       <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", fontWeight: 600, fontSize: 14,

@@ -73,6 +73,7 @@ interface StatsRowProps {
 }
 
 export function StatsRow({ completedSessions, totalSessions, totalStoppages, totalActual }: StatsRowProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
       <div className="bg-muted/40 rounded-lg px-4 py-3 flex items-center gap-3">

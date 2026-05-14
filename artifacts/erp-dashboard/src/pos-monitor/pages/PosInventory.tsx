@@ -6,7 +6,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { inventoryApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 function NewPlanModal({ onClose, onCreated, t }: { onClose: () => void; onCreated: () => void; t: (k: string) => string }) {
   const [warehouseId, setWarehouseId] = useState("");
@@ -59,7 +58,6 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function PosInventory() {
-  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const [tab, setTab]     = useState<"plans" | "active" | "variances">("plans");
   const [plans, setPlans] = useState<Plan[]>([]);

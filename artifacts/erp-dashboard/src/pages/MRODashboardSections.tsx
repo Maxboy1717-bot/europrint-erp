@@ -75,6 +75,7 @@ interface RequestsTabProps {
 }
 
 export function RequestsTab({ requests, onApprove, isPending }: RequestsTabProps) {
+  const { t } = useTranslation("common");
   if ((requests || []).length === 0) {
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
@@ -128,6 +129,7 @@ export function RequestsTab({ requests, onApprove, isPending }: RequestsTabProps
 
 // ── EquipmentTab ──────────────────────────────────────────────────────────────
 export function EquipmentTab({ equipment }: { equipment: MroEquipment[] | undefined }) {
+  const { t } = useTranslation("common");
   if ((equipment || []).length === 0) {
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">

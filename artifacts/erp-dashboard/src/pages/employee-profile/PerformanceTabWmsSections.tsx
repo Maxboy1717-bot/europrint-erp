@@ -57,6 +57,7 @@ export function WmsSection({wmsSummary, loadingWms }: WmsSectionProps) {
 }
 
 function WmsKpiCards({ wmsSummary }: { wmsSummary: WmsSummary }) {
+  const { t } = useTranslation("common");
   const { summary } = wmsSummary;
   const returnRate = summary?.overallReturnRate ?? 0;
   return (
@@ -106,6 +107,7 @@ function WmsKpiCards({ wmsSummary }: { wmsSummary: WmsSummary }) {
 }
 
 function WmsMaterialsTable({ wmsSummary }: { wmsSummary: WmsSummary }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

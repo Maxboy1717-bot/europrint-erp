@@ -6,7 +6,6 @@
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { Language, Translation } from "./types";
-import { useTranslation } from '@/lib/i18n';
 
 interface WizardHeaderProps {
   t: Translation;
@@ -16,7 +15,6 @@ interface WizardHeaderProps {
 }
 
 export function WizardHeader({ t, lang, setLang, onSaveDraft }: WizardHeaderProps) {
-  const { t } = useTranslation("common");
   const [titleFirst, ...titleRest] = t.title.split(' ');
   
   return (

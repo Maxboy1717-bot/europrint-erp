@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Plus } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import type { TransactionFormData, CashPositionData } from "./CashFlowManagementTypes";
-import { useTranslation } from "@/lib/i18n";
 
 interface CreateTransactionDialogProps {
   open: boolean;
@@ -26,7 +25,6 @@ interface CreateTransactionDialogProps {
 }
 
 export function CreateTransactionDialog({ open, onOpenChange, form, onSubmit, isPending, cashPosition, t, tCommon, }: CreateTransactionDialogProps) {
-  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>

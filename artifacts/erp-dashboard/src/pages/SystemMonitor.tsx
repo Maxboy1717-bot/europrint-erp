@@ -32,6 +32,7 @@ interface Integration { key?: string; name?: string; type?: string; status?: str
 interface CronJob { name?: string; schedule?: string; module?: string }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("common");
   if (status === "ok" || status === "running" || status === "active" || status === "connected")
     return <Badge className="bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />{t("active")}</Badge>;
   if (status === "warning" || status === "in_memory" || status === "default" || status === "default_key")

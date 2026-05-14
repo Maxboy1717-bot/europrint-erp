@@ -15,7 +15,6 @@ import type { UseFormReturn } from "react-hook-form";
 import type { InsertProductionFact } from "@shared/schema";
 import type { WorkCenter, Product, MRPRun, MRPResult, PlanningTranslations } from "./planning-types";
 
-import { useTranslation } from '@/lib/i18n';
 import { EPStatusPill } from "@/components/ep";
 // ─── Fact Form Dialog ─────────────────────────────────────────────────────────
 

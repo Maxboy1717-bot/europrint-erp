@@ -109,6 +109,7 @@ interface SparePartsTabProps {
 }
 
 export function SparePartsTab({ items, itemsLoading, lowStockItems, onAddItem }: SparePartsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="spareparts" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
@@ -167,6 +168,7 @@ interface UtilitiesTabProps {
 }
 
 export function UtilitiesTab({ stats, utilityReadings, utilityReadingsLoading }: UtilitiesTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="utilities" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("kommunalXizmatlarMonitoring")}</h2>

@@ -21,6 +21,7 @@ export function MatchStatusIcon({ status }: { status: string }) {
 }
 
 export function MatchResultPanel({ result }: { result: ThreeWayMatchResult }) {
+  const { t } = useTranslation("common");
   return (
     <div className="mt-3 p-3 rounded-lg border bg-gray-50 text-sm space-y-2">
       <div className="flex items-center gap-2 font-semibold">

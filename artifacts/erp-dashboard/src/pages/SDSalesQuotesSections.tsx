@@ -139,6 +139,7 @@ const EXTRAS = [
 ];
 
 export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, onCalculate }: ProductParamsPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <h3 className="font-semibold text-sm flex items-center gap-2">

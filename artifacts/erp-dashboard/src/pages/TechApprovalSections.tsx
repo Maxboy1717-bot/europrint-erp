@@ -112,6 +112,7 @@ export function AiCheckPanel({ orderId }: { orderId: string }) {
 // ─── Approval History ─────────────────────────────────────────────────────────
 
 export function ApprovalHistory({ orderId }: { orderId: string }) {
+  const { t } = useTranslation("common");
   const { data: log } = useQuery<ApprovalLog>({
     queryKey: ["/api/technology/orders", orderId, "approval-log"],
     queryFn: async () => {

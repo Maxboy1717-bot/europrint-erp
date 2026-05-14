@@ -36,6 +36,7 @@ interface WeekNavigatorProps {
 }
 
 export function WeekNavigator({ week, onWeekChange }: WeekNavigatorProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="py-3 flex items-center justify-between gap-4">
@@ -62,6 +63,7 @@ interface PageHeaderProps {
 }
 
 export function WeeklyPlanHeader({ onRefresh }: PageHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-start justify-between gap-4 flex-wrap">
       <div>
@@ -88,6 +90,7 @@ interface ManagerViewProps {
 }
 
 export function ManagerApprovalSection({ plans, isLoading, onApprove, isApprovePending }: ManagerViewProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">

@@ -108,6 +108,7 @@ interface OvertimeTableProps {
 }
 
 export function OvertimeTable({ loading, overtime }: OvertimeTableProps) {
+  const { t } = useTranslation("common");
   if (loading) return <Skeleton className="h-40 w-full rounded-lg" />;
   if (!overtime || overtime.length === 0) {
     return <p className="text-muted-foreground text-center py-8">{t("overtaymYozuvlariYoq")}</p>;

@@ -74,6 +74,7 @@ interface CampaignLeadSectionProps {
   leadSources: LeadSourceSummary | undefined;
 }
 export function CampaignLeadSection({ activeCampaigns, campaignsLoading, leadSources }: CampaignLeadSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
       <div className="bg-card rounded-xl p-6 overflow-hidden">
@@ -173,6 +174,7 @@ export function BudgetSection({ stats }: BudgetSectionProps) {
 // ─── Segments + Hot Leads ─────────────────────────────────────────────────────
 interface SegmentLeadProps { segments: Segment[]; hotLeads: HotLead[]; }
 export function SegmentsHotLeadsSection({ segments, hotLeads }: SegmentLeadProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
       <div className="bg-card rounded-xl p-6" data-testid="card-segments">

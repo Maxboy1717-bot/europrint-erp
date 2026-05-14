@@ -20,7 +20,6 @@ import { useToast } from "@/hooks/use-toast";
 import { WarehouseData, Lang, Translations } from "./warehouse-types";
 import { apiRequest } from '@/lib/queryClient';
 
-import { useTranslation } from '@/lib/i18n';
 interface LotRow {
   id: number;
   lot_number: string;
@@ -61,7 +60,6 @@ const STATUS_CONF: Record<string, { label: string; icon: React.ComponentType<{ c
 interface LotsTabProps { lang: Lang; t: Translations }
 
 export function LotsTab({lang, t }: LotsTabProps) {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [warehouseId, setWarehouseId] = useState("");
   const [statusFilter, setStatusFilter] = useState("");

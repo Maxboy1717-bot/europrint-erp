@@ -178,6 +178,7 @@ export function GenerateCardDialog({
   isLoading,
   onConfirm,
 }: GenerateCardDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -235,6 +236,7 @@ interface OptimizeResultPanelProps {
 
 /** Inline panel rendered below the cards grid when an optimization result is ready. */
 export function OptimizeResultPanel({ result }: OptimizeResultPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

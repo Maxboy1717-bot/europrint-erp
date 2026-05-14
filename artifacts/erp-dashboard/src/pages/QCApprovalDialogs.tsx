@@ -117,6 +117,7 @@ export function ApprovalDialog({
   isPending,
   onApprove,
 }: ApprovalDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -205,6 +206,7 @@ export function RejectDialog({
   isPending,
   onReject,
 }: RejectDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -256,6 +258,7 @@ export function TestInputDialog({
   isPending,
   onSave,
 }: TestInputDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl p-6">

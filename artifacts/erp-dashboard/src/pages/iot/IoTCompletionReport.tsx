@@ -11,8 +11,10 @@ import { apiRequest } from '@/lib/queryClient';
 import { IoTCompletionReportProps, CompletionStep } from "./IoTCompletionReportTypes";
 import { StepProgressBar, ResultsStep } from "./IoTCompletionReportSections";
 import { EvaluationStep, MaterialReturnStep, DoneStep } from "./IoTCompletionReportSteps";
+import { useTranslation } from '@/lib/i18n';
 
 export function IoTCompletionReport({ lang, open, onClose, completionReport, formatTime, tabletToken }: IoTCompletionReportProps) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   const { toast } = useToast();
 

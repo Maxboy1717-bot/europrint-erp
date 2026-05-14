@@ -79,6 +79,7 @@ export function AssetFilters({
   filterDepartment, onDepartmentChange,
   departments, onRefresh,
 }: FiltersProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       <div className="relative flex-1">
@@ -151,6 +152,7 @@ interface TableProps {
 export function AssetTable({
   assets, isLoading, onDetail, onAssign, onReturn, onReport,
 }: TableProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-0">

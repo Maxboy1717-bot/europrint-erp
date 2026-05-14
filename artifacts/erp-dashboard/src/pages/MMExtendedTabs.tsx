@@ -141,6 +141,7 @@ interface GoodsReceiptsTabProps {
 }
 
 export function GoodsReceiptsTab({ goodsReceipts, grLoading }: GoodsReceiptsTabProps) {
+  const { t } = useTranslation("common");
   const safe = Array.isArray(goodsReceipts) ? goodsReceipts : [];
   return (
     <TabsContent value="receipts" className="mt-0 space-y-4">
@@ -201,6 +202,7 @@ interface CreditorTabProps {
 }
 
 export function CreditorTab({ purchaseOrders, totalPOValue, overduePOCount, pendingPOCount, vendorsCount }: CreditorTabProps) {
+  const { t } = useTranslation("common");
   const openOrders = (Array.isArray(purchaseOrders) ? purchaseOrders : []).filter(po => po.status !== "completed" && po.status !== "cancelled");
   return (
     <TabsContent value="creditor" className="mt-0 space-y-4">

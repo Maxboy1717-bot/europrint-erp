@@ -43,6 +43,7 @@ interface AttendanceHeaderProps {
 }
 
 export function AttendanceHeader({ date, wsConnected, filtered, onRefresh, onExport }: AttendanceHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-start justify-between">
       <div>
@@ -74,6 +75,7 @@ interface AttendanceStatsProps {
 }
 
 export function AttendanceStats({ stats, liveLoading, alertCount, filteredCount }: AttendanceStatsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="border-0 shadow-sm">
@@ -146,6 +148,7 @@ export function EventsTable({
   filtered, logsLoading, empFilter, deptFilter, departments, date,
   onEmpFilterChange, onDeptFilterChange, onDateChange,
 }: EventsTableProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="lg:col-span-2 border-0 shadow-sm">
       <CardHeader className="pb-3">
@@ -242,6 +245,7 @@ interface LiveEventsFeedProps {
 }
 
 export function LiveEventsFeed({ events, wsConnected }: LiveEventsFeedProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-3">

@@ -49,6 +49,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 function NewCheckupDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({

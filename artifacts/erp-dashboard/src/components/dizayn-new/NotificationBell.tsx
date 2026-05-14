@@ -106,6 +106,7 @@ interface NotifItemProps {
 }
 
 function NotifItem({ notif, onMarkRead, onDismiss }: NotifItemProps) {
+  const { t } = useTranslation("common");
   const cfg = TYPE_CONFIG[notif.type];
   const Icon = cfg.icon;
 

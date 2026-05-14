@@ -103,6 +103,7 @@ interface AssessmentSkipsCardProps {
 }
 
 export function AssessmentSkipsCard({ assessmentSkips, loadingSkips }: AssessmentSkipsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

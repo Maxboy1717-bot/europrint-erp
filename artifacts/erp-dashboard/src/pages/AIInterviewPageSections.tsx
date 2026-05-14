@@ -191,6 +191,7 @@ export function AddQuestionForm({ qForm, setQForm, onSubmit, isPending, onCancel
 interface QuestionBankListProps { questions: InterviewQuestion2[]; onDeleteClick: (id: number) => void; }
 
 export function QuestionBankList({ questions, onDeleteClick }: QuestionBankListProps) {
+  const { t } = useTranslation("common");
   if (questions.length === 0) {
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
@@ -229,6 +230,7 @@ export function QuestionBankList({ questions, onDeleteClick }: QuestionBankListP
 interface CreateInterviewFormProps { form: UseFormReturn<InterviewFormData>; onSubmit: (values: InterviewFormData) => void; isPending: boolean; onCancel: () => void; }
 
 export function CreateInterviewForm({ form, onSubmit, isPending, onCancel }: CreateInterviewFormProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="mb-6" data-testid="card-create-form">
       <CardHeader><CardTitle className="text-[14px] font-semibold">{t("yangiIntervyuYaratish")}</CardTitle></CardHeader>

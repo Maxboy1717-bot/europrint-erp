@@ -183,6 +183,7 @@ interface FunnelDialogProps {
 }
 
 export function FunnelDialog({ open, onOpenChange, funnelData }: FunnelDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
@@ -233,6 +234,7 @@ export function DeleteLeadConfirm({
   onOpenChange,
   onConfirm,
 }: DeleteLeadConfirmProps) {
+  const { t } = useTranslation("common");
   return (
     <ConfirmDialog
       open={!!deleteId}

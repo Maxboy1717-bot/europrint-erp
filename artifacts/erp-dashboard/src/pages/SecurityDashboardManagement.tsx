@@ -110,6 +110,7 @@ interface PPETabProps {
 }
 
 export function PPETab({ ppeChecks, onAdd }: PPETabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="ppe" className="space-y-4">
       <div className="bg-card rounded-xl p-6">
@@ -199,6 +200,7 @@ interface FireTabProps {
 }
 
 export function FireTab({ fireSensors }: FireTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="fire" className="space-y-4">
       <Card>

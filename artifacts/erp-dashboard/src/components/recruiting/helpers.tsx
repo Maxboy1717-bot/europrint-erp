@@ -195,6 +195,7 @@ export function ChannelDots({ channels }: { channels: Record<string, { active: b
 }
 
 export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; onUpdate?: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const channels = vacancy.channels ?? {};
 
@@ -292,6 +293,7 @@ export function ScoreBar({ label, score }: { label: string; score: number | null
 }
 
 export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; sessions: AIInterviewSession[] }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [recruiterNotes, setRecruiterNotes] = useState("");

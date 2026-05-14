@@ -94,6 +94,7 @@ function ProgressBar({ pct, color }: { pct: number; color: string }) {
 }
 
 function SagaTracker({ detail }: { detail: SagaDetail }) {
+  const { t } = useTranslation("common");
   const trackColors = ['#60a5fa', '#a78bfa', '#34d399'];
   return (
     <div className="flex gap-3">

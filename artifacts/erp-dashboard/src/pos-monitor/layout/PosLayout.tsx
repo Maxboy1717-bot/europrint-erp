@@ -10,7 +10,6 @@ import { getPosSocket } from "../socket/pos-socket";
 import { warehousesApi } from "../api/pos-monitor.api";
 import PosOfflineBanner from "../components/PosOfflineBanner";
 import PosNotificationsDrawer from "../components/PosNotificationsDrawer";
-import { useTranslation } from '@/lib/i18n';
 
 interface NavItem {
   icon: string;

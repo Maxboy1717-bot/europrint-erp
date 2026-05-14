@@ -99,6 +99,7 @@ interface BuildingTabProps {
 }
 
 export function BuildingTab({ buildingRooms, facilitiesLoading }: BuildingTabProps) {
+  const { t } = useTranslation("common");
   if (facilitiesLoading) {
     return <div className="space-y-2">{[1, 2, 3, 4].map(i => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}</div>;
   }
@@ -147,6 +148,7 @@ export function BuildingTab({ buildingRooms, facilitiesLoading }: BuildingTabPro
 
 // ── CleaningTab ───────────────────────────────────────────────────────────────
 export function CleaningTab({ cleaningSchedule }: { cleaningSchedule: MroCleaningSchedule[] }) {
+  const { t } = useTranslation("common");
   return (
     <div className="ep-table-scroll"><Table>
       <TableHeader>
@@ -189,6 +191,7 @@ export function CleaningTab({ cleaningSchedule }: { cleaningSchedule: MroCleanin
 
 // ── UniformsTab ───────────────────────────────────────────────────────────────
 export function UniformsTab({ ppeItems }: { ppeItems: MroItem[] }) {
+  const { t } = useTranslation("common");
   if (ppeItems.length === 0) {
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">

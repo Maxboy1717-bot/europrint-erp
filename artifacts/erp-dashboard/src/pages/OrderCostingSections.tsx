@@ -112,6 +112,7 @@ interface CostingsTableProps {
 }
 
 export function CostingsTable({ costings, isLoading, statusFilter, onStatusFilterChange, onRowClick, getStatusBadge }: CostingsTableProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
@@ -197,6 +198,7 @@ interface TopRankingsProps {
 }
 
 export function TopRankings({ topProfitable, topLoss, onRowClick }: TopRankingsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
@@ -287,6 +289,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "draft":
       return <Badge variant="outline" className="bg-muted text-muted-foreground">{t("draft")}</Badge>;

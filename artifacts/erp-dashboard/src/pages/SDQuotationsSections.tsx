@@ -163,6 +163,7 @@ export function QuotationTable({
   onConvert,
   onDelete,
 }: QuotationTableProps) {
+  const { t } = useTranslation("common");
   const safeQuotations = Array.isArray(filteredQuotations) ? filteredQuotations : [];
 
   return (

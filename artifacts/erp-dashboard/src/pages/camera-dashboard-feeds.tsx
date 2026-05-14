@@ -23,6 +23,7 @@ import {
   type CameraAlert,
   type CameraEvent,
 } from "./camera-dashboard-types";
+import { useTranslation } from '@/lib/i18n';
 
 type Lang = "uz" | "ru";
 
@@ -46,6 +47,7 @@ export function AlertsAndEventsPanel({
   language,
   t,
 }: AlertsAndEventsPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* ---- Pending alerts ---- */}

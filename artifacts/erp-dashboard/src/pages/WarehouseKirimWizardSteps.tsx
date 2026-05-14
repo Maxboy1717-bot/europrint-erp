@@ -113,6 +113,7 @@ interface Step2Props {
   onSelectMaterial: (key: string, matId: number) => void;
 }
 export function Step2({ lines, materials, cfg, currency, totalQty, totalValue, onAddLine, onRemoveLine, onUpdateLine, onSelectMaterial }: Step2Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -223,6 +224,7 @@ interface Step4Props {
   totalValue: number;
 }
 export function Step4({ lines, header, activeWarehouse, cfg, totalQty, totalValue }: Step4Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="bg-gray-100 p-4 rounded space-y-2 text-sm">
@@ -283,6 +285,7 @@ interface Step5Props {
   onReset: () => void;
 }
 export function Step5({ created, cfg, onNavigate, onReset }: Step5Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="text-center py-10">
       <CheckCircle2 className="h-20 w-20 text-[var(--ep-green)] mx-auto mb-4" />

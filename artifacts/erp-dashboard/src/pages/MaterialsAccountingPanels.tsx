@@ -116,6 +116,7 @@ interface InventoryValuationCardProps {
 }
 
 export function InventoryValuationCard({ inventoryData, inventoryLoading }: InventoryValuationCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-inventory-valuation">
       <CardHeader>

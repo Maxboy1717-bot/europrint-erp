@@ -113,6 +113,7 @@ interface RemoveMemberConfirmProps {
 }
 
 export function RemoveMemberConfirm({ confirmRemove, onClose, onConfirm }: RemoveMemberConfirmProps) {
+  const { t } = useTranslation("common");
   return (
     <ConfirmDialog
       open={confirmRemove !== null}

@@ -5,7 +5,6 @@
 
 import { usePosI18n } from "../i18n/usePosI18n";
 import { useOfflineSync, type QueueItem } from "../hooks/useOfflineSync";
-import { useTranslation } from '@/lib/i18n';
 
 // Re-export the legacy type so other files don't break
 export type { QueueItem as OfflineQueueItem };
@@ -67,7 +66,6 @@ export async function idbEnqueue(input: {
 }
 
 export default function PosOfflineBanner() {
-  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const {
     isOnline,

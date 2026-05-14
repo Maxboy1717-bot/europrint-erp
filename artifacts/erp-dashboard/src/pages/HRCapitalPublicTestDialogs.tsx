@@ -102,6 +102,7 @@ export function QuestionScreen({
   session, questions, currentIdx, answers, testConfig,
   onAnswer, onPrev, onNext, onFinish,
 }: QuestionScreenProps) {
+  const { t } = useTranslation("common");
   const progress = Math.round((currentIdx / Math.max(questions.length, 1)) * 100);
   const currentQuestion = questions[currentIdx];
   const Icon = testConfig.icon;

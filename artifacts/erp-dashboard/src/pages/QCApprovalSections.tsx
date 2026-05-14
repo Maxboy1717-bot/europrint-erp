@@ -16,6 +16,7 @@ interface StatusBadgeProps {
 }
 
 function StatusBadge({ status }: StatusBadgeProps) {
+  const { t } = useTranslation("common");
   if (status === "pending_review") {
     return (
       <span className="bg-blue-100 text-blue-800 rounded-full px-2.5 py-0.5 text-xs font-semibold flex items-center">
@@ -44,6 +45,7 @@ interface OrderCardProps {
 }
 
 function OrderCard({ order, onView, onTest, onInspectorSubmit, onApprove, onReject }: OrderCardProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6" data-testid={`order-card-${order.id}`}>
       <div className="flex flex-row items-center justify-between gap-4 mb-4">
@@ -190,6 +192,7 @@ interface OrdersListProps {
 }
 
 export function QCOrdersList({ orders, onView, onTest, onInspectorSubmit, onApprove, onReject }: OrdersListProps) {
+  const { t } = useTranslation("common");
   if (orders.length === 0) {
     return (
       <div className="bg-card rounded-xl p-6 text-center">

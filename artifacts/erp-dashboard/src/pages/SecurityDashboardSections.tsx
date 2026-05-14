@@ -114,6 +114,7 @@ interface VisitorsTabProps {
 }
 
 export function VisitorsTab({ visitors, isLoading, onAdd, onExit, exitPending }: VisitorsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="visitors" className="space-y-4">
       <div className="bg-card rounded-xl p-6">

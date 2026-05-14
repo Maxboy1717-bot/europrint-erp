@@ -133,6 +133,7 @@ interface CreateRequestDialogProps {
 }
 
 export function CreateRequestDialog({ open, onOpenChange, form, onSubmit, isPending, items }: CreateRequestDialogProps) {
+  const { t } = useTranslation("common");
   const { register, handleSubmit, setValue, watch, formState: { errors } } = form;
 
   return (

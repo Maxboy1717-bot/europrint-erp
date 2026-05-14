@@ -111,6 +111,7 @@ interface BrandTabProps {
 }
 
 export function BrandTab({ colors }: BrandTabProps) {
+  const { t } = useTranslation("common");
   const doRules = ["Logoni kichraytirmang 32px dan past", "Fon bilan kontrast saqlang", "Logoni cho'zmang", "Rangli versiyadan foydalaning"];
   const dontRules = ["To'q fonda oq versiyani ishlating", "Logoni aylantirmang"];
   return (

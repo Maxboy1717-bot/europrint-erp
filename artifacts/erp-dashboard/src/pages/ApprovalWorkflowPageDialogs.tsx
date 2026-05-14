@@ -134,6 +134,7 @@ export function ActionWorkflowDialog({
   onConfirm,
   isPending,
 }: ActionDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog
       open={!!actionDialog}

@@ -18,10 +18,8 @@ import { Contact, PhoneCall, Plus } from "lucide-react";
 import type { EmergencyContact } from "./profile-types";
 import type { EmergencyCardProps } from "./PersonalTabTypes";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from "@/lib/i18n";
 
 export function EmergencyContactCard({ t, tCommon, emergencyContacts, loadingEmergency, emergencyDialogOpen, setEmergencyDialogOpen, emergencyForm, setEmergencyForm, saveEmergencyMutation, }: EmergencyCardProps) {
-  const { t } = useTranslation("common");
   const contacts = Array.isArray(emergencyContacts) ? emergencyContacts : [];
 
   return (

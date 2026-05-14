@@ -12,10 +12,8 @@ import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { RefreshCw } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz; boardId: string | null }) {
-  const { t } = useTranslation("common");
   const { data: allocation = [], isLoading } = useQuery<AllocationData[]>({
     queryKey: ['/api/kanban/resource-allocation', boardId],
     enabled: true,

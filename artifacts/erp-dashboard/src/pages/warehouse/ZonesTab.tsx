@@ -23,7 +23,6 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Layers, Plus, Pencil, Trash2 } from "lucide-react";
 import { WarehouseData, ZoneData, ZoneFormData, Lang, Translations, zoneSchema } from "./warehouse-types";
-import { useTranslation } from '@/lib/i18n';
 
 interface ZonesTabProps {
   lang: Lang;
@@ -31,7 +30,6 @@ interface ZonesTabProps {
 }
 
 export function ZonesTab({ lang, t }: ZonesTabProps) {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);

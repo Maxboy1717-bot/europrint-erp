@@ -97,6 +97,7 @@ interface CreateSessionDialogProps {
 export function CreateSessionDialog({
   open, onOpenChange, form, onChange, onSubmit, isPending,
 }: CreateSessionDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

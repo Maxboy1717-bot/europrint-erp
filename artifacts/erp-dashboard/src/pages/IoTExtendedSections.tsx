@@ -28,6 +28,7 @@ export function SensorsTabContent({
   onRefresh: () => void;
   onAddSensor: () => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -118,6 +119,7 @@ export function AlertsTabContent({
   onResolve: (id: number | string) => void;
   resolvePending: boolean;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

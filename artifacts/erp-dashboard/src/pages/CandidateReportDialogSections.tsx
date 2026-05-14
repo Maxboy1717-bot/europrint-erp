@@ -69,6 +69,7 @@ export function InfoPair({ label, value }: { label: string; value: React.ReactNo
 // ─── Section 1: Basic info + score summary ────────────────────────────────────
 
 export function Section1BasicInfo({ report }: { report: ReportData }) {
+  const { t } = useTranslation("common");
   return (
     <SectionBlock number={1} title={t("asosiyMalumotlarVaNatijalar")} icon={User}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -117,6 +118,7 @@ export function Section1BasicInfo({ report }: { report: ReportData }) {
 // ─── Section 2: Tool test A–J results ────────────────────────────────────────
 
 export function Section2ToolTest({ report }: { report: ReportData }) {
+  const { t } = useTranslation("common");
   const toolTestResults = report.tool_test_results ?? {};
   const hasTool = Object.keys(toolTestResults).length > 0;
   const toolPassed = report.tool_test_passed ?? {};
@@ -167,6 +169,7 @@ export function Section2ToolTest({ report }: { report: ReportData }) {
 // ─── Section 3: IQ, Leadership, Repetition ───────────────────────────────────
 
 export function Section3Scores({ report }: { report: ReportData }) {
+  const { t } = useTranslation("common");
   const motivLevel = report.motivation_level ?? null;
   const motivInfo = motivLevel ? MOTIVATION_LABELS[motivLevel] ?? null : null;
 

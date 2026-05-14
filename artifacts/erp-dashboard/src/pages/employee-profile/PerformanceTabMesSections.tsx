@@ -61,6 +61,7 @@ export function MesSection({ mesSummary, loadingMes }: MesSectionProps) {
 }
 
 function MesKpiCards({ mesSummary }: { mesSummary: MesSummary }) {
+  const { t } = useTranslation("common");
   const { summary } = mesSummary;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -161,6 +162,7 @@ function MesStatsRow({ mesSummary }: { mesSummary: MesSummary }) {
 }
 
 function MesCharts({ mesSummary }: { mesSummary: MesSummary }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {mesSummary.monthlyData.length > 0 && (

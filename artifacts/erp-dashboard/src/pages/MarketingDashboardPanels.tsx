@@ -121,6 +121,7 @@ export function NpsPanel({ npsStats }: { npsStats: NpsStats | undefined }) {
 
 // ─── Churn Risk panel ─────────────────────────────────────────────────────────
 export function ChurnRiskPanel({ churnData }: { churnData: ChurnData | undefined }) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 overflow-hidden" data-testid="card-churn-risk">
       <div className="flex items-center gap-2 mb-4">

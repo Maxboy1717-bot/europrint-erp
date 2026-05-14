@@ -70,6 +70,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onEdit, onDelete, isDeletePending }: GoalCardProps) {
+  const { t } = useTranslation("common");
   const progress = getProgressPercentage(goal.currentValue, goal.targetValue);
 
   return (
@@ -164,6 +165,7 @@ interface GoalsListProps {
 }
 
 export function GoalsList({ goals, isLoading, onEdit, onDelete, isDeletePending }: GoalsListProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {isLoading ? (

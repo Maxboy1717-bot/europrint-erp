@@ -103,6 +103,7 @@ interface NBASectionProps {
 }
 
 export function NBASection({ nba, loading, onRun, onCreateTask }: NBASectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <Button onClick={onRun} disabled={!!loading} className="w-full" data-testid="btn-run-nba">

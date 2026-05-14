@@ -103,6 +103,7 @@ export function LeaveRequestsSection({
   t: TranslationFn;
   dialogTrigger: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
@@ -233,6 +234,7 @@ export function BusinessTripsSection({
   t: TranslationFn;
   dialogTrigger: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">

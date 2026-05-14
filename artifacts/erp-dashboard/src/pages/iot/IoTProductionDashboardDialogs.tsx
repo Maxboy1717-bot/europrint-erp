@@ -15,6 +15,7 @@ import { REASON_ICONS } from "./useIoTTablet";
 import { UseMutationResult } from "@tanstack/react-query";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Bottom Actions Bar ───────────────────────────────────────────────────────
 export function BottomActionsBar({
   lang, activeSession, stopSession, setEnergySaving, setShowSOSDialog, setShowHandoverDialog,
@@ -26,6 +27,7 @@ export function BottomActionsBar({
   setShowSOSDialog: (v: boolean) => void;
   setShowHandoverDialog: (v: boolean) => void;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-3 flex items-center justify-between z-30 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
@@ -78,6 +80,7 @@ export function ActionButtons({
   reasonCodes: DowntimeReasonCode[];
   reportDowntime: UseMutationResult<void, Error, void, unknown>;
 }) {
+  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
 
   if (activeSession?.status === "pending" || isSettingUp) {

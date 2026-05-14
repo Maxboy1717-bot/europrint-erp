@@ -173,6 +173,7 @@ interface HistoryListProps {
 }
 
 export function HistoryList({ reports, isLoading }: HistoryListProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
   }

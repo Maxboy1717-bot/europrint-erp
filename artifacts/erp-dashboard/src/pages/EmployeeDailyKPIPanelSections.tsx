@@ -100,6 +100,7 @@ export function EvaluationsTableSection({
   isLoading,
   selectedDate,
 }: EvaluationsTableSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-evaluations-table">
       <CardHeader>

@@ -168,6 +168,7 @@ export function ParameterTableSection({
 interface ControlChartCardProps { dataPoints: unknown[] | undefined; }
 
 export function ControlChartCard({ dataPoints }: ControlChartCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card rounded-lg border-none shadow-none">
       <div className="p-4 flex items-center gap-2">

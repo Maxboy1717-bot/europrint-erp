@@ -206,6 +206,7 @@ interface ResultsTabProps {
 }
 
 export function ResultsTab({ sessions, setSelectedSession }: ResultsTabProps) {
+  const { t } = useTranslation("common");
   const completed = sessions.filter(s => s.status === "completed");
 
   if (completed.length === 0) {

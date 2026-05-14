@@ -163,6 +163,7 @@ interface SummarySectionProps {
 }
 
 export function SummarySection({ stats, loading }: SummarySectionProps) {
+  const { t } = useTranslation("common");
   const rows = [
     {
       label: "O'tish darajasi",

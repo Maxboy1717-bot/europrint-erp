@@ -73,6 +73,7 @@ export function ProblemsTab({ alerts, alertsLoading, onRefresh, }: {
 }
 
 export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | undefined; prodLoading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="production" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("ishlabChiqarishHolati")}</h2>
@@ -152,6 +153,7 @@ export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | 
 }
 
 export function HrTab({ hrData, hrLoading }: { hrData: HrData | undefined; hrLoading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="hr" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("hrVaDavomadHolati")}</h2>
@@ -226,6 +228,7 @@ export function FinanceTab({ finData, finLoading }: { finData: FinData | undefin
 }
 
 export function KpisTab({ kpiList, kpiData }: { kpiList: KpiListItem[]; kpiData: KpiData | undefined }) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="kpis" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{"KPI Monitoringi"}</h2>

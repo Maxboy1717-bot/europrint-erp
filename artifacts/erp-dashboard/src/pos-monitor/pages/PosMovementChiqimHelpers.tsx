@@ -60,6 +60,7 @@ interface NoStockModalProps {
 }
 
 export function NoStockModal({ materialName, onClose }: NoStockModalProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-modal-overlay" onClick={onClose}>
       <div
@@ -94,6 +95,7 @@ interface EmployeeSearchProps {
 }
 
 export function EmployeeSearch({ value, onChange }: EmployeeSearchProps) {
+  const { t } = useTranslation("common");
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<EmployeeSuggestion[]>([]);

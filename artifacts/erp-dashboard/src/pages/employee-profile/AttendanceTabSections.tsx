@@ -67,6 +67,7 @@ export function DetailedStatsCard({ attendanceStats, earlyDeparturesCount }: Det
 // ─── Early Departures Table ─────────────────────────────────────────────────
 
 export function EarlyDeparturesSection({ earlyDepartures }: { earlyDepartures: AttendanceRecord[] }) {
+  const { t } = useTranslation("common");
   if (earlyDepartures.length === 0) return null;
   return (
     <Card>
@@ -113,6 +114,7 @@ interface ShiftSwapsSectionProps {
 }
 
 export function ShiftSwapsSection({ shiftSwaps, loadingShiftSwaps }: ShiftSwapsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -242,6 +244,7 @@ interface AttendanceHistoryProps {
 }
 
 export function AttendanceHistorySection({ attendanceData, tCommon }: AttendanceHistoryProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

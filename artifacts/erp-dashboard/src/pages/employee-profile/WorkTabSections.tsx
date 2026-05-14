@@ -145,6 +145,7 @@ export function CurrentWorkplaceCard({
   orgStructureData,
   calculateWorkExperience,
 }: CurrentWorkplaceCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -229,6 +230,7 @@ export function CkpAttestationCard({
   t,
   tCommon,
 }: CkpAttestationCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

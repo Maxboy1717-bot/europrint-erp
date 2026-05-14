@@ -99,6 +99,7 @@ interface AttendanceViewCardProps {
 export function AttendanceViewCard({
   viewMode, onSetViewMode, attendanceData, attendancePieData, tCommon,
 }: AttendanceViewCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="lg:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap pb-2">

@@ -59,6 +59,7 @@ interface ToolsTabProps {
 }
 
 export function ToolsTab({ tools }: ToolsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">{t("bosmaAsboblarInventari")}</CardTitle></CardHeader>

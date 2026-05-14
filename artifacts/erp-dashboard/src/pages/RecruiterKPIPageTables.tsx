@@ -83,6 +83,7 @@ interface VacancyTypeSectionProps {
 }
 
 export function VacancyTypeSection({ kpi }: VacancyTypeSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="lg:col-span-2">
       <CardHeader>

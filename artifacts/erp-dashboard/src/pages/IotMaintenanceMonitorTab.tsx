@@ -12,7 +12,6 @@ import {
   Clock, Heart, Activity,
 } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from "@/lib/i18n";
 
 /* ────────── Types ────────── */
 interface PmSensor {

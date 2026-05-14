@@ -79,6 +79,7 @@ interface PendingOrdersPanelProps {
 
 /** Renders the list of orders waiting for an AI-generated tech card. */
 export function PendingOrdersPanel({ orders, onGenerateClick }: PendingOrdersPanelProps) {
+  const { t } = useTranslation("common");
   if (orders.length === 0) return null;
 
   return (
@@ -140,6 +141,7 @@ export function SingleTechCard({
   onOptimize,
   onExport,
 }: SingleTechCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card
       className="bg-card rounded-lg border-none shadow-none"
@@ -247,6 +249,7 @@ export function CardsGrid({
   onOptimize,
   onExport,
 }: CardsGridProps) {
+  const { t } = useTranslation("common");
   const filtered = (Array.isArray(cards) ? cards : []).filter(
     (c) =>
       c.name?.toLowerCase().includes(search.toLowerCase()) ||

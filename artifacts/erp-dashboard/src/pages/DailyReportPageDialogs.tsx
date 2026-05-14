@@ -105,6 +105,7 @@ export function DeptReportColumns({
   onSetOverrideReason,
   onOverride,
 }: DeptReportColumnsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Card className="bg-card border-border">
@@ -217,6 +218,7 @@ interface AllReportsListProps {
 }
 
 export function AllReportsList({ allReports, isLoading, reportType }: AllReportsListProps) {
+  const { t } = useTranslation("common");
   const heading =
     reportType === "operator" ? "Operator hisobotlari (bugun)" :
     reportType === "office" ? "Ofis xodimlari hisobotlari (bugun)" :

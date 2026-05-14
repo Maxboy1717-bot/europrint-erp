@@ -18,7 +18,6 @@ import { useTranslation } from "@/lib/i18n";
 // ---------------------------------------------------------------------------
 
 export function PersonalInfoCard({ employee, t, tCommon }: SectionProps) {
-  const { t } = useTranslation("common");
   const genderLabel =
     employee.gender === "erkak"
       ? t("male")
@@ -110,6 +109,7 @@ export function ContactInfoCard({ employee, t, tCommon }: SectionProps) {
 const KNOWN_SALARY_TYPES = ["monthly", "hourly", "piecework", "contract", "oylik", "soatbay", "ishbay"] as const;
 
 function SalaryTypeLabel({ salaryType }: { salaryType: string }) {
+  const { t } = useTranslation("common");
   if (salaryType === "monthly" || salaryType === "oylik") {
     return (
       <div>

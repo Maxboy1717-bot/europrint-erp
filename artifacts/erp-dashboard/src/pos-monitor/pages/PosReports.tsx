@@ -6,7 +6,6 @@
 import { useState, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { reportsApi, stockApi, glApi, syncApi, inventoryApi, movementsApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 function exportCsv(data: unknown, filename: string) {
   const rows = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
@@ -85,7 +84,6 @@ async function fetchReport(selected: ReportType, warehouseId: string, dateFrom: 
 }
 
 export default function PosReports() {
-  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const [selected, setSelected] = useState<ReportType>("stock_balance");
   const [dateFrom, setDateFrom] = useState("");

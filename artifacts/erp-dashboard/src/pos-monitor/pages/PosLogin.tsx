@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import "../styles/pos-theme.css";
-import { useTranslation } from '@/lib/i18n';
 
 interface PosLoginResponse {
   token: string;
@@ -36,7 +35,6 @@ function GridParticles() {
 }
 
 export default function PosLogin() {
-  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [username, setUsername]     = useState("");

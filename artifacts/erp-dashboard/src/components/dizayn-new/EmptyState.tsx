@@ -143,6 +143,7 @@ export function TableSkeleton({
   hasCheckbox = true,
   className,
 }: TableSkeletonProps) {
+  const { t } = useTranslation("common");
   const colCount = cols + (hasCheckbox ? 1 : 0) + 1; // +1 for actions
 
   return (
@@ -210,6 +211,7 @@ interface CardSkeletonProps {
 }
 
 export function CardSkeleton({ count = 1, className }: CardSkeletonProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (

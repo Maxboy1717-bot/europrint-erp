@@ -25,6 +25,7 @@ import {
 // ─── Create Order Form (used inside dialog) ───────────────────────────────────
 
 function CreateOrderForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState({
     category: "",
@@ -125,6 +126,7 @@ function CreateOrderForm({ onClose, onSuccess }: { onClose: () => void; onSucces
 // ─── Order Detail Content (used inside dialog) ────────────────────────────────
 
 function OrderDetailContent({ orderId, onClose }: { orderId: number; onClose: () => void }) {
+  const { t } = useTranslation("common");
   const { data: entry, isLoading } = useQuery<OrdersRegistryEntry>({
     queryKey: [`/api/orders-registry/${orderId}`],
   });
@@ -199,6 +201,7 @@ interface OrderDetailDialogProps {
 }
 
 export function OrderDetailDialog({ viewId, onOpenChange }: OrderDetailDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={viewId !== null} onOpenChange={(open) => !open && onOpenChange(false)}>
       <DialogContent className="max-w-2xl p-6">

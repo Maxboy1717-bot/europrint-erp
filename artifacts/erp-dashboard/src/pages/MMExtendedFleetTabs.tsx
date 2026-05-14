@@ -77,6 +77,7 @@ interface FuelTabProps {
 }
 
 export function FuelTab({ fuelLogs, vehicles, fuelLoading }: FuelTabProps) {
+  const { t } = useTranslation("common");
   const safeFuelLogs = Array.isArray(fuelLogs) ? fuelLogs : [];
   return (
     <TabsContent value="fuel" className="mt-0 space-y-4">
@@ -130,6 +131,7 @@ interface DriversTabProps {
 }
 
 export function DriversTab({ vehicles, vehiclesLoading, onAddDriver }: DriversTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="drivers" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
@@ -179,6 +181,7 @@ interface ScheduleTabProps {
 }
 
 export function ScheduleTab({ deliveries, deliveriesLoading }: ScheduleTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="schedule" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("transportJadvali")}</h2>
@@ -270,6 +273,7 @@ interface TransportTabProps {
 }
 
 export function TransportTab({ vehicles, vehiclesLoading, onAddVehicle }: TransportTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="transport" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">

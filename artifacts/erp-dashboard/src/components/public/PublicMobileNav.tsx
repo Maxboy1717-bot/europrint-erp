@@ -6,10 +6,8 @@
 import { Link, useLocation } from 'wouter';
 import { Home, Package, Briefcase, User, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
-import { useTranslation } from '@/lib/i18n';
 
 export default function PublicMobileNav() {
-  const { t } = useTranslation("common");
   const [location] = useLocation();
   const { t } = useLanguage();
 

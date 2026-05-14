@@ -97,6 +97,7 @@ export function EditVendorDialog({
   isPending,
   onSubmit,
 }: EditVendorDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
@@ -141,6 +142,7 @@ export function DeleteVendorAlert({
   isPending,
   onConfirm,
 }: DeleteVendorAlertProps) {
+  const { t } = useTranslation("common");
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>

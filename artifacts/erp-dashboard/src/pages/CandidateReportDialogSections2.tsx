@@ -50,6 +50,7 @@ export function Section4Checklist({ report }: { report: ReportData }) {
 // ─── Section 5: Final recommendation ─────────────────────────────────────────
 
 export function Section5Decision({ report }: { report: ReportData }) {
+  const { t } = useTranslation("common");
   const decisionKey = report.final_decision ?? report.recommendation ?? null;
   const decisionInfo = decisionKey ? (DECISION_INFO[decisionKey] ?? null) : null;
   return (
@@ -85,6 +86,7 @@ export function Section5Decision({ report }: { report: ReportData }) {
 // ─── Section 6: Risks and opportunities ──────────────────────────────────────
 
 export function Section6Risks({ report }: { report: ReportData }) {
+  const { t } = useTranslation("common");
   const toolTestResults = report.tool_test_results ?? {};
   const hasTool = Object.keys(toolTestResults).length > 0;
   const motivLevel = report.motivation_level ?? null;

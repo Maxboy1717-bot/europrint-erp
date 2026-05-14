@@ -23,6 +23,7 @@ interface Props {
 type InfoTab = "members" | "files" | "pinned";
 
 function RoleBadge({ role }: { role: string }) {
+  const { t } = useTranslation("common");
   if (role === "OWNER") return (
     <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500/50 text-[var(--ep-yellow)] dark:text-yellow-400 gap-1">
       <Crown className="w-2.5 h-2.5" />

@@ -85,6 +85,7 @@ export function StatsTab({ node }: StatsTabProps) {
 }
 
 export function VacantTab({ node }: StatsTabProps) {
+  const { t } = useTranslation("common");
   const isVacant = !node.headUserName;
   return (
     <Card>

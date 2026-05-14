@@ -88,6 +88,7 @@ function KpiCard({
 }
 
 function InlineError({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-3">
       <AlertTriangle className="w-8 h-8 text-destructive/60" />

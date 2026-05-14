@@ -107,6 +107,7 @@ interface AITabProps {
 }
 
 export function AITab({ entityType, entityId }: AITabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="ai" className="m-0">
       <div className="space-y-6">

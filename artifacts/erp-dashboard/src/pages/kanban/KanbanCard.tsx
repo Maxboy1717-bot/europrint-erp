@@ -84,6 +84,7 @@ export function SortableTaskCard({
   onClick:     () => void;
   columnName?: string;
 }) {
+  const { t } = useTranslation("common");
   const {
     attributes, listeners, setNodeRef,
     transform, transition, isDragging,

@@ -101,6 +101,7 @@ function MovementCard({
   onPrint: (id: number) => void;
   actionLoading: number | null;
 }) {
+  const { t } = useTranslation("common");
   const cfg = STATUS_CFG[mov.status] ?? STATUS_CFG.draft;
   const isDone = mov.status === "completed" || mov.status === "cancelled";
 
@@ -266,7 +267,6 @@ function MovementCard({
 
 // ── Main page ─────────────────────────────────────────────────────────────
 export default function PosMovements() {
-  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t }        = usePosI18n();
   const [movements, setMovements]       = useState<Movement[]>([]);

@@ -131,6 +131,7 @@ export function MaintenanceTab({
   onRefetch,
   onOpenDialog,
 }: MaintenanceTabProps) {
+  const { t } = useTranslation("common");
   const requests = Array.isArray(maintenanceRequests) ? maintenanceRequests : [];
   const stats = [
     { l: "Jami so'rovlar",  v: requests.length,                                                       c: "text-primary"    },

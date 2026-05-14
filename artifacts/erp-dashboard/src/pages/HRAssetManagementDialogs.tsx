@@ -122,6 +122,7 @@ interface AssignDialogProps {
 }
 
 export function AssignDialog({ open, onOpenChange, asset, form, onFormChange, employees, onSubmit, isPending }: AssignDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">

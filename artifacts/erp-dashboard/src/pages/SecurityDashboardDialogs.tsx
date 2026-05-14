@@ -85,6 +85,7 @@ interface IncidentDialogProps {
 }
 
 export function IncidentDialog({ open, onOpenChange, form, onChange, onSubmit }: IncidentDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
@@ -158,6 +159,7 @@ interface PPEDialogProps {
 }
 
 export function PPEDialog({ open, onOpenChange, form, onChange, onSubmit }: PPEDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">

@@ -68,6 +68,7 @@ export function ActiveInventoryTable({
   signPending, returnPending,
   onAdd, onSign, onReturn,
 }: ActiveTableProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
@@ -181,6 +182,7 @@ interface ReturnedTableProps {
 }
 
 export function ReturnedInventoryTable({ returnedItems }: ReturnedTableProps) {
+  const { t } = useTranslation("common");
   if (returnedItems.length === 0) return null;
   return (
     <Card>

@@ -70,6 +70,7 @@ interface SkillsCardProps {
 }
 
 export function SkillsCard({ stats, loading }: SkillsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-skills-stats">
       <CardHeader>
@@ -120,6 +121,7 @@ interface EmployeeStatsCardProps {
 }
 
 export function EmployeeStatsCard({ stats, loading }: EmployeeStatsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-employee-stats">
       <CardHeader>

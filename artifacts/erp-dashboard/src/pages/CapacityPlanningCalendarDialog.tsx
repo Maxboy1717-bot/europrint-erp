@@ -32,7 +32,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { WorkCenter, CalendarFormValues } from "./CapacityPlanningTypes";
-import { useTranslation } from "@/lib/i18n";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -54,7 +53,6 @@ interface CalendarDialogProps {
 // ---------------------------------------------------------------------------
 
 export function CalendarDialog({ open, onOpenChange, form, workCenters, isPending, onSubmit, t, tCommon, }: CalendarDialogProps) {
-  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="dialog-create-calendar" className="p-6">

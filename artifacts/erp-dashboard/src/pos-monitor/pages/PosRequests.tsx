@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { requestsApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 function NewRequestModal({ onClose, onCreated, t }: { onClose: () => void; onCreated: () => void; t: (k: string) => string }) {
   const [justification, setJustification] = useState("");
@@ -78,7 +77,6 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function PosRequests() {
-  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
   const [activeTab, setActiveTab] = useState<"my" | "approve" | "fulfill">("my");

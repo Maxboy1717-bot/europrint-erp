@@ -100,6 +100,7 @@ interface PriceResultPanelProps {
 }
 
 function PriceResultPanel({ priceResult, calcForm, form, onFormChange, customers, isCreatePending, onCreate }: PriceResultPanelProps) {
+  const { t } = useTranslation("common");
   if (!priceResult) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-muted-foreground text-sm gap-3 bg-muted/30 rounded-md">

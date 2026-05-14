@@ -67,6 +67,7 @@ interface LossAnalysisPanelProps {
 }
 
 export function LossAnalysisPanel({ lossAnalysis }: LossAnalysisPanelProps) {
+  const { t } = useTranslation("common");
   if (!lossAnalysis || !Array.isArray(lossAnalysis.breakdown) || lossAnalysis.breakdown.length === 0) {
     return null;
   }
@@ -110,6 +111,7 @@ export function LeadList({
   onEdit,
   onDelete,
 }: LeadListProps) {
+  const { t } = useTranslation("common");
   const arr = Array.isArray(leads) ? leads : [];
 
   if (arr.length === 0) {
@@ -247,6 +249,7 @@ export function ContactLogPanel({
   isAddPending,
   onClose,
 }: ContactLogPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div
       className="fixed right-0 top-0 h-full w-96 bg-background border-l border-border shadow-lg z-50 flex flex-col"

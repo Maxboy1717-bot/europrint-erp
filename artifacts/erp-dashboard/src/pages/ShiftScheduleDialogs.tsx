@@ -192,6 +192,7 @@ interface DeleteConfirmProps {
 }
 
 export function DeleteEntryConfirm({ deleteEntryId, onOpenChange, onConfirm }: DeleteConfirmProps) {
+  const { t } = useTranslation("common");
   return (
     <ConfirmDialog
       open={deleteEntryId !== null}

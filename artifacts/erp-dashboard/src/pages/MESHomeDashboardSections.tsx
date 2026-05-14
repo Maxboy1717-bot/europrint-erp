@@ -82,6 +82,7 @@ export function MesKpiRow({
   stats, sLoad, sessLoad, dtLoad, activeSessions, downtimes,
   totalProduced, defectRate, oeePercent, avgOee,
 }: MesKpiRowProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <KpiCard
@@ -127,6 +128,7 @@ export function MesKpiRow({
 // ─── Machine Grid ──────────────────────────────────────────────────────────────
 
 export function MesMachineGrid({ sessions, sessLoad }: { sessions: Session[]; sessLoad: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
