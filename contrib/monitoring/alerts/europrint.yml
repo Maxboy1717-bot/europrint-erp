@@ -1,0 +1,90 @@
+groups:
+  - name: europrint-api
+    interval: 30s
+    rules:
+      - alert: APIDown
+        expr: up{job="europrint-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'API is unreachable for >2 minutes'
+          description: 'No successful scrape of europrint-api in the last 2 minutes.'
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: '>5% of requests returning 5xx for 5 minutes'
+
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'p95 latency >1s for 10 minutes'
+
+      - alert: EventLoopLag
+        expr: nodejs_eventloop_lag_seconds > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Node.js event loop lag >200ms — possible blocking operation'
+
+      - alert: HeapUsageHigh
+        expr: nodejs_heap_size_used_bytes / nodejs_heap_size_total_bytes > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Heap usage >90% for 10 minutes — potential memory leak'
+
+  - name: postgres
+    rules:
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 2m
+        labels:
+          severity: critical
+
+      - alert: PostgresConnectionPoolNearLimit
+        expr: pg_stat_database_numbackends{datname="europrint"} > 18
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'DB connection pool >90% (18/20) — possible leak or load spike'
+
+  - name: redis
+    rules:
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 2m
+        labels:
+          severity: critical
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 10m
+        labels:
+          severity: warning
+
+  - name: host
+    rules:
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Disk space <15% on {{ $labels.mountpoint }}'
+
+      - alert: HighCPULoad
+        expr: 100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 10m
+        labels:
+          severity: warning

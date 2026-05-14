@@ -1,0 +1,104 @@
+# Optional monitoring stack for EuroPrint ERP.
+# Run alongside the main docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f contrib/monitoring/docker-compose.monitoring.yml up -d
+#
+# Then access:
+#   - Prometheus: http://localhost:9090
+#   - Grafana:    http://localhost:3001 (default admin/admin, change immediately)
+#   - Alertmanager: http://localhost:9093
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts:/etc/prometheus/alerts:ro
+      - prometheus-data:/prometheus
+    ports:
+      - '127.0.0.1:9090:9090'
+    networks:
+      - monitoring
+      - internal
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    restart: unless-stopped
+    depends_on: [prometheus]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD required}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    ports:
+      - '127.0.0.1:3001:3000'
+    networks:
+      - monitoring
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - '127.0.0.1:9093:9093'
+    networks:
+      - monitoring
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    network_mode: host
+    pid: host
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER:-europrint}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-europrint}?sslmode=disable
+    networks:
+      - monitoring
+      - internal
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: 'redis://redis:6379'
+    networks:
+      - monitoring
+      - internal
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:
+
+networks:
+  monitoring:
+    driver: bridge
+  internal:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME:-europrint-erp}_internal
