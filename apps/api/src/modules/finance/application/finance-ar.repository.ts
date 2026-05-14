@@ -77,4 +77,28 @@ export class FinanceArRepository {
       total_outstanding: String(b.total_outstanding),
     });
   }
+
+  /**
+   * Atomic recalculation: clear table + bulk insert in a single transaction.
+   * Prevents partial state where buckets are cleared but inserts fail mid-loop.
+   */
+  async replaceArAgingBuckets(rows: ArBucket[]): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(ar_aging_buckets);
+      if (rows.length > 0) {
+        await tx.insert(ar_aging_buckets).values(
+          rows.map(b => ({
+            customer_id:       b.customer_id ?? undefined,
+            customer_type:     b.customer_type,
+            current_amount:    String(b.current),
+            days_31_60:        String(b.days_31_60),
+            days_61_90:        String(b.days_61_90),
+            days_91_120:       String(b.days_91_120),
+            over_120:          String(b.over_120),
+            total_outstanding: String(b.total_outstanding),
+          })),
+        );
+      }
+    });
+  }
 }

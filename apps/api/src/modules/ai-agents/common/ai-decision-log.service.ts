@@ -119,17 +119,32 @@ export class AiDecisionLogService {
 
   async log(input: LogDecisionInput): Promise<string> {
     const inputHash = this.hashInput(input.inputData);
-    const isDup = await this.isDuplicate(input.agentCode, inputHash).catch((err: unknown) => {
-      this.logger.error({ msg: 'isDuplicate check failed', agentCode: input.agentCode, err });
-      throw err;
-    });
-    if (isDup) {
+    if (await this.checkDuplicateOrThrow(input.agentCode, inputHash)) {
       this.logger.debug(`Duplicate decision skipped: ${input.agentCode}/${inputHash.slice(0, 8)}`);
       return inputHash;
     }
+    const row = this.buildLogRow(input, inputHash);
+    await db.insert(aiDecisionLog).values(row).onConflictDoNothing();
+    this.logger.log({
+      msg:        'AI qaror yozildi',
+      agent:      input.agentCode,
+      entity:     input.entityType,
+      auto:       input.autoExecuted,
+      confidence: input.confidence,
+    });
+    return inputHash;
+  }
 
+  private async checkDuplicateOrThrow(agentCode: string, inputHash: string): Promise<boolean> {
+    return this.isDuplicate(agentCode, inputHash).catch((err: unknown) => {
+      this.logger.error({ msg: 'isDuplicate check failed', agentCode, err });
+      throw err;
+    });
+  }
+
+  private buildLogRow(input: LogDecisionInput, inputHash: string): AiDecisionLogInsert {
     const bucketHour = new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000);
-    const row: AiDecisionLogInsert = {
+    return {
       agentCode:    input.agentCode,
       entityType:   input.entityType,
       entityId:     this.toEntityUuid(input.entityId),
@@ -142,16 +157,6 @@ export class AiDecisionLogService {
       latencyMs:    input.latencyMs,
       costUsd:      input.costUsd ? String(input.costUsd) : null,
     };
-
-    await db.insert(aiDecisionLog).values(row).onConflictDoNothing();
-    this.logger.log({
-      msg:          'AI qaror yozildi',
-      agent:        input.agentCode,
-      entity:       input.entityType,
-      auto:         input.autoExecuted,
-      confidence:   input.confidence,
-    });
-    return inputHash;
   }
 
   async getStats(agentCode?: string) {
@@ -194,52 +199,20 @@ export class AiDecisionLogService {
         .orderBy(sql`created_at DESC`)
         .limit(limit);
     } catch (e) {
-      throw new Error(`aiDecisionLog.getRecentDecisions: ${String(e)}`);
+      // WHY graceful degradation: this is an audit-dashboard read; if the DB
+      // hiccups we'd rather show an empty list than crash the Director panel.
+      this.logger.error({ msg: 'getRecentDecisions failed', agentCode, err: e });
+      return [];
     }
   }
 
   async getHardBlockStats() {
-    const result = await db.execute<{
-      guard_type:         string;
-      blocked_count:      string;
-      avg_blocked_age_sec: string;
-    }>(sql`
-      SELECT guard_type, COUNT(*) AS blocked_count,
-             ROUND(AVG(EXTRACT(EPOCH FROM NOW() - created_at)))::bigint AS avg_blocked_age_sec
-      FROM (
-        SELECT 'payment_pending' AS guard_type, created_at
-        FROM customer_orders
-        WHERE deleted_at IS NULL
-          AND LOWER(payment_status) IN ('pending', 'unpaid')
-
-        UNION ALL
-
-        SELECT 'lab_wait' AS guard_type, s.created_at
-        FROM mes_production_sessions s
-        LEFT JOIN certificates c ON c.employee_id = s.operator_id
-          AND c.is_active = true
-          AND c.expires_at > NOW()
-        WHERE s.operator_id IS NOT NULL
-          AND c.id IS NULL
-
-        UNION ALL
-
-        SELECT 'material_wait' AS guard_type, po.created_at
-        FROM mm_purchase_orders po
-        WHERE LOWER(po.status) IN ('pending', 'approved')
-      ) AS blocked_items
-      GROUP BY guard_type
-    `).then((r) => r.rows).catch((err: unknown): { guard_type: string; blocked_count: string; avg_blocked_age_sec: string }[] => {
-      this.logger.error({ msg: 'getHardBlockStats query failed', err });
-      return [];
-    });
-
+    const result = await this.queryHardBlockedItems();
     const GUARD_AGENT: Record<string, string> = {
       payment_pending: AGENT_CODES.SALES_COPILOT,
       lab_wait:        AGENT_CODES.MES_MONITOR,
       material_wait:   AGENT_CODES.PLANNER,
     };
-
     return result.map((r) => ({
       agentCode:        GUARD_AGENT[r.guard_type] ?? 'UNKNOWN',
       guardType:        r.guard_type,
@@ -247,4 +220,47 @@ export class AiDecisionLogService {
       avgBlockedAgeSec: Number(r.avg_blocked_age_sec ?? 0),
     }));
   }
+
+  private async queryHardBlockedItems(): Promise<HardBlockRow[]> {
+    return db.execute<HardBlockRow>(HARD_BLOCK_QUERY)
+      .then((r) => r.rows)
+      .catch((err: unknown): HardBlockRow[] => {
+        this.logger.error({ msg: 'getHardBlockStats query failed', err });
+        return [];
+      });
+  }
 }
+
+type HardBlockRow = {
+  guard_type:         string;
+  blocked_count:      string;
+  avg_blocked_age_sec: string;
+};
+
+const HARD_BLOCK_QUERY = sql`
+  SELECT guard_type, COUNT(*) AS blocked_count,
+         ROUND(AVG(EXTRACT(EPOCH FROM NOW() - created_at)))::bigint AS avg_blocked_age_sec
+  FROM (
+    SELECT 'payment_pending' AS guard_type, created_at
+    FROM customer_orders
+    WHERE deleted_at IS NULL
+      AND LOWER(payment_status) IN ('pending', 'unpaid')
+
+    UNION ALL
+
+    SELECT 'lab_wait' AS guard_type, s.created_at
+    FROM mes_production_sessions s
+    LEFT JOIN certificates c ON c.employee_id = s.operator_id
+      AND c.is_active = true
+      AND c.expires_at > NOW()
+    WHERE s.operator_id IS NOT NULL
+      AND c.id IS NULL
+
+    UNION ALL
+
+    SELECT 'material_wait' AS guard_type, po.created_at
+    FROM mm_purchase_orders po
+    WHERE LOWER(po.status) IN ('pending', 'approved')
+  ) AS blocked_items
+  GROUP BY guard_type
+`;
