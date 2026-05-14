@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import { safeStorage } from "@/lib/safeStorage";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   type DocumentsTabProps, type HrDocument, type EmploymentContract,
@@ -43,10 +42,11 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   const { data: contracts, isLoading: loadingContracts } = useQuery<EmploymentContract[]>({
     queryKey: ["/api/employees", employeeId, "contracts"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/employees/${employeeId}/contracts`);
+      const res = await apiRequest('GET', `/api/employees/${employeeId}/contracts`) as unknown as Response;
       if (!res.ok) return [];
-      const json = await res.json();
-      return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      const json = await res.json() as { data?: unknown[] };
+      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      return arr as EmploymentContract[];
     },
     enabled: !!employeeId,
   });
@@ -54,10 +54,11 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   const { data: hrDocs, isLoading: loadingDocs } = useQuery<HrDocument[]>({
     queryKey: ["/api/hr-v2/documents/employee", employeeId],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/hr-v2/documents/employee/${employeeId}`);
+      const res = await apiRequest('GET', `/api/hr-v2/documents/employee/${employeeId}`) as unknown as Response;
       if (!res.ok) return [];
-      const json = await res.json();
-      return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      const json = await res.json() as { data?: unknown[] };
+      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      return arr as HrDocument[];
     },
     enabled: !!employeeId,
   });
@@ -65,10 +66,11 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   const { data: employeeFiles, isLoading: loadingFiles } = useQuery<EmployeeFile[]>({
     queryKey: ["/api/employees", employeeId, "files"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/employees/${employeeId}/files`);
+      const res = await apiRequest('GET', `/api/employees/${employeeId}/files`) as unknown as Response;
       if (!res.ok) return [];
-      const json = await res.json();
-      return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      const json = await res.json() as { data?: unknown[] };
+      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      return arr as EmployeeFile[];
     },
     enabled: !!employeeId,
   });
@@ -76,12 +78,12 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   const { data: empDocs, isLoading: loadingEmpDocs } = useQuery<EmployeeDocument[]>({
     queryKey: ["/api/hr/employees", employeeId, "documents"],
     queryFn: async () => {
-      const token = safeStorage.getItem("access_token");
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await apiRequest('GET', `/api/hr/employees/${employeeId}/documents`);
+      // Auth carried by httpOnly cookie via apiRequest's `credentials: 'include'`.
+      const res = await apiRequest('GET', `/api/hr/employees/${employeeId}/documents`) as unknown as Response;
       if (!res.ok) return [];
-      const json = await res.json();
-      return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      const json = await res.json() as { data?: unknown[] };
+      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      return arr as EmployeeDocument[];
     },
     enabled: !!employeeId,
   });
@@ -98,7 +100,7 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   async function handleDelete(fileId: number) {
     setDeletingId(fileId);
     try {
-      const res = await apiRequest('DELETE', `/api/employees/${employeeId}/files/${fileId}`);
+      const res = await apiRequest('DELETE', `/api/employees/${employeeId}/files/${fileId}`) as unknown as Response;
       if (!res.ok) throw new Error("O'chirishda xatolik");
       await qc.invalidateQueries({ queryKey: ["/api/employees", employeeId, "files"] });
       toast({ title: "Fayl o'chirildi" });
@@ -112,9 +114,8 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   async function handleDeleteDoc(docId: number) {
     setDeletingDocId(docId);
     try {
-      const token = safeStorage.getItem("access_token");
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await apiRequest('DELETE', `/api/hr/employees/${employeeId}/documents/${docId}`);
+      // Auth via httpOnly cookie; apiRequest sets `credentials: 'include'` internally.
+      const res = await apiRequest('DELETE', `/api/hr/employees/${employeeId}/documents/${docId}`) as unknown as Response;
       if (!res.ok) throw new Error("O'chirishda xatolik");
       await qc.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "documents"] });
       toast({ title: "Hujjat o'chirildi" });

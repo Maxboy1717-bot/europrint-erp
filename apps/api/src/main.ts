@@ -167,6 +167,23 @@ async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? DEFAULT_PORT);
 
   await configureSecurityHeaders(app);
+  // @fastify/cookie — enables httpOnly cookie auth (access_token / refresh_token).
+  // Registered before other plugins so cookies are parsed on every request, and
+  // are available via `request.cookies` in NestJS guards / controllers.
+  // The COOKIE_SECRET env var is OPTIONAL: cookies are httpOnly + sameSite=strict
+  // already, so signing them is defense-in-depth, not required for MVP.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fastifyCookie = require('@fastify/cookie');
+    await app.register(fastifyCookie.default ?? fastifyCookie, {
+      secret: process.env.COOKIE_SECRET, // optional — undefined disables signing
+      parseOptions: {},
+    });
+  } catch (e: unknown) {
+    new Logger('Bootstrap').warn(
+      `@fastify/cookie ro'yxatdan o'tmadi — Bearer token rejimi ishlatiladi: ${String(e)}`,
+    );
+  }
   await app.register(require('@fastify/multipart'), { limits: { fileSize: MAX_FILE_SIZE, files: 1 } });
 
   // Parse raw binary uploads as Buffer. Registered AFTER multipart so

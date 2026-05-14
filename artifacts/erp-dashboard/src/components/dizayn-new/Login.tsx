@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { Eye, EyeOff, ArrowRight, Users, Building2, Zap, ShieldCheck } from "lucide-react";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
 import { apiRequest, HttpError } from "@/lib/queryClient";
-import { safeStorage } from '@/lib/safeStorage';
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -145,14 +144,16 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
 
     setField("isLoading", true);
     try {
+      // After a successful login the server sets the httpOnly access_token /
+      // refresh_token cookies on the response — the browser persists them
+      // automatically. We no longer write tokens to localStorage; reading
+      // them client-side would defeat the purpose of httpOnly cookies.
       const data = await apiRequest<{
         accessToken?: string;
         user?: { id: string | number; username: string; role: string };
       }>('POST', "/api/auth/login", { username: form.username, password: form.password });
 
       if (data.accessToken) {
-        safeStorage.setItem("token", data.accessToken);
-        if (data.user) safeStorage.setItem("admin", JSON.stringify(data.user));
         onLoginSuccess?.(data.user?.role);
       }
     } catch (err) {

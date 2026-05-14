@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Clock, Upload, Plus, File, Image, FileText, FileType2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getAuthHeaders, apiRequest } from "@/lib/queryClient";
-import { safeStorage } from "@/lib/safeStorage";
 import { useTranslation } from '@/lib/i18n';
 import {
   addDocFormSchema, type AddDocFormValues,
@@ -67,7 +66,7 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
       formData.append("category", uploadCategory);
       if (uploadDescription) formData.append("description", uploadDescription);
 
-      const res = await apiRequest('POST', `/api/employees/${employeeId}/files`);
+      const res = await apiRequest('POST', `/api/employees/${employeeId}/files`) as unknown as Response;
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as { error?: string }).error || "Yuklash xatoligi");
@@ -197,15 +196,11 @@ export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogPro
   async function handleAddDoc(values: AddDocFormValues) {
     setSavingDoc(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
+      // Auth via httpOnly cookie; apiRequest handles credentials and Content-Type.
       const res = await apiRequest('POST', `/api/hr/employees/${employeeId}/documents`, {
           category:  values.category,
           title:     values.title.trim(),
-      });
+      }) as unknown as Response;
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as { error?: string }).error || "Saqlashda xatolik");

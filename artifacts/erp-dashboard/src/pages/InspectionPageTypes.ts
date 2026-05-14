@@ -49,8 +49,14 @@ export const ROOMS = [
 export const REFERENCE_PHOTO_ROLES = new Set(['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_DIRECTOR']);
 export const MANUAL_INSPECTION_ROLES = new Set(['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_DIRECTOR', 'SECURITY']);
 
+/**
+ * @deprecated Auth tokens are httpOnly cookies; JavaScript cannot read them.
+ * Use `apiRequest` / `apiFetch` (both attach `credentials: 'include'`) instead
+ * of building auth headers manually. Returns '' so legacy callers degrade
+ * gracefully — no token is ever actually attached to requests this way.
+ */
 export function getToken(): string {
-  return localStorage.getItem('access_token') ?? '';
+  return '';
 }
 
 export async function apiFetch<T>(path: string): Promise<T> {

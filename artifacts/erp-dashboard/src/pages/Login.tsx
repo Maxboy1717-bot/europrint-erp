@@ -76,7 +76,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       });
 
       if (data.accessToken) {
+        // setAuthToken is a no-op post-cookie migration — httpOnly cookies
+        // are set by the server's Set-Cookie header. Call retained for clarity
+        // and forward compatibility.
         setAuthToken(data.accessToken, undefined);
+        // Optional UX cache of non-sensitive user fields (role, name) so
+        // routing decisions don't have to await /api/auth/me on first paint.
+        // No token is persisted here.
         if (data.user) safeStorage.setItem("admin", JSON.stringify(data.user));
         onLoginSuccess(data.user?.role);
       }

@@ -25,7 +25,6 @@ import { countNodes } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
 import { AddNodeDialog } from "@/components/hr/org/AddNodeDialog";
 import { TreeCanvas } from "@/components/hr/org/TreeCanvas";
-import { safeStorage } from '@/lib/safeStorage';
 import { EPErrorState, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -54,8 +53,8 @@ export default function OrgStructureHierarchy() {
 
   const notifyMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/org-departments/notify-vacancies");
-      return res.json();
+      const res = await apiRequest("POST", "/api/org-departments/notify-vacancies") as unknown as Response;
+      return res.json() as Promise<{ message?: string }>;
     },
     onSuccess: (d) => toast({ title: d.message || "Xabar yuborildi" }),
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
@@ -111,8 +110,9 @@ export default function OrgStructureHierarchy() {
     setExporting(format);
     try {
       const endpoint = format === "pdf" ? "/api/org-structure/export/pdf" : "/api/org-structure/export/excel";
-      const token = safeStorage.getItem("access_token");
-      const res = await fetch(endpoint, { credentials: "include", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      // NOTE: Binary blob download (PDF/Excel) — keep raw fetch; apiRequest unwraps JSON envelopes.
+      // Auth via httpOnly cookie sent with credentials: 'include'.
+      const res = await fetch(endpoint, { credentials: "include" });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
