@@ -19,7 +19,6 @@ import {
   UserX, CheckCircle2, Clock, AlertCircle, FileText, Search, Plus,
   ShieldOff, ClipboardList,
 } from "lucide-react";
-import { getAuthHeaders } from "@/lib/queryClient";
 import { type OffboardingCase, type Stats } from "./HROffboardingTypes";
 import { OffboardingCard, CreateCaseDialog } from "./HROffboardingDialogs";
 import { ChecklistPanel } from "./HROffboardingSteps";
@@ -40,10 +39,12 @@ export default function HROffboarding() {
   const { data: stats } = useQuery<Stats>({
     queryKey: ["/api/hr/offboarding/cases/stats"],
     queryFn: async () => {
-      const r = await apiRequest('GET', "/api/hr/offboarding/cases/stats");
-      if (!r.ok) return undefined;
-      const d: unknown = await r.json();
-      return (d && typeof d === "object" && !Array.isArray(d) ? d : {}) as Stats;
+      try {
+        const d = await apiRequest<unknown>('GET', "/api/hr/offboarding/cases/stats");
+        return (d && typeof d === "object" && !Array.isArray(d) ? d : {}) as Stats;
+      } catch {
+        return {} as Stats;
+      }
     },
   });
 
@@ -51,19 +52,21 @@ export default function HROffboarding() {
   const { data: rawCases, isLoading } = useQuery<OffboardingCase[]>({
     queryKey: ["/api/hr/offboarding/cases", statusFilter, search],
     queryFn: async () => {
-      const r = await fetch(
-        `/api/hr/offboarding/cases?status=${
-          statusFilter === "all" ? "" : statusFilter
-        }&search=${encodeURIComponent(search)}`,
-        { credentials: "include", headers: getAuthHeaders() },
-      );
-      if (!r.ok) return [];
-      const d: unknown = await r.json();
-      return Array.isArray(d)
-        ? (d as OffboardingCase[])
-        : Array.isArray((d as { items?: OffboardingCase[] })?.items)
-        ? (d as { items: OffboardingCase[] }).items
-        : [];
+      try {
+        const d = await apiRequest<unknown>(
+          'GET',
+          `/api/hr/offboarding/cases?status=${
+            statusFilter === "all" ? "" : statusFilter
+          }&search=${encodeURIComponent(search)}`,
+        );
+        return Array.isArray(d)
+          ? (d as OffboardingCase[])
+          : Array.isArray((d as { items?: OffboardingCase[] })?.items)
+          ? (d as { items: OffboardingCase[] }).items
+          : [];
+      } catch {
+        return [];
+      }
     },
   });
 

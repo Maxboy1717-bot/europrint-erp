@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
-import { setAuthToken } from "@/lib/queryClient";
+import { apiRequest, HttpError, setAuthToken } from "@/lib/queryClient";
 import { safeStorage } from '@/lib/safeStorage';
 import { FloatingInput, LoginHeroPanel } from "./LoginSections";
 
@@ -67,31 +67,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
     setField("isLoading", true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: form.username.trim().toLowerCase(), password: form.password }),
-        credentials: "include",
-      });
-
-      if (res.status === 429) {
-        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
-        return;
-      }
-
-      if (!res.ok) {
-        if (res.status >= 500) {
-          setField("error", "Server vaqtinchalik ishlamayapti. Iltimos, biroz kutib qayta urinib ko'ring.");
-        } else {
-          setField("error", "Login yoki parol noto'g'ri");
-        }
-        return;
-      }
-
-      const data = await res.json() as {
+      const data = await apiRequest<{
         accessToken?: string;
         user?: { id: string | number; username: string; role: string };
-      };
+      }>('POST', "/api/auth/login", {
+        username: form.username.trim().toLowerCase(),
+        password: form.password,
+      });
 
       if (data.accessToken) {
         setAuthToken(data.accessToken, undefined);
@@ -99,8 +81,24 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         onLoginSuccess(data.user?.role);
       }
     } catch (err) {
-      void err;
-      setField("error", "Server bilan ulanishda xatolik yuz berdi. Sahifani yangilab qayta urinib ko'ring.");
+      // apiRequest throws Error("<status>: <body>") for non-2xx HTTP responses,
+      // or HttpError(500, ...) for envelope-level failures.
+      let status = 0;
+      if (err instanceof HttpError) {
+        status = err.status;
+      } else if (err instanceof Error) {
+        const m = err.message.match(/^(\d{3}):/);
+        if (m) status = Number(m[1]);
+      }
+      if (status === 429) {
+        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
+      } else if (status >= 500) {
+        setField("error", "Server vaqtinchalik ishlamayapti. Iltimos, biroz kutib qayta urinib ko'ring.");
+      } else if (status > 0) {
+        setField("error", "Login yoki parol noto'g'ri");
+      } else {
+        setField("error", "Server bilan ulanishda xatolik yuz berdi. Sahifani yangilab qayta urinib ko'ring.");
+      }
     } finally {
       setField("isLoading", false);
     }

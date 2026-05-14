@@ -62,9 +62,7 @@ export default function OrderApprovalWorkflow() {
     queryKey: ["/api/approval-workflow/pending", filterStage],
     queryFn: async () => {
       const url = filterStage === "all" ? "/api/approval-workflow/pending" : `/api/approval-workflow/pending?stage=${filterStage}`;
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      return await apiRequest<ApprovalItem[]>('GET', url);
     },
   });
 
@@ -74,9 +72,7 @@ export default function OrderApprovalWorkflow() {
       const params = new URLSearchParams();
       if (filterStage !== "all") params.set("stage", filterStage);
       if (filterStatus !== "all") params.set("status", filterStatus);
-      const res = await apiRequest('GET', `/api/approval-workflow/history?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      return await apiRequest<ApprovalItem[]>('GET', `/api/approval-workflow/history?${params}`);
     },
     enabled: activeTab === "history",
   });

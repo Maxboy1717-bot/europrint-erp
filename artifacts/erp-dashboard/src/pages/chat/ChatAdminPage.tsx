@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apiRequest, getAuthHeaders } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 import { AdminRoom, AdminMember, AuditLog, Tab } from "./ChatAdminPageTypes";
 import { RoomsSection, AuditSection } from "./ChatAdminPageSections";
 import { RoomMembersSheet, RemoveMemberConfirm } from "./ChatAdminPageDialogs";
@@ -28,9 +28,7 @@ export default function ChatAdminPage() {
   const { data: rooms = [], isLoading: roomsLoading, refetch: refetchRooms } = useQuery<AdminRoom[]>({
     queryKey: ["chat-admin-rooms"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/chat/admin/rooms");
-      if (!res.ok) throw new Error("Failed to load rooms");
-      return res.json();
+      return await apiRequest<AdminRoom[]>('GET', "/api/chat/admin/rooms");
     },
     staleTime: 30_000,
   });
@@ -38,9 +36,7 @@ export default function ChatAdminPage() {
   const { data: auditData, isLoading: auditLoading } = useQuery({
     queryKey: ["chat-audit-logs", auditPage],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/chat/admin/audit-logs?page=${auditPage}&limit=50`);
-      if (!res.ok) throw new Error("Failed to load audit logs");
-      return res.json() as Promise<{ logs: AuditLog[]; total: number; pages: number }>;
+      return await apiRequest<{ logs: AuditLog[]; total: number; pages: number }>('GET', `/api/chat/admin/audit-logs?page=${auditPage}&limit=50`);
     },
     enabled: tab === "audit",
     staleTime: 30_000,
@@ -49,20 +45,14 @@ export default function ChatAdminPage() {
   const { data: roomMembers = [], isLoading: membersLoading } = useQuery<AdminMember[]>({
     queryKey: ["chat-admin-room-members", selectedRoom?.id],
     queryFn: async () => {
-      const res = await fetch(`/api/chat/admin/rooms/${selectedRoom?.id ?? ''}/members`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error("Failed to load members");
-      return res.json();
+      return await apiRequest<AdminMember[]>('GET', `/api/chat/admin/rooms/${selectedRoom?.id ?? ''}/members`);
     },
     enabled: !!selectedRoom,
   });
 
   const archiveMutation = useMutation({
     mutationFn: async ({ roomId, archive }: { roomId: string; archive: boolean }) => {
-      const res = await apiRequest('PATCH', `/api/chat/admin/rooms/${roomId}/archive`, { archive });
-      if (!res.ok) throw new Error("Failed to update archive status");
-      return res.json();
+      return await apiRequest('PATCH', `/api/chat/admin/rooms/${roomId}/archive`, { archive });
     },
     onSuccess: () => {
       toast({ title: "Muvaffaqiyatli", description: "Arxiv holati yangilandi" });
@@ -72,9 +62,7 @@ export default function ChatAdminPage() {
 
   const removeMemberMutation = useMutation({
     mutationFn: async ({ roomId, userId }: { roomId: string; userId: string }) => {
-      const res = await apiRequest('DELETE', `/api/chat/admin/rooms/${roomId}/members/${userId}`);
-      if (!res.ok) throw new Error("Failed to remove member");
-      return res.json();
+      return await apiRequest('DELETE', `/api/chat/admin/rooms/${roomId}/members/${userId}`);
     },
     onSuccess: () => {
       toast({ title: "A'zo chiqarildi" });
@@ -84,9 +72,7 @@ export default function ChatAdminPage() {
 
   const changeRoleMutation = useMutation({
     mutationFn: async ({ roomId, userId, role }: { roomId: string; userId: string; role: string }) => {
-      const res = await apiRequest('PATCH', `/api/chat/admin/rooms/${roomId}/members/${userId}/role`, { role });
-      if (!res.ok) throw new Error("Failed to change role");
-      return res.json();
+      return await apiRequest('PATCH', `/api/chat/admin/rooms/${roomId}/members/${userId}/role`, { role });
     },
     onSuccess: () => {
       toast({ title: "Rol o'zgartirildi" });

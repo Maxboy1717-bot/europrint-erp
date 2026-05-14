@@ -29,6 +29,7 @@ import {
 import { ShiftReportsTab } from "@/components/production/report/ShiftReportsTab";
 import { WeeklyReportsTab } from "@/components/production/report/WeeklyReportsTab";
 import { ProductionOrder, PaginationData } from "@/components/production/report/types";
+import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
 export default function ProductionReportPage() {
@@ -41,9 +42,7 @@ export default function ProductionReportPage() {
   const { data, isLoading, refetch } = useQuery<{ orders: ProductionOrder[]; pagination: PaginationData; stats: { total: number; completed: number; in_progress: number; delayed: number } }>({
     queryKey: ["/api/production/orders", status, page],
     queryFn: async () => {
-      const r = await fetch(`/api/production/orders?page=${page}&limit=10${status !== "all" ? `&status=${status}` : ""}`);
-      if (!r.ok) throw new Error("Xato");
-      return r.json();
+      return await apiRequest('GET', `/api/production/orders?page=${page}&limit=10${status !== "all" ? `&status=${status}` : ""}`);
     },
     enabled: !!isAuthenticated,
   });

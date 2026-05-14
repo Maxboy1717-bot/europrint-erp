@@ -55,7 +55,7 @@ export class SaasController {
 
   @Get('error-logs')
   async getErrorLogs() {
-    return await this.svc.getErrorLogs().then(unwrapOrBadRequest);
+    return unwrapOrBadRequest(await this.svc.getErrorLogs());
   }
 
   @Patch('tenants/:id/status')

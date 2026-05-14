@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ClipboardCheck, Star, Upload, X } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from '@/lib/i18n';
 
 const FormSchema = z.object({
@@ -93,17 +94,10 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
     setSubmitError(null);
     setPdfUrl(null);
     try {
-      const token = localStorage.getItem('access_token') ?? '';
       const payload: Record<string, unknown> = { room_code: roomCode, ...values };
       if (evidenceBase64) payload['evidence_photo_url'] = evidenceBase64;
-      const res = await fetch('/api/hr/inspection/checklist', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body:    JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(`Server xatosi: ${res.status}`);
-      const data = await res.json() as { ok?: boolean; data?: { pdf_url?: string | null } };
-      if (data.data?.pdf_url) setPdfUrl(data.data.pdf_url);
+      const data = await apiRequest<{ pdf_url?: string | null } | undefined>('POST', '/api/hr/inspection/checklist', payload);
+      if (data?.pdf_url) setPdfUrl(data.pdf_url);
       onSaved();
     } catch (e: unknown) {
       setSubmitError((e as Error)?.message ?? 'Yuborishda xatolik');

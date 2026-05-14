@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff, ArrowRight, Users, Building2, Zap, ShieldCheck } from "lucide-react";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
+import { apiRequest, HttpError } from "@/lib/queryClient";
 import { safeStorage } from '@/lib/safeStorage';
 
 import { EPLoader } from "@/components/ep";
@@ -144,35 +145,31 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
 
     setField("isLoading", true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: form.username, password: form.password }),
-        credentials: "include",
-      });
-
-      if (res.status === 429) {
-        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
-        return;
-      }
-
-      const data = await res.json() as {
+      const data = await apiRequest<{
         accessToken?: string;
         user?: { id: string | number; username: string; role: string };
-      };
-
-      if (!res.ok) {
-        setField("error", "Login yoki parol noto'g'ri");
-        return;
-      }
+      }>('POST', "/api/auth/login", { username: form.username, password: form.password });
 
       if (data.accessToken) {
         safeStorage.setItem("token", data.accessToken);
         if (data.user) safeStorage.setItem("admin", JSON.stringify(data.user));
         onLoginSuccess?.(data.user?.role);
       }
-    } catch {
-      setField("error", "Server bilan ulanishda xatolik yuz berdi");
+    } catch (err) {
+      let status = 0;
+      if (err instanceof HttpError) {
+        status = err.status;
+      } else if (err instanceof Error) {
+        const m = err.message.match(/^(\d{3}):/);
+        if (m) status = Number(m[1]);
+      }
+      if (status === 429) {
+        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
+      } else if (status > 0 && status < 500) {
+        setField("error", "Login yoki parol noto'g'ri");
+      } else {
+        setField("error", "Server bilan ulanishda xatolik yuz berdi");
+      }
     } finally {
       setField("isLoading", false);
     }

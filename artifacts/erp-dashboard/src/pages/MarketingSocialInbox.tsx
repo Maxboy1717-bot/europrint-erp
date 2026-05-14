@@ -7,7 +7,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest, getAuthHeaders } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare } from "lucide-react";
@@ -47,10 +47,8 @@ export default function MarketingSocialInbox() {
       const url = queryString
         ? `/api/marketing/inbox/conversations?${queryString}`
         : "/api/marketing/inbox/conversations";
-      const res = await fetch(url, { credentials: "include", headers: getAuthHeaders() });
-      if (!res.ok) throw new Error("Failed to fetch conversations");
-      const json = await res.json();
-      return Array.isArray(json) ? json : (json?.data ?? []);
+      const json = await apiRequest<unknown>('GET', url);
+      return Array.isArray(json) ? (json as SocialConversation[]) : ((json as { data?: SocialConversation[] })?.data ?? []);
     },
     refetchInterval: 15000,
   });
@@ -58,9 +56,7 @@ export default function MarketingSocialInbox() {
   const { data: messages, isLoading: messagesLoading } = useQuery<SocialMessage[]>({
     queryKey: ["/api/marketing/inbox/conversations", selectedId, "messages"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/marketing/inbox/conversations/${selectedId}/messages`);
-      if (!res.ok) throw new Error("Failed to fetch messages");
-      return res.json();
+      return await apiRequest<SocialMessage[]>('GET', `/api/marketing/inbox/conversations/${selectedId}/messages`);
     },
     enabled: !!selectedId,
     refetchInterval: 10000,

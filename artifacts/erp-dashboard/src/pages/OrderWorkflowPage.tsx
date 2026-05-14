@@ -10,20 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { apiRequest } from '@/lib/queryClient';
 
 import { useTranslation } from '@/lib/i18n';
 const BASE = (import.meta.env.BASE_URL ?? '/erp-dashboard/').replace(/\/$/, '');
 function getApiUrl(path: string) { return `${BASE}/api/${path}`; }
-
-function getAuthToken(): string {
-  try {
-    return (
-      localStorage.getItem('access_token') ??
-      localStorage.getItem('token') ??
-      ''
-    );
-  } catch { return ''; }
-}
 
 interface OrderItem {
   id:           string;
@@ -156,22 +147,25 @@ export default function OrderWorkflowPage() {
     const url = filterStatus
       ? getApiUrl(`order-workflow/orders?status=${filterStatus}&limit=100`)
       : getApiUrl('order-workflow/orders?limit=100');
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
-    if (!res.ok) { setError('Buyurtmalar yuklanmadi'); setLoading(false); return; }
-    const data = await res.json();
-    setOrders((data.items ?? []) as OrderItem[]);
-    setLoading(false);
+    try {
+      const data = await apiRequest<{ items?: OrderItem[] }>('GET', url);
+      setOrders((data?.items ?? []) as OrderItem[]);
+    } catch {
+      setError('Buyurtmalar yuklanmadi');
+    } finally {
+      setLoading(false);
+    }
   }, [filterStatus]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   const openSaga = async (id: string) => {
-    const res = await fetch(getApiUrl(`order-workflow/orders/${id}/saga-status`), {
-      headers: { Authorization: `Bearer ${getAuthToken()}` },
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    setSelected(data as SagaDetail);
+    try {
+      const data = await apiRequest<SagaDetail>('GET', getApiUrl(`order-workflow/orders/${id}/saga-status`));
+      setSelected(data);
+    } catch {
+      // ignore
+    }
   };
 
   const grouped = PHASE_GROUPS.map((g) => ({

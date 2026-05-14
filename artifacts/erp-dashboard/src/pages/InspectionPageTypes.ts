@@ -3,6 +3,8 @@
  * @description Types, constants, and utilities for InspectionPage.
  */
 
+import { apiRequest } from '@/lib/queryClient';
+
 export interface RoomRow {
   room_code:          string;
   room_name:          string;
@@ -52,9 +54,5 @@ export function getToken(): string {
 }
 
 export async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(path, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.json() as Promise<T>;
+  return await apiRequest<T>('GET', path);
 }

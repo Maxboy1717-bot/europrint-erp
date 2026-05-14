@@ -162,9 +162,12 @@ export default function EmployeeProfile() {
   const { data: transfers } = useQuery<TransferRecord[]>({ queryKey: [`/api/erp/employee/${id}/transfer-history`], enabled: !!id });
   const { data: orgStructureData } = useQuery<{ primary: OrgStructureAssignment; all: OrgStructureAssignment[] }>({ queryKey: [`/api/employees/${id}/org-structure`], enabled: !!id });
   const mkArrFn = <T,>(path: string) => async (): Promise<T[]> => {
-    const res = await fetch(path, { credentials: 'include', headers: getAuthHeaders() });
-    if (!res.ok) return [];
-    return toArr<T>(await res.json());
+    try {
+      const json = await apiRequest<unknown>('GET', path);
+      return toArr<T>(json);
+    } catch {
+      return [];
+    }
   };
   const { data: contracts, isLoading: loadingContracts } = useQuery<EmploymentContract[]>({ queryKey: ['/api/employees', id, 'contracts'], queryFn: mkArrFn<EmploymentContract>(`/api/employees/${id}/contracts`), enabled: !!id });
   const { data: salaryHistory, isLoading: loadingSalaryHistory } = useQuery<SalaryHistoryRecord[]>({ queryKey: ['/api/employees', id, 'salary-history'], queryFn: mkArrFn<SalaryHistoryRecord>(`/api/employees/${id}/salary-history`), enabled: !!id });
@@ -177,11 +180,14 @@ export default function EmployeeProfile() {
   const { data: businessTrips, isLoading: loadingBusinessTrips } = useQuery<BusinessTrip[]>({ queryKey: ['/api/employees', id, 'business-trips'], queryFn: mkArrFn<BusinessTrip>(`/api/employees/${id}/business-trips`), enabled: !!id });
   const { data: shiftSwaps, isLoading: loadingShiftSwaps } = useQuery<ShiftSwapRecord[]>({ 
     queryKey: ['/api/integration/swap-requests', id], 
-    queryFn: async () => { 
-      const res = await apiRequest('GET', `/api/integration/swap-requests?requestedBy=${id}`); 
-      if (!res.ok) return []; 
-      return res.json(); 
-    }, 
+    queryFn: async () => {
+      try {
+        const json = await apiRequest<unknown>('GET', `/api/integration/swap-requests?requestedBy=${id}`);
+        return toArr<ShiftSwapRecord>(json);
+      } catch {
+        return [];
+      }
+    },
     enabled: !!id 
   });
   const { data: zoneLogs, isLoading: loadingZoneLogs } = useQuery<ZoneTrackingLog[]>({ queryKey: ['/api/attendance/zone-logs', id], enabled: !!id });

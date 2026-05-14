@@ -118,7 +118,12 @@ export class AutoGlPostingService {
   }
 
   async listForMovement(movementId: number) {
-    return this.repo.listForMovement(movementId).then(rows => ({ ok: true as const, data: rows }));
+    return this.repo.listForMovement(movementId)
+      .then(rows => ({ ok: true as const, data: rows }))
+      .catch((e: Error) => {
+        this.logger.error(`[AutoGL] listForMovement xato: ${e.message}`);
+        return Err({ message: e.message, code: 'DB_ERROR' as const });
+      });
   }
 
   async getJournal(filters?: {
@@ -126,6 +131,11 @@ export class AutoGlPostingService {
     debitAccount?: string; creditAccount?: string;
     limit?: number;
   }) {
-    return this.repo.getJournal(filters).then(rows => ({ ok: true as const, data: rows }));
+    return this.repo.getJournal(filters)
+      .then(rows => ({ ok: true as const, data: rows }))
+      .catch((e: Error) => {
+        this.logger.error(`[AutoGL] getJournal xato: ${e.message}`);
+        return Err({ message: e.message, code: 'DB_ERROR' as const });
+      });
   }
 }

@@ -5,7 +5,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { EmployeeFormData } from "./types";
 
 interface UseEmployeeMutationProps {
@@ -14,35 +14,8 @@ interface UseEmployeeMutationProps {
   onAfterSubmit: (empId: string) => Promise<void>;
 }
 
-/**
- * Auth header bilan fetch — JWT token avtomatik qo'shiladi.
- * fetch() to'g'ridan-to'g'ri ishlatish o'rniga shu funksiyani chaqiring.
- */
-const authFetch = (url: string, init: RequestInit = {}): Promise<Response> => {
-  const headers: Record<string, string> = {
-    ...getAuthHeaders(),
-    ...(init.body ? { "Content-Type": "application/json" } : {}),
-    ...((init.headers as Record<string, string>) ?? {}),
-  };
-  return fetch(url, { ...init, headers, credentials: "include" });
-};
-
 export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEmployeeMutationProps) {
   const { toast } = useToast();
-
-  // NestJS GlobalExceptionFilter `{statusCode, message, error}` qaytaradi —
-  // `message` asosiy xato matn (string yoki array). `.error` faqat HTTP status nomi.
-  const extractErrorMessage = async (response: Response): Promise<string> => {
-    try {
-      const body = await response.json();
-      if (typeof body?.message === "string") return body.message;
-      if (Array.isArray(body?.message)) return body.message.join(", ");
-      if (typeof body?.error === "string") return body.error;
-      return `HTTP ${response.status}: ${response.statusText}`;
-    } catch {
-      return `HTTP ${response.status}: ${response.statusText}`;
-    }
-  };
 
   const safeToast = (title: string, description?: string, variant?: "destructive") => {
     try {
@@ -56,12 +29,7 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
 
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      const response = await authFetch("/api/employees", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error(await extractErrorMessage(response));
-      return response.json();
+      return await apiRequest<{ id?: string | number }>('POST', "/api/employees", data);
     },
     onSuccess: async (data) => {
       const id = data?.id ? String(data.id) : "";
@@ -75,12 +43,7 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
 
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      const response = await authFetch(`/api/employees/${employeeId}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error(await extractErrorMessage(response));
-      return response.json();
+      return await apiRequest('PATCH', `/api/employees/${employeeId}`, data);
     },
     onSuccess: async () => {
       if (employeeId) await onAfterSubmit(employeeId).catch(() => null);

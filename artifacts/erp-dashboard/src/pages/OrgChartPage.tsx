@@ -177,6 +177,7 @@ export default function OrgChartPage() {
         ? "/api/org-structure/export/pdf"
         : "/api/org-structure/export/excel";
       const token = safeStorage.getItem("access_token");
+      // NOTE: Binary blob download (PDF/Excel) — keep raw fetch; apiRequest unwraps JSON envelopes
       const res = await fetch(endpoint, { credentials: "include", headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
@@ -198,8 +199,7 @@ export default function OrgChartPage() {
 
   const aiRecommendationMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/org-chart/ai-recommendations");
-      return res.json();
+      return await apiRequest<{ summary?: string }>("POST", "/api/org-chart/ai-recommendations");
     },
     onSuccess: (data: { summary?: string }) => {
       toast({
@@ -215,6 +215,7 @@ export default function OrgChartPage() {
   const handleSnapshot = async () => {
     try {
       const token = safeStorage.getItem("access_token");
+      // NOTE: Binary blob download (PNG snapshot) — keep raw fetch; apiRequest unwraps JSON envelopes
       const res = await fetch("/api/org-structure/export/png", {
         credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},

@@ -13,7 +13,7 @@ import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, ClipboardList, Refr
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import type { WorkCenter } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export function ERPDashboardTab() {
   const { t } = useTranslation('production');
@@ -50,9 +50,7 @@ export function ERPDashboardTab() {
     queryFn: async () => {
       if (!selectedWorkCenterId) throw new Error("No work center selected");
       const url = `/api/erp/work-centers/${selectedWorkCenterId}/stats?dateRange=${dateRange}`;
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
-      return response.json();
+      return await apiRequest('GET', url);
     },
     enabled: !!selectedWorkCenterId,
   });
