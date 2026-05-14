@@ -7,7 +7,7 @@ import { useState, useCallback } from "react";
 import { X, Plus, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getChatApiBase } from "@/lib/apiBase";
-import { safeStorage } from '@/lib/safeStorage';
+import { apiRequest, HttpError } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
 interface Props {
@@ -48,28 +48,17 @@ export function PollCreator({ roomId, onClose, onCreated }: Props) {
     setLoading(true);
     setError("");
     try {
-      const token = safeStorage.getItem("access_token");
-      const res = await fetch(`${getChatApiBase()}/polls`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          roomId,
-          question: question.trim(),
-          options: validOptions,
-          isMultiple,
-          isAnonymous,
-        }),
+      await apiRequest('POST', `${getChatApiBase()}/polls`, {
+        roomId,
+        question: question.trim(),
+        options: validOptions,
+        isMultiple,
+        isAnonymous,
       });
-      if (!res.ok) {
-        const err = await res.json() as { error: string };
-        setError(err.error || "Xato");
-      } else {
-        onCreated?.();
-        onClose();
-      }
+      onCreated?.();
+      onClose();
+    } catch (e) {
+      setError(e instanceof HttpError ? e.message : "Xato");
     } finally {
       setLoading(false);
     }

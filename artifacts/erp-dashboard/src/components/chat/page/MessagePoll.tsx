@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { ChatPollData } from "@/store/chatStore";
 import { useAuth } from "@/hooks/useAuth";
 import { getChatApiBase } from "@/lib/apiBase";
-import { safeStorage } from '@/lib/safeStorage';
+import { apiRequest } from "@/lib/queryClient";
 
 interface Props {
   messageId: string;
@@ -31,27 +31,18 @@ export function MessagePoll({ messageId, poll, isMe }: Props) {
     if (isVoting) return;
     setIsVoting(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      const res = await fetch(`${getChatApiBase()}/polls/${poll.id}/vote`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          optionIndex: poll.isMultiple ? [...localMyVotes, idx] : [idx],
-        }),
+      const data = await apiRequest<{
+        votes: Record<number, { count: number; users: string[] }>;
+        totalVotes: number;
+        myVotes: number[];
+      }>('POST', `${getChatApiBase()}/polls/${poll.id}/vote`, {
+        optionIndex: poll.isMultiple ? [...localMyVotes, idx] : [idx],
       });
-      if (res.ok) {
-        const data = await res.json() as {
-          votes: Record<number, { count: number; users: string[] }>;
-          totalVotes: number;
-          myVotes: number[];
-        };
-        setLocalVotes(data.votes);
-        setLocalTotal(data.totalVotes);
-        setLocalMyVotes(data.myVotes);
-      }
+      setLocalVotes(data.votes);
+      setLocalTotal(data.totalVotes);
+      setLocalMyVotes(data.myVotes);
+    } catch {
+      // Silently ignore — vote may have failed, user can retry
     } finally {
       setIsVoting(false);
     }

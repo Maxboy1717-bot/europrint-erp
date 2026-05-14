@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Download, Image, FileText, Grid3X3, List } from "lucide-react";
@@ -49,9 +49,7 @@ export function SharedFiles({ roomId }: Props) {
     queryKey: ["chat-room-files", roomId, filter],
     queryFn: async () => {
       const url = `/api/chat/rooms/${roomId}/files${filter !== "all" ? `?type=${filter}` : ""}`;
-      const res = await fetch(url, { headers: getAuthHeaders() });
-      if (!res.ok) throw new Error("Failed to load files");
-      return res.json();
+      return apiRequest<SharedFile[]>('GET', url);
     },
     enabled: !!roomId,
     staleTime: 30_000,

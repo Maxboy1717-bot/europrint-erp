@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChatAvatar } from "./ChatAvatar";
@@ -62,9 +62,7 @@ export function ChatSearchPanel({ onClose }: Props) {
     queryFn: async () => {
       if (!debouncedQuery || debouncedQuery.length < 2) return { results: [], total: 0 };
       const url = `/api/chat/search?q=${encodeURIComponent(debouncedQuery)}&limit=20`;
-      const res = await fetch(url, { headers: getAuthHeaders() });
-      if (!res.ok) throw new Error("Search failed");
-      return res.json() as Promise<{ results: SearchResult[]; total: number }>;
+      return apiRequest<{ results: SearchResult[]; total: number }>('GET', url);
     },
     enabled: debouncedQuery.length >= 2,
     staleTime: 10_000,
