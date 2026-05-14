@@ -44,13 +44,12 @@ export class LmsAgentService {
   async cron(): Promise<void> {
     try {
       const expiring = await this.checkCertificateExpiry();
-      for (const c of expiring) {
-        await this.alert.send({
-          agentName: this.AGENT, severity: c.daysLeft < 7 ? 'critical' : 'warning', module: 'lms',
-          title: 'Sertifikat muddati', message: `Sertifikat #${c.certificateId} ${c.daysLeft} kun qoldi`,
-          targetUserId: c.userId, actionRequired: true,
-        });
-      }
+      // Pattern 2: independent alert sends — fire in parallel to avoid N+1 sequential await
+      await Promise.all(expiring.map(c => this.alert.send({
+        agentName: this.AGENT, severity: c.daysLeft < 7 ? 'critical' : 'warning', module: 'lms',
+        title: 'Sertifikat muddati', message: `Sertifikat #${c.certificateId} ${c.daysLeft} kun qoldi`,
+        targetUserId: c.userId, actionRequired: true,
+      })));
     } catch (err) { this.logger.error(`cron: ${(err as Error).message}`); }
   }
 }

@@ -131,7 +131,8 @@ export async function ensureUserForEmployee(
     RETURNING id
   `);
   const insertedRow = dbRows(inserted)[0];
-  if (!insertedRow) throw new Error('User yaratish bajarilmadi');
+  // WHY: callers wrap this helper in safeCall; BadRequestException maps to BAD_REQUEST cleanly.
+  if (!insertedRow) throw new BadRequestException('User yaratish bajarilmadi');
   return Number(insertedRow['id']);
 }
 

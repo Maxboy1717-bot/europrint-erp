@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { assetItems, assetMaintenance, assetDisposals, assetTransfers } from '@shared/db/europrint-compat';
 import { eq, desc } from 'drizzle-orm';
+import { Ok, Err, safeCall, AppErr } from '@common/result';
 
 type AssetInsert = {
   name: string; assetCode?: string; category: string; status: string;
@@ -34,150 +35,107 @@ type TransferInsert = {
 
 @Injectable()
 export class AssetManagementRepo {
-  async findAllAssets() {
-    try {
-      return await db.select().from(assetItems).orderBy(desc(assetItems.createdAt));
-    } catch (e) {
-      throw new Error(`asset_management.findAllAssets: ${String(e)}`);
-    }
+  findAllAssets() {
+    return safeCall(() => db.select().from(assetItems).orderBy(desc(assetItems.createdAt)), 'DB_ERROR');
   }
 
   async findAssetById(id: string) {
-    try {
-      const rows = await db.select().from(assetItems).where(eq(assetItems.id, id));
-      return rows[0] ?? null;
-    } catch (e) {
-      throw new Error(`asset_management.findAssetById: ${String(e)}`);
-    }
+    const r = await safeCall(() => db.select().from(assetItems).where(eq(assetItems.id, id)), 'DB_ERROR');
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    if (!row) return Err(AppErr('NOT_FOUND', `Asset ${id} not found`));
+    return Ok(row);
   }
 
-  async insertAsset(data: AssetInsert) {
-    try {
-      return await db.insert(assetItems).values({
-        name:          data.name,
-        assetCode:     data.assetCode ?? null,
-        category:      data.category,
-        status:        data.status,
-        location:      data.location ?? null,
-        assignedTo:    data.assignedTo ?? null,
-        departmentId:  data.departmentId ?? null,
-        serialNumber:  data.serialNumber ?? null,
-        purchaseDate:  data.purchaseDate ?? null,
-        purchaseValue: data.purchaseValue ?? null,
-        currentValue:  data.currentValue ?? null,
-        notes:         data.notes ?? null,
-      }).returning();
-    } catch (e) {
-      throw new Error(`asset_management.insertAsset: ${String(e)}`);
-    }
+  insertAsset(data: AssetInsert) {
+    return safeCall(() => db.insert(assetItems).values({
+      name:          data.name,
+      assetCode:     data.assetCode ?? null,
+      category:      data.category,
+      status:        data.status,
+      location:      data.location ?? null,
+      assignedTo:    data.assignedTo ?? null,
+      departmentId:  data.departmentId ?? null,
+      serialNumber:  data.serialNumber ?? null,
+      purchaseDate:  data.purchaseDate ?? null,
+      purchaseValue: data.purchaseValue ?? null,
+      currentValue:  data.currentValue ?? null,
+      notes:         data.notes ?? null,
+    }).returning(), 'DB_ERROR');
   }
 
-  async updateAsset(id: string, data: AssetUpdate) {
-    try {
-      return await db.update(assetItems).set({
-        name:          data.name,
-        assetCode:     data.assetCode,
-        category:      data.category,
-        status:        data.status,
-        location:      data.location,
-        assignedTo:    data.assignedTo,
-        departmentId:  data.departmentId,
-        serialNumber:  data.serialNumber,
-        purchaseDate:  data.purchaseDate,
-        purchaseValue: data.purchaseValue,
-        currentValue:  data.currentValue,
-        notes:         data.notes,
-        updatedAt:     data.updatedAt,
-      }).where(eq(assetItems.id, id)).returning();
-    } catch (e) {
-      throw new Error(`asset_management.updateAsset: ${String(e)}`);
-    }
+  updateAsset(id: string, data: AssetUpdate) {
+    return safeCall(() => db.update(assetItems).set({
+      name:          data.name,
+      assetCode:     data.assetCode,
+      category:      data.category,
+      status:        data.status,
+      location:      data.location,
+      assignedTo:    data.assignedTo,
+      departmentId:  data.departmentId,
+      serialNumber:  data.serialNumber,
+      purchaseDate:  data.purchaseDate,
+      purchaseValue: data.purchaseValue,
+      currentValue:  data.currentValue,
+      notes:         data.notes,
+      updatedAt:     data.updatedAt,
+    }).where(eq(assetItems.id, id)).returning(), 'DB_ERROR');
   }
 
-  async deleteAsset(id: string) {
-    try {
-      return await db.delete(assetItems).where(eq(assetItems.id, id)).returning();
-    } catch (e) {
-      throw new Error(`asset_management.deleteAsset: ${String(e)}`);
-    }
+  deleteAsset(id: string) {
+    return safeCall(() => db.delete(assetItems).where(eq(assetItems.id, id)).returning(), 'DB_ERROR');
   }
 
-  async findAllMaintenance() {
-    try {
-      return await db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
-    } catch (e) {
-      throw new Error(`asset_management.findAllMaintenance: ${String(e)}`);
-    }
+  findAllMaintenance() {
+    return safeCall(() => db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt)), 'DB_ERROR');
   }
 
   async findMaintenanceByAsset(assetId: string) {
-    try {
-      const rows = await db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
-      return (Array.isArray(rows) ? rows : []).filter((r) => r.assetId === assetId);
-    } catch (e) {
-      throw new Error(`asset_management.findMaintenanceByAsset: ${String(e)}`);
-    }
+    const r = await safeCall(() => db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt)), 'DB_ERROR');
+    if (!r.ok) return Err(r.error);
+    const rows = Array.isArray(r.data) ? r.data : [];
+    return Ok(rows.filter((row) => row.assetId === assetId));
   }
 
-  async insertMaintenance(data: MaintenanceInsert) {
-    try {
-      return await db.insert(assetMaintenance).values({
-        assetId:         data.assetId,
-        maintenanceType: data.maintenanceType,
-        scheduledAt:     data.scheduledAt ?? null,
-        completedAt:     data.completedAt ?? null,
-        cost:            data.cost ?? null,
-        notes:           data.notes ?? null,
-        status:          data.status,
-      }).returning();
-    } catch (e) {
-      throw new Error(`asset_management.insertMaintenance: ${String(e)}`);
-    }
+  insertMaintenance(data: MaintenanceInsert) {
+    return safeCall(() => db.insert(assetMaintenance).values({
+      assetId:         data.assetId,
+      maintenanceType: data.maintenanceType,
+      scheduledAt:     data.scheduledAt ?? null,
+      completedAt:     data.completedAt ?? null,
+      cost:            data.cost ?? null,
+      notes:           data.notes ?? null,
+      status:          data.status,
+    }).returning(), 'DB_ERROR');
   }
 
-  async findAllDisposals() {
-    try {
-      return await db.select().from(assetDisposals).orderBy(desc(assetDisposals.createdAt));
-    } catch (e) {
-      throw new Error(`asset_management.findAllDisposals: ${String(e)}`);
-    }
+  findAllDisposals() {
+    return safeCall(() => db.select().from(assetDisposals).orderBy(desc(assetDisposals.createdAt)), 'DB_ERROR');
   }
 
-  async insertDisposal(data: DisposalInsert) {
-    try {
-      return await db.insert(assetDisposals).values({
-        assetId:      data.assetId,
-        disposalType: data.disposalType,
-        disposalDate: data.disposalDate ?? null,
-        saleValue:    data.saleValue ?? null,
-        reason:       data.reason ?? null,
-        approvedBy:   data.approvedBy ?? null,
-      }).returning();
-    } catch (e) {
-      throw new Error(`asset_management.insertDisposal: ${String(e)}`);
-    }
+  insertDisposal(data: DisposalInsert) {
+    return safeCall(() => db.insert(assetDisposals).values({
+      assetId:      data.assetId,
+      disposalType: data.disposalType,
+      disposalDate: data.disposalDate ?? null,
+      saleValue:    data.saleValue ?? null,
+      reason:       data.reason ?? null,
+      approvedBy:   data.approvedBy ?? null,
+    }).returning(), 'DB_ERROR');
   }
 
-  async findAllTransfers() {
-    try {
-      return await db.select().from(assetTransfers).orderBy(desc(assetTransfers.createdAt));
-    } catch (e) {
-      throw new Error(`asset_management.findAllTransfers: ${String(e)}`);
-    }
+  findAllTransfers() {
+    return safeCall(() => db.select().from(assetTransfers).orderBy(desc(assetTransfers.createdAt)), 'DB_ERROR');
   }
 
-  async insertTransfer(data: TransferInsert) {
-    try {
-      return await db.insert(assetTransfers).values({
-        assetId:      data.assetId,
-        fromDeptId:   data.fromDeptId ?? null,
-        toDeptId:     data.toDeptId ?? null,
-        transferDate: data.transferDate ?? null,
-        reason:       data.reason ?? null,
-        approvedBy:   data.approvedBy ?? null,
-      }).returning();
-    } catch (e) {
-      throw new Error(`asset_management.insertTransfer: ${String(e)}`);
-    }
+  insertTransfer(data: TransferInsert) {
+    return safeCall(() => db.insert(assetTransfers).values({
+      assetId:      data.assetId,
+      fromDeptId:   data.fromDeptId ?? null,
+      toDeptId:     data.toDeptId ?? null,
+      transferDate: data.transferDate ?? null,
+      reason:       data.reason ?? null,
+      approvedBy:   data.approvedBy ?? null,
+    }).returning(), 'DB_ERROR');
   }
 }

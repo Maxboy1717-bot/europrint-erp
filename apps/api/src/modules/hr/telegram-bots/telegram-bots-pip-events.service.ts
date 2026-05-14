@@ -28,9 +28,11 @@ export class TelegramBotsPipEventsService {
 
   private async broadcastMsg(message: string) {
     const chatIds = await this.repo.getActiveChatIds();
-    for (const chatId of (chatIds.ok ? chatIds.data : [])) {
-      await this.notificationBot.sendMessage(chatId, message).catch((): void => undefined);
-    }
+    const ids = chatIds.ok ? chatIds.data : [];
+    // Pattern 2: per-chat Telegram sends are independent — fan out in parallel
+    await Promise.all(ids.map((chatId) =>
+      this.notificationBot.sendMessage(chatId, message).catch((): void => undefined),
+    ));
   }
 
   @OnEvent(HrV2Events.PIP_STARTED)

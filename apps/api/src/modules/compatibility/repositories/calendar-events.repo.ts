@@ -9,6 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { calendarEvents } from '@shared/db/europrint-compat';
 import { eq, gte, desc } from 'drizzle-orm';
+import { Ok, Err, safeCall, AppErr } from '@common/result';
 
 type EventInsert = {
   title: string;
@@ -30,74 +31,53 @@ type EventUpdate = Partial<Omit<EventInsert, 'startDate' | 'endDate'>> & {
 
 @Injectable()
 export class CalendarEventsRepo {
-  async findAll() {
-    try {
-      return await db.select().from(calendarEvents).orderBy(desc(calendarEvents.startDate));
-    } catch (e) {
-      throw new Error(`calendarEvents.findAll: ${String(e)}`);
-    }
+  findAll() {
+    return safeCall(() => db.select().from(calendarEvents).orderBy(desc(calendarEvents.startDate)), 'DB_ERROR');
   }
 
-  async findUpcoming() {
-    try {
-      return await db.select().from(calendarEvents)
-        .where(gte(calendarEvents.startDate, _time.now()))
-        .orderBy(calendarEvents.startDate);
-    } catch (e) {
-      throw new Error(`calendarEvents.findUpcoming: ${String(e)}`);
-    }
+  findUpcoming() {
+    return safeCall(() => db.select().from(calendarEvents)
+      .where(gte(calendarEvents.startDate, _time.now()))
+      .orderBy(calendarEvents.startDate), 'DB_ERROR');
   }
 
   async findById(id: string) {
-    try {
-      const rows = await db.select().from(calendarEvents).where(eq(calendarEvents.id, id));
-      return rows[0] ?? null;
-    } catch (e) {
-      throw new Error(`calendarEvents.findById: ${String(e)}`);
-    }
+    const r = await safeCall(() => db.select().from(calendarEvents).where(eq(calendarEvents.id, id)), 'DB_ERROR');
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    if (!row) return Err(AppErr('NOT_FOUND', `Calendar event ${id} not found`));
+    return Ok(row);
   }
 
-  async insert(data: EventInsert) {
-    try {
-      return await db.insert(calendarEvents).values({
-        title:       data.title,
-        description: data.description ?? null,
-        startDate:   data.startDate,
-        endDate:     data.endDate ?? null,
-        allDay:      data.allDay,
-        eventType:   data.eventType,
-        location:    data.location ?? null,
-        attendees:   data.attendees,
-        createdBy:   data.createdBy ?? null,
-      }).returning();
-    } catch (e) {
-      throw new Error(`calendarEvents.insert: ${String(e)}`);
-    }
+  insert(data: EventInsert) {
+    return safeCall(() => db.insert(calendarEvents).values({
+      title:       data.title,
+      description: data.description ?? null,
+      startDate:   data.startDate,
+      endDate:     data.endDate ?? null,
+      allDay:      data.allDay,
+      eventType:   data.eventType,
+      location:    data.location ?? null,
+      attendees:   data.attendees,
+      createdBy:   data.createdBy ?? null,
+    }).returning(), 'DB_ERROR');
   }
 
-  async update(id: string, data: EventUpdate) {
-    try {
-      return await db.update(calendarEvents).set({
-        title:       data.title,
-        description: data.description,
-        startDate:   data.startDate,
-        endDate:     data.endDate,
-        allDay:      data.allDay,
-        eventType:   data.eventType,
-        location:    data.location,
-        attendees:   data.attendees,
-        updatedAt:   data.updatedAt,
-      }).where(eq(calendarEvents.id, id)).returning();
-    } catch (e) {
-      throw new Error(`calendarEvents.update: ${String(e)}`);
-    }
+  update(id: string, data: EventUpdate) {
+    return safeCall(() => db.update(calendarEvents).set({
+      title:       data.title,
+      description: data.description,
+      startDate:   data.startDate,
+      endDate:     data.endDate,
+      allDay:      data.allDay,
+      eventType:   data.eventType,
+      location:    data.location,
+      attendees:   data.attendees,
+      updatedAt:   data.updatedAt,
+    }).where(eq(calendarEvents.id, id)).returning(), 'DB_ERROR');
   }
 
-  async delete(id: string) {
-    try {
-      return await db.delete(calendarEvents).where(eq(calendarEvents.id, id)).returning();
-    } catch (e) {
-      throw new Error(`calendarEvents.delete: ${String(e)}`);
-    }
+  delete(id: string) {
+    return safeCall(() => db.delete(calendarEvents).where(eq(calendarEvents.id, id)).returning(), 'DB_ERROR');
   }
 }

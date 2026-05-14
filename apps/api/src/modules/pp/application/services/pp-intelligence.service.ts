@@ -228,14 +228,15 @@ export class PpIntelligenceService implements OnModuleInit {
       const key = `${po.materialId}:${po.periodIndex}`;
       poByPeriod.set(key, (poByPeriod.get(key) ?? 0) + po.qty);
     }
-    for (const nr of data.netRequirements) {
+    // Pattern 2: each ON CONFLICT DO NOTHING insert is independent — fire in parallel to remove N+1 latency
+    await Promise.all(data.netRequirements.map((nr) => {
       const poQty = poByPeriod.get(`${nr.materialId}:${nr.period}`) ?? 0;
-      await runQuery(sql`
+      return runQuery(sql`
         INSERT INTO pp_mrp_run_lines (run_id, material_id, period, gross_req, on_hand, net_req, planned_order)
         VALUES (${runId}, ${nr.materialId}, ${`W${nr.period + 1}`}, ${nr.gr}, ${onHand[nr.materialId] ?? 0}, ${nr.nr}, ${poQty})
         ON CONFLICT DO NOTHING
       `).catch((e: Error) => this.logger.warn(`MRP line insert failed: ${e.message}`));
-    }
+    }));
   }
 
   async getLearningCurve(productId: string): Promise<Result<LearningCurveResult, AppError>> {
