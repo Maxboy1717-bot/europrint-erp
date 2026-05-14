@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useChatStore, ChatMessage } from "@/store/chatStore";
 import { ChatAvatar } from "./ChatAvatar";
 import { getChatApiBase } from "@/lib/apiBase";
-import { safeStorage } from '@/lib/safeStorage';
+import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
 interface Props {
@@ -34,17 +34,13 @@ export function ForwardModal({ message, onClose }: Props) {
     if (!selected || loading) return;
     setLoading(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      await fetch(`${getChatApiBase()}/messages/${message.id}/forward`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ targetRoomId: selected }),
+      await apiRequest('POST', `${getChatApiBase()}/messages/${message.id}/forward`, {
+        targetRoomId: selected,
       });
       setDone(true);
       setTimeout(onClose, 800);
+    } catch {
+      // Swallow — UI keeps the modal open so user can retry
     } finally {
       setLoading(false);
     }

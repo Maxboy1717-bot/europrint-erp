@@ -18,7 +18,7 @@ import { CreateTaskModal } from "./CreateTaskModal";
 import { SocketReconnectBanner } from "@/components/chat/SocketReconnectBanner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getChatApiBase } from "@/lib/apiBase";
-import { safeStorage } from "@/lib/safeStorage";
+import { apiRequest } from "@/lib/queryClient";
 import { ChatLayoutSidebar } from "./ChatLayoutSidebar";
 import { ChatLayoutMessages } from "./ChatLayoutMessages";
 import { useTranslation } from '@/lib/i18n';
@@ -117,24 +117,17 @@ export function ChatLayout() {
       setVideoCallUrl(null);
       setVideoMinimized(false);
 
-      const token = safeStorage.getItem("access_token");
-      fetch(`${getChatApiBase()}/rooms/${room.id}/pinned`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(async (res) => {
-          if (res.ok) {
-            const data = (await res.json()) as {
-              id: string;
-              content: string;
-              sender_name: string;
-            } | null;
-            if (data) {
-              useChatStore.getState().setPinnedMessage(room.id, {
-                id: data.id,
-                content: data.content,
-                senderName: data.sender_name,
-              });
-            }
+      apiRequest<{ id: string; content: string; sender_name: string } | null>(
+        'GET',
+        `${getChatApiBase()}/rooms/${room.id}/pinned`,
+      )
+        .then((data) => {
+          if (data) {
+            useChatStore.getState().setPinnedMessage(room.id, {
+              id: data.id,
+              content: data.content,
+              senderName: data.sender_name,
+            });
           }
         })
         .catch(e => {
@@ -174,15 +167,12 @@ export function ChatLayout() {
   }, []);
 
   const handleReact = useCallback(async (messageId: string, emoji: string) => {
-    const token = safeStorage.getItem("access_token");
-    await fetch(`${getChatApiBase()}/messages/${messageId}/reactions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ emoji }),
-    }).catch(e => {
+    try {
+      await apiRequest('POST', `${getChatApiBase()}/messages/${messageId}/reactions`, { emoji });
+    } catch (e) {
       console.error('Failed to send reaction:', e);
       toast({ title: 'Xato', description: String(e), variant: 'destructive' });
-    });
+    }
   }, [toast]);
 
   const handleThread = useCallback(
@@ -198,15 +188,12 @@ export function ChatLayout() {
   }, []);
 
   const handlePin = useCallback(async (msg: ChatMessage) => {
-    const token = safeStorage.getItem("access_token");
-    await fetch(`${getChatApiBase()}/messages/${msg.id}/pin`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ pin: !msg.isPinned }),
-    }).catch(e => {
+    try {
+      await apiRequest('PATCH', `${getChatApiBase()}/messages/${msg.id}/pin`, { pin: !msg.isPinned });
+    } catch (e) {
       console.error('Failed to pin message:', e);
       toast({ title: 'Xato', description: String(e), variant: 'destructive' });
-    });
+    }
   }, [toast]);
 
   const handleUploadFile = useCallback(
@@ -220,44 +207,45 @@ export function ChatLayout() {
       }
       setUploadProgress("Yuklanmoqda...");
       try {
-        const token = safeStorage.getItem("access_token");
-        const urlRes = await fetch(`${getChatApiBase()}/upload/request-url`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            name: file.name,
-            size: file.size,
-            contentType: file.type,
-            roomId: activeRoomId,
-          }),
-        });
-        if (!urlRes.ok) {
-          const err = (await urlRes.json()) as { message?: string };
-          alert(err.message || "Upload URL xatosi");
+        let uploadUrl: string;
+        let publicUrl: string;
+        try {
+          const data = await apiRequest<{ uploadUrl: string; publicUrl: string }>(
+            'POST',
+            `${getChatApiBase()}/upload/request-url`,
+            {
+              name: file.name,
+              size: file.size,
+              contentType: file.type,
+              roomId: activeRoomId,
+            },
+          );
+          uploadUrl = data.uploadUrl;
+          publicUrl = data.publicUrl;
+        } catch (e) {
+          alert((e as Error).message || "Upload URL xatosi");
           return;
         }
-        const { uploadUrl, publicUrl } = (await urlRes.json()) as {
-          uploadUrl: string;
-          publicUrl: string;
-        };
         setUploadProgress("Fayl yuklanmoqda...");
         const formData = new FormData();
         formData.append("file", file, file.name);
+        // NOTE: This is a direct PUT to an external S3 presigned URL — NOT our backend.
+        // apiRequest is intentionally NOT used here (it would inject our JWT into an
+        // S3 request and break the presigned signature).
         const uploadRes = await fetch(uploadUrl, { method: "PUT", body: formData });
         if (!uploadRes.ok) { alert("Fayl yuklashda xato"); return; }
         setUploadProgress("Xabar yuborilmoqda...");
-        const completeRes = await fetch(`${getChatApiBase()}/upload/complete`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
+        try {
+          await apiRequest('POST', `${getChatApiBase()}/upload/complete`, {
             roomId: activeRoomId,
             fileUrl: publicUrl,
             fileName: file.name,
             fileType: file.type,
             fileSize: file.size,
-          }),
-        });
-        if (!completeRes.ok) alert("Xabar yuborishda xato");
+          });
+        } catch {
+          alert("Xabar yuborishda xato");
+        }
       } catch {
         alert("Upload xatosi");
       } finally {
@@ -289,19 +277,12 @@ export function ChatLayout() {
     if (videoCallUrl) { setVideoCallUrl(null); return; }
     setVideoLoading(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      const res = await fetch(`${getChatApiBase()}/video/token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ roomId: activeRoomId }),
-      });
-      if (!res.ok) throw new Error("Token xatosi");
-      const data = (await res.json()) as {
+      const data = await apiRequest<{
         token: string | null;
         jitsiUrl: string;
         roomName: string;
         embedUrl: string;
-      };
+      }>('POST', `${getChatApiBase()}/video/token`, { roomId: activeRoomId });
       const separator = data.embedUrl.includes("#") ? "&" : "#";
       const configFlags = [
         "config.prejoinPageEnabled=false",

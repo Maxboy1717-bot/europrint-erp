@@ -11,7 +11,7 @@ import { ChatAvatar } from "./ChatAvatar";
 import { formatMsgTime } from "./ChatUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { getChatApiBase } from "@/lib/apiBase";
-import { safeStorage } from '@/lib/safeStorage';
+import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
 interface Props {
@@ -31,13 +31,14 @@ export function ThreadPanel({ rootMessage, onClose }: Props) {
   // Load thread messages
   useEffect(() => {
     const load = async () => {
-      const token = safeStorage.getItem("access_token");
-      const res = await fetch(`${getChatApiBase()}/messages/${rootMessage.id}/thread`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const msgs = await res.json() as ChatMessage[];
+      try {
+        const msgs = await apiRequest<ChatMessage[]>(
+          'GET',
+          `${getChatApiBase()}/messages/${rootMessage.id}/thread`,
+        );
         setThreadMessages(rootMessage.id, msgs);
+      } catch {
+        // Silently ignore — empty thread list will be shown
       }
     };
     load();
@@ -52,16 +53,10 @@ export function ThreadPanel({ rootMessage, onClose }: Props) {
     if (!content) return;
     setLoading(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      await fetch(`${getChatApiBase()}/messages/${rootMessage.id}/thread`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ content }),
-      });
+      await apiRequest('POST', `${getChatApiBase()}/messages/${rootMessage.id}/thread`, { content });
       setText("");
+    } catch {
+      // Silently ignore — keep text so user can retry
     } finally {
       setLoading(false);
     }

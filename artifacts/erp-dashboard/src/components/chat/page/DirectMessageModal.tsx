@@ -13,7 +13,7 @@ import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { getChatApiBase } from "@/lib/apiBase";
 import { useChatStore, ChatRoom } from "@/store/chatStore";
-import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -46,33 +46,30 @@ export function DirectMessageModal({ open, onClose }: Props) {
       startDirect(emp.id);
 
       // Also call REST API as reliable fallback
-      const res = await fetch(`${getChatApiBase()}/rooms/direct`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ targetUserId: emp.id }),
-      });
+      const data = await apiRequest<Record<string, unknown>>(
+        'POST',
+        `${getChatApiBase()}/rooms/direct`,
+        { targetUserId: emp.id },
+      );
 
-      if (res.ok) {
-        const data = await res.json() as Record<string, unknown>;
-        const room: ChatRoom = {
-          id: String(data.id),
-          name: String(data.name || emp.fullName),
-          displayName: String(data.displayName || data.name || emp.fullName),
-          type: "direct",
-          avatarUrl: (data.avatarUrl as string) || emp.avatarUrl,
-          unreadCount: Number(data.unreadCount) || 0,
-          createdAt: String(data.createdAt || new Date().toISOString()),
-          memberRole: "MEMBER",
-        };
+      const room: ChatRoom = {
+        id: String(data.id),
+        name: String(data.name || emp.fullName),
+        displayName: String(data.displayName || data.name || emp.fullName),
+        type: "direct",
+        avatarUrl: (data.avatarUrl as string) || emp.avatarUrl,
+        unreadCount: Number(data.unreadCount) || 0,
+        createdAt: String(data.createdAt || new Date().toISOString()),
+        memberRole: "MEMBER",
+      };
 
-        const st = useChatStore.getState();
-        const exists = st.rooms?.some((r) => r.id === room.id);
-        if (!exists) {
-          st.setRooms([room, ...st.rooms]);
-        }
-        st.setActiveRoomId(room.id);
-        joinRoom(room.id);
+      const st = useChatStore.getState();
+      const exists = st.rooms?.some((r) => r.id === room.id);
+      if (!exists) {
+        st.setRooms([room, ...st.rooms]);
       }
+      st.setActiveRoomId(room.id);
+      joinRoom(room.id);
     } catch {
       // Silently ignore — socket event may still deliver the room
     } finally {
