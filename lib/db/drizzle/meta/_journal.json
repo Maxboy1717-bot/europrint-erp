@@ -17,6 +17,20 @@
       "breakpoints": true
     },
     {
+      "idx": 2,
+      "version": "7",
+      "when": 1744473600000,
+      "tag": "0002_recruitment_funnel_refs_offers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1745493600000,
+      "tag": "0003_pos_schema_extensions",
+      "breakpoints": true
+    },
+    {
       "idx": 4,
       "version": "7",
       "when": 1745575200000,
@@ -28,6 +42,48 @@
       "version": "7",
       "when": 1745575800000,
       "tag": "0005_lms_kanban_website_extended",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1745751600000,
+      "tag": "0006_fix_varchar_fk_to_integer",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1745961660000,
+      "tag": "0007_hr_architecture_additions",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1745962260000,
+      "tag": "0008_fk_int_parallel_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1746360360000,
+      "tag": "0009_master_data_unique_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1746718620000,
+      "tag": "0010_financial_reports_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1747252800000,
+      "tag": "0011_consolidated_legacy_fixes",
       "breakpoints": true
     }
   ]
