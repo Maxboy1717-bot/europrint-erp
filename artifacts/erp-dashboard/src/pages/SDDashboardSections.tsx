@@ -14,6 +14,7 @@ import {
   Target,
 } from "lucide-react";
 import React from "react";
+import { useTranslation } from '@/lib/i18n';
 import {
   CrmDashboardAnalysis,
   Deal,
@@ -29,6 +30,7 @@ export function KpiCard({ title, value, sub, icon: Icon, color, loading }: {
   title: string; value: string | number; sub?: string;
   icon: React.ElementType; color: string; loading?: boolean;
 }) {
+  const { t } = useTranslation("common");
   if (loading) return (
     <Card><CardContent className="p-5">
       <Skeleton className="h-4 w-24 mb-3 rounded-lg" /><Skeleton className="h-8 w-16 mb-2 rounded-lg" /><Skeleton className="h-3 w-20 rounded-lg" />
@@ -58,14 +60,14 @@ interface KpiSectionProps {
 export function KpiSection({ stats, pipelineValue, convRate, loading }: KpiSectionProps) {
   return (
     <section>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Hozirgi holat</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("hozirgiHolat")}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KpiCard title="Jami Leadlar" value={stats.leads} icon={Users} color="text-[var(--ep-blue)]" loading={loading} />
-        <KpiCard title="Bitimlar" value={stats.deals} icon={CheckCircle} color="text-[var(--ep-green)]" loading={loading} />
-        <KpiCard title="Kontaktlar" value={stats.contacts} icon={Phone} color="text-[var(--ep-purple)]" loading={loading} />
-        <KpiCard title="Kompaniyalar" value={stats.companies} icon={Building2} color="text-[var(--ep-primary)]" loading={loading} />
-        <KpiCard title="Pipeline" value={fmtMoney(pipelineValue)} sub="so'm" icon={DollarSign} color="text-[var(--ep-green)]" loading={loading} />
-        <KpiCard title="Konversiya" value={`${convRate}%`} sub="lead → bitim" icon={TrendingUp} color="text-[var(--ep-cyan)]" loading={loading} />
+        <KpiCard title={t("jamiLeadlar")} value={stats.leads} icon={Users} color="text-[var(--ep-blue)]" loading={loading} />
+        <KpiCard title={t("bitimlar")} value={stats.deals} icon={CheckCircle} color="text-[var(--ep-green)]" loading={loading} />
+        <KpiCard title={t("kontaktlar")} value={stats.contacts} icon={Phone} color="text-[var(--ep-purple)]" loading={loading} />
+        <KpiCard title={t("kompaniyalar")} value={stats.companies} icon={Building2} color="text-[var(--ep-primary)]" loading={loading} />
+        <KpiCard title={t("pipeline")} value={fmtMoney(pipelineValue)} sub="so'm" icon={DollarSign} color="text-[var(--ep-green)]" loading={loading} />
+        <KpiCard title={t("konversiya")} value={`${convRate}%`} sub="lead → bitim" icon={TrendingUp} color="text-[var(--ep-cyan)]" loading={loading} />
       </div>
     </section>
   );
@@ -85,7 +87,7 @@ export function AiSummaryCard({ aiLoad, aiAnalysis }: AiSummaryCardProps) {
       <CardContent className="p-4 flex items-start gap-3">
         <Star className="w-4 h-4 text-primary mt-0.5 shrink-0" />
         <div className="space-y-1.5 flex-1">
-          <p className="text-sm font-semibold">AI Savdo Tahlili</p>
+          <p className="text-sm font-semibold">{t("aiSavdoTahlili")}</p>
           <p className="text-sm text-muted-foreground">{aiAnalysis.analysis.summary}</p>
           {aiAnalysis.analysis.priorityActions?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -117,19 +119,19 @@ export function AttentionSection({
 }: AttentionSectionProps) {
   return (
     <section>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">E'tibor kerak</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("etiborKerak")}</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Lead statuslari */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Layers className="w-4 h-4 text-[var(--ep-blue)]" />
-              Lead statuslari
+              {t("leadStatuslari")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {leadsLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-5 w-full rounded-lg" />)}</div> :
-             leads.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Lead yo'q</p> : (
+             leads.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("leadYoq")}</p> : (
               <div className="space-y-2">
                 {Object.entries(leadsByStatus ?? {}).filter((_, i) => i < 6).map(([st, cnt]) => (
                   <div key={st} className="flex items-center justify-between text-sm">
@@ -152,12 +154,12 @@ export function AttentionSection({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-[var(--ep-green)]" />
-              So'nggi bitimlar
+              {t("songgiBitimlar")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {dealsLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}</div> :
-             deals.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Bitim yo'q</p> : (
+             deals.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("bitimYoq")}</p> : (
               <div className="space-y-2">
                 {(Array.isArray(deals) ? deals : []).slice(0, 5).map(d => (
                   <div key={d.id} className="flex items-center justify-between text-sm py-1">
@@ -177,13 +179,13 @@ export function AttentionSection({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Package className="w-4 h-4 text-[var(--ep-primary)]" />
-              Invoicelar
+              {t("invoicelar")}
               <Badge variant="outline" className="ml-auto text-xs">{invoices.length}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {invLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}</div> :
-             invoices.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Invoice yo'q</p> : (
+             invoices.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("invoiceYoq")}</p> : (
               <div className="space-y-2">
                 {(Array.isArray(invoices) ? invoices : []).slice(0, 5).map(inv => (
                   <div key={inv.id} className="flex items-center justify-between text-sm py-1">
@@ -215,12 +217,12 @@ export function AiAnalysisSection({ aiLoad, aiAnalysis }: AiAnalysisSectionProps
   if (aiLoad || !aiAnalysis?.analysis) return null;
   return (
     <section>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">AI Tahlil</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("aiTahlil")}</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-[var(--ep-blue)]" />Asosiy xulosalar
+              <BarChart3 className="w-4 h-4 text-[var(--ep-blue)]" />{t("asosiyXulosalar")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -237,7 +239,7 @@ export function AiAnalysisSection({ aiLoad, aiAnalysis }: AiAnalysisSectionProps
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Target className="w-4 h-4 text-[var(--ep-purple)]" />Tavsiyalar
+              <Target className="w-4 h-4 text-[var(--ep-purple)]" />{t("tavsiyalar1")}
             </CardTitle>
           </CardHeader>
           <CardContent>

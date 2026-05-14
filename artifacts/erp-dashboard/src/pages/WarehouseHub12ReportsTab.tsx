@@ -51,36 +51,36 @@ export function WarehouseHub12ReportsTab({activeWarehouse,
                 <>
                   <Card><CardContent className="p-4">
                     <Trash2 className="h-8 w-8 mb-2 text-[var(--ep-red)]" />
-                    <h3 className="font-bold">Nuqson turlari</h3>
-                    <p className="text-xs text-muted-foreground">Brak sabablari klassifikatsiyasi</p>
+                    <h3 className="font-bold">{t("nuqsonTurlari1")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("brakSabablariKlassifikatsiyasi")}</p>
                   </CardContent></Card>
                   <Card><CardContent className="p-4">
                     <TrendingDown className="h-8 w-8 mb-2 text-[var(--ep-red)]" />
-                    <h3 className="font-bold">Yo'qotish hisobi</h3>
+                    <h3 className="font-bold">{t("yoqotishHisobi")}</h3>
                     <p className="text-xs text-muted-foreground">Oylik/yillik brak summasi (UZS)</p>
                   </CardContent></Card>
                   <Card><CardContent className="p-4">
                     <Recycle className="h-8 w-8 mb-2 text-[var(--ep-green)]" />
-                    <h3 className="font-bold">Qayta ishlash</h3>
-                    <p className="text-xs text-muted-foreground">Recycling va utilizatsiya</p>
+                    <h3 className="font-bold">{t("process")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("recyclingVaUtilizatsiya")}</p>
                   </CardContent></Card>
                 </>
               ) : activeWarehouse.code === "TOOL-MAIN" ? (
                 <>
                   <Card><CardContent className="p-4">
                     <Wrench className="h-8 w-8 mb-2 text-[var(--ep-yellow)]" />
-                    <h3 className="font-bold">Uskuna holati</h3>
+                    <h3 className="font-bold">{t("uskunaHolati")}</h3>
                     <p className="text-xs text-muted-foreground">Ishlamoqda / ta'mirda / yaroqsiz</p>
                   </CardContent></Card>
                   <Card><CardContent className="p-4">
                     <Timer className="h-8 w-8 mb-2 text-[var(--ep-primary)]" />
-                    <h3 className="font-bold">Kalibratsiya</h3>
+                    <h3 className="font-bold">{t("kalibratsiya")}</h3>
                     <p className="text-xs text-muted-foreground">O'z vaqtida / muddati o'tgan</p>
                   </CardContent></Card>
                   <Card><CardContent className="p-4">
                     <Users className="h-8 w-8 mb-2 text-[var(--ep-blue)]" />
-                    <h3 className="font-bold">Operator foydalanish</h3>
-                    <p className="text-xs text-muted-foreground">Kim qancha vaqt ishlatgan</p>
+                    <h3 className="font-bold">{t("operatorFoydalanish")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("kimQanchaVaqtIshlatgan")}</p>
                   </CardContent></Card>
                 </>
               ) : (
@@ -92,13 +92,13 @@ export function WarehouseHub12ReportsTab({activeWarehouse,
                   </CardContent></Card>
                   <Card><CardContent className="p-4">
                     <BarChart3 className="h-8 w-8 mb-2 text-primary" />
-                    <h3 className="font-bold">Aging</h3>
-                    <p className="text-xs text-muted-foreground">Eskirgan zaxiralar tahlili</p>
+                    <h3 className="font-bold">{t("aging")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("eskirganZaxiralarTahlili")}</p>
                   </CardContent></Card>
                   <Card><CardContent className="p-4">
                     <BarChart3 className="h-8 w-8 mb-2 text-primary" />
-                    <h3 className="font-bold">Turnover</h3>
-                    <p className="text-xs text-muted-foreground">Aylanish darajasi</p>
+                    <h3 className="font-bold">{t("turnover")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("aylanishDarajasi")}</p>
                   </CardContent></Card>
                 </>
               )}
@@ -125,7 +125,7 @@ export function WarehouseHub12ReportsTab({activeWarehouse,
           </CardHeader>
           <CardContent className="py-6 text-center text-muted-foreground">
             <Users className="h-10 w-10 mx-auto mb-2" />
-            <p className="font-medium">Yetkazib beruvchilar</p>
+            <p className="font-medium">{t("yetkazibBeruvchilar")}</p>
             <p className="text-xs mt-2">
               {activeWarehouse.code === "RM-MAIN" || activeWarehouse.code === "RM-ROLLS"
                 ? "Xom ashyo/rulon yetkazib beruvchilarni MM modulida boshqaring."
@@ -154,7 +154,7 @@ export function WarehouseHub12ReportsTab({activeWarehouse,
           <CardContent className="py-6 text-center text-muted-foreground">
             <History className="h-10 w-10 mx-auto mb-2" />
             <p className="font-medium">{t('auditTrail')}</p>
-            <p className="text-xs mt-2">Kim, qachon, nimani o'zgartirdi — barcha amallar kuzatiladi.</p>
+            <p className="text-xs mt-2">{t("kimQachonNimaniOzgartirdiBarcha")}</p>
           </CardContent>
         </Card>
       </TabsContent>
@@ -191,19 +191,19 @@ export function WarehouseHub12ReportsTab({activeWarehouse,
                 <p className="text-2xl font-bold">—</p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
-                <p className="text-xs text-muted-foreground">Oxirgi sync</p>
+                <p className="text-xs text-muted-foreground">{t("oxirgiSync")}</p>
                 <p className="text-sm font-bold">{new Date().toLocaleTimeString('uz-UZ')}</p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">{t('status22')}</p>
-                <EPStatusPill tone="neutral">Avtomatik</EPStatusPill>
+                <EPStatusPill tone="neutral">{t("avtomatik")}</EPStatusPill>
               </CardContent></Card>
             </div>
             <div className="mt-4 bg-muted/60 rounded-xl p-4">
-              <h4 className="font-bold text-sm mb-2">Sinxronizatsiya mexanizmi</h4>
+              <h4 className="font-bold text-sm mb-2">{t("sinxronizatsiyaMexanizmi")}</h4>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Stock har o'zgarganda <code className="bg-background px-1 rounded">pos_sync_events</code> jadvaliga yoziladi</li>
-                <li>POS Monitor bu eventlarni o'qib, ekranni yangilaydi</li>
+                <li>{t("stockHarOzgarganda")}<code className="bg-background px-1 rounded">pos_sync_events</code> jadvaliga yoziladi</li>
+                <li>{t("posMonitorBuEventlarniOqib")}</li>
                 <li>"Hozir sinxronlash" tugmasi manual signal yuboradi</li>
                 <li>{activeWarehouse.name} zaxirasi POS terminallarida real-time ko'rinadi</li>
               </ul>

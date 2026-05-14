@@ -14,6 +14,7 @@ import { Edit, Trash2 } from "lucide-react";
 import type { TemplateWithPosition } from "./QuestionnaireTemplatesTypes";
 import type { QuestionnaireQuestion } from "@shared/schema";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // TemplatesGrid
@@ -34,6 +35,7 @@ export function TemplatesGrid({
   onEdit,
   onDelete,
 }: TemplatesGridProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -128,7 +130,7 @@ export function QuestionsSection({
       <div className="space-y-2">
         {questions.length === 0 && (
           <div className="text-center text-muted-foreground py-8">
-            Savollar yo'q. Yuqoridagi tugmani bosib qo'shing.
+            {t("savollarYoqYuqoridagiTugmaniBosib")}
           </div>
         )}
         {(Array.isArray(questions) ? questions : []).map((q: QuestionnaireQuestion, index: number) => (
@@ -141,7 +143,7 @@ export function QuestionsSection({
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{index + 1}</Badge>
                 <span className="font-medium">{q.question}</span>
-                {q.isRequired && <EPStatusPill tone="neutral">Majburiy</EPStatusPill>}
+                {q.isRequired && <EPStatusPill tone="neutral">{t("majburiy")}</EPStatusPill>}
               </div>
               <p className="text-sm text-muted-foreground mt-1">{q.questionRu}</p>
             </div>

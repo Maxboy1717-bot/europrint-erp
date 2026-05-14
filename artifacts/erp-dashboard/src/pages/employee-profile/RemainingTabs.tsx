@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { HardHat, FileText } from "lucide-react";
 import type { SafetyViolation } from "./profile-types";
 import type { SafetyTabProps } from "./RemainingTabsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Re-exports — consumers can still `import { DisciplineTab } from "./RemainingTabs"`
@@ -29,6 +30,7 @@ export { COMPLAINT_TYPE_LABELS, SEVERITY_LABELS, STATUS_LABELS } from "./Remaini
 // ---------------------------------------------------------------------------
 
 export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       {loadingSafety ? (
@@ -49,7 +51,7 @@ export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
                   <HardHat className="h-8 w-8" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Xavfsizlik holati</p>
+                  <p className="text-sm text-muted-foreground">{t("xavfsizlikHolati")}</p>
                   {safetyViolations && safetyViolations.length > 0 ? (
                     <>
                       <p className="text-2xl font-bold text-[var(--ep-red)]">
@@ -61,7 +63,7 @@ export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
                       </p>
                     </>
                   ) : (
-                    <p className="text-2xl font-bold text-[var(--ep-green)]">Xavfsizlik buzilmagan</p>
+                    <p className="text-2xl font-bold text-[var(--ep-green)]">{t("xavfsizlikBuzilmagan")}</p>
                   )}
                 </div>
               </div>
@@ -72,7 +74,7 @@ export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <HardHat className="h-5 w-5" />
-                Xavfsizlik qoidalari buzilishi
+                {t("xavfsizlikQoidalariBuzilishi")}
               </CardTitle>
               <CardDescription>AI kamera orqali aniqlangan buzilishlar</CardDescription>
             </CardHeader>
@@ -81,10 +83,10 @@ export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Sana</TableHead>
-                      <TableHead>Turi</TableHead>
-                      <TableHead>Kamera</TableHead>
-                      <TableHead>Holat</TableHead>
+                      <TableHead>{t("date")}</TableHead>
+                      <TableHead>{t("type")}</TableHead>
+                      <TableHead>{t("camera")}</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -109,9 +111,9 @@ export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
               ) : (
                 <div className="text-center py-12">
                   <HardHat className="h-16 w-16 mx-auto text-[var(--ep-green)] mb-4" />
-                  <p className="text-lg font-medium text-[var(--ep-green)]">Xavfsizlik buzilmagan</p>
+                  <p className="text-lg font-medium text-[var(--ep-green)]">{t("xavfsizlikBuzilmagan")}</p>
                   <p className="text-muted-foreground">
-                    Bu xodimda xavfsizlik qoidalari buzilishi qayd etilmagan
+                    {t("buXodimdaXavfsizlikQoidalariBuzilishi")}
                   </p>
                 </div>
               )}
@@ -128,18 +130,19 @@ export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
 // ---------------------------------------------------------------------------
 
 export function DocumentsTab() {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Hujjatlar
+            {t("hujjatlar")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
-            Hujjatlar yuklanmagan
+            {t("hujjatlarYuklanmagan")}
           </p>
         </CardContent>
       </Card>

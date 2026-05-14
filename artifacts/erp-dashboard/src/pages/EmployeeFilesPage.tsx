@@ -27,6 +27,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface EmployeeFile {
   id: string;
@@ -55,6 +56,7 @@ const FILE_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function EmployeeFilesPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -113,12 +115,12 @@ export default function EmployeeFilesPage() {
   return (
     <ModulePage
       module="hr"
-      title="Xodim Fayllari"
+      title={t("xodimFayllari1")}
       icon={<FolderOpen className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-add-file">
           <Plus className="h-4 w-4 mr-2" />
-          Fayl qo'shish
+          {t("faylQoshish")}
         </Button>
       }
     >
@@ -126,7 +128,7 @@ export default function EmployeeFilesPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Fayl qidirish..."
+            placeholder={t("faylQidirish")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -209,11 +211,11 @@ export default function EmployeeFilesPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Fayl qo'shish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("faylQoshish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Fayl nomi *</Label>
+              <Label>{t("faylNomi1")}</Label>
               <Input
                 value={form.file_name}
                 onChange={e => setForm(f => ({ ...f, file_name: e.target.value }))}
@@ -222,7 +224,7 @@ export default function EmployeeFilesPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Fayl turi</Label>
+              <Label>{t("faylTuri")}</Label>
               <Select value={form.file_type} onValueChange={v => setForm(f => ({ ...f, file_type: v }))}>
                 <SelectTrigger data-testid="select-file-type" className="h-9">
                   <SelectValue />
@@ -235,7 +237,7 @@ export default function EmployeeFilesPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Fayl URL</Label>
+              <Label>{t("faylUrl1")}</Label>
               <Input
                 value={form.file_url}
                 onChange={e => setForm(f => ({ ...f, file_url: e.target.value }))}
@@ -245,7 +247,7 @@ export default function EmployeeFilesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.file_name.trim()) createMutation.mutate(form); }}
               disabled={!form.file_name.trim() || createMutation.isPending}
@@ -260,16 +262,16 @@ export default function EmployeeFilesPage() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent data-testid="dialog-confirm-delete-file">
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
-            <AlertDialogDescription>Haqiqatan ham bu faylni o'chirmoqchimisiz?</AlertDialogDescription>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("haqiqatanHamBuFaylniOchirmoqchimisiz")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor</AlertDialogCancel>
+            <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
               data-testid="button-confirm-delete-file"
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { BrandData, OrgNode, PortretData, Review, EMPTY_BRAND } from "./HRBrandPageTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   PresentationTab,
   ChannelsTab,
@@ -27,6 +28,7 @@ import {
 } from "./HRBrandPageTabs";
 
 export default function HRBrandPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [brand, setBrand] = useState<BrandData>(EMPTY_BRAND);
@@ -174,7 +176,7 @@ export default function HRBrandPage() {
     return (
       <div className="p-6 flex items-center gap-2 text-gray-500">
         <RefreshCw className="w-4 h-4 animate-spin" />
-        Yuklanmoqda...
+        {t("Yuklanmoqda...")}
       </div>
     );
   }
@@ -187,7 +189,7 @@ export default function HRBrandPage() {
     <div className="p-6 space-y-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">HR Brend</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("hrBrend")}</h1>
           <p className="text-sm text-gray-500 mt-1">
             Kompaniya employer brand strategiyasini boshqarish (Material №59)
           </p>
@@ -202,27 +204,27 @@ export default function HRBrandPage() {
         <TabsList className="grid grid-cols-2 lg:grid-cols-6 w-full">
           <TabsTrigger value="presentation" className="flex items-center gap-1 text-xs">
             <Building2 className="w-3 h-3" />
-            <span className="hidden sm:inline">Taqdimot</span>
+            <span className="hidden sm:inline">{t("taqdimot")}</span>
           </TabsTrigger>
           <TabsTrigger value="channels" className="flex items-center gap-1 text-xs">
             <Megaphone className="w-3 h-3" />
-            <span className="hidden sm:inline">Kanallar</span>
+            <span className="hidden sm:inline">{t("kanallar")}</span>
           </TabsTrigger>
           <TabsTrigger value="benefits" className="flex items-center gap-1 text-xs">
             <Star className="w-3 h-3" />
-            <span className="hidden sm:inline">Afzalliklar</span>
+            <span className="hidden sm:inline">{t("afzalliklar")}</span>
           </TabsTrigger>
           <TabsTrigger value="reviews" className="flex items-center gap-1 text-xs">
             <MessageSquare className="w-3 h-3" />
-            <span className="hidden sm:inline">Sharhlar</span>
+            <span className="hidden sm:inline">{t("comments")}</span>
           </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-1 text-xs">
             <BarChart3 className="w-3 h-3" />
-            <span className="hidden sm:inline">Raqamlar</span>
+            <span className="hidden sm:inline">{t("raqamlar")}</span>
           </TabsTrigger>
           <TabsTrigger value="vacancy" className="flex items-center gap-1 text-xs">
             <FileText className="w-3 h-3" />
-            <span className="hidden sm:inline">Vakansiya</span>
+            <span className="hidden sm:inline">{t("vakansiya")}</span>
           </TabsTrigger>
         </TabsList>
 

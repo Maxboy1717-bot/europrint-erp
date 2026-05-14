@@ -17,6 +17,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NODE_TYPE_LABELS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function AddNodeDialog({
   open,
@@ -29,6 +30,7 @@ export function AddNodeDialog({
   onSuccess: () => void;
   initialParentId?: string;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState({
     name: "",
@@ -71,7 +73,7 @@ export function AddNodeDialog({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi bo'lim qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiBolimQoshish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div>
@@ -79,7 +81,7 @@ export function AddNodeDialog({
             <Input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="Masalan: Moliya bo'limi"
+              placeholder={t("masalanMoliyaBolimi")}
             />
           </div>
           <div>
@@ -91,7 +93,7 @@ export function AddNodeDialog({
             />
           </div>
           <div>
-            <Label>Turi</Label>
+            <Label>{t("type")}</Label>
             <Select value={form.nodeType} onValueChange={(v) => setForm((f) => ({ ...f, nodeType: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -106,13 +108,13 @@ export function AddNodeDialog({
             <Input
               value={form.tskp}
               onChange={(e) => setForm((f) => ({ ...f, tskp: e.target.value.slice(0, 32) }))}
-              placeholder="Asosiy vazifasi..."
+              placeholder={t("asosiyVazifasi")}
               maxLength={32}
             />
             <p className="text-xs text-muted-foreground mt-0.5">{form.tskp.length}/32</p>
           </div>
           <div>
-            <Label>Ota node ID</Label>
+            <Label>{t("otaNodeId")}</Label>
             <Input
               value={form.parentId}
               onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value }))}
@@ -122,7 +124,7 @@ export function AddNodeDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button onClick={() => mutation.mutate()} disabled={!form.name || mutation.isPending}>
             {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

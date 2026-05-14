@@ -16,9 +16,11 @@ import {
   BlockMaterialDialog, ConfigDialog,
 } from "./AIProductionPlanningDialogs";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Main Page Component ──────────────────────────────────────────────────────
 export default function AIProductionPlanning() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // ── Dialog visibility ──────────────────────────────────────────────────────
@@ -169,18 +171,18 @@ export default function AIProductionPlanning() {
           </div>
           <div>
             <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">AI Rejalashtirish</b></>}
-        title="AI Rejalashtirish"
-        subtitle="VIP-First · FIFO · Batch grouping · Dynamic reschedule"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("aiRejalashtirish")}</b></>}
+        title={t("aiRejalashtirish")}
+        subtitle={t("vipFirstFifoBatchGrouping")}
       />
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={() => setShowBlockMaterial(true)} data-testid="button-block-material">
-            <Package className="h-4 w-4 mr-1" /> Material blok
+            <Package className="h-4 w-4 mr-1" /> {t("materialBlok")}
           </Button>
           <Button variant="outline" size="sm" onClick={() => { setThreshold(config?.auto_approval_threshold ? parseInt(config.auto_approval_threshold) : 85); setShowConfig(true); }} data-testid="button-open-config">
-            <Settings className="h-4 w-4 mr-1" /> Sozlamalar
+            <Settings className="h-4 w-4 mr-1" /> {t("settings")}
           </Button>
           <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending} data-testid="button-generate-plan">
             {generateMutation.isPending ? <EPLoader className="mr-2" /> : <Cpu className="h-4 w-4 mr-2" />}
@@ -193,8 +195,8 @@ export default function AIProductionPlanning() {
 
       <Tabs defaultValue="plans">
         <TabsList className="mb-4">
-          <TabsTrigger value="plans" data-testid="tab-plans">Rejalar</TabsTrigger>
-          <TabsTrigger value="recommendations" data-testid="tab-recommendations">AI Tavsiyalar</TabsTrigger>
+          <TabsTrigger value="plans" data-testid="tab-plans">{t("rejalar")}</TabsTrigger>
+          <TabsTrigger value="recommendations" data-testid="tab-recommendations">{t("aiTavsiyalar")}</TabsTrigger>
         </TabsList>
         <TabsContent value="plans">
           <PlansGrid plans={plans} isLoading={plansLoading} isGenerating={generateMutation.isPending} onPlanClick={openDetail} onGenerate={() => generateMutation.mutate()} />

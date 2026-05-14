@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type T, type Employee, type TaskFlowWithUsers } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function FlowsDialog({
   open,
@@ -33,6 +34,7 @@ export function FlowsDialog({
   employees: Employee[];
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [flowName, setFlowName] = useState("");
   const [flowType, setFlowType] = useState<"round_robin" | "least_busy" | "random">("round_robin");
@@ -195,14 +197,14 @@ export function FlowsDialog({
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="O'chirish"
+                          aria-label={t("delete")}
                           onClick={() => setConfirmDeleteId(flow.id)}
                           data-testid={`button-delete-flow-${flow.id}`}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>O'chirish</TooltipContent>
+                      <TooltipContent>{t("delete")}</TooltipContent>
                     </Tooltip>
                   </div>
                 </div>
@@ -216,8 +218,8 @@ export function FlowsDialog({
     <ConfirmDialog
       open={confirmDeleteId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-      title="Oqimni o'chirish"
-      description="Ushbu tayinlash oqimini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("oqimniOchirish")}
+      description={t("ushbuTayinlashOqiminiOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

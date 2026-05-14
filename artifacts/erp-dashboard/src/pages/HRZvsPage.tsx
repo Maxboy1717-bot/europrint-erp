@@ -16,12 +16,14 @@ import {
 } from "./HRZvsPageSections";
 import { CreateZvsDialog, ActionZvsDialog } from "./HRZvsPageDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const EMPTY_FORM: ZvsFormState = {
   purpose: "", amount: "", submitter_name: "", priority: "normal", week_date: "",
 };
 
 export default function HRZvsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -117,12 +119,12 @@ export default function HRZvsPage() {
   return (
     <ModulePage
       module="hr"
-      title="ZVS — Rejalashtirilmagan Xarajatlar"
+      title={t("zvsRejalashtirilmaganXarajatlar")}
       icon={<TrendingUp className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-zvs">
           <Plus className="h-4 w-4 mr-2" />
-          Ariza yaratish
+          {t("arizaYaratish")}
         </Button>
       }
     >

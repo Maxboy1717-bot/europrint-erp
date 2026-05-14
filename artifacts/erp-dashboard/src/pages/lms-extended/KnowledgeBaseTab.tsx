@@ -13,8 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, RefreshCw } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function KnowledgeBaseTab() {
+  const { t } = useTranslation("common");
   const [kbSearch, setKbSearch] = useState("");
   const [kbCategory, setKbCategory] = useState("");
   const [selectedArticle, setSelectedArticle] = useState<Record<string, unknown> | null>(null);
@@ -34,15 +36,15 @@ export function KnowledgeBaseTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-lg font-semibold">Bilim Bazasi</h2>
-        <Button variant="outline" size="sm" onClick={() => refetchKb()}><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash</Button>
+        <h2 className="text-lg font-semibold">{t("bilimBazasi")}</h2>
+        <Button variant="outline" size="sm" onClick={() => refetchKb()}><RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}</Button>
       </div>
       <div className="flex gap-2 flex-wrap">
-        <Input data-testid="input-kb-search" placeholder="Qidirish..." value={kbSearch} onChange={e => setKbSearch(e.target.value)} className="max-w-xs" />
+        <Input data-testid="input-kb-search" placeholder={t("Qidirish...")} value={kbSearch} onChange={e => setKbSearch(e.target.value)} className="max-w-xs" />
         <Select value={kbCategory || "all"} onValueChange={v => setKbCategory(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-40 h-9" data-testid="select-kb-category"><SelectValue placeholder="Kategoriya" /></SelectTrigger>
+          <SelectTrigger className="w-40 h-9" data-testid="select-kb-category"><SelectValue placeholder={t("category")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {(Array.isArray(kbCategories) ? kbCategories : []).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>

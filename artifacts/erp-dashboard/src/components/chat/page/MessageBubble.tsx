@@ -20,6 +20,7 @@ import { ImageLightbox } from "./ImageLightbox";
 import { CreateTaskModal } from "./CreateTaskModal";
 import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   msg: ChatMessage;
@@ -42,6 +43,7 @@ export function MessageBubble({
   msg, isMe, showAvatar, showName, isRead, canPin,
   onEdit, onDelete, onReply, onReact, onThread, onForward, onPin, onScrollTo,
 }: Props) {
+  const { t } = useTranslation("common");
   const [hover, setHover] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export function MessageBubble({
         <div className={cn("w-[34px] flex-shrink-0", isMe && "hidden")} />
         <div className={cn("flex flex-col", isMe && "items-end")}>
           <span className="text-[13px] italic text-[var(--tg-text-secondary)]/60 px-3 py-1.5 bg-[var(--tg-action-bar-bg)]/50 rounded-lg">
-            Xabar o'chirildi
+            {t("xabarOchirildi")}
           </span>
         </div>
       </div>
@@ -114,7 +116,7 @@ export function MessageBubble({
           {msg.isPinned && (
             <div className="flex items-center gap-1 mb-0.5 px-2 py-0.5 bg-[var(--tg-action-bar-bg)]/80 rounded-full w-fit shadow-sm">
               <Pin className="w-3 h-3 text-[var(--tg-sidebar-active)] rotate-45" />
-              <span className="text-[10px] text-[var(--tg-sidebar-active)] font-medium">Pinlangan</span>
+              <span className="text-[10px] text-[var(--tg-sidebar-active)] font-medium">{t("pinlangan")}</span>
             </div>
           )}
 
@@ -130,7 +132,7 @@ export function MessageBubble({
                   <button
                     onClick={() => setTaskModalOpen(true)}
                     className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
-                    title="Task yaratish"
+                    title={t("taskYaratish")}
                   >
                     <CheckSquare className="w-[15px] h-[15px]" />
                   </button>
@@ -141,7 +143,7 @@ export function MessageBubble({
                     <button
                       onClick={() => setShowEmojiPicker((p) => !p)}
                       className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
-                      title="Reaksiya"
+                      title={t("reaksiya")}
                     >
                       <Smile className="w-[15px] h-[15px]" />
                     </button>
@@ -161,7 +163,7 @@ export function MessageBubble({
                   <button
                     onClick={() => onReply(msg)}
                     className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
-                    title="Javob"
+                    title={t("javob")}
                   >
                     <CornerUpRight className="w-[15px] h-[15px]" />
                   </button>
@@ -171,7 +173,7 @@ export function MessageBubble({
                   <button
                     onClick={() => onThread(msg)}
                     className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
-                    title="Thread"
+                    title={t("thread")}
                   >
                     <MessageSquare className="w-[15px] h-[15px]" />
                   </button>
@@ -181,7 +183,7 @@ export function MessageBubble({
                   <button
                     onClick={() => onForward(msg)}
                     className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
-                    title="Yuborish"
+                    title={t("submitBtn")}
                   >
                     <CornerDownRight className="w-[15px] h-[15px]" />
                   </button>
@@ -204,7 +206,7 @@ export function MessageBubble({
                   <button
                     onClick={() => onEdit(msg)}
                     className="p-1.5 rounded-md hover:bg-[var(--tg-hover)] text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] transition-colors"
-                    title="Tahrirlash"
+                    title={t("edit")}
                   >
                     <Pencil className="w-[14px] h-[14px]" />
                   </button>
@@ -225,7 +227,7 @@ export function MessageBubble({
                   <button
                     onClick={() => onDelete(msg)}
                     className="p-1.5 rounded-md hover:bg-red-50 text-[var(--tg-text-secondary)] hover:text-red-500 transition-colors"
-                    title="O'chirish"
+                    title={t("delete")}
                   >
                     <Trash2 className="w-[14px] h-[14px]" />
                   </button>
@@ -257,7 +259,7 @@ export function MessageBubble({
                   isMe ? "text-[var(--tg-time-out-color)] border-[var(--tg-bubble-out-darker)]" : "text-[var(--tg-text-secondary)] border-[var(--tg-border)]"
                 )}>
                   <CornerDownRight className="w-3 h-3 flex-shrink-0" />
-                  <span>Yuborildi: <strong>{msg.forwardFrom.senderName}</strong></span>
+                  <span>{t("yuborildi")}<strong>{msg.forwardFrom.senderName}</strong></span>
                 </div>
               )}
 

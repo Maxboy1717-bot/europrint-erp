@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import type { SalaryHistoryRecord } from "./profile-types";
 import type { SalaryBenchmark } from "./FinanceTabTypes";
 import { SALARY_TYPE_LABEL } from "./FinanceTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // MonthlySummaryCard
@@ -26,26 +27,27 @@ export function MonthlySummaryCard({
   currentMonth, baseSalary, salaryType,
   totalOvertime, totalBonuses, totalFines, estimatedSalary,
 }: MonthlySummaryCardProps) {
+  const { t } = useTranslation("common");
   const salaryTypeLabel = salaryType ? (SALARY_TYPE_LABEL[salaryType] ?? "Belgilanmagan") : "Belgilanmagan";
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <DollarSign className="h-4 w-4 text-[var(--ep-green)]" />
-          Joriy oy moliyaviy xulosasi
+          {t("joriyOyMoliyaviyXulosasi")}
         </CardTitle>
         <CardDescription>{currentMonth} oy uchun hisob-kitob</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between py-2 border-b border-border/50">
-          <span className="text-sm text-muted-foreground">Bazaviy maosh</span>
+          <span className="text-sm text-muted-foreground">{t("bazaviyMaosh")}</span>
           <span className="font-medium">{baseSalary.toLocaleString()} so'm</span>
         </div>
         <div className="text-xs text-muted-foreground mb-1">{salaryTypeLabel}</div>
         {totalOvertime > 0 && (
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-1 text-muted-foreground">
-              <TrendingUp className="h-3 w-3 text-[var(--ep-green)]" /> Overvaqt
+              <TrendingUp className="h-3 w-3 text-[var(--ep-green)]" /> {t("overvaqt")}
             </span>
             <span className="text-[var(--ep-green)]">+{totalOvertime.toLocaleString()} so'm</span>
           </div>
@@ -53,7 +55,7 @@ export function MonthlySummaryCard({
         {totalBonuses > 0 && (
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-1 text-muted-foreground">
-              <Gift className="h-3 w-3 text-[var(--ep-blue)]" /> Bonus
+              <Gift className="h-3 w-3 text-[var(--ep-blue)]" /> {t("bonus")}
             </span>
             <span className="text-[var(--ep-blue)]">+{totalBonuses.toLocaleString()} so'm</span>
           </div>
@@ -61,13 +63,13 @@ export function MonthlySummaryCard({
         {totalFines > 0 && (
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-1 text-muted-foreground">
-              <TrendingDown className="h-3 w-3 text-[var(--ep-red)]" /> Jarimalar
+              <TrendingDown className="h-3 w-3 text-[var(--ep-red)]" /> {t("jarimalar")}
             </span>
             <span className="text-[var(--ep-red)]">-{totalFines.toLocaleString()} so'm</span>
           </div>
         )}
         <div className="flex items-center justify-between pt-2 border-t border-border font-semibold">
-          <span>Taxminiy jami</span>
+          <span>{t("taxminiyJami")}</span>
           <span className={`text-lg ${estimatedSalary > baseSalary ? "text-[var(--ep-green)]" : estimatedSalary < baseSalary ? "text-[var(--ep-red)]" : ""}`}>
             {estimatedSalary.toLocaleString()} so'm
           </span>
@@ -98,7 +100,7 @@ export function SalaryHistoryCard({ salaryHistory }: SalaryHistoryCardProps) {
           <BarChart3 className="h-4 w-4 text-[var(--ep-purple)]" />
           Maosh tarixi (12 oy)
         </CardTitle>
-        <CardDescription>Oylik bazaviy maosh o'zgarishi</CardDescription>
+        <CardDescription>{t("oylikBazaviyMaoshOzgarishi")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-40">
@@ -152,7 +154,7 @@ export function BenchmarkCard({ loadingBenchmark, salaryBenchmark, baseSalary }:
           <BenchmarkContent salaryBenchmark={salaryBenchmark} baseSalary={baseSalary} />
         ) : (
           <p className="text-muted-foreground text-center py-6 text-sm">
-            Benchmark ma'lumotlari mavjud emas
+            {t("benchmarkMalumotlariMavjudEmas")}
           </p>
         )}
       </CardContent>

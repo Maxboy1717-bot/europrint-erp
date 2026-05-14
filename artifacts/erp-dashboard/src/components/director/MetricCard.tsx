@@ -5,6 +5,7 @@
 import { Card } from "@/components/ui/card";
 import { ArrowUp, ArrowDown, AlertTriangle, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 export type MetricTone = 'blue' | 'green' | 'amber' | 'red' | 'slate';
 
@@ -34,6 +35,7 @@ const TONE_TEXT: Record<MetricTone, string> = {
 };
 
 export function MetricCard({ label, value, unit, delta, tone = 'blue', icon, warning }: MetricCardProps) {
+  const { t } = useTranslation("common");
   const deltaIsPositive = (delta ?? 0) > 0;
   const deltaIsNegative = (delta ?? 0) < 0;
 
@@ -68,7 +70,7 @@ export function MetricCard({ label, value, unit, delta, tone = 'blue', icon, war
           )}>
             {Math.abs(delta).toFixed(1)}%
           </span>
-          <span className="text-muted-foreground">o'tgan davrga nisbatan</span>
+          <span className="text-muted-foreground">{t("otganDavrgaNisbatan")}</span>
         </div>
       )}
     </Card>

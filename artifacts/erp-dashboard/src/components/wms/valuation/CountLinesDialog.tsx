@@ -32,7 +32,7 @@ export function CountLinesDialog({isOpen,
         <DialogHeader>
           <DialogTitle className="text-[18px] font-semibold">Inventarizatsiya tafsilotlari: {selectedCount?.countNumber}</DialogTitle>
           <DialogDescription>
-            Barcha elementlar va ularning hisob-kitob farqlari
+            {t("barchaElementlarVaUlarningHisob")}
           </DialogDescription>
         </DialogHeader>
 
@@ -47,11 +47,11 @@ export function CountLinesDialog({isOpen,
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>{t('mahsulotMaterial')}</TableHead>
-                <TableHead className="text-right">Kitob miqdori</TableHead>
-                <TableHead className="text-right">Sanalgan miqdor</TableHead>
-                <TableHead className="text-right">Farq</TableHead>
-                <TableHead className="text-right">Birlik narxi</TableHead>
-                <TableHead className="text-right">Qiymat farqi</TableHead>
+                <TableHead className="text-right">{t("kitobMiqdori")}</TableHead>
+                <TableHead className="text-right">{t("sanalganMiqdor")}</TableHead>
+                <TableHead className="text-right">{t("farq")}</TableHead>
+                <TableHead className="text-right">{t("birlikNarxi")}</TableHead>
+                <TableHead className="text-right">{t("qiymatFarqi")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -90,7 +90,7 @@ export default function MrpMatrix() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('mrp_title')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('mrp_title')}</b></>}
         title={t('mrp_title')}
         subtitle={t('mrp_description')}
         icon={<Package className="w-6 h-6"

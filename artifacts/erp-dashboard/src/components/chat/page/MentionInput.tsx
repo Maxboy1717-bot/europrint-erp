@@ -8,6 +8,7 @@ import { Send, X, Smile, AtSign, Mic, Paperclip, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/store/chatStore";
 import { VoiceRecorder } from "./VoiceRecorder";
+import { useTranslation } from '@/lib/i18n';
 
 interface RoomMember {
   userId: string;
@@ -34,6 +35,7 @@ export function MentionInput({
   roomId, replyTo, onCancelReply, onSend, onTypingStart, onTypingStop,
   members = [], isChannelReadOnly = false, onUploadFile, onCreatePoll, onVoiceMessage,
 }: Props) {
+  const { t } = useTranslation("common");
   const [text, setText] = useState("");
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -173,7 +175,7 @@ export function MentionInput({
       <div className="flex-shrink-0 bg-[var(--tg-chat-bg)] px-4 py-3">
         <div className="flex items-center justify-center py-3 px-4 bg-[var(--tg-action-bar-bg)]/80 rounded-xl">
           <p className="text-[14px] text-[var(--tg-text-secondary)]">
-            Bu kanal — faqat adminlar yozishi mumkin
+            {t("buKanalFaqatAdminlarYozishi")}
           </p>
         </div>
       </div>
@@ -232,7 +234,7 @@ export function MentionInput({
         <div className="absolute bottom-full left-3 right-3 mb-1 bg-[var(--tg-action-bar-bg)] rounded-xl shadow-lg overflow-hidden z-50 border border-[var(--tg-border)]">
           <div className="px-3 py-1.5 text-[12px] text-[var(--tg-text-secondary)] border-b border-[var(--tg-border)] flex items-center gap-1">
             <AtSign className="w-3.5 h-3.5" />
-            Mention
+            {t("mention")}
           </div>
           {(Array.isArray(filteredMembers) ? filteredMembers : []).map((member, idx) => (
             <button
@@ -262,7 +264,7 @@ export function MentionInput({
         {/* Emoji button */}
         <button
           className="flex-shrink-0 p-1.5 rounded-full text-[var(--tg-text-placeholder)] hover:text-[var(--tg-text-secondary)] transition-colors mb-[2px]"
-          title="Emoji"
+          title={t("emoji")}
         >
           <Smile className="w-[22px] h-[22px]" />
         </button>
@@ -273,7 +275,7 @@ export function MentionInput({
           value={text}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder="Xabar yozing..."
+          placeholder={t("xabarYozing")}
           rows={1}
           className={cn(
             "flex-1 resize-none bg-transparent",
@@ -290,7 +292,7 @@ export function MentionInput({
           <button
             onClick={() => fileInputRef.current?.click()}
             className="flex-shrink-0 p-1.5 rounded-full text-[var(--tg-text-placeholder)] hover:text-[var(--tg-text-secondary)] transition-colors mb-[2px]"
-            title="Fayl"
+            title={t("fayl")}
           >
             <Paperclip className="w-[22px] h-[22px]" />
           </button>
@@ -313,7 +315,7 @@ export function MentionInput({
                 ? "bg-[var(--tg-sidebar-active)] text-white shadow-sm"
                 : "text-[var(--tg-text-placeholder)] hover:text-[var(--tg-text-secondary)]"
             )}
-            title="Ovozli xabar"
+            title={t("ovozliXabar")}
           >
             <Mic className="w-[22px] h-[22px]" />
           </button>

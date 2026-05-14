@@ -36,7 +36,7 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
           <label className="text-sm font-medium">{t('resumeMatni')}</label>
           <Textarea
             data-testid="input-resume-text"
-            placeholder="Resume matnini kiriting..."
+            placeholder={t("resumeMatniniKiriting")}
             value={formData.resumeText || ""}
             onChange={(e) => onFormChange({ ...formData, resumeText: e.target.value })}
             className="min-h-[120px]"
@@ -48,16 +48,16 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
       return (
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Mavzu</label>
+            <label className="text-sm font-medium">{t("mavzu")}</label>
             <Input
               data-testid="input-topic"
-              placeholder="Mavzuni kiriting"
+              placeholder={t("mavzuniKiriting")}
               value={formData.topic || ""}
               onChange={(e) => onFormChange({ ...formData, topic: e.target.value })}
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Savollar soni</label>
+            <label className="text-sm font-medium">{t("savollarSoni")}</label>
             <Input
               data-testid="input-question-count"
               type="number"
@@ -67,18 +67,18 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Qiyinlik darajasi</label>
+            <label className="text-sm font-medium">{t("qiyinlikDarajasi1")}</label>
             <Select
               value={formData.difficulty || ""}
               onValueChange={(val) => onFormChange({ ...formData, difficulty: val })}
             >
               <SelectTrigger data-testid="select-difficulty" className="h-9">
-                <SelectValue placeholder="Tanlang" />
+                <SelectValue placeholder={t("tanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="easy">Oson</SelectItem>
-                <SelectItem value="medium">O'rta</SelectItem>
-                <SelectItem value="hard">Qiyin</SelectItem>
+                <SelectItem value="easy">{t("oson")}</SelectItem>
+                <SelectItem value="medium">{t("medium")}</SelectItem>
+                <SelectItem value="hard">{t("qiyin")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -89,19 +89,19 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
       return (
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Lavozim nomi</label>
+            <label className="text-sm font-medium">{t("lavozimNomi1")}</label>
             <Input
               data-testid="input-job-title"
-              placeholder="Lavozim nomini kiriting"
+              placeholder={t("lavozimNominiKiriting")}
               value={formData.title || ""}
               onChange={(e) => onFormChange({ ...formData, title: e.target.value })}
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Bo'lim</label>
+            <label className="text-sm font-medium">{t("bolim1")}</label>
             <Input
               data-testid="input-department"
-              placeholder="Bo'lim nomini kiriting"
+              placeholder={t("bolimNominiKiriting")}
               value={formData.department || ""}
               onChange={(e) => onFormChange({ ...formData, department: e.target.value })}
             />
@@ -113,10 +113,10 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
       return (
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Lavozim</label>
+            <label className="text-sm font-medium">{t("lavozim1")}</label>
             <Input
               data-testid="input-position"
-              placeholder="Lavozim"
+              placeholder={t("lavozim1")}
               value={formData.position || ""}
               onChange={(e) => onFormChange({ ...formData, position: e.target.value })}
             />
@@ -132,16 +132,16 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Hudud</label>
+            <label className="text-sm font-medium">{t("hudud")}</label>
             <Input
               data-testid="input-region"
-              placeholder="Toshkent"
+              placeholder={t("toshkent")}
               value={formData.region || ""}
               onChange={(e) => onFormChange({ ...formData, region: e.target.value })}
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Joriy maosh</label>
+            <label className="text-sm font-medium">{t("joriyMaosh")}</label>
             <Input
               data-testid="input-current-salary"
               type="number"
@@ -156,10 +156,10 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
     default:
       return (
         <div className="space-y-3">
-          <label className="text-sm font-medium">Ma'lumot</label>
+          <label className="text-sm font-medium">{t("info")}</label>
           <Textarea
             data-testid="input-generic-text"
-            placeholder="Ma'lumotni kiriting..."
+            placeholder={t("malumotniKiriting")}
             value={formData.text || ""}
             onChange={(e) => onFormChange({ ...formData, text: e.target.value })}
             className="min-h-[120px]"
@@ -210,14 +210,14 @@ export function TaskExecutionPanel({
         <TaskForm selectedTask={selectedTask} formData={formData} onFormChange={onFormChange} />
 
         <div>
-          <label className="text-sm font-medium">Til</label>
+          <label className="text-sm font-medium">{t("language")}</label>
           <Select value={taskLanguage} onValueChange={onLanguageChange}>
             <SelectTrigger data-testid="select-language" className="h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="uz">O'zbekcha</SelectItem>
-              <SelectItem value="ru">Ruscha</SelectItem>
+              <SelectItem value="uz">{t("language.uz")}</SelectItem>
+              <SelectItem value="ru">{t("ruscha")}</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -30,6 +30,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EPCard } from "./EPCard";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface EPErrorStateProps {
   /** Title — 14px semibold. Default: "Ma'lumotlarni yuklashda xatolik". */
@@ -48,14 +49,18 @@ interface EPErrorStateProps {
 }
 
 export function EPErrorState({
-  title = "Ma'lumotlarni yuklashda xatolik",
-  description = "Server javob bermayapti yoki internet aloqasi yo'q. Iltimos, qaytadan urinib ko'ring.",
+  title,
+  description,
   onRetry,
-  retryLabel = "Qayta urinib ko'rish",
+  retryLabel,
   variant = "card",
   severity = "error",
   className,
 }: EPErrorStateProps) {
+  const { t } = useTranslation("common");
+  const resolvedTitle = title ?? t("malumotlarniYuklashdaXatolik");
+  const resolvedDescription = description ?? t("serverJavobBermayaptiYokiInternet");
+  const resolvedRetryLabel = retryLabel ?? t("qaytaUrinibKorish");
   const palette =
     severity === "warning"
       ? { soft: "var(--ep-yellow-soft)", solid: "var(--ep-yellow)" }
@@ -70,9 +75,9 @@ export function EPErrorState({
         <AlertCircle className="h-6 w-6" style={{ color: palette.solid }} />
       </div>
       <div className="space-y-1">
-        <h3 className="text-[14px] font-semibold">{title}</h3>
+        <h3 className="text-[14px] font-semibold">{resolvedTitle}</h3>
         <p className="text-[13px] text-muted-foreground max-w-[420px]">
-          {description}
+          {resolvedDescription}
         </p>
       </div>
       {onRetry && (
@@ -83,7 +88,7 @@ export function EPErrorState({
           className="mt-1 gap-1.5"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          {retryLabel}
+          {resolvedRetryLabel}
         </Button>
       )}
     </div>

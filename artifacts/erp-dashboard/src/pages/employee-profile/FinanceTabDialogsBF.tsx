@@ -25,23 +25,24 @@ interface BonusDialogProps {
 }
 
 export function BonusDialog({ tCommon, open, onOpenChange, form, setForm, mutation }: BonusDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" data-testid="button-add-bonus">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi bonus
+          {t("yangiBonus")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi bonus qo'shish</DialogTitle>
-          <DialogDescription>Xodimga bonus berish</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiBonusQoshish")}</DialogTitle>
+          <DialogDescription>{t("xodimgaBonusBerish")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>To'lov sanasi</Label>
+          <Label>{t("tolovSanasi")}</Label>
               <Input
                 type="date"
                 value={form.paymentDate}
@@ -61,26 +62,26 @@ export function BonusDialog({ tCommon, open, onOpenChange, form, setForm, mutati
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Bonus turi</Label>
+          <Label>{t("bonusTuri")}</Label>
             <Select value={form.bonusType} onValueChange={(value) => setForm({ ...form, bonusType: value })}>
               <SelectTrigger data-testid="select-bonus-type" className="h-9">
-                <SelectValue placeholder="Turni tanlang" />
+                <SelectValue placeholder={t("turniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="performance">Samaradorlik</SelectItem>
-                <SelectItem value="annual">Yillik</SelectItem>
-                <SelectItem value="holiday">Bayram</SelectItem>
-                <SelectItem value="project">Loyiha</SelectItem>
-                <SelectItem value="other">Boshqa</SelectItem>
+                <SelectItem value="performance">{t("samaradorlik")}</SelectItem>
+                <SelectItem value="annual">{t("yearly")}</SelectItem>
+                <SelectItem value="holiday">{t("bayram")}</SelectItem>
+                <SelectItem value="project">{t("loyiha")}</SelectItem>
+                <SelectItem value="other">{t("boshqa")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-          <Label>Izoh</Label>
+          <Label>{t("Izoh")}</Label>
             <Input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Bonus sababi..."
+              placeholder={t("bonusSababi")}
               data-testid="input-bonus-description"
             />
           </div>
@@ -118,18 +119,18 @@ export function FineDialog({ tCommon, open, onOpenChange, form, setForm, mutatio
       <DialogTrigger asChild>
         <Button size="sm" variant="destructive" data-testid="button-add-fine">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi jarima
+          {t("yangiJarima")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi jarima qo'shish</DialogTitle>
-          <DialogDescription>Xodimga jarima yozish</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiJarimaQoshish")}</DialogTitle>
+          <DialogDescription>{t("xodimgaJarimaYozish")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Jarima sanasi</Label>
+          <Label>{t("jarimaSanasi")}</Label>
               <Input
                 type="date"
                 value={form.fineDate}
@@ -149,27 +150,27 @@ export function FineDialog({ tCommon, open, onOpenChange, form, setForm, mutatio
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Jarima turi</Label>
+          <Label>{t("jarimaTuri")}</Label>
             <Select value={form.fineType} onValueChange={(value) => setForm({ ...form, fineType: value })}>
               <SelectTrigger data-testid="select-fine-type" className="h-9">
-                <SelectValue placeholder="Turni tanlang" />
+                <SelectValue placeholder={t("turniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="late">Kechikish</SelectItem>
-                <SelectItem value="absence">Ishga kelmaslik</SelectItem>
-                <SelectItem value="damage">Zarar</SelectItem>
-                <SelectItem value="quality">Sifat</SelectItem>
-                <SelectItem value="safety">Xavfsizlik</SelectItem>
-                <SelectItem value="other">Boshqa</SelectItem>
+                <SelectItem value="late">{t("kechikish")}</SelectItem>
+                <SelectItem value="absence">{t("ishgaKelmaslik")}</SelectItem>
+                <SelectItem value="damage">{t("zarar")}</SelectItem>
+                <SelectItem value="quality">{t("Sifat")}</SelectItem>
+                <SelectItem value="safety">{t("xavfsizlik")}</SelectItem>
+                <SelectItem value="other">{t("boshqa")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-          <Label>Izoh</Label>
+          <Label>{t("Izoh")}</Label>
             <Input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Jarima sababi..."
+              placeholder={t("jarimaSababi")}
               data-testid="input-fine-description"
             />
           </div>
@@ -182,7 +183,7 @@ export function FineDialog({ tCommon, open, onOpenChange, form, setForm, mutatio
               className="h-4 w-4 rounded border-border/40"
               data-testid="checkbox-deducted"
             />
-            <Label htmlFor="deducted">Maoshdan ushlab qolindi</Label>
+            <Label htmlFor="deducted">{t("maoshdanUshlabQolindi")}</Label>
           </div>
         </div>
         <DialogFooter>

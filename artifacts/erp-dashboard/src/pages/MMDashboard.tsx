@@ -23,6 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Link } from "wouter";
+import { useTranslation } from '@/lib/i18n';
 import {
   EPPageHeader, EPErrorState, EPEmptyState, EPSkeletonKpiRow,
 } from "@/components/ep";
@@ -58,6 +59,7 @@ interface PurchaseOrder {
 }
 
 export default function MMDashboard() {
+  const { t } = useTranslation("common");
   const { data: materialsData, isLoading, error, isError, refetch} = useQuery<Material[]>({
     queryKey: ["/api/warehouse/materials"],
   });
@@ -78,9 +80,9 @@ export default function MMDashboard() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="loading-spinner">
         <EPPageHeader
-          breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
-          title="Materiallar boshqaruvi"
-          subtitle="Materiallar va zaxiralarni boshqaring"
+          breadcrumb={<>{t("dashboardMm")}<b className="text-foreground">{t("Materiallar")}</b></>}
+          title={t("materiallarBoshqaruvi")}
+          subtitle={t("materiallarVaZaxiralarniBoshqaring")}
         />
         <EPSkeletonKpiRow count={4} />
       </div>
@@ -91,9 +93,9 @@ export default function MMDashboard() {
     return (
       <div className="flex flex-col p-5 lg:p-6 gap-5">
         <EPPageHeader
-          breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
-          title="Materiallar boshqaruvi"
-          subtitle="Materiallar va zaxiralarni boshqaring"
+          breadcrumb={<>{t("dashboardMm")}<b className="text-foreground">{t("Materiallar")}</b></>}
+          title={t("materiallarBoshqaruvi")}
+          subtitle={t("materiallarVaZaxiralarniBoshqaring")}
         />
         <EPErrorState onRetry={refetch} />
       </div>
@@ -158,20 +160,20 @@ export default function MMDashboard() {
     return (
       <div className="flex flex-col p-5 lg:p-6 gap-5">
         <EPPageHeader
-          breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
-          title="Materiallar boshqaruvi"
-          subtitle="Materiallar va zaxiralarni boshqaring"
+          breadcrumb={<>{t("dashboardMm")}<b className="text-foreground">{t("Materiallar")}</b></>}
+          title={t("materiallarBoshqaruvi")}
+          subtitle={t("materiallarVaZaxiralarniBoshqaring")}
           data-testid="text-mm-dashboard-title"
         />
         <EPEmptyState
           icon={PackageX}
-          title="Hali material yo'q"
-          description="Birinchi materialni qo'shing — ombor sahifasiga o'ting va materiallar ro'yxatini boshlang."
+          title={t("haliMaterialYoq")}
+          description={t("birinchiMaterialniQoshingOmborSahifasiga")}
           action={
             <Link href="/warehouse-management">
               <Button className="ep-btn-primary-shimmer gap-1.5">
                 <Plus className="h-4 w-4" />
-                Yangi material qo'shish
+                {t("yangiMaterialQoshish")}
               </Button>
             </Link>
           }
@@ -183,9 +185,9 @@ export default function MMDashboard() {
   return (
     <div className="flex flex-col p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · MM · <b className="text-foreground">Materiallar</b></>}
-        title="Materiallar boshqaruvi"
-        subtitle="Materiallar va zaxiralarni boshqaring"
+        breadcrumb={<>{t("dashboardMm")}<b className="text-foreground">{t("Materiallar")}</b></>}
+        title={t("materiallarBoshqaruvi")}
+        subtitle={t("materiallarVaZaxiralarniBoshqaring")}
         data-testid="text-mm-dashboard-title"
       />
 
@@ -206,7 +208,7 @@ export default function MMDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               <ArrowDownRight className="h-4 w-4 text-primary" />
-              Oxirgi Kirimlar
+              {t("oxirgiKirimlar")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -229,7 +231,7 @@ export default function MMDashboard() {
               ))}
               {recentInbound.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
-                  Kirimlar mavjud emas
+                  {t("kirimlarMavjudEmas")}
                 </p>
               )}
             </div>
@@ -240,7 +242,7 @@ export default function MMDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               <ArrowUpRight className="h-5 w-5 text-[var(--ep-red)]" />
-              Oxirgi Chiqimlar
+              {t("oxirgiChiqimlar")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -263,7 +265,7 @@ export default function MMDashboard() {
               ))}
               {recentOutbound.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
-                  Chiqimlar mavjud emas
+                  {t("chiqimlarMavjudEmas")}
                 </p>
               )}
             </div>
@@ -309,7 +311,7 @@ export default function MMDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Tezkor Harakatlar
+            {t("tezkorHarakatlar")}
           </CardTitle>
         </CardHeader>
         <CardContent>

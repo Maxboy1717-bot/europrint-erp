@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { warehousesApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface Warehouse {
   id: string;
@@ -107,14 +108,14 @@ function WarehouseCard({ wh }: { wh: Warehouse }) {
           <div style={{ fontSize: 20, fontWeight: 800, color: "#059669" }}>
             {wh.totalQty % 1 === 0 ? wh.totalQty.toLocaleString() : wh.totalQty.toFixed(1)}
           </div>
-          <div style={{ fontSize: 10, color: "#9CA3AF" }}>Jami qoldiq</div>
+          <div style={{ fontSize: 10, color: "#9CA3AF" }}>{t("jamiQoldiq")}</div>
         </div>
       </div>
 
       {/* Progress bar */}
       <div style={{ padding: "0 16px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>
-          <span>To'ldirganlik</span>
+          <span>{t("toldirganlik")}</span>
           <span>{pct}%</span>
         </div>
         <div style={{ height: 6, background: "#F3F4F6", borderRadius: 3, overflow: "hidden" }}>
@@ -133,13 +134,13 @@ function WarehouseCard({ wh }: { wh: Warehouse }) {
           display: "flex", alignItems: "center", gap: 8, fontSize: 11,
         }}>
           {wh.departmentCode && (
-            <span style={{ color: "#6B7280" }}>Bo'lim: <b>{wh.departmentCode}</b></span>
+            <span style={{ color: "#6B7280" }}>{t("bolim")}<b>{wh.departmentCode}</b></span>
           )}
           {!wh.isActive && (
             <span style={{
               marginLeft: "auto", background: "#FEE2E2", color: "#DC2626",
               borderRadius: 4, padding: "1px 6px", fontWeight: 600,
-            }}>Nofaol</span>
+            }}>{t("inactive")}</span>
           )}
         </div>
       )}
@@ -148,6 +149,7 @@ function WarehouseCard({ wh }: { wh: Warehouse }) {
 }
 
 export default function PosWarehouses() {
+  const { t } = useTranslation("common");
   const { t }         = usePosI18n();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -198,7 +200,7 @@ export default function PosWarehouses() {
         gap: 12, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10,
       }}>
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1F2937" }}>
-          Omborlar
+          {t("omborlar")}
         </h2>
         <div style={{ flex: 1 }} />
         <input
@@ -206,7 +208,7 @@ export default function PosWarehouses() {
             border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 12px",
             fontSize: 13, outline: "none", width: 220, color: "#1F2937", background: "#F9FAFB",
           }}
-          placeholder="Ombor nomi yoki kodi..."
+          placeholder={t("omborNomiYokiKodi")}
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -293,7 +295,7 @@ export default function PosWarehouses() {
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: "#DC2626", marginBottom: 8 }}>
-              Omborlar yuklanmadi
+              {t("omborlarYuklanmadi")}
             </div>
             <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>{error}</div>
             <button
@@ -303,7 +305,7 @@ export default function PosWarehouses() {
                 borderRadius: 8, padding: "10px 24px", fontWeight: 700, cursor: "pointer",
               }}
             >
-              🔄 Qayta urinish
+              {t("qaytaUrinish1")}
             </button>
           </div>
         )}
@@ -313,7 +315,7 @@ export default function PosWarehouses() {
           <div style={{ textAlign: "center", padding: "60px 20px", color: "#9CA3AF" }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🏭</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: "#374151", marginBottom: 8 }}>
-              Ombor topilmadi
+              {t("omborTopilmadi")}
             </div>
             <div style={{ fontSize: 13 }}>
               {search ? `"${search}" bo'yicha ombor yo'q` : "Hali ombor qo'shilmagan"}

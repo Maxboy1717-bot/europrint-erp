@@ -15,9 +15,11 @@ import { Shield, Pencil, Save, CheckCircle2, XCircle } from "lucide-react";
 import type { MarketingSetting } from "@shared/schema";
 import type { SocialApiConfig } from "./MarketingSettingsTypes";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 // TZ_02-04: Telegram Webhook faollashtirish komponenti
 export function TelegramWebhookActivation() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isActivating, setIsActivating] = useState(false);
 
@@ -44,7 +46,7 @@ export function TelegramWebhookActivation() {
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Shield className="h-4 w-4 text-[var(--ep-blue)]" />
-          Telegram Webhook Sozlamasi
+          {t("telegramWebhookSozlamasi")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -76,25 +78,25 @@ export function WebhookUrlsSection({ webhookUrl }: WebhookUrlsSectionProps) {
     <>
       <Card className="bg-card border-none shadow-sm overflow-hidden">
         <CardHeader className="bg-muted/60 py-3 px-6">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Webhook URL'lar</CardTitle>
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("webhookUrllar")}</CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           <div className="space-y-1">
           <Label className="text-sm text-muted-foreground font-bold">Meta (Instagram/Facebook)</Label>
             <div className="flex gap-3">
               <Input readOnly value={`${webhookUrl}/meta`} className="bg-background border-border font-mono text-xs h-11" data-testid="input-webhook-meta" />
-              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/meta`); toast({ title: "Nusxalandi" }); }}>Nusxa</Button>
+              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/meta`); toast({ title: "Nusxalandi" }); }}>{t("nusxa")}</Button>
             </div>
           </div>
           <div className="space-y-1">
-          <Label className="text-sm text-muted-foreground font-bold">Telegram</Label>
+          <Label className="text-sm text-muted-foreground font-bold">{t("telegram")}</Label>
             <div className="flex gap-3">
               <Input readOnly value={`${webhookUrl}/telegram`} className="bg-background border-border font-mono text-xs h-11" data-testid="input-webhook-telegram" />
-              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/telegram`); toast({ title: "Nusxalandi" }); }}>Nusxa</Button>
+              <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/telegram`); toast({ title: "Nusxalandi" }); }}>{t("nusxa")}</Button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-            Ushbu URL'larni Meta Developer Console va Telegram BotFather'da webhook sifatida sozlang.
+            {t("ushbuUrllarniMetaDeveloperConsole")}
           </p>
         </CardContent>
       </Card>
@@ -119,7 +121,7 @@ export function ApiConfigsList({ apiConfigs, apisLoading, onEdit }: ApiConfigsLi
   if (apiConfigs?.length === 0) {
     return (
       <Card className="bg-card border-none">
-        <CardContent className="p-12 text-center text-muted-foreground">Social API sozlamalari yo'q</CardContent>
+        <CardContent className="p-12 text-center text-muted-foreground">{t("socialApiSozlamalariYoq")}</CardContent>
       </Card>
     );
   }
@@ -140,9 +142,9 @@ export function ApiConfigsList({ apiConfigs, apisLoading, onEdit }: ApiConfigsLi
             </div>
             <div className="flex items-center gap-3">
               {cfg.isActive ? (
-                <Badge variant="outline" className="border-green-200 bg-green-50 text-[var(--ep-green)] rounded-full px-2.5 py-0.5 text-xs font-bold no-default-hover-elevate"><CheckCircle2 className="h-3 w-3 mr-1.5" />Faol</Badge>
+                <Badge variant="outline" className="border-green-200 bg-green-50 text-[var(--ep-green)] rounded-full px-2.5 py-0.5 text-xs font-bold no-default-hover-elevate"><CheckCircle2 className="h-3 w-3 mr-1.5" />{t("active")}</Badge>
               ) : (
-                <Badge variant="outline" className="border-red-200 bg-red-50 text-[var(--ep-red)] rounded-full px-2.5 py-0.5 text-xs font-bold no-default-hover-elevate"><XCircle className="h-3 w-3 mr-1.5" />Nofaol</Badge>
+                <Badge variant="outline" className="border-red-200 bg-red-50 text-[var(--ep-red)] rounded-full px-2.5 py-0.5 text-xs font-bold no-default-hover-elevate"><XCircle className="h-3 w-3 mr-1.5" />{t("inactive")}</Badge>
               )}
               <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate" onClick={() => onEdit(cfg)}><Pencil className="h-4 w-4" /></Button>
             </div>
@@ -175,7 +177,7 @@ export function GeneralSettingsList({
   if (Object.keys(grouped).length === 0) {
     return (
       <Card className="bg-card border-none">
-        <CardContent className="p-12 text-center text-muted-foreground">Hozircha sozlamalar yo'q</CardContent>
+        <CardContent className="p-12 text-center text-muted-foreground">{t("hozirchaSozlamalarYoq")}</CardContent>
       </Card>
     );
   }

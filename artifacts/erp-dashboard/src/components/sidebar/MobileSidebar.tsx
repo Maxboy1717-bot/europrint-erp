@@ -48,19 +48,19 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="left" className="w-full sm:w-[300px] p-0 flex flex-col gap-0">
         <SheetHeader className="sr-only">
-          <SheetTitle>Menyu</SheetTitle>
+          <SheetTitle>{t("menyu")}</SheetTitle>
         </SheetHeader>
 
         {/* Logo header */}
         <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
           <span className="text-sm font-bold text-foreground">
-            Euro<span className="text-primary">{t('print')}</span>
+            {t("euro")}<span className="text-primary">{t('print')}</span>
             <span className="ml-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">ERP</span>
           </span>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
-            aria-label="Yopish"
+            aria-label={t("close2")}
           >
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -68,7 +68,7 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
 
         {/* Module grid — all modules, 4 columns, real icons */}
         <div className="px-3 py-3 bg-muted/50 border-b border-border">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2 px-1">Modullar</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2 px-1">{t("modullar")}</p>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
             {filteredModules.map(([key, g]) => {
               const isActive = activeModule === key;
@@ -158,7 +158,7 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
             onClick={() => navigate("/kanban")}
           >
             <Plus className="h-4 w-4" />
-            Yangi Vazifa
+            {t("yangiVazifa1")}
           </button>
           <div className="flex gap-1 pt-0.5">
             <button
@@ -166,14 +166,14 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
               className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-colors"
             >
               <MessageSquare className="h-3.5 w-3.5" />
-              Yordam
+              {t("help")}
             </button>
             <button
               onClick={() => navigate("/feedback")}
               className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-colors"
             >
               <Star className="h-3.5 w-3.5" />
-              Fikr
+              {t("fikr")}
             </button>
           </div>
         </div>

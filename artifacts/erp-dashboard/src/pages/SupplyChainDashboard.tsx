@@ -12,8 +12,10 @@ import { RefreshCw } from "lucide-react";
 import type { GoodsReceipt, PurchaseOrder, ThreeWayMatchResult, VendorInvoice } from "./SupplyChainDashboardTypes";
 import { AlertsSection, GRNColumn, InvoiceColumn, POColumn, SummaryCards } from "./SupplyChainDashboardSections";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function SupplyChainDashboard() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [matchResults, setMatchResults] = useState<Record<string | number, ThreeWayMatchResult>>({});
   const [matchingId, setMatchingId] = useState<string | number | null>(null);
@@ -92,8 +94,8 @@ export default function SupplyChainDashboard() {
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Ta'minot Zanjiri</b></>}
-        title="Ta'minot Zanjiri"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("taminotZanjiri")}</b></>}
+        title={t("taminotZanjiri")}
         subtitle="Xarid tsikli: PO → Qabul (GRN) → Faktura (3-Way Match)"
       />
         <Button

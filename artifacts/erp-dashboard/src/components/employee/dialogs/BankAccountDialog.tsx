@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from '@/lib/i18n';
 
 interface BankAccountForm {
   bankName: string;
@@ -36,6 +37,7 @@ export function BankAccountDialog({
   onSave,
   isPending
 }: BankAccountDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof BankAccountForm, value: string | boolean) => {
     onChange({ ...form, [field]: value });
   };
@@ -44,11 +46,11 @@ export function BankAccountDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Bank hisob raqamini qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("bankHisobRaqaminiQoshish")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label htmlFor="bankName">Bank nomi</Label>
+          <Label htmlFor="bankName">{t("bankNomi")}</Label>
             <Input
               id="bankName"
               value={form.bankName}
@@ -64,7 +66,7 @@ export function BankAccountDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="cardNumber">Karta raqami</Label>
+          <Label htmlFor="cardNumber">{t("kartaRaqami")}</Label>
             <Input
               id="cardNumber"
               value={form.cardNumber}
@@ -72,7 +74,7 @@ export function BankAccountDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="cardHolderName">Karta egasi ismi</Label>
+          <Label htmlFor="cardHolderName">{t("kartaEgasiIsmi")}</Label>
             <Input
               id="cardHolderName"
               value={form.cardHolderName}
@@ -103,11 +105,11 @@ export function BankAccountDialog({
               checked={form.isPrimary}
               onCheckedChange={(checked) => updateField("isPrimary", checked)}
             />
-            <Label htmlFor="isPrimary">Asosiy hisob raqami</Label>
+            <Label htmlFor="isPrimary">{t("asosiyHisobRaqami")}</Label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

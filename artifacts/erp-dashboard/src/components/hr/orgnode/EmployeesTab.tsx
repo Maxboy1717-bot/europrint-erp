@@ -8,19 +8,21 @@ import { Users, Clock, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { NodeDetail } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface EmployeesTabProps {
   node: NodeDetail;
 }
 
 export function EmployeesTab({ node }: EmployeesTabProps) {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
 
   if (node.employees.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
         <Users className="h-10 w-10" />
-        <p>Bu bo'limda xodimlar yo'q</p>
+        <p>{t("buBolimdaXodimlarYoq")}</p>
       </div>
     );
   }

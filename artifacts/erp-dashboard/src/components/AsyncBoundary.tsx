@@ -8,6 +8,7 @@ import { AlertCircle, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 /**
  * AsyncBoundary — sahifaning 4 holatini birga boshqaradi:
  *   1. loading  → Spinner
@@ -75,6 +76,7 @@ export function AsyncBoundary({
   errorText,
   minHeight = "200px",
 }: AsyncBoundaryProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     if (loadingFallback) return <>{loadingFallback}</>;
     return (
@@ -101,7 +103,7 @@ export function AsyncBoundary({
         </p>
         {onRetry && (
           <Button onClick={onRetry} variant="outline" size="sm">
-            Qayta urinish
+            {t("qaytaUrinish")}
           </Button>
         )}
       </div>

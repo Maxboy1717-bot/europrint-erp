@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { formatCurrency } from "@/lib/format";
 import type { Contact, Company, Proposal, EntityData } from "./crm-types";
 import type { CrmActivity, SdOrder } from "./DetailSheetTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -37,42 +38,43 @@ export function Customer360Section({
   proposals,
   historyData,
 }: Customer360SectionProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="360" className="m-0 space-y-4">
       {/* Header card */}
       <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
         <h3 className="font-semibold text-purple-800 flex items-center gap-2">
           <TrendingUp className="h-4 w-4" />
-          Mijoz 360° Ko'rinishi
+          {t("mijoz360Korinishi")}
         </h3>
-        <p className="text-xs text-[var(--ep-purple)] mt-1">To'liq mijoz ma'lumotlari va tarix</p>
+        <p className="text-xs text-[var(--ep-purple)] mt-1">{t("toliqMijozMalumotlariVaTarix")}</p>
       </div>
 
       {/* Stat grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="p-3 bg-blue-50 rounded-lg text-center">
           <p className="text-2xl font-bold text-[var(--ep-blue)]">{sdOrders.length}</p>
-          <p className="text-xs text-muted-foreground">Buyurtmalar</p>
+          <p className="text-xs text-muted-foreground">{t("buyurtmalar")}</p>
         </div>
         <div className="p-3 bg-green-50 rounded-lg text-center">
           <p className="text-2xl font-bold text-[var(--ep-green)]">{activities.length}</p>
-          <p className="text-xs text-muted-foreground">Faoliyatlar</p>
+          <p className="text-xs text-muted-foreground">{t("faoliyatlar")}</p>
         </div>
         <div className="p-3 bg-purple-50 rounded-lg text-center">
           <p className="text-2xl font-bold text-[var(--ep-purple)]">{proposals.length}</p>
-          <p className="text-xs text-muted-foreground">Takliflar</p>
+          <p className="text-xs text-muted-foreground">{t("takliflar")}</p>
         </div>
         <div className="p-3 bg-amber-50 rounded-lg text-center">
           <p className="text-2xl font-bold text-[var(--ep-yellow)]">{historyData.length}</p>
-          <p className="text-xs text-muted-foreground">Amallar</p>
+          <p className="text-xs text-muted-foreground">{t("Amallar")}</p>
         </div>
       </div>
 
       {/* Recent activities */}
       <div>
-        <h4 className="text-sm font-semibold mb-2">Oxirgi faoliyatlar</h4>
+        <h4 className="text-sm font-semibold mb-2">{t("oxirgiFaoliyatlar")}</h4>
         {activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-3">Faoliyatlar yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-3">{t("faoliyatlarYoq")}</p>
         ) : (
           <div className="space-y-2">
             {activities.slice(0, 5).map((act) => (
@@ -98,7 +100,7 @@ export function Customer360Section({
       {/* Contact details */}
       {entityType === "contacts" && entity && (
         <div className="border-t pt-4">
-          <h4 className="text-sm font-semibold mb-2">Kontakt ma'lumotlari</h4>
+          <h4 className="text-sm font-semibold mb-2">{t("kontaktMalumotlari")}</h4>
           <div className="space-y-2 text-sm">
             {(entity as Contact).post && (
               <div className="flex items-center gap-2">
@@ -129,7 +131,7 @@ export function Customer360Section({
       {/* Company details */}
       {entityType === "companies" && entity && (
         <div className="border-t pt-4">
-          <h4 className="text-sm font-semibold mb-2">Kompaniya ma'lumotlari</h4>
+          <h4 className="text-sm font-semibold mb-2">{t("kompaniyaMalumotlari")}</h4>
           <div className="space-y-2 text-sm">
             {(entity as Company).industry && (
               <div className="flex items-center gap-2">

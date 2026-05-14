@@ -34,7 +34,7 @@ export default function WmsAnalytics() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('inventory_intelligence_title')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('inventory_intelligence_title')}</b></>}
         title={t('inventory_intelligence_title')}
         subtitle={t('inventory_intelligence_desc')}
         icon={<BarChart3 className="w-6 h-6"

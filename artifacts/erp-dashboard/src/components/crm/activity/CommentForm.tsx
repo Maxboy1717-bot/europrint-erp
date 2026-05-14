@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, AtSign, Paperclip } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
 interface CommentFormProps {
   entityType: string;
@@ -17,6 +18,7 @@ interface CommentFormProps {
 }
 
 export function CommentForm({ entityType, entityId }: CommentFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [commentForm, setCommentForm] = useState({
     content: "",
@@ -45,7 +47,7 @@ export function CommentForm({ entityType, entityId }: CommentFormProps) {
   return (
     <div className="space-y-3 p-4">
       <Textarea
-        placeholder="Izoh yozing..."
+        placeholder={t("izohYozing")}
         value={commentForm.content}
         onChange={(e) => setCommentForm((prev) => ({ ...prev, content: e.target.value }))}
         className="min-h-[100px] resize-none"
@@ -54,11 +56,11 @@ export function CommentForm({ entityType, entityId }: CommentFormProps) {
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" data-testid="button-mention-user">
           <AtSign className="h-3.5 w-3.5 mr-1.5" />
-          Eslatma
+          {t("eslatma")}
         </Button>
         <Button variant="outline" size="sm" data-testid="button-attach-file">
           <Paperclip className="h-3.5 w-3.5 mr-1.5" />
-          Fayl
+          {t("fayl")}
         </Button>
       </div>
       <Button
@@ -68,7 +70,7 @@ export function CommentForm({ entityType, entityId }: CommentFormProps) {
         data-testid="button-save-comment"
       >
         <Send className="h-4 w-4 mr-2" />
-        Saqlash
+        {t("Saqlash")}
       </Button>
     </div>
   );

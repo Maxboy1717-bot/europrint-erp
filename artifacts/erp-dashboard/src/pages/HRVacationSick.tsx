@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Calendar, Plus, RefreshCw } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeaveRequest {
   id: number | string;
@@ -50,6 +51,7 @@ const LeaveRequestSchema = z.object({
 });
 
 export default function HRVacationSick() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
@@ -83,17 +85,17 @@ export default function HRVacationSick() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Calendar className="h-5 w-5 text-[var(--ep-blue)]" />
-          <h1 className="font-semibold text-base">HR — Ta'til va Kasallik</h1>
+          <h1 className="font-semibold text-base">{t("hrTatilVaKasallik")}</h1>
           {pending.length > 0 && (
             <EPStatusPill tone="neutral">{pending.length} so'rov kutmoqda</EPStatusPill>
           )}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button size="sm" onClick={() => setShowDialog(true)} data-testid="button-add-vacation">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />So'rov Yuborish
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("sorovYuborish1")}
           </Button>
         </div>
       </div>
@@ -120,19 +122,19 @@ export default function HRVacationSick() {
             <div className="ep-table-scroll"><Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead>Turi</TableHead>
-                  <TableHead>Boshlanish</TableHead>
-                  <TableHead>Tugash</TableHead>
-                  <TableHead>Sabab</TableHead>
-                  <TableHead>Holati</TableHead>
+                  <TableHead>{t("xodim1")}</TableHead>
+                  <TableHead>{t("type")}</TableHead>
+                  <TableHead>{t("boshlanish")}</TableHead>
+                  <TableHead>{t("tugash")}</TableHead>
+                  <TableHead>{t("sabab")}</TableHead>
+                  <TableHead>{t("holati")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
                 ) : (leaveRequests as LeaveRequest[]).length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Ta'til so'rovlari yo'q</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("tatilSorovlariYoq")}</TableCell></TableRow>
                 ) : (leaveRequests as LeaveRequest[]).slice(0, 30).map((v) => (
                   <TableRow key={v.id} data-testid={`row-vacation-${v.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{v.userId || v.employeeId || `#${v.id}`}</TableCell>
@@ -160,7 +162,7 @@ export default function HRVacationSick() {
           <DialogHeader><DialogTitle className="text-[18px] font-semibold">Ta'til / Kasallik So'rovi</DialogTitle></DialogHeader>
           <form onSubmit={form.handleSubmit((d) => createLeave.mutate(d))} className="space-y-4 py-2">
             <div className="space-y-1">
-          <Label>Turi</Label>
+          <Label>{t("type")}</Label>
               <Controller control={form.control} name="type" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger data-testid="select-leave-type" className="h-9"><SelectValue /></SelectTrigger>
@@ -174,20 +176,20 @@ export default function HRVacationSick() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-          <Label>Boshlanish</Label>
+          <Label>{t("boshlanish")}</Label>
                 <Input type="date" {...form.register("startDate")} data-testid="input-start-date" />
               </div>
               <div className="space-y-1">
-          <Label>Tugash</Label>
+          <Label>{t("tugash")}</Label>
                 <Input type="date" {...form.register("endDate")} />
               </div>
             </div>
             <div className="space-y-1">
-          <Label>Sabab</Label>
-              <Input {...form.register("reason")} placeholder="Ta'til sababi..." />
+          <Label>{t("sabab")}</Label>
+              <Input {...form.register("reason")} placeholder={t("tatilSababi1")} />
             </div>
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setShowDialog(false)}>Bekor</Button>
+              <Button variant="outline" type="button" onClick={() => setShowDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createLeave.isPending}>
                 {createLeave.isPending ? "Yuborilmoqda..." : "Yuborish"}
               </Button>

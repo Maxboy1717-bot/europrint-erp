@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface AuditorDashboard {
   deletedRecords: number;
   overrides: number;
@@ -60,6 +61,7 @@ interface StatusChangeHistory {
 }
 
 export default function AuditorPanel() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const restoreMutation = useMutation({
@@ -162,19 +164,19 @@ export default function AuditorPanel() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Auditor paneli</b></>}
-        title="Auditor paneli"
-        subtitle="Muvofiqlik tekshiruvi va audit tarixi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("auditorPaneli")}</b></>}
+        title={t("auditorPaneli")}
+        subtitle={t("muvofiqlikTekshiruviVaAuditTarixi")}
       />
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none gap-2" onClick={handleExportReport} data-testid="button-download-report">
             <Download className="h-4 w-4" />
-            Hisobot Yuklab Olish
+            {t("hisobotYuklabOlish")}
           </Button>
           <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" onClick={() => { refetch(); toast({ title: "Tekshirish boshlandi", description: "Barcha qoidalar bo'yicha tekshiruv amalga oshirilmoqda" }); }} data-testid="button-start-audit">
             <FileSearch className="h-4 w-4" />
-            Tekshirish Boshlash
+            {t("tekshirishBoshlash")}
           </Button>
         </div>
       </div>
@@ -203,24 +205,24 @@ export default function AuditorPanel() {
 
       <Tabs defaultValue="deleted" className="mt-10">
         <TabsList className="bg-muted/60 p-1 rounded-xl w-full grid grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="deleted" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-deleted">O'chirilganlar</TabsTrigger>
-          <TabsTrigger value="overrides" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-overrides">Override'lar</TabsTrigger>
-          <TabsTrigger value="status" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-status">Holat tarixi</TabsTrigger>
-          <TabsTrigger value="validations" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-validations">Tekshiruvlar</TabsTrigger>
+          <TabsTrigger value="deleted" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-deleted">{t("ochirilganlar")}</TabsTrigger>
+          <TabsTrigger value="overrides" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-overrides">{t("overridelar")}</TabsTrigger>
+          <TabsTrigger value="status" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-status">{t("holatTarixi")}</TabsTrigger>
+          <TabsTrigger value="validations" className="rounded-lg data-[state=active]:bg-card" data-testid="tab-validations">{t("tekshiruvlar")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="deleted" className="mt-6">
           <div className="bg-card rounded-xl p-6">
             <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
               <Trash2 className="h-4 w-4 text-[var(--ep-red)]" />
-              O'chirilgan Yozuvlar
+              {t("ochirilganYozuvlar")}
             </h3>
             {deletedRecords.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-center">
                 <CheckCircle className="h-16 w-16 text-[var(--ep-green)] mb-4" />
-                <p className="text-lg font-bold text-foreground">O'chirilgan yozuvlar yo'q</p>
+                <p className="text-lg font-bold text-foreground">{t("ochirilganYozuvlarYoq")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Tizimda hech narsa o'chirilmagan
+                  {t("tizimdaHechNarsaOchirilmagan")}
                 </p>
               </div>
             ) : (
@@ -243,7 +245,7 @@ export default function AuditorPanel() {
                       </div>
                       <Button variant="outline" size="sm" className="mt-3 bg-muted/60 text-foreground rounded-lg px-3 py-1 text-xs border-none hover:bg-muted" onClick={() => restoreMutation.mutate(record.id)} disabled={restoreMutation.isPending} data-testid={`button-restore-${record.id}`}>
                         <RotateCcw className="h-3 w-3 mr-1" />
-                        Tiklash
+                        {t("restore")}
                       </Button>
                     </div>
                   </div>
@@ -257,13 +259,13 @@ export default function AuditorPanel() {
           <div className="bg-card rounded-xl p-6">
             <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
               <Key className="h-4 w-4 text-[var(--ep-yellow)]" />
-              Override Tarixi
+              {t("overrideTarixi")}
             </h3>
             <div className="flex flex-col items-center py-16 text-center">
               <CheckCircle className="h-16 w-16 text-[var(--ep-green)] mb-4" />
-              <p className="text-lg font-bold text-foreground">Override yozuvlari yo'q</p>
+              <p className="text-lg font-bold text-foreground">{t("overrideYozuvlariYoq")}</p>
               <p className="text-sm text-muted-foreground">
-                Hech kim qoidalarni chetlab o'tmagan
+                {t("hechKimQoidalarniChetlabOtmagan")}
               </p>
             </div>
           </div>
@@ -273,14 +275,14 @@ export default function AuditorPanel() {
           <div className="bg-card rounded-xl p-6">
             <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
               <RotateCcw className="h-5 w-5 text-[var(--ep-purple)]" />
-              Status O'zgarishlar Tarixi
+              {t("statusOzgarishlarTarixi")}
             </h3>
             {statusHistory.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-center">
                 <CheckCircle className="h-16 w-16 text-[var(--ep-green)] mb-4" />
-                <p className="text-lg font-bold text-foreground">Status o'zgarishlar yo'q</p>
+                <p className="text-lg font-bold text-foreground">{t("statusOzgarishlarYoq")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Hech qanday status o'zgarishi qayd etilmagan
+                  {t("hechQandayStatusOzgarishiQayd")}
                 </p>
               </div>
             ) : (
@@ -315,22 +317,22 @@ export default function AuditorPanel() {
           <div className="bg-card rounded-xl p-6">
             <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
               <FileSearch className="h-5 w-5 text-primary" />
-              Tekshirish Natijalari
+              {t("tekshirishNatijalari")}
             </h3>
             {validationResults.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-center">
                 <CheckCircle className="h-16 w-16 text-[var(--ep-green)] mb-4" />
-                <p className="text-lg font-bold text-foreground">Barcha tekshiruvlar muvaffaqiyatli</p>
+                <p className="text-lg font-bold text-foreground">{t("barchaTekshiruvlarMuvaffaqiyatli")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Hech qanday muammo topilmadi
+                  {t("hechQandayMuammoTopilmadi")}
                 </p>
                 <div className="mt-8 p-6 bg-background rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-8 w-full max-w-sm">
                   <div className="text-center">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami qoidalar</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("jamiQoidalar")}</p>
                     <p className="text-3xl font-bold text-foreground">{validationSummary?.totalRules || 0}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Muammolar</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("muammolar")}</p>
                     <p className="text-3xl font-bold text-[var(--ep-red)]">{validationSummary?.issueCount || 0}</p>
                   </div>
                 </div>

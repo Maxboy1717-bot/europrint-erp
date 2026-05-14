@@ -39,7 +39,7 @@ export function GoalDialog({isOpen,
       <DialogTrigger asChild>
         <Button data-testid="button-create-goal" onClick={onResetForNew}>
           <Plus className="h-4 w-4 mr-2" />
-          Maqsad qo'shish
+          {t("maqsadQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
@@ -54,9 +54,9 @@ export function GoalDialog({isOpen,
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sarlavha</FormLabel>
+                  <FormLabel>{t("progress.title")}</FormLabel>
                   <FormControl>
-                    <Input {...field} data-testid="input-goal-title" placeholder="Maqsad sarlavhasi" />
+                    <Input {...field} data-testid="input-goal-title" placeholder={t("maqsadSarlavhasi")} />
                   </FormControl>
                 </FormItem>
               )}
@@ -67,9 +67,9 @@ export function GoalDialog({isOpen,
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif</FormLabel>
+                  <FormLabel>{t("progress.description")}</FormLabel>
                   <FormControl>
-                    <Textarea {...field} value={field.value || ""} placeholder="Maqsad haqida batafsil" rows={3} />
+                    <Textarea {...field} value={field.value || ""} placeholder={t("maqsadHaqidaBatafsil")} rows={3} />
                   </FormControl>
                 </FormItem>
               )}
@@ -81,7 +81,7 @@ export function GoalDialog({isOpen,
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kategoriya</FormLabel>
+                    <FormLabel>{t("category")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-goal-category" className="h-9">
@@ -103,7 +103,7 @@ export function GoalDialog({isOpen,
                 name="targetType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Qo'llaniladi</FormLabel>
+                    <FormLabel>{t("qollaniladi")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-target-type" className="h-9">
@@ -135,7 +135,7 @@ export function GoalDialog({isOpen,
                     <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger data-testid="select-target-id" className="h-9">
-                          <SelectValue placeholder="Tanlang" />
+                          <SelectValue placeholder={t("tanlang")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -163,7 +163,7 @@ export function GoalDialog({isOpen,
               name="metric"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Metrika</FormLabel>
+                  <FormLabel>{t("metrika")}</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder={t('completionRateAverageScore')} />
                   </FormControl>
@@ -194,7 +194,7 @@ export function GoalDialog({isOpen,
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Boshlanish sanasi</FormLabel>
+                    <FormLabel>{t("startDate")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -212,7 +212,7 @@ export function GoalDialog({isOpen,
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tugash sanasi</FormLabel>
+                    <FormLabel>{t("endDate")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -232,7 +232,7 @@ export function GoalDialog({isOpen,
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Muhimlik</FormLabel>
+                    <FormLabel>{t("priority")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-priority" className="h-9">
@@ -254,7 +254,7 @@ export function GoalDialog({isOpen,
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Holat</FormLabel>
+                    <FormLabel>{t("status28")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-status" className="h-9">
@@ -274,7 +274,7 @@ export function GoalDialog({isOpen,
 
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" data-testid="button-save-goal">
                 {editingGoal ? "Yangilash" : "Saqlash"}

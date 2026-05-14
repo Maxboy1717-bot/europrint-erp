@@ -29,8 +29,10 @@ import {
   type Production360Response,
 } from "./ProductionOrder360Types";
 import { KpiCard, OverviewSection } from "./ProductionOrder360Sections";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ProductionOrder360() {
+  const { t } = useTranslation("common");
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
 
@@ -57,7 +59,7 @@ export default function ProductionOrder360() {
   }
 
   if (!data) return (
-    <div className="p-8 text-center text-muted-foreground">Ma'lumot topilmadi</div>
+    <div className="p-8 text-center text-muted-foreground">{t("noData")}</div>
   );
 
   const { overview, kpi, shifts, materials, quality, equipment, timeAnalysis, costAnalysis } = data;
@@ -89,22 +91,22 @@ export default function ProductionOrder360() {
           {/* ── KPI row ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <KpiCard
-              icon={CheckCircle2} label="Bajarish foizi" value={`${kpi.completionRate}%`}
+              icon={CheckCircle2} label={t("bajarishFoizi")} value={`${kpi.completionRate}%`}
               sub={`${fmt(kpi.produced)} / ${fmt(kpi.planned)} dona`}
               color={kpi.completionRate >= 100 ? "text-[var(--ep-green)]" : kpi.completionRate >= 50 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}
             />
             <KpiCard
-              icon={Gauge} label="O'rtacha OEE" value={kpi.avgOee != null ? `${fmt(kpi.avgOee * 100, 1)}%` : "—"}
+              icon={Gauge} label={t("ortachaOee")} value={kpi.avgOee != null ? `${fmt(kpi.avgOee * 100, 1)}%` : "—"}
               sub="Umumiy samaradorlik"
               color={kpi.avgOee != null && kpi.avgOee >= 0.85 ? "text-[var(--ep-green)]" : kpi.avgOee != null && kpi.avgOee >= 0.65 ? "text-[var(--ep-yellow)]" : "text-muted-foreground"}
             />
             <KpiCard
-              icon={ShieldCheck} label="QC o'tish darajasi" value={`${kpi.qcPassRate}%`}
+              icon={ShieldCheck} label={t("qcOtishDarajasi")} value={`${kpi.qcPassRate}%`}
               sub={`${fmt(quality?.totalFailed)} rad etildi`}
               color={kpi.qcPassRate >= 95 ? "text-[var(--ep-green)]" : kpi.qcPassRate >= 85 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}
             />
             <KpiCard
-              icon={kpi.costVariance > 0 ? TrendingUp : TrendingDown} label="Tannarx og'ishi"
+              icon={kpi.costVariance > 0 ? TrendingUp : TrendingDown} label={t("tannarxOgishi")}
               value={kpi.costVariance !== 0 ? fmtMoney(Math.abs(kpi.costVariance)) : "0"}
               sub={kpi.costVariancePct !== 0 ? `${kpi.costVariance > 0 ? "+" : ""}${kpi.costVariancePct}% (${kpi.costVariance > 0 ? "ortiq" : "tejaldi"})` : "Reja bajarildi"}
               color={kpi.costVariance > 0 ? "text-[var(--ep-red)]" : kpi.costVariance < 0 ? "text-[var(--ep-green)]" : "text-muted-foreground"}
@@ -113,13 +115,13 @@ export default function ProductionOrder360() {
 
           <Tabs defaultValue="overview">
             <TabsList className="flex flex-wrap h-auto gap-1" data-testid="tabs-360">
-              <TabsTrigger value="overview" data-testid="tab-overview"><Factory className="w-3.5 h-3.5 mr-1.5" />Umumiy</TabsTrigger>
-              <TabsTrigger value="shifts" data-testid="tab-shifts"><Clock className="w-3.5 h-3.5 mr-1.5" />Smenalar</TabsTrigger>
-              <TabsTrigger value="materials" data-testid="tab-materials"><Package className="w-3.5 h-3.5 mr-1.5" />Materiallar</TabsTrigger>
-              <TabsTrigger value="quality" data-testid="tab-quality"><ShieldCheck className="w-3.5 h-3.5 mr-1.5" />Sifat</TabsTrigger>
-              <TabsTrigger value="equipment" data-testid="tab-equipment"><Wrench className="w-3.5 h-3.5 mr-1.5" />Uskuna</TabsTrigger>
-              <TabsTrigger value="time" data-testid="tab-time"><Activity className="w-3.5 h-3.5 mr-1.5" />Vaqt tahlili</TabsTrigger>
-              <TabsTrigger value="cost" data-testid="tab-cost"><Coins className="w-3.5 h-3.5 mr-1.5" />Tannarx</TabsTrigger>
+              <TabsTrigger value="overview" data-testid="tab-overview"><Factory className="w-3.5 h-3.5 mr-1.5" />{t("umumiy")}</TabsTrigger>
+              <TabsTrigger value="shifts" data-testid="tab-shifts"><Clock className="w-3.5 h-3.5 mr-1.5" />{t("smenalar")}</TabsTrigger>
+              <TabsTrigger value="materials" data-testid="tab-materials"><Package className="w-3.5 h-3.5 mr-1.5" />{t("Materiallar")}</TabsTrigger>
+              <TabsTrigger value="quality" data-testid="tab-quality"><ShieldCheck className="w-3.5 h-3.5 mr-1.5" />{t("Sifat")}</TabsTrigger>
+              <TabsTrigger value="equipment" data-testid="tab-equipment"><Wrench className="w-3.5 h-3.5 mr-1.5" />{t("Uskuna")}</TabsTrigger>
+              <TabsTrigger value="time" data-testid="tab-time"><Activity className="w-3.5 h-3.5 mr-1.5" />{t("vaqtTahlili")}</TabsTrigger>
+              <TabsTrigger value="cost" data-testid="tab-cost"><Coins className="w-3.5 h-3.5 mr-1.5" />{t("tannarx1")}</TabsTrigger>
             </TabsList>
 
             {/* ── TAB 1: OVERVIEW ── */}

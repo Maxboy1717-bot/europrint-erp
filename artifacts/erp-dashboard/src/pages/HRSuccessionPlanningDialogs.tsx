@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import type { NewPlanForm } from "./HRSuccessionPlanningTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface NewPlanDialogProps {
   open: boolean;
@@ -23,29 +24,30 @@ interface NewPlanDialogProps {
 export function NewPlanDialog({
   open, onOpenChange, form, onFormChange, isPending, onSubmit,
 }: NewPlanDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" data-testid="button-add-plan">
-          <Plus className="h-4 w-4 mr-1" /> Yangi Reja
+          <Plus className="h-4 w-4 mr-1" /> {t("yangiReja1")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi Vorislik Rejasi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiVorislikRejasi")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div>
-            <Label>Xodim ID</Label>
+            <Label>{t("xodimId")}</Label>
             <Input
               data-testid="input-plan-user-id"
               value={form.userId}
               onChange={e => onFormChange(f => ({ ...f, userId: e.target.value }))}
-              placeholder="Xodim ID si"
+              placeholder={t("xodimIdSi")}
             />
           </div>
           <div>
-            <Label>Maqsad Sana</Label>
+            <Label>{t("maqsadSana1")}</Label>
             <Input
               data-testid="input-plan-target-date"
               type="date"
@@ -54,12 +56,12 @@ export function NewPlanDialog({
             />
           </div>
           <div>
-            <Label>Izoh</Label>
+            <Label>{t("Izoh")}</Label>
             <Textarea
               data-testid="input-plan-notes"
               value={form.notes}
               onChange={e => onFormChange(f => ({ ...f, notes: e.target.value }))}
-              placeholder="Reja haqida izoh..."
+              placeholder={t("rejaHaqidaIzoh")}
             />
           </div>
           <Button
@@ -68,7 +70,7 @@ export function NewPlanDialog({
             disabled={!form.userId || isPending}
             onClick={onSubmit}
           >
-            Saqlash
+            {t("Saqlash")}
           </Button>
         </div>
       </DialogContent>

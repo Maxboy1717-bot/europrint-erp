@@ -14,10 +14,12 @@ import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import type { DashStats, Session, Downtime } from "./MESHomeDashboardTypes";
 import { oeeColor, statusInfo } from "./MESHomeDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Section Title ─────────────────────────────────────────────────────────────
 
 export function SectionTitle({ icon: Icon, title, sub }: { icon: React.ElementType; title: string; sub?: string }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-3 mb-4">
       <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -83,7 +85,7 @@ export function MesKpiRow({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <KpiCard
-        title="Faol sessiyalar"
+        title={t("faolSessiyalar")}
         value={sLoad ? "..." : (stats?.activeSessions ?? activeSessions.length)}
         sub={`Bugun bajarildi: ${stats?.completedToday ?? 0}`}
         icon={Play}
@@ -92,7 +94,7 @@ export function MesKpiRow({
         loading={sLoad}
       />
       <KpiCard
-        title="O'rtacha OEE"
+        title={t("ortachaOee")}
         value={sLoad ? "..." : `${oeePercent}%`}
         sub={oeePercent >= 85 ? "Yaxshi" : oeePercent >= 70 ? "Qabul qilinadi" : "Yaxshilash kerak"}
         icon={Gauge}
@@ -101,7 +103,7 @@ export function MesKpiRow({
         loading={sLoad}
       />
       <KpiCard
-        title="Ishlab chiqarildi"
+        title={t("ishlabChiqarildi")}
         value={sessLoad ? "..." : totalProduced.toLocaleString()}
         sub={`Brak: ${defectRate}%`}
         icon={Factory}
@@ -110,7 +112,7 @@ export function MesKpiRow({
         loading={sessLoad}
       />
       <KpiCard
-        title="To'xtashlar"
+        title={t("toxtashlar")}
         value={dtLoad ? "..." : downtimes.length}
         sub={`Rejalashmagan: ${(Array.isArray(downtimes) ? downtimes : []).filter(d => !d.isPlanned).length}`}
         icon={AlertTriangle}
@@ -128,9 +130,9 @@ export function MesMachineGrid({ sessions, sessLoad }: { sessions: Session[]; se
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <SectionTitle icon={Cpu} title="Mashina holati" sub="Hozirgi sessiyalar" />
+        <SectionTitle icon={Cpu} title={t("mashinaHolati1")} sub="Hozirgi sessiyalar" />
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/mes/work-centers">Barchasi <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+          <Link href="/mes/work-centers">{t("Barchasi")}<ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
         </Button>
       </div>
       {sessLoad ? (
@@ -138,7 +140,7 @@ export function MesMachineGrid({ sessions, sessLoad }: { sessions: Session[]; se
           {([1,2,3,4]).map(i => <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />)}
         </div>
       ) : sessions.length === 0 ? (
-        <div className="text-center py-10 text-[13px] text-muted-foreground">Sessiya topilmadi</div>
+        <div className="text-center py-10 text-[13px] text-muted-foreground">{t("sessiyaTopilmadi")}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {sessions?.slice(0, 8).map(s => {

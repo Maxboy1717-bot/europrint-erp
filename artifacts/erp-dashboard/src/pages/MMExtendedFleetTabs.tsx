@@ -14,6 +14,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Navigation, MapPin, Map, Plus } from "lucide-react";
 import type { MMVehicle, MMDelivery, MMFuelLog } from "./MMExtendedTypes";
 import { fmtMoney } from "./MMExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── GPSTab ───────────────────────────────────────────────────────────────────
 
@@ -23,18 +24,19 @@ interface GPSTabProps {
 }
 
 export function GPSTab({ vehicles, vehiclesLoading }: GPSTabProps) {
+  const { t } = useTranslation("common");
   const activeVehicles = (Array.isArray(vehicles) ? vehicles : []).filter(v => v.status === "on_route");
   return (
     <TabsContent value="gps" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">GPS Real-time Monitoring</h2>
+      <h2 className="text-lg font-semibold">{t("gpsRealTimeMonitoring")}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
-          <CardHeader><CardTitle className="text-base">Harakatdagi transportlar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("harakatdagiTransportlar")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {vehiclesLoading ? (
-              <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>
+              <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>
             ) : activeVehicles.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-4 text-center">Hozirda harakatdagi transport yo'q</div>
+              <div className="text-sm text-muted-foreground py-4 text-center">{t("hozirdaHarakatdagiTransportYoq")}</div>
             ) : activeVehicles.map((v: MMVehicle) => (
               <div key={v.id} className="flex items-center gap-3 p-3 rounded-md bg-muted/50">
                 <Navigation className="h-5 w-5 text-[var(--ep-blue)]" />
@@ -55,7 +57,7 @@ export function GPSTab({ vehicles, vehiclesLoading }: GPSTabProps) {
             <div className="h-48 bg-muted/30 rounded-md flex items-center justify-center border border-dashed">
               <div className="text-center text-muted-foreground">
                 <MapPin className="h-8 w-8 mx-auto mb-2" />
-                <div className="text-sm">GPS xarita ko'rinishi</div>
+                <div className="text-sm">{t("gpsXaritaKorinishi")}</div>
                 <div className="text-xs mt-1">{activeVehicles.length} transport harakatda</div>
               </div>
             </div>
@@ -78,7 +80,7 @@ export function FuelTab({ fuelLogs, vehicles, fuelLoading }: FuelTabProps) {
   const safeFuelLogs = Array.isArray(fuelLogs) ? fuelLogs : [];
   return (
     <TabsContent value="fuel" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Yoqilg'i Nazorati</h2>
+      <h2 className="text-lg font-semibold">{t("yoqilgiNazorati")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "Jami sarfi (L)",      v: safeFuelLogs.reduce((s, f) => s + Number(f.liters || 0), 0).toFixed(0) + " L", c: "text-[var(--ep-primary)]" },
@@ -95,14 +97,14 @@ export function FuelTab({ fuelLogs, vehicles, fuelLoading }: FuelTabProps) {
       <Card><CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
-            <TableHead>Mashina</TableHead><TableHead>Sana</TableHead>
-            <TableHead>Miqdor (L)</TableHead><TableHead>Narx/L</TableHead><TableHead>Jami xarajat</TableHead>
+            <TableHead>{t("mashina")}</TableHead><TableHead>{t("date")}</TableHead>
+            <TableHead>Miqdor (L)</TableHead><TableHead>Narx/L</TableHead><TableHead>{t("jamiXarajat")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {fuelLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : safeFuelLogs.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Yonilg'i ma'lumotlari yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("yonilgiMalumotlariYoq")}</TableCell></TableRow>
             ) : safeFuelLogs.map((f: MMFuelLog) => (
               <TableRow key={f.id} data-testid={`row-fuel-${f.id}`} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium">{f.plateNumber || `Mashina #${f.vehicleId}`}</TableCell>
@@ -131,25 +133,25 @@ export function DriversTab({ vehicles, vehiclesLoading, onAddDriver }: DriversTa
   return (
     <TabsContent value="drivers" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Haydovchilar</h2>
+        <h2 className="text-lg font-semibold">{t("haydovchilar")}</h2>
         <Button data-testid="button-add-driver" onClick={onAddDriver}>
-          <Plus className="h-4 w-4 mr-2" />Haydovchi Qo'shish
+          <Plus className="h-4 w-4 mr-2" />{t("haydovchiQoshish")}
         </Button>
       </div>
       <Card><CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
-            <TableHead>Haydovchi</TableHead><TableHead>Transport</TableHead>
-            <TableHead>Davlat raqami</TableHead><TableHead>Holati</TableHead><TableHead>Sug'urta muddati</TableHead>
+            <TableHead>{t("haydovchi")}</TableHead><TableHead>{t("transport")}</TableHead>
+            <TableHead>{t("davlatRaqami1")}</TableHead><TableHead>{t("holati")}</TableHead><TableHead>{t("sugurtaMuddati")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {vehiclesLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : vehicles.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Transport ma'lumotlari yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("transportMalumotlariYoq")}</TableCell></TableRow>
             ) : (Array.isArray(vehicles) ? vehicles : []).map((v: MMVehicle, i: number) => (
               <TableRow key={v.id} data-testid={`row-driver-${i}`} className="hover:bg-muted/40 transition-colors">
-                <TableCell className="font-medium">{v.driverName || <span className="text-muted-foreground text-xs">Tayinlanmagan</span>}</TableCell>
+                <TableCell className="font-medium">{v.driverName || <span className="text-muted-foreground text-xs">{t("tayinlanmagan")}</span>}</TableCell>
                 <TableCell>{v.model || "-"}</TableCell>
                 <TableCell className="font-mono text-sm">{v.plateNumber || "-"}</TableCell>
                 <TableCell>
@@ -179,14 +181,14 @@ interface ScheduleTabProps {
 export function ScheduleTab({ deliveries, deliveriesLoading }: ScheduleTabProps) {
   return (
     <TabsContent value="schedule" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Transport Jadvali</h2>
+      <h2 className="text-lg font-semibold">{t("transportJadvali")}</h2>
       <Card>
-        <CardHeader><CardTitle className="text-base">Yetkazish jadvali</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("yetkazishJadvali1")}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {deliveriesLoading ? (
-            <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>
+            <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : deliveries.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-4 text-center">Rejalashtirilgan yetkazish yo'q</div>
+            <div className="text-sm text-muted-foreground py-4 text-center">{t("rejalashtirilganYetkazishYoq")}</div>
           ) : (Array.isArray(deliveries) ? deliveries : []).slice(0, 10).map((d: MMDelivery, i: number) => {
             const statusMap: Record<string, string> = { delivered: "Bajarildi", in_transit: "Bajarilmoqda", planned: "Rejalashtirilgan", cancelled: "Bekor" };
             const statusLabel = statusMap[d.status || ""] || d.status || "-";
@@ -213,12 +215,13 @@ export function ScheduleTab({ deliveries, deliveriesLoading }: ScheduleTabProps)
 // ─── RoutesTab ────────────────────────────────────────────────────────────────
 
 export function RoutesTab() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="routes" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">AI Marshrut Rejalashtirish</h2>
+      <h2 className="text-lg font-semibold">{t("aiMarshrutRejalashtirish")}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
-          <CardHeader><CardTitle className="text-base">Yangi marshrut hisoblash</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("yangiMarshrutHisoblash")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([
               { l: "Qayerdan",          p: "Toshkent, Sergeli" },
@@ -232,7 +235,7 @@ export function RoutesTab() {
               </div>
             ))}
             <Button className="w-full gap-2" data-testid="button-calc-route">
-              <Map className="h-4 w-4" />Optimal Marshrut
+              <Map className="h-4 w-4" />{t("optimalMarshrut")}
             </Button>
           </CardContent>
         </Card>
@@ -270,9 +273,9 @@ export function TransportTab({ vehicles, vehiclesLoading, onAddVehicle }: Transp
   return (
     <TabsContent value="transport" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Transport Parki</h2>
+        <h2 className="text-lg font-semibold">{t("transportParki")}</h2>
         <Button data-testid="button-add-vehicle" onClick={onAddVehicle}>
-          <Plus className="h-4 w-4 mr-2" />Mashina Qo'shish
+          <Plus className="h-4 w-4 mr-2" />{t("mashinaQoshish")}
         </Button>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -291,21 +294,21 @@ export function TransportTab({ vehicles, vehiclesLoading, onAddVehicle }: Transp
       <Card><CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
-            <TableHead>Davlat raqami</TableHead><TableHead>Model</TableHead>
-            <TableHead>Haydovchi</TableHead><TableHead>Holati</TableHead><TableHead>Yoqilg'i</TableHead><TableHead>Probeg</TableHead>
+            <TableHead>{t("davlatRaqami1")}</TableHead><TableHead>{t("model1")}</TableHead>
+            <TableHead>{t("haydovchi")}</TableHead><TableHead>{t("holati")}</TableHead><TableHead>{t("yoqilgi")}</TableHead><TableHead>{t("probeg")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {vehiclesLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : vehicles.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Transport ma'lumotlari yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t("transportMalumotlariYoq")}</TableCell></TableRow>
             ) : (Array.isArray(vehicles) ? vehicles : []).map((v: MMVehicle) => {
               const fuelLevel = Number(v.fuelLevel || 0);
               return (
                 <TableRow key={v.id} data-testid={`row-vehicle-${v.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium font-mono">{v.plateNumber || "-"}</TableCell>
                   <TableCell>{v.model || "-"}</TableCell>
-                  <TableCell>{v.driverName || <span className="text-muted-foreground text-xs">Tayinlanmagan</span>}</TableCell>
+                  <TableCell>{v.driverName || <span className="text-muted-foreground text-xs">{t("tayinlanmagan")}</span>}</TableCell>
                   <TableCell>
                     <Badge variant={v.status === "on_route" ? "default" : v.status === "idle" ? "outline" : "secondary"}>
                       {v.status === "on_route" ? "Yo'lda" : v.status === "idle" ? "Bo'sh" : v.status === "maintenance" ? "Ta'mirda" : v.status || "-"}

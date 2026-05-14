@@ -49,7 +49,7 @@ function CohortHeatmap({ data, t }: { data: CohortMatrix; t: (k: string) => stri
       <table className="text-xs border-separate border-spacing-0.5 min-w-max">
         <thead>
           <tr>
-            <th className="text-left px-2 py-1 text-muted-foreground font-medium">Cohort</th>
+            <th className="text-left px-2 py-1 text-muted-foreground font-medium">{t("cohort")}</th>
             <th className="px-2 py-1 text-muted-foreground font-medium">
               {data.mode === "revenue" ? t('baseRevenue') : t('cohortSize')}
             </th>

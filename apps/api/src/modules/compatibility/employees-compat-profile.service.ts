@@ -287,8 +287,8 @@ export class EmployeesCompatProfileService {
       const [item] = await db.insert(employee_inventory_ledger)
         .values({
           employee_id: si(employeeId),
-          item_id:     (body['item_id'] ?? body['itemId'] ?? null) as number | null,
-          quantity:    Number(body['quantity'] ?? 1),
+          item_id:     body['item_id'] != null ? Number(body['item_id']) : (body['itemId'] != null ? Number(body['itemId']) : undefined),
+          quantity:    String(body['quantity'] ?? 1),
           type:        String(body['type'] ?? 'issue'),
         })
         .returning();

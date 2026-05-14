@@ -56,12 +56,12 @@ export function WarehouseHub12MiddleTabs({activeWarehouse,
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tur</TableHead>
+                    <TableHead>{t("tur")}</TableHead>
                     <TableHead>{t('Material')}</TableHead>
-                    <TableHead className="text-right">Miqdor</TableHead>
-                    <TableHead>Foydalanuvchi</TableHead>
-                    <TableHead>Sabab</TableHead>
-                    <TableHead className="text-right">Sana</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
+                    <TableHead>{t("foydalanuvchi")}</TableHead>
+                    <TableHead>{t("sabab")}</TableHead>
+                    <TableHead className="text-right">{t("date")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -107,7 +107,7 @@ export function WarehouseHub12MiddleTabs({activeWarehouse,
           </CardHeader>
           <CardContent className="py-6 text-center text-muted-foreground">
             <Lock className="h-10 w-10 mx-auto mb-2" />
-            <p className="text-xs mt-2">Bron qilingan zaxiralar uchun API integratsiyasi tayyor.</p>
+            <p className="text-xs mt-2">{t("bronQilinganZaxiralarUchunApi")}</p>
           </CardContent>
         </Card>
       </TabsContent>
@@ -130,7 +130,7 @@ export function WarehouseHub12MiddleTabs({activeWarehouse,
           </CardHeader>
           <CardContent className="py-6 text-center text-muted-foreground">
             <ClipboardList className="h-10 w-10 mx-auto mb-2" />
-            <p className="font-medium">Inventarizatsiya hisobi</p>
+            <p className="font-medium">{t("inventarizatsiyaHisobi")}</p>
             <p className="text-xs mt-2">
               {activeWarehouse.code === "SCRAP-MAIN"
                 ? "Brak materiallar inventarizatsiyasi — utilizatsiya uchun tayyor miqdorni aniqlash."
@@ -167,11 +167,11 @@ export function WarehouseHub12MiddleTabs({activeWarehouse,
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Barcode</TableHead>
+                    <TableHead>{t("barcode2")}</TableHead>
                     <TableHead>{t('Material')}</TableHead>
-                    <TableHead>Holat</TableHead>
-                    <TableHead>Joylashuv</TableHead>
-                    <TableHead className="text-right">Miqdor</TableHead>
+                    <TableHead>{t("status28")}</TableHead>
+                    <TableHead>{t("location")}</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

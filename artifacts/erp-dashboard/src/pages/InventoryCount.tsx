@@ -37,8 +37,10 @@ import { CreateUpdateCountDialog } from "@/components/wms/inventory/CreateUpdate
 import { InventoryStats } from "@/components/wms/inventory/InventoryStats";
 import { CountDetailHeader } from "@/components/wms/inventory/CountDetailHeader";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function InventoryCount() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { language, setLanguage } = useLanguage();
   const t = useInventoryCountTranslations();
@@ -220,7 +222,7 @@ export default function InventoryCount() {
           </div>
         </CardHeader>
         <CardContent>
-          {countsLoading ? <div className="space-y-4">{([...Array(5)]).map((_, i) => (<Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />))}</div> : isError ? <EPErrorState message={(countsError as Error)?.message} onRetry={() => refetch()} /> : <CountSessionTable counts={filteredCounts} onEdit={(c) => { setEditingCount(c); setFormData({ countDate: c.countDate, warehouseId: c.warehouseId || "", countType: c.countType, assignedTo: c.assignedTo ? String(c.assignedTo) : "", notes: c.notes || "" }); }} onView={handleViewDetail} />}
+          {countsLoading ? <div className="space-y-4">{([...Array(5)]).map((_, i) => (<Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />))}</div> {t("iserror")}<EPErrorState message={(countsError as Error)?.message} onRetry={() => refetch()} /> : <CountSessionTable counts={filteredCounts} onEdit={(c) => { setEditingCount(c); setFormData({ countDate: c.countDate, warehouseId: c.warehouseId || "", countType: c.countType, assignedTo: c.assignedTo ? String(c.assignedTo) : "", notes: c.notes || "" }); }} onView={handleViewDetail} />}
         </CardContent>
       </Card>
       <CreateUpdateCountDialog isOpen={isCreateDialogOpen || !!editingCount} onOpenChange={(open) => { if (!open) { setIsCreateDialogOpen(false); setEditingCount(null); resetForm(); } else setIsCreateDialogOpen(true); }} isEditing={!!editingCount} formData={formData} onFormChange={(data) => setFormData((prev) => ({ ...prev, ...data }))} onSubmit={handleFormSubmit} isPending={createMutation.isPending || updateMutation.isPending} warehouses={warehouses} users={users} />

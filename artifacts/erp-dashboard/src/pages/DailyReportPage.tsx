@@ -22,8 +22,10 @@ import type {
 import { INITIAL_FORM } from "./DailyReportPageTypes";
 import { StatsBar, SubmitForm, HistoryList } from "./DailyReportPageSections";
 import { DeptFilterBar, DeptReportColumns, AllReportsList } from "./DailyReportPageDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function DailyReportPage() {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -130,7 +132,7 @@ export default function DailyReportPage() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <FileText className="w-6 h-6 text-primary" /> Kunlik Hisobot
+          <FileText className="w-6 h-6 text-primary" /> {t("kunlikHisobot")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
           {new Date().toLocaleDateString("uz-UZ", {
@@ -152,13 +154,13 @@ export default function DailyReportPage() {
       <Tabs defaultValue="submit">
         <TabsList className="bg-muted border-border">
           <TabsTrigger value="submit" className="data-[state=active]:bg-card data-[state=active]:text-foreground">
-            Hisobot yozish
+            {t("hisobotYozish")}
           </TabsTrigger>
           <TabsTrigger value="history" className="data-[state=active]:bg-card data-[state=active]:text-foreground">
-            Tarixim
+            {t("tarixim")}
           </TabsTrigger>
           <TabsTrigger value="admin" className="data-[state=active]:bg-card data-[state=active]:text-foreground">
-            HR Ko'rinish
+            {t("hrKorinish")}
           </TabsTrigger>
         </TabsList>
 

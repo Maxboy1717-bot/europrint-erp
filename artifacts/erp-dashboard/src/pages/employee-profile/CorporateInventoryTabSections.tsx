@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { CorporateInventoryItem } from "./CorporateInventoryTabTypes";
 import { DEVICE_TYPES, CONDITION_COLORS } from "./CorporateInventoryTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 function DeviceIcon({ type }: { type: string }) {
   const found = DEVICE_TYPES.find(d => d.value === type);
@@ -28,21 +29,22 @@ interface KpiRowProps {
 }
 
 export function InventoryKpiRow({ activeItems, returnedItems }: KpiRowProps) {
+  const { t } = useTranslation("common");
   const unsignedCount = (Array.isArray(activeItems) ? activeItems : []).filter(i => !i.employeeSignedAt).length;
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-card rounded-lg p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Faol inventar</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("faolInventar")}</p>
         <p className="text-3xl font-bold text-foreground mt-1">{activeItems.length}</p>
         <ClipboardList className="h-4 w-4 text-primary mt-1" />
       </div>
       <div className="bg-card rounded-lg p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Imzosiz</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("imzosiz")}</p>
         <p className="text-3xl font-bold text-[var(--ep-yellow)] mt-1">{unsignedCount}</p>
         <FileSignature className="h-4 w-4 text-[var(--ep-yellow)] mt-1" />
       </div>
       <div className="bg-card rounded-lg p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qaytarilgan</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("qaytarilgan")}</p>
         <p className="text-3xl font-bold text-[var(--ep-green)] mt-1">{returnedItems.length}</p>
         <RotateCcw className="h-4 w-4 text-[var(--ep-green)] mt-1" />
       </div>
@@ -72,14 +74,14 @@ export function ActiveInventoryTable({
         <div>
           <CardTitle className="flex items-center gap-2">
             <Laptop className="h-5 w-5" />
-            Korporativ inventar
+            {t("korporativInventar")}
           </CardTitle>
-          <CardDescription>Xodimga berilgan qurilmalar va jihozlar</CardDescription>
+          <CardDescription>{t("xodimgaBerilganQurilmalarVaJihozlar")}</CardDescription>
         </div>
         {isHr && (
           <Button size="sm" onClick={onAdd} data-testid="button-add-inventory">
             <Plus className="h-4 w-4 mr-2" />
-            Qo'shish
+            {t("add")}
           </Button>
         )}
       </CardHeader>
@@ -89,18 +91,18 @@ export function ActiveInventoryTable({
             {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-16 w-full rounded-lg" />)}
           </div>
         ) : activeItems.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">Inventar yo'q</p>
+          <p className="text-center text-muted-foreground py-8">{t("inventarYoq")}</p>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Qurilma</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>Serial</TableHead>
-                <TableHead>Holati</TableHead>
-                <TableHead>Berilgan sana</TableHead>
-                <TableHead>Imzo</TableHead>
-                {isHr && <TableHead>Amallar</TableHead>}
+                <TableHead>{t("qurilma")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("serial")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
+                <TableHead>{t("berilganSana")}</TableHead>
+                <TableHead>{t("imzo")}</TableHead>
+                {isHr && <TableHead>{t("Amallar")}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -131,13 +133,13 @@ export function ActiveInventoryTable({
                     {item.employeeSignedAt ? (
                       <Badge className="bg-green-100 text-green-800 border-none text-xs gap-1">
                         <CheckCircle className="h-3 w-3" />
-                        Imzolangan
+                        {t("imzolangan")}
                       </Badge>
                     ) : (
                       <div className="flex items-center gap-2">
                         <Badge className="bg-amber-100 text-amber-800 border-none text-xs gap-1">
                           <Clock className="h-3 w-3" />
-                          Kutilmoqda
+                          {t("Kutilmoqda")}
                         </Badge>
                         <Button
                           size="sm" variant="outline" className="h-6 text-xs px-2"
@@ -145,7 +147,7 @@ export function ActiveInventoryTable({
                           disabled={signPending}
                           data-testid={`button-sign-${item.id}`}
                         >
-                          Imzolash
+                          {t("imzolash")}
                         </Button>
                       </div>
                     )}
@@ -160,7 +162,7 @@ export function ActiveInventoryTable({
                         data-testid={`button-return-${item.id}`}
                       >
                         <RotateCcw className="h-3 w-3 mr-1" />
-                        Qaytarildi
+                        {t("qaytarildi")}
                       </Button>
                     </TableCell>
                   )}
@@ -185,17 +187,17 @@ export function ReturnedInventoryTable({ returnedItems }: ReturnedTableProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
           <RotateCcw className="h-4 w-4" />
-          Qaytarilgan inventar
+          {t("qaytarilganInventar")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Qurilma</TableHead>
-              <TableHead>Turi</TableHead>
-              <TableHead>Berilgan</TableHead>
-              <TableHead>Qaytarilgan</TableHead>
+              <TableHead>{t("qurilma")}</TableHead>
+              <TableHead>{t("type")}</TableHead>
+              <TableHead>{t("Berilgan")}</TableHead>
+              <TableHead>{t("qaytarilgan")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

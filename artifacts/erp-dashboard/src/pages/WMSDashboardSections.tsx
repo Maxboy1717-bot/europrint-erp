@@ -39,14 +39,14 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
   const { t } = useTranslation('common');
   return (
     <div>
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Joriy holat</h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("joriyHolat1")}</h2>
       {isLoading ? <KPISkeleton /> : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Jami materiallar</p>
+                  <p className="text-sm text-muted-foreground">{t("jamiMateriallar")}</p>
                   <p className="text-3xl font-bold mt-1">{kpis?.totalMaterials || 0}</p>
                   <p className="text-xs text-muted-foreground mt-1">nomenklatura pozitsiya</p>
                 </div>
@@ -58,13 +58,13 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Ombor qiymati</p>
+                  <p className="text-sm text-muted-foreground">{t("omborQiymati")}</p>
                   <p className="text-2xl font-bold mt-1">
                     {(kpis?.totalValue || 0) >= 1_000_000
                       ? `${((kpis?.totalValue || 0) / 1_000_000).toFixed(1)}M`
                       : (kpis?.totalValue || 0).toLocaleString()}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">so'm</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("som")}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-[var(--ep-green)] opacity-70" />
               </div>
@@ -74,7 +74,7 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Kam qoldiq</p>
+                  <p className="text-sm text-muted-foreground">{t("kamQoldiq")}</p>
                   <p className="text-3xl font-bold mt-1 text-[var(--ep-red)]">{kpis?.lowStockCount || 0}</p>
                   <p className="text-xs text-muted-foreground mt-1">minimal ostida</p>
                 </div>
@@ -86,7 +86,7 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Kutilayotgan qabul</p>
+                  <p className="text-sm text-muted-foreground">{t("kutilayotganQabul")}</p>
                   <p className="text-3xl font-bold mt-1">{kpis?.pendingReceipts || 0}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('goodsReceipt')}</p>
                 </div>
@@ -98,7 +98,7 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Aktiv transferlar</p>
+                  <p className="text-sm text-muted-foreground">{t("aktivTransferlar")}</p>
                   <p className="text-3xl font-bold mt-1">{kpis?.pendingTransfers || 0}</p>
                   <p className="text-xs text-muted-foreground mt-1">harakatda</p>
                 </div>
@@ -110,7 +110,7 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Muddati o'tgan</p>
+                  <p className="text-sm text-muted-foreground">{t("muddatiOtgan")}</p>
                   <p className="text-3xl font-bold mt-1 text-[var(--ep-primary)]">{kpis?.overdueReservations || 0}</p>
                   <p className="text-xs text-muted-foreground mt-1">rezervatsiya</p>
                 </div>
@@ -138,7 +138,7 @@ export function MovementCard({ todayMovement, weekMovement, isLoading, onReserve
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-[var(--ep-blue)]" />
-          Bugungi harakat
+          {t("bugungiHarakat")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -149,21 +149,21 @@ export function MovementCard({ todayMovement, weekMovement, isLoading, onReserve
             <div className="flex items-center justify-between p-3 rounded-md bg-green-50">
               <div className="flex items-center gap-2">
                 <ArrowDownCircle className="h-5 w-5 text-[var(--ep-green)]" />
-                <span className="text-sm font-medium">Kirim</span>
+                <span className="text-sm font-medium">{t("kirim")}</span>
               </div>
               <span className="text-lg font-bold text-[var(--ep-green)]">{(todayMovement?.totalIn || 0).toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-md bg-red-50">
               <div className="flex items-center gap-2">
                 <ArrowUpCircle className="h-5 w-5 text-[var(--ep-red)]" />
-                <span className="text-sm font-medium">Chiqim</span>
+                <span className="text-sm font-medium">{t("chiqim")}</span>
               </div>
               <span className="text-lg font-bold text-[var(--ep-red)]">{(todayMovement?.totalOut || 0).toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-md bg-muted/50">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm font-medium">Sof o'zgarish</span>
+                <span className="text-sm font-medium">{t("sofOzgarish")}</span>
               </div>
               <span className={`text-lg font-bold ${(todayMovement?.netChange || 0) >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
                 {(todayMovement?.netChange || 0) >= 0 ? "+" : ""}{(todayMovement?.netChange || 0).toLocaleString()}
@@ -180,7 +180,7 @@ export function MovementCard({ todayMovement, weekMovement, isLoading, onReserve
               disabled={isReserving}
             >
               <Package className="h-4 w-4 mr-2" />
-              Avtomatik zaxira tekshirish
+              {t("avtomatikZaxiraTekshirish")}
             </Button>
           </div>
         )}
@@ -205,7 +205,7 @@ export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isCh
         <CardTitle className="text-base flex items-center justify-between">
           <span className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />
-            Diqqat talab qiluvchi
+            {t("diqqatTalabQiluvchi")}
           </span>
           <div className="flex items-center gap-2">
             {totalAlerts > 0 && <EPStatusPill tone="danger">{totalAlerts}</EPStatusPill>}
@@ -234,7 +234,7 @@ export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isCh
             )}
             {(alerts?.overdueTasks || 0) > 0 && (
               <div className="flex items-center justify-between p-2 rounded-md border border-red-200 bg-red-50">
-                <span className="text-sm">Muddati o'tgan rezervatsiyalar</span>
+                <span className="text-sm">{t("muddatiOtganRezervatsiyalar")}</span>
                 <EPStatusPill tone="danger">{alerts?.overdueTasks}</EPStatusPill>
               </div>
             )}
@@ -252,13 +252,13 @@ export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isCh
                     className="h-6 text-xs px-2"
                     onClick={() => onReserveStock({ materialId: m.id, urgent: true })}
                   >
-                    So'rov
+                    {t("sorov")}
                   </Button>
                 </div>
               </div>
             ))}
             {totalAlerts === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">Hozircha muammolar yo'q</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("hozirchaMuammolarYoq")}</p>
             )}
           </div>
         )}

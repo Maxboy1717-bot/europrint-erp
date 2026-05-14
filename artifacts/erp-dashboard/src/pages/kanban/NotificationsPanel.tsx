@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { TaskNotification } from "@shared/schema";
 import { type T, type NotificationCategory } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function NotificationsPanel({
   open,
@@ -26,6 +27,7 @@ export function NotificationsPanel({
   onOpenChange: (open: boolean) => void;
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>("all");
   const [selectedNotification, setSelectedNotification] = useState<TaskNotification | null>(null);
@@ -138,7 +140,7 @@ export function NotificationsPanel({
             <div className="flex-1 p-3 space-y-3">
               <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setSelectedNotification(null)}>
                 <ChevronLeft className="h-3 w-3 mr-1" />
-                Orqaga
+                {t("back")}
               </Button>
               <div className="space-y-2">
                 <h4 className="font-medium">{selectedNotification.title}</h4>

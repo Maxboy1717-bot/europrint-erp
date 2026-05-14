@@ -14,10 +14,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { type QueueStat, type FailedJob, type FailedJobsResponse, QUEUE_LABELS } from "./QueueMonitorTypes";
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Helper ───────────────────────────────────────────────────────────────
 
 export function statusBadge(value: number, type: "failed" | "active" | "waiting" | "completed" | "delayed") {
+  const { t } = useTranslation("common");
   if (type === "failed" && value > 0) return <EPStatusPill tone="danger">{value}</EPStatusPill>;
   if (type === "active" && value > 0) return <EPStatusPill tone="info">{value}</EPStatusPill>;
   if (type === "waiting" && value > 0) return <EPStatusPill tone="warning">{value}</EPStatusPill>;
@@ -60,28 +62,28 @@ export function QueueCard({ name, stat, selected, onSelect }: QueueCardProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs">
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3 text-[var(--ep-yellow)]" />
-              <span className="text-muted-foreground">Kutmoqda:</span>
+              <span className="text-muted-foreground">{t("kutmoqda")}</span>
               {statusBadge(stat.waiting, "waiting")}
             </div>
             <div className="flex items-center gap-1">
               <Activity className="h-3 w-3 text-[var(--ep-blue)]" />
-              <span className="text-muted-foreground">Aktiv:</span>
+              <span className="text-muted-foreground">{t("aktiv1")}</span>
               {statusBadge(stat.active, "active")}
             </div>
             <div className="flex items-center gap-1">
               <CheckCircle className="h-3 w-3 text-[var(--ep-green)]" />
-              <span className="text-muted-foreground">Tugadi:</span>
+              <span className="text-muted-foreground">{t("tugadi1")}</span>
               {statusBadge(stat.completed, "completed")}
             </div>
             <div className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-[var(--ep-red)]" />
-              <span className="text-muted-foreground">Xato:</span>
+              <span className="text-muted-foreground">{t("xato")}</span>
               {statusBadge(stat.failed, "failed")}
             </div>
             {stat.delayed > 0 && (
               <div className="flex items-center gap-1 col-span-2">
                 <Clock className="h-3 w-3 text-[var(--ep-primary)]" />
-                <span className="text-muted-foreground">Kechiktirilgan:</span>
+                <span className="text-muted-foreground">{t("kechiktirilgan")}</span>
                 {statusBadge(stat.delayed, "delayed")}
               </div>
             )}
@@ -163,26 +165,26 @@ export function FailedJobsPanel({
               disabled={failedLoading}
             >
               <RefreshCw className="h-4 w-4 mr-1" />
-              Yangilash
+              {t("refresh")}
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" disabled={clearPending}>
                   <Trash2 className="h-4 w-4 mr-1" />
-                  Barchasini tozalash
+                  {t("barchasiniTozalash")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Barcha xato ishlarni o'chirishni tasdiqlang</AlertDialogTitle>
+                  <AlertDialogTitle>{t("barchaXatoIshlarniOchirishniTasdiqlang")}</AlertDialogTitle>
                   <AlertDialogDescription>
                     «{selectedQueue}» navbatidagi barcha muvaffaqiyatsiz ishlar o'chiriladi. Bu amalni bekor qilib bo'lmaydi.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                  <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                   <AlertDialogAction onClick={onClearAll} className="bg-red-600 hover:bg-[var(--ep-red)]/90">
-                    O'chirish
+                    {t("delete")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -198,18 +200,18 @@ export function FailedJobsPanel({
         ) : !failedData?.jobs?.length ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
             <CheckCircle className="h-8 w-8 mx-auto mb-2 text-[var(--ep-green)]" />
-            Xatoli job yo'q
+            {t("xatoliJobYoq")}
           </div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Job ID</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Xato sababi</TableHead>
-                <TableHead>Urinishlar</TableHead>
-                <TableHead>Vaqt</TableHead>
-                <TableHead>Amallar</TableHead>
+                <TableHead>{t("jobId")}</TableHead>
+                <TableHead>{t("nom")}</TableHead>
+                <TableHead>{t("xatoSababi")}</TableHead>
+                <TableHead>{t("urinishlar1")}</TableHead>
+                <TableHead>{t("time")}</TableHead>
+                <TableHead>{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -234,7 +236,7 @@ export function FailedJobsPanel({
                       disabled={retryPending}
                     >
                       <Play className="h-4 w-4 mr-1" />
-                      Qayta
+                      {t("qayta")}
                     </Button>
                   </TableCell>
                 </TableRow>

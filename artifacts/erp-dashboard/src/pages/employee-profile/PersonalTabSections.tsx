@@ -18,6 +18,7 @@ import { useTranslation } from "@/lib/i18n";
 // ---------------------------------------------------------------------------
 
 export function PersonalInfoCard({ employee, t, tCommon }: SectionProps) {
+  const { t } = useTranslation("common");
   const genderLabel =
     employee.gender === "erkak"
       ? t("male")
@@ -112,16 +113,16 @@ function SalaryTypeLabel({ salaryType }: { salaryType: string }) {
   if (salaryType === "monthly" || salaryType === "oylik") {
     return (
       <div>
-        <p className="font-medium">Oylik stavka</p>
-        <p className="text-xs text-muted-foreground">Belgilangan oylik maosh</p>
+        <p className="font-medium">{t("oylikStavka")}</p>
+        <p className="text-xs text-muted-foreground">{t("belgilanganOylikMaosh")}</p>
       </div>
     );
   }
   if (salaryType === "hourly" || salaryType === "soatbay") {
     return (
       <div>
-        <p className="font-medium">Soatbay</p>
-        <p className="text-xs text-muted-foreground">Ish soati × soatlik tarif</p>
+        <p className="font-medium">{t("soatbay")}</p>
+        <p className="text-xs text-muted-foreground">{t("ishSoatiSoatlikTarif")}</p>
       </div>
     );
   }
@@ -129,15 +130,15 @@ function SalaryTypeLabel({ salaryType }: { salaryType: string }) {
     return (
       <div>
         <p className="font-medium">Akkord (Ishbay)</p>
-        <p className="text-xs text-muted-foreground">Miqdor × tarif formulasi</p>
+        <p className="text-xs text-muted-foreground">{t("miqdorTarifFormulasi")}</p>
       </div>
     );
   }
   if (salaryType === "contract") {
     return (
       <div>
-        <p className="font-medium">Shartnoma asosida</p>
-        <p className="text-xs text-muted-foreground">Alohida shartnoma shartlari</p>
+        <p className="font-medium">{t("shartnomaAsosida")}</p>
+        <p className="text-xs text-muted-foreground">{t("alohidaShartnomaShartlari")}</p>
       </div>
     );
   }
@@ -153,13 +154,13 @@ export function WorkConditionsCard({ employee, t: _t, tCommon }: SectionProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Briefcase className="h-5 w-5" />
-          Ish shartlari
+          {t("ishShartlari")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">Maosh turi</p>
+            <p className="text-sm text-muted-foreground">{t("maoshTuri")}</p>
             {employee.salaryType ? (
               <div className="flex items-center gap-2 mt-1">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -170,7 +171,7 @@ export function WorkConditionsCard({ employee, t: _t, tCommon }: SectionProps) {
             )}
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Smena</p>
+            <p className="text-sm text-muted-foreground">{t("smena")}</p>
             <p className="font-medium">{employee.shift || tCommon("notSpecified")}</p>
           </div>
           <div className="col-span-2">

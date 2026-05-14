@@ -18,23 +18,23 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Faol Xodimlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("faolXodimlar")}</CardTitle>
             <Target className="w-4 h-4 text-[var(--ep-green)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{hrStats?.activeUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">Aktiv holat</p>
+            <p className="text-xs text-muted-foreground">{t("aktivHolat")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Noaktiv Xodimlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("noaktivXodimlar")}</CardTitle>
             <Target className="w-4 h-4 text-[var(--ep-red)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{hrStats?.inactiveUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">Noaktiv holat</p>
+            <p className="text-xs text-muted-foreground">{t("noaktivHolat")}</p>
           </CardContent>
         </Card>
 
@@ -45,18 +45,18 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{hrStats?.certificatesExpiringIn7Days || 0}</div>
-            <p className="text-xs text-muted-foreground">Muddati tugaydi</p>
+            <p className="text-xs text-muted-foreground">{t("muddatiTugaydi")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Kechikishlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("kechikishlar")}</CardTitle>
             <Clock className="w-4 h-4 text-[var(--ep-red)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{hrStats?.totalLateRecords || 0}</div>
-            <p className="text-xs text-muted-foreground">Jami kechikishlar</p>
+            <p className="text-xs text-muted-foreground">{t("jamiKechikishlar")}</p>
           </CardContent>
         </Card>
       </div>
@@ -64,7 +64,7 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Bajarilmagan Onboardinglar</CardTitle>
+            <CardTitle>{t("bajarilmaganOnboardinglar")}</CardTitle>
             <CardDescription>{hrStats?.incompleteOnboardingCount || 0} ta xodim</CardDescription>
           </CardHeader>
           <CardContent>
@@ -75,17 +75,17 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
                     <p className="font-medium">{emp.userName}</p>
                     <p className="text-xs text-muted-foreground">Ishga kirgan: {emp.hireDate}</p>
                   </div>
-                  <EPStatusPill tone="danger">Bajarilmagan</EPStatusPill>
+                  <EPStatusPill tone="danger">{t("bajarilmagan")}</EPStatusPill>
                 </div>
-              )) || <p className="text-center text-muted-foreground py-8">Hammasi bajarilgan</p>}
+              )) || <p className="text-center text-muted-foreground py-8">{t("hammasiBajarilgan")}</p>}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Kechikkanlar Top 10</CardTitle>
-            <CardDescription>Eng ko'p kechikkan xodimlar</CardDescription>
+            <CardTitle>{t("kechikkanlarTop10")}</CardTitle>
+            <CardDescription>{t("engKopKechikkanXodimlar")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -97,7 +97,7 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
                   </div>
                   <EPStatusPill tone="danger">{stat.lateCount} marta</EPStatusPill>
                 </div>
-              )) || <p className="text-center text-muted-foreground py-8">Ma'lumot topilmadi</p>}
+              )) || <p className="text-center text-muted-foreground py-8">{t("noData")}</p>}
             </div>
           </CardContent>
         </Card>
@@ -106,52 +106,52 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
       <Card>
         <CardHeader>
           <CardTitle>{t('exportHisobotlar')}</CardTitle>
-          <CardDescription>Turli formatda yuklab olish</CardDescription>
+          <CardDescription>{t("turliFormatdaYuklabOlish")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="text-sm font-semibold mb-2">HR Dashboard to'liq hisobot</h4>
+            <h4 className="text-sm font-semibold mb-2">{t("hrDashboardToliqHisobot")}</h4>
             <div className="flex gap-2 flex-wrap">
               <a
                 href="/api/export/hr-stats/pdf"
                 className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover-elevate"
                 data-testid="button-export-hr-pdf"
               >
-                HR Dashboard PDF
+                {t("hrDashboardPdf")}
               </a>
               <a
                 href="/api/export/hr-stats/excel"
                 className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover-elevate"
                 data-testid="button-export-hr-excel"
               >
-                HR Dashboard Excel
+                {t("hrDashboardExcel")}
               </a>
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold mb-2">Alohida CSV hisobotlar</h4>
+            <h4 className="text-sm font-semibold mb-2">{t("alohidaCsvHisobotlar")}</h4>
             <div className="flex gap-2 flex-wrap">
               <a
                 href="/api/export/employees/csv"
                 className="inline-flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover-elevate"
                 data-testid="button-export-employees"
               >
-                Xodimlar CSV
+                {t("xodimlarCsv")}
               </a>
               <a
                 href="/api/export/attendance/csv"
                 className="inline-flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover-elevate"
                 data-testid="button-export-attendance"
               >
-                Davomat CSV
+                {t("davomatCsv")}
               </a>
               <a
                 href="/api/export/discipline/csv"
                 className="inline-flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover-elevate"
                 data-testid="button-export-discipline"
               >
-                Intizom CSV
+                {t("intizomCsv")}
               </a>
             </div>
           </div>

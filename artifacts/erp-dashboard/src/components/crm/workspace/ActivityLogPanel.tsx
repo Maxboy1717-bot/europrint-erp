@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckSquare, Plus, Clock, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ActivityLogPanelProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function ActivityLogPanel({
   activityFilter,
@@ -19,6 +20,7 @@ export function ActivityLogPanel({
   onDoneActivity,
   onDeleteActivity,
 }: ActivityLogPanelProps) {
+  const { t } = useTranslation("common");
   const ACTIVITY_TYPES = [
     { value: "call", label: "Qo'ng'iroq" },
     { value: "meeting", label: "Uchrashuv" },
@@ -32,7 +34,7 @@ export function ActivityLogPanel({
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <CheckSquare className="h-5 w-5 text-primary" />
-          Mening faoliyatlarim
+          {t("meningFaoliyatlarim")}
         </h2>
         <div className="flex items-center gap-2">
           <Button
@@ -41,7 +43,7 @@ export function ActivityLogPanel({
             onClick={() => setActivityFilter("today")}
             data-testid="button-filter-today"
           >
-            Bugun
+            {t("today")}
           </Button>
           <Button
             variant={activityFilter === "all" ? "default" : "outline"}
@@ -49,7 +51,7 @@ export function ActivityLogPanel({
             onClick={() => setActivityFilter("all")}
             data-testid="button-filter-all"
           >
-            Barchasi
+            {t("Barchasi")}
           </Button>
           <Button
             size="sm"
@@ -57,7 +59,7 @@ export function ActivityLogPanel({
             onClick={onAddActivity}
             data-testid="button-add-activity"
           >
-            <Plus className="h-4 w-4" /> Faoliyat qo'shish
+            <Plus className="h-4 w-4" /> {t("faoliyatQoshish")}
           </Button>
         </div>
       </div>
@@ -118,7 +120,7 @@ export function ActivityLogPanel({
                 </Badge>
                 {activity.isDone && (
                   <Badge className="text-xs shrink-0 bg-green-100 text-green-800 no-default-hover-elevate">
-                    Bajarildi
+                    {t("Bajarildi")}
                   </Badge>
                 )}
               </div>

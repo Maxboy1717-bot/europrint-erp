@@ -11,6 +11,7 @@ import {
   Users, Building2, Zap, ShieldCheck,
 } from "lucide-react";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Hero stats ───────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export function FloatingInput({
   id, label, type = "text", value, onChange,
   autoComplete, "data-testid": testId, rightElement,
 }: FloatingInputProps) {
+  const { t } = useTranslation("common");
   const [focused, setFocused] = useState(false);
   const isFloated = focused || value.length > 0;
 
@@ -85,6 +87,7 @@ export function FloatingInput({
 // ─── Hero Panel (left 60%) ────────────────────────────────────────────────────
 
 export function LoginHeroPanel() {
+  const { t } = useTranslation("common");
   return (
     <div
       className="erp-auth-hero-panel hidden lg:flex lg:w-[60%] relative flex-col justify-between p-12"
@@ -98,14 +101,14 @@ export function LoginHeroPanel() {
       <div className="relative z-10">
         <div className="inline-flex items-center gap-3 bg-white/15 rounded-xl px-4 py-2 backdrop-blur-sm">
           <EuroprintLogo height={28} />
-          <span className="text-white font-semibold text-sm tracking-wide">ERP System</span>
+          <span className="text-white font-semibold text-sm tracking-wide">{t("erpSystem")}</span>
         </div>
       </div>
 
       <div className="relative z-10 space-y-8">
         <div className="space-y-3">
           <h1 className="ep-h1 text-white">
-            Zamonaviy ishlab chiqarish
+            {t("zamonaviyIshlabChiqarish")}
             <br />
             <span className="opacity-80">boshqaruv tizimi</span>
           </h1>
@@ -133,7 +136,7 @@ export function LoginHeroPanel() {
       </div>
 
       <div className="relative z-10">
-        <p className="text-white/40 text-xs">v2.0 | © 2026 Europrint LLC. Barcha huquqlar himoyalangan.</p>
+        <p className="text-white/40 text-xs">{t("v202026EuroprintLlc")}</p>
       </div>
     </div>
   );

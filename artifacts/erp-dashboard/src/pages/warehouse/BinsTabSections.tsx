@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Grid3X3, Plus, Pencil, Trash2, Eye } from "lucide-react";
 import { BinData, WarehouseData, ZoneData, Lang, Translations } from "./warehouse-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface BinsToolbarProps {
   lang: Lang;
@@ -29,6 +30,7 @@ export function BinsToolbar({
   lang, t, selectedWarehouseId, selectedZoneId,
   warehouses, zones, onWarehouseChange, onZoneChange, onAddClick,
 }: BinsToolbarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-4 flex-wrap">
       <Select value={selectedWarehouseId} onValueChange={v => { onWarehouseChange(v); onZoneChange(""); }}>
@@ -143,7 +145,7 @@ export function BinsTable({ lang, t, bins, isLoading, onEdit, onDelete, onView36
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         size="icon" variant="ghost"
-                        title="360° Ko'rinish"
+                        title={t("k360Korinish")}
                         onClick={() => onView360(bin.id)}
                         data-testid={`btn-360-bin-${bin.id}`}
                       >

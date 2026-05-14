@@ -13,6 +13,7 @@ import type { AiFinanceInsight } from "./types";
 import { getPriorityBadgeVariant, getPriorityLabel, getInsightTypeIcon } from "./types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface AIInsightsSectionProps {
   insights?: AiFinanceInsight[];
@@ -20,16 +21,17 @@ interface AIInsightsSectionProps {
 }
 
 export function AIInsightsSection({ insights, isLoading }: AIInsightsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <Card data-testid="card-ai-insights">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-primary" />
-          AI Tahlil va Tavsiyalar
+          {t("aiTahlilVaTavsiyalar")}
         </CardTitle>
-        <CardDescription>Sun'iy intellekt tomonidan tayyorlangan moliyaviy tahlillar</CardDescription>
+        <CardDescription>{t("suniyIntellektTomonidanTayyorlanganMoliyaviy")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -51,14 +53,14 @@ export function AIInsightsSection({ insights, isLoading }: AIInsightsSectionProp
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={getPriorityBadgeVariant(insight.priority)}>{getPriorityLabel(insight.priority)}</Badge>
-                        {insight.actionRequired && !insight.actionTaken && <Badge variant="warning">Talab qilinadi</Badge>}
+                        {insight.actionRequired && !insight.actionTaken && <Badge variant="warning">{t("talabQilinadi")}</Badge>}
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">{insight.description}</p>
                     {insight.confidence && (
                       <div className="mb-3">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">Ishonchlilik</span>
+                          <span className="text-muted-foreground">{t("ishonchlilik")}</span>
                           <span className="font-medium">{insight.confidence.toFixed(0)}%</span>
                         </div>
                         <Progress value={insight.confidence} className="h-1.5" />
@@ -68,14 +70,14 @@ export function AIInsightsSection({ insights, isLoading }: AIInsightsSectionProp
                       <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
                         <div className="flex items-center gap-2 mb-1">
                           <Lightbulb className="h-3 w-3 text-primary" />
-                          <span className="text-xs font-medium text-primary">Tavsiya</span>
+                          <span className="text-xs font-medium text-primary">{t("tavsiya")}</span>
                         </div>
                         <p className="text-sm">{insight.recommendation}</p>
                       </div>
                     )}
                     {insight.impact && (
                       <div className="mt-2 text-sm">
-                        <span className="text-muted-foreground">Ta'siri: </span>{insight.impact}
+                        <span className="text-muted-foreground">{t("tasiri1")}</span>{insight.impact}
                       </div>
                     )}
                   </div>
@@ -86,8 +88,8 @@ export function AIInsightsSection({ insights, isLoading }: AIInsightsSectionProp
         ) : (
           <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground">
             <Brain className="h-12 w-12 mb-4 opacity-40" />
-            <p>Hozircha AI tahlillari mavjud emas</p>
-            <p className="text-sm">Tizim ma'lumotlarni tahlil qilmoqda</p>
+            <p>{t("hozirchaAiTahlillariMavjudEmas")}</p>
+            <p className="text-sm">{t("tizimMalumotlarniTahlilQilmoqda")}</p>
           </div>
         )}
       </CardContent>

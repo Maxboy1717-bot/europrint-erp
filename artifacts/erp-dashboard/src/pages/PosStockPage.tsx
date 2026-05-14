@@ -75,7 +75,7 @@ export default function PosStockPage() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-start justify-between">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('posStock.title', 'POS Zaxira')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('posStock.title', 'POS Zaxira')}</b></>}
         title={t('posStock.title', 'POS Zaxira')}
         subtitle={t('posStock.description', 'Real-time ombor qoldiqlari (POS terminallari)')}
       />
@@ -83,16 +83,16 @@ export default function PosStockPage() {
           <DialogTrigger asChild>
             <Button data-testid="button-adjust-stock">
               <SlidersHorizontal className="h-4 w-4 mr-2" />
-              Miqdorni sozlash
+              {t("miqdorniSozlash")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-[18px] font-semibold">Miqdorni sozlash</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold">{t("miqdorniSozlash")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1">
-                <Label htmlFor="stock-productId">Mahsulot ID</Label>
+                <Label htmlFor="stock-productId">{t("mahsulotId")}</Label>
                 <Input
                   id="stock-productId"
                   value={adjustForm.productId}
@@ -101,7 +101,7 @@ export default function PosStockPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="stock-adjustment">Miqdor o'zgarishi</Label>
+                <Label htmlFor="stock-adjustment">{t("miqdorOzgarishi")}</Label>
                 <Input
                   id="stock-adjustment"
                   type="number"
@@ -111,12 +111,12 @@ export default function PosStockPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="stock-reason">Sabab</Label>
+                <Label htmlFor="stock-reason">{t("sabab")}</Label>
                 <Input
                   id="stock-reason"
                   value={adjustForm.reason}
                   onChange={(e) => setAdjustForm((f) => ({ ...f, reason: e.target.value }))}
-                  placeholder="Sabab..."
+                  placeholder={t("sabab2")}
                 />
               </div>
               <Button

@@ -4,16 +4,16 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall } from '@common/result';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
-const rawExec = (q: Parameters<typeof db.execute>[0]) => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+const rawExec = (q: SQL | SQLWrapper) => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
 @Injectable()
 export class CameraRepository {

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart } from "lucide-react";
 import { SectionTitle, formatMoney } from "@/components/director/helpers";
 import type { DirSummary } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface SalesSummaryCardProps {
   dirSum: DirSummary | undefined;
@@ -15,6 +16,7 @@ interface SalesSummaryCardProps {
 }
 
 export function SalesSummaryCard({ dirSum, dirSumLoad }: SalesSummaryCardProps) {
+  const { t } = useTranslation("common");
   const stats = [
     { label: "Bugun buyurtma", val: dirSum?.orders?.today ?? 0 },
     { label: "Oylik jami", val: dirSum?.orders?.monthTotal ?? 0 },
@@ -25,7 +27,7 @@ export function SalesSummaryCard({ dirSum, dirSumLoad }: SalesSummaryCardProps) 
   return (
     <Card data-testid="card-sales-summary">
       <CardHeader className="pb-3">
-        <SectionTitle icon={ShoppingCart} title="Savdo Ko'rsatkichlari" sub="Joriy oy" accent="text-[var(--ep-blue)]" />
+        <SectionTitle icon={ShoppingCart} title={t("savdoKorsatkichlari")} sub="Joriy oy" accent="text-[var(--ep-blue)]" />
       </CardHeader>
       <CardContent>
         {dirSumLoad ? <Skeleton className="h-32 rounded-lg" /> : (

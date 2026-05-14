@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { ChevronLeft, ChevronRight, ArrowDownToLine, ArrowUpFromLine, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface StockMovement {
   id: number;
@@ -36,6 +37,7 @@ interface MovementsResponse {
 const LIMIT = 20;
 
 export default function PosMovementsPage() {
+  const { t } = useTranslation("common");
   const [page, setPage] = useState(1);
   const [type, setType] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -63,13 +65,13 @@ export default function PosMovementsPage() {
   const getTypeBadge = (t: string) => {
     switch (t) {
       case "incoming":
-        return <EPStatusPill tone="success">Kirim</EPStatusPill>;
+        return <EPStatusPill tone="success">{t("kirim")}</EPStatusPill>;
       case "outgoing":
-        return <EPStatusPill tone="danger">Chiqim</EPStatusPill>;
+        return <EPStatusPill tone="danger">{t("chiqim")}</EPStatusPill>;
       case "transfer":
-        return <EPStatusPill tone="info">Ko'chirish</EPStatusPill>;
+        return <EPStatusPill tone="info">{t("move")}</EPStatusPill>;
       case "adjustment":
-        return <Badge className="bg-amber-100 text-amber-800">Tuzatish</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">{t("tuzatish")}</Badge>;
       default:
         return <Badge variant="outline">{t}</Badge>;
     }
@@ -96,22 +98,22 @@ export default function PosMovementsPage() {
         <CardContent className="pt-4 pb-3">
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <Label className="text-xs mb-1 block">Tur</Label>
+              <Label className="text-xs mb-1 block">{t("tur")}</Label>
               <Select value={type} onValueChange={(v) => { setType(v); handleFilterChange(); }}>
                 <SelectTrigger className="w-40 h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Barchasi</SelectItem>
-                  <SelectItem value="incoming">Kirim</SelectItem>
-                  <SelectItem value="outgoing">Chiqim</SelectItem>
-                  <SelectItem value="transfer">Ko'chirish</SelectItem>
-                  <SelectItem value="adjustment">Tuzatish</SelectItem>
+                  <SelectItem value="all">{t("Barchasi")}</SelectItem>
+                  <SelectItem value="incoming">{t("kirim")}</SelectItem>
+                  <SelectItem value="outgoing">{t("chiqim")}</SelectItem>
+                  <SelectItem value="transfer">{t("move")}</SelectItem>
+                  <SelectItem value="adjustment">{t("tuzatish")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs mb-1 block">Boshlanish sanasi</Label>
+              <Label className="text-xs mb-1 block">{t("startDate")}</Label>
               <Input
                 type="date"
                 value={dateFrom}
@@ -120,7 +122,7 @@ export default function PosMovementsPage() {
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block">Tugash sanasi</Label>
+              <Label className="text-xs mb-1 block">{t("endDate")}</Label>
               <Input
                 type="date"
                 value={dateTo}
@@ -135,20 +137,20 @@ export default function PosMovementsPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+            <div className="p-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : movements.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">Ma'lumot topilmadi</div>
+            <div className="p-8 text-center text-muted-foreground">{t("noData")}</div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sana</TableHead>
-                  <TableHead>Tur</TableHead>
-                  <TableHead>Mahsulot</TableHead>
-                  <TableHead className="text-right">Miqdor</TableHead>
-                  <TableHead>Ombordan</TableHead>
-                  <TableHead>Omborgacha</TableHead>
-                  <TableHead>Yaratdi</TableHead>
+                  <TableHead>{t("date")}</TableHead>
+                  <TableHead>{t("tur")}</TableHead>
+                  <TableHead>{t("Mahsulot")}</TableHead>
+                  <TableHead className="text-right">{t("quantity")}</TableHead>
+                  <TableHead>{t("ombordan")}</TableHead>
+                  <TableHead>{t("omborgacha")}</TableHead>
+                  <TableHead>{t("yaratdi")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -196,7 +198,7 @@ export default function PosMovementsPage() {
             disabled={page <= 1 || isLoading}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
-            Oldingi
+            {t("previous")}
           </Button>
           <Button
             variant="outline"
@@ -204,7 +206,7 @@ export default function PosMovementsPage() {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages || isLoading}
           >
-            Keyingi
+            {t("nextBtn")}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>

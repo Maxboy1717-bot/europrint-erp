@@ -40,12 +40,14 @@ import {
   PPEDialog,
 } from "./SecurityDashboardDialogs";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function SecurityDashboard() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // --- tab ---
@@ -201,9 +203,9 @@ export default function SecurityDashboard() {
       {/* Page header */}
       <div>
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Xavfsizlik Nazorati</b></>}
-        title="Xavfsizlik Nazorati"
-        subtitle="Kirish nazorati · PPE · Hodisalar · Evakuatsiya · Signallar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xavfsizlikNazorati")}</b></>}
+        title={t("xavfsizlikNazorati")}
+        subtitle={t("kirishNazoratiPpeHodisalarEvakuatsiya")}
       />
       </div>
 
@@ -219,12 +221,12 @@ export default function SecurityDashboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-muted/40 p-1 rounded-lg flex-wrap h-auto">
-          <TabsTrigger value="overview" data-testid="tab-security-overview" className="data-[state=active]:bg-card">Kirish Jurnali</TabsTrigger>
-          <TabsTrigger value="visitors" data-testid="tab-security-visitors" className="data-[state=active]:bg-card">Tashrifchilar</TabsTrigger>
-          <TabsTrigger value="incidents" data-testid="tab-security-incidents" className="data-[state=active]:bg-card">Hodisalar</TabsTrigger>
+          <TabsTrigger value="overview" data-testid="tab-security-overview" className="data-[state=active]:bg-card">{t("kirishJurnali")}</TabsTrigger>
+          <TabsTrigger value="visitors" data-testid="tab-security-visitors" className="data-[state=active]:bg-card">{t("tashrifchilar")}</TabsTrigger>
+          <TabsTrigger value="incidents" data-testid="tab-security-incidents" className="data-[state=active]:bg-card">{t("hodisalar")}</TabsTrigger>
           <TabsTrigger value="ppe" data-testid="tab-security-ppe" className="data-[state=active]:bg-card">PPE</TabsTrigger>
-          <TabsTrigger value="zones" data-testid="tab-security-zones" className="data-[state=active]:bg-card">Zonalar</TabsTrigger>
-          <TabsTrigger value="fire" data-testid="tab-security-fire" className="data-[state=active]:bg-card">Signallar</TabsTrigger>
+          <TabsTrigger value="zones" data-testid="tab-security-zones" className="data-[state=active]:bg-card">{t("zonalar")}</TabsTrigger>
+          <TabsTrigger value="fire" data-testid="tab-security-fire" className="data-[state=active]:bg-card">{t("signallar")}</TabsTrigger>
         </TabsList>
 
         <AttendanceTab records={records} isLoading={recordsLoading} />

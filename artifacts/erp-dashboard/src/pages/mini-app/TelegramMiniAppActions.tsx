@@ -11,6 +11,7 @@ import type {
 } from "./TelegramMiniAppTypes";
 import { PRIORITY_COLORS } from "./TelegramMiniAppTypes";
 import { AppLayout, StatusBadge, EmptyState, LoadingSpinner } from "./TelegramMiniAppHelpers";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Shared style factories ───────────────────────────────────────────────────
 
@@ -98,6 +99,7 @@ export function ApprovalDetailScreen({
   approveMutation,
   rejectMutation,
 }: ApprovalDetailScreenProps) {
+  const { t } = useTranslation("common");
   const cardStyle = makeCardStyle(isDark);
   const btnStyle = (v: "primary" | "danger" | "secondary") => makeBtnStyle(v, colors, isDark);
   const inputStyle = makeInputStyle(colors, isDark);
@@ -106,7 +108,7 @@ export function ApprovalDetailScreen({
     <AppLayout
       screen={screen}
       onBack={onBack}
-      title="So'rov tafsiloti"
+      title={t("sorovTafsiloti")}
       colors={colors}
       isDark={isDark}
       user={user}
@@ -130,7 +132,7 @@ export function ApprovalDetailScreen({
           )}
         </div>
 
-        <h3 style={{ margin: "16px 0 8px", fontSize: 15, fontWeight: 600 }}>Materiallar</h3>
+        <h3 style={{ margin: "16px 0 8px", fontSize: 15, fontWeight: 600 }}>{t("Materiallar")}</h3>
         {(Array.isArray(approval.lines) ? approval.lines : []).map((line, i) => (
           <div key={`line-${i}`} style={cardStyle}>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>{line.name}</div>
@@ -147,12 +149,12 @@ export function ApprovalDetailScreen({
           <div style={{ marginTop: 16 }}>
             <textarea
               style={{ ...inputStyle, minHeight: 80, resize: "none" } as React.CSSProperties}
-              placeholder="Rad etish sababi..."
+              placeholder={t("radEtishSababi1")}
               value={rejectReason}
               onChange={(e) => onRejectReasonChange(e.target.value)}
             />
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button style={{ ...btnStyle("secondary"), flex: 1 }} onClick={() => onShowRejectInput(false)}>Bekor</button>
+              <button style={{ ...btnStyle("secondary"), flex: 1 }} onClick={() => onShowRejectInput(false)}>{t("Bekor")}</button>
               <button
                 style={{ ...btnStyle("danger"), flex: 1 }}
                 disabled={!rejectReason.trim() || rejectMutation.isPending}
@@ -165,7 +167,7 @@ export function ApprovalDetailScreen({
         ) : (
           <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "12px 16px", background: colors.bg, borderTop: `1px solid ${isDark ? "#374151" : "#e5e7eb"}` }}>
             <div style={{ display: "flex", gap: 8 }}>
-              <button style={{ ...btnStyle("danger"), flex: 1 }} onClick={() => onShowRejectInput(true)}>❌ Rad etish</button>
+              <button style={{ ...btnStyle("danger"), flex: 1 }} onClick={() => onShowRejectInput(true)}>{t("radEtish")}</button>
               <button
                 style={{ ...btnStyle("primary"), flex: 1 }}
                 disabled={approveMutation.isPending}
@@ -220,7 +222,7 @@ export function RequestScreen({
     <AppLayout
       screen={screen}
       onBack={onBack}
-      title="Material so'rov"
+      title={t("materialSorov")}
       colors={colors}
       isDark={isDark}
       user={user}

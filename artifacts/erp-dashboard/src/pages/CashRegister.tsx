@@ -58,7 +58,7 @@ export default function CashRegister() {
     const itemsHtml = cr.receiptData.items?.map((item: TransactionItem) =>
       `<tr><td>${escHtml(item.name)}</td><td style="text-align:center">${escHtml(item.quantity)}</td><td style="text-align:right">${formatCurrency(item.unitPrice)}</td><td style="text-align:right">${formatCurrency(item.total)}</td></tr>`
     ).join("");
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Chek</title><style>body{font-family:monospace;font-size:12px;width:300px;margin:0 auto;padding:10px}.center{text-align:center}.right{text-align:right}.line{border-top:1px dashed #000;margin:5px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}h2,h3{margin:5px 0}</style></head><body><div class="center"><h2>${escHtml(cr.receiptData.companyName)}</h2><p>${escHtml(cr.receiptData.companyAddress)}</p><p>Tel: ${escHtml(cr.receiptData.companyPhone)}</p><p>INN: ${escHtml(cr.receiptData.companyInn)}</p></div><div class="line"></div><p>Chek: ${escHtml(cr.receiptData.receiptNumber)}</p><p>Tranzaksiya: ${escHtml(cr.receiptData.transactionNumber)}</p><p>Sana: ${formatDateTime(cr.receiptData.createdAt)}</p>${cr.receiptData.customerName ? `<p>Mijoz: ${escHtml(cr.receiptData.customerName)}</p>` : ""}<div class="line"></div><table><tr><th>Mahsulot</th><th>Soni</th><th>Narx</th><th>Jami</th></tr>${itemsHtml}</table><div class="line"></div><div class="right"><p>Jami: ${formatCurrency(cr.receiptData.subtotal)}</p>${cr.receiptData.discountAmount ? `<p>Chegirma: -${formatCurrency(cr.receiptData.discountAmount)}</p>` : ""}<p>QQS (${escHtml(cr.receiptData.taxRate)}%): ${formatCurrency(cr.receiptData.taxAmount)}</p><p><strong>UMUMIY: ${formatCurrency(cr.receiptData.totalAmount)}</strong></p><p>To'lov: ${escHtml(paymentMethodLabels[cr.receiptData.paymentMethod]?.uz || cr.receiptData.paymentMethod)}</p>${cr.receiptData.paymentDetails?.changeAmount ? `<p>Qaytim: ${formatCurrency(cr.receiptData.paymentDetails.changeAmount)}</p>` : ""}</div><div class="line"></div><div class="center"><p>Xaridingiz uchun rahmat!</p></div></body></html>`);
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>{t("chek1")}</title><style>body{font-family:monospace;font-size:12px;width:300px;margin:0 auto;padding:10px}.center{text-align:center}.right{text-align:right}.line{border-top:1px dashed #000;margin:5px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}h2,h3{margin:5px 0}</style></head><body><div class="center"><h2>${escHtml(cr.receiptData.companyName)}</h2><p>${escHtml(cr.receiptData.companyAddress)}</p><p>Tel: ${escHtml(cr.receiptData.companyPhone)}</p><p>INN: ${escHtml(cr.receiptData.companyInn)}</p></div><div class="line"></div><p>Chek: ${escHtml(cr.receiptData.receiptNumber)}</p><p>Tranzaksiya: ${escHtml(cr.receiptData.transactionNumber)}</p><p>Sana: ${formatDateTime(cr.receiptData.createdAt)}</p>${cr.receiptData.customerName ? `<p>Mijoz: ${escHtml(cr.receiptData.customerName)}</p>` : ""}<div class="line"></div><table><tr><th>{t("Mahsulot")}</th><th>{t("count")}</th><th>{t("price")}</th><th>{t("total")}</th></tr>${itemsHtml}</table><div class="line"></div><div class="right"><p>Jami: ${formatCurrency(cr.receiptData.subtotal)}</p>${cr.receiptData.discountAmount ? `<p>Chegirma: -${formatCurrency(cr.receiptData.discountAmount)}</p>` : ""}<p>QQS (${escHtml(cr.receiptData.taxRate)}%): ${formatCurrency(cr.receiptData.taxAmount)}</p><p><strong>UMUMIY: ${formatCurrency(cr.receiptData.totalAmount)}</strong></p><p>To'lov: ${escHtml(paymentMethodLabels[cr.receiptData.paymentMethod]?.uz || cr.receiptData.paymentMethod)}</p>${cr.receiptData.paymentDetails?.changeAmount ? `<p>Qaytim: ${formatCurrency(cr.receiptData.paymentDetails.changeAmount)}</p>` : ""}</div><div class="line"></div><div class="center"><p>{t("xaridingizUchunRahmat")}</p></div></body></html>`);
     printWindow.document.close(); printWindow.print();
   };
 
@@ -82,7 +82,7 @@ export default function CashRegister() {
               Bugun: {formatCurrency(cr.dashboard.salesToday)} ({cr.dashboard.transactionsToday} ta)
             </EPStatusPill>
           )}
-          <Button variant="ghost" size="sm" onClick={() => cr.refetch()} title="Yangilash">
+          <Button variant="ghost" size="sm" onClick={() => cr.refetch()} title={t("refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
@@ -93,7 +93,7 @@ export default function CashRegister() {
           <TabsTrigger value="pos" data-testid="tab-pos"><ScanBarcode className="h-4 w-4 mr-1" /> {t('cashRegister')}</TabsTrigger>
           <TabsTrigger value="products" data-testid="tab-products"><Package className="h-4 w-4 mr-1" /> {t('products')}</TabsTrigger>
           <TabsTrigger value="history" data-testid="tab-history"><History className="h-4 w-4 mr-1" /> {t('transactions')}</TabsTrigger>
-          <TabsTrigger value="dashboard" data-testid="tab-dashboard"><BarChart3 className="h-4 w-4 mr-1" /> Dashboard</TabsTrigger>
+          <TabsTrigger value="dashboard" data-testid="tab-dashboard"><BarChart3 className="h-4 w-4 mr-1" /> {t("dashboard10")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pos" className="flex-1 mt-2">

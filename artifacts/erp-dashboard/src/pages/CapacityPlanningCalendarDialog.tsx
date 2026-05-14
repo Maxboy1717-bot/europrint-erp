@@ -54,6 +54,7 @@ interface CalendarDialogProps {
 // ---------------------------------------------------------------------------
 
 export function CalendarDialog({ open, onOpenChange, form, workCenters, isPending, onSubmit, t, tCommon, }: CalendarDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="dialog-create-calendar" className="p-6">
@@ -101,7 +102,7 @@ export function CalendarDialog({ open, onOpenChange, form, workCenters, isPendin
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="1st Shift, 2nd Shift..."
+                      placeholder={t("k1stShift2ndShift")}
                       data-testid="input-shift-name"
                     />
                   </FormControl>

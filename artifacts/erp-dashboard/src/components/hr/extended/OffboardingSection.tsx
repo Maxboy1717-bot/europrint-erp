@@ -20,7 +20,7 @@ export function OffboardingSection({offboardingChecklists,
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Offboarding va Bo'shatish</h2>
+        <h2 className="text-lg font-semibold">{t("offboardingVaBoshatish")}</h2>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
@@ -39,17 +39,17 @@ export function OffboardingSection({offboardingChecklists,
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Faol Offboarding Jarayonlari</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("faolOffboardingJarayonlari")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Xodim</TableHead><TableHead>Bo'lim</TableHead>
-              <TableHead>Sana</TableHead><TableHead>Checklist</TableHead>
-              <TableHead>Holat</TableHead>
+              <TableHead>{t("xodim1")}</TableHead><TableHead>{t("bolim1")}</TableHead>
+              <TableHead>{t("date")}</TableHead><TableHead>{t("checklist")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {offboardingChecklists.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Faol offboarding jarayonlari yo'q</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("faolOffboardingJarayonlariYoq")}</TableCell></TableRow>
               ) : (Array.isArray(offboardingChecklists) ? offboardingChecklists : []).map((item) => (
                 <TableRow key={item.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{item.fullName || `Xodim #${item.userId}`}</TableCell>
@@ -63,7 +63,7 @@ export function OffboardingSection({offboardingChecklists,
                       <span className="text-xs">{item.completedItems || 0}/{item.totalItems || 0}</span>
                     </div>
                   </TableCell>
-                  <TableCell><Badge variant="outline">Jarayonda</Badge></TableCell>
+                  <TableCell><Badge variant="outline">{t("inProgress")}</Badge></TableCell>
                 </TableRow>
               ))}
             </TableBody>

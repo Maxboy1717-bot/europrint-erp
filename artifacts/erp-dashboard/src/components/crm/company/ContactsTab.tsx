@@ -20,6 +20,7 @@ import { Contact } from "./types";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
 interface ContactsTabProps {
   companyId: number;
@@ -27,6 +28,7 @@ interface ContactsTabProps {
 }
 
 export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
+  const { t } = useTranslation("common");
   const [showLinkContactDialog, setShowLinkContactDialog] = useState(false);
   const [confirmUnlinkId, setConfirmUnlinkId] = useState<number | null>(null);
   const [linkContactId, setLinkContactId] = useState("");
@@ -67,13 +69,13 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
       <div className="flex justify-end">
         <Button size="sm" variant="outline" onClick={() => setShowLinkContactDialog(true)}>
           <Users className="h-3 w-3 mr-1" />
-          Kontakt ulash
+          {t("kontaktUlash")}
         </Button>
       </div>
       {contacts.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           <User className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">Kontaktlar yo'q</p>
+          <p className="text-sm">{t("kontaktlarYoq")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -83,7 +85,7 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
                 <div className="font-medium text-sm flex items-center gap-1">
                   {([contact.lastName, contact.name]).filter(Boolean).join(' ') || 'Nomsiz kontakt'}
                   {contact.linkIsPrimary && (
-                    <Badge variant="secondary" className="text-xs ml-1">Asosiy</Badge>
+                    <Badge variant="secondary" className="text-xs ml-1">{t("primary")}</Badge>
                   )}
                 </div>
                 {(contact.post || contact.linkRole) && (
@@ -119,20 +121,20 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
       <Dialog open={showLinkContactDialog} onOpenChange={setShowLinkContactDialog}>
         <DialogContent data-testid="dialog-link-contact" className="p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Kontakt ulash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("kontaktUlash")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Kontakt ID *</label>
+              <label className="text-sm font-medium">{t("kontaktId")}</label>
               <Input
                 type="number"
                 value={linkContactId}
                 onChange={(e) => setLinkContactId(e.target.value)}
-                placeholder="Kontakt ID raqamini kiriting"
+                placeholder={t("kontaktIdRaqaminiKiriting")}
                 data-testid="input-link-contact-id"
               />
               <p className="text-xs text-muted-foreground">
-                Kontaktlar ro'yxatidan ID raqamini toping
+                {t("kontaktlarRoyxatidanIdRaqaminiToping")}
               </p>
             </div>
             <div className="space-y-2">
@@ -140,14 +142,14 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
               <Input
                 value={linkContactRole}
                 onChange={(e) => setLinkContactRole(e.target.value)}
-                placeholder="masalan: Direktor, Buxgalter"
+                placeholder={t("masalanDirektorBuxgalter")}
                 data-testid="input-link-contact-role"
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowLinkContactDialog(false)}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -170,8 +172,8 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
       <ConfirmDialog
         open={confirmUnlinkId !== null}
         onOpenChange={(open) => { if (!open) setConfirmUnlinkId(null); }}
-        title="Kontaktni uzish"
-        description="Ushbu kontaktni kompaniyadan uzishni tasdiqlaysizmi?"
+        title={t("kontaktniUzish")}
+        description={t("ushbuKontaktniKompaniyadanUzishniTasdiqlaysizmi")}
         confirmText="Uzish"
         cancelText="Bekor qilish"
         variant="destructive"

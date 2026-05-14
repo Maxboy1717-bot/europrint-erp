@@ -3,6 +3,7 @@
  * ReportList, ReportViewer, ReportTable, formatCell — display sections
  */
 import { ReportType, CATEGORY_COLORS, CATEGORY_LABELS, REPORTS } from "./WarehouseReportsAllTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Cell formatter ───────────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ export function formatCell(v: unknown): string {
 // ─── Dynamic Table ────────────────────────────────────────────────────────────
 
 export function ReportTable({ data }: { data: unknown[] }) {
+  const { t } = useTranslation("common");
   if (data.length === 0) return null;
 
   const firstRow = data[0] as Record<string, unknown>;
@@ -101,7 +103,7 @@ export function ReportList({ filteredReports, selected, onSelect }: ReportListPr
         </button>
       ))}
       {filteredReports.length === 0 && (
-        <div className="text-center py-8 text-gray-400 text-sm">Hisobot topilmadi</div>
+        <div className="text-center py-8 text-gray-400 text-sm">{t("hisobotTopilmadi")}</div>
       )}
     </div>
   );
@@ -122,7 +124,7 @@ export function ReportViewer({ selected, data, loading, error, onRefresh }: Repo
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-10 text-center">
         <div className="text-5xl mb-3">📊</div>
-        <div className="font-semibold text-gray-700">Hisobot turini tanlang</div>
+        <div className="font-semibold text-gray-700">{t("hisobotTuriniTanlang")}</div>
         <div className="text-sm text-gray-500 mt-2">
           Chap tomondan {REPORTS.length} ta hisobotdan birini bosing
         </div>
@@ -159,13 +161,13 @@ export function ReportViewer({ selected, data, loading, error, onRefresh }: Repo
           onClick={handleExport}
           className="px-3 py-1.5 bg-[var(--ep-blue)] text-white rounded text-sm hover:bg-[var(--ep-blue)]/90"
         >
-          📥 Export JSON
+          {t("exportJson")}
         </button>
       </div>
 
       <div className="p-4 min-h-[400px]">
         {loading && (
-          <div className="text-center py-10 text-gray-500">⏳ Yuklanmoqda...</div>
+          <div className="text-center py-10 text-gray-500">{t("yuklanmoqda")}</div>
         )}
 
         {!loading && error && (
@@ -176,7 +178,7 @@ export function ReportViewer({ selected, data, loading, error, onRefresh }: Repo
               onClick={onRefresh}
               className="mt-3 px-4 py-2 bg-[var(--ep-yellow)] text-white rounded text-sm"
             >
-              Qayta urinish
+              {t("qaytaUrinish")}
             </button>
           </div>
         )}
@@ -184,7 +186,7 @@ export function ReportViewer({ selected, data, loading, error, onRefresh }: Repo
         {!loading && !error && data.length === 0 && (
           <div className="text-center py-10 text-gray-400">
             <div className="text-3xl mb-2">📭</div>
-            <div>Ma'lumot yo'q yoki bo'sh natija</div>
+            <div>{t("malumotYoqYokiBoshNatija")}</div>
           </div>
         )}
 
@@ -215,7 +217,7 @@ export function FiltersBar({ search, onSearch, categoryFilter, onCategory }: Fil
   return (
     <div className="flex gap-3 mb-4 flex-wrap">
       <input
-        placeholder="Hisobot qidirish..."
+        placeholder={t("hisobotQidirish")}
         value={search}
         onChange={e => onSearch(e.target.value)}
         className="px-3 py-2 border border-gray-200 rounded-lg text-sm flex-1 min-w-[200px]"

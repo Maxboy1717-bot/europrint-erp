@@ -3,6 +3,7 @@
  * @description React UI component.
  */
 
+import { useTranslation } from '@/lib/i18n';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,18 +39,19 @@ export function CourseDeleteDialogs({
   onDeleteLessonIdChange,
   onConfirmDeleteLesson,
 }: CourseDeleteDialogsProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       <AlertDialog open={deleteCourseOpen} onOpenChange={onDeleteCourseOpenChange}>
         <AlertDialogContent data-testid="dialog-confirm-delete-course">
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Kursni o'chirishni tasdiqlaysizmi? Bu amal qaytarilmaydi.
+              {t("kursniOchirishniTasdiqlaysizmiBuAmal")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-course">Bekor qilish</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-course">{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               data-testid="button-confirm-delete-course"
               onClick={() => {
@@ -57,7 +59,7 @@ export function CourseDeleteDialogs({
                 onDeleteCourseOpenChange(false);
               }}
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -66,13 +68,13 @@ export function CourseDeleteDialogs({
       <AlertDialog open={!!deleteModuleId} onOpenChange={() => onDeleteModuleIdChange(null)}>
         <AlertDialogContent data-testid="dialog-confirm-delete-module">
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Haqiqatan ham modulni o'chirmoqchimisiz?
+              {t("haqiqatanHamModulniOchirmoqchimisiz")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-module">Bekor qilish</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-module">{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               data-testid="button-confirm-delete-module"
               onClick={() => {
@@ -82,7 +84,7 @@ export function CourseDeleteDialogs({
                 }
               }}
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -91,13 +93,13 @@ export function CourseDeleteDialogs({
       <AlertDialog open={!!deleteLessonId} onOpenChange={() => onDeleteLessonIdChange(null)}>
         <AlertDialogContent data-testid="dialog-confirm-delete-lesson">
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Haqiqatan ham darsni o'chirmoqchimisiz?
+              {t("haqiqatanHamDarsniOchirmoqchimisiz")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-lesson">Bekor qilish</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-lesson">{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               data-testid="button-confirm-delete-lesson"
               onClick={() => {
@@ -107,7 +109,7 @@ export function CourseDeleteDialogs({
                 }
               }}
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

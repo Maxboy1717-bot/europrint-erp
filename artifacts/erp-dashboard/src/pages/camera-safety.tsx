@@ -32,6 +32,7 @@ import {
 import { Link } from "wouter";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface SafetyViolation {
   id: number;
   cameraId: string;
@@ -61,6 +62,7 @@ const violationTypeLabels: Record<string, { uz: string; ru: string; icon: typeof
 const COLORS = ['#f97316', '#ef4444', '#eab308', '#3b82f6', '#22c55e', '#8b5cf6'];
 
 export default function CameraSafety() {
+  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
   const { data: violations, isLoading: violationsLoading, isError, refetch} = useQuery<SafetyViolation[]>({
@@ -132,8 +134,8 @@ export default function CameraSafety() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Xavfsizlik Nazorati</b></>}
-        title="Xavfsizlik Nazorati"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xavfsizlikNazorati")}</b></>}
+        title={t("xavfsizlikNazorati")}
         subtitle={t.subtitle}
       />
         </div>

@@ -18,6 +18,7 @@ import type { PassportCardProps } from "./PersonalTabTypes";
 import { useTranslation } from "@/lib/i18n";
 
 export function PassportCard({ t, tCommon, passportData, loadingPassport, passportDialogOpen, setPassportDialogOpen, passportForm, setPassportForm, savePassportMutation, }: PassportCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -91,7 +92,7 @@ export function PassportCard({ t, tCommon, passportData, loadingPassport, passpo
                 <Input
                   value={passportForm.birthPlace}
                   onChange={(e) => setPassportForm({ ...passportForm, birthPlace: e.target.value })}
-                  placeholder="Toshkent shahri"
+                  placeholder={t("toshkentShahri")}
                   data-testid="input-passport-birth-place"
                 />
               </div>
@@ -100,7 +101,7 @@ export function PassportCard({ t, tCommon, passportData, loadingPassport, passpo
                 <Input
                   value={passportForm.citizenship}
                   onChange={(e) => setPassportForm({ ...passportForm, citizenship: e.target.value })}
-                  placeholder="Uzbekistan"
+                  placeholder={t("uzbekistan")}
                   data-testid="input-passport-citizenship"
                 />
               </div>

@@ -12,8 +12,10 @@ import type { CrmDeal, UserRecord, PapkaOrder, RentalRecord, ManagerStat } from 
 import { ManagerPanel, QuotaPanel } from "./SDExtendedSections";
 import { RentalPanel, AdvancePanel } from "./SDExtendedSections2";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function SDExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const defaultTab = routeTabMap[location] || "manager";
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -79,9 +81,9 @@ export default function SDExtended() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · SD · <b className="text-foreground">{meta?.title}</b></>}
+        breadcrumb={<>{t("dashboardSd")}<b className="text-foreground">{meta?.title}</b></>}
         title={meta?.title || "Sales"}
-        subtitle="Sotuv moduli kengaytirilgan boshqaruv paneli"
+        subtitle={t("sotuvModuliKengaytirilganBoshqaruvPaneli")}
       />
         </div>
         <div className="flex bg-muted/40 p-1 rounded-xl border border-border/30">

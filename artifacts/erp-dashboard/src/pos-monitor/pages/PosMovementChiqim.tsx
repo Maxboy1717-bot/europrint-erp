@@ -13,10 +13,12 @@ import {
 import { ToastContainer, NoStockModal } from "./PosMovementChiqimHelpers";
 import { MovementTypeSelector, ScanZone, ContextFields, BottomBar } from "./PosMovementChiqimLeft";
 import { LinesPanel, SuccessScreen } from "./PosMovementChiqimRight";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function PosMovementChiqim() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
 
   // Movement type
@@ -217,16 +219,16 @@ export default function PosMovementChiqim() {
 
       {/* Page header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button className="pos-btn pos-btn-ghost" style={{ padding: "6px 12px" }} onClick={() => navigate("/pos-monitor/movements")}>← Orqaga</button>
+        <button className="pos-btn pos-btn-ghost" style={{ padding: "6px 12px" }} onClick={() => navigate("/pos-monitor/movements")}>{t("orqaga")}</button>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Chiqim — Barcode skaner</h2>
-          <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>FAQAT barcode skaner orqali. Qo'lda kiritish taqiqlangan.</div>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("chiqimBarcodeSkaner")}</h2>
+          <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>{t("faqatBarcodeSkanerOrqaliQolda")}</div>
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
           <span className="pos-badge" style={{ background: `${selectedTypeInfo.color}18`, color: selectedTypeInfo.color, fontSize: 11 }}>
             {selectedTypeInfo.label}
           </span>
-          {scanning && <span className="pos-badge pos-badge-blue pos-live" style={{ fontSize: 11 }}>Skanerlanyapti...</span>}
+          {scanning && <span className="pos-badge pos-badge-blue pos-live" style={{ fontSize: 11 }}>{t("skanerlanyapti")}</span>}
         </div>
       </div>
 

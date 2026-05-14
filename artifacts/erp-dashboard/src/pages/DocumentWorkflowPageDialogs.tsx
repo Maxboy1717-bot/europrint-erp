@@ -34,6 +34,7 @@ interface AdminRoutingTabProps {
 }
 
 export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, tCommon, onRouteFormChange, onCreateRoute, onToggleRoute, onDeleteRoute, }: AdminRoutingTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="admin" className="mt-4">
       <div className="space-y-6">
@@ -60,7 +61,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
               </div>
 
               <div>
-                <Label className="text-muted-foreground text-xs">Qadam tartibi</Label>
+                <Label className="text-muted-foreground text-xs">{t("qadamTartibi")}</Label>
                 <Input type="number" min={1}
                   value={routeForm.step_order}
                   onChange={e => onRouteFormChange({ step_order: parseInt(e.target.value) || 1 })}
@@ -68,7 +69,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
               </div>
 
               <div>
-                <Label className="text-muted-foreground text-xs">Marshrutlash turi</Label>
+                <Label className="text-muted-foreground text-xs">{t("marshrutlashTuri")}</Label>
                 <Select value={routeForm.route_type} onValueChange={v => onRouteFormChange({ route_type: v })}>
                   <SelectTrigger className="bg-input border-border mt-1 text-xs h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -101,7 +102,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
                 <Input
                   value={routeForm.target_role_code}
                   onChange={e => onRouteFormChange({ target_role_code: e.target.value })}
-                  placeholder="Masalan: HR Menejer, Direktor, Bosh buxgalter"
+                  placeholder={t("masalanHrMenejerDirektorBosh")}
                   className="bg-input border-border mt-1 h-8 text-xs" />
               </div>
 
@@ -176,17 +177,17 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Marshrutni o'chirishni tasdiqlang</AlertDialogTitle>
+                            <AlertDialogTitle>{t("marshrutniOchirishniTasdiqlang")}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Bu marshrut qoidasi butunlay o'chiriladi. Bu amalni bekor qilib bo'lmaydi.
+                              {t("buMarshrutQoidasiButunlayOchiriladi")}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => onDeleteRoute(r.id)}
                               className="bg-red-600 hover:bg-[var(--ep-red)]/90">
-                              O'chirish
+                              {t("delete")}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -197,7 +198,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                Hali marshrutlash qoidasi yo'q. Yuqoridagi forma orqali qo'shing.
+                {t("haliMarshrutlashQoidasiYoqYuqoridagi")}
               </div>
             )}
           </CardContent>

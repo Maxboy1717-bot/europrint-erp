@@ -17,6 +17,7 @@ import { type EmployeePerformance } from "./kanban-types";
 import { queryClient, getAuthHeaders } from "@/lib/queryClient";
 import { apiRequest } from '@/lib/queryClient';
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function ReportsDialog({
   open,
@@ -25,6 +26,7 @@ export function ReportsDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation("common");
   const [exporting, setExporting] = useState<"excel" | "pdf" | null>(null);
 
   const { data: performance = [], isLoading } = useQuery<EmployeePerformance[]>({
@@ -67,7 +69,7 @@ export function ReportsDialog({
           <div className="flex items-center justify-between gap-2">
             <DialogTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Xodimlar samaradorligi hisoboti
+              {t("xodimlarSamaradorligiHisoboti")}
             </DialogTitle>
             <div className="flex items-center gap-2">
               <Button
@@ -77,7 +79,7 @@ export function ReportsDialog({
                 data-testid="button-refresh-report"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Yangilash
+                {t("refresh")}
               </Button>
               <Button
                 variant="outline"
@@ -118,10 +120,10 @@ export function ReportsDialog({
             <div className="ep-table-scroll"><Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead className="text-right">Vazifalar</TableHead>
-                  <TableHead className="text-right">Vaqt</TableHead>
-                  <TableHead className="text-right">Natijalar</TableHead>
+                  <TableHead>{t("xodim1")}</TableHead>
+                  <TableHead className="text-right">{t("vazifalar")}</TableHead>
+                  <TableHead className="text-right">{t("time")}</TableHead>
+                  <TableHead className="text-right">{t("natijalar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -150,7 +152,7 @@ export function ReportsDialog({
                 {performance.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">
-                      Ma'lumotlar topilmadi
+                      {t("malumotlarTopilmadi")}
                     </TableCell>
                   </TableRow>
                 )}

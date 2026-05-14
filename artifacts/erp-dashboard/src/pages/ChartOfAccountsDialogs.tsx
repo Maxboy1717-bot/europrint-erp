@@ -58,7 +58,7 @@ export function CreateAccountDialog({
               id="accountNumber"
               value={newAccount.accountNumber}
               onChange={(e) => onNewAccountChange({ ...newAccount, accountNumber: e.target.value })}
-              placeholder="Masalan: 1010"
+              placeholder={t("masalan1010")}
               data-testid="input-account-number"
             />
           </div>
@@ -68,7 +68,7 @@ export function CreateAccountDialog({
               id="accountName"
               value={newAccount.accountName}
               onChange={(e) => onNewAccountChange({ ...newAccount, accountName: e.target.value })}
-              placeholder="Masalan: Kassa"
+              placeholder={t("masalanKassa")}
               data-testid="input-account-name"
             />
           </div>

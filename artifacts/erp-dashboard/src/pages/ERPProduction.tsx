@@ -39,14 +39,14 @@ export default function ERPProduction() {
       <div className="flex items-center justify-between">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">ERP Ishlab Chiqarish</b></>}
-        title="ERP Ishlab Chiqarish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("erpIshlabChiqarish")}</b></>}
+        title={t("erpIshlabChiqarish")}
         subtitle={t('productionModuleDesc')}
       />
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 

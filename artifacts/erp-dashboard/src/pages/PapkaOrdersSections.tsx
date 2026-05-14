@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import type { PapkaOrder } from "@shared/schema";
 import type { Lang } from "./PapkaOrdersTypes";
 import { STATUS_CONFIG, TRANSLATIONS } from "./PapkaOrdersTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Stats row
@@ -40,6 +41,7 @@ interface StatsRowProps {
 }
 
 export function StatsRow({ totalCount, activeCount, completedCount, lang }: StatsRowProps) {
+  const { t } = useTranslation("common");
   const t = TRANSLATIONS[lang];
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -96,7 +98,7 @@ export function OrdersList({
   return (
     <div className="bg-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Buyurtmalar Ro'yxati</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("buyurtmalarRoyxati")}</h2>
         <div className="flex items-center gap-4 flex-wrap">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -166,7 +168,7 @@ export function OrdersList({
                       </Button>
                       <DeleteConfirmDialog
                         title={t.cancelled}
-                        description="Bu amalni qaytarib bo'lmaydi."
+                        description={t("buAmalniQaytaribBolmaydi")}
                         onConfirm={() => onDelete(order.id)}
                         isPending={isDeletePending}
                       >

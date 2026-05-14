@@ -33,16 +33,16 @@ export function AddApEntryDialog({open,
       <DialogTrigger asChild>
         <Button data-testid="button-add-ap-entry">
           <Plus className="h-4 w-4 mr-2" />
-          Yozuv qo'shish
+          {t("yozuvQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi yozuv qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiYozuvQoshish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="space-y-1">
-            <Label htmlFor="ap-vendorId">Yetkazuvchi ID</Label>
+            <Label htmlFor="ap-vendorId">{t("yetkazuvchiId")}</Label>
             <Input
               id="ap-vendorId"
               value={form.vendorId}
@@ -51,7 +51,7 @@ export function AddApEntryDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="ap-amount">Summa</Label>
+            <Label htmlFor="ap-amount">{t("summa")}</Label>
             <Input
               id="ap-amount"
               type="number"
@@ -61,7 +61,7 @@ export function AddApEntryDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="ap-dueDate">Muddat</Label>
+            <Label htmlFor="ap-dueDate">{t("muddat")}</Label>
             <Input
               id="ap-dueDate"
               type="date"
@@ -70,12 +70,12 @@ export function AddApEntryDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="ap-description">Tavsif</Label>
+            <Label htmlFor="ap-description">{t("progress.description")}</Label>
             <Input
               id="ap-description"
               value={form.description}
               onChange={(e) => onFormChange((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Tavsif..."
+              placeholder={t("tavsif1")}
             />
           </div>
           <Button

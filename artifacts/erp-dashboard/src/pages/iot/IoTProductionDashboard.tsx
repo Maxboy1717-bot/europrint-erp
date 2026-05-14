@@ -21,7 +21,9 @@ import {
 import { ActionButtons, BottomActionsBar } from "./IoTProductionDashboardDialogs";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export function IoTProductionDashboard(props: IoTProductionDashboardProps) {
+  const { t } = useTranslation("common");
   const {
     lang, setLang, workerName, currentTime, activeSession, shiftInfo, shiftRemaining,
     elapsedTime, setupTime, qcReminderVisible, energySaving, setEnergySaving,

@@ -21,8 +21,10 @@ import {
 } from "./MarketingExtendedTypes";
 import { RoiSection, SeoSection, AbSection, CompSection, NpsSection } from "./MarketingExtendedSections";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function MarketingExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const defaultTab = routeTabMap[location] || "roi";
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -61,12 +63,12 @@ export default function MarketingExtended() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between mb-6">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing Kengaytirilgan</b></>}
-        title="Marketing Kengaytirilgan"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("marketingKengaytirilgan")}</b></>}
+        title={t("marketingKengaytirilgan")}
       />
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 

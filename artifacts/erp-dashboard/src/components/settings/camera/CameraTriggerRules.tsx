@@ -24,7 +24,9 @@ import {
 } from "./types";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export function CameraTriggerRules() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [rules, setRules] = useState<TriggerRule[]>([]);
@@ -103,7 +105,7 @@ export function CameraTriggerRules() {
     setIsDirty(true);
   };
 
-  if (camsLoading) return <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>;
+  if (camsLoading) return <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
 
   return (
     <div className="space-y-4">
@@ -122,11 +124,11 @@ export function CameraTriggerRules() {
           {cameras_list.length === 0 ? (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
               <Camera className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              <p>Kameralar topilmadi</p>
+              <p>{t("kameralarTopilmadi")}</p>
             </div>
           ) : (
             <div className="space-y-1">
-          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Kamera tanlang</Label>
+          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("kameraTanlang")}</Label>
               <div className="flex flex-wrap gap-2">
                 {(Array.isArray(cameras_list) ? cameras_list : []).map(cam => (
                   <Button
@@ -155,7 +157,7 @@ export function CameraTriggerRules() {
                   {rules.length === 0 && !isDirty ? (
                     <div className="text-center py-6 text-muted-foreground border-2 border-dashed rounded-lg">
                       <Zap className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                      <p className="text-sm">Bu kamera uchun trigger qoidalar yo'q. Yangi qoida qo'shing.</p>
+                      <p className="text-sm">{t("buKameraUchunTriggerQoidalar")}</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -190,7 +192,7 @@ export function CameraTriggerRules() {
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-muted-foreground">Aniqlash turi</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground">{t("aniqlashTuri")}</Label>
                                   <Select value={rule.detectionType} onValueChange={v => updateRule(rule.id, { detectionType: v })}>
                                     <SelectTrigger className="h-9" data-testid={`select-detection-${rule.id}`}>
                                       <SelectValue />
@@ -203,7 +205,7 @@ export function CameraTriggerRules() {
                                   </Select>
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-muted-foreground">Harakat</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground">{t("harakat")}</Label>
                                   <Select value={rule.action} onValueChange={v => updateRule(rule.id, { action: v })}>
                                     <SelectTrigger className="h-9" data-testid={`select-action-${rule.id}`}>
                                       <SelectValue />
@@ -216,22 +218,22 @@ export function CameraTriggerRules() {
                                   </Select>
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-muted-foreground">Muhimlik</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground">{t("priority")}</Label>
                                   <Select value={rule.severity} onValueChange={v => updateRule(rule.id, { severity: v })}>
                                     <SelectTrigger className="h-9" data-testid={`select-severity-${rule.id}`}>
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="low">Past</SelectItem>
-                                      <SelectItem value="medium">O'rta</SelectItem>
-                                      <SelectItem value="high">Yuqori</SelectItem>
-                                      <SelectItem value="critical">Kritik</SelectItem>
+                                      <SelectItem value="low">{t("low")}</SelectItem>
+                                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                                      <SelectItem value="high">{t("high")}</SelectItem>
+                                      <SelectItem value="critical">{t("kritik")}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span className="font-semibold">Modul:</span>
+                                <span className="font-semibold">{t("modul")}</span>
                                 <Badge variant="secondary" className="text-xs">{MODULE_LABELS[rule.targetModule] || rule.targetModule}</Badge>
                               </div>
                             </CardContent>
@@ -244,7 +246,7 @@ export function CameraTriggerRules() {
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Button variant="outline" onClick={addRule} data-testid="button-add-trigger-rule">
                       <Plus className="h-4 w-4 mr-1" />
-                      Qoida qo'shish
+                      {t("qoidaQoshish")}
                     </Button>
                     {isDirty && (
                       <Button onClick={() => saveRulesMutation.mutate()} disabled={saveRulesMutation.isPending} data-testid="button-save-trigger-rules">

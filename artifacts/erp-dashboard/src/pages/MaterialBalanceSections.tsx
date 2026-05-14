@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type { StockAlert, AlertsResponse } from "./MaterialBalanceTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Shared
@@ -31,6 +32,7 @@ import { EPStatusPill } from "@/components/ep";
 const SKELETON_KEYS = [1, 2, 3];
 
 export function SkeletonRows() {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-2">
       {SKELETON_KEYS.map((i) => (
@@ -69,12 +71,12 @@ export function OverviewSection({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kod</TableHead>
-                  <TableHead>Xom ashyo</TableHead>
-                  <TableHead className="text-right">Qoldiq</TableHead>
-                  <TableHead className="text-right">Min zaxira</TableHead>
-                  <TableHead>O'lchov</TableHead>
-                  <TableHead>Ombor</TableHead>
+                  <TableHead>{t("code")}</TableHead>
+                  <TableHead>{t("xomAshyo")}</TableHead>
+                  <TableHead className="text-right">{t("qoldiq")}</TableHead>
+                  <TableHead className="text-right">{t("minZaxira")}</TableHead>
+                  <TableHead>{t("olchov1")}</TableHead>
+                  <TableHead>{t("ombor")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,12 +114,12 @@ export function OverviewSection({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kod</TableHead>
-                  <TableHead>Xom ashyo</TableHead>
-                  <TableHead className="text-right">Qoldiq</TableHead>
-                  <TableHead className="text-right">Min</TableHead>
-                  <TableHead className="text-right">Etishmovchilik</TableHead>
-                  <TableHead>O'lchov</TableHead>
+                  <TableHead>{t("code")}</TableHead>
+                  <TableHead>{t("xomAshyo")}</TableHead>
+                  <TableHead className="text-right">{t("qoldiq")}</TableHead>
+                  <TableHead className="text-right">{t("min1")}</TableHead>
+                  <TableHead className="text-right">{t("etishmovchilik")}</TableHead>
+                  <TableHead>{t("olchov1")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -152,7 +154,7 @@ export function OverviewSection({
             <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
               <CheckCircle className="w-10 h-10 text-[var(--ep-green)]" />
               <p className="text-muted-foreground">
-                Barcha materiallar yetarli darajada
+                {t("barchaMateriallarYetarliDarajada")}
               </p>
             </CardContent>
           </Card>
@@ -180,7 +182,7 @@ export function AlertsSection({
     <div className="mt-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-base">Barcha ogohlantirishlar</CardTitle>
+          <CardTitle className="text-base">{t("barchaOgohlantirishlar")}</CardTitle>
           <div className="flex gap-2">
             <EPStatusPill tone="danger" data-testid="badge-critical-count">
               {alerts?.criticalCount ?? 0} kritik
@@ -197,14 +199,14 @@ export function AlertsSection({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>Kod</TableHead>
-                  <TableHead>Xom ashyo</TableHead>
-                  <TableHead className="text-right">Qoldiq</TableHead>
-                  <TableHead className="text-right">Min</TableHead>
-                  <TableHead className="text-right">Etishmovchilik</TableHead>
-                  <TableHead>O'lchov</TableHead>
-                  <TableHead>Ombor</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
+                  <TableHead>{t("code")}</TableHead>
+                  <TableHead>{t("xomAshyo")}</TableHead>
+                  <TableHead className="text-right">{t("qoldiq")}</TableHead>
+                  <TableHead className="text-right">{t("min1")}</TableHead>
+                  <TableHead className="text-right">{t("etishmovchilik")}</TableHead>
+                  <TableHead>{t("olchov1")}</TableHead>
+                  <TableHead>{t("ombor")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -212,9 +214,9 @@ export function AlertsSection({
                   <TableRow key={a.id} data-testid={`row-alert-${a.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>
                       {a.severity === "critical" ? (
-                        <EPStatusPill tone="danger">Kritik</EPStatusPill>
+                        <EPStatusPill tone="danger">{t("kritik")}</EPStatusPill>
                       ) : (
-                        <EPStatusPill tone="neutral">Kam</EPStatusPill>
+                        <EPStatusPill tone="neutral">{t("kam")}</EPStatusPill>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-sm">{a.kod}</TableCell>

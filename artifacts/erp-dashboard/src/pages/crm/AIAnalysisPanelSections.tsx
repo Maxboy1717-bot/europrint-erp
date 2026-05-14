@@ -12,6 +12,7 @@ import type { LeadScoringV2, NBAResult } from "./AIAnalysisPanelTypes";
 import { getPriorityColor, getFactorColor } from "./AIAnalysisPanelTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // Re-export risk sections for consumers that import from this file
 export { AutoFillSection, ChurnRescueSection } from "./AIAnalysisPanelRiskSections";
 
@@ -24,13 +25,14 @@ interface ScoringV2SectionProps {
 }
 
 export function ScoringV2Section({ scoringV2, loading, onRun }: ScoringV2SectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <Button onClick={onRun} disabled={!!loading} className="w-full" data-testid="btn-run-scoring-v2">
         {loading === "scoring" ? (
-          <><EPLoader className="mr-2" />Baholanmoqda...</>
+          <><EPLoader className="mr-2" />{t("baholanmoqda")}</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2" />Lead Scoring 2.0</>
+          <><Sparkles className="h-4 w-4 mr-2" />{t("leadScoring20")}</>
         )}
       </Button>
 
@@ -39,33 +41,33 @@ export function ScoringV2Section({ scoringV2, loading, onRun }: ScoringV2Section
           <div className="flex items-center justify-between">
             <div className="text-center">
               <div className="text-4xl font-bold">{scoringV2.score}</div>
-              <div className="text-xs text-muted-foreground">Umumiy ball</div>
+              <div className="text-xs text-muted-foreground">{t("umumiyBall")}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-[var(--ep-blue)]">{scoringV2.probability}%</div>
-              <div className="text-xs text-muted-foreground">Ehtimollik</div>
+              <div className="text-xs text-muted-foreground">{t("ehtimollik1")}</div>
             </div>
             <Badge className={getPriorityColor(scoringV2.priority)}>{scoringV2.priority}</Badge>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-background p-3 rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">Taxminiy LTV</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("taxminiyLtv")}</div>
               <div className="font-bold text-[var(--ep-green)]">{scoringV2.estimatedLTV?.toLocaleString()} UZS</div>
             </div>
             <div className="bg-background p-3 rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">Segment</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("segment")}</div>
               <Badge variant="outline">{scoringV2.segment}</Badge>
             </div>
           </div>
 
           <div className="bg-background p-3 rounded-lg">
-            <div className="text-xs text-muted-foreground mb-1">Tavsiya etiladigan yondashuv</div>
+            <div className="text-xs text-muted-foreground mb-1">{t("tavsiyaEtiladiganYondashuv")}</div>
             <div className="font-medium text-primary">{scoringV2.recommendedApproach}</div>
           </div>
 
           <div>
-            <div className="text-xs font-medium mb-2">Baholash omillari</div>
+            <div className="text-xs font-medium mb-2">{t("baholashOmillari")}</div>
             <div className="space-y-2">
               {([
                 { label: "Kompaniya hajmi", value: scoringV2.factors.companySize },
@@ -105,9 +107,9 @@ export function NBASection({ nba, loading, onRun, onCreateTask }: NBASectionProp
     <div className="space-y-4">
       <Button onClick={onRun} disabled={!!loading} className="w-full" data-testid="btn-run-nba">
         {loading === "nba" ? (
-          <><EPLoader className="mr-2" />Tahlil qilinmoqda...</>
+          <><EPLoader className="mr-2" />{t("tahlilQilinmoqda")}</>
         ) : (
-          <><Zap className="h-4 w-4 mr-2" />Keyingi eng yaxshi qadam</>
+          <><Zap className="h-4 w-4 mr-2" />{t("keyingiEngYaxshiQadam")}</>
         )}
       </Button>
 
@@ -123,28 +125,28 @@ export function NBASection({ nba, loading, onRun, onCreateTask }: NBASectionProp
           </div>
 
           <div className="bg-primary/10 p-3 rounded-lg">
-            <div className="text-xs text-muted-foreground mb-1">Keyingi qadam</div>
+            <div className="text-xs text-muted-foreground mb-1">{t("keyingiQadam")}</div>
             <div className="font-medium">{nba.action}</div>
           </div>
 
           <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Sabab:</span> {nba.reason}
+            <span className="font-medium">{t("sabab1")}</span> {nba.reason}
           </div>
 
           <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Kutilayotgan natija:</span> {nba.expectedOutcome}
+            <span className="font-medium">{t("kutilayotganNatija")}</span> {nba.expectedOutcome}
           </div>
 
           {nba.script && (
             <div className="bg-muted p-3 rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">Skript</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("skript")}</div>
               <div className="text-sm italic">{nba.script}</div>
             </div>
           )}
 
           {nba.tips && nba.tips.length > 0 && (
             <div className="space-y-1">
-              <div className="text-xs font-medium">Maslahatlar:</div>
+              <div className="text-xs font-medium">{t("maslahatlar")}</div>
               {(Array.isArray(nba.tips) ? nba.tips : []).map((tip, i) => (
                 <div key={`k-${i}`} className="text-xs text-muted-foreground flex items-start gap-1">
                   <span className="text-[var(--ep-blue)]">•</span> {tip}
@@ -160,9 +162,9 @@ export function NBASection({ nba, loading, onRun, onCreateTask }: NBASectionProp
             data-testid="btn-create-nba-task"
           >
             {loading === "createTask" ? (
-              <><EPLoader className="mr-2" />Yaratilmoqda...</>
+              <><EPLoader className="mr-2" />{t("yaratilmoqda")}</>
             ) : (
-              <><Plus className="h-4 w-4 mr-2" />Vazifa yaratish</>
+              <><Plus className="h-4 w-4 mr-2" />{t("vazifaYaratish")}</>
             )}
           </Button>
         </div>

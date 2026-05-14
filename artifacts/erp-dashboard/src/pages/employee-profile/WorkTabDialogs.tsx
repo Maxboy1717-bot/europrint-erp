@@ -50,6 +50,7 @@ interface SalarySectionProps {
 }
 
 export function SalarySection({ t, tCommon, salaryDialogOpen, setSalaryDialogOpen, salaryForm, setSalaryForm, saveSalaryChangeMutation, loadingSalaryHistory, salaryHistory, }: SalarySectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
@@ -139,7 +140,7 @@ export function SalarySection({ t, tCommon, salaryDialogOpen, setSalaryDialogOpe
                   onChange={(e) =>
                     setSalaryForm({ ...salaryForm, notes: e.target.value })
                   }
-                  placeholder="Qo'shimcha ma'lumot..."
+                  placeholder={t("qoshimchaMalumot")}
                   data-testid="input-salary-notes"
                 />
               </div>

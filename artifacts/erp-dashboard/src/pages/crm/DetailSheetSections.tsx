@@ -67,13 +67,13 @@ export function GeneralSection({entity,
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Nomi</label>
+              <label className="text-xs text-muted-foreground">{t("name")}</label>
               <div className="font-medium">{title}</div>
             </div>
 
             {entityType === "deals" && entity && (
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Summa</label>
+                <label className="text-xs text-muted-foreground">{t("summa")}</label>
                 <div className="font-bold text-[var(--ep-green)] text-lg">
                   {formatCurrency((entity as Deal).opportunity, (entity as Deal).currencyId)}
                 </div>
@@ -87,7 +87,7 @@ export function GeneralSection({entity,
 
             {entityType === "leads" && entity && (
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Holati</label>
+                <label className="text-xs text-muted-foreground">{t("holati")}</label>
                 <Badge
                   style={{
                     backgroundColor:
@@ -110,7 +110,7 @@ export function GeneralSection({entity,
 
             {entityType === "proposals" && entity && (
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Summa</label>
+                <label className="text-xs text-muted-foreground">{t("summa")}</label>
                 <div className="font-bold text-[var(--ep-purple)]">
                   {formatCurrency(
                     (entity as Proposal).totalAmount,
@@ -122,7 +122,7 @@ export function GeneralSection({entity,
 
             {entityType === "invoices" && entity && (
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">To'lov holati</label>
+                <label className="text-xs text-muted-foreground">{t("tolovHolati")}</label>
                 <div>
                   <div className="font-bold text-[var(--ep-yellow)]">
                     {formatCurrency(
@@ -146,7 +146,7 @@ export function GeneralSection({entity,
 
           {phone && (
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Telefon</label>
+              <label className="text-xs text-muted-foreground">{t("phone")}</label>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-[var(--ep-blue)]" />
                 <a href={`tel:${phone}`} className="text-[var(--ep-blue)] hover:underline">{phone}</a>
@@ -166,7 +166,7 @@ export function GeneralSection({entity,
 
           {entityType === "contacts" && entity && (entity as Contact).post && (
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Lavozim</label>
+              <label className="text-xs text-muted-foreground">{t("lavozim1")}</label>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span>{(entity as Contact).post}</span>
@@ -176,7 +176,7 @@ export function GeneralSection({entity,
 
           {entityType === "companies" && entity && (entity as Company).industry && (
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Soha</label>
+              <label className="text-xs text-muted-foreground">{t("soha")}</label>
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <span>{(entity as Company).industry}</span>
@@ -186,14 +186,14 @@ export function GeneralSection({entity,
 
           {entityType === "companies" && entity && (entity as Company).address && (
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Manzil</label>
+              <label className="text-xs text-muted-foreground">{t("address")}</label>
               <div className="text-sm">{(entity as Company).address}</div>
             </div>
           )}
 
           {entity?.dateCreate && (
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Yaratilgan</label>
+              <label className="text-xs text-muted-foreground">{t("Yaratilgan")}</label>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span>
@@ -225,7 +225,7 @@ export function GeneralSection({entity,
 
           {activities.length > 0 && (
             <div className="space-y-1 border-t pt-4">
-              <label className="text-xs text-muted-foreground">Faoliyatlar</label>
+              <label className="text-xs text-muted-foreground">{t("faoliyatlar")}</label>
               <div className="flex items-center gap-2">
                 <EPStatusPill tone="neutral">
                   {activities.filter((a) => !a.isDone).length} ta aktiv

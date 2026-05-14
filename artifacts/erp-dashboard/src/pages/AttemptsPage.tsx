@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClipboardList, Trophy } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Attempt {
   id: string | number;
   test_id?: string | number;
@@ -47,6 +48,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 export default function AttemptsPage() {
+  const { t } = useTranslation("common");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: rawData, isLoading, isError, refetch } = useQuery<
@@ -70,7 +72,7 @@ export default function AttemptsPage() {
   return (
     <ModulePage
       module="hr"
-      title="Test Urinishlari"
+      title={t("testUrinishlari")}
       icon={<ClipboardList className="h-5 w-5" />}
     >
       <div className="space-y-4">
@@ -107,7 +109,7 @@ export default function AttemptsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Test urinishlari topilmadi</p>
+              <p className="text-muted-foreground">{t("testUrinishlariTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (

@@ -8,6 +8,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useTranslation } from '@/lib/i18n';
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
@@ -50,6 +51,7 @@ const BreadcrumbLink = React.forwardRef<
     asChild?: boolean
   }
 >(({ asChild, className, ...props }, ref) => {
+  const { t } = useTranslation("common");
   const Comp = asChild ? Slot : "a"
 
   return (
@@ -104,7 +106,7 @@ const BreadcrumbEllipsis = ({
     {...props}
   >
     <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More</span>
+    <span className="sr-only">{t("more1")}</span>
   </span>
 )
 BreadcrumbEllipsis.displayName = "BreadcrumbElipssis"

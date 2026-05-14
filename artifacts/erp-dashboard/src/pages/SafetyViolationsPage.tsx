@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldAlert, AlertTriangle, AlertCircle, CheckCircle2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface SafetyViolation {
   id: string | number;
   violation_type?: string;
@@ -44,6 +45,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function SafetyViolationsPage() {
+  const { t } = useTranslation("common");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [statusFilter, setStatusFilter]     = useState("all");
 
@@ -67,14 +69,14 @@ export default function SafetyViolationsPage() {
   return (
     <ModulePage
       module="iot"
-      title="Xavfsizlik Buzilishlari"
+      title={t("xavfsizlikBuzilishlari")}
       icon={<ShieldAlert className="h-5 w-5" />}
     >
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
           <div className="flex gap-1.5 flex-wrap">
-            <span className="text-xs text-muted-foreground self-center mr-1">Darajasi:</span>
+            <span className="text-xs text-muted-foreground self-center mr-1">{t("darajasi1")}</span>
             {["all", "critical", "high", "medium", "low"].map(s => (
               <Button
                 key={s}
@@ -89,7 +91,7 @@ export default function SafetyViolationsPage() {
             ))}
           </div>
           <div className="flex gap-1.5 flex-wrap">
-            <span className="text-xs text-muted-foreground self-center mr-1">Holat:</span>
+            <span className="text-xs text-muted-foreground self-center mr-1">{t("holat1")}</span>
             {["all", "open", "pending", "resolved"].map(s => (
               <Button
                 key={s}
@@ -124,7 +126,7 @@ export default function SafetyViolationsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <ShieldAlert className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Xavfsizlik buzilishlari topilmadi</p>
+              <p className="text-muted-foreground">{t("xavfsizlikBuzilishlariTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (

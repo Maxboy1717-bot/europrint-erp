@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Activity, Brain, Gauge, Layers, RefreshCw, CheckCircle, XCircle } from "lucide-react";
 import type { IoTSensor, IoTAlert, OEEData, PredictionData } from "./IoTExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 export function SensorsTabContent({
   sensors,
@@ -30,13 +31,13 @@ export function SensorsTabContent({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Real-time Sensor Ma'lumotlari</h2>
+        <h2 className="text-lg font-semibold">{t("realTimeSensorMalumotlari")}</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onRefresh} data-testid="button-refresh-sensors">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button size="sm" onClick={onAddSensor} data-testid="button-add-sensor">
-            <Activity className="h-3.5 w-3.5 mr-1.5" />Sensor Qo'shish
+            <Activity className="h-3.5 w-3.5 mr-1.5" />{t("sensorQoshish")}
           </Button>
         </div>
       </div>
@@ -56,23 +57,23 @@ export function SensorsTabContent({
       </div>
 
       {sensorsLoading ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">Yuklanmoqda...</CardContent></Card>
+        <Card><CardContent className="py-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</CardContent></Card>
       ) : sensors.length === 0 ? (
         <Card><CardContent className="py-8 text-center text-muted-foreground">
           <Activity className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <div>Sensorlar yo'q. Yangi sensor qo'shing.</div>
+          <div>{t("sensorlarYoqYangiSensorQoshing")}</div>
         </CardContent></Card>
       ) : (
         <Card>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Sensor ID</TableHead>
-                <TableHead>Tur</TableHead>
-                <TableHead>Mashina</TableHead>
-                <TableHead>Birlik</TableHead>
+                <TableHead>{t("sensorId")}</TableHead>
+                <TableHead>{t("tur")}</TableHead>
+                <TableHead>{t("mashina")}</TableHead>
+                <TableHead>{t("unit")}</TableHead>
                 <TableHead>Min/Max</TableHead>
-                <TableHead>Holati</TableHead>
+                <TableHead>{t("holati")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(sensors) ? sensors : []).slice(0, 20).map((s: IoTSensor) => (
@@ -84,9 +85,9 @@ export function SensorsTabContent({
                     <TableCell className="text-sm text-muted-foreground">{s.minValue} / {s.maxValue}</TableCell>
                     <TableCell>
                       {s.isActive ? (
-                        <Badge variant="default" className="gap-1"><CheckCircle className="h-3 w-3" />Faol</Badge>
+                        <Badge variant="default" className="gap-1"><CheckCircle className="h-3 w-3" />{t("active")}</Badge>
                       ) : (
-                        <Badge variant="secondary" className="gap-1"><XCircle className="h-3 w-3" />Nofaol</Badge>
+                        <Badge variant="secondary" className="gap-1"><XCircle className="h-3 w-3" />{t("inactive")}</Badge>
                       )}
                     </TableCell>
                   </TableRow>
@@ -120,9 +121,9 @@ export function AlertsTabContent({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">IoT Ogohlantirishlar</h2>
+        <h2 className="text-lg font-semibold">{t("iotOgohlantirishlar")}</h2>
         <Button variant="outline" size="sm" onClick={onRefresh} data-testid="button-refresh-alerts">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
 
@@ -143,17 +144,17 @@ export function AlertsTabContent({
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Sensor</TableHead><TableHead>Xabar</TableHead>
-              <TableHead>Og'irlik</TableHead><TableHead>Qiymat</TableHead>
-              <TableHead>Vaqt</TableHead><TableHead>Harakat</TableHead>
+              <TableHead>{t("sensor")}</TableHead><TableHead>{t("xabar")}</TableHead>
+              <TableHead>{t("weight")}</TableHead><TableHead>{t("qiymat")}</TableHead>
+              <TableHead>{t("time")}</TableHead><TableHead>{t("harakat")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {alertsLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : alerts.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">
                   <CheckCircle className="h-8 w-8 mx-auto mb-2 text-[var(--ep-green)]" />
-                  Hozirda ogohlantirishlar yo'q
+                  {t("hozirdaOgohlantirishlarYoq")}
                 </TableCell></TableRow>
               ) : (Array.isArray(alerts) ? alerts : []).slice(0, 15).map((a: IoTAlert) => (
                 <TableRow key={a.id} data-testid={`row-alert-${a.id}`} className="hover:bg-muted/40 transition-colors">
@@ -172,10 +173,10 @@ export function AlertsTabContent({
                     {!a.resolvedAt ? (
                       <Button size="sm" variant="outline" onClick={() => onResolve(a.id)}
                         disabled={resolvePending} data-testid={`button-resolve-alert-${a.id}`}>
-                        Hal qilish
+                        {t("halQilish")}
                       </Button>
                     ) : (
-                      <Badge variant="outline" className="text-[var(--ep-green)] border-green-600">Hal qilindi</Badge>
+                      <Badge variant="outline" className="text-[var(--ep-green)] border-green-600">{t("halQilindi")}</Badge>
                     )}
                   </TableCell>
                 </TableRow>
@@ -197,11 +198,12 @@ export function OEETabContent({
   oeeLoading: boolean;
   liveSummary?: { activeMachines?: number | string; avgOee?: number | string; totalProduced?: number | string; totalDefects?: number | string } & Record<string, unknown>;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">OEE Live Monitor</h2>
-        <Badge variant="outline" className="text-[var(--ep-green)] border-green-600">Jonli ma'lumot</Badge>
+        <h2 className="text-lg font-semibold">{t("oeeLiveMonitor")}</h2>
+        <Badge variant="outline" className="text-[var(--ep-green)] border-green-600">{t("jonliMalumot")}</Badge>
       </div>
 
       {oeeLoading ? (
@@ -210,8 +212,8 @@ export function OEETabContent({
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
             <Gauge className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <div>OEE ma'lumotlari yo'q</div>
-            <div className="text-xs mt-1">MES orqali ishlab chiqarish seansini boshlang</div>
+            <div>{t("oeeMalumotlariYoq")}</div>
+            <div className="text-xs mt-1">{t("mesOrqaliIshlabChiqarishSeansini")}</div>
           </CardContent>
         </Card>
       ) : (
@@ -252,7 +254,7 @@ export function OEETabContent({
 
       {liveSummary && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Live Dashboard Xulosasi</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("liveDashboardXulosasi")}</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {([

@@ -69,7 +69,7 @@ export default function ValidatePage() {
   return (
     <div className="space-y-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('validate.title', "Hujjat Validatsiyasi")}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('validate.title', "Hujjat Validatsiyasi")}</b></>}
         title={t('validate.title', 'Hujjat validatsiyasi')}
         subtitle={t('validate.description', 'STIR (INN) va karta raqami (Luhn algoritmi) tekshiruvi')}
       />

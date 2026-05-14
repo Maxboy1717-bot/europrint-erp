@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, BookOpen } from "lucide-react";
 import { NINE_BOX } from "./HRSuccessionPlanningTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Key Positions Tab ────────────────────────────────────────────────────────
 
@@ -20,11 +21,12 @@ interface KeyPositionsTabProps {
 }
 
 export function KeyPositionsTab({ positions, isLoading }: KeyPositionsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Strategik Lavozimlar Ro'yxati</CardTitle>
-        <CardDescription>Vorissiz yoki yuqori xavfli asosiy lavozimlar</CardDescription>
+        <CardTitle>{t("strategikLavozimlarRoyxati")}</CardTitle>
+        <CardDescription>{t("vorissizYokiYuqoriXavfliAsosiy")}</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
@@ -35,9 +37,9 @@ export function KeyPositionsTab({ positions, isLoading }: KeyPositionsTabProps) 
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Lavozim</TableHead>
-                <TableHead>Bo'lim</TableHead>
-                <TableHead>Rejalari</TableHead>
+                <TableHead>{t("lavozim1")}</TableHead>
+                <TableHead>{t("bolim1")}</TableHead>
+                <TableHead>{t("rejalari")}</TableHead>
                 <TableHead>1 yilda</TableHead>
                 <TableHead>2 yilda</TableHead>
               </TableRow>
@@ -63,7 +65,7 @@ export function KeyPositionsTab({ positions, isLoading }: KeyPositionsTabProps) 
               )) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                    Asosiy lavozimlar topilmadi
+                    {t("asosiyLavozimlarTopilmadi")}
                   </TableCell>
                 </TableRow>
               )}
@@ -92,17 +94,17 @@ export function CareerPlansTab({ plans, isLoading }: CareerPlansTabProps) {
       ) : plans.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground">
           <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-40" />
-          <p>Hali vorislik rejalari yo'q. Yangi reja qo'shing.</p>
+          <p>{t("haliVorislikRejalariYoqYangi")}</p>
         </div>
       ) : (
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Xodim</TableHead>
-              <TableHead>Joriy lavozim</TableHead>
-              <TableHead>Maqsad lavozim</TableHead>
-              <TableHead>Sana</TableHead>
-              <TableHead>Holat</TableHead>
+              <TableHead>{t("xodim1")}</TableHead>
+              <TableHead>{t("joriyLavozim")}</TableHead>
+              <TableHead>{t("maqsadLavozim1")}</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -139,8 +141,8 @@ export function CandidatesTab({ candidates, isLoading }: CandidatesTabProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Potentsial Nomzodlar</CardTitle>
-        <CardDescription>Ko'proq ko'nikmaga ega xodimlar</CardDescription>
+        <CardTitle>{t("potentsialNomzodlar1")}</CardTitle>
+        <CardDescription>{t("koproqKonikmagaEgaXodimlar")}</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
@@ -150,7 +152,7 @@ export function CandidatesTab({ candidates, isLoading }: CandidatesTabProps) {
         ) : candidates.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
-            <p>Xodimlar ma'lumotlari yo'q.</p>
+            <p>{t("xodimlarMalumotlariYoq")}</p>
           </div>
         ) : (
           <div className="divide-y">
@@ -173,7 +175,7 @@ export function CandidatesTab({ candidates, isLoading }: CandidatesTabProps) {
                 {Number(c.skills_count ?? 0) > 0 && (
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Ko'nikma darajasi</span>
+                      <span className="text-muted-foreground">{t("konikmaDarajasi")}</span>
                       <span>{Math.min(100, Number(c.skills_count ?? 0) * 10)}%</span>
                     </div>
                     <Progress value={Math.min(100, Number(c.skills_count ?? 0) * 10)} className="h-1.5" />
@@ -198,8 +200,8 @@ export function NineBoxMatrixTab({ candidates }: NineBoxMatrixTabProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>9-Blok Samaradorlik-Potentsial Matritsa</CardTitle>
-        <CardDescription>Xodimlarni potentsial va samaradorlik bo'yicha joylash</CardDescription>
+        <CardTitle>{t("k9BlokSamaradorlikPotentsialMatritsa")}</CardTitle>
+        <CardDescription>{t("xodimlarniPotentsialVaSamaradorlikBoyicha")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -216,8 +218,8 @@ export function NineBoxMatrixTab({ candidates }: NineBoxMatrixTabProps) {
           ))}
         </div>
         <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
-          <span>← Past samaradorlik | Yuqori samaradorlik →</span>
-          <span>↑ Yuqori potentsial | Past potentsial ↓</span>
+          <span>{t("pastSamaradorlikYuqoriSamaradorlik")}</span>
+          <span>{t("yuqoriPotentsialPastPotentsial")}</span>
         </div>
       </CardContent>
     </Card>

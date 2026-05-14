@@ -10,6 +10,7 @@ import { getPosSocket } from "../socket/pos-socket";
 import { warehousesApi } from "../api/pos-monitor.api";
 import PosOfflineBanner from "../components/PosOfflineBanner";
 import PosNotificationsDrawer from "../components/PosNotificationsDrawer";
+import { useTranslation } from '@/lib/i18n';
 
 interface NavItem {
   icon: string;
@@ -125,7 +126,7 @@ export default function PosLayout({ children }: PosLayoutProps) {
             {!mini && (
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "var(--pos-accent)", letterSpacing: 1 }}>{t('common.posMonitor')}</div>
-                <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>EuroPrint ERP</div>
+                <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("europrintErp")}</div>
               </div>
             )}
           </div>
@@ -136,7 +137,7 @@ export default function PosLayout({ children }: PosLayoutProps) {
               onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
               onMouseLeave={e => (e.currentTarget.style.opacity = "0.7")}
             >
-              ← ERP ga qaytish
+              {t("erpGaQaytish")}
             </a>
           )}
         </div>
@@ -211,7 +212,7 @@ export default function PosLayout({ children }: PosLayoutProps) {
             onClick={() => setMini(m => !m)}
           >
             <span>{mini ? "→" : "←"}</span>
-            {!mini && <span style={{ fontSize: 12 }}>Yopish</span>}
+            {!mini && <span style={{ fontSize: 12 }}>{t("close2")}</span>}
           </button>
         </div>
       </nav>

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
+import { useTranslation } from '@/lib/i18n';
 
 interface KanbanColumnHeaderProps {
   stageName: string;
@@ -25,6 +26,7 @@ export function KanbanColumnHeader({
   currency = "UZS",
   onQuickAdd,
 }: KanbanColumnHeaderProps) {
+  const { t } = useTranslation("common");
   const color = stageColor ?? "#A0AEC0";
 
   return (
@@ -90,7 +92,7 @@ export function KanbanColumnHeader({
               }}
               onClick={onQuickAdd}
               data-testid="button-quick-add"
-              title="Yangi qo'shish"
+              title={t("yangiQoshish")}
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>

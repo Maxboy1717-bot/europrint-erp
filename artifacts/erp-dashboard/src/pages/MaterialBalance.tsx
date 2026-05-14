@@ -184,10 +184,10 @@ export default function MaterialBalance() {
             className="text-2xl font-bold"
             data-testid="text-page-title"
           >
-            Material Balans
+            {t("materialBalans1")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Xom ashyo zaxirasi va ichki so'rovlar boshqaruvi
+            {t("xomAshyoZaxirasiVaIchki")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function MaterialBalance() {
             onClick={() => setMovementDialogOpen(true)}
           >
             <PlusCircle className="w-4 h-4 mr-2" />
-            Harakat qo'shish
+            {t("harakatQoshish")}
           </Button>
           <Button
             variant="outline"
@@ -213,7 +213,7 @@ export default function MaterialBalance() {
             }}
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            Yangilash
+            {t("refresh")}
           </Button>
         </div>
       </div>
@@ -231,26 +231,26 @@ export default function MaterialBalance() {
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard
-          title="Jami materiallar"
+          title={t("jamiMateriallar")}
           value={ov?.totalMaterials ?? 0}
           icon={Package}
           loading={overviewLoading}
         />
         <StatCard
-          title="Umumiy qiymat"
+          title={t("umumiyQiymat")}
           value={ov ? formatCurrency(ov.totalStockValue) : "0"}
           icon={Warehouse}
           loading={overviewLoading}
         />
         <StatCard
-          title="Kam qolganlar"
+          title={t("kamQolganlar")}
           value={ov?.lowStockAlerts ?? 0}
           icon={TrendingDown}
           loading={overviewLoading}
           variant="warning"
         />
         <StatCard
-          title="Tuganganlar"
+          title={t("tuganganlar")}
           value={ov?.criticalStockCount ?? 0}
           icon={AlertTriangle}
           loading={overviewLoading}
@@ -262,7 +262,7 @@ export default function MaterialBalance() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview" data-testid="tab-overview">
-            Umumiy
+            {t("umumiy")}
           </TabsTrigger>
           <TabsTrigger value="alerts" data-testid="tab-alerts">
             Ogohlantirishlar
@@ -273,10 +273,10 @@ export default function MaterialBalance() {
             )}
           </TabsTrigger>
           <TabsTrigger value="requests" data-testid="tab-requests">
-            Ichki So'rovlar
+            {t("ichkiSorovlar")}
           </TabsTrigger>
           <TabsTrigger value="production" data-testid="tab-production">
-            Ishlab Chiqarish
+            {t("ishlabChiqarish1")}
           </TabsTrigger>
         </TabsList>
 

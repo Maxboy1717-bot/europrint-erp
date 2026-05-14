@@ -5,6 +5,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from '@/lib/i18n';
 
 const STAGE_LABELS: Record<string, string> = {
   incoming: "Kirish nazorat",
@@ -43,12 +44,13 @@ export default function ProductionOrder360Quality({
   totalFailed,
   checks,
 }: ProductionOrder360QualityProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">QC o'tish darajasi</p>
+            <p className="text-xs text-muted-foreground">{t("qcOtishDarajasi")}</p>
             <p className={`text-2xl font-bold mt-0.5 ${qcPassRate >= 95 ? "text-[var(--ep-green)]" : qcPassRate >= 85 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
               {qcPassRate}%
             </p>
@@ -56,13 +58,13 @@ export default function ProductionOrder360Quality({
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Tekshirilgan</p>
+            <p className="text-xs text-muted-foreground">{t("tekshirilgan")}</p>
             <p className="text-2xl font-bold mt-0.5">{fmt(totalChecked)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Rad etilgan</p>
+            <p className="text-xs text-muted-foreground">{t("rejected")}</p>
             <p className="text-2xl font-bold mt-0.5 text-[var(--ep-red)]">{fmt(totalFailed)}</p>
           </CardContent>
         </Card>
@@ -81,22 +83,22 @@ export default function ProductionOrder360Quality({
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
               <div>
-                <p className="text-muted-foreground text-xs">Tekshirildi</p>
+                <p className="text-muted-foreground text-xs">{t("tekshirildi")}</p>
                 <p className="font-bold">{fmt(check.checkedQty)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">O'tdi</p>
+                <p className="text-muted-foreground text-xs">{t("otdi")}</p>
                 <p className="font-bold text-[var(--ep-green)]">{fmt(check.passedQty)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">Rad etildi</p>
+                <p className="text-muted-foreground text-xs">{t("radEtildi")}</p>
                 <p className="font-bold text-[var(--ep-red)]">{fmt(check.failedQty)}</p>
               </div>
             </div>
 
             {check.defectTypes && Array.isArray(check.defectTypes) && check.defectTypes.length > 0 && (
               <div className="mt-3 space-y-1">
-                <p className="text-xs text-muted-foreground font-medium">Nuqson turlari:</p>
+                <p className="text-xs text-muted-foreground font-medium">{t("nuqsonTurlari")}</p>
                 {check.defectTypes.map((dt, i) => (
                   <div key={`k-${i}`} className="flex items-center justify-between text-xs">
                     <span>{dt.type || "Noma'lum"}</span>
@@ -124,7 +126,7 @@ export default function ProductionOrder360Quality({
       {(!checks || checks.length === 0) && (
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            QC nazorat ma'lumotlari yo'q
+            {t("qcNazoratMalumotlariYoq")}
           </CardContent>
         </Card>
       )}

@@ -73,9 +73,9 @@ export default function BottleneckAnalysisPage() {
                   </div>
                   <Progress value={Math.min(100, b.utilization)} className="mb-2" />
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-muted-foreground mb-2">
-                    <span>Yuklanish: <strong>{b.utilization}%</strong></span>
-                    <span>Navbat: <strong>{b.queueDepth}</strong></span>
-                    <span>Kutish: <strong>{b.averageWaitMinutes} daq</strong></span>
+                    <span>{t("yuklanish")}<strong>{b.utilization}%</strong></span>
+                    <span>{t("navbat")}<strong>{b.queueDepth}</strong></span>
+                    <span>{t("kutish1")}<strong>{b.averageWaitMinutes} daq</strong></span>
                   </div>
                   <p className="text-xs italic">{b.recommendation}</p>
                 </div>

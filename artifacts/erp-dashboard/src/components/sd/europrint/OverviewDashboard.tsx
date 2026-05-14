@@ -15,7 +15,7 @@ export function OverviewDashboard() {
     queryKey: ["/api/sd/dashboard/overview"],
   });
 
-  if (isLoading) return <div className="text-sm text-muted-foreground p-4">Yuklanmoqda...</div>;
+  if (isLoading) return <div className="text-sm text-muted-foreground p-4">{t("Yuklanmoqda...")}</div>;
 
   const stats = [
     { label: "Yangi buyurtmalar (hafta)", value: overview?.newOrders?.count || 0, sub: fmt(overview?.newOrders?.amount || 0) + " so'm", icon: ShoppingCart, color: "text-[var(--ep-blue)]" },

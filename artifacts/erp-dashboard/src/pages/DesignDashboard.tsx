@@ -81,12 +81,12 @@ export default function DesignDashboard() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between gap-4">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Dizayn {t('dashboard7')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Dizayn {t('dashboard7')}</b></>}
         title="Dizayn {t('dashboard7')}"
       />
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
@@ -121,15 +121,15 @@ export default function DesignDashboard() {
       {!isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div className="bg-card rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Promptlar</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("aiPromptlar")}</p>
             <p className="text-4xl font-bold tracking-tight text-foreground mt-1" data-testid="text-prompts">{stats?.totalPrompts || 0}</p>
           </div>
           <div className="bg-card rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tasdiqlash ko'rsatkichi</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tasdiqlashKorsatkichi")}</p>
             <p className="text-4xl font-bold tracking-tight text-foreground mt-1" data-testid="text-approval-rate">{approvalRate}%</p>
           </div>
           <div className="bg-card rounded-lg p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tasdiqlangan Dizaynlar</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tasdiqlanganDizaynlar")}</p>
             <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{stats?.approvedDesigns || 0}</p>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function DesignDashboard() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-card rounded-xl p-6">
-          <h3 className="text-sm font-semibold mb-4">Buyurtmalar Status Taqsimoti</h3>
+          <h3 className="text-sm font-semibold mb-4">{t("buyurtmalarStatusTaqsimoti")}</h3>
           <div className="h-[260px]">
             {statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -168,7 +168,7 @@ export default function DesignDashboard() {
         </div>
 
         <div className="bg-card rounded-xl p-6">
-          <h3 className="text-sm font-semibold mb-4">Buyurtmalar Statistikasi</h3>
+          <h3 className="text-sm font-semibold mb-4">{t("buyurtmalarStatistikasi")}</h3>
           <div className="h-[260px]">
             {statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -195,7 +195,7 @@ export default function DesignDashboard() {
 
       {/* Recent Orders */}
       <div className="bg-card rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-foreground mb-4">So'nggi Buyurtmalar</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4">{t("songgiBuyurtmalar1")}</h3>
         <div className="space-y-2">
           {isLoading ? (
             ([1, 2, 3, 4, 5]).map((i) => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)

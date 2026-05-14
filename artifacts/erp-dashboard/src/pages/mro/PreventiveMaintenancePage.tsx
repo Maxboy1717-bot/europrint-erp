@@ -81,10 +81,10 @@ export default function PreventiveMaintenancePage() {
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                    <span>Keyingi: <strong>{p.nextDueDate}</strong></span>
-                    <span>Oxirgi: <strong>{p.lastCompletedDate ?? '—'}</strong></span>
-                    <span>Vaqt: <strong>{p.estimatedDurationHours} soat</strong></span>
-                    <span>Texnik: <strong>{p.assignedTechName ?? '—'}</strong></span>
+                    <span>{t("keyingi")}<strong>{p.nextDueDate}</strong></span>
+                    <span>{t("oxirgi")}<strong>{p.lastCompletedDate ?? '—'}</strong></span>
+                    <span>{t("vaqt")}<strong>{p.estimatedDurationHours} soat</strong></span>
+                    <span>{t("texnik1")}<strong>{p.assignedTechName ?? '—'}</strong></span>
                   </div>
                 </div>
               );

@@ -74,7 +74,7 @@ export function PayrollTab({
               <div className="space-y-4 py-4">
                 <div>
                   <Label htmlFor="periodName">{t('period')}</Label>
-                  <Input id="periodName" {...periodForm.register("periodName")} placeholder="Yanvar 2024" data-testid="input-period-name" />
+                  <Input id="periodName" {...periodForm.register("periodName")} placeholder={t("yanvar2024")} data-testid="input-period-name" />
                   {periodForm.formState.errors.periodName && (
                     <p className="text-sm text-destructive mt-1">{periodForm.formState.errors.periodName.message}</p>
                   )}

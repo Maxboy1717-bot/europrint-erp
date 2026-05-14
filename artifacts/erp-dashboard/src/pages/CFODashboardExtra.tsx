@@ -44,34 +44,34 @@ export function QuickLinksSection() {
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-cash-flow">
             <Banknote className="h-6 w-6 text-[var(--ep-green)]" />
             <span>{t('cashFlow')}</span>
-            <span className="text-xs text-muted-foreground">Pul oqimi</span>
+            <span className="text-xs text-muted-foreground">{t("pulOqimi1")}</span>
           </Button>
         </Link>
         <Link href="/finance/budgets">
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-budgets">
             <Target className="h-6 w-6 text-[var(--ep-blue)]" />
             <span>{t('budgets')}</span>
-            <span className="text-xs text-muted-foreground">Byudjet boshqarish</span>
+            <span className="text-xs text-muted-foreground">{t("byudjetBoshqarish")}</span>
           </Button>
         </Link>
         <Link href="/finance/order-costing">
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-order-costing">
             <Calculator className="h-6 w-6 text-[var(--ep-purple)]" />
             <span>{t('orderCosting')}</span>
-            <span className="text-xs text-muted-foreground">Buyurtma tannarxi</span>
+            <span className="text-xs text-muted-foreground">{t("buyurtmaTannarxi")}</span>
           </Button>
         </Link>
         <Link href="/financial-reports">
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-reports">
             <FileText className="h-6 w-6 text-[var(--ep-yellow)]" />
             <span>{t('financialReports')}</span>
-            <span className="text-xs text-muted-foreground">Moliyaviy hisobotlar</span>
+            <span className="text-xs text-muted-foreground">{t("moliyaviyHisobotlar")}</span>
           </Button>
         </Link>
         <Link href="/finance/variance">
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-variance">
             <TrendingDown className="h-6 w-6 text-[var(--ep-red)]" />
-            <span>Variance Tahlili</span>
+            <span>{t("varianceTahlili")}</span>
             <span className="text-xs text-muted-foreground">MPV · MQV · LRV · LEV · OV</span>
           </Button>
         </Link>
@@ -85,8 +85,8 @@ export function QuickLinksSection() {
         <Link href="/finance/pricing-tiers">
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-pricing">
             <Percent className="h-6 w-6 text-[var(--ep-blue)]" />
-            <span>Narxlar Tizimi</span>
-            <span className="text-xs text-muted-foreground">Tiered Pricing</span>
+            <span>{t("narxlarTizimi")}</span>
+            <span className="text-xs text-muted-foreground">{t("tieredPricing")}</span>
           </Button>
         </Link>
       </div>
@@ -124,9 +124,9 @@ export function RiskSection({ financialRisk, riskLoading }: RiskSectionProps) {
                 {(financialRisk?.overallRiskLevel === "critical" || financialRisk?.overallRiskLevel === "high")
                   ? <ShieldAlert className="h-6 w-6" />
                   : <ShieldCheck className="h-6 w-6" />}
-                <h3 className="text-lg font-bold">Moliyaviy Risk Tahlili</h3>
+                <h3 className="text-lg font-bold">{t("moliyaviyRiskTahlili")}</h3>
               </div>
-              <Badge className="bg-white/20 text-white border-white/30 text-xs">AI • Rule-based</Badge>
+              <Badge className="bg-white/20 text-white border-white/30 text-xs">{t("aiRuleBased")}</Badge>
             </div>
             <div className="flex items-end gap-3 mb-3">
               <span className="text-5xl font-bold">{financialRisk?.overallRiskScore ?? 0}</span>
@@ -235,13 +235,13 @@ export function FinancialSummarySection({ dashboard, netProfit, netProfitTrend }
         </div>
         <div className="flex justify-between items-center pb-3 border-b border-border md:border-b-0 md:border-r md:px-4">
           <div>
-            <span className="text-sm text-muted-foreground">Yalpi foyda</span>
+            <span className="text-sm text-muted-foreground">{t("yalpiFoyda")}</span>
             <p className="font-bold text-lg">{formatCurrency(dashboard?.grossProfit || 0)}</p>
           </div>
         </div>
         <div className="flex justify-between items-center md:pl-4">
           <div>
-            <span className="text-sm text-muted-foreground">Sof pozitsiya</span>
+            <span className="text-sm text-muted-foreground">{t("sofPozitsiya")}</span>
             <p className={`font-bold text-xl ${netProfitTrend ? "text-[var(--ep-green)]" : "text-[var(--ep-primary)]"}`}>
               {formatCurrency(netProfit)}
             </p>

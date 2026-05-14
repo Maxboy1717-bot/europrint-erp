@@ -10,11 +10,13 @@ import { Target, TrendingUp, Lightbulb, Sparkles, Send } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface RevenueRes { optimistic: number; realistic: number; pessimistic: number }
 interface ScenarioRes { analysis: string }
 interface InvestmentRes { recommendations: Array<{ item: string; cost: number; roi: number; priority: 'high'|'medium'|'low' }> }
 
 export default function StrategicDashboard() {
+  const { t } = useTranslation("common");
   const [scenarioInput, setScenarioInput] = useState('Xom ashyo narxi 15% ga oshib ketsa nima bo\'ladi?');
   const [scenarioResult, setScenarioResult] = useState<string | null>(null);
 
@@ -39,7 +41,7 @@ export default function StrategicDashboard() {
       <header className="flex items-center gap-3">
         <Target className="h-7 w-7 text-[var(--ep-primary)]" />
         <div>
-          <h1 className="text-2xl font-bold">Strategik AI</h1>
+          <h1 className="text-2xl font-bold">{t("strategikAi")}</h1>
           <p className="text-sm text-muted-foreground">6 oylik bashorat + scenario simulator + investitsiya tavsiyalari</p>
         </div>
       </header>
@@ -47,21 +49,21 @@ export default function StrategicDashboard() {
       {/* 6 oylik daromad bashorat — 3 scenario */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-5 border-2 border-emerald-200 bg-emerald-50/40">
-          <div className="text-xs uppercase font-bold text-[var(--ep-green)]">🟢 Optimistik</div>
+          <div className="text-xs uppercase font-bold text-[var(--ep-green)]">{t("optimistik")}</div>
           <div className="text-2xl font-bold text-emerald-800 mt-2 tabular-nums">
             {revenue.isLoading ? <EPLoader size={20} /> :
               `${(revenue.data?.optimistic ?? 0).toLocaleString()} so'm`}
           </div>
         </Card>
         <Card className="p-5 border-2 border-amber-200 bg-amber-50/40">
-          <div className="text-xs uppercase font-bold text-[var(--ep-yellow)]">🟡 Realistik</div>
+          <div className="text-xs uppercase font-bold text-[var(--ep-yellow)]">{t("realistik")}</div>
           <div className="text-2xl font-bold text-amber-800 mt-2 tabular-nums">
             {revenue.isLoading ? <EPLoader size={20} /> :
               `${(revenue.data?.realistic ?? 0).toLocaleString()} so'm`}
           </div>
         </Card>
         <Card className="p-5 border-2 border-red-200 bg-red-50/40">
-          <div className="text-xs uppercase font-bold text-[var(--ep-red)]">🔴 Pessimistik</div>
+          <div className="text-xs uppercase font-bold text-[var(--ep-red)]">{t("pessimistik")}</div>
           <div className="text-2xl font-bold text-red-800 mt-2 tabular-nums">
             {revenue.isLoading ? <EPLoader size={20} /> :
               `${(revenue.data?.pessimistic ?? 0).toLocaleString()} so'm`}
@@ -77,7 +79,7 @@ export default function StrategicDashboard() {
         </div>
         <textarea
           className="w-full border rounded-md p-3 text-sm min-h-[80px]"
-          placeholder="Masalan: Yangi raqobatchi bozorga kirsa nima bo'ladi?"
+          placeholder={t("masalanYangiRaqobatchiBozorgaKirsa")}
           value={scenarioInput}
           onChange={(e) => setScenarioInput(e.target.value)}
         />
@@ -110,7 +112,7 @@ export default function StrategicDashboard() {
                 <div>
                   <div className="font-semibold">{rec.item}</div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    Xarajat: <span className="font-bold tabular-nums">{rec.cost.toLocaleString()} so'm</span> · ROI: <span className="font-bold">{rec.roi}%</span>
+                    {t("xarajat")}<span className="font-bold tabular-nums">{rec.cost.toLocaleString()} so'm</span> · ROI: <span className="font-bold">{rec.roi}%</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

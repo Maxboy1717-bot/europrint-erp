@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HelpCircle, Trash2 } from "lucide-react";
 import { DIFFICULTY_MAP, TYPE_LABELS, type Question } from "./QuestionsPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Filter bar ──────────────────────────────────────────────────────────────
 
@@ -27,10 +28,11 @@ export function QuestionFilterBar({
   onSearch,
   onClear,
 }: FilterBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex gap-2 max-w-sm">
       <Input
-        placeholder="Test ID bo'yicha filter..."
+        placeholder={t("testIdBoyichaFilter")}
         value={testId}
         onChange={e => onTestIdChange(e.target.value)}
         onKeyDown={e => e.key === "Enter" && onSearch()}
@@ -71,11 +73,12 @@ export function QuestionListSkeleton() {
 // ─── Empty state ─────────────────────────────────────────────────────────────
 
 export function QuestionEmptyState() {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="py-12 text-center">
         <HelpCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">Savollar topilmadi</p>
+        <p className="text-muted-foreground">{t("savollarTopilmadi")}</p>
       </CardContent>
     </Card>
   );

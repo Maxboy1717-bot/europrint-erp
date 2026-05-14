@@ -15,12 +15,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { BookOpen } from "lucide-react";
 import type { Course, Lesson, ProgressData } from "./LessonPlayerTypes";
 import { LessonSidebar, LessonContentArea } from "./LessonPlayerSections";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function LessonPlayer() {
+  const { t } = useTranslation("common");
   const { id, lessonId } = useParams<{ id: string; lessonId?: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -195,13 +197,13 @@ export default function LessonPlayer() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Kurs topilmadi</p>
+          <p className="text-muted-foreground">{t("kursTopilmadi")}</p>
           <Button
             variant="outline"
             className="mt-4"
             onClick={() => navigate("/courses")}
           >
-            Kurslarga qaytish
+            {t("kurslargaQaytish")}
           </Button>
         </div>
       </div>

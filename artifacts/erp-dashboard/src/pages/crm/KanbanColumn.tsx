@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { KanbanColumnHeader } from "@/components/crm/KanbanColumnHeader";
 import { EntityCard } from "./EntityCard";
 import type { KanbanColumnProps } from "./crm-types";
+import { useTranslation } from '@/lib/i18n';
 
 function hexToRgba(hex: string, alpha: number): string {
   try {
@@ -35,6 +36,7 @@ export function KanbanColumn({
   stageIndex = 0,
   totalStages = 7,
 }: KanbanColumnProps) {
+  const { t } = useTranslation("common");
   const { setNodeRef, isOver } = useDroppable({
     id: stage.stageId,
     data: { stageId: stage.stageId },
@@ -127,7 +129,7 @@ export function KanbanColumn({
                   +
                 </div>
                 <p className="text-[11px] font-600" style={{ color: hexToRgba(color, 0.65) }}>
-                  Bo'sh · qo'shish
+                  {t("boshQoshish")}
                 </p>
               </motion.button>
             )}

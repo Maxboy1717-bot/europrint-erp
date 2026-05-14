@@ -8,6 +8,7 @@ import { Gift, AlertTriangle, Wallet } from "lucide-react";
 import type { BonusRecord, FineRecord, OvertimeRecord, CashAdvanceRecord } from "./profile-types";
 import { BONUS_TYPE_LABELS, FINE_TYPE_LABELS, CASH_ADVANCE_STATUS_CONFIG } from "./FinanceTabTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // BonusList
@@ -19,6 +20,7 @@ interface BonusListProps {
 }
 
 export function BonusList({ loading, bonuses }: BonusListProps) {
+  const { t } = useTranslation("common");
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -27,7 +29,7 @@ export function BonusList({ loading, bonuses }: BonusListProps) {
     );
   }
   if (!bonuses || bonuses.length === 0) {
-    return <p className="text-muted-foreground text-center py-8">Bonuslar yo'q</p>;
+    return <p className="text-muted-foreground text-center py-8">{t("bonuslarYoq")}</p>;
   }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -70,7 +72,7 @@ export function FineList({ loading, fines }: FineListProps) {
     );
   }
   if (!fines || fines.length === 0) {
-    return <p className="text-muted-foreground text-center py-8">Jarimalar yo'q</p>;
+    return <p className="text-muted-foreground text-center py-8">{t("jarimalarYoq")}</p>;
   }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -82,7 +84,7 @@ export function FineList({ loading, fines }: FineListProps) {
                 <AlertTriangle className="h-4 w-4 text-[var(--ep-red)]" />
                 <EPStatusPill tone="danger">{FINE_TYPE_LABELS[fine.fineType] || fine.fineType}</EPStatusPill>
               </div>
-              {fine.deductedFromSalary && <EPStatusPill tone="info">To'lab tashlandi</EPStatusPill>}
+              {fine.deductedFromSalary && <EPStatusPill tone="info">{t("tolabTashlandi")}</EPStatusPill>}
             </div>
             <p className="text-2xl font-bold text-[var(--ep-red)] mb-2">-{fine.amount?.toLocaleString()} so'm</p>
             <div className="text-sm text-muted-foreground space-y-1">
@@ -108,19 +110,19 @@ interface OvertimeTableProps {
 export function OvertimeTable({ loading, overtime }: OvertimeTableProps) {
   if (loading) return <Skeleton className="h-40 w-full rounded-lg" />;
   if (!overtime || overtime.length === 0) {
-    return <p className="text-muted-foreground text-center py-8">Overtaym yozuvlari yo'q</p>;
+    return <p className="text-muted-foreground text-center py-8">{t("overtaymYozuvlariYoq")}</p>;
   }
   return (
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Sana</TableHead>
-          <TableHead>Soatlar</TableHead>
-          <TableHead>Stavka</TableHead>
-          <TableHead>Koeff.</TableHead>
-          <TableHead>Jami</TableHead>
-          <TableHead>Sabab</TableHead>
-          <TableHead>Holat</TableHead>
+          <TableHead>{t("date")}</TableHead>
+          <TableHead>{t("soatlar")}</TableHead>
+          <TableHead>{t("stavka")}</TableHead>
+          <TableHead>{t("koeff")}</TableHead>
+          <TableHead>{t("total")}</TableHead>
+          <TableHead>{t("sabab")}</TableHead>
+          <TableHead>{t("status28")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -134,8 +136,8 @@ export function OvertimeTable({ loading, overtime }: OvertimeTableProps) {
             <TableCell className="max-w-[200px] truncate">{record.reason || "-"}</TableCell>
             <TableCell>
               {record.isPaid
-                ? <EPStatusPill tone="success">To'langan</EPStatusPill>
-                : <EPStatusPill tone="neutral">Kutilmoqda</EPStatusPill>}
+                ? <EPStatusPill tone="success">{t("tolangan")}</EPStatusPill>
+                : <EPStatusPill tone="neutral">{t("Kutilmoqda")}</EPStatusPill>}
             </TableCell>
           </TableRow>
         ))}
@@ -162,7 +164,7 @@ export function CashAdvanceList({ loading, cashAdvances }: CashAdvanceListProps)
     );
   }
   if (!cashAdvances || cashAdvances.length === 0) {
-    return <p className="text-muted-foreground text-center py-8">Avans so'rovlari yo'q</p>;
+    return <p className="text-muted-foreground text-center py-8">{t("avansSorovlariYoq")}</p>;
   }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

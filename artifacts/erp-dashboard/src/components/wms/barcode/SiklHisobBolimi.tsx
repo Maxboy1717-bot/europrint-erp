@@ -12,8 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Hash } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export function SiklHisobBolimi() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [formData, setFormData] = useState({ barcodeId: "", materialCardId: "", countedQuantity: "", binId: "", warehouseId: "" });
 
@@ -45,15 +47,15 @@ export function SiklHisobBolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-2">
         <p className="text-xs text-muted-foreground">
-          Tizim miqdorni ko'rsatmaydi. Siz faqat hisoblangan miqdorni kiriting.
+          {t("tizimMiqdorniKorsatmaydiSizFaqat")}
         </p>
         <div>
           <Label className="text-xs">Barcode (ixtiyoriy)</Label>
-          <Input data-testid="input-cycle-barcode" placeholder="Barcode skanerlang" value={formData.barcodeId} onChange={(e) => setFormData({ ...formData, barcodeId: e.target.value })} />
+          <Input data-testid="input-cycle-barcode" placeholder={t("barcodeSkanerlang")} value={formData.barcodeId} onChange={(e) => setFormData({ ...formData, barcodeId: e.target.value })} />
         </div>
         <div>
-          <Label className="text-xs">Hisoblangan miqdor *</Label>
-          <Input data-testid="input-cycle-qty" type="number" step="0.1" placeholder="Faqat hisoblangan miqdorni kiriting" value={formData.countedQuantity} onChange={(e) => setFormData({ ...formData, countedQuantity: e.target.value })} />
+          <Label className="text-xs">{t("hisoblanganMiqdor")}</Label>
+          <Input data-testid="input-cycle-qty" type="number" step="0.1" placeholder={t("faqatHisoblanganMiqdorniKiriting")} value={formData.countedQuantity} onChange={(e) => setFormData({ ...formData, countedQuantity: e.target.value })} />
         </div>
         <Button data-testid="button-cycle-submit" className="w-full" onClick={() => hisobMutation.mutate({
           barcodeId: formData.barcodeId || undefined,

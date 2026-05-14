@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, UserCheck, TrendingUp, Clock, Target, Award, Percent } from "lucide-react";
 import { CONVERSION_TARGET, fmt } from "./RecruiterKPIPageTypes";
 import type { KPISummary } from "./RecruiterKPIPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── ConversionChain ───────────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ interface ConversionChainProps {
 
 /** Renders a compact "Ariza → Telefon → Suhbat  Conv%" inline badge row. */
 export function ConversionChain({ applications, phone, interview, hired }: ConversionChainProps) {
+  const { t } = useTranslation("common");
   const stages = [
     { label: "Ariza",   value: applications,    target: null },
     { label: "Telefon", value: phone ?? null,   target: Math.round(applications * 0.5) },
@@ -55,7 +57,7 @@ export function ConversionChain({ applications, phone, interview, hired }: Conve
       ))}
       {convRate !== null && (
         <div className="flex flex-col items-center ml-2">
-          <span className="text-[9px] text-muted-foreground">Conv%</span>
+          <span className="text-[9px] text-muted-foreground">{t("conv")}</span>
           <span className={`text-xs font-bold ${convColor}`}>{convRate}%</span>
         </div>
       )}

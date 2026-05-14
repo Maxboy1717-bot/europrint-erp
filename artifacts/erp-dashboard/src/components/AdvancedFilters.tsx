@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { SavedFilter } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 interface OrgDepartment {
   id: string;
@@ -71,6 +72,7 @@ const DATE_RANGES = [
 ];
 
 export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
@@ -231,10 +233,10 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
           <PopoverContent className="w-96" align="start">
             <div className="space-y-4">
               <div>
-                <Label>Vaqt oralig'i</Label>
+                <Label>{t("vaqtOraligi")}</Label>
                 <Select onValueChange={handleDateRangeChange}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Tanlang" />
+                    <SelectValue placeholder={t("tanlang")} />
                   </SelectTrigger>
                   <SelectContent>
                     {(Array.isArray(DATE_RANGES) ? DATE_RANGES : []).map(range => (
@@ -249,7 +251,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
               {filters.dateRange && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <Label>Boshlanish</Label>
+                    <Label>{t("boshlanish")}</Label>
                     <Input
                       type="date"
                       value={filters.dateRange.start}
@@ -266,7 +268,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
                     />
                   </div>
                   <div>
-                    <Label>Tugash</Label>
+                    <Label>{t("tugash")}</Label>
                     <Input
                       type="date"
                       value={filters.dateRange.end}
@@ -286,7 +288,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
               )}
 
               <div>
-                <Label>Tashkiliy tuzilma</Label>
+                <Label>{t("tashkiliyTuzilma")}</Label>
                 <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
                   {(Array.isArray(orgDepartments) ? orgDepartments : []).map((dept: OrgDepartment) => (
                     <Badge
@@ -302,7 +304,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
               </div>
 
               <div>
-                <Label>Kurslar</Label>
+                <Label>{t("kurslar")}</Label>
                 <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
                   {(Array.isArray(courses) ? courses : []).map((course: Course) => (
                     <Badge
@@ -319,11 +321,11 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
 
               <div className="flex gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={handleReset} className="flex-1">
-                  Tozalash
+                  {t("tozalash")}
                 </Button>
                 <Button size="sm" onClick={() => setIsSaveDialogOpen(true)} className="flex-1">
                   <Save className="h-4 w-4 mr-2" />
-                  Saqlash
+                  {t("Saqlash")}
                 </Button>
               </div>
             </div>
@@ -358,7 +360,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
 
         {activeFiltersCount > 0 && (
           <Button size="sm" variant="ghost" onClick={handleReset}>
-            Hammasini tozalash
+            {t("hammasiniTozalash")}
           </Button>
         )}
       </div>
@@ -395,15 +397,15 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Filtrni saqlash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("filtrniSaqlash")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Filtr nomi</Label>
+              <Label>{t("filtrNomi")}</Label>
               <Input
                 value={filterName}
                 onChange={(e) => setFilterName(e.target.value)}
-                placeholder="Masalan: Bu oyning bo'lim filtri"
+                placeholder={t("masalanBuOyningBolimFiltri")}
               />
             </div>
             <div>
@@ -411,15 +413,15 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
               <Input
                 value={filterDescription}
                 onChange={(e) => setFilterDescription(e.target.value)}
-                placeholder="Batafsil ma'lumot"
+                placeholder={t("batafsilMalumot")}
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button onClick={handleSaveFilter}>
-                Saqlash
+                {t("Saqlash")}
               </Button>
             </div>
           </div>
@@ -429,8 +431,8 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
       <ConfirmDialog
         open={confirmDeleteFilterId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteFilterId(null); }}
-        title="Filterni o'chirish"
-        description="Saqlangan filterni o'chirishni tasdiqlaysizmi?"
+        title={t("filterniOchirish")}
+        description={t("saqlanganFilterniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

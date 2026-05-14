@@ -18,7 +18,9 @@ import { Bot, Camera, CheckCircle, Edit2, Save } from "lucide-react";
 import { CameraWithPrompt, CAMERA_TYPES } from "./types";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export function CameraAIPrompts() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [localPrompts, setLocalPrompts] = useState<Record<string, { prompt: string; sensitivity: string; enabled: boolean }>>({});
@@ -51,7 +53,7 @@ export function CameraAIPrompts() {
     onError: () => toast({ title: "Xato", description: "Saqlashda xatolik", variant: "destructive" }),
   });
 
-  if (isLoading) return <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>;
+  if (isLoading) return <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
 
   return (
     <div className="space-y-4">
@@ -59,7 +61,7 @@ export function CameraAIPrompts() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-[var(--ep-blue)]" />
-            Har kamera uchun AI Prompt sozlamalari
+            {t("harKameraUchunAiPrompt")}
           </CardTitle>
           <CardDescription>
             Har bir kamera uchun alohida AI tahlil yo'riqnomasi. Super Admin tomonidan boshqariladi. Jami: {cameras_list.length} ta kamera.
@@ -69,7 +71,7 @@ export function CameraAIPrompts() {
           {cameras_list.length === 0 ? (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
               <Camera className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              <p>Hali kamera qo'shilmagan. Kameralar boshqaruvi sahifasiga o'ting.</p>
+              <p>{t("haliKameraQoshilmaganKameralarBoshqaruvi")}</p>
             </div>
           ) : (Array.isArray(cameras_list) ? cameras_list : []).map(cam => {
             const loc = getLocal(cam);
@@ -90,19 +92,19 @@ export function CameraAIPrompts() {
                     <div className="flex items-center gap-2">
                       {saved[cam.id] && (
                         <span className="text-[var(--ep-green)] text-sm flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" /> Saqlandi
+                          <CheckCircle className="h-3 w-3" /> {t("saqlandi")}
                         </span>
                       )}
                       {isEditing ? (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => setEditingId(null)} data-testid={`button-cancel-prompt-${cam.id}`}>Bekor</Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingId(null)} data-testid={`button-cancel-prompt-${cam.id}`}>{t("Bekor")}</Button>
                           <Button size="sm" onClick={() => saveMutation.mutate({ id: cam.id, ...loc })} disabled={saveMutation.isPending} data-testid={`button-save-prompt-${cam.id}`}>
                             {saveMutation.isPending ? <EPLoader size={12} className="mr-1" /> : <Save className="h-3 w-3 mr-1" />} Saqlash
                           </Button>
                         </>
                       ) : (
                         <Button size="sm" variant="outline" onClick={() => setEditingId(cam.id)} data-testid={`button-edit-prompt-${cam.id}`}>
-                          <Edit2 className="h-3 w-3 mr-1" /> Tahrirlash
+                          <Edit2 className="h-3 w-3 mr-1" /> {t("edit")}
                         </Button>
                       )}
                     </div>
@@ -120,7 +122,7 @@ export function CameraAIPrompts() {
                       <Label className="text-sm">AI tahlil yoqilgan</Label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm">Sezgirlik:</Label>
+                      <Label className="text-sm">{t("sezgirlik")}</Label>
                       <Select
                         value={loc.sensitivity}
                         onValueChange={v => setLocalPrompts(p => ({ ...p, [cam.id]: { ...loc, sensitivity: v } }))}
@@ -130,9 +132,9 @@ export function CameraAIPrompts() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Past</SelectItem>
-                          <SelectItem value="medium">O'rta</SelectItem>
-                          <SelectItem value="high">Yuqori</SelectItem>
+                          <SelectItem value="low">{t("low")}</SelectItem>
+                          <SelectItem value="medium">{t("medium")}</SelectItem>
+                          <SelectItem value="high">{t("high")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

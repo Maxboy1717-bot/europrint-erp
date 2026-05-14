@@ -13,6 +13,7 @@ import { FileText, Printer, Phone, Mail, Briefcase, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { CandidateReportDialogProps, ReportData } from "./CandidateReportDialogTypes";
 import { DECISION_INFO } from "./CandidateReportDialogTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   Section1BasicInfo,
   Section2ToolTest,
@@ -30,6 +31,7 @@ export function CandidateReportDialog({
   open,
   onClose,
 }: CandidateReportDialogProps) {
+  const { t } = useTranslation("common");
   const { data, isLoading, error } = useQuery<{ data: ReportData }>({
     queryKey: [`/api/hr/recruitment/pipeline/${pipelineEntryId}/report`],
     enabled: open && !!pipelineEntryId,
@@ -62,7 +64,7 @@ export function CandidateReportDialog({
                 Chop etish / PDF
               </Button>
               <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onClose}>
-                Yopish
+                {t("close2")}
               </Button>
             </div>
           </div>
@@ -72,13 +74,13 @@ export function CandidateReportDialog({
           {isLoading && (
             <div className="flex items-center justify-center py-16 text-gray-500">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3" />
-              Yuklanmoqda…
+              {t("yuklanmoqda1")}
             </div>
           )}
 
           {error && (
             <div className="text-center py-8 text-[var(--ep-red)]">
-              Ma'lumotni yuklashda xatolik. Qayta urinib ko'ring.
+              {t("malumotniYuklashdaXatolikQaytaUrinib")}
             </div>
           )}
 
@@ -89,7 +91,7 @@ export function CandidateReportDialog({
                 <div className="flex items-start justify-between flex-wrap gap-3">
                   <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">
-                      YAKUNIY HISOBOT — HR Capital Material №55
+                      {t("yakuniyHisobotHrCapitalMaterial")}
                     </p>
                     <h1 className="text-2xl font-bold text-gray-900">{report.candidate_name}</h1>
                     <div className="flex flex-wrap gap-3 mt-1.5">
@@ -121,7 +123,7 @@ export function CandidateReportDialog({
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-[10px] text-gray-400">Hisobot sanasi</p>
+                    <p className="text-[10px] text-gray-400">{t("hisobotSanasi")}</p>
                     <p className="text-sm font-semibold text-gray-700">{printDate}</p>
                     {decisionInfo && (
                       <div className={`mt-2 px-3 py-1 rounded border-2 text-xs font-bold ${decisionInfo.bg} ${decisionInfo.border} ${decisionInfo.color}`}>
@@ -142,7 +144,7 @@ export function CandidateReportDialog({
 
               {/* Footer */}
               <div className="mt-6 pt-3 border-t border-gray-200 flex justify-between text-[10px] text-gray-400 print:mt-4">
-                <span>EuroPrint ERP — HR Capital Tizimi · Material №55</span>
+                <span>{t("europrintErpHrCapitalTizimi1")}</span>
                 <span>Kandidat ID: {report.candidate_id} | Pipeline ID: {report.entry_id} | {printDate}</span>
               </div>
             </>

@@ -21,6 +21,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 import {
   DEFAULT_FREE_DAYS,
   DEFAULT_DAILY_RATE_PER_M2,
@@ -39,6 +40,7 @@ interface AddRecordDialogProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
@@ -87,21 +89,21 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi ijara yozuvi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiIjaraYozuvi")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>Mahsulot nomi *</Label>
+            <Label>{t("mahsulotNomi1")}</Label>
             <Input
               data-testid="input-product-name"
               value={form.productName}
               onChange={(e) => f("productName", e.target.value)}
-              placeholder="Ofset bosma qog'oz A4..."
+              placeholder={t("ofsetBosmaQogozA4")}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Buyurtma raqami</Label>
+              <Label>{t("buyurtmaRaqami")}</Label>
               <Input
                 data-testid="input-order-number"
                 value={form.orderNumber}
@@ -110,7 +112,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
               />
             </div>
             <div>
-              <Label>Ombor nomi</Label>
+              <Label>{t("omborNomi")}</Label>
               <Input
                 data-testid="input-warehouse-name"
                 value={form.warehouseName}
@@ -120,7 +122,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Menejer</Label>
+              <Label>{t("manager")}</Label>
               <Input
                 data-testid="input-manager-name"
                 value={form.managerName}
@@ -128,7 +130,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
               />
             </div>
             <div>
-              <Label>Mijoz</Label>
+              <Label>{t("mijoz1")}</Label>
               <Input
                 data-testid="input-customer-name"
                 value={form.customerName}
@@ -148,7 +150,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
               />
             </div>
             <div>
-              <Label>Qabul sanasi *</Label>
+              <Label>{t("qabulSanasi1")}</Label>
               <Input
                 data-testid="input-admitted-date"
                 type="date"
@@ -159,7 +161,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Bepul kunlar</Label>
+              <Label>{t("bepulKunlar")}</Label>
               <Input
                 data-testid="input-free-days"
                 type="number"
@@ -183,10 +185,10 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
               checked={form.excludeWeekends}
               onCheckedChange={(v) => f("excludeWeekends", v)}
             />
-            <Label>Dam olish kunlarini hisoblamaslik</Label>
+            <Label>{t("damOlishKunlariniHisoblamaslik")}</Label>
           </div>
           <div>
-            <Label>Izoh</Label>
+            <Label>{t("Izoh")}</Label>
             <Textarea
               data-testid="textarea-notes"
               value={form.notes}
@@ -197,7 +199,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Bekor
+            {t("Bekor")}
           </Button>
           <Button
             data-testid="button-save-record"

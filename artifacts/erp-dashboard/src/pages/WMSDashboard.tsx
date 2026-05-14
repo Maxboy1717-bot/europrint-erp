@@ -29,8 +29,10 @@ import { KPISection, MovementCard } from "./WMSDashboardSections";
 import { AlertsCard, TopMaterialsCard } from "./WMSDashboardAlerts";
 import { CreateWarehouseDialog, CreateRequestDialog } from "./WMSDashboardDialogs";
 import { EPPageHeader, EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WMSDashboard() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [createWarehouseOpen, setCreateWarehouseOpen] = useState(false);
   const [createRequestOpen, setCreateRequestOpen] = useState(false);
@@ -113,25 +115,25 @@ export default function WMSDashboard() {
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Ombor Boshqaruvi</b></>}
-        title="Ombor Boshqaruvi"
-        subtitle="WMS — Joriy holat va operatsiyalar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("omborBoshqaruvi1")}</b></>}
+        title={t("omborBoshqaruvi1")}
+        subtitle={t("wmsJoriyHolatVaOperatsiyalar")}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={() => checkAlertsMutation.mutate()} disabled={checkAlertsMutation.isPending}>
-              <Bell className="h-4 w-4 mr-2" />Alertlarni tekshirish
+              <Bell className="h-4 w-4 mr-2" />{t("alertlarniTekshirish")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" />Yangilash
+              <RefreshCw className="h-4 w-4 mr-2" />{t("refresh")}
             </Button>
             <Button size="sm" onClick={() => setCreateRequestOpen(true)}>
-              <ArrowRightLeft className="h-4 w-4 mr-2" />Ichki so'rov
+              <ArrowRightLeft className="h-4 w-4 mr-2" />{t("ichkiSorov")}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => setCreateWarehouseOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />Yangi ombor
+              <Plus className="h-4 w-4 mr-2" />{t("yangiOmbor")}
             </Button>
             <Link href="/wms">
-              <Badge variant="outline" className="cursor-pointer">Ombor moduliga o'tish</Badge>
+              <Badge variant="outline" className="cursor-pointer">{t("omborModuligaOtish")}</Badge>
             </Link>
           </div>
         }

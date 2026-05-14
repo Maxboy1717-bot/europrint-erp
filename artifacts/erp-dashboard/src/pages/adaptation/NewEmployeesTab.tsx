@@ -39,6 +39,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit } from "lucide-react";
 import type { AdaptationProgram } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 interface NewEmployeeResponse {
   id: string;
@@ -86,6 +87,7 @@ const newEmployeeFormSchema = z.object({
 type NewEmployeeFormValues = z.infer<typeof newEmployeeFormSchema>;
 
 export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<NewEmployeeResponse | null>(null);
@@ -155,14 +157,14 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Yangi xodimlar</CardTitle>
-            <CardDescription>Adaptatsiya jarayonidagi xodimlar</CardDescription>
+            <CardTitle>{t("yangiXodimlar")}</CardTitle>
+            <CardDescription>{t("adaptatsiyaJarayonidagiXodimlar")}</CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingEmployee(null); form.reset(); } }}>
             <DialogTrigger asChild>
               <Button onClick={() => { setEditingEmployee(null); form.reset(); }} data-testid="button-add-employee">
                 <Plus className="w-4 h-4 mr-2" />
-                Xodim qo'shish
+                {t("xodimQoshish")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl p-6">
@@ -171,10 +173,10 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div>
-                  <Label>Xodim</Label>
+                  <Label>{t("xodim1")}</Label>
                   <Controller control={form.control} name="userId" render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-user" className="h-9"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-user" className="h-9"><SelectValue placeholder={t("xodimniTanlang")} /></SelectTrigger>
                       <SelectContent>
                         {(Array.isArray(users) ? users : []).map((user: UserItem) => (
                           <SelectItem key={user.id} value={user.id}>{user.fullName} - {user.phone}</SelectItem>
@@ -188,9 +190,9 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                   <Label>Dastur (ixtiyoriy)</Label>
                   <Controller control={form.control} name="programId" render={({ field }) => (
                     <Select value={field.value ?? "none"} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-program" className="h-9"><SelectValue placeholder="Dasturni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-program" className="h-9"><SelectValue placeholder={t("dasturniTanlang")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Dastur tanlanmagan</SelectItem>
+                        <SelectItem value="none">{t("dasturTanlanmagan")}</SelectItem>
                         {(Array.isArray(programs) ? programs : []).map((prog: AdaptationProgram) => (
                           <SelectItem key={prog.id} value={prog.id}>{prog.title}</SelectItem>
                         ))}
@@ -202,9 +204,9 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                   <Label>Mentor (ixtiyoriy)</Label>
                   <Controller control={form.control} name="mentorId" render={({ field }) => (
                     <Select value={field.value ?? "none"} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-mentor" className="h-9"><SelectValue placeholder="Mentorni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-mentor" className="h-9"><SelectValue placeholder={t("mentorniTanlang")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Mentor tanlanmagan</SelectItem>
+                        <SelectItem value="none">{t("mentorTanlanmagan")}</SelectItem>
                         {(Array.isArray(users) ? users : []).map((user: UserItem) => (
                           <SelectItem key={user.id} value={user.id}>{user.fullName}</SelectItem>
                         ))}
@@ -214,7 +216,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="startDate">Boshlanish sanasi</Label>
+                    <Label htmlFor="startDate">{t("startDate")}</Label>
                     <Input id="startDate" type="date" {...form.register("startDate")} data-testid="input-start-date" />
                     {form.formState.errors.startDate && <p className="text-sm text-destructive mt-1">{form.formState.errors.startDate.message}</p>}
                   </div>
@@ -225,15 +227,15 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Holat</Label>
+                    <Label>{t("status28")}</Label>
                     <Controller control={form.control} name="status" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger data-testid="select-status" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="in_progress">Jarayonda</SelectItem>
-                          <SelectItem value="completed">Yakunlangan</SelectItem>
-                          <SelectItem value="extended">Uzaytirilgan</SelectItem>
-                          <SelectItem value="failed">Muvaffaqiyatsiz</SelectItem>
+                          <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
+                          <SelectItem value="completed">{t("yakunlangan")}</SelectItem>
+                          <SelectItem value="extended">{t("uzaytirilgan")}</SelectItem>
+                          <SelectItem value="failed">{t("muvaffaqiyatsiz")}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
@@ -257,21 +259,21 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Xodim</TableHead>
+              <TableHead>{t("xodim1")}</TableHead>
               <TableHead>Bo'lim / Lavozim</TableHead>
-              <TableHead>Dastur</TableHead>
-              <TableHead>Mentor</TableHead>
-              <TableHead>Boshlanish</TableHead>
-              <TableHead>Jarayon</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>Amallar</TableHead>
+              <TableHead>{t("dastur")}</TableHead>
+              <TableHead>{t("mentor")}</TableHead>
+              <TableHead>{t("boshlanish")}</TableHead>
+              <TableHead>{t("jarayon")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("Amallar")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {employees.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-center text-muted-foreground">
-                  Yangi xodimlar yo'q
+                  {t("yangiXodimlarYoq")}
                 </TableCell>
               </TableRow>
             )}

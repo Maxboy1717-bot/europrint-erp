@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from '@/lib/i18n';
 
 interface BonusForm {
   paymentDate: string;
@@ -34,6 +35,7 @@ export function BonusDialog({
   onSave,
   isPending
 }: BonusDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof BonusForm, value: string) => {
     onChange({ ...form, [field]: value });
   };
@@ -46,7 +48,7 @@ export function BonusDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label htmlFor="paymentDate">To'lov sanasi</Label>
+          <Label htmlFor="paymentDate">{t("tolovSanasi")}</Label>
             <Input
               id="paymentDate"
               type="date"
@@ -64,25 +66,25 @@ export function BonusDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>Mukofot turi</Label>
+          <Label>{t("mukofotTuri")}</Label>
             <Select
               value={form.bonusType}
               onValueChange={(val) => updateField("bonusType", val)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Tanlang" />
+                <SelectValue placeholder={t("tanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="performance">Natijadorlik uchun</SelectItem>
-                <SelectItem value="holiday">Bayram munosabati bilan</SelectItem>
-                <SelectItem value="project">Loyiha muvaffaqiyati</SelectItem>
-                <SelectItem value="referral">Tavsiya uchun</SelectItem>
-                <SelectItem value="other">Boshqa</SelectItem>
+                <SelectItem value="performance">{t("natijadorlikUchun")}</SelectItem>
+                <SelectItem value="holiday">{t("bayramMunosabatiBilan")}</SelectItem>
+                <SelectItem value="project">{t("loyihaMuvaffaqiyati")}</SelectItem>
+                <SelectItem value="referral">{t("tavsiyaUchun")}</SelectItem>
+                <SelectItem value="other">{t("boshqa")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="description">Tavsif</Label>
+          <Label htmlFor="description">{t("progress.description")}</Label>
             <Textarea
               id="description"
               value={form.description}
@@ -91,7 +93,7 @@ export function BonusDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

@@ -32,6 +32,7 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { QuickCreateModalProps, EntityType } from "./crm-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface DuplicateEntry {
   id: number;
@@ -58,6 +59,7 @@ const CURRENCY_OPTIONS = [
 ];
 
 export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [title, setTitle]       = useState("");
   const [phone, setPhone]       = useState("");
@@ -192,7 +194,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold">{entityLabels[entityType]} yaratish</h3>
-              <p className="text-[11px] text-muted-foreground">Asosiy ma'lumotlarni kiriting</p>
+              <p className="text-[11px] text-muted-foreground">{t("asosiyMalumotlarniKiriting")}</p>
             </div>
             <Button
               size="icon"
@@ -212,7 +214,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                   <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] mt-0.5 shrink-0" />
                   <div>
                     <div className="font-medium text-[var(--ep-yellow)] dark:text-yellow-400 text-sm">
-                      Duplikat topildi
+                      {t("duplikatTopildi")}
                     </div>
                     <div className="text-xs text-[var(--ep-yellow)] dark:text-yellow-500 mt-0.5">
                       Xuddi shunday {entityLabels[entityType]?.toLowerCase()} mavjud:
@@ -247,7 +249,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                     onClick={() => setShowDuplicateWarning(false)}
                     className="flex-1"
                   >
-                    Orqaga
+                    {t("back")}
                   </Button>
                   <Button
                     onClick={handleForceCreate}
@@ -265,7 +267,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                     <Tag className="h-3 w-3" />
-                    Nomi *
+                    {t("nomi")}
                   </label>
                   <Input
                     value={title}
@@ -284,7 +286,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                           <Phone className="h-3 w-3" />
-                          Telefon
+                          {t("phone")}
                         </label>
                         <Input
                           value={phone}
@@ -297,7 +299,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                           <Mail className="h-3 w-3" />
-                          Email
+                          {t("email1")}
                         </label>
                         <Input
                           type="email"
@@ -331,11 +333,11 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                 {showSource && (
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Manba
+                      {t("manba")}
                     </label>
                     <Select value={source} onValueChange={setSource}>
                       <SelectTrigger className="h-9" data-testid="select-quick-source">
-                        <SelectValue placeholder="Manbani tanlang" />
+                        <SelectValue placeholder={t("manbaniTanlang")} />
                       </SelectTrigger>
                       <SelectContent>
                         {SOURCE_OPTIONS.map((opt) => (
@@ -385,12 +387,12 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                     <FileText className="h-3 w-3" />
-                    Izoh
+                    {t("Izoh")}
                   </label>
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Qo'shimcha ma'lumot..."
+                    placeholder={t("qoshimchaMalumot")}
                     className="min-h-[70px] resize-none text-sm"
                     data-testid="input-quick-description"
                   />
@@ -404,7 +406,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                     onClick={onClose}
                     className="flex-1 h-9"
                   >
-                    Bekor qilish
+                    {t("cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -414,7 +416,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                     {createMutation.isPending ? (
                       <span className="flex items-center gap-2">
                         <span className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full inline-block" />
-                        Yaratilmoqda...
+                        {t("yaratilmoqda")}
                       </span>
                     ) : (
                       "Yaratish"

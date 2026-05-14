@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { warehouseFeaturesApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface Material360 {
   material: {
@@ -76,6 +77,7 @@ function fmtDate(iso: string | null): string {
 }
 
 export default function PosMaterial360() {
+  const { t } = useTranslation("common");
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const matId = parseInt(params.id ?? "0", 10);
@@ -103,7 +105,7 @@ export default function PosMaterial360() {
   }, [matId]);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: "center" }}>⏳ Yuklanmoqda...</div>;
+    return <div style={{ padding: 40, textAlign: "center" }}>{t("yuklanmoqda")}</div>;
   }
 
   if (error || !data) {
@@ -115,7 +117,7 @@ export default function PosMaterial360() {
           onClick={() => navigate("/pos-monitor/materials")}
           style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, background: "#F59E0B", color: "#FFF", border: "none", cursor: "pointer" }}
         >
-          ← Materiallar ro'yxatiga qaytish
+          {t("materiallarRoyxatigaQaytish")}
         </button>
       </div>
     );
@@ -131,7 +133,7 @@ export default function PosMaterial360() {
           onClick={() => navigate("/pos-monitor/materials")}
           style={{ padding: "6px 12px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}
         >
-          ← Orqaga
+          {t("orqaga")}
         </button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>MATERIAL 360°</div>
@@ -143,7 +145,7 @@ export default function PosMaterial360() {
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>Joriy stok</div>
+          <div style={{ fontSize: 11, color: "#9CA3AF" }}>{t("joriyStok")}</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: material.currentStock < material.minStock ? "#DC2626" : "#059669" }}>
             {fmt(material.currentStock, material.unit)}
           </div>
@@ -153,13 +155,13 @@ export default function PosMaterial360() {
 
       {/* Yuqori KPI kartlar */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <KpiCard icon="📦" label="Kategoriya" value={material.category ?? "—"} />
-        <KpiCard icon="🏷️" label="Tur" value={material.materialType ?? "—"} />
-        <KpiCard icon="💰" label="Birlik narxi" value={fmtMoney(material.unitPrice, material.currency)} />
-        <KpiCard icon="⬇️" label="Jami kirim" value={fmt(totals.totalInflow, material.unit)} color="#059669" />
-        <KpiCard icon="⬆️" label="Jami chiqim" value={fmt(totals.totalOutflow, material.unit)} color="#DC2626" />
-        <KpiCard icon="🏭" label="Omborlar soni" value={String(totals.distinctWarehouses)} />
-        <KpiCard icon="🔄" label="Harakatlar" value={String(totals.movementCount)} />
+        <KpiCard icon="📦" label={t("category")} value={material.category ?? "—"} />
+        <KpiCard icon="🏷️" label={t("tur")} value={material.materialType ?? "—"} />
+        <KpiCard icon="💰" label={t("birlikNarxi")} value={fmtMoney(material.unitPrice, material.currency)} />
+        <KpiCard icon="⬇️" label={t("jamiKirim")} value={fmt(totals.totalInflow, material.unit)} color="#059669" />
+        <KpiCard icon="⬆️" label={t("jamiChiqim")} value={fmt(totals.totalOutflow, material.unit)} color="#DC2626" />
+        <KpiCard icon="🏭" label={t("omborlarSoni")} value={String(totals.distinctWarehouses)} />
+        <KpiCard icon="🔄" label={t("actions")} value={String(totals.movementCount)} />
       </div>
 
       {/* Tabs */}
@@ -192,9 +194,9 @@ export default function PosMaterial360() {
         <TableCard>
           <thead>
             <tr>
-              <Th>Ombor</Th><Th>Kod</Th><Th>Tur</Th>
-              <Th align="right">Mavjud</Th><Th align="right">Band</Th><Th align="right">Jami</Th>
-              <Th>Yangilangan</Th>
+              <Th>{t("ombor")}</Th><Th>{t("code")}</Th><Th>{t("tur")}</Th>
+              <Th align="right">{t("mavjud")}</Th><Th align="right">{t("band")}</Th><Th align="right">{t("total")}</Th>
+              <Th>{t("updated")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -212,7 +214,7 @@ export default function PosMaterial360() {
               </tr>
             ))}
             {stockByWarehouse.length === 0 && (
-              <tr><Td colSpan={7} center color="#9CA3AF">Hech qaysi omborda stok yo'q</Td></tr>
+              <tr><Td colSpan={7} center color="#9CA3AF">{t("hechQaysiOmbordaStokYoq")}</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -222,8 +224,8 @@ export default function PosMaterial360() {
         <TableCard>
           <thead>
             <tr>
-              <Th>Raqam</Th><Th>Sana</Th><Th>Turi</Th><Th>Holat</Th>
-              <Th align="right">Miqdor</Th><Th align="right">Narx</Th><Th>Kim</Th>
+              <Th>{t("raqam")}</Th><Th>{t("date")}</Th><Th>{t("type")}</Th><Th>{t("status28")}</Th>
+              <Th align="right">{t("quantity")}</Th><Th align="right">{t("price")}</Th><Th>{t("kim1")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -242,7 +244,7 @@ export default function PosMaterial360() {
               );
             })}
             {recentMovements.length === 0 && (
-              <tr><Td colSpan={7} center color="#9CA3AF">Harakatlar yo'q</Td></tr>
+              <tr><Td colSpan={7} center color="#9CA3AF">{t("harakatlarYoq")}</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -252,8 +254,8 @@ export default function PosMaterial360() {
         <TableCard>
           <thead>
             <tr>
-              <Th>Sana</Th><Th align="right">Narx</Th>
-              <Th>Valyuta</Th><Th>Ta'minotchi</Th>
+              <Th>{t("date")}</Th><Th align="right">{t("price")}</Th>
+              <Th>{t("valyuta")}</Th><Th>{t("taminotchi")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -276,8 +278,8 @@ export default function PosMaterial360() {
         <TableCard>
           <thead>
             <tr>
-              <Th>Ta'minotchi</Th><Th align="right">Oxirgi narx</Th>
-              <Th>Oxirgi yetkazib berish</Th><Th align="right">Marotaba</Th>
+              <Th>{t("taminotchi")}</Th><Th align="right">{t("oxirgiNarx")}</Th>
+              <Th>{t("oxirgiYetkazibBerish")}</Th><Th align="right">{t("marotaba")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -290,7 +292,7 @@ export default function PosMaterial360() {
               </tr>
             ))}
             {suppliers.length === 0 && (
-              <tr><Td colSpan={4} center color="#9CA3AF">Ta'minotchilar yo'q</Td></tr>
+              <tr><Td colSpan={4} center color="#9CA3AF">{t("taminotchilarYoq")}</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -300,8 +302,8 @@ export default function PosMaterial360() {
         <TableCard>
           <thead>
             <tr>
-              <Th>Barkod</Th><Th>Turi</Th><Th>Partiya</Th>
-              <Th align="right">Miqdor</Th><Th>Holat</Th><Th>Yaratilgan</Th>
+              <Th>{t("barkod")}</Th><Th>{t("type")}</Th><Th>{t("partiya1")}</Th>
+              <Th align="right">{t("quantity")}</Th><Th>{t("status28")}</Th><Th>{t("Yaratilgan")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -320,7 +322,7 @@ export default function PosMaterial360() {
               </tr>
             ))}
             {barcodes.length === 0 && (
-              <tr><Td colSpan={6} center color="#9CA3AF">Barkodlar hali yaratilmagan</Td></tr>
+              <tr><Td colSpan={6} center color="#9CA3AF">{t("barkodlarHaliYaratilmagan")}</Td></tr>
             )}
           </tbody>
         </TableCard>

@@ -11,8 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Medal, Star, Video, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 export function GamificationTab() {
+  const { t } = useTranslation("common");
   const { data: achievements = [], isLoading: achievementsLoading } = useQuery<Record<string, unknown>[]>({
     queryKey: ["/api/achievements"],
   });
@@ -23,10 +25,10 @@ export function GamificationTab() {
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-foreground">Geymifikatsiya va Yutuqlar</h2>
-      <p className="text-sm text-muted-foreground -mt-4">O'quv jarayonini o'yin elementlari bilan jonlantirish</p>
+      <h2 className="text-xl font-bold text-foreground">{t("geymifikatsiyaVaYutuqlar")}</h2>
+      <p className="text-sm text-muted-foreground -mt-4">{t("oquvJarayoniniOyinElementlariBilan")}</p>
 
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -39,8 +41,8 @@ export function GamificationTab() {
         ) : achievements.length === 0 ? (
           <div className="bg-card rounded-xl p-6 text-center text-muted-foreground">
             <Medal className="h-10 w-10 mx-auto mb-2 opacity-20" />
-            <p className="font-medium">Yutuqlar mavjud emas</p>
-            <p className="text-sm mt-1 opacity-70">Xodimlar kurslarni yakunlaganda avtomatik beriladi</p>
+            <p className="font-medium">{t("yutuqlarMavjudEmas")}</p>
+            <p className="text-sm mt-1 opacity-70">{t("xodimlarKurslarniYakunlagandaAvtomatikBeriladi")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -59,7 +61,7 @@ export function GamificationTab() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <Video className="h-5 w-5 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">Video Ko'rish Progressi</h3>
+          <h3 className="text-base font-semibold text-foreground">{t("videoKorishProgressi")}</h3>
           <Badge className="bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs border-none ml-auto">{videoProgress.length} ta yozuv</Badge>
         </div>
         {videoLoading ? (
@@ -67,8 +69,8 @@ export function GamificationTab() {
         ) : videoProgress.length === 0 ? (
           <div className="bg-card rounded-xl p-6 text-center text-muted-foreground">
             <Video className="h-10 w-10 mx-auto mb-2 opacity-20" />
-            <p className="font-medium">Video progress ma'lumotlari yo'q</p>
-            <p className="text-sm mt-1 opacity-70">Xodimlar videolarni tomosha qilganda progress qayd etiladi</p>
+            <p className="font-medium">{t("videoProgressMalumotlariYoq")}</p>
+            <p className="text-sm mt-1 opacity-70">{t("xodimlarVideolarniTomoshaQilgandaProgress")}</p>
           </div>
         ) : (
           <Card className="bg-card border-border shadow-none">

@@ -103,11 +103,11 @@ export default function PosMaterialNew() {
     <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <button onClick={() => navigate("/pos-monitor/materials")} style={{ padding: "6px 12px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
-          ← Orqaga
+          {t("orqaga")}
         </button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>YANGI MATERIAL</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Material qo'shish</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{t("materialQoshish")}</h1>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ export default function PosMaterialNew() {
             />
           </Field>
 
-          <Field label="O'lchov birligi *" required>
+          <Field label={t("olchovBirligi1")} required>
             <select value={form.unit_of_measure} onChange={e => setForm({...form, unit_of_measure: e.target.value})} style={inputStyle}>
               {UNIT_OPTIONS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
             </select>
@@ -152,19 +152,19 @@ export default function PosMaterialNew() {
             />
           </Field>
 
-          <Field label="Kategoriya">
+          <Field label={t("category")}>
             <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} style={inputStyle}>
               {CATEGORY_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </Field>
 
-          <Field label="Material turi">
+          <Field label={t("materialTuri")}>
             <select value={form.material_type} onChange={e => setForm({...form, material_type: e.target.value})} style={inputStyle}>
               {MATERIAL_TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </Field>
 
-          <Field label="Minimal qoldiq">
+          <Field label={t("minimalQoldiq")}>
             <input
               type="number" min="0" step="any"
               value={form.min_stock}
@@ -174,7 +174,7 @@ export default function PosMaterialNew() {
             />
           </Field>
 
-          <Field label="Maksimal qoldiq">
+          <Field label={t("maksimalQoldiq")}>
             <input
               type="number" min="0" step="any"
               value={form.max_stock}
@@ -184,7 +184,7 @@ export default function PosMaterialNew() {
             />
           </Field>
 
-          <Field label="Birlik narxi">
+          <Field label={t("birlikNarxi")}>
             <input
               type="number" min="0" step="any"
               value={form.unit_price}
@@ -194,7 +194,7 @@ export default function PosMaterialNew() {
             />
           </Field>
 
-          <Field label="Valyuta">
+          <Field label={t("valyuta")}>
             <select value={form.currency} onChange={e => setForm({...form, currency: e.target.value})} style={inputStyle}>
               <option value="UZS">UZS</option>
               <option value="USD">USD</option>
@@ -202,20 +202,20 @@ export default function PosMaterialNew() {
             </select>
           </Field>
 
-          <Field label="Asosiy ta'minotchi">
+          <Field label={t("asosiyTaminotchi")}>
             <input
               value={form.supplier_name}
               onChange={e => setForm({...form, supplier_name: e.target.value})}
-              placeholder="Alfa-Tex LLC"
+              placeholder={t("alfaTexLlc")}
               style={inputStyle}
             />
           </Field>
 
-          <Field label="Tavsif" colSpan={2}>
+          <Field label={t("progress.description")} colSpan={2}>
             <textarea
               value={form.description}
               onChange={e => setForm({...form, description: e.target.value})}
-              placeholder="Qo'shimcha izoh..."
+              placeholder={t("qoshimchaIzoh")}
               rows={3}
               style={{ ...inputStyle, resize: "vertical" }}
             />
@@ -224,7 +224,7 @@ export default function PosMaterialNew() {
 
         <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={() => navigate("/pos-monitor/materials")} style={{ padding: "10px 20px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer" }}>
-            Bekor qilish
+            {t("cancel")}
           </button>
           <button onClick={submit} disabled={saving} style={{ padding: "10px 24px", background: "#10B981", color: "#FFF", border: "none", borderRadius: 8, cursor: saving ? "not-allowed" : "pointer", fontWeight: 700 }}>
             {saving ? "⏳ Saqlanmoqda..." : "💾 Yaratish"}

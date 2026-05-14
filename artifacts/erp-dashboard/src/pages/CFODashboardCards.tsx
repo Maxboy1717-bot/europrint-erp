@@ -144,7 +144,7 @@ export function RatioCards({ dashboard, profitability }: RatioCardsProps) {
       />
       <RatioBlock
         testId="card-quick-ratio"
-        label="Quick Ratio"
+        label={t("quickRatio")}
         value={formatRatio(dashboard?.kpis?.quickRatio)}
         hint={t("quickRatioDesc")}
       />

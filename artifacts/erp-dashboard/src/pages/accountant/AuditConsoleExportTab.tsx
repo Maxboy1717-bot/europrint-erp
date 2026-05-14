@@ -6,6 +6,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Download, Table, FileCheck } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface ExportTabProps {
   onExportCSV: () => void;
@@ -14,6 +15,7 @@ interface ExportTabProps {
 }
 
 export function ExportTab({ onExportCSV, onExportExcel, onExportPDF }: ExportTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -22,7 +24,7 @@ export function ExportTab({ onExportCSV, onExportExcel, onExportPDF }: ExportTab
             <FileText className="h-12 w-12 mx-auto mb-4 text-[var(--ep-blue)]" />
             <h3 className="font-bold mb-2">CSV eksport</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Audit loglarni CSV formatda yuklash
+              {t("auditLoglarniCsvFormatdaYuklash")}
             </p>
             <Button
               variant="outline"
@@ -31,16 +33,16 @@ export function ExportTab({ onExportCSV, onExportExcel, onExportPDF }: ExportTab
               data-testid="button-export-csv"
             >
               <Download className="h-4 w-4" />
-              Yuklash
+              {t("upload")}
             </Button>
           </CardContent>
         </Card>
         <Card className="hover-elevate cursor-pointer">
           <CardContent className="p-6 text-center">
             <Table className="h-12 w-12 mx-auto mb-4 text-[var(--ep-green)]" />
-            <h3 className="font-bold mb-2">Excel eksport</h3>
+            <h3 className="font-bold mb-2">{t("excelEksport")}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Audit loglarni Excel formatda yuklash
+              {t("auditLoglarniExcelFormatdaYuklash")}
             </p>
             <Button
               variant="outline"
@@ -49,15 +51,15 @@ export function ExportTab({ onExportCSV, onExportExcel, onExportPDF }: ExportTab
               data-testid="button-export-excel"
             >
               <Download className="h-4 w-4" />
-              Yuklash
+              {t("upload")}
             </Button>
           </CardContent>
         </Card>
         <Card className="hover-elevate cursor-pointer">
           <CardContent className="p-6 text-center">
             <FileCheck className="h-12 w-12 mx-auto mb-4 text-[var(--ep-red)]" />
-            <h3 className="font-bold mb-2">PDF Hisobot</h3>
-            <p className="text-sm text-muted-foreground mb-4">Auditor uchun PDF hisobot</p>
+            <h3 className="font-bold mb-2">{t("pdfHisobot")}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{t("auditorUchunPdfHisobot")}</p>
             <Button
               variant="outline"
               className="w-full gap-2"
@@ -65,7 +67,7 @@ export function ExportTab({ onExportCSV, onExportExcel, onExportPDF }: ExportTab
               data-testid="button-export-pdf"
             >
               <Download className="h-4 w-4" />
-              Yuklash
+              {t("upload")}
             </Button>
           </CardContent>
         </Card>

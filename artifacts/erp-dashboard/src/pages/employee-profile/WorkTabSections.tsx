@@ -26,6 +26,7 @@ interface OperatorProductionBlockProps {
 }
 
 export function OperatorProductionBlock({ employeeId, }: OperatorProductionBlockProps) {
+  const { t } = useTranslation("common");
   const { data: stats, isLoading } = useQuery({
     queryKey: ["/api/hr/employees/operator-stats", employeeId],
     queryFn: () =>
@@ -71,7 +72,7 @@ export function OperatorProductionBlock({ employeeId, }: OperatorProductionBlock
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div className="col-span-2 md:col-span-1 flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">Dastgoh</p>
+            <p className="text-xs text-muted-foreground">{t("dastgoh2")}</p>
             <p className="font-semibold flex items-center gap-1.5">
               <Settings className="h-4 w-4 text-[var(--ep-blue)]" />
               {stats.machine_name || "—"}
@@ -83,22 +84,22 @@ export function OperatorProductionBlock({ employeeId, }: OperatorProductionBlock
             </p>
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">Smena</p>
+            <p className="text-xs text-muted-foreground">{t("smena")}</p>
             <p className="font-semibold">{stats.shift_type || "—"}</p>
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">Bugungi OEE</p>
+            <p className="text-xs text-muted-foreground">{t("bugungiOee")}</p>
             <p className={`text-2xl font-bold ${oeeColor}`}>{oee.toFixed(1)}%</p>
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">Bajarildi</p>
+            <p className="text-xs text-muted-foreground">{t("Bajarildi")}</p>
             <p className="font-semibold flex items-center gap-1">
               <Activity className="h-4 w-4 text-[var(--ep-green)]" />
               {produced.toLocaleString()} dona
             </p>
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">Nuqsonli</p>
+            <p className="text-xs text-muted-foreground">{t("nuqsonli")}</p>
             <p className="font-semibold flex items-center gap-1 text-[var(--ep-red)]">
               <span>❌</span>
               {defects} dona ({defectRate}%)

@@ -9,17 +9,19 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import { MonthlyLatePoint } from './AttendanceMonitorPageTypes';
+import { useTranslation } from '@/lib/i18n';
 
 interface MonthlyChartProps {
   data: MonthlyLatePoint[];
 }
 
 export function MonthlyLateChart({ data }: MonthlyChartProps) {
+  const { t } = useTranslation("common");
   if (data.length === 0) return null;
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold">Oylik Kech Kelish Statistikasi</CardTitle>
+        <CardTitle className="text-base font-semibold">{t("oylikKechKelishStatistikasi")}</CardTitle>
       </CardHeader>
       <Separator />
       <CardContent className="pt-4">

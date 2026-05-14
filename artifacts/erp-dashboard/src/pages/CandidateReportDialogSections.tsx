@@ -70,13 +70,13 @@ export function InfoPair({ label, value }: { label: string; value: React.ReactNo
 
 export function Section1BasicInfo({ report }: { report: ReportData }) {
   return (
-    <SectionBlock number={1} title="Asosiy Ma'lumotlar va Natijalar" icon={User}>
+    <SectionBlock number={1} title={t("asosiyMalumotlarVaNatijalar")} icon={User}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <InfoPair label={"Funnel bosqichi"} value={report.funnel_stage} />
-          <InfoPair label="Ariza manbasi" value={report.candidate_source} />
+          <InfoPair label={t("arizaManbasi")} value={report.candidate_source} />
           {report.avg_score != null && (
-            <InfoPair label="Suhbat o'rtacha ball" value={
+            <InfoPair label={t("suhbatOrtachaBall")} value={
               <span className={`font-bold ${report.avg_score >= 7 ? "text-[var(--ep-green)]" : report.avg_score >= 5 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
                 {report.avg_score}/10
               </span>
@@ -90,18 +90,18 @@ export function Section1BasicInfo({ report }: { report: ReportData }) {
             } />
           )}
           {report.screening_score != null && (
-            <InfoPair label="AI saralash ball" value={`${report.screening_score}%`} />
+            <InfoPair label={t("aiSaralashBall")} value={`${report.screening_score}%`} />
           )}
         </div>
         <div className="space-y-2 bg-gray-50 rounded-lg p-3 print:bg-white print:border">
-          <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">Suhbat Ball Xulosasi</p>
-          <ScoreRow label="Produktivlik" score={report.productivity_score} />
-          <ScoreRow label="Motivatsiya" score={report.motivation_score} />
-          <ScoreRow label="Kompetensiya" score={report.competency_score} />
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{t("suhbatBallXulosasi")}</p>
+          <ScoreRow label={t("produktivlik")} score={report.productivity_score} />
+          <ScoreRow label={t("motivatsiya")} score={report.motivation_score} />
+          <ScoreRow label={t("kompetensiya")} score={report.competency_score} />
           {report.avg_score != null && (
             <div className="pt-1 border-t border-gray-200">
               <div className="flex justify-between text-xs font-semibold">
-                <span>O'rtacha:</span>
+                <span>{t("ortacha")}</span>
                 <span className={report.avg_score >= 7 ? "text-[var(--ep-green)]" : report.avg_score >= 5 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}>
                   {report.avg_score}/10
                 </span>
@@ -122,9 +122,9 @@ export function Section2ToolTest({ report }: { report: ReportData }) {
   const toolPassed = report.tool_test_passed ?? {};
 
   return (
-    <SectionBlock number={2} title="TOOL TEST A-J Natijalari" icon={BarChart2}>
+    <SectionBlock number={2} title={t("toolTestAJNatijalari")} icon={BarChart2}>
       {!hasTool ? (
-        <p className="text-sm text-gray-400 italic">TOOL TEST ma'lumotlari mavjud emas</p>
+        <p className="text-sm text-gray-400 italic">{t("toolTestMalumotlariMavjudEmas")}</p>
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -155,7 +155,7 @@ export function Section2ToolTest({ report }: { report: ReportData }) {
             })}
           </div>
           <div className="mt-2">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Sindromlar Tahlili</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">{t("sindromlarTahlili")}</p>
             <SyndromeAnalysis toolTestResults={toolTestResults} />
           </div>
         </div>
@@ -171,7 +171,7 @@ export function Section3Scores({ report }: { report: ReportData }) {
   const motivInfo = motivLevel ? MOTIVATION_LABELS[motivLevel] ?? null : null;
 
   return (
-    <SectionBlock number={3} title="IQ, Liderlik va Takrorlash Natijalari" icon={TrendingUp}>
+    <SectionBlock number={3} title={t("iqLiderlikVaTakrorlashNatijalari")} icon={TrendingUp}>
       {(report.competency_score != null || report.productivity_score != null || report.motivation_score != null) ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           {([
@@ -195,7 +195,7 @@ export function Section3Scores({ report }: { report: ReportData }) {
           ))}
         </div>
       ) : (
-        <p className="text-xs text-gray-400 italic mb-4">Produktivlik suhbati o'tkazilmagan</p>
+        <p className="text-xs text-gray-400 italic mb-4">{t("produktivlikSuhbatiOtkazilmagan")}</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -204,7 +204,7 @@ export function Section3Scores({ report }: { report: ReportData }) {
             <div className="mb-3 flex items-center gap-2 p-2 rounded-lg border border-gray-200 bg-gray-50">
               <span className="text-2xl">{motivInfo.icon}</span>
               <div>
-                <p className="text-[10px] text-gray-400">Motivatsiya darajasi</p>
+                <p className="text-[10px] text-gray-400">{t("motivatsiyaDarajasi")}</p>
                 <p className={`text-sm font-bold ${motivInfo.color}`}>{motivInfo.label}</p>
               </div>
             </div>
@@ -213,7 +213,7 @@ export function Section3Scores({ report }: { report: ReportData }) {
             <div className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 bg-gray-50">
               <span className="text-lg">{report.flow_direction === "inflow" ? "→" : "←"}</span>
               <div>
-                <p className="text-[10px] text-gray-400">Oqim yo'nalishi</p>
+                <p className="text-[10px] text-gray-400">{t("oqimYonalishi")}</p>
                 <p className="text-sm font-medium">
                   {report.flow_direction === "inflow" ? "Kiruvchi oqim (kompaniyaga kelmoqchi)" : "Chiquvchi oqim (ketmoqchi)"}
                 </p>
@@ -223,7 +223,7 @@ export function Section3Scores({ report }: { report: ReportData }) {
         </div>
         {report.motivation_answers && (
           <div className="space-y-2">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide">Motivatsiya savollari</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide">{t("motivatsiyaSavollari")}</p>
             {Object.entries(report.motivation_answers).map(([k, v]) => {
               if (!v) return null;
               return (
@@ -241,7 +241,7 @@ export function Section3Scores({ report }: { report: ReportData }) {
         <div className="mt-3 p-3 rounded-lg border border-blue-200 bg-blue-50">
           <div className="flex items-center gap-1.5 mb-2">
             <Bot className="w-4 h-4 text-[var(--ep-blue)]" />
-            <p className="text-xs font-semibold text-[var(--ep-blue)]">AI Suhbat Natijalari</p>
+            <p className="text-xs font-semibold text-[var(--ep-blue)]">{t("aiSuhbatNatijalari")}</p>
             <Badge variant="outline" className="text-[9px] ml-auto border-blue-400 text-[var(--ep-blue)]">{report.ai_session.status}</Badge>
           </div>
           {report.ai_session.overall_score != null && (

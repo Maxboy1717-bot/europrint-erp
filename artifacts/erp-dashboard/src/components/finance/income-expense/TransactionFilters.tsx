@@ -51,7 +51,7 @@ export function TransactionFilters({
         onValueChange={(value) => setFilters((prev) => ({ ...prev, type: value }))}
       >
         <SelectTrigger className="w-full sm:w-[150px] h-9" data-testid="filter-type">
-          <SelectValue placeholder="Turi" />
+          <SelectValue placeholder={t("type")} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">{tCommon("all")}</SelectItem>

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Briefcase } from "lucide-react";
 import { CONVERSION_TARGET, TYPE_LABELS, TYPE_COLORS, fmt } from "./RecruiterKPIPageTypes";
 import type { KPIData } from "./RecruiterKPIPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── RecruiterTableSection ─────────────────────────────────────────────────────
 
@@ -13,29 +14,30 @@ interface RecruiterTableSectionProps {
 }
 
 export function RecruiterTableSection({ kpi }: RecruiterTableSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" /> Recruiter bo'yicha KPI
+          <Users className="w-4 h-4 text-primary" /> {t("recruiterBoyichaKpi")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {kpi.byRecruiter.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">Ma'lumot yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("malumotYoq")}</p>
         )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-muted-foreground border-b border-border">
-                <th className="text-left pb-2 font-medium">Recruiter</th>
-                <th className="text-right pb-2 font-medium">Qabul</th>
+                <th className="text-left pb-2 font-medium">{t("recruiter")}</th>
+                <th className="text-right pb-2 font-medium">{t("qabul1")}</th>
                 <th className="text-right pb-2 font-medium">O'rtacha (kun)</th>
-                <th className="text-right pb-2 font-medium">Taklif %</th>
-                <th className="text-right pb-2 font-medium">AI o'tish %</th>
+                <th className="text-right pb-2 font-medium">{t("taklif1")}</th>
+                <th className="text-right pb-2 font-medium">{t("aiOtish")}</th>
                 <th className="text-right pb-2 font-medium">Yopilgan (oy)</th>
-                <th className="text-right pb-2 font-medium">Sifat %</th>
-                <th className="text-right pb-2 font-medium">Foiz</th>
+                <th className="text-right pb-2 font-medium">{t("sifat")}</th>
+                <th className="text-right pb-2 font-medium">{t("percentage")}</th>
               </tr>
             </thead>
             <tbody>
@@ -85,7 +87,7 @@ export function VacancyTypeSection({ kpi }: VacancyTypeSectionProps) {
     <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Briefcase className="w-4 h-4 text-primary" /> Vakansiya turi bo'yicha konversiya
+          <Briefcase className="w-4 h-4 text-primary" /> {t("vakansiyaTuriBoyichaKonversiya")}
           <span className="ml-auto text-xs font-normal text-muted-foreground flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-primary/60" />
             Maqsad: {CONVERSION_TARGET}%
@@ -94,16 +96,16 @@ export function VacancyTypeSection({ kpi }: VacancyTypeSectionProps) {
       </CardHeader>
       <CardContent>
         {kpi.byVacancyType.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">Ma'lumot yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("malumotYoq")}</p>
         )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-muted-foreground border-b border-border">
-                <th className="text-left pb-2 font-medium">Tur</th>
-                <th className="text-right pb-2 font-medium">Arizalar</th>
-                <th className="text-right pb-2 font-medium">Qabul</th>
-                <th className="text-right pb-2 font-medium">Konversiya</th>
+                <th className="text-left pb-2 font-medium">{t("tur")}</th>
+                <th className="text-right pb-2 font-medium">{t("arizalar")}</th>
+                <th className="text-right pb-2 font-medium">{t("qabul1")}</th>
+                <th className="text-right pb-2 font-medium">{t("konversiya")}</th>
                 <th className="text-left pb-2 font-medium pl-4">Progress (60% maqsad)</th>
               </tr>
             </thead>

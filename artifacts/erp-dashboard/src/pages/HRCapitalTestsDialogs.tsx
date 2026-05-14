@@ -65,28 +65,28 @@ export function CreateSessionDialog({open, onOpenChange }: CreateSessionDialogPr
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Test Sessiyasi Yaratish</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("testSessiyasiYaratish")}</DialogTitle></DialogHeader>
         <div className="space-y-4 py-2">
           <div>
-            <Label className="text-xs mb-1 block">Test turi *</Label>
+            <Label className="text-xs mb-1 block">{t("testTuri")}</Label>
             <Select value={sessionForm.test_type} onValueChange={v => setSessionForm(p => ({ ...p, test_type: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="tool_test">TOOL TEST (Shaxsiyat profili)</SelectItem>
-                <SelectItem value="iq">IQ Test</SelectItem>
-                <SelectItem value="leadership">Liderlik testi</SelectItem>
-                <SelectItem value="replication">Takrorlash testi</SelectItem>
+                <SelectItem value="iq">{t("iqTest")}</SelectItem>
+                <SelectItem value="leadership">{t("liderlikTesti")}</SelectItem>
+                <SelectItem value="replication">{t("takrorlashTesti")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label className="text-xs mb-1 block">Nomzod ID (ixtiyoriy)</Label>
-            <Input placeholder="Nomzod ID raqami..." value={sessionForm.candidate_id}
+            <Input placeholder={t("nomzodIdRaqami")} value={sessionForm.candidate_id}
               onChange={e => setSessionForm(p => ({ ...p, candidate_id: e.target.value }))} type="number" />
           </div>
           <div>
             <Label className="text-xs mb-1 block">Xodim ID (ixtiyoriy)</Label>
-            <Input placeholder="Xodim ID raqami..." value={sessionForm.employee_id}
+            <Input placeholder={t("xodimIdRaqami")} value={sessionForm.employee_id}
               onChange={e => setSessionForm(p => ({ ...p, employee_id: e.target.value }))} type="number" />
           </div>
           <div>
@@ -96,13 +96,13 @@ export function CreateSessionDialog({open, onOpenChange }: CreateSessionDialogPr
           </div>
           <div>
             <Label className="text-xs mb-1 block">Vakansiya ID (ixtiyoriy)</Label>
-            <Input placeholder="Vakansiya ID..." value={sessionForm.vacancy_id}
+            <Input placeholder={t("vakansiyaId")} value={sessionForm.vacancy_id}
               onChange={e => setSessionForm(p => ({ ...p, vacancy_id: e.target.value }))} type="number" />
           </div>
-          <p className="text-xs text-muted-foreground">Test linki 24 soat amal qiladi. Nomzodga link yuborasiz.</p>
+          <p className="text-xs text-muted-foreground">{t("testLinki24SoatAmal")}</p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button onClick={() => createSessionMutation.mutate(sessionForm)} disabled={createSessionMutation.isPending}>
             {createSessionMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
             Yaratish va link olish
@@ -172,7 +172,7 @@ export function QuestionDialog({ open, onOpenChange, editingQuestion, onClose }:
         <div className="space-y-4 py-2">
           {!editingQuestion && (
             <div>
-              <Label className="text-xs mb-1 block">Ko'rsatkich</Label>
+              <Label className="text-xs mb-1 block">{t("korsatkich")}</Label>
               <Select value={questionForm.indicator} onValueChange={v => setQuestionForm(p => ({ ...p, indicator: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -185,7 +185,7 @@ export function QuestionDialog({ open, onOpenChange, editingQuestion, onClose }:
           )}
           <div>
             <Label className="text-xs mb-1 block">Savol matni (O'zbek) *</Label>
-            <Textarea placeholder="Savol matni..." value={questionForm.text_uz} rows={3}
+            <Textarea placeholder={t("savolMatni")} value={questionForm.text_uz} rows={3}
               onChange={e => setQuestionForm(p => ({ ...p, text_uz: e.target.value }))} />
           </div>
           <div>
@@ -207,7 +207,7 @@ export function QuestionDialog({ open, onOpenChange, editingQuestion, onClose }:
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button onClick={() => createQuestionMutation.mutate(questionForm)}
             disabled={createQuestionMutation.isPending || !questionForm.text_uz}>
             {createQuestionMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
@@ -353,7 +353,7 @@ export function ResultDetailDialog({ session, onClose }: ResultDetailDialogProps
                   {(session.score ?? 0) >= 90 ? "Juda aniq bajarildi"
                     : (session.score ?? 0) >= 70 ? "Qoniqarli" : "Aniqlik past"}
                 </p>
-                <p className="text-xs text-muted-foreground">Maqsad: 90-100%</p>
+                <p className="text-xs text-muted-foreground">{t("maqsad90100")}</p>
               </div>
             )}
           </div>

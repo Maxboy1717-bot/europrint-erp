@@ -34,12 +34,14 @@ import {
   useQuestionMutations,
 } from "./QuestionnaireTemplatesHooks";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function QuestionnaireTemplates() {
+  const { t } = useTranslation("common");
   // --- Dialog visibility ---
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [isPresetsDialogOpen, setIsPresetsDialogOpen] = useState(false);
@@ -128,8 +130,8 @@ export default function QuestionnaireTemplates() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Anketa shablonlari</CardTitle>
-              <CardDescription>Lavozimlar uchun anketa shablonlarini yarating</CardDescription>
+              <CardTitle>{t("anketaShablonlari")}</CardTitle>
+              <CardDescription>{t("lavozimlarUchunAnketaShablonlariniYarating")}</CardDescription>
             </div>
             <div className="flex gap-2">
               <PresetsDialog
@@ -164,7 +166,7 @@ export default function QuestionnaireTemplates() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Savollar</CardTitle>
+                <CardTitle>{t("questions")}</CardTitle>
                 <CardDescription>{selectedTemplateName}</CardDescription>
               </div>
               <QuestionDialog
@@ -189,8 +191,8 @@ export default function QuestionnaireTemplates() {
       <ConfirmDialog
         open={confirmDeleteTemplateId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteTemplateId(null); }}
-        title="Shablonni o'chirish"
-        description="Ushbu so'rovnoma shablonini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("shablonniOchirish")}
+        description={t("ushbuSorovnomaShabloniniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"
@@ -204,8 +206,8 @@ export default function QuestionnaireTemplates() {
       <ConfirmDialog
         open={confirmDeleteQuestionId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteQuestionId(null); }}
-        title="Savolni o'chirish"
-        description="Ushbu so'rovnoma savolini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("savolniOchirish")}
+        description={t("ushbuSorovnomaSavoliniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

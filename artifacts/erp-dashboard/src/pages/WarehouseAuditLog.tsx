@@ -109,7 +109,7 @@ export default function WarehouseAuditLog() {
         <History className="h-8 w-8 text-[var(--ep-purple)]" />
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">{t('auditLog1')}</div>
-          <h1 className="text-2xl font-bold">Tizim audit jurnali</h1>
+          <h1 className="text-2xl font-bold">{t("tizimAuditJurnali")}</h1>
           <p className="text-sm text-gray-500">7 yil saqlanadi (O'zbekiston soliq talabi)</p>
         </div>
         <Button onClick={exportCsv} variant="outline" disabled={filtered.length === 0}>
@@ -123,7 +123,7 @@ export default function WarehouseAuditLog() {
           <div className="flex flex-wrap gap-3 items-center">
             <div className="flex items-center gap-2 flex-1 min-w-[300px]">
               <Search className="h-4 w-4 text-gray-400" />
-              <Input placeholder="Foydalanuvchi, amal, obyekt..." value={search} onChange={e => setSearch(e.target.value)} />
+              <Input placeholder={t("foydalanuvchiAmalObyekt")} value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <select value={actionFilter} onChange={e => setActionFilter(e.target.value)} className="px-3 py-2 border rounded text-sm">
               <option value="all">Barcha amallar ({logs.length})</option>
@@ -133,7 +133,7 @@ export default function WarehouseAuditLog() {
               <Calendar className="h-4 w-4 text-gray-400" />
               <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36" />
               <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36" />
-              <Button onClick={load} size="sm" variant="outline">Filtr</Button>
+              <Button onClick={load} size="sm" variant="outline">{t("filter3")}</Button>
             </div>
           </div>
         </CardHeader>
@@ -141,17 +141,17 @@ export default function WarehouseAuditLog() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
             <div className="lg:col-span-2 overflow-x-auto">
               {loading ? (
-                <div className="p-10 text-center text-gray-500">⏳ Yuklanmoqda...</div>
+                <div className="p-10 text-center text-gray-500">{t("yuklanmoqda")}</div>
               ) : filtered.length === 0 ? (
-                <div className="p-10 text-center text-gray-400">Yozuvlar yo'q</div>
+                <div className="p-10 text-center text-gray-400">{t("yozuvlarYoq")}</div>
               ) : (
                 <div className="ep-table-scroll"><Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead>Sana</TableHead>
-                      <TableHead>Foydalanuvchi</TableHead>
-                      <TableHead>Amal</TableHead>
-                      <TableHead>Obyekt</TableHead>
+                      <TableHead>{t("date")}</TableHead>
+                      <TableHead>{t("foydalanuvchi")}</TableHead>
+                      <TableHead>{t("amal")}</TableHead>
+                      <TableHead>{t("obyekt")}</TableHead>
                       <TableHead>IP</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -193,7 +193,7 @@ export default function WarehouseAuditLog() {
               {!selected ? (
                 <div className="text-center text-gray-400 py-10">
                   <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <div className="text-sm">Yozuvni bosib tanlang</div>
+                  <div className="text-sm">{t("yozuvniBosibTanlang")}</div>
                 </div>
               ) : (
                 <div className="space-y-3 text-sm">

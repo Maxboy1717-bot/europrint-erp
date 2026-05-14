@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Truck, Fuel, Wrench, User, Plus } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export interface Vehicle {
   id: string;
@@ -75,6 +76,7 @@ export function LogisticsDashboardVehiclesTab({
   vLoading, fLoading, mLoading,
   onAddVehicle, onAddFuel,
 }: Props) {
+  const { t } = useTranslation("common");
   return (
     <>
       {/* TRANSPORT PARKI */}
@@ -84,10 +86,10 @@ export function LogisticsDashboardVehiclesTab({
             <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <Truck className="w-5 h-5 text-primary" />
-                Mashinalar Ro'yxati
+                {t("mashinalarRoyxati")}
               </CardTitle>
               <Button onClick={onAddVehicle} data-testid="button-add-vehicle" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold border-none gap-2">
-                <Plus className="w-4 h-4" />Mashina Qo'sh
+                <Plus className="w-4 h-4" />{t("mashinaQosh")}
               </Button>
             </div>
           </CardHeader>
@@ -97,20 +99,20 @@ export function LogisticsDashboardVehiclesTab({
             ) : vehicleList.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Truck className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Hali mashina qo'shilmagan</p>
+                <p>{t("haliMashinaQoshilmagan")}</p>
               </div>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Raqam</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Model</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Turi</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Haydovchi</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Yoqilg'i</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Keyingi TA</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sug'urta</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("raqam")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("model1")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("type")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("haydovchi")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("yoqilgi")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("keyingiTa")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("sugurta")}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -168,10 +170,10 @@ export function LogisticsDashboardVehiclesTab({
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <CardTitle className="flex items-center gap-2"><Fuel className="w-5 h-5" />Yoqilg'i Jurnali</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Fuel className="w-5 h-5" />{t("yoqilgiJurnali")}</CardTitle>
               </div>
               <Button onClick={onAddFuel} data-testid="button-add-fuel">
-                <Plus className="w-4 h-4 mr-2" />Yoqilg'i Qo'sh
+                <Plus className="w-4 h-4 mr-2" />{t("yoqilgiQosh")}
               </Button>
             </div>
           </CardHeader>
@@ -181,19 +183,19 @@ export function LogisticsDashboardVehiclesTab({
             ) : fuelLogs.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Fuel className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Hali yoqilg'i yozuvi yo'q</p>
+                <p>{t("haliYoqilgiYozuviYoq")}</p>
               </div>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Mashina</TableHead>
-                    <TableHead>Sana</TableHead>
-                    <TableHead>Litri</TableHead>
+                    <TableHead>{t("mashina")}</TableHead>
+                    <TableHead>{t("date")}</TableHead>
+                    <TableHead>{t("litri1")}</TableHead>
                     <TableHead>Narxi (l)</TableHead>
-                    <TableHead>Jami narx</TableHead>
-                    <TableHead>Stantsiya</TableHead>
-                    <TableHead>Probeg</TableHead>
+                    <TableHead>{t("jamiNarx1")}</TableHead>
+                    <TableHead>{t("stantsiya1")}</TableHead>
+                    <TableHead>{t("probeg")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -219,7 +221,7 @@ export function LogisticsDashboardVehiclesTab({
       <TabsContent value="maintenance">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Wrench className="w-5 h-5" />Texnik Xizmat Tarixi</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Wrench className="w-5 h-5" />{t("texnikXizmatTarixi")}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {mLoading ? (
@@ -227,19 +229,19 @@ export function LogisticsDashboardVehiclesTab({
             ) : maintenanceList.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Wrench className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Hali ta'mirlash yozuvi yo'q</p>
+                <p>{t("haliTamirlashYozuviYoq")}</p>
               </div>
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Mashina</TableHead>
-                    <TableHead>Turi</TableHead>
-                    <TableHead>Sana</TableHead>
-                    <TableHead>Xarajat</TableHead>
-                    <TableHead>Probeg</TableHead>
-                    <TableHead>Keyingi TA</TableHead>
-                    <TableHead>Ustaxona</TableHead>
+                    <TableHead>{t("mashina")}</TableHead>
+                    <TableHead>{t("type")}</TableHead>
+                    <TableHead>{t("date")}</TableHead>
+                    <TableHead>{t("xarajat1")}</TableHead>
+                    <TableHead>{t("probeg")}</TableHead>
+                    <TableHead>{t("keyingiTa")}</TableHead>
+                    <TableHead>{t("ustaxona")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

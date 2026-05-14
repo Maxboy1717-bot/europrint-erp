@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, Star, TriangleAlert } from "lucide-react";
 import { SectionTitle, DaysSince } from "@/components/director/helpers";
 import type { ProductionData } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface OverdueOrdersCardProps {
   prod: ProductionData | undefined;
@@ -18,12 +19,13 @@ interface OverdueOrdersCardProps {
 }
 
 export function OverdueOrdersCard({ prod, prodLoad, onVipRequest }: OverdueOrdersCardProps) {
+  const { t } = useTranslation("common");
   const overdueOrders = prod?.overdueOrders ?? [];
 
   return (
     <Card data-testid="card-overdue-orders">
       <CardHeader className="pb-3">
-        <SectionTitle icon={TriangleAlert} title="Kechikayotgan Buyurtmalar" sub={`${overdueOrders.length} ta muddati o'tgan`} accent="text-[var(--ep-red)]" />
+        <SectionTitle icon={TriangleAlert} title={t("kechikayotganBuyurtmalar")} sub={`${overdueOrders.length} ta muddati o'tgan`} accent="text-[var(--ep-red)]" />
       </CardHeader>
       <CardContent>
         {prodLoad ? (
@@ -31,7 +33,7 @@ export function OverdueOrdersCard({ prod, prodLoad, onVipRequest }: OverdueOrder
         ) : overdueOrders.length === 0 ? (
           <div className="text-center py-6">
             <CheckCircle className="w-8 h-8 text-[var(--ep-green)] mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Barcha buyurtmalar vaqtida</p>
+            <p className="text-sm text-muted-foreground">{t("barchaBuyurtmalarVaqtida")}</p>
           </div>
         ) : (
           <div className="space-y-2">

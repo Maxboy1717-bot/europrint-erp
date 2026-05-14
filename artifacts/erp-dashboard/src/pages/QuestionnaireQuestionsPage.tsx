@@ -114,19 +114,19 @@ export default function QuestionnaireQuestionsPage() {
   return (
     <ModulePage
       module="hr"
-      title="So'rovnoma Savollari"
+      title={t("sorovnomaSavollari")}
       icon={<ListChecks className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-q-question">
           <Plus className="h-4 w-4 mr-2" />
-          Savol qo'shish
+          {t("savolQoshish")}
         </Button>
       }
     >
       <div className="space-y-4">
         <div className="flex gap-2 max-w-sm">
           <Input
-            placeholder="Shablon ID bo'yicha filter..."
+            placeholder={t("shablonIdBoyichaFilter")}
             value={templateId}
             onChange={e => setTemplateId(e.target.value)}
             onKeyDown={e => e.key === "Enter" && setSearched(templateId)}
@@ -157,7 +157,7 @@ export default function QuestionnaireQuestionsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <ListChecks className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Savollar topilmadi</p>
+              <p className="text-muted-foreground">{t("savollarTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -205,22 +205,22 @@ export default function QuestionnaireQuestionsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi savol qo'shish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiSavolQoshish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Savol matni *</Label>
+              <Label>{t("savolMatni1")}</Label>
               <Textarea
                 value={form.question_text}
                 onChange={e => setForm(f => ({ ...f, question_text: e.target.value }))}
-                placeholder="Savol matni..."
+                placeholder={t("savolMatni")}
                 rows={2}
                 data-testid="input-qq-text"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Savol turi</Label>
+                <Label>{t("savolTuri1")}</Label>
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                   value={form.question_type}
@@ -233,11 +233,11 @@ export default function QuestionnaireQuestionsPage() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label>Shablon ID</Label>
+                <Label>{t("shablonId")}</Label>
                 <Input
                   value={form.template_id}
                   onChange={e => setForm(f => ({ ...f, template_id: e.target.value }))}
-                  placeholder="Shablon ID"
+                  placeholder={t("shablonId")}
                   data-testid="input-qq-template"
                 />
               </div>
@@ -249,11 +249,11 @@ export default function QuestionnaireQuestionsPage() {
                 onChange={e => setForm(f => ({ ...f, is_required: e.target.checked }))}
                 data-testid="checkbox-qq-required"
               />
-              Majburiy savol
+              {t("majburiySavol")}
             </label>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.question_text.trim()) createMutation.mutate(form); }}
               disabled={!form.question_text.trim() || createMutation.isPending}
@@ -268,18 +268,18 @@ export default function QuestionnaireQuestionsPage() {
       <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Savolni o'chirish</AlertDialogTitle>
+            <AlertDialogTitle>{t("savolniOchirish")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu savolni o'chirishni tasdiqlaysizmi?
+              {t("buSavolniOchirishniTasdiqlaysizmi")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor</AlertDialogCancel>
+            <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground"
               onClick={() => { if (deleteId !== null) deleteMutation.mutate(deleteId); }}
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,7 +1,7 @@
 /**
  * /api/cc/notification-prefs — har xodim o'z bildirishnoma sozlamalarini boshqaradi.
  */
-import { Body, Controller, Get, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Put, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';

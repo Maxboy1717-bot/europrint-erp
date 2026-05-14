@@ -16,6 +16,7 @@ import {
   AlertTriangle, Plus, StopCircle, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 import {
   EquipmentSummary, SessionFormState, oeeColor, statusBadge, fmtSecs,
 } from "./MESWorkCentersTypes";
@@ -34,11 +35,12 @@ interface HeaderProps {
 export function WorkCentersHeader({
   running, stopped, total, onRefresh, onCreateWC, onCreateSession,
 }: HeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center justify-between flex-wrap gap-2">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Ish markazlari</h1>
-        <p className="text-sm text-muted-foreground">Barcha uskunalar va ularning holati</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("ishMarkazlari")}</h1>
+        <p className="text-sm text-muted-foreground">{t("barchaUskunalarVaUlarningHolati")}</p>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
         <Badge variant="outline" className="gap-1.5">
@@ -51,13 +53,13 @@ export function WorkCentersHeader({
           <Factory className="w-3 h-3 text-muted-foreground" /> {total} jami
         </Badge>
         <Button variant="outline" size="sm" onClick={onRefresh}>
-          <RefreshCw className="h-4 w-4 mr-1" /> Yangilash
+          <RefreshCw className="h-4 w-4 mr-1" /> {t("refresh")}
         </Button>
         <Button variant="outline" size="sm" onClick={onCreateWC}>
-          <Plus className="h-4 w-4 mr-1" /> Ish markazi
+          <Plus className="h-4 w-4 mr-1" /> {t("ishMarkazi")}
         </Button>
         <Button size="sm" onClick={onCreateSession}>
-          <Play className="h-4 w-4 mr-1" /> Yangi sessiya
+          <Play className="h-4 w-4 mr-1" /> {t("yangiSessiya")}
         </Button>
       </div>
     </div>
@@ -119,9 +121,9 @@ export function EquipmentGrid({
     return (
       <div className="text-center py-20 text-[13px] text-muted-foreground">
         <Factory className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>Sessiya topilmadi</p>
+        <p>{t("sessiyaTopilmadi")}</p>
         <Button className="mt-4 gap-2" onClick={onCreateSession}>
-          <Plus className="h-4 w-4" /> Sessiya yaratish
+          <Plus className="h-4 w-4" /> {t("sessiyaYaratish")}
         </Button>
       </div>
     );
@@ -168,7 +170,7 @@ export function EquipmentGrid({
             <CardContent className="space-y-3">
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">Bajarilish</span>
+                  <span className="text-muted-foreground">{t("progress5")}</span>
                   <span className="font-semibold">{eq.progress}%</span>
                 </div>
                 <Progress value={eq.progress} className="h-2" />
@@ -189,18 +191,18 @@ export function EquipmentGrid({
                 <div className="text-center">
                   <Timer className="w-3 h-3 text-muted-foreground mx-auto mb-0.5" />
                   <p className="text-sm font-bold text-foreground">{fmtSecs(eq.totalRunning)}</p>
-                  <p className="text-[10px] text-muted-foreground">Ish vaqti</p>
+                  <p className="text-[10px] text-muted-foreground">{t("ishVaqti")}</p>
                 </div>
                 <div className="text-center">
                   <CheckCircle className="w-3 h-3 text-muted-foreground mx-auto mb-0.5" />
                   <p className="text-sm font-bold text-foreground">{eq.sessionCount}</p>
-                  <p className="text-[10px] text-muted-foreground">Sessiya</p>
+                  <p className="text-[10px] text-muted-foreground">{t("sessiya")}</p>
                 </div>
               </div>
 
               {eq.latest.orderNumber && (
                 <div className="pt-1 border-t">
-                  <p className="text-[10px] text-muted-foreground">Joriy buyurtma</p>
+                  <p className="text-[10px] text-muted-foreground">{t("joriyBuyurtma")}</p>
                   <p className="text-xs font-medium text-foreground">{eq.latest.orderNumber}</p>
                 </div>
               )}
@@ -213,14 +215,14 @@ export function EquipmentGrid({
                       onClick={() => pauseSessionMutation.mutate(eq.latest.id)}
                       disabled={pauseSessionMutation.isPending}
                     >
-                      <PauseCircle className="h-3 w-3 mr-1" /> To'xtat
+                      <PauseCircle className="h-3 w-3 mr-1" /> {t("toxtat")}
                     </Button>
                     <Button
                       size="sm" variant="outline" className="flex-1 h-7 text-xs"
                       onClick={() => completeSessionMutation.mutate(eq.latest.id)}
                       disabled={completeSessionMutation.isPending}
                     >
-                      <StopCircle className="h-3 w-3 mr-1" /> Yakunla
+                      <StopCircle className="h-3 w-3 mr-1" /> {t("yakunla")}
                     </Button>
                   </>
                 )}
@@ -230,7 +232,7 @@ export function EquipmentGrid({
                     onClick={() => resumeSessionMutation.mutate(eq.latest.id)}
                     disabled={resumeSessionMutation.isPending}
                   >
-                    <Play className="h-3 w-3 mr-1" /> Davom ettir
+                    <Play className="h-3 w-3 mr-1" /> {t("davomEttir")}
                   </Button>
                 )}
                 {isStopped && (
@@ -242,7 +244,7 @@ export function EquipmentGrid({
                       orderNumber: eq.latest.orderNumber || "",
                     })}
                   >
-                    <Play className="h-3 w-3 mr-1" /> Yangi sessiya
+                    <Play className="h-3 w-3 mr-1" /> {t("yangiSessiya")}
                   </Button>
                 )}
               </div>

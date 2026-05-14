@@ -390,9 +390,18 @@
   "recencyAxis": "Recency (нормализованный)",
   "frequencyAxis": "Frequency (нормализованный)",
   "monetaryAxis": "Monetary (нормализованный)",
-  "recencyLabel": "Recency",
-  "frequencyLabel": "Frequency",
-  "monetaryLabel": "Monetary",
+  "recencyLabel": "Давность (Recency)",
+  "frequencyLabel": "Частота (Frequency)",
+  "monetaryLabel": "Сумма (Monetary)",
   "deal001": "deal-001",
-  "winRate1": "Win Rate"
+  "winRate1": "% выигранных сделок",
+  "activityType.call": "Звонок",
+  "activityType.meeting": "Встреча",
+  "activityType.email": "Email",
+  "activityType.followUp": "Отслеживание",
+  "activityType.other": "Прочее",
+  "calendar.prevMonth": "Предыдущий месяц",
+  "calendar.nextMonth": "Следующий месяц",
+  "calendar.today": "Сегодня",
+  "calendar.morePlus": "+{n} ещё"
 }

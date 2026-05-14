@@ -47,6 +47,7 @@ import {
 } from "recharts";
 import { apiRequest } from '@/lib/queryClient';
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
@@ -69,6 +70,7 @@ interface TopEmployee {
 }
 
 export default function CameraReports() {
+  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   const [reportPeriod, setReportPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -218,8 +220,8 @@ export default function CameraReports() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">AI Kamera Hisobotlari</b></>}
-        title="AI Kamera Hisobotlari"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("aiKameraHisobotlari")}</b></>}
+        title={t("aiKameraHisobotlari")}
         subtitle={t.subtitle}
       />
         </div>

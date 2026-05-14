@@ -10,6 +10,7 @@ import { Video, Activity, Clock, AlertCircle, CheckCircle2, RefreshCw, Play, Max
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Camera, CameraWithDetections, LiveDetection } from "./CameraLiveMonitoringTypes";
 import { getConfidenceColor, getTimeSinceDetection } from "./CameraLiveMonitoringTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Video Grid tab
@@ -32,11 +33,12 @@ export function VideoTab({
   onExitFullscreen,
   gridSize,
 }: VideoTabProps) {
+  const { t } = useTranslation("common");
   if (camerasLoading) {
     return (
       <div className="text-center py-24 bg-card rounded-lg border-none">
         <RefreshCw className="h-12 w-12 animate-spin mx-auto text-primary opacity-20" />
-        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-4">Yuklanmoqda...</p>
+        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-4">{t("Yuklanmoqda...")}</p>
       </div>
     );
   }
@@ -45,8 +47,8 @@ export function VideoTab({
     return (
       <Card className="bg-card border-none rounded-lg py-24 text-center">
         <Play className="h-16 w-16 mx-auto text-muted-foreground opacity-10 mb-6" />
-        <p className="text-foreground font-bold">Jonli streamlar topilmadi</p>
-        <p className="text-sm text-muted-foreground mt-2">Kameralarni boshqaruv sahifasidan sozlang</p>
+        <p className="text-foreground font-bold">{t("jonliStreamlarTopilmadi")}</p>
+        <p className="text-sm text-muted-foreground mt-2">{t("kameralarniBoshqaruvSahifasidanSozlang")}</p>
       </Card>
     );
   }
@@ -67,7 +69,7 @@ export function VideoTab({
             className="rounded-lg hover:bg-muted/40 text-muted-foreground gap-2"
             data-testid="button-exit-fullscreen">
             <Grid className="h-4 w-4" />
-            Grid ko'rinishga qaytish
+            {t("gridKorinishgaQaytish")}
           </Button>
         </CardHeader>
         <CardContent className="p-0">
@@ -142,7 +144,7 @@ export function GroupedTab({ groupedLoading, groupedData }: GroupedTabProps) {
     return (
       <div className="text-center py-24 bg-card rounded-lg border-none">
         <RefreshCw className="h-12 w-12 animate-spin mx-auto text-primary opacity-20" />
-        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-4">Yuklanmoqda...</p>
+        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs mt-4">{t("Yuklanmoqda...")}</p>
       </div>
     );
   }
@@ -151,7 +153,7 @@ export function GroupedTab({ groupedLoading, groupedData }: GroupedTabProps) {
     return (
       <Card className="bg-card border-none rounded-lg py-24 text-center">
         <Video className="h-16 w-16 mx-auto text-muted-foreground opacity-10 mb-6" />
-        <p className="text-foreground font-bold">Faol kameralar topilmadi</p>
+        <p className="text-foreground font-bold">{t("faolKameralarTopilmadi")}</p>
       </Card>
     );
   }
@@ -182,12 +184,12 @@ export function GroupedTab({ groupedLoading, groupedData }: GroupedTabProps) {
             {item.detections.length === 0 ? (
               <div className="text-center py-12 bg-background rounded-lg border border-dashed border-border">
                 <Clock className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-20" />
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Hali aniqlashlar yo'q</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("haliAniqlashlarYoq")}</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  Oxirgi aniqlashlar
+                  {t("oxirgiAniqlashlar")}
                   <Badge className="bg-primary/10 text-primary border-none rounded-full h-5 min-w-5 flex items-center justify-center font-bold px-1.5">{item.detections.length}</Badge>
                 </p>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
@@ -242,12 +244,12 @@ export function StreamTab({ streamLoading, streamData }: StreamTabProps) {
       {streamLoading ? (
         <div className="text-center py-12">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-          <p className="text-muted-foreground mt-2">Yuklanmoqda...</p>
+          <p className="text-muted-foreground mt-2">{t("Yuklanmoqda...")}</p>
         </div>
       ) : !streamData || streamData.length === 0 ? (
         <div className="text-center py-12">
           <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Aniqlashlar topilmadi</p>
+          <p className="text-muted-foreground">{t("aniqlashlarTopilmadi")}</p>
         </div>
       ) : (
         <div className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -265,19 +267,19 @@ export function StreamTab({ streamLoading, streamData }: StreamTabProps) {
               </div>
               <div className="flex items-center gap-6 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Kamera</p>
+                  <p className="text-muted-foreground">{t("camera")}</p>
                   <p className="font-medium">{item.camera.name}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Zona</p>
+                  <p className="text-muted-foreground">{t("zona")}</p>
                   <p className="font-medium">{item.detection.zoneName || "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Vaqt</p>
+                  <p className="text-muted-foreground">{t("time")}</p>
                   <p className="font-medium">{item.detection.detectionTime}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Ishonch</p>
+                  <p className="text-muted-foreground">{t("ishonch")}</p>
                   <Badge variant={getConfidenceColor(item.detection.confidence)}>
                     {item.detection.confidence ? `${(item.detection.confidence * 100).toFixed(0)}%` : "N/A"}
                   </Badge>

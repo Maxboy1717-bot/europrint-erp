@@ -70,9 +70,9 @@ function WinRateCard({ data, t }: { data: WinRateResult; t: (k: string) => strin
           </div>
         </div>
         <div className="space-y-2">
-          <div className="flex justify-between text-xs"><span className="text-[var(--ep-green)]">Won</span><span>{data.winRate.toFixed(1)}%</span></div>
+          <div className="flex justify-between text-xs"><span className="text-[var(--ep-green)]">{t("won")}</span><span>{data.winRate.toFixed(1)}%</span></div>
           <Progress value={data.winRate} className="h-2" />
-          <div className="flex justify-between text-xs"><span className="text-[var(--ep-red)]">Lost</span><span>{data.lossRate.toFixed(1)}%</span></div>
+          <div className="flex justify-between text-xs"><span className="text-[var(--ep-red)]">{t("lost")}</span><span>{data.lossRate.toFixed(1)}%</span></div>
           <Progress value={data.lossRate} className="h-2 [&>div]:bg-red-400" />
         </div>
       </CardContent>
@@ -147,8 +147,8 @@ function FunnelStages({ data, t }: { data: RawStage[]; t: (k: string) => string 
                   <span className="font-medium">{stage.stage_name}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-sm">{stage.count}</span>
-                    {stage.is_won  && <Badge className="text-xs bg-green-100 text-green-800">Won</Badge>}
-                    {stage.is_lost && <Badge className="text-xs bg-red-100 text-red-800">Lost</Badge>}
+                    {stage.is_won  && <Badge className="text-xs bg-green-100 text-green-800">{t("won")}</Badge>}
+                    {stage.is_lost && <Badge className="text-xs bg-red-100 text-red-800">{t("lost")}</Badge>}
                   </div>
                 </div>
                 <Progress value={(stage.count / maxCount) * 100} className="h-2" />
@@ -247,16 +247,16 @@ export default function CrmFunnelAnalytics() {
           <DialogTrigger asChild>
             <Button variant="outline" data-testid="button-update-stage">
               <Target className="h-4 w-4 mr-2" />
-              Bosqichni yangilash
+              {t("bosqichniYangilash")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-[18px] font-semibold">Bitim bosqichini yangilash</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold">{t("bitimBosqichiniYangilash")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1">
-                <Label htmlFor="stage-deal-id">Bitim ID</Label>
+                <Label htmlFor="stage-deal-id">{t("bitimId")}</Label>
                 <Input
                   id="stage-deal-id"
                   value={stageForm.dealId}
@@ -266,11 +266,11 @@ export default function CrmFunnelAnalytics() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="stage-name">Yangi bosqich</Label>
+                <Label htmlFor="stage-name">{t("yangiBosqich")}</Label>
                 {data?.rawStages && data.rawStages.length > 0 ? (
                   <Select value={stageForm.stage} onValueChange={(v) => setStageForm((f) => ({ ...f, stage: v }))}>
                     <SelectTrigger id="stage-name" data-testid="select-stage-name" className="h-9">
-                      <SelectValue placeholder="Bosqich tanlang" />
+                      <SelectValue placeholder={t("bosqichTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
                       {data.rawStages.map((s) => (
@@ -283,7 +283,7 @@ export default function CrmFunnelAnalytics() {
                     id="stage-name"
                     value={stageForm.stage}
                     onChange={(e) => setStageForm((f) => ({ ...f, stage: e.target.value }))}
-                    placeholder="Bosqich nomi"
+                    placeholder={t("bosqichNomi")}
                     data-testid="input-stage-name"
                   />
                 )}
@@ -303,16 +303,16 @@ export default function CrmFunnelAnalytics() {
           <DialogTrigger asChild>
             <Button data-testid="button-close-deal">
               <CheckCircle className="h-4 w-4 mr-2" />
-              Bitimni yopish
+              {t("bitimniYopish")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-[18px] font-semibold">Bitimni yopish</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold">{t("bitimniYopish")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1">
-                <Label htmlFor="deal-id">Bitim ID</Label>
+                <Label htmlFor="deal-id">{t("bitimId")}</Label>
                 <Input
                   id="deal-id"
                   value={dealForm.dealId}
@@ -321,13 +321,13 @@ export default function CrmFunnelAnalytics() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="deal-outcome">Natija</Label>
+                <Label htmlFor="deal-outcome">{t("natija")}</Label>
                 <Select
                   value={dealForm.outcome}
                   onValueChange={(v) => setDealForm((f) => ({ ...f, outcome: v }))}
                 >
                   <SelectTrigger id="deal-outcome" className="h-9">
-                    <SelectValue placeholder="Natijani tanlang" />
+                    <SelectValue placeholder={t("natijaniTanlang")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="won">Yutildi (Won)</SelectItem>
@@ -336,7 +336,7 @@ export default function CrmFunnelAnalytics() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="deal-closeDate">Yopish sanasi</Label>
+                <Label htmlFor="deal-closeDate">{t("yopishSanasi")}</Label>
                 <Input
                   id="deal-closeDate"
                   type="date"

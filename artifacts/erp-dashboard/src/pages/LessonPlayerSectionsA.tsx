@@ -72,7 +72,7 @@ export function LessonSidebar({ course, progressData, completedIds, activeLesson
           className="mb-3 text-muted-foreground hover:text-foreground -ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Kursga qaytish
+          {t("kursgaQaytish")}
         </Button>
         <h2 className="font-semibold text-foreground text-sm leading-tight line-clamp-2">
           {course.title}
@@ -137,7 +137,7 @@ export function LessonSidebar({ course, progressData, completedIds, activeLesson
                   })}
                   {mod.lessons.length === 0 && (
                     <p className="px-3 py-2 text-xs text-muted-foreground italic">
-                      Darslar yo'q
+                      {t("darslarYoq")}
                     </p>
                   )}
                 </div>
@@ -153,8 +153,8 @@ export function LessonSidebar({ course, progressData, completedIds, activeLesson
           <div className="bg-green-50 rounded-lg p-3 flex items-center gap-2">
             <Award className="h-4 w-4 text-[var(--ep-green)] shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-green-800">Kurs yakunlandi!</p>
-              <p className="text-xs text-[var(--ep-green)]">Sertifikat berildi</p>
+              <p className="text-sm font-medium text-green-800">{t("kursYakunlandi")}</p>
+              <p className="text-xs text-[var(--ep-green)]">{t("sertifikatBerildi")}</p>
             </div>
           </div>
         </div>

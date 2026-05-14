@@ -39,6 +39,7 @@ import type { CameraAiRow } from "../types";
 import { CameraMissionEditor } from "../components/CameraMissionEditor";
 import { CameraAnalysisWorkbench } from "../components/CameraAnalysisWorkbench";
 import "../camera-ai-visual.css";
+import { useTranslation } from '@/lib/i18n';
 
 const severityClass: Record<string, string> = {
   low: "border-l-blue-500 bg-blue-500/5",
@@ -48,6 +49,7 @@ const severityClass: Record<string, string> = {
 };
 
 export default function CameraAIModernHub() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
   const [lang, setLang] = useState<"uz" | "ru">("uz");
@@ -150,14 +152,14 @@ export default function CameraAIModernHub() {
               </span>
               <span className="cai-pill opacity-90">
                 <Cpu className="h-3 w-3" />
-                Gemini Vision
+                {t("geminiVision")}
               </span>
             </div>
             <h1 className="cai-hero-title">
               {lang === "uz" ? (
                 <>
-                  Vizual <span className="text-cyan-300">xavfsizlik</span> va{" "}
-                  <span className="text-violet-300">ishlab chiqarish</span> AI
+                  {t("vizual")}<span className="text-cyan-300">xavfsizlik</span> va{" "}
+                  <span className="text-violet-300">{t("ishlabChiqarish")}</span> AI
                 </>
               ) : (
                 <>

@@ -44,8 +44,10 @@ import {
   AbcAnalysis as LocalAbcAnalysis,
 } from "@/components/hr/stats/types";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function EmployeeStats() {
+  const { t } = useTranslation("common");
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -138,7 +140,7 @@ export default function EmployeeStats() {
   if (employeeLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">Yuklanmoqda...</div>
+        <div className="text-muted-foreground">{t("Yuklanmoqda...")}</div>
       </div>
     );
   }
@@ -150,10 +152,10 @@ export default function EmployeeStats() {
   if (!employee) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <div className="text-muted-foreground">Xodim topilmadi</div>
+        <div className="text-muted-foreground">{t("xodimTopilmadi")}</div>
         <Button onClick={() => navigate("/employees")} data-testid="button-back">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Orqaga
+          {t("back")}
         </Button>
       </div>
     );
@@ -169,9 +171,9 @@ export default function EmployeeStats() {
         </Button>
         <div className="flex-1">
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Xodim Statistikasi</b></>}
-        title="Xodim Statistikasi"
-        subtitle="To'liq ma'lumotlar va o'qish jarayoni"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimStatistikasi")}</b></>}
+        title={t("xodimStatistikasi")}
+        subtitle={t("toliqMalumotlarVaOqishJarayoni")}
       />
         </div>
       </div>
@@ -205,11 +207,11 @@ export default function EmployeeStats() {
 
       <Tabs defaultValue="activity" className="space-y-4">
         <TabsList className="bg-muted/60 rounded-lg p-1">
-          <TabsTrigger value="activity">Faoliyat</TabsTrigger>
-          <TabsTrigger value="learning">O'quv jarayoni</TabsTrigger>
-          <TabsTrigger value="files">Fayllar</TabsTrigger>
-          <TabsTrigger value="abc">ABC Analiz</TabsTrigger>
-          <TabsTrigger value="hierarchy">Tuzilma</TabsTrigger>
+          <TabsTrigger value="activity">{t("faoliyat")}</TabsTrigger>
+          <TabsTrigger value="learning">{t("oquvJarayoni")}</TabsTrigger>
+          <TabsTrigger value="files">{t("fayllar")}</TabsTrigger>
+          <TabsTrigger value="abc">{t("abcAnaliz")}</TabsTrigger>
+          <TabsTrigger value="hierarchy">{t("tuzilma")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activity" className="space-y-4">

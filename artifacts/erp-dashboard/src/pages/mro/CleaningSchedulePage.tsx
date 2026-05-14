@@ -81,10 +81,10 @@ export default function CleaningSchedulePage() {
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                    <span>Davomiyligi: <strong>{task.frequency}</strong></span>
-                    <span>Oxirgi: <strong>{task.lastDoneAt ?? '—'}</strong></span>
-                    <span>Keyingi: <strong>{task.nextDueAt}</strong></span>
-                    <span>Mas'ul: <strong>{task.assignedToName ?? '—'}</strong></span>
+                    <span>{t("davomiyligi1")}<strong>{task.frequency}</strong></span>
+                    <span>{t("oxirgi")}<strong>{task.lastDoneAt ?? '—'}</strong></span>
+                    <span>{t("keyingi")}<strong>{task.nextDueAt}</strong></span>
+                    <span>{t("masul1")}<strong>{task.assignedToName ?? '—'}</strong></span>
                   </div>
                 </div>
               );

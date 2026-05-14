@@ -25,10 +25,12 @@ import { OffboardingCard, CreateCaseDialog } from "./HROffboardingDialogs";
 import { ChecklistPanel } from "./HROffboardingSteps";
 import { apiRequest } from '@/lib/queryClient';
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function HROffboarding() {
+  const { t } = useTranslation("common");
   const [statusFilter, setStatusFilter] = useState("active");
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -120,7 +122,7 @@ export default function HROffboarding() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <ShieldOff className="h-5 w-5 text-[var(--ep-primary)]" />
-          <h1 className="font-semibold text-base">HR — Offboarding</h1>
+          <h1 className="font-semibold text-base">{t("hrOffboarding")}</h1>
           <EPStatusPill tone="neutral">{safeStats.active} faol</EPStatusPill>
         </div>
         <Button
@@ -128,7 +130,7 @@ export default function HROffboarding() {
           className="h-8 text-xs bg-[var(--ep-primary)] hover:bg-[var(--ep-primary)]/90 text-white"
         >
           <Plus className="h-3.5 w-3.5 mr-1" />
-          Yangi jarayon
+          {t("yangiJarayon")}
         </Button>
       </div>
 
@@ -153,7 +155,7 @@ export default function HROffboarding() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Xodim yoki bo'lim qidiring..."
+              placeholder={t("xodimYokiBolimQidiring")}
               className="h-8 text-sm pl-8"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -200,7 +202,7 @@ export default function HROffboarding() {
                 onClick={() => setCreateOpen(true)}
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
-                Yangi jarayon boshlash
+                {t("yangiJarayonBoshlash")}
               </Button>
             )}
           </div>
@@ -229,7 +231,7 @@ export default function HROffboarding() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-[var(--ep-primary)]" />
-              Offboarding Chek-listi
+              {t("offboardingChekListi")}
             </DialogTitle>
           </DialogHeader>
           {checklistCaseId !== null && (

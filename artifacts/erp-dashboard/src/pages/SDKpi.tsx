@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Target } from "lucide-react";
 import { fmt, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS } from "@/lib/sd-helpers";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface TeamKpiItem {
   managerId: string;
@@ -30,6 +31,7 @@ interface FunnelItem {
 const MONTHS = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
 
 export default function SDKpi() {
+  const { t } = useTranslation("common");
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -50,9 +52,9 @@ export default function SDKpi() {
       <div className="flex items-center justify-between mb-6 gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Savdo KPI</b></>}
-        title="Savdo KPI"
-        subtitle="Menejer reytingi, kvotalar va funnel tahlili"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("savdoKpi")}</b></>}
+        title={t("savdoKpi")}
+        subtitle={t("menejerReytingiKvotalarVaFunnel")}
       />
         </div>
         <div className="flex gap-2 items-center">
@@ -76,9 +78,9 @@ export default function SDKpi() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-card rounded-xl p-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Menejerlar reytingi</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("menejerlarReytingi")}</h3>
           <div className="space-y-4">
-            {teamLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+            {teamLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
             {[...(Array.isArray(team) ? team : [])]
               .sort((a, b) => (Number(b.totalSales) || 0) - (Number(a.totalSales) || 0))
               .map((m, i) => (
@@ -95,15 +97,15 @@ export default function SDKpi() {
                 </div>
               ))}
             {!teamLoading && (Array.isArray(team) ? team : []).length === 0 && (
-              <div className="text-sm text-muted-foreground text-center py-4">Ushbu oyda buyurtmalar yo'q</div>
+              <div className="text-sm text-muted-foreground text-center py-4">{t("ushbuOydaBuyurtmalarYoq")}</div>
             )}
           </div>
         </div>
 
         <div className="bg-card rounded-xl p-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Lead funnel tahlili</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("leadFunnelTahlili")}</h3>
           <div className="space-y-3">
-            {funnelLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+            {funnelLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
             {(Array.isArray(funnel) ? funnel : []).map((f) => (
               <div key={f.status} data-testid={`card-funnel-${f.status}`} className="flex items-center gap-3 text-sm">
                 <span className={cn(

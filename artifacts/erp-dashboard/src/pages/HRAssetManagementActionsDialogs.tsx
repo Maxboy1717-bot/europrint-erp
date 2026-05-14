@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertTriangle, CheckCircle, UserCheck } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   Asset, ReturnForm, ReportForm, ReportType,
   CATEGORY_LABELS, STATUS_LABELS, STATUS_VARIANTS, CONDITION_LABELS,
@@ -33,16 +34,17 @@ interface ReturnDialogProps {
 }
 
 export function ReturnDialog({ open, onOpenChange, asset, form, onFormChange, onSubmit, isPending }: ReturnDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Jihoz qaytarish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("jihozQaytarish")}</DialogTitle>
           <DialogDescription>{asset?.name} — {asset?.assigned_employee_name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Qaytarish sanasi</Label>
+            <Label>{t("qaytarishSanasi")}</Label>
             <Input
               type="date"
               value={form.return_date}
@@ -50,7 +52,7 @@ export function ReturnDialog({ open, onOpenChange, asset, form, onFormChange, on
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Qaytarishdagi holat</Label>
+            <Label>{t("qaytarishdagiHolat")}</Label>
             <Select
               value={form.condition_on_return}
               onValueChange={v => onFormChange({ ...form, condition_on_return: v })}
@@ -64,7 +66,7 @@ export function ReturnDialog({ open, onOpenChange, asset, form, onFormChange, on
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Izoh</Label>
+            <Label>{t("Izoh")}</Label>
             <Textarea
               value={form.notes}
               onChange={e => onFormChange({ ...form, notes: e.target.value })}
@@ -73,7 +75,7 @@ export function ReturnDialog({ open, onOpenChange, asset, form, onFormChange, on
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSubmit} disabled={isPending}>
             {isPending ? "..." : "Qaytarish"}
           </Button>
@@ -104,41 +106,41 @@ export function ReportDialog({ open, onOpenChange, asset, form, onFormChange, on
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[var(--ep-red)]">
             <AlertTriangle className="w-5 h-5" />
-            Muammo haqida xabar berish
+            {t("muammoHaqidaXabarBerish")}
           </DialogTitle>
           <DialogDescription>{asset?.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Muammo turi *</Label>
+            <Label>{t("muammoTuri1")}</Label>
             <Select
               value={form.report_type}
               onValueChange={v => onFormChange({ ...form, report_type: v as ReportType })}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="broken">Buzilgan</SelectItem>
-                <SelectItem value="damaged">Shikastlangan</SelectItem>
-                <SelectItem value="lost">Yo'qolgan</SelectItem>
+                <SelectItem value="broken">{t("buzilgan")}</SelectItem>
+                <SelectItem value="damaged">{t("shikastlangan")}</SelectItem>
+                <SelectItem value="lost">{t("yoqolgan")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Tavsif</Label>
+            <Label>{t("progress.description")}</Label>
             <Textarea
               value={form.description}
               onChange={e => onFormChange({ ...form, description: e.target.value })}
               rows={3}
-              placeholder="Muammo haqida batafsil ma'lumot..."
+              placeholder={t("muammoHaqidaBatafsilMalumot")}
             />
           </div>
           <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg text-sm text-[var(--ep-yellow)] dark:text-amber-400 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-            Yo'qolgan yoki shikastlangan jihoz uchun maosh chegirmasi navbatga qo'shiladi.
+            {t("yoqolganYokiShikastlanganJihozUchun")}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button variant="destructive" onClick={onSubmit} disabled={isPending}>
             {isPending ? "..." : "Xabar berish"}
           </Button>
@@ -170,26 +172,26 @@ export function DetailDialog({ open, onOpenChange, asset }: DetailDialogProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-muted-foreground">Tur</p>
+                <p className="text-muted-foreground">{t("tur")}</p>
                 <p className="font-medium">{CATEGORY_LABELS[asset.category] ?? asset.category}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Holat</p>
+                <p className="text-muted-foreground">{t("status28")}</p>
                 <Badge variant={STATUS_VARIANTS[asset.status] ?? "outline"}>
                   {STATUS_LABELS[asset.status] ?? asset.status}
                 </Badge>
               </div>
               <div>
-                <p className="text-muted-foreground">Qiymati</p>
+                <p className="text-muted-foreground">{t("qiymati")}</p>
                 <p className="font-medium">{Number(asset.value).toLocaleString()} UZS</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Xarid sanasi</p>
+                <p className="text-muted-foreground">{t("xaridSanasi")}</p>
                 <p className="font-medium">{asset.purchase_date ?? "—"}</p>
               </div>
               {asset.assigned_employee_name && (
                 <div className="col-span-2">
-                  <p className="text-muted-foreground">Hozirgi foydalanuvchi</p>
+                  <p className="text-muted-foreground">{t("hozirgiFoydalanuvchi")}</p>
                   <p className="font-medium text-primary">{asset.assigned_employee_name}</p>
                 </div>
               )}
@@ -197,7 +199,7 @@ export function DetailDialog({ open, onOpenChange, asset }: DetailDialogProps) {
 
             {Array.isArray(asset.history) && asset.history.length > 0 && (
               <div>
-                <p className="text-sm font-medium mb-2">Topshiriq tarixi</p>
+                <p className="text-sm font-medium mb-2">{t("topshiriqTarixi")}</p>
                 <div className="space-y-2">
                   {asset.history.map((h, i) => (
                     <div

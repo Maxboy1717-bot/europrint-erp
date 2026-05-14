@@ -50,12 +50,12 @@ interface HRCapitalStats {
 const getDifficultyBadge = (difficulty: string) => {
   switch (difficulty) {
     case "beginner":
-      return <Badge variant="outline">Boshlang'ich</Badge>;
+      return <Badge variant="outline">{t("boshlangich")}</Badge>;
     case "intermediate":
-      return <EPStatusPill tone="neutral">O'rta</EPStatusPill>;
+      return <EPStatusPill tone="neutral">{t("medium")}</EPStatusPill>;
     case "advanced":
       return (
-        <Badge className="bg-purple-500 hover:bg-[var(--ep-purple)]/90">Ilg'or</Badge>
+        <Badge className="bg-purple-500 hover:bg-[var(--ep-purple)]/90">{t("ilgor")}</Badge>
       );
     default:
       return <Badge>{difficulty}</Badge>;
@@ -144,7 +144,7 @@ export default function HRCapitalCourses() {
     return (
       <ModulePage
         module="hr"
-        title="HR Capital - O'quv Kurslari"
+        title={t("hrCapitalOquvKurslari")}
         icon={<BookOpen className="h-5 w-5" />}
         actions={<Skeleton className="h-9 w-32 rounded-lg" />}
       >
@@ -166,7 +166,7 @@ export default function HRCapitalCourses() {
   return (
     <ModulePage
       module="hr"
-      title="HR Capital - O'quv Kurslari"
+      title={t("hrCapitalOquvKurslari")}
       icon={<BookOpen className="h-5 w-5" />}
       actions={
         <Button
@@ -176,7 +176,7 @@ export default function HRCapitalCourses() {
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Kurs qo'shish
+          {t("kursQoshish")}
         </Button>
       }
     >
@@ -206,13 +206,13 @@ export default function HRCapitalCourses() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="all" data-testid="tab-all-courses">
-            Barcha kurslar
+            {t("barchaKurslar")}
           </TabsTrigger>
           <TabsTrigger value="active" data-testid="tab-active-courses">
-            Faol
+            {t("active")}
           </TabsTrigger>
           <TabsTrigger value="archive" data-testid="tab-archive-courses">
-            Arxiv
+            {t("arxiv")}
           </TabsTrigger>
         </TabsList>
 
@@ -222,7 +222,7 @@ export default function HRCapitalCourses() {
             <div className="text-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                Hozircha kurslar mavjud emas
+                {t("hozirchaKurslarMavjudEmas")}
               </p>
             </div>
           ) : (
@@ -246,7 +246,7 @@ export default function HRCapitalCourses() {
                       className="w-full"
                       data-testid={`button-view-course-${course.id}`}
                     >
-                      Ko'rish
+                      {t("view")}
                       <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
                   </CardContent>
@@ -262,7 +262,7 @@ export default function HRCapitalCourses() {
             <div className="text-center py-12">
               <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                Faol kurslar mavjud emas
+                {t("faolKurslarMavjudEmas")}
               </p>
             </div>
           ) : (
@@ -286,7 +286,7 @@ export default function HRCapitalCourses() {
                       className="w-full"
                       data-testid={`button-view-course-${course.id}`}
                     >
-                      Ko'rish
+                      {t("view")}
                       <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
                   </CardContent>
@@ -302,7 +302,7 @@ export default function HRCapitalCourses() {
             <div className="text-center py-12">
               <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                Arxivlangan kurslar mavjud emas
+                {t("arxivlanganKurslarMavjudEmas")}
               </p>
             </div>
           ) : (
@@ -326,7 +326,7 @@ export default function HRCapitalCourses() {
                       className="w-full"
                       data-testid={`button-view-course-${course.id}`}
                     >
-                      Ko'rish
+                      {t("view")}
                       <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
                   </CardContent>

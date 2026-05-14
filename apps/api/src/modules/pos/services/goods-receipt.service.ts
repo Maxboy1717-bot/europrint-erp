@@ -4,10 +4,10 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Err, AppError } from '@common/result';
-import { GoodsReceiptRepository } from '../repositories/goods-receipt.repository';
+import { GoodsReceiptRepository, type GoodsReceipt } from '../repositories/goods-receipt.repository';
 
 // Re-export so controllers/other services can continue importing from here
-export type { GoodsReceipt } from '../repositories/goods-receipt.repository';
+export type { GoodsReceipt };
 
 @Injectable()
 export class GoodsReceiptService {
@@ -40,7 +40,8 @@ export class GoodsReceiptService {
     receivedBy:      number;
   }): Promise<Result<{ id: number; grnNumber: string }, AppError>> {
     // GRN raqami avtomatik: GRN-YYYY-NNNNN
-    const cnt        = await this.repo.countByCurrentYear();
+    const cntResult  = await this.repo.countByCurrentYear();
+    const cnt        = cntResult.ok ? cntResult.data : 0;
     const year       = new Date().getFullYear();
     const grnNumber  = `GRN-${year}-${String(cnt + 1).padStart(5, '0')}`;
 

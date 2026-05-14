@@ -27,8 +27,10 @@ import {
   ExpensesTab, KitchenTab, UniformsTab, OfficeTab, CleaningTab, SanitationTab, BuildingTab,
 } from "./MROExtendedTabsB";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function MROExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "preventive");
 
@@ -108,7 +110,7 @@ export default function MROExtended() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
         <Building className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-base">MRO — Xo'jalik Boshqaruvi</h1>
+        <h1 className="font-semibold text-base">{t("mroXojalikBoshqaruvi")}</h1>
         {pendingReqs.length > 0 && (
           <EPStatusPill tone="neutral" className="ml-2">{pendingReqs.length} so'rov kutmoqda</EPStatusPill>
         )}

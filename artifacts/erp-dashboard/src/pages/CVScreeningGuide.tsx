@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileSearch, ChevronDown, ChevronUp, CheckCircle2, XCircle, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Material №52: CV Skrining mezonlari ────────────────────────────────────
 const GOOD_CV_SIGNS = [
@@ -152,6 +153,7 @@ export function CVScreeningGuide({
   candidateName?: string;
   trigger?: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
 
   return (
@@ -165,7 +167,7 @@ export function CVScreeningGuide({
             data-testid="button-cv-screening-guide"
           >
             <FileSearch className="w-2.5 h-2.5" />
-            CV Mezonlari №52
+            {t("cvMezonlari52")}
           </Button>
         )}
       </SheetTrigger>
@@ -175,24 +177,24 @@ export function CVScreeningGuide({
           <div className="flex items-center justify-between">
             <SheetTitle className="text-white flex items-center gap-2 text-base">
               <FileSearch className="w-4 h-4 text-white/80" />
-              CV Skrining Ko'rsatmasi
+              {t("cvSkriningKorsatmasi")}
             </SheetTitle>
             <Badge className="bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[10px]">
-              Material №52
+              {t("material52")}
             </Badge>
           </div>
           {candidateName && (
             <p className="text-sm text-slate-300 mt-0.5">{candidateName}</p>
           )}
           <p className="text-xs text-slate-400 mt-1">
-            CV ni ko'rib chiqish uchun mezonlar va baholash ko'rsatmalari
+            {t("cvNiKoribChiqishUchun")}
           </p>
         </SheetHeader>
 
         <div className="px-4 py-4 space-y-3">
           {/* Good signs */}
           <CollapsibleSection
-            title="Yaxshi CV belgilari"
+            title={t("yaxshiCvBelgilari")}
             defaultOpen={true}
             icon={<CheckCircle2 className="w-4 h-4 text-[var(--ep-green)]" />}
             headerClass="bg-green-50 text-green-800"
@@ -227,7 +229,7 @@ export function CVScreeningGuide({
           {/* Evaluation parameters */}
           <div>
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">
-              Baholash parametrlari
+              {t("baholashParametrlari")}
             </p>
             <div className="space-y-2">
               {(Array.isArray(EVALUATION_PARAMS) ? EVALUATION_PARAMS : []).map(param => (
@@ -266,7 +268,7 @@ export function CVScreeningGuide({
           <div className="rounded-lg border border-slate-200 overflow-hidden">
             <div className="bg-slate-700 px-3 py-2.5 flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-400" />
-              <span className="text-sm font-semibold text-white">Qaror matritsasi</span>
+              <span className="text-sm font-semibold text-white">{t("qarorMatritsasi")}</span>
             </div>
             <div className="divide-y divide-slate-100 bg-white">
               {(Array.isArray(DECISION_MATRIX) ? DECISION_MATRIX : []).map((row, i) => (
@@ -285,7 +287,7 @@ export function CVScreeningGuide({
 
           {/* Scoring tip */}
           <div className="bg-violet-50 border border-violet-200 rounded-lg p-3">
-            <p className="text-[10px] font-semibold text-[var(--ep-purple)] mb-1.5">Hisoblash usuli:</p>
+            <p className="text-[10px] font-semibold text-[var(--ep-purple)] mb-1.5">{t("hisoblashUsuli")}</p>
             <p className="text-[11px] text-slate-600 leading-relaxed">
               Har bir parametrni 0–25 ball bilan baholang (ta'lim, tajriba, maosh, ko'nikmalar).
               Jami 100 ball. Yakuniy ball asosida yuqoridagi qaror matritsasidan foydalaning.

@@ -154,8 +154,8 @@ export default function Discipline() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between mb-6">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Intizom Nazorati</b></>}
-        title="Intizom Nazorati"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("intizomNazorati")}</b></>}
+        title={t("intizomNazorati")}
       />
         <div className="flex items-center gap-2">
           <Button

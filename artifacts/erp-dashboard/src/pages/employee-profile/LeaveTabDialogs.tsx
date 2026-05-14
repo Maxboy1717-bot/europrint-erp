@@ -14,42 +14,43 @@ import type { UseMutationResult } from "@tanstack/react-query";
 import { useTranslation } from "@/lib/i18n";
 
 export function LeaveRequestDialog({ open, onOpenChange, form, setForm, mutation, tCommon, }: { open: boolean; onOpenChange: (open: boolean) => void; form: LeaveRequestForm; setForm: (form: LeaveRequestForm) => void; mutation: UseMutationResult<unknown, Error, unknown, unknown>; tCommon: (key: string) => string; }) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" data-testid="button-add-leave-request">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi so'rov
+          {t("yangiSorov")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi ta'til so'rovi</DialogTitle>
-          <DialogDescription>Ta'til so'rovi ma'lumotlarini kiriting</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiTatilSorovi1")}</DialogTitle>
+          <DialogDescription>{t("tatilSoroviMalumotlariniKiriting")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label>Ta'til turi</Label>
+          <Label>{t("tatilTuri")}</Label>
             <Select
               value={form.leaveType}
               onValueChange={(value) => setForm({ ...form, leaveType: value })}
             >
               <SelectTrigger data-testid="select-leave-type" className="h-9">
-                <SelectValue placeholder="Turni tanlang" />
+                <SelectValue placeholder={t("turniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="annual">Yillik ta'til</SelectItem>
-                <SelectItem value="sick">Kasallik</SelectItem>
-                <SelectItem value="unpaid">Haq to'lanmaydigan</SelectItem>
-                <SelectItem value="maternity">Ona tug'ruq</SelectItem>
-                <SelectItem value="paternity">Ota tug'ruq</SelectItem>
-                <SelectItem value="study">O'quv ta'tili</SelectItem>
+                <SelectItem value="annual">{t("yillikTatil")}</SelectItem>
+                <SelectItem value="sick">{t("kasallik")}</SelectItem>
+                <SelectItem value="unpaid">{t("haqTolanmaydigan")}</SelectItem>
+                <SelectItem value="maternity">{t("onaTugruq")}</SelectItem>
+                <SelectItem value="paternity">{t("otaTugruq")}</SelectItem>
+                <SelectItem value="study">{t("oquvTatili")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Boshlanish sanasi</Label>
+          <Label>{t("startDate")}</Label>
               <Input
                 type="date"
                 value={form.startDate}
@@ -58,7 +59,7 @@ export function LeaveRequestDialog({ open, onOpenChange, form, setForm, mutation
               />
             </div>
             <div className="space-y-1">
-          <Label>Tugash sanasi</Label>
+          <Label>{t("endDate")}</Label>
               <Input
                 type="date"
                 value={form.endDate}
@@ -68,11 +69,11 @@ export function LeaveRequestDialog({ open, onOpenChange, form, setForm, mutation
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Sabab</Label>
+          <Label>{t("sabab")}</Label>
             <Input
               value={form.reason}
               onChange={(e) => setForm({ ...form, reason: e.target.value })}
-              placeholder="Ta'til sababi"
+              placeholder={t("tatilSababi")}
               data-testid="input-leave-reason"
             />
           </div>
@@ -111,43 +112,43 @@ export function SickLeaveDialog({
       <DialogTrigger asChild>
         <Button size="sm" data-testid="button-add-sick-leave">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi varaq
+          {t("yangiVaraq")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi kasallik varaqasi</DialogTitle>
-          <DialogDescription>Kasallik varaqasi ma'lumotlarini kiriting</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiKasallikVaraqasi")}</DialogTitle>
+          <DialogDescription>{t("kasallikVaraqasiMalumotlariniKiriting")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Boshlanish sanasi</Label>
+          <Label>{t("startDate")}</Label>
               <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} data-testid="input-sick-start" />
             </div>
             <div className="space-y-1">
-          <Label>Tugash sanasi</Label>
+          <Label>{t("endDate")}</Label>
               <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} data-testid="input-sick-end" />
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Diagnoz</Label>
-            <Input value={form.diagnosis} onChange={(e) => setForm({ ...form, diagnosis: e.target.value })} placeholder="Kasallik diagnozi" data-testid="input-sick-diagnosis" />
+          <Label>{t("diagnoz")}</Label>
+            <Input value={form.diagnosis} onChange={(e) => setForm({ ...form, diagnosis: e.target.value })} placeholder={t("kasallikDiagnozi")} data-testid="input-sick-diagnosis" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Kasalxona nomi</Label>
-              <Input value={form.hospitalName} onChange={(e) => setForm({ ...form, hospitalName: e.target.value })} placeholder="Shifoxona nomi" data-testid="input-sick-hospital" />
+          <Label>{t("kasalxonaNomi")}</Label>
+              <Input value={form.hospitalName} onChange={(e) => setForm({ ...form, hospitalName: e.target.value })} placeholder={t("shifoxonaNomi")} data-testid="input-sick-hospital" />
             </div>
             <div className="space-y-1">
-          <Label>Shifokor ismi</Label>
-              <Input value={form.doctorName} onChange={(e) => setForm({ ...form, doctorName: e.target.value })} placeholder="Shifokor F.I.O" data-testid="input-sick-doctor" />
+          <Label>{t("shifokorIsmi")}</Label>
+              <Input value={form.doctorName} onChange={(e) => setForm({ ...form, doctorName: e.target.value })} placeholder={t("shifokorFIO")} data-testid="input-sick-doctor" />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Hujjat raqami</Label>
-              <Input value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder="Varaq raqami" data-testid="input-sick-document" />
+          <Label>{t("hujjatRaqami")}</Label>
+              <Input value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder={t("varaqRaqami")} data-testid="input-sick-document" />
             </div>
             <div className="space-y-1">
           <Label>To'lov foizi (%)</Label>
@@ -189,30 +190,30 @@ export function BusinessTripDialog({
       <DialogTrigger asChild>
         <Button size="sm" data-testid="button-add-business-trip">
           <Plus className="h-4 w-4 mr-2" />
-          Yangi safar
+          {t("yangiSafar")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi xizmat safari</DialogTitle>
-          <DialogDescription>Xizmat safari ma'lumotlarini kiriting</DialogDescription>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiXizmatSafari")}</DialogTitle>
+          <DialogDescription>{t("xizmatSafariMalumotlariniKiriting")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label>Manzil</Label>
-            <Input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} placeholder="Samarqand shahri" data-testid="input-trip-destination" />
+          <Label>{t("address")}</Label>
+            <Input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} placeholder={t("samarqandShahri")} data-testid="input-trip-destination" />
           </div>
           <div className="space-y-1">
-          <Label>Maqsad</Label>
-            <Input value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} placeholder="Safari maqsadi" data-testid="input-trip-purpose" />
+          <Label>{t("Maqsad")}</Label>
+            <Input value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} placeholder={t("safariMaqsadi")} data-testid="input-trip-purpose" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Boshlanish sanasi</Label>
+          <Label>{t("startDate")}</Label>
               <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} data-testid="input-trip-start" />
             </div>
             <div className="space-y-1">
-          <Label>Tugash sanasi</Label>
+          <Label>{t("endDate")}</Label>
               <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} data-testid="input-trip-end" />
             </div>
           </div>

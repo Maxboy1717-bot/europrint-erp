@@ -7,12 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { History } from "lucide-react";
 import { HistoryEntry } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface HistoryTabProps {
   nodeId: string | number;
 }
 
 export function HistoryTab({ nodeId }: HistoryTabProps) {
+  const { t } = useTranslation("common");
   const { data: historyData, isLoading: histLoading } = useQuery<{
     nodeId: number; history: HistoryEntry[];
   }>({
@@ -32,7 +34,7 @@ export function HistoryTab({ nodeId }: HistoryTabProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
         <History className="h-10 w-10 opacity-20" />
-        <p>Hozircha tarix mavjud emas</p>
+        <p>{t("hozirchaTarixMavjudEmas")}</p>
       </div>
     );
   }

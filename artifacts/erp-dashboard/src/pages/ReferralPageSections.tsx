@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UserPlus, Users, Gift, CheckCircle, Clock, RefreshCcw } from "lucide-react";
 import { Referral, BoomerangAlumni, STATUS_MAP } from "./ReferralPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // StatsGrid
@@ -24,6 +25,7 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
+  const { t } = useTranslation("common");
   const items = [
     { label: "Jami tavsiyalar",  value: (stats.total as number) || 0,           icon: Users,       color: "text-[var(--ep-blue)]"   },
     { label: "Qabul qilingan",   value: (stats.hired as number) || 0,            icon: CheckCircle, color: "text-[var(--ep-green)]"  },
@@ -63,24 +65,24 @@ export function MyReferralsTab({ referrals, isLoading, onAddOpen }: MyReferralsT
     <Card>
       <CardContent className="p-0">
         {isLoading ? (
-          <div className="py-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+          <div className="py-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
         ) : referrals.length === 0 ? (
           <div className="py-10 text-center text-muted-foreground">
             <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Hali tavsiya yo'q</p>
+            <p className="text-sm">{t("haliTavsiyaYoq")}</p>
             <Button size="sm" className="mt-3" onClick={onAddOpen}>
-              Do'stingizni tavsiya qiling
+              {t("dostingizniTavsiyaQiling")}
             </Button>
           </div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nomzod</TableHead>
-                <TableHead>Lavozim</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead>Bonus</TableHead>
-                <TableHead>Sana</TableHead>
+                <TableHead>{t("nomzod")}</TableHead>
+                <TableHead>{t("lavozim1")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead>{t("bonus")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -137,19 +139,19 @@ export function AllReferralsTab({ referrals, isLoading, onEdit }: AllReferralsTa
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nomzod</TableHead>
-              <TableHead>Tavsiyachi</TableHead>
-              <TableHead>Lavozim</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>Bonus</TableHead>
-              <TableHead className="text-right">Amal</TableHead>
+              <TableHead>{t("nomzod")}</TableHead>
+              <TableHead>{t("tavsiyachi")}</TableHead>
+              <TableHead>{t("lavozim1")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("bonus")}</TableHead>
+              <TableHead className="text-right">{t("amal")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-6">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : referrals.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">Tavsiyalar yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("tavsiyalarYoq")}</TableCell></TableRow>
             ) : (Array.isArray(referrals) ? referrals : []).map((r) => {
               const st = STATUS_MAP[r.status] || { label: r.status, color: "bg-gray-100 text-gray-700" };
               return (
@@ -165,9 +167,9 @@ export function AllReferralsTab({ referrals, isLoading, onEdit }: AllReferralsTa
                   </TableCell>
                   <TableCell className="text-sm">
                     {r.bonus_paid ? (
-                      <EPStatusPill tone="success" className="text-xs">To'langan</EPStatusPill>
+                      <EPStatusPill tone="success" className="text-xs">{t("tolangan")}</EPStatusPill>
                     ) : r.status === "hired" ? (
-                      <Badge variant="outline" className="text-xs text-[var(--ep-primary)]">Kutilmoqda</Badge>
+                      <Badge variant="outline" className="text-xs text-[var(--ep-primary)]">{t("Kutilmoqda")}</Badge>
                     ) : "—"}
                   </TableCell>
                   <TableCell className="text-right">
@@ -177,7 +179,7 @@ export function AllReferralsTab({ referrals, isLoading, onEdit }: AllReferralsTa
                       className="h-7 text-xs"
                       onClick={() => onEdit(r)}
                     >
-                      Tahrirlash
+                      {t("edit")}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -204,24 +206,24 @@ export function BoomerangTab({ alumni }: BoomerangTabProps) {
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <RefreshCcw className="h-4 w-4 text-[var(--ep-blue)]" />
-          Boomerang Hire — Sobiq xodimlar
+          {t("boomerangHireSobiqXodimlar")}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Xodim</TableHead>
-              <TableHead>Bo'lim</TableHead>
-              <TableHead>Lavozim</TableHead>
-              <TableHead>Holat</TableHead>
+              <TableHead>{t("xodim1")}</TableHead>
+              <TableHead>{t("bolim1")}</TableHead>
+              <TableHead>{t("lavozim1")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {alumni.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">
-                  Sobiq xodimlar bazasi bo'sh
+                  {t("sobiqXodimlarBazasiBosh")}
                 </TableCell>
               </TableRow>
             ) : (Array.isArray(alumni) ? alumni : []).map((a) => (

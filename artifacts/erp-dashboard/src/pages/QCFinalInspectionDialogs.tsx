@@ -70,7 +70,7 @@ export function InspectDialog({open,
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Namuna soni</label>
+              <label className="text-sm font-medium">{t("namunaSoni")}</label>
               <Input
                 type="number"
                 min={1}
@@ -80,7 +80,7 @@ export function InspectDialog({open,
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Nuqsonli soni</label>
+              <label className="text-sm font-medium">{t("nuqsonliSoni")}</label>
               <Input
                 type="number"
                 min={0}
@@ -100,7 +100,7 @@ export function InspectDialog({open,
             >
               <AlertTriangle className={`h-4 w-4 ${defectRate > 5 ? "text-[var(--ep-red)]" : "text-[var(--ep-yellow)]"}`} />
               <span className="text-sm">
-                Nuqson darajasi: <strong>{defectRate.toFixed(1)}%</strong>{" "}
+                {t("nuqsonDarajasi")}<strong>{defectRate.toFixed(1)}%</strong>{" "}
                 {defectRate > 5 ? "(5% dan yuqori — RAD ETILADI)" : "(normal)"}
               </span>
             </div>
@@ -130,7 +130,7 @@ export function InspectDialog({open,
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             onClick={() => inspectMutation.mutate()}
             disabled={inspectMutation.isPending || !allChecked}

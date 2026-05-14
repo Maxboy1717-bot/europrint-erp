@@ -14,6 +14,7 @@ import type { CrmActivity, HistoryRecord } from "./DetailSheetTypes";
 import { HISTORY_ACTION_LABELS } from "./DetailSheetTypes";
 import { AIAnalysisPanel } from "./AIAnalysisPanel";
 import { ExtendedAIPanel } from "./ExtendedAIPanel";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // HistoryTab — "Tarix" tab
@@ -25,6 +26,7 @@ interface HistoryTabProps {
 }
 
 export function HistoryTab({ activities, historyData }: HistoryTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tarix" className="m-0">
       <ScrollArea className="h-[400px]">
@@ -32,7 +34,7 @@ export function HistoryTab({ activities, historyData }: HistoryTabProps) {
           {activities.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Faoliyatlar
+                {t("faoliyatlar")}
               </h4>
               {activities.map((act) => (
                 <div
@@ -52,7 +54,7 @@ export function HistoryTab({ activities, historyData }: HistoryTabProps) {
                         ? format(new Date(act.dueDate), "dd.MM.yyyy HH:mm")
                         : "Muddat yo'q"}
                       {act.isDone && (
-                        <span className="ml-1 text-[var(--ep-green)]">✓ Bajarildi</span>
+                        <span className="ml-1 text-[var(--ep-green)]">{t("bajarildi")}</span>
                       )}
                     </p>
                   </div>
@@ -63,10 +65,10 @@ export function HistoryTab({ activities, historyData }: HistoryTabProps) {
 
           <div>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              O'zgarishlar tarixi
+              {t("ozgarishlarTarixi")}
             </h4>
             {historyData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Tarix bo'sh</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("tarixBosh")}</p>
             ) : (
               historyData.map((h) => (
                 <div
@@ -112,7 +114,7 @@ export function AITab({ entityType, entityId }: AITabProps) {
         <div className="border-t pt-4">
           <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <Zap className="h-4 w-4 text-primary" />
-            Kengaytirilgan AI funksiyalari
+            {t("kengaytirilganAiFunksiyalari")}
           </h3>
           <ExtendedAIPanel entityType={entityType} entityId={entityId} />
         </div>

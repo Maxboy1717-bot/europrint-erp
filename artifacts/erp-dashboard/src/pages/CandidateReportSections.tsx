@@ -10,6 +10,7 @@ import type {
   ToolTestRecord, ProductivityInterview, CandidateDetail,
 } from "./CandidateReportTypes";
 import { CATEGORY_LABELS, TOOL_TEST_TRAIT_LABELS } from "./CandidateReportTypes";
+import { useTranslation } from '@/lib/i18n';
 
 export function Section({
   title, children, number,
@@ -18,6 +19,7 @@ export function Section({
   children: React.ReactNode;
   number: number;
 }) {
+  const { t } = useTranslation("common");
   return (
     <section className="break-inside-avoid mb-8">
       <div className="flex items-center gap-3 mb-4 pb-2 border-b-2 border-primary/30">
@@ -55,11 +57,11 @@ export function Section1MainResults({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <InfoRow label="Manba (kanal)" value={candidate.source} />
-        <InfoRow label="Holat" value={candidate.status} />
-        <InfoRow label="Izoh" value={candidate.notes} />
+        <InfoRow label={t("status28")} value={candidate.status} />
+        <InfoRow label={t("Izoh")} value={candidate.notes} />
       </div>
       <div className="bg-gray-50 rounded-lg p-4 print:bg-white print:border print:border-gray-300">
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Umumiy Baholash</p>
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{t("umumiyBaholash")}</p>
         <div className={`text-2xl font-bold ${recInfo.color}`}>{recInfo.label}</div>
         {latestToolTest && (
           <div className="mt-2">
@@ -69,7 +71,7 @@ export function Section1MainResults({
         )}
         {latestInterview && (
           <div className="mt-2">
-            <p className="text-xs text-gray-500">Produktivlik intervyusi:</p>
+            <p className="text-xs text-gray-500">{t("produktivlikIntervyusi")}</p>
             <p className="text-lg font-bold">{latestInterview.overallScore}/10</p>
           </div>
         )}
@@ -86,19 +88,19 @@ export function Section2TestResults({
   toolTestResults: Record<string, number> | null;
 }) {
   if (!latestToolTest) {
-    return <p className="text-sm text-gray-500 italic">TOOL TEST o'tkazilmagan</p>;
+    return <p className="text-sm text-gray-500 italic">{t("toolTestOtkazilmagan")}</p>;
   }
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-gray-500 mb-1">Test sanasi</p>
+          <p className="text-xs text-gray-500 mb-1">{t("testSanasi")}</p>
           <p className="text-sm font-medium">
             {new Date(latestToolTest.testDate).toLocaleDateString("uz-UZ")}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 mb-1">Umumiy ball</p>
+          <p className="text-xs text-gray-500 mb-1">{t("umumiyBall")}</p>
           <p className={`text-lg font-bold ${latestToolTest.totalScore >= 30 ? "text-[var(--ep-green)]" : latestToolTest.totalScore >= -30 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {latestToolTest.totalScore > 0 ? "+" : ""}{latestToolTest.totalScore}
           </p>
@@ -106,7 +108,7 @@ export function Section2TestResults({
       </div>
 
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">A-J Ko'rsatkichlar</p>
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{t("aJKorsatkichlar")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(["A","B","C","D","E","F","G","H","I","J"]).map((key) => {
             const score = (latestToolTest[`point${key}` as keyof ToolTestRecord] as number) ?? 0;
@@ -132,7 +134,7 @@ export function Section2TestResults({
 
       {latestToolTest.iqScore != null && (
         <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">IQ Natijasi</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{t("iqNatijasi")}</p>
           <IQScaleChart iq={latestToolTest.iqScore} />
         </div>
       )}
@@ -153,7 +155,7 @@ export function Section2TestResults({
       )}
 
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Sindromlar Tahlili</p>
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{t("sindromlarTahlili")}</p>
         <SyndromeAnalysis toolTestResults={toolTestResults} />
       </div>
     </div>
@@ -166,19 +168,19 @@ export function Section3InterviewResults({
   latestInterview: ProductivityInterview | null;
 }) {
   if (!latestInterview) {
-    return <p className="text-sm text-gray-500 italic">Produktivlik intervyusi o'tkazilmagan</p>;
+    return <p className="text-sm text-gray-500 italic">{t("produktivlikIntervyusiOtkazilmagan")}</p>;
   }
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-gray-500 mb-1">Intervyu sanasi</p>
+          <p className="text-xs text-gray-500 mb-1">{t("intervyuSanasi")}</p>
           <p className="text-sm font-medium">
             {new Date(latestInterview.conductedAt).toLocaleDateString("uz-UZ")}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 mb-1">Umumiy ball</p>
+          <p className="text-xs text-gray-500 mb-1">{t("umumiyBall")}</p>
           <p className={`text-lg font-bold ${latestInterview.overallScore >= 7 ? "text-[var(--ep-green)]" : latestInterview.overallScore >= 5 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
             {latestInterview.overallScore}/10
           </p>
@@ -190,7 +192,7 @@ export function Section3InterviewResults({
             ? <CheckCircle className="w-4 h-4 text-[var(--ep-green)]" />
             : <XCircle className="w-4 h-4 text-[var(--ep-red)]" />
           }
-          <span className="text-sm">Aniq natijalarga ega</span>
+          <span className="text-sm">{t("aniqNatijalargaEga")}</span>
         </div>
       )}
       {latestInterview.canWorkIndependently !== undefined && (
@@ -199,7 +201,7 @@ export function Section3InterviewResults({
             ? <CheckCircle className="w-4 h-4 text-[var(--ep-green)]" />
             : <XCircle className="w-4 h-4 text-[var(--ep-red)]" />
           }
-          <span className="text-sm">Mustaqil ishlash qobiliyati</span>
+          <span className="text-sm">{t("mustaqilIshlashQobiliyati")}</span>
         </div>
       )}
     </div>

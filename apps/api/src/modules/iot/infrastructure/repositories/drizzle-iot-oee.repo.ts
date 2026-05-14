@@ -4,13 +4,13 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { sql, eq, and, gte, inArray, count } from 'drizzle-orm';
+import { SQL, SQLWrapper, and, count, eq, gte, inArray, sql } from 'drizzle-orm';
 import { db, camera_events, camera_safety_violations, camera_quality_defects , runQuery } from '@shared/db';
 import { Ok, Err, Result } from '@common/result';
 
 import { MS_PER_HOUR } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

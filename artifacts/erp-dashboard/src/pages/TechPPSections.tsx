@@ -13,13 +13,15 @@ import { StatCard, EmptyState } from "./TechPPExtendedDialogs";
 import type { ProductionOrder, OeeData, ShiftRequirement } from "./TechPPExtendedTypes";
 import { REMAINING_PP_TABS, REMAINING_TAB_TITLES } from "./TechPPExtendedTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── PP: Smena Boshqaruvi ─────────────────────────────────────────────────────
 interface PpShiftsProps { shifts: ShiftRequirement[]; loading: boolean; }
 export function PpShiftsSection({ shifts, loading }: PpShiftsProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="pp-shifts" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Smena Boshqaruvi</h2>
+      <h2 className="text-lg font-semibold">{t("smenaBoshqaruvi")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           {l:"1-smena (06-14)", type:"MORNING", c:"text-[var(--ep-green)]"},
@@ -37,19 +39,19 @@ export function PpShiftsSection({ shifts, loading }: PpShiftsProps) {
         })}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Bugungi smena</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("bugungiSmena")}</CardTitle></CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-3">{([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />)}</div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Bo'lim</TableHead><TableHead>Smena turi</TableHead>
-                <TableHead>Kerakli xodimlar</TableHead><TableHead>Holati</TableHead>
+                <TableHead>{t("bolim1")}</TableHead><TableHead>{t("smenaTuri")}</TableHead>
+                <TableHead>{t("kerakliXodimlar")}</TableHead><TableHead>{t("holati")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {shifts.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">Ma'lumot kiritilmagan</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">{t("malumotKiritilmagan")}</TableCell></TableRow>
                 ) : (
                   (Array.isArray(shifts) ? shifts : []).map((s, i) => (
                     <TableRow key={s.id} data-testid={`row-shift-${i}`} className="hover:bg-muted/40 transition-colors">
@@ -77,13 +79,13 @@ export function PpRushSection({ rushOrders, loading }: PpRushProps) {
   return (
     <TabsContent value="pp-rush" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Rush Order Boshqaruvi</h2>
-        <Button variant="destructive" data-testid="button-add-rush"><Zap className="h-4 w-4 mr-2" />Rush Qo'shish</Button>
+        <h2 className="text-lg font-semibold">{t("rushOrderBoshqaruvi")}</h2>
+        <Button variant="destructive" data-testid="button-add-rush"><Zap className="h-4 w-4 mr-2" />{t("rushQoshish")}</Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Faol rush" value={loading ? "..." : rushOrders.length} color="text-[var(--ep-red)]" />
-        <StatCard label="Bugun yakunlanadigan" value="—" color="text-[var(--ep-primary)]" />
-        <StatCard label="O'rtacha kechikish" value="—" />
+        <StatCard label={t("faolRush")} value={loading ? "..." : rushOrders.length} color="text-[var(--ep-red)]" />
+        <StatCard label={t("bugunYakunlanadigan")} value="—" color="text-[var(--ep-primary)]" />
+        <StatCard label={t("ortachaKechikish")} value="—" />
       </div>
       <Card>
         <CardContent className="p-0">
@@ -92,12 +94,12 @@ export function PpRushSection({ rushOrders, loading }: PpRushProps) {
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Buyurtma</TableHead><TableHead>Mijoz</TableHead>
-                <TableHead>Muddati</TableHead><TableHead>Ustuvorlik</TableHead>
+                <TableHead>{t("Buyurtma")}</TableHead><TableHead>{t("mijoz1")}</TableHead>
+                <TableHead>{t("muddati")}</TableHead><TableHead>{t("ustuvorlik")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {rushOrders.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">Ma'lumot kiritilmagan</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">{t("malumotKiritilmagan")}</TableCell></TableRow>
                 ) : (
                   (Array.isArray(rushOrders) ? rushOrders : []).map((r, i) => (
                     <TableRow key={r.id} data-testid={`row-rush-${i}`} className="hover:bg-muted/40 transition-colors">
@@ -125,16 +127,17 @@ export function PpRushSection({ rushOrders, loading }: PpRushProps) {
 
 // ─── PP: Bottleneck ───────────────────────────────────────────────────────────
 export function PpBottleneckSection() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="pp-bottleneck" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Bottleneck Tahlili</h2>
+      <h2 className="text-lg font-semibold">{t("bottleneckTahlili")}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
-          <CardHeader><CardTitle className="text-base">Muammoli nuqtalar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("muammoliNuqtalar")}</CardTitle></CardHeader>
           <CardContent><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">AI Tavsiyalar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("aiTavsiyalar")}</CardTitle></CardHeader>
           <CardContent><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>
         </Card>
       </div>
@@ -144,17 +147,18 @@ export function PpBottleneckSection() {
 
 // ─── PP: Demand Forecast ──────────────────────────────────────────────────────
 export function PpDemandSection() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="pp-demand" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">AI Demand Forecasting</h2>
+      <h2 className="text-lg font-semibold">{t("aiDemandForecasting")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Keyingi oy prognoz" value="—" color="text-[var(--ep-green)]" />
-        <StatCard label="Model aniqligi" value="—" color="text-[var(--ep-blue)]" />
-        <StatCard label="Prognoz davri" value="—" />
-        <StatCard label="Oxirgi yangilanish" value="—" />
+        <StatCard label={t("keyingiOyPrognoz")} value="—" color="text-[var(--ep-green)]" />
+        <StatCard label={t("modelAniqligi1")} value="—" color="text-[var(--ep-blue)]" />
+        <StatCard label={t("prognozDavri")} value="—" />
+        <StatCard label={t("oxirgiYangilanish")} value="—" />
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Mahsulot kategoriyalari prognozi</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("mahsulotKategoriyalariPrognozi")}</CardTitle></CardHeader>
         <CardContent><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>
       </Card>
     </TabsContent>
@@ -168,10 +172,10 @@ export function PpOeeSection({ oeeData, loading }: PpOeeProps) {
     <TabsContent value="pp-oee" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">OEE Monitor (Real-time)</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="O'rtacha OEE" value={loading ? "..." : `${oeeData?.overall?.oee ?? "—"}%`} color="text-[var(--ep-blue)]" />
-        <StatCard label="Mavjudlik" value={loading ? "..." : `${oeeData?.overall?.availability ?? "—"}%`} color="text-[var(--ep-green)]" />
-        <StatCard label="Unumdorlik" value={loading ? "..." : `${oeeData?.overall?.performance ?? "—"}%`} color="text-[var(--ep-primary)]" />
-        <StatCard label="Sifat" value={loading ? "..." : `${oeeData?.overall?.quality ?? "—"}%`} color="text-[var(--ep-purple)]" />
+        <StatCard label={t("ortachaOee")} value={loading ? "..." : `${oeeData?.overall?.oee ?? "—"}%`} color="text-[var(--ep-blue)]" />
+        <StatCard label={t("Mavjudlik")} value={loading ? "..." : `${oeeData?.overall?.availability ?? "—"}%`} color="text-[var(--ep-green)]" />
+        <StatCard label={t("Unumdorlik")} value={loading ? "..." : `${oeeData?.overall?.performance ?? "—"}%`} color="text-[var(--ep-primary)]" />
+        <StatCard label={t("Sifat")} value={loading ? "..." : `${oeeData?.overall?.quality ?? "—"}%`} color="text-[var(--ep-purple)]" />
       </div>
       <Card>
         <CardContent className="p-0">
@@ -180,12 +184,12 @@ export function PpOeeSection({ oeeData, loading }: PpOeeProps) {
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Stanoq</TableHead><TableHead>OEE</TableHead><TableHead>Mavjud</TableHead>
-                <TableHead>Unumd.</TableHead><TableHead>Sifat</TableHead><TableHead>Seanslari</TableHead>
+                <TableHead>{t("stanoq")}</TableHead><TableHead>OEE</TableHead><TableHead>{t("mavjud")}</TableHead>
+                <TableHead>{t("unumd")}</TableHead><TableHead>{t("Sifat")}</TableHead><TableHead>{t("seanslari")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(!oeeData?.byMachine || oeeData.byMachine.length === 0) ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">Ma'lumot kiritilmagan</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("malumotKiritilmagan")}</TableCell></TableRow>
                 ) : (
                   oeeData.byMachine?.map((r, i) => (
                     <TableRow key={r.machineId} data-testid={`row-oee-${i}`} className="hover:bg-muted/40 transition-colors">
@@ -209,15 +213,16 @@ export function PpOeeSection({ oeeData, loading }: PpOeeProps) {
 
 // ─── Remaining PP tabs (generic empty-state pattern) ─────────────────────────
 export function RemainingPpSections() {
+  const { t } = useTranslation("common");
   return (
     <>
       {(Array.from(REMAINING_PP_TABS)).map(tab => (
         <TabsContent key={tab} value={tab} className="mt-0 space-y-4">
           <h2 className="text-lg font-semibold">{REMAINING_TAB_TITLES[tab]}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard label="Faol jarayonlar" value="—" />
-            <StatCard label="Bajarilgan" value="—" color="text-[var(--ep-green)]" />
-            <StatCard label="Kechikmoqda" value="—" color="text-[var(--ep-red)]" />
+            <StatCard label={t("faolJarayonlar")} value="—" />
+            <StatCard label={t("bajarilgan")} value="—" color="text-[var(--ep-green)]" />
+            <StatCard label={t("kechikmoqda")} value="—" color="text-[var(--ep-red)]" />
           </div>
           <Card>
             <CardContent className="pt-4"><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>

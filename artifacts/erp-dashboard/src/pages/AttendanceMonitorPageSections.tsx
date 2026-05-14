@@ -15,10 +15,12 @@ import {
 } from 'lucide-react';
 import { TerritoryEvent, LiveStatus, eventBadgeColor, fmtTime, fmtDate } from './AttendanceMonitorPageTypes';
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Event Icon ───────────────────────────────────────────────────────────────
 
 export function EventIcon({ type }: { type: string }) {
+  const { t } = useTranslation("common");
   switch (type) {
     case 'enter':        return <ArrowRightCircle className="h-3.5 w-3.5 text-[var(--ep-green)]" />;
     case 'exit':         return <ArrowLeftCircle  className="h-3.5 w-3.5 text-muted-foreground" />;
@@ -45,14 +47,14 @@ export function AttendanceHeader({ date, wsConnected, filtered, onRefresh, onExp
     <div className="flex items-start justify-between">
       <div>
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Hudud Kuzatuvchi</b></>}
-        title="Hudud Kuzatuvchi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("hududKuzatuvchi")}</b></>}
+        title={t("hududKuzatuvchi")}
         subtitle="Kamera asosida real-vaqt davomad monitori · {date} <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${wsConnected ? 'bg-emerald-50 border-emerald-200 text-[var(--ep-green)]' : 'bg-gray-50 border-gray-200 text-gray-500'}`}> <span className={`w-1.5 h-1.5 rounded-full ${wsConnected ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} /> {wsConnected ? 'Socket.IO jonli' : 'Ulash...'} </span>"
       />
       </div>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={onRefresh} className="gap-1.5">
-          <RefreshCw className="h-3.5 w-3.5" /> Yangilash
+          <RefreshCw className="h-3.5 w-3.5" /> {t("refresh")}
         </Button>
         <Button variant="outline" size="sm" onClick={onExport} className="gap-1.5" disabled={filtered.length === 0}>
           <Download className="h-3.5 w-3.5" /> CSV
@@ -79,7 +81,7 @@ export function AttendanceStats({ stats, liveLoading, alertCount, filteredCount 
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-100 rounded-lg"><Users className="h-4 w-4 text-[var(--ep-green)]" /></div>
             <div>
-              <p className="text-xs text-muted-foreground">Hozir bor</p>
+              <p className="text-xs text-muted-foreground">{t("hozirBor")}</p>
               <p className="text-2xl font-bold text-foreground">{liveLoading ? '…' : stats.present_count}</p>
             </div>
           </div>
@@ -90,7 +92,7 @@ export function AttendanceStats({ stats, liveLoading, alertCount, filteredCount 
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-100 rounded-lg"><Clock className="h-5 w-5 text-[var(--ep-yellow)]" /></div>
             <div>
-              <p className="text-xs text-muted-foreground">Kech kelganlar</p>
+              <p className="text-xs text-muted-foreground">{t("kechKelganlar")}</p>
               <p className="text-2xl font-bold text-foreground">{liveLoading ? '…' : stats.late_count}</p>
             </div>
           </div>
@@ -101,7 +103,7 @@ export function AttendanceStats({ stats, liveLoading, alertCount, filteredCount 
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg"><Camera className="h-5 w-5 text-[var(--ep-blue)]" /></div>
             <div>
-              <p className="text-xs text-muted-foreground">Bugungi voqealar</p>
+              <p className="text-xs text-muted-foreground">{t("bugungiVoqealar")}</p>
               <p className="text-2xl font-bold text-foreground">{liveLoading ? '…' : stats.events_today}</p>
             </div>
           </div>
@@ -148,12 +150,12 @@ export function EventsTable({
     <Card className="lg:col-span-2 border-0 shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <CardTitle className="text-base font-semibold">Hudud Voqealari</CardTitle>
+          <CardTitle className="text-base font-semibold">{t("hududVoqealari")}</CardTitle>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
               <Filter className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Xodim ismi yoki ID"
+                placeholder={t("xodimIsmiYokiId")}
                 value={empFilter}
                 onChange={(e) => onEmpFilterChange(e.target.value)}
                 className="pl-7 h-8 w-40 text-sm"
@@ -164,7 +166,7 @@ export function EventsTable({
               onChange={(e) => onDeptFilterChange(e.target.value)}
               className="h-8 rounded-md border border-input bg-background text-sm px-2 focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="">Barcha bo'limlar</option>
+              <option value="">{t("barchaBolimlar")}</option>
               {departments.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
             <Input
@@ -179,20 +181,20 @@ export function EventsTable({
       <Separator />
       <CardContent className="p-0">
         {logsLoading ? (
-          <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">Yuklanmoqda…</div>
+          <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">{t("yuklanmoqda1")}</div>
         ) : filtered.length === 0 ? (
-          <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">Bu sana uchun voqealar yo'q</div>
+          <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">{t("buSanaUchunVoqealarYoq")}</div>
         ) : (
           <ScrollArea className="h-[420px]">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-surface-variant/30">
                   <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">Sana/Vaqt</th>
-                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">Xodim</th>
-                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">Bo'lim</th>
-                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">Voqea</th>
-                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">Xona</th>
-                  <th className="text-right py-2 px-4 font-medium text-xs text-muted-foreground">Ishonch</th>
+                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("xodim1")}</th>
+                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("bolim1")}</th>
+                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("voqea")}</th>
+                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("xona")}</th>
+                  <th className="text-right py-2 px-4 font-medium text-xs text-muted-foreground">{t("ishonch")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -208,7 +210,7 @@ export function EventsTable({
                       ) : event.employee_id ? (
                         <span className="font-mono text-muted-foreground">#{event.employee_id}</span>
                       ) : (
-                        <span className="text-[var(--ep-red)] font-medium">Noma'lum</span>
+                        <span className="text-[var(--ep-red)] font-medium">{t("unknown")}</span>
                       )}
                     </td>
                     <td className="py-2.5 px-4 text-xs text-muted-foreground">{event.department_name ?? '—'}</td>
@@ -244,7 +246,7 @@ export function LiveEventsFeed({ events, wsConnected }: LiveEventsFeedProps) {
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">So'nggi Voqealar</CardTitle>
+          <CardTitle className="text-base font-semibold">{t("songgiVoqealar")}</CardTitle>
           <Badge
             variant="outline"
             className={`text-xs gap-1 ${wsConnected ? 'border-emerald-300 text-[var(--ep-green)]' : 'border-gray-300 text-gray-500'}`}
@@ -260,7 +262,7 @@ export function LiveEventsFeed({ events, wsConnected }: LiveEventsFeedProps) {
       <Separator />
       <CardContent className="p-0">
         {events.length === 0 ? (
-          <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">So'nggi voqealar yo'q</div>
+          <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">{t("songgiVoqealarYoq")}</div>
         ) : (
           <ScrollArea className="h-[420px]">
             <div className="divide-y">

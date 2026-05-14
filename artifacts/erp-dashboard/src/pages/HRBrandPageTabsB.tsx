@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MessageSquare, BarChart3, FileText, Plus, X, Sparkles } from "lucide-react";
 import { BrandData, OrgNode, PortretData } from "./HRBrandPageTypes";
 import { CharCounter } from "./HRBrandPageHelpers";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Tab 4 — Xodimlar Sharhlari
@@ -23,13 +24,14 @@ interface ReviewsTabProps {
 }
 
 export function ReviewsTab({ brand, onAdd, onUpdate, onRemove }: ReviewsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="reviews">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-[var(--ep-green)]" />
-            Xodimlar Sharhlari
+            {t("xodimlarSharhlari")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -38,12 +40,12 @@ export function ReviewsTab({ brand, onAdd, onUpdate, onRemove }: ReviewsTabProps
           </p>
           <Button onClick={onAdd} variant="outline" className="gap-2">
             <Plus className="w-4 h-4" />
-            Sharh qo'shish
+            {t("sharhQoshish")}
           </Button>
           <div className="space-y-4">
             {brand.reviews.length === 0 && (
               <p className="text-sm text-gray-400 text-center py-6">
-                Hali sharhlar qo'shilmagan
+                {t("haliSharhlarQoshilmagan")}
               </p>
             )}
             {(Array.isArray(brand.reviews) ? brand.reviews : []).map((review, i) => (
@@ -57,27 +59,27 @@ export function ReviewsTab({ brand, onAdd, onUpdate, onRemove }: ReviewsTabProps
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label className="text-xs">Ism</Label>
+                      <Label className="text-xs">{t("ism1")}</Label>
                       <Input
-                        placeholder="Xodim ismi"
+                        placeholder={t("xodimIsmi")}
                         value={review.name}
                         onChange={(e) => onUpdate(i, "name", e.target.value)}
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Lavozim</Label>
+                      <Label className="text-xs">{t("lavozim1")}</Label>
                       <Input
-                        placeholder="Lavozim"
+                        placeholder={t("lavozim1")}
                         value={review.position}
                         onChange={(e) => onUpdate(i, "position", e.target.value)}
                       />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Sharh matni</Label>
+                    <Label className="text-xs">{t("sharhMatni")}</Label>
                     <Textarea
                       rows={2}
-                      placeholder="Xodim sharhi..."
+                      placeholder={t("xodimSharhi")}
                       value={review.text}
                       onChange={(e) => onUpdate(i, "text", e.target.value)}
                     />
@@ -125,16 +127,16 @@ export function StatsTab({ brand, setBrand }: StatsTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[var(--ep-primary)]" />
-            Kompaniya Statistikasi
+            {t("kompaniyaStatistikasi")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-500">Employer brending uchun asosiy raqamlar</p>
+          <p className="text-sm text-gray-500">{t("employerBrendingUchunAsosiyRaqamlar")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-          <Label>Xodimlar soni</Label>
+          <Label>{t("xodimlarSoni")}</Label>
               <Input
-                placeholder="Masalan: 250"
+                placeholder={t("masalan250")}
                 value={brand.stats.employees_count}
                 onChange={(e) =>
                   setBrand((prev) => ({ ...prev, stats: { ...prev.stats, employees_count: e.target.value } }))
@@ -144,7 +146,7 @@ export function StatsTab({ brand, setBrand }: StatsTabProps) {
             <div className="space-y-1">
           <Label>O'rtacha ish staji (yil)</Label>
               <Input
-                placeholder="Masalan: 3.5"
+                placeholder={t("masalan35")}
                 value={brand.stats.avg_tenure}
                 onChange={(e) =>
                   setBrand((prev) => ({ ...prev, stats: { ...prev.stats, avg_tenure: e.target.value } }))
@@ -154,7 +156,7 @@ export function StatsTab({ brand, setBrand }: StatsTabProps) {
             <div className="space-y-1">
           <Label>O'sish foizi (%)</Label>
               <Input
-                placeholder="Masalan: 15"
+                placeholder={t("masalan15")}
                 value={brand.stats.growth_percent}
                 onChange={(e) =>
                   setBrand((prev) => ({ ...prev, stats: { ...prev.stats, growth_percent: e.target.value } }))
@@ -167,19 +169,19 @@ export function StatsTab({ brand, setBrand }: StatsTabProps) {
               {brand.stats.employees_count && (
                 <div className="bg-blue-50 rounded-lg p-4 text-center">
                   <div className="text-2xl font-bold text-[var(--ep-blue)]">{brand.stats.employees_count}</div>
-                  <div className="text-xs text-[var(--ep-blue)] mt-1">Xodimlar</div>
+                  <div className="text-xs text-[var(--ep-blue)] mt-1">{t("xodimlar")}</div>
                 </div>
               )}
               {brand.stats.avg_tenure && (
                 <div className="bg-green-50 rounded-lg p-4 text-center">
                   <div className="text-2xl font-bold text-[var(--ep-green)]">{brand.stats.avg_tenure} yil</div>
-                  <div className="text-xs text-[var(--ep-green)] mt-1">O'rtacha staj</div>
+                  <div className="text-xs text-[var(--ep-green)] mt-1">{t("ortachaStaj")}</div>
                 </div>
               )}
               {brand.stats.growth_percent && (
                 <div className="bg-orange-50 rounded-lg p-4 text-center">
                   <div className="text-2xl font-bold text-[var(--ep-primary)]">{brand.stats.growth_percent}%</div>
-                  <div className="text-xs text-[var(--ep-primary)] mt-1">O'sish</div>
+                  <div className="text-xs text-[var(--ep-primary)] mt-1">{t("osish")}</div>
                 </div>
               )}
             </div>
@@ -223,7 +225,7 @@ export function VacancyTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-[var(--ep-blue)]" />
-            Vakansiya E'lon Generator
+            {t("vakansiyaElonGenerator")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -233,7 +235,7 @@ export function VacancyTab({
             avtomatik qo'shiladi.
           </p>
           <div className="space-y-1">
-          <Label>Lavozim portretini tanlang</Label>
+          <Label>{t("lavozimPortretiniTanlang")}</Label>
             <Select value={selectedNodeId} onValueChange={setSelectedNodeId}>
               <SelectTrigger>
                 <SelectValue placeholder="Bo'lim/lavozimni tanlang..." />
@@ -249,7 +251,7 @@ export function VacancyTab({
           </div>
           {selectedNodeId && portretData?.portret?.portret_data && (
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm space-y-1">
-              <p className="font-medium text-blue-800">Portret ma'lumotlari topildi:</p>
+              <p className="font-medium text-blue-800">{t("portretMalumotlariTopildi")}</p>
               {portretData.portret.portret_data.main_purpose && (
                 <p className="text-[var(--ep-blue)]">
                   Maqsad: {portretData.portret.portret_data.main_purpose.slice(0, 80)}...
@@ -274,12 +276,12 @@ export function VacancyTab({
           </Button>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>E'lon matni</Label>
+              <Label>{t("elonMatni")}</Label>
               <CharCounter value={brand.vacancy_template} max={3000} />
             </div>
             <Textarea
               rows={16}
-              placeholder="Generatsiya tugmasini bosing yoki qo'lda kiriting..."
+              placeholder={t("generatsiyaTugmasiniBosingYokiQolda")}
               value={brand.vacancy_template}
               onChange={(e) =>
                 setBrand((prev) => ({ ...prev, vacancy_template: e.target.value }))
@@ -290,7 +292,7 @@ export function VacancyTab({
           </div>
           {brand.vacancy_template && (
             <Button variant="outline" onClick={onCopy} className="gap-2">
-              Matnni nusxalash
+              {t("matnniNusxalash")}
             </Button>
           )}
         </CardContent>

@@ -13,6 +13,7 @@ import type { Segment, HotLead, LeadSourceSummary, DashboardStats } from "./Mark
 import { CHANNEL_ICONS } from "./MarketingDashboardTypes";
 import type { MarketingCampaign } from "@shared/schema";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Stat cards row ───────────────────────────────────────────────────────────
 interface StatCardsProps {
@@ -26,6 +27,7 @@ interface StatCardsProps {
   totalLeads: number;
 }
 export function StatCardsSection({ stats, inboxStats, publishedPosts, blogPostsTotal, statsLoading, conversionRate, convertedLeads, totalLeads }: StatCardsProps) {
+  const { t } = useTranslation("common");
   const statCards = [
     { title: "Faol Kampaniyalar", value: stats?.activeCampaigns || 0, icon: Target, color: "text-[var(--ep-primary)]" },
     { title: "Jami Lidlar", value: totalLeads, icon: Users, color: "text-[var(--ep-blue)]" },
@@ -50,7 +52,7 @@ export function StatCardsSection({ stats, inboxStats, publishedPosts, blogPostsT
       ))}
 
       <div className="bg-card rounded-lg p-5" data-testid="card-crm-conversion">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CRM Konversiya</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("crmKonversiya")}</p>
         <div className="flex items-center justify-between mt-1">
           <p className="text-4xl font-bold tracking-tight text-foreground" data-testid="text-conversion-rate">
             {statsLoading ? "..." : `${conversionRate}%`}
@@ -77,12 +79,12 @@ export function CampaignLeadSection({ activeCampaigns, campaignsLoading, leadSou
       <div className="bg-card rounded-xl p-6 overflow-hidden">
         <div className="flex items-center gap-2 mb-4">
           <Target className="h-5 w-5 text-[var(--ep-primary)]" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Faol Kampaniyalar</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("faolKampaniyalar")}</h3>
         </div>
         {campaignsLoading ? (
           <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-12 rounded-lg" />)}</div>
         ) : activeCampaigns.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Hozircha faol kampaniyalar yo'q</p>
+          <p className="text-muted-foreground text-sm">{t("hozirchaFaolKampaniyalarYoq")}</p>
         ) : (
           <div className="divide-y divide-outline-variant">
             {(Array.isArray(activeCampaigns) ? activeCampaigns : []).slice(0, 5).map((campaign) => (
@@ -101,7 +103,7 @@ export function CampaignLeadSection({ activeCampaigns, campaignsLoading, leadSou
       <div className="bg-card rounded-xl p-6 overflow-hidden" data-testid="card-lead-sources">
         <div className="flex items-center gap-2 mb-4">
           <BarChart3 className="h-5 w-5 text-[var(--ep-blue)]" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lead Manba Kanallari</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("leadManbaKanallari")}</h3>
           {leadSources?.topChannel && (
             <Badge className="text-xs bg-blue-100 text-[var(--ep-blue)] no-default-hover-elevate ml-auto">
               Top: {leadSources.channels?.find(c => c.key === leadSources.topChannel)?.label || leadSources.topChannel}
@@ -111,7 +113,7 @@ export function CampaignLeadSection({ activeCampaigns, campaignsLoading, leadSou
         {!leadSources ? (
           <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-10 rounded-lg" />)}</div>
         ) : leadSources.total === 0 ? (
-          <p className="text-sm text-muted-foreground">Hali kanal ma'lumotlari yo'q</p>
+          <p className="text-sm text-muted-foreground">{t("haliKanalMalumotlariYoq")}</p>
         ) : (
           <div className="space-y-3">
             {(Array.isArray(leadSources.channels) ? leadSources.channels : []).map((ch) => {
@@ -148,19 +150,19 @@ export function BudgetSection({ stats }: BudgetSectionProps) {
     <div className="bg-card rounded-xl p-6 mb-6">
       <div className="flex items-center gap-2 mb-4">
         <DollarSign className="h-5 w-5 text-[var(--ep-yellow)]" />
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Byudjet Xulosa</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("byudjetXulosa")}</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg bg-muted/40 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Umumiy Byudjet</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("umumiyByudjet")}</p>
           <p className="text-xl font-bold text-foreground">{Number(stats?.totalBudget || 0).toLocaleString()} so'm</p>
         </div>
         <div className="p-4 rounded-lg bg-muted/40 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Sarflangan</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("sarflangan")}</p>
           <p className="text-xl font-bold text-foreground">{Number(stats?.totalSpent || 0).toLocaleString()} so'm</p>
         </div>
         <div className="p-4 rounded-lg bg-muted/40 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Qoldiq</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("qoldiq")}</p>
           <p className="text-xl font-bold text-foreground">{(Number(stats?.totalBudget || 0) - Number(stats?.totalSpent || 0)).toLocaleString()} so'm</p>
         </div>
       </div>
@@ -176,11 +178,11 @@ export function SegmentsHotLeadsSection({ segments, hotLeads }: SegmentLeadProps
       <div className="bg-card rounded-xl p-6" data-testid="card-segments">
         <div className="flex items-center gap-2 mb-4">
           <PieChart className="h-5 w-5 text-[var(--ep-purple)]" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mijozlar Segmentatsiyasi</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("mijozlarSegmentatsiyasi")}</h3>
         </div>
         <div className="space-y-3">
           {segments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Segment ma'lumotlari yuklanmoqda...</p>
+            <p className="text-sm text-muted-foreground">{t("segmentMalumotlariYuklanmoqda")}</p>
           ) : (Array.isArray(segments) ? segments : []).map((seg, idx) => (
             <div key={seg.segment ?? `seg-${idx}`} className="flex items-center gap-3" data-testid={`segment-${seg.segment ?? idx}`}>
               <div className="flex-1">
@@ -205,7 +207,7 @@ export function SegmentsHotLeadsSection({ segments, hotLeads }: SegmentLeadProps
         </div>
         <div className="space-y-2">
           {hotLeads.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Hozircha issiq lidlar yo'q</p>
+            <p className="text-sm text-muted-foreground">{t("hozirchaIssiqLidlarYoq")}</p>
           ) : (Array.isArray(hotLeads) ? hotLeads : []).map(lead => (
             <div key={lead.id} className="flex items-center gap-3 p-3 bg-muted/60 rounded-lg" data-testid={`hot-lead-${lead.id}`}>
               <div className="flex-1 min-w-0">

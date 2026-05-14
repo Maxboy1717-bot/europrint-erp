@@ -5,6 +5,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from '@/lib/i18n';
 
 function fmt(n: number | null | undefined, d = 0) {
   if (n == null) return "—";
@@ -20,6 +21,7 @@ export interface ProductionOrder360EquipmentProps {
 }
 
 export default function ProductionOrder360Equipment({ list, sessions }: ProductionOrder360EquipmentProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-4">
       {(list || []).map((equip) => {
@@ -44,15 +46,15 @@ export default function ProductionOrder360Equipment({ list, sessions }: Producti
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                 <div>
-                  <p className="text-muted-foreground text-xs">Smenalar</p>
+                  <p className="text-muted-foreground text-xs">{t("smenalar")}</p>
                   <p className="font-bold">{equipSessions.length}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Jami ishlab chiq.</p>
+                  <p className="text-muted-foreground text-xs">{t("jamiIshlabChiq")}</p>
                   <p className="font-bold">{fmt(totalProd)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">O'rtacha OEE</p>
+                  <p className="text-muted-foreground text-xs">{t("ortachaOee")}</p>
                   <p className={`font-bold ${oeeAvg != null && oeeAvg >= 0.85 ? "text-[var(--ep-green)]" : oeeAvg != null && oeeAvg >= 0.65 ? "text-[var(--ep-yellow)]" : "text-muted-foreground"}`}>
                     {oeeAvg != null ? `${fmt(oeeAvg * 100, 1)}%` : "—"}
                   </p>
@@ -66,7 +68,7 @@ export default function ProductionOrder360Equipment({ list, sessions }: Producti
       {(!list || list.length === 0) && (
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            Uskuna ma'lumotlari yo'q
+            {t("uskunaMalumotlariYoq")}
           </CardContent>
         </Card>
       )}

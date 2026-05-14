@@ -19,6 +19,7 @@ import { HiringForecast, type EmployerMarket, type CandidateMarket, type Histori
 import { EmployerMarketSection } from "./labor-market/EmployerMarketSection";
 import { CandidateMarketSection } from "./labor-market/CandidateMarketSection";
 import { RecommendationsSection } from "./labor-market/RecommendationsSection";
+import { useTranslation } from '@/lib/i18n';
 
 interface LaborMarketData {
   id?: number;
@@ -65,7 +66,7 @@ function generateRecommendations(em: EmployerMarket, cm: CandidateMarket): strin
 
   if (salExpMin > 0 && compAvgMin > 0 && salExpMin > compAvgMin * 1.2) {
     recs.push("💰 Nomzodlarning maosh kutilmasi raqobatchilardan 20%+ yuqori. Maosh paketini qayta ko'rib chiqishni tavsiya etamiz.");
-  } else if (compAvgMax > 0 && salExpMax > 0 && salExpMax < compAvgMax * 0.8) {
+  } else if (compAvgMax > 0 && salExpMax > {t("k0Salexpmax")}< compAvgMax * 0.8) {
     recs.push("💰 Maosh kutilmasi raqobatchilarnikidan past — bu ijobiy. Imtiyozlar (DMS, oylik bonus) bilan qo'shimcha qiziqish uyg'otish mumkin.");
   }
 
@@ -104,6 +105,7 @@ const DEFAULT_CANDIDATE_MARKET: CandidateMarket = {
 };
 
 export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }: Props) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const [employerMarket, setEmployerMarket] = useState<EmployerMarket>(DEFAULT_EMPLOYER_MARKET);
@@ -170,7 +172,7 @@ export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }
         </SheetHeader>
 
         {isLoading ? (
-          <div className="text-sm text-muted-foreground py-8 text-center">Yuklanmoqda...</div>
+          <div className="text-sm text-muted-foreground py-8 text-center">{t("Yuklanmoqda...")}</div>
         ) : (
           <div className="space-y-6 pb-6">
             <EmployerMarketSection 
@@ -186,7 +188,7 @@ export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }
             <section className="space-y-2">
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-400" />
-                Yollash vaqti bashorati
+                {t("yollashVaqtiBashorati")}
               </h3>
               <HiringForecast
                 em={employerMarket}

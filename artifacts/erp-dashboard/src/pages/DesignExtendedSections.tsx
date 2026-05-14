@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { DesignOrder, BrandColor } from "./DesignExtendedTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── AI Review Tab ────────────────────────────────────────────────────────────
 
@@ -21,19 +22,20 @@ interface AiReviewTabProps {
 }
 
 export function AiReviewTab({ pendingReview, onOpenOrder }: AiReviewTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardContent className="pt-4">
-          <p className="text-sm text-muted-foreground">Tekshiruv kutilayotgan</p>
+          <p className="text-sm text-muted-foreground">{t("tekshiruvKutilayotgan")}</p>
           <p className="text-2xl font-bold">{pendingReview.length}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4">
-          <p className="text-sm text-muted-foreground">Bugun tasdiqlangan</p>
+          <p className="text-sm text-muted-foreground">{t("approvedToday")}</p>
           <p className="text-2xl font-bold text-[var(--ep-green)]">0</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4">
-          <p className="text-sm text-muted-foreground">Rad etilgan</p>
+          <p className="text-sm text-muted-foreground">{t("rejected")}</p>
           <p className="text-2xl font-bold text-[var(--ep-red)]">0</p>
         </CardContent></Card>
       </div>
@@ -43,13 +45,13 @@ export function AiReviewTab({ pendingReview, onOpenOrder }: AiReviewTabProps) {
           {pendingReview.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle2 className="w-12 h-12 text-[var(--ep-green)] mx-auto mb-3" />
-              <p className="text-muted-foreground">Barcha dizaynlar tekshirilgan</p>
+              <p className="text-muted-foreground">{t("barchaDizaynlarTekshirilgan")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Buyurtma</TableHead>
-                <TableHead>Holat</TableHead>
+                <TableHead>{t("Buyurtma")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
                 <TableHead>AI natija</TableHead>
                 <TableHead></TableHead>
               </TableRow></TableHeader>
@@ -58,9 +60,9 @@ export function AiReviewTab({ pendingReview, onOpenOrder }: AiReviewTabProps) {
                   <TableRow key={o.id} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{o.title || o.papkaNo}</TableCell>
                     <TableCell><EPStatusPill tone="neutral">{o.status}</EPStatusPill></TableCell>
-                    <TableCell><Badge variant="outline">Kutilmoqda</Badge></TableCell>
+                    <TableCell><Badge variant="outline">{t("Kutilmoqda")}</Badge></TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => onOpenOrder(o.id)}>Tekshirish</Button>
+                      <Button size="sm" variant="outline" onClick={() => onOpenOrder(o.id)}>{t("check")}</Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -76,9 +78,10 @@ export function AiReviewTab({ pendingReview, onOpenOrder }: AiReviewTabProps) {
 // ─── 3D Mockup Tab ────────────────────────────────────────────────────────────
 
 export function MockupTab() {
+  const { t } = useTranslation("common");
   return (
     <Card>
-      <CardHeader><CardTitle className="flex items-center gap-2"><Boxes className="w-5 h-5" />3D Quti Vizualizatsiya</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="flex items-center gap-2"><Boxes className="w-5 h-5" />{t("k3dQutiVizualizatsiya")}</CardTitle></CardHeader>
       <CardContent>
         <div className="border-2 border-dashed rounded-lg flex flex-col items-center justify-center min-h-64 gap-4 text-muted-foreground">
           <Package className="w-16 h-16 opacity-30" />
@@ -87,13 +90,13 @@ export function MockupTab() {
         </div>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="p-3 rounded-md border">
-            <p className="font-medium mb-1">Standart o'lchamlar</p>
+            <p className="font-medium mb-1">{t("standartOlchamlar")}</p>
             <p className="text-muted-foreground">F201: 300×200×150 mm</p>
             <p className="text-muted-foreground">F302: 150×100×100 mm</p>
           </div>
           <div className="p-3 rounded-md border">
-            <p className="font-medium mb-1">So'nggi mockuplar</p>
-            <p className="text-muted-foreground text-sm italic">Hali mockup yaratilmagan</p>
+            <p className="font-medium mb-1">{t("songgiMockuplar")}</p>
+            <p className="text-muted-foreground text-sm italic">{t("haliMockupYaratilmagan")}</p>
           </div>
         </div>
       </CardContent>
@@ -113,7 +116,7 @@ export function BrandTab({ colors }: BrandTabProps) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader><CardTitle className="text-base">Korporativ ranglar</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("korporativRanglar")}</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
             {(Array.isArray(colors) ? colors : []).map((c, i) => (
@@ -131,14 +134,14 @@ export function BrandTab({ colors }: BrandTabProps) {
       </Card>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader><CardTitle className="text-sm">Shriftlar</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">{t("shriftlar")}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            <div className="p-3 rounded-md border"><p className="text-xl font-bold">Inter Bold</p><p className="text-xs text-muted-foreground">Sarlavhalar uchun</p></div>
-            <div className="p-3 rounded-md border"><p className="text-base">Inter Regular</p><p className="text-xs text-muted-foreground">Asosiy matn uchun</p></div>
+            <div className="p-3 rounded-md border"><p className="text-xl font-bold">{t("interBold")}</p><p className="text-xs text-muted-foreground">{t("sarlavhalarUchun")}</p></div>
+            <div className="p-3 rounded-md border"><p className="text-base">{t("interRegular")}</p><p className="text-xs text-muted-foreground">{t("asosiyMatnUchun")}</p></div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm">Logo qoidalari</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">{t("logoQoidalari")}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm">
               {doRules.map((rule, i) => (
@@ -162,21 +165,22 @@ export function BrandTab({ colors }: BrandTabProps) {
 // ─── Compare Tab ──────────────────────────────────────────────────────────────
 
 export function CompareTab() {
+  const { t } = useTranslation("common");
   return (
     <Card>
-      <CardHeader><CardTitle className="flex items-center gap-2"><Scale className="w-5 h-5" />Variantlarni solishtirish</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="flex items-center gap-2"><Scale className="w-5 h-5" />{t("variantlarniSolishtirish")}</CardTitle></CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {(["A varianti", "B varianti"]).map((v, i) => (
             <div key={`k-${i}`} className="border-2 border-dashed rounded-lg flex flex-col items-center justify-center min-h-48 gap-3 text-muted-foreground">
               <Palette className="w-10 h-10 opacity-30" />
               <p className="text-sm font-medium">{v}</p>
-              <Button variant="outline" size="sm">Yuklash</Button>
+              <Button variant="outline" size="sm">{t("upload")}</Button>
             </div>
           ))}
         </div>
         <p className="text-center text-sm text-muted-foreground mt-4">
-          Ikkala dizaynni yuklab, yonma-yon solishtirishingiz mumkin
+          {t("ikkalaDizaynniYuklabYonmaYon")}
         </p>
       </CardContent>
     </Card>

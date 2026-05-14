@@ -77,7 +77,7 @@ export default function RecruiterKPIPage() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t('recruiterKpi')}</h1>
-          <p className="text-sm text-muted-foreground">Ishga qabul bo'limi samaradorligi tahlili</p>
+          <p className="text-sm text-muted-foreground">{t("ishgaQabulBolimiSamaradorligiTahlili")}</p>
         </div>
         <Button
           variant="outline"
@@ -95,7 +95,7 @@ export default function RecruiterKPIPage() {
         <CardContent className="pt-4">
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <Label className="text-xs mb-1 block">Boshlanish sanasi</Label>
+              <Label className="text-xs mb-1 block">{t("startDate")}</Label>
               <Input
                 type="date"
                 value={from}
@@ -104,7 +104,7 @@ export default function RecruiterKPIPage() {
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block">Tugash sanasi</Label>
+              <Label className="text-xs mb-1 block">{t("endDate")}</Label>
               <Input
                 type="date"
                 value={to}
@@ -116,7 +116,7 @@ export default function RecruiterKPIPage() {
               onClick={() => setApplied({ from, to })}
               className="bg-primary hover:bg-primary/90"
             >
-              <BarChart3 className="w-4 h-4 mr-2" /> Ko'rsatish
+              <BarChart3 className="w-4 h-4 mr-2" /> {t("korsatish1")}
             </Button>
           </div>
         </CardContent>
@@ -131,7 +131,7 @@ export default function RecruiterKPIPage() {
       {isError && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Ma'lumot yuklanmadi
+            {t("malumotYuklanmadi")}
           </CardContent>
         </Card>
       )}

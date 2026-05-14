@@ -16,6 +16,7 @@ import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { useDebounce } from "@/hooks/useDebounce";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface SearchResult {
   id: string;
   roomId: string;
@@ -50,6 +51,7 @@ function highlightText(text: string): React.ReactNode {
 }
 
 export function ChatSearchPanel({ onClose }: Props) {
+  const { t } = useTranslation("common");
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 400);
   const setActiveRoomId = useChatStore((s) => s.setActiveRoomId);
@@ -86,7 +88,7 @@ export function ChatSearchPanel({ onClose }: Props) {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Xabarlarda qidirish..."
+          placeholder={t("xabarlardaQidirish")}
           autoFocus
           className="border-0 shadow-none p-0 h-auto text-sm focus-visible:ring-0 flex-1"
         />
@@ -105,7 +107,7 @@ export function ChatSearchPanel({ onClose }: Props) {
         {!query || query.length < 2 ? (
           <div className="flex flex-col items-center justify-center h-32 gap-2 text-muted-foreground">
             <Search className="w-8 h-8 opacity-30" />
-            <p className="text-xs">Kamida 2 ta belgi kiriting</p>
+            <p className="text-xs">{t("kamida2TaBelgiKiriting")}</p>
           </div>
         ) : showLoading ? (
           <div className="flex items-center justify-center h-24">
@@ -114,7 +116,7 @@ export function ChatSearchPanel({ onClose }: Props) {
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 gap-2 text-muted-foreground">
             <Search className="w-8 h-8 opacity-30" />
-            <p className="text-xs">Natijalar topilmadi</p>
+            <p className="text-xs">{t("natijalarTopilmadi")}</p>
           </div>
         ) : (
           <>
@@ -152,7 +154,7 @@ export function ChatSearchPanel({ onClose }: Props) {
                     size="sm"
                     variant="ghost"
                     className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                    title="Xonaga o'tish"
+                    title={t("xonagaOtish")}
                   >
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>

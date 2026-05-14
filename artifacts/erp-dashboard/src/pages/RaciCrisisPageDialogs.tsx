@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskFormState } from "./RaciCrisisPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // CreateTaskDialog
@@ -33,44 +34,45 @@ export function CreateTaskDialog({
   onConfirm,
   isPending,
 }: CreateTaskDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi RACI vazifa</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiRaciVazifa")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>Vazifa nomi *</Label>
+            <Label>{t("vazifaNomi1")}</Label>
             <Input
               value={form.title}
               onChange={e => onFormChange(f => ({ ...f, title: e.target.value }))}
-              placeholder="Vazifa nomi"
+              placeholder={t("vazifaNomi")}
               data-testid="input-task-title"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Javobgar ID</Label>
+              <Label>{t("javobgarId")}</Label>
               <Input
                 value={form.responsible_id}
                 onChange={e => onFormChange(f => ({ ...f, responsible_id: e.target.value }))}
-                placeholder="Xodim ID"
+                placeholder={t("xodimId")}
                 data-testid="input-task-responsible"
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Mas'ul ID</Label>
+              <Label>{t("masulId")}</Label>
               <Input
                 value={form.accountable_id}
                 onChange={e => onFormChange(f => ({ ...f, accountable_id: e.target.value }))}
-                placeholder="Xodim ID"
+                placeholder={t("xodimId")}
                 data-testid="input-task-accountable"
               />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Muddat</Label>
+            <Label>{t("muddat")}</Label>
             <Input
               type="date"
               value={form.deadline}
@@ -79,19 +81,19 @@ export function CreateTaskDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Tavsif</Label>
+            <Label>{t("progress.description")}</Label>
             <Textarea
               value={form.description}
               onChange={e => onFormChange(f => ({ ...f, description: e.target.value }))}
               rows={2}
-              placeholder="Vazifa tavsifi..."
+              placeholder={t("vazifaTavsifi1")}
               data-testid="input-task-description"
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor
+            {t("Bekor")}
           </Button>
           <Button
             onClick={onConfirm}

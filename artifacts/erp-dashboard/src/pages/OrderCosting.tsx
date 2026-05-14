@@ -20,8 +20,10 @@ import { OrderCostingDetailView } from "./OrderCostingDetail";
 import { CreateCostingDialog } from "./OrderCostingDialogs";
 import { SummaryCards, CostingsTable, TopRankings, StatusBadge } from "./OrderCostingSections";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function OrderCosting() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [selectedCosting, setSelectedCosting] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -112,14 +114,14 @@ export default function OrderCosting() {
             <div className="flex items-center gap-3">
               <Calculator className="h-8 w-8" />
               <div>
-                <h1 className="text-2xl font-bold">Buyurtma Tannarxi</h1>
-                <p className="text-white/75 text-sm">Har bir buyurtma uchun xarajatlar taqsimoti</p>
+                <h1 className="text-2xl font-bold">{t("buyurtmaTannarxi1")}</h1>
+                <p className="text-white/75 text-sm">{t("harBirBuyurtmaUchunXarajatlar")}</p>
               </div>
             </div>
             <DialogTrigger asChild onClick={() => setCreateDialogOpen(true)}>
               <Button className="bg-card text-[var(--ep-green)] hover:bg-green-50 gap-2" data-testid="button-create-costing">
                 <Plus className="h-4 w-4" />
-                Yangi Tannarx
+                {t("yangiTannarx")}
               </Button>
             </DialogTrigger>
           </div>

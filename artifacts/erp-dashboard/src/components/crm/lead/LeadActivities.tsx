@@ -9,6 +9,7 @@ import { Activity, Clock } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity as ActivityType, HistoryItem, Lead } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeadActivitiesProps {
   activities: ActivityType[];
@@ -17,6 +18,7 @@ interface LeadActivitiesProps {
 }
 
 export function LeadActivities({ activities, history, lead }: LeadActivitiesProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <Card>
@@ -31,7 +33,7 @@ export function LeadActivities({ activities, history, lead }: LeadActivitiesProp
           <ScrollArea className="h-[200px]">
             <div className="space-y-3">
               {activities.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Faoliyatlar yo'q</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("faoliyatlarYoq")}</p>
               ) : (
                 (Array.isArray(activities) ? activities : []).map((act) => (
                   <div key={act.id} className="flex items-start gap-2 text-sm border-l-2 border-blue-200 pl-3">
@@ -54,7 +56,7 @@ export function LeadActivities({ activities, history, lead }: LeadActivitiesProp
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            O'zgarishlar tarixi
+            {t("ozgarishlarTarixi")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -62,7 +64,7 @@ export function LeadActivities({ activities, history, lead }: LeadActivitiesProp
             <div className="space-y-2">
               <div className="flex items-start gap-3 text-sm border-l-2 border-green-200 pl-3">
                 <div>
-                  <p className="font-medium">Lead yaratildi</p>
+                  <p className="font-medium">{t("leadYaratildi")}</p>
                   <p className="text-xs text-muted-foreground">
                     {lead?.dateCreate && format(new Date(lead.dateCreate), "dd.MM.yyyy HH:mm")}
                   </p>

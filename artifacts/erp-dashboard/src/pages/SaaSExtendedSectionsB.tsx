@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
 import { RefreshCw, CheckCircle, XCircle, Clock, Database, Cpu, AlertCircle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   SaaSTenant,
   ErrorLog,
@@ -29,18 +30,19 @@ interface ModulesSectionProps {
 }
 
 export function ModulesSection({ tenants, selectedTenant, setSelectedTenant, selectedTenantData }: ModulesSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="modules" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Modul Nazorati</h2>
+        <h2 className="text-lg font-semibold">{t("modulNazorati")}</h2>
         <div className="flex items-center gap-2">
-          <Label className="text-sm shrink-0">Tenant:</Label>
+          <Label className="text-sm shrink-0">{t("tenant1")}</Label>
           <Select
             value={selectedTenant || (tenants[0]?.id !== undefined ? String(tenants[0].id) : undefined)}
             onValueChange={setSelectedTenant}
           >
             <SelectTrigger className="w-56 h-9" data-testid="select-module-tenant">
-              <SelectValue placeholder="Tenant tanlang" />
+              <SelectValue placeholder={t("tenantTanlang")} />
             </SelectTrigger>
             <SelectContent>
               {(Array.isArray(tenants) ? tenants : []).map((t: SaaSTenant) => (
@@ -56,9 +58,9 @@ export function ModulesSection({ tenants, selectedTenant, setSelectedTenant, sel
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Modul</TableHead>
-                  <TableHead>Kalit</TableHead>
-                  <TableHead>Min. tarif</TableHead>
+                  <TableHead>{t("modul1")}</TableHead>
+                  <TableHead>{t("kalit1")}</TableHead>
+                  <TableHead>{t("minTarif")}</TableHead>
                   <TableHead>{String(selectedTenantData.name ?? "")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -101,9 +103,9 @@ export function MonitoringSection({ platformStats, statsLoading, onRefresh }: Mo
   return (
     <TabsContent value="monitoring" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Tizim Monitoringi</h2>
+        <h2 className="text-lg font-semibold">{t("tizimMonitoringi")}</h2>
         <Button variant="outline" size="sm" onClick={onRefresh} data-testid="button-refresh-stats">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
 
@@ -132,7 +134,7 @@ export function MonitoringSection({ platformStats, statsLoading, onRefresh }: Mo
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card>
-              <CardHeader><CardTitle className="text-base">Tenant statistika</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">{t("tenantStatistika")}</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {([
                   { l: "Jami", v: platformStats.tenants?.total },
@@ -150,7 +152,7 @@ export function MonitoringSection({ platformStats, statsLoading, onRefresh }: Mo
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle className="text-base">Server holati</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">{t("serverHolati")}</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {([
                   { l: "Versiya", v: platformStats.version },
@@ -171,7 +173,7 @@ export function MonitoringSection({ platformStats, statsLoading, onRefresh }: Mo
       ) : (
         <Card>
           <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
-            Ma'lumot yuklanmadi
+            {t("malumotYuklanmadi")}
           </CardContent>
         </Card>
       )}
@@ -191,25 +193,25 @@ export function ErrorsSection({ errorLogsData, errorsLoading, onRefresh }: Error
   return (
     <TabsContent value="errors" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Tizim Xatolari Logi</h2>
+        <h2 className="text-lg font-semibold">{t("tizimXatolariLogi")}</h2>
         <Button variant="outline" size="sm" onClick={onRefresh} data-testid="button-refresh-errors">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
       <Card>
         <CardContent className="p-0">
           {errorsLoading ? (
-            <div className="p-8 text-center text-muted-foreground animate-pulse">Yuklanmoqda...</div>
+            <div className="p-8 text-center text-muted-foreground animate-pulse">{t("Yuklanmoqda...")}</div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Vaqt</TableHead>
-                  <TableHead>Tenant</TableHead>
-                  <TableHead>Daraja</TableHead>
-                  <TableHead>Modul</TableHead>
-                  <TableHead>Xabar</TableHead>
-                  <TableHead>Yo'l</TableHead>
+                  <TableHead>{t("time")}</TableHead>
+                  <TableHead>{t("tenant")}</TableHead>
+                  <TableHead>{t("daraja")}</TableHead>
+                  <TableHead>{t("modul1")}</TableHead>
+                  <TableHead>{t("xabar")}</TableHead>
+                  <TableHead>{t("yol")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -229,7 +231,7 @@ export function ErrorsSection({ errorLogsData, errorsLoading, onRefresh }: Error
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       <CheckCircle className="h-8 w-8 text-[var(--ep-green)] mx-auto mb-2" />
-                      Hech qanday xato yo'q
+                      {t("hechQandayXatoYoq")}
                     </TableCell>
                   </TableRow>
                 )}

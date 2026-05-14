@@ -5,6 +5,7 @@
 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from '@/lib/i18n';
 
 interface ContentData {
   description: string;
@@ -17,13 +18,14 @@ interface CourseContentFormProps {
 }
 
 export function CourseContentForm({ formData, setFormData }: CourseContentFormProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="space-y-1">
           <Label htmlFor="description">Tavsif (O'zbek) *</Label>
         <Textarea
           id="description"
-          placeholder="Kurs haqida batafsil ma'lumot..."
+          placeholder={t("kursHaqidaBatafsilMalumot")}
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={3}

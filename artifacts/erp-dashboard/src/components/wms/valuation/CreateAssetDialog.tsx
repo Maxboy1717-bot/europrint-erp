@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { AssetInventoryForm } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CreateAssetDialogProps {
   isOpen: boolean;
@@ -28,19 +29,20 @@ export function CreateAssetDialog({
   onSubmit,
   isPending
 }: CreateAssetDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi Aktiv Qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiAktivQoshish")}</DialogTitle>
           <DialogDescription>
-            Asosiy vositalar ro'yxatiga yangi aktiv ma'lumotlarini kiriting
+            {t("asosiyVositalarRoyxatigaYangiAktiv")}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Aktiv kodi *</Label>
+              <Label>{t("aktivKodi")}</Label>
               <Input
                 value={form.assetCode}
                 onChange={(e) => setForm({ ...form, assetCode: e.target.value })}
@@ -49,7 +51,7 @@ export function CreateAssetDialog({
               />
             </div>
             <div>
-              <Label>Aktiv turi *</Label>
+              <Label>{t("aktivTuri")}</Label>
               <Select 
                 value={form.assetType} 
                 onValueChange={(value) => setForm({ ...form, assetType: value })}
@@ -58,27 +60,27 @@ export function CreateAssetDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="equipment">Uskunalar</SelectItem>
-                  <SelectItem value="vehicle">Transport</SelectItem>
-                  <SelectItem value="building">Binolar</SelectItem>
-                  <SelectItem value="furniture">Mebel</SelectItem>
+                  <SelectItem value="equipment">{t("uskunalar")}</SelectItem>
+                  <SelectItem value="vehicle">{t("transport")}</SelectItem>
+                  <SelectItem value="building">{t("binolar")}</SelectItem>
+                  <SelectItem value="furniture">{t("mebel")}</SelectItem>
                   <SelectItem value="it_equipment">IT uskunalar</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div>
-            <Label>Aktiv nomi *</Label>
+            <Label>{t("aktivNomi")}</Label>
             <Input
               value={form.assetName}
               onChange={(e) => setForm({ ...form, assetName: e.target.value })}
-              placeholder="Uskunaning nomi"
+              placeholder={t("uskunaningNomi")}
               data-testid="input-asset-name"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Xarid sanasi</Label>
+              <Label>{t("xaridSanasi")}</Label>
               <Input
                 type="date"
                 value={form.purchaseDate}
@@ -87,7 +89,7 @@ export function CreateAssetDialog({
               />
             </div>
             <div>
-              <Label>Seriya raqami</Label>
+              <Label>{t("seriyaRaqami")}</Label>
               <Input
                 value={form.serialNumber}
                 onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
@@ -138,7 +140,7 @@ export function CreateAssetDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Holati</Label>
+              <Label>{t("holati")}</Label>
               <Select 
                 value={form.condition} 
                 onValueChange={(value) => setForm({ ...form, condition: value })}
@@ -147,15 +149,15 @@ export function CreateAssetDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="excellent">A'lo</SelectItem>
-                  <SelectItem value="good">Yaxshi</SelectItem>
-                  <SelectItem value="fair">Qoniqarli</SelectItem>
-                  <SelectItem value="poor">Yomon</SelectItem>
+                  <SelectItem value="excellent">{t("alo")}</SelectItem>
+                  <SelectItem value="good">{t("Yaxshi")}</SelectItem>
+                  <SelectItem value="fair">{t("qoniqarli")}</SelectItem>
+                  <SelectItem value="poor">{t("yomon")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Joylashuv</Label>
+              <Label>{t("location")}</Label>
               <Input
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
@@ -165,9 +167,9 @@ export function CreateAssetDialog({
             </div>
           </div>
           <div>
-            <Label>Izoh</Label>
+            <Label>{t("Izoh")}</Label>
             <Textarea
-              placeholder="Qo'shimcha ma'lumotlar..."
+              placeholder={t("qoshimchaMalumotlar1")}
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               data-testid="input-asset-notes"
@@ -176,7 +178,7 @@ export function CreateAssetDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button 
             onClick={onSubmit}

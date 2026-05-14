@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Building2, User, DollarSign, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface Deal {
   id: number;
@@ -31,6 +32,7 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, isDragging = false, onClick }: DealCardProps) {
+  const { t } = useTranslation("common");
   const {
     attributes,
     listeners,
@@ -124,7 +126,7 @@ export function DealCard({ deal, isDragging = false, onClick }: DealCardProps) {
                 <User className="h-3 w-3 text-muted-foreground" />
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground">Mas'ul</span>
+            <span className="text-xs text-muted-foreground">{t("masul")}</span>
           </div>
         )}
       </CardContent>

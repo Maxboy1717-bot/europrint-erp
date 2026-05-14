@@ -13,12 +13,14 @@ import { Label } from "@/components/ui/label";
 import { BookOpen, Phone, Hash } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { safeStorage } from "@/lib/safeStorage";
+import { useTranslation } from '@/lib/i18n';
 
 interface LoginFormProps {
   onLogin?: (phone: string, employeeId: string) => void;
 }
 
 export function LoginForm({ onLogin }: LoginFormProps) {
+  const { t } = useTranslation("common");
   const [, setLocation] = useLocation();
   const [step, setStep] = useState<"phone" | "otp" | "employeeId">("phone");
   const [phone, setPhone] = useState("");
@@ -74,7 +76,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               <BookOpen className="w-10 h-10 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-[14px] font-semibold">Europrint system</CardTitle>
+          <CardTitle className="text-[14px] font-semibold">{t("europrintSystem")}</CardTitle>
           <CardDescription>
             {step === "phone" && "Telefon raqamingizni kiriting"}
             {step === "otp" && "SMS orqali yuborilgan kodni kiriting"}
@@ -85,7 +87,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           {step === "phone" && (
             <form onSubmit={handlePhoneSubmit} className="space-y-4">
               <div className="space-y-1">
-          <Label htmlFor="phone">Telefon raqami</Label>
+          <Label htmlFor="phone">{t("telefonRaqami")}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -119,7 +121,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           {step === "otp" && (
             <form onSubmit={handleOtpSubmit} className="space-y-4">
               <div className="space-y-1">
-          <Label htmlFor="otp">Tasdiqlash kodi</Label>
+          <Label htmlFor="otp">{t("tasdiqlashKodi")}</Label>
                 <Input
                   id="otp"
                   type="text"
@@ -146,7 +148,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                   onClick={() => setStep("phone")}
                   data-testid="button-back"
                 >
-                  Orqaga
+                  {t("back")}
                 </Button>
                 <Button
                   type="submit"
@@ -163,7 +165,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           {step === "employeeId" && (
             <form onSubmit={handleEmployeeIdSubmit} className="space-y-4">
               <div className="space-y-1">
-          <Label htmlFor="employeeId">Tabel raqami</Label>
+          <Label htmlFor="employeeId">{t("tabelRaqami")}</Label>
                 <div className="relative">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -182,7 +184,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                 className="w-full"
                 data-testid="button-login"
               >
-                Kirish
+                {t("login1")}
               </Button>
             </form>
           )}

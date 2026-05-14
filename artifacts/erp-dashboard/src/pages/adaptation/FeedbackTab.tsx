@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface FeedbackResponse {
   id: string;
@@ -93,6 +94,7 @@ const feedbackFormSchema = z.object({
 type FeedbackFormValues = z.infer<typeof feedbackFormSchema>;
 
 export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackResponse | null>(null);
@@ -167,14 +169,14 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Feedbacklar</CardTitle>
+            <CardTitle>{t("feedbacklar")}</CardTitle>
             <CardDescription>1 hafta, 1 oy, 3 oy suhbatlari</CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingFeedback(null); form.reset(); } }}>
             <DialogTrigger asChild>
               <Button onClick={() => { setEditingFeedback(null); form.reset(); }} data-testid="button-add-feedback">
                 <Plus className="w-4 h-4 mr-2" />
-                Feedback qo'shish
+                {t("feedbackQoshish")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
@@ -183,10 +185,10 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div>
-                  <Label>Xodim</Label>
+                  <Label>{t("xodim1")}</Label>
                   <Controller control={form.control} name="newEmployeeId" render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger data-testid="select-employee" className="h-9"><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+                      <SelectTrigger data-testid="select-employee" className="h-9"><SelectValue placeholder={t("xodimniTanlang")} /></SelectTrigger>
                       <SelectContent>
                         {(Array.isArray(employees) ? employees : []).map((emp: NewEmployeeResponse) => (
                           <SelectItem key={emp.id} value={emp.id}>{emp.employeeName}</SelectItem>
@@ -200,7 +202,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Turi</Label>
+                    <Label>{t("type")}</Label>
                     <Controller control={form.control} name="feedbackType" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger data-testid="select-feedback-type" className="h-9"><SelectValue /></SelectTrigger>
@@ -208,20 +210,20 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                           <SelectItem value="week1">1 hafta</SelectItem>
                           <SelectItem value="month1">1 oy</SelectItem>
                           <SelectItem value="month3">3 oy</SelectItem>
-                          <SelectItem value="final">Yakuniy</SelectItem>
+                          <SelectItem value="final">{t("yakuniy")}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
                   </div>
                   <div>
-                    <Label>Holat</Label>
+                    <Label>{t("status28")}</Label>
                     <Controller control={form.control} name="status" render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger data-testid="select-status" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="scheduled">Rejalashtirilgan</SelectItem>
-                          <SelectItem value="completed">Yakunlangan</SelectItem>
-                          <SelectItem value="cancelled">Bekor qilingan</SelectItem>
+                          <SelectItem value="scheduled">{t("rejalashtirilgan")}</SelectItem>
+                          <SelectItem value="completed">{t("yakunlangan")}</SelectItem>
+                          <SelectItem value="cancelled">{t("cancelledDesc")}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
@@ -229,14 +231,14 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="scheduledDate">Rejalashtirilgan sana</Label>
+                    <Label htmlFor="scheduledDate">{t("rejalashtirilganSana")}</Label>
                     <Input id="scheduledDate" type="date" {...form.register("scheduledDate")} data-testid="input-scheduled-date" />
                     {form.formState.errors.scheduledDate && (
                       <p className="text-sm text-destructive mt-1">{form.formState.errors.scheduledDate.message}</p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="completedDate">Yakunlangan sana</Label>
+                    <Label htmlFor="completedDate">{t("yakunlanganSana")}</Label>
                     <Input id="completedDate" type="date" {...form.register("completedDate")} data-testid="input-completed-date" />
                   </div>
                 </div>
@@ -246,32 +248,32 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                     <Input id="rating" type="number" min="1" max="5" {...form.register("rating", { valueAsNumber: true })} data-testid="input-rating" />
                   </div>
                   <div>
-                    <Label>Qoniqish darajasi</Label>
+                    <Label>{t("qoniqishDarajasi")}</Label>
                     <Controller control={form.control} name="satisfactionLevel" render={({ field }) => (
                       <Select value={field.value ?? "none"} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-satisfaction" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                        <SelectTrigger data-testid="select-satisfaction" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">-</SelectItem>
-                          <SelectItem value="very_low">Juda past</SelectItem>
-                          <SelectItem value="low">Past</SelectItem>
-                          <SelectItem value="medium">O'rta</SelectItem>
-                          <SelectItem value="high">Yuqori</SelectItem>
-                          <SelectItem value="very_high">Juda yuqori</SelectItem>
+                          <SelectItem value="very_low">{t("judaPast")}</SelectItem>
+                          <SelectItem value="low">{t("low")}</SelectItem>
+                          <SelectItem value="medium">{t("medium")}</SelectItem>
+                          <SelectItem value="high">{t("high")}</SelectItem>
+                          <SelectItem value="very_high">{t("judaYuqori")}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="strengths">Kuchli tomonlar</Label>
+                  <Label htmlFor="strengths">{t("kuchliTomonlar1")}</Label>
                   <Textarea id="strengths" {...form.register("strengths")} rows={3} data-testid="input-strengths" />
                 </div>
                 <div>
-                  <Label htmlFor="weaknesses">Zaif tomonlar</Label>
+                  <Label htmlFor="weaknesses">{t("zaifTomonlar")}</Label>
                   <Textarea id="weaknesses" {...form.register("weaknesses")} rows={3} data-testid="input-weaknesses" />
                 </div>
                 <div>
-                  <Label htmlFor="suggestions">Takliflar</Label>
+                  <Label htmlFor="suggestions">{t("takliflar")}</Label>
                   <Textarea id="suggestions" {...form.register("suggestions")} rows={3} data-testid="input-suggestions" />
                 </div>
                 <DialogFooter>
@@ -288,18 +290,18 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
         <div className="ep-table-scroll"><Table>
           <TableHeader className="sticky top-0 z-10 bg-card">
             <TableRow>
-              <TableHead>Xodim</TableHead>
-              <TableHead>Turi</TableHead>
-              <TableHead>Rejalashtirilgan</TableHead>
-              <TableHead>Ball</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>Amallar</TableHead>
+              <TableHead>{t("xodim1")}</TableHead>
+              <TableHead>{t("type")}</TableHead>
+              <TableHead>{t("rejalashtirilgan")}</TableHead>
+              <TableHead>{t("ball")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("Amallar")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {feedbacks.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">Feedbacklar yo'q</TableCell>
+                <TableCell colSpan={6} className="text-center text-muted-foreground">{t("feedbacklarYoq")}</TableCell>
               </TableRow>
             )}
             {(Array.isArray(feedbacks) ? feedbacks : []).map((fb: FeedbackResponse) => (

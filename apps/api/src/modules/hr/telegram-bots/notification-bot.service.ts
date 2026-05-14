@@ -13,6 +13,7 @@ import { errMsg } from "../hr-v2-error";
 import { TelegramBotsRepository } from './telegram-bots.repository';
 import { NOTIFICATION_TEMPLATES, NotificationTemplateKey, renderTemplate } from './notification-templates';
 import type { Telegraf, Context } from 'telegraf';
+import { message } from 'telegraf/filters';
 
 export interface ErpEventPayload {
   event: string;
@@ -47,7 +48,7 @@ export class NotificationBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[notification-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('Notification Bot token not configured (TELEGRAM_NOTIFICATION_BOT_TOKEN missing) — skipping');
         return;
@@ -136,7 +137,7 @@ export class NotificationBotService implements OnModuleInit, OnModuleDestroy {
   }
 
   private registerInboundTextHandler(bot: Telegraf<Context>): void {
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       const chatId = String((ctx as TCtxWithChat).chat?.id ?? '');
       if (!chatId) return;
       const employeeId = this.pendingLateReasons.get(chatId);

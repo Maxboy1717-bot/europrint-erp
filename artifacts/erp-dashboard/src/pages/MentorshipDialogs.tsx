@@ -84,11 +84,11 @@ export function MentorshipFormDialog({
                 name="menteeId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground">Mentee</FormLabel>
+                    <FormLabel className="text-foreground">{t("mentee")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-mentee" className="bg-muted/40 border-border h-9">
-                          <SelectValue placeholder="Mentee" />
+                          <SelectValue placeholder={t("mentee")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-card border-border">

@@ -21,6 +21,7 @@ import { getChatApiBase } from "@/lib/apiBase";
 import { safeStorage } from "@/lib/safeStorage";
 import { ChatLayoutSidebar } from "./ChatLayoutSidebar";
 import { ChatLayoutMessages } from "./ChatLayoutMessages";
+import { useTranslation } from '@/lib/i18n';
 import {
   EMPTY_MESSAGES,
   VIDEO_HEIGHT_DEFAULT,
@@ -33,6 +34,7 @@ import {
 // ---------------------------------------------------------------------------
 
 export function ChatLayout() {
+  const { t } = useTranslation("common");
   const { joinRoom, sendMessage, sendTypingStart, sendTypingStop, editMsg, deleteMsg } =
     useChatSocket();
 
@@ -422,8 +424,8 @@ export function ChatLayout() {
       <ConfirmDialog
         open={confirmDeleteMsg !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteMsg(null); }}
-        title="Xabarni o'chirish"
-        description="Ushbu xabarni o'chirishni tasdiqlaysizmi?"
+        title={t("xabarniOchirish")}
+        description={t("ushbuXabarniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

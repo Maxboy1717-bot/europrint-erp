@@ -42,22 +42,22 @@ export function BalanceSection({ stock, stockLoading }: BalanceSectionProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{"Material"}</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Miqdor</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Birlik</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ombor</TableHead>
-              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Holati</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("quantity")}</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("unit")}</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("ombor")}</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("holati")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {stockLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-sm">Yuklanmoqda...</TableCell>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-sm">{t("Yuklanmoqda...")}</TableCell>
               </TableRow>
             ) : stock.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-sm">
                   <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  Materiallar yo'q
+                  {t("materiallarYoq")}
                 </TableCell>
               </TableRow>
             ) : (Array.isArray(stock) ? stock : []).slice(0, 12).map((item) => {
@@ -103,10 +103,10 @@ export function TransferSection({ transfers, onCreateClick }: TransferSectionPro
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Jami: <span className="font-semibold text-foreground dark:text-slate-100">{transfers.length} ta</span>
+          {t("jami")}<span className="font-semibold text-foreground dark:text-slate-100">{transfers.length} ta</span>
         </p>
         <Button onClick={onCreateClick} data-testid="button-create-transfer">
-          <Plus className="h-4 w-4 mr-1.5" />Ko'chirish Yaratish
+          <Plus className="h-4 w-4 mr-1.5" />{t("kochirishYaratish")}
         </Button>
       </div>
       <Card>
@@ -114,18 +114,18 @@ export function TransferSection({ transfers, onCreateClick }: TransferSectionPro
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hujjat №</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Qayerdan</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Qayerga</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("hujjat1")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("qayerdan")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("qayerga")}</TableHead>
                 <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{"Material"}</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Miqdor</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Holati</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("quantity")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("holati")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {transfers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">Ko'chirish hujjatlari yo'q</TableCell>
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">{t("kochirishHujjatlariYoq")}</TableCell>
                 </TableRow>
               ) : (Array.isArray(transfers) ? transfers : []).slice(0, 10).map((t) => (
                 <TableRow key={t.id} data-testid={`row-transfer-${t.id}`} className="hover:bg-background dark:hover:bg-slate-800/50">

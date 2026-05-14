@@ -2,6 +2,7 @@
 
 import type { ScannedLine, MovementTypeCode } from "./PosMovementChiqimTypes";
 import { MOVEMENT_TYPES } from "./PosMovementChiqimTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Lines panel ──────────────────────────────────────────────────────────────
 
@@ -17,12 +18,13 @@ interface LinesPanelProps {
 export function LinesPanel({
   lines, totalItems, totalValue, qtyInputRefs, onUpdateQty, onRemoveLine,
 }: LinesPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card" style={{ padding: 0, overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--pos-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--pos-text)" }}>
-          Skanerlangan mahsulotlar
+          {t("skanerlanganMahsulotlar")}
         </span>
         <span className="pos-badge pos-badge-blue" style={{ fontSize: 11 }}>
           {lines.length} ta
@@ -33,9 +35,9 @@ export function LinesPanel({
       {lines.length === 0 ? (
         <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--pos-text-muted)", fontSize: 13 }}>
           <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>📦</div>
-          Hali hech narsa skanerlangan emas.
+          {t("haliHechNarsaSkanerlanganEmas")}
           <br />
-          <span style={{ fontSize: 12 }}>Barcode skanering boshlang.</span>
+          <span style={{ fontSize: 12 }}>{t("barcodeSkaneringBoshlang")}</span>
         </div>
       ) : (
         <div style={{ maxHeight: 420, overflowY: "auto" }}>
@@ -72,7 +74,7 @@ export function LinesPanel({
                         Qoldiq: {line.availableQty}
                       </span>
                       {qtyExceedsStock && (
-                        <span className="pos-badge pos-badge-yellow" style={{ fontSize: 9 }}>Kam!</span>
+                        <span className="pos-badge pos-badge-yellow" style={{ fontSize: 9 }}>{t("kam1")}</span>
                       )}
                     </div>
                   </div>
@@ -92,7 +94,7 @@ export function LinesPanel({
                       className="pos-btn pos-btn-ghost"
                       style={{ padding: "6px 8px", color: "var(--pos-danger)", flexShrink: 0 }}
                       onClick={() => onRemoveLine(line._key)}
-                      title="O'chirish"
+                      title={t("delete")}
                     >
                       ✕
                     </button>
@@ -108,7 +110,7 @@ export function LinesPanel({
       {lines.length > 0 && (
         <div style={{ padding: "12px 16px", borderTop: "1px solid var(--pos-border)", background: "rgba(59,130,246,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
-            Jami mahsulotlar: <strong className="pos-mono">{totalItems.toLocaleString("uz-UZ")}</strong>
+            {t("jamiMahsulotlar")}<strong className="pos-mono">{totalItems.toLocaleString("uz-UZ")}</strong>
           </span>
           {totalValue > 0 && (
             <span style={{ fontSize: 13, fontWeight: 700 }}>
@@ -139,11 +141,11 @@ export function SuccessScreen({ documentNumber, selectedType, onNewChiqim, onGoT
       <div className="pos-card">
         <div style={{ fontSize: 60, marginBottom: 12 }}>✅</div>
         <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "var(--pos-success)" }}>
-          Chiqim hujjati yaratildi!
+          {t("chiqimHujjatiYaratildi")}
         </h3>
         {documentNumber && (
           <div className="pos-mono" style={{ fontSize: 16, color: "var(--pos-text-muted)", marginBottom: 16 }}>
-            Hujjat raqami: <strong style={{ color: "var(--pos-text)" }}>{documentNumber}</strong>
+            {t("hujjatRaqami1")}<strong style={{ color: "var(--pos-text)" }}>{documentNumber}</strong>
           </div>
         )}
         <div className="pos-badge pos-badge-blue" style={{ fontSize: 13, padding: "6px 16px", marginBottom: 20 }}>
@@ -151,10 +153,10 @@ export function SuccessScreen({ documentNumber, selectedType, onNewChiqim, onGoT
         </div>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <button className="pos-btn pos-btn-ghost" onClick={onNewChiqim}>
-            Yangi chiqim
+            {t("yangiChiqim")}
           </button>
           <button className="pos-btn pos-btn-primary" onClick={onGoToList}>
-            Harakatlar ro'yxatiga
+            {t("harakatlarRoyxatiga")}
           </button>
         </div>
       </div>

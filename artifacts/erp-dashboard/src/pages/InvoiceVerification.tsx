@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CheckCircle, XCircle, AlertTriangle, FileCheck, Search, Scale, TrendingUp } from "lucide-react";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface VendorInvoice {
   id: string;
   invoiceNumber: string;
@@ -59,6 +60,7 @@ interface MatchResult {
 }
 
 export default function InvoiceVerification() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [matchStatus, setMatchStatus] = useState<string>("all");
   const [selectedVendorInvoiceId, setSelectedVendorInvoiceId] = useState<string | null>(null);
@@ -99,10 +101,10 @@ export default function InvoiceVerification() {
 
   const matchBadge = (status: string) => {
     switch (status) {
-      case "full_match": return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><CheckCircle className="w-3 h-3 mr-1" />To'liq mos</Badge>;
-      case "partial_match": return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"><AlertTriangle className="w-3 h-3 mr-1" />Qisman mos</Badge>;
-      case "mismatch": return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Mos emas</Badge>;
-      default: return <EPStatusPill tone="neutral">Tekshirilmagan</EPStatusPill>;
+      case "full_match": return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><CheckCircle className="w-3 h-3 mr-1" />{t("toliqMos")}</Badge>;
+      case "partial_match": return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"><AlertTriangle className="w-3 h-3 mr-1" />{t("qismanMos")}</Badge>;
+      case "mismatch": return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />{t("mosEmas")}</Badge>;
+      default: return <EPStatusPill tone="neutral">{t("tekshirilmagan")}</EPStatusPill>;
     }
   };
 
@@ -117,8 +119,8 @@ export default function InvoiceVerification() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-invoice-verification">
       <div>
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">3-Way Match — Faktura Tekshirish</h1>
-        <p className="text-muted-foreground">PO + Qabul hujjati + Faktura avtomatik solishtirish</p>
+        <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("k3WayMatchFakturaTekshirish")}</h1>
+        <p className="text-muted-foreground">{t("poQabulHujjatiFakturaAvtomatik")}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -126,7 +128,7 @@ export default function InvoiceVerification() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900"><FileCheck className="w-5 h-5 text-[var(--ep-blue)]" /></div>
-              <div><p className="text-sm text-muted-foreground">Jami fakturalar</p><p className="text-2xl font-bold">{totalInvoices}</p></div>
+              <div><p className="text-sm text-muted-foreground">{t("jamiFakturalar")}</p><p className="text-2xl font-bold">{totalInvoices}</p></div>
             </div>
           </CardContent>
         </Card>
@@ -134,7 +136,7 @@ export default function InvoiceVerification() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-md bg-green-100 dark:bg-green-900"><CheckCircle className="w-5 h-5 text-[var(--ep-green)]" /></div>
-              <div><p className="text-sm text-muted-foreground">Mos kelgan</p><p className="text-2xl font-bold">{matchedCount}</p></div>
+              <div><p className="text-sm text-muted-foreground">{t("mosKelgan")}</p><p className="text-2xl font-bold">{matchedCount}</p></div>
             </div>
           </CardContent>
         </Card>
@@ -142,7 +144,7 @@ export default function InvoiceVerification() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-md bg-red-100 dark:bg-red-900"><XCircle className="w-5 h-5 text-[var(--ep-red)]" /></div>
-              <div><p className="text-sm text-muted-foreground">Mos kelmagan</p><p className="text-2xl font-bold">{mismatchCount}</p></div>
+              <div><p className="text-sm text-muted-foreground">{t("mosKelmagan")}</p><p className="text-2xl font-bold">{mismatchCount}</p></div>
             </div>
           </CardContent>
         </Card>
@@ -150,7 +152,7 @@ export default function InvoiceVerification() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900"><TrendingUp className="w-5 h-5 text-[var(--ep-purple)]" /></div>
-              <div><p className="text-sm text-muted-foreground">Match foizi</p><p className="text-2xl font-bold">{totalInvoices > 0 ? Math.round((matchedCount / totalInvoices) * 100) : 0}%</p></div>
+              <div><p className="text-sm text-muted-foreground">{t("matchFoizi")}</p><p className="text-2xl font-bold">{totalInvoices > 0 ? Math.round((matchedCount / totalInvoices) * 100) : 0}%</p></div>
             </div>
           </CardContent>
         </Card>
@@ -158,37 +160,37 @@ export default function InvoiceVerification() {
 
       <Card data-testid="card-invoices-table">
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-          <CardTitle className="text-[14px] font-semibold"><Scale className="w-4 h-4 inline mr-2" />Fakturalar ro'yxati</CardTitle>
+          <CardTitle className="text-[14px] font-semibold"><Scale className="w-4 h-4 inline mr-2" />{t("fakturalarRoyxati")}</CardTitle>
           <Select value={matchStatus} onValueChange={setMatchStatus}>
-            <SelectTrigger className="w-44 h-9" data-testid="select-match-filter"><SelectValue placeholder="Match holati" /></SelectTrigger>
+            <SelectTrigger className="w-44 h-9" data-testid="select-match-filter"><SelectValue placeholder={t("matchHolati")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              <SelectItem value="full_match">To'liq mos</SelectItem>
-              <SelectItem value="partial_match">Qisman mos</SelectItem>
-              <SelectItem value="mismatch">Mos emas</SelectItem>
-              <SelectItem value="pending">Tekshirilmagan</SelectItem>
+              <SelectItem value="all">{t("Barchasi")}</SelectItem>
+              <SelectItem value="full_match">{t("toliqMos")}</SelectItem>
+              <SelectItem value="partial_match">{t("qismanMos")}</SelectItem>
+              <SelectItem value="mismatch">{t("mosEmas")}</SelectItem>
+              <SelectItem value="pending">{t("tekshirilmagan")}</SelectItem>
             </SelectContent>
           </Select>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8 text-muted-foreground">Yuklanmoqda...</div>
+            <div className="flex items-center justify-center py-8 text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : invoices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Search className="w-12 h-12 mb-3 opacity-30" />
-              <p>Hali faktura mavjud emas</p>
-              <p className="text-sm">Taminotchi fakturalari qo'shilganda bu yerda ko'rinadi</p>
+              <p>{t("haliFakturaMavjudEmas")}</p>
+              <p className="text-sm">{t("taminotchiFakturalariQoshilgandaBuYerda")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Faktura raqami</TableHead>
-                  <TableHead>Taminotchi</TableHead>
-                  <TableHead>Summa</TableHead>
+                  <TableHead>{t("fakturaRaqami")}</TableHead>
+                  <TableHead>{t("taminotchi1")}</TableHead>
+                  <TableHead>{t("summa")}</TableHead>
                   <TableHead>PO farqi</TableHead>
-                  <TableHead>Match holati</TableHead>
-                  <TableHead>Amallar</TableHead>
+                  <TableHead>{t("matchHolati")}</TableHead>
+                  <TableHead>{t("Amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -201,7 +203,7 @@ export default function InvoiceVerification() {
                     <TableCell>{matchBadge(inv.matchStatus || "pending")}</TableCell>
                     <TableCell>
                       <Button size="sm" variant="outline" onClick={() => runMatchMutation.mutate(inv.id)} disabled={runMatchMutation.isPending} data-testid={`button-match-${inv.id}`}>
-                        <Scale className="w-3 h-3 mr-1" />Tekshirish
+                        <Scale className="w-3 h-3 mr-1" />{t("check")}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -214,17 +216,17 @@ export default function InvoiceVerification() {
 
       {results.length > 0 && (
         <Card data-testid="card-match-results">
-          <CardHeader><CardTitle className="text-[14px] font-semibold">So'nggi Match Natijalari</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-[14px] font-semibold">{t("songgiMatchNatijalari")}</CardTitle></CardHeader>
           <CardContent>
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Faktura</TableHead>
+                  <TableHead>{t("faktura")}</TableHead>
                   <TableHead>PO summa</TableHead>
                   <TableHead>GR summa</TableHead>
-                  <TableHead>Faktura summa</TableHead>
-                  <TableHead>Narx farqi</TableHead>
-                  <TableHead>Natija</TableHead>
+                  <TableHead>{t("fakturaSumma")}</TableHead>
+                  <TableHead>{t("narxFarqi")}</TableHead>
+                  <TableHead>{t("natija")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

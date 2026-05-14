@@ -12,6 +12,7 @@ import { CheckCircle, Clock, Plus, Target } from "lucide-react";
 import type { WeeklyPlan } from "./WeeklyPlanPageTypes";
 import { getWeekLabel } from "./WeeklyPlanPageTypes";
 import { statusBadge } from "./WeeklyPlanPageSections";
+import { useTranslation } from '@/lib/i18n';
 
 interface MyPlanViewProps {
   myPlan: WeeklyPlan | undefined;
@@ -40,20 +41,21 @@ export function MyPlanSection({
   onGsdTargetChange, onTaskChange, onSuccessFactorsChange, onResourcesNeededChange,
   onSubmit, onEdit, onCancelEdit, onStartCreate,
 }: MyPlanViewProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
-            Mening Rejam
+            {t("meningRejam")}
           </CardTitle>
           {myPlan && !editMode && (
             <div className="flex items-center gap-2">
               {statusBadge(myPlan.status)}
               {myPlan.status !== "approved" && (
                 <Button variant="outline" size="sm" onClick={() => onEdit(myPlan)}>
-                  Tahrirlash
+                  {t("edit")}
                 </Button>
               )}
             </div>
@@ -91,7 +93,7 @@ export function MyPlanSection({
               {getWeekLabel(week)} hafta uchun reja topshirilmagan
             </p>
             <Button onClick={onStartCreate}>
-              <Plus className="w-4 h-4 mr-1.5" /> Reja yaratish
+              <Plus className="w-4 h-4 mr-1.5" /> {t("rejaYaratish")}
             </Button>
           </div>
         )}
@@ -104,11 +106,11 @@ function MyPlanReadView({ plan }: { plan: WeeklyPlan }) {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">GSD Maqsad</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("gsdMaqsad")}</p>
         <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3">{plan.gsdTarget}</p>
       </div>
       <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Top-5 Vazifalar</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("top5Vazifalar")}</p>
         <ol className="space-y-1.5">
           {(Array.isArray(plan.top5Tasks) ? plan.top5Tasks as string[] : []).map((task, i) => (
             <li key={`k-${i}`} className="flex items-start gap-2 text-sm">
@@ -122,13 +124,13 @@ function MyPlanReadView({ plan }: { plan: WeeklyPlan }) {
       </div>
       {plan.successFactors && (
         <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Muvaffaqiyat Omillari</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("muvaffaqiyatOmillari")}</p>
           <p className="text-sm text-foreground">{plan.successFactors}</p>
         </div>
       )}
       {plan.resourcesNeeded && (
         <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Kerak Resurslar</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("kerakResurslar")}</p>
           <p className="text-sm text-foreground">{plan.resourcesNeeded}</p>
         </div>
       )}
@@ -167,13 +169,13 @@ function MyPlanEditForm({
     <div className="space-y-4">
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          GSD Maqsad <span className="text-destructive">*</span>
+          {t("gsdMaqsad")}<span className="text-destructive">*</span>
         </label>
-        <Textarea value={gsdTarget} onChange={(e) => onGsdTargetChange(e.target.value)} placeholder="Bu hafta erishmoqchi bo'lgan asosiy natija..." rows={3} />
+        <Textarea value={gsdTarget} onChange={(e) => onGsdTargetChange(e.target.value)} placeholder={t("buHaftaErishmoqchiBolganAsosiy")} rows={3} />
       </div>
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          Top-5 Vazifalar <span className="text-destructive">*</span>
+          {t("top5Vazifalar")}<span className="text-destructive">*</span>
         </label>
         <div className="space-y-2">
           {(Array.isArray(tasks) ? tasks : []).map((task, i) => (
@@ -187,18 +189,18 @@ function MyPlanEditForm({
         </div>
       </div>
       <div>
-        <label className="text-sm font-medium text-foreground mb-1.5 block">Muvaffaqiyat Omillari</label>
-        <Textarea value={successFactors} onChange={(e) => onSuccessFactorsChange(e.target.value)} placeholder="Nima bo'lsa muvaffaqiyatga erishiladi?" rows={2} />
+        <label className="text-sm font-medium text-foreground mb-1.5 block">{t("muvaffaqiyatOmillari")}</label>
+        <Textarea value={successFactors} onChange={(e) => onSuccessFactorsChange(e.target.value)} placeholder={t("nimaBolsaMuvaffaqiyatgaErishiladi")} rows={2} />
       </div>
       <div>
-        <label className="text-sm font-medium text-foreground mb-1.5 block">Kerak Resurslar</label>
-        <Textarea value={resourcesNeeded} onChange={(e) => onResourcesNeededChange(e.target.value)} placeholder="Maqsadga erishish uchun nima kerak?" rows={2} />
+        <label className="text-sm font-medium text-foreground mb-1.5 block">{t("kerakResurslar")}</label>
+        <Textarea value={resourcesNeeded} onChange={(e) => onResourcesNeededChange(e.target.value)} placeholder={t("maqsadgaErishishUchunNimaKerak")} rows={2} />
       </div>
       <div className="flex gap-2 pt-1">
         <Button onClick={onSubmit} disabled={isSubmitPending} className="flex-1">
           {isSubmitPending ? "Saqlanmoqda..." : editMode ? "Yangilash" : "Topshirish"}
         </Button>
-        {editMode && <Button variant="outline" onClick={onCancel}>Bekor</Button>}
+        {editMode && <Button variant="outline" onClick={onCancel}>{t("Bekor")}</Button>}
       </div>
     </div>
   );

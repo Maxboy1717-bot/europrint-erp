@@ -87,10 +87,10 @@ export default function QualityCertificatesPage() {
                       ) : null}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                      <span>Mahsulot: <strong>{c.productName}</strong></span>
-                      <span>Mijoz: <strong>{c.customerName ?? '—'}</strong></span>
-                      <span>Berildi: <strong>{c.issueDate}</strong></span>
-                      <span>Muddati: <strong>{c.expiryDate ?? '—'}</strong></span>
+                      <span>{t("mahsulot")}<strong>{c.productName}</strong></span>
+                      <span>{t("mijoz")}<strong>{c.customerName ?? '—'}</strong></span>
+                      <span>{t("berildi1")}<strong>{c.issueDate}</strong></span>
+                      <span>{t("muddati1")}<strong>{c.expiryDate ?? '—'}</strong></span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {t('certs.parameters', "Parametrlar")}: {c.testParametersCount} ta

@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { ledgerApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 interface InventoryItem {
   materialCardId: number;
@@ -109,7 +110,7 @@ function ReturnModal({ item, onClose, onDone, t }: ReturnModalProps) {
             <textarea
               className="pos-input"
               rows={3}
-              placeholder="Ixtiyoriy izoh..."
+              placeholder={t("ixtiyoriyIzoh")}
               value={reason}
               onChange={e => setReason(e.target.value)}
               style={{ resize: "vertical" }}
@@ -168,6 +169,7 @@ function KpiCard({ label, value, color }: { label: string; value: string | numbe
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function PosMyInventory() {
+  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const [items, setItems]               = useState<InventoryItem[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -252,7 +254,7 @@ export default function PosMyInventory() {
             window.open(url, "_blank");
           }}
         >
-          📄 Hisobot yuklab olish
+          {t("hisobotYuklabOlish1")}
         </button>
       </div>
 
@@ -265,16 +267,16 @@ export default function PosMyInventory() {
           marginBottom: 24,
         }}
       >
-        <KpiCard label="Berilgan materiallar soni" value={fmtNum(totalGiven)} color="var(--pos-accent)" />
-        <KpiCard label="Hozirgi balans" value={fmtNum(totalBalance)} color={totalBalance > 0 ? "var(--pos-warning)" : "var(--pos-success)"} />
-        <KpiCard label="Qaytarilgan materiallar" value={fmtNum(totalReturned)} color="var(--pos-success)" />
-        <KpiCard label="Umumiy qiymat" value={`${fmtCurrency(totalValue)} UZS`} />
+        <KpiCard label={t("berilganMateriallarSoni")} value={fmtNum(totalGiven)} color="var(--pos-accent)" />
+        <KpiCard label={t("hozirgiBalans")} value={fmtNum(totalBalance)} color={totalBalance > 0 ? "var(--pos-warning)" : "var(--pos-success)"} />
+        <KpiCard label={t("qaytarilganMateriallar")} value={fmtNum(totalReturned)} color="var(--pos-success)" />
+        <KpiCard label={t("umumiyQiymat")} value={`${fmtCurrency(totalValue)} UZS`} />
       </div>
 
       {/* ── Materials table ─────────────────────────────────────────────────── */}
       <div className="pos-card" style={{ marginBottom: 20, overflow: "hidden" }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>
-          📋 Materiallar ro'yxati
+          {t("materiallarRoyxati1")}
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="pos-table">

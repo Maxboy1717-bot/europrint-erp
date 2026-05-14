@@ -9,6 +9,7 @@ import { Factory } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionTitle, MachineCell } from "@/components/director/helpers";
 import type { ProductionData } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface ProductionStatusCardProps {
   prod: ProductionData | undefined;
@@ -18,10 +19,11 @@ interface ProductionStatusCardProps {
 }
 
 export function ProductionStatusCard({ prod, prodLoad, runningMachines, totalMachines }: ProductionStatusCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-production-status">
       <CardHeader className="pb-3">
-        <SectionTitle icon={Factory} title="Ishlab Chiqarish" sub="Bugungi seans holati" accent="text-[var(--ep-primary)]" />
+        <SectionTitle icon={Factory} title={t("ishlabChiqarish1")} sub="Bugungi seans holati" accent="text-[var(--ep-primary)]" />
       </CardHeader>
       <CardContent>
         {prodLoad ? <Skeleton className="h-40 rounded-lg" /> : (
@@ -39,7 +41,7 @@ export function ProductionStatusCard({ prod, prodLoad, runningMachines, totalMac
               ))}
             </div>
             <div className="rounded-lg bg-muted/30 p-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Buyurtma Holati</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">{t("buyurtmaHolati")}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5">
                 {Object.entries(prod?.orderBreakdown ?? {}).map(([status, cnt]) => (
                   <div key={status} className="flex items-center gap-2">

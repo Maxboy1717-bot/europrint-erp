@@ -23,10 +23,12 @@ import { KpiCards, OverdueAlert } from "./WarehouseRentalSections";
 import { RecordsTable } from "./WarehouseRentalTable";
 import { SettingsPanel } from "./WarehouseRentalSettings";
 import { AddRecordDialog } from "./WarehouseRentalDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function WarehouseRental() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -116,10 +118,10 @@ export default function WarehouseRental() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Warehouse className="h-6 w-6 text-primary" />
-            Ombor Ichki Ijara
+            {t("omborIchkiIjara")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tayyor mahsulot omborda saqlash: 8 kun bepul, keyin m² × kun × tarif
+            {t("tayyorMahsulotOmbordaSaqlash8")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -131,10 +133,10 @@ export default function WarehouseRental() {
             data-testid="button-recalculate"
           >
             <RefreshCw className="h-4 w-4 mr-1" />
-            Qayta hisoblash
+            {t("qaytaHisoblash")}
           </Button>
           <Button onClick={() => setAddOpen(true)} data-testid="button-add-rental">
-            <Plus className="h-4 w-4 mr-1" /> Yangi yozuv
+            <Plus className="h-4 w-4 mr-1" /> {t("yangiYozuv1")}
           </Button>
         </div>
       </div>
@@ -149,10 +151,10 @@ export default function WarehouseRental() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="records" data-testid="tab-records">
-            <SquareStack className="h-4 w-4 mr-1" /> Yozuvlar
+            <SquareStack className="h-4 w-4 mr-1" /> {t("yozuvlar")}
           </TabsTrigger>
           <TabsTrigger value="settings" data-testid="tab-settings">
-            <Settings className="h-4 w-4 mr-1" /> Sozlamalar
+            <Settings className="h-4 w-4 mr-1" /> {t("settings")}
           </TabsTrigger>
         </TabsList>
 

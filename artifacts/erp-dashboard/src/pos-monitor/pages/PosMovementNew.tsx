@@ -10,6 +10,7 @@
 
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
+import { useTranslation } from '@/lib/i18n';
 
 interface MovementTypeConfig {
   value: string;
@@ -96,6 +97,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
 ];
 
 export default function PosMovementNew() {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
 
@@ -121,7 +123,7 @@ export default function PosMovementNew() {
         <div>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("movements.newMovement")}</h2>
           <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>
-            Harakat turini tanlang
+            {t("harakatTuriniTanlang")}
           </div>
         </div>
       </div>
@@ -136,9 +138,9 @@ export default function PosMovementNew() {
         }}>
           <span style={{ fontSize: 20 }}>📥</span>
           <div>
-            <div style={{ fontWeight: 700, color: "#065F46", marginBottom: 2 }}>Tashqi Kirim — QO'LDA</div>
+            <div style={{ fontWeight: 700, color: "#065F46", marginBottom: 2 }}>{t("tashqiKirimQolda")}</div>
             <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
-              Operator barcha maydonlarni qo'lda to'ldiradi. Barcode skaneri ishlatilmaydi.
+              {t("operatorBarchaMaydonlarniQoldaToldiradi")}
             </div>
           </div>
         </div>
@@ -148,9 +150,9 @@ export default function PosMovementNew() {
         }}>
           <span style={{ fontSize: 20 }}>📤</span>
           <div>
-            <div style={{ fontWeight: 700, color: "#1E40AF", marginBottom: 2 }}>Chiqim turlar — BARCODE</div>
+            <div style={{ fontWeight: 700, color: "#1E40AF", marginBottom: 2 }}>{t("chiqimTurlarBarcode")}</div>
             <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
-              Barcode skaner orqali amalga oshiriladi. Alohida forma ochiladi.
+              {t("barcodeSkanerOrqaliAmalgaOshiriladi")}
             </div>
           </div>
         </div>

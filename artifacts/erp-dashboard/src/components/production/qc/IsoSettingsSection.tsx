@@ -6,8 +6,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Settings as SettingsIcon } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export function IsoSettingsSection({ type }: { type: "iso" | "settings" }) {
+  const { t } = useTranslation("common");
   if (type === "iso") {
     return (
       <div className="space-y-6">
@@ -16,14 +18,14 @@ export function IsoSettingsSection({ type }: { type: "iso" | "settings" }) {
             <Shield className="h-6 w-6 text-[var(--ep-blue)]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">ISO Standartlari va Audit</h2>
+            <h2 className="text-xl font-bold">{t("isoStandartlariVaAudit")}</h2>
             <p className="text-sm text-muted-foreground">Sifatni boshqarish tizimi hujjatlari (ISO 9001:2015)</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader><CardTitle className="text-sm">Joriy Standartlar</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm">{t("joriyStandartlar")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               {([
                 { name: "ISO 9001:2015", desc: "Sifat menejmenti tizimi", status: "Faol" },
@@ -70,21 +72,21 @@ export function IsoSettingsSection({ type }: { type: "iso" | "settings" }) {
           <SettingsIcon className="h-6 w-6 text-slate-600" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">Sifat Normalari Sozlamalari</h2>
-          <p className="text-sm text-muted-foreground">Materiallar va mahsulotlar uchun ruxsat etilgan og'ishlar</p>
+          <h2 className="text-xl font-bold">{t("sifatNormalariSozlamalari")}</h2>
+          <p className="text-sm text-muted-foreground">{t("materiallarVaMahsulotlarUchunRuxsat")}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Avtomatik Bildirishnomalar</CardTitle>
-          <CardDescription>Sifat ko'rsatkichlari normadan chetganda kimga xabar yuborish</CardDescription>
+          <CardTitle className="text-sm">{t("avtomatikBildirishnomalar")}</CardTitle>
+          <CardDescription>{t("sifatKorsatkichlariNormadanChetgandaKimga")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {(["Sifat menejeri", "Ishlab chiqarish boshlig'i", "Laboratoriya mudiri"]).map((s, i) => (
             <div key={`k-${i}`} className="flex items-center justify-between py-2 border-b last:border-0">
               <span className="text-sm">{s}</span>
-              <Badge variant="default" className="cursor-pointer">Yoqiq</Badge>
+              <Badge variant="default" className="cursor-pointer">{t("yoqiq")}</Badge>
             </div>
           ))}
         </CardContent>

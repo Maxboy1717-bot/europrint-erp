@@ -5,13 +5,13 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 import { CreateMroItemDto, CreateMroRequestDto } from './dto/mro.dto';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

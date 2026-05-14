@@ -6,8 +6,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fmtQty, fmtNum, fmtDate, type InventoryInfo, type BasicInfo } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function InventoryTab({ inventory, basic }: { inventory: InventoryInfo; basic: BasicInfo }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -22,7 +24,7 @@ export function InventoryTab({ inventory, basic }: { inventory: InventoryInfo; b
       </div>
       {(inventory.history || []).length > 0 ? (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Inventarizatsiya tarixi</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("inventarizatsiyaTarixi")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50">
@@ -48,7 +50,7 @@ export function InventoryTab({ inventory, basic }: { inventory: InventoryInfo; b
           </CardContent>
         </Card>
       ) : (
-        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Inventarizatsiya tarixi topilmadi</CardContent></Card>
+        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">{t("inventarizatsiyaTarixiTopilmadi")}</CardContent></Card>
       )}
     </div>
   );

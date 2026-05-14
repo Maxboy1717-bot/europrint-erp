@@ -50,7 +50,7 @@ export class KanbanBoardsController {
     if (!result.ok) return unwrapOrThrow(result);
     if (!departmentId) return result.data;
     // departmentId filtrini qo'llash — null departmentId ham qabul qilinadi
-    return (result.data as Record<string, unknown>[]).filter(
+    return (result.data as unknown as Record<string, unknown>[]).filter(
       (b: Record<string, unknown>) => b.department_id === departmentId || b.departmentId === departmentId,
     );
   }

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { DesignTool, DesignTemplate, CostRow } from "./DesignExtendedTypes";
 import { toolStatusMap } from "./DesignExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Templates Tab ────────────────────────────────────────────────────────────
 
@@ -17,20 +18,21 @@ interface TemplatesTabProps {
 }
 
 export function TemplatesTab({ templates }: TemplatesTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Tayyor qoliplar</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("tayyorQoliplar")}</CardTitle></CardHeader>
       <CardContent>
         {templates.length === 0 ? (
-          <div className="text-center py-12 text-[13px] text-muted-foreground">Shablonlar mavjud emas</div>
+          <div className="text-center py-12 text-[13px] text-muted-foreground">{t("shablonlarMavjudEmas")}</div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Shablon raqami</TableHead>
-              <TableHead>Nomi</TableHead>
-              <TableHead>Toifa</TableHead>
-              <TableHead>Brend</TableHead>
-              <TableHead className="text-right">Ishlatilgan</TableHead>
+              <TableHead>{t("shablonRaqami")}</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("toifa")}</TableHead>
+              <TableHead>{t("brend")}</TableHead>
+              <TableHead className="text-right">{t("Ishlatilgan")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {(Array.isArray(templates) ? templates : []).map((t) => (
@@ -59,18 +61,18 @@ interface ToolsTabProps {
 export function ToolsTab({ tools }: ToolsTabProps) {
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Bosma asboblar inventari</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("bosmaAsboblarInventari")}</CardTitle></CardHeader>
       <CardContent>
         {tools.length === 0 ? (
-          <div className="text-center py-12 text-[13px] text-muted-foreground">Uskunalar ro'yxati bo'sh</div>
+          <div className="text-center py-12 text-[13px] text-muted-foreground">{t("uskunalarRoyxatiBosh")}</div>
         ) : (
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Asbob nomi</TableHead>
-              <TableHead>Tur</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>So'nggi TO</TableHead>
-              <TableHead>Keyingi TO</TableHead>
+              <TableHead>{t("asbobNomi")}</TableHead>
+              <TableHead>{t("tur")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("songgiTo")}</TableHead>
+              <TableHead>{t("keyingiTo")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {(Array.isArray(tools) ? tools : []).map((t) => {
@@ -110,13 +112,13 @@ interface CostingTabProps {
 export function CostingTab({ costData, totalCost }: CostingTabProps) {
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Dizayn xarajat kalkulyatori</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("dizaynXarajatKalkulyatori")}</CardTitle></CardHeader>
       <CardContent>
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
-            <TableHead>Komponent</TableHead>
-            <TableHead className="text-right">Birlik narxi</TableHead>
-            <TableHead className="text-right">Jami</TableHead>
+            <TableHead>{t("komponent")}</TableHead>
+            <TableHead className="text-right">{t("birlikNarxi")}</TableHead>
+            <TableHead className="text-right">{t("total")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {(Array.isArray(costData) ? costData : []).map((c, i) => (
@@ -127,13 +129,13 @@ export function CostingTab({ costData, totalCost }: CostingTabProps) {
               </TableRow>
             ))}
             <TableRow className="border-t-2 hover:bg-muted/40 transition-colors">
-              <TableCell colSpan={2} className="font-bold">Jami dizayn tannarxi</TableCell>
+              <TableCell colSpan={2} className="font-bold">{t("jamiDizaynTannarxi")}</TableCell>
               <TableCell className="text-right font-bold text-primary">{totalCost.toLocaleString()} so'm</TableCell>
             </TableRow>
           </TableBody>
         </Table></div>
         <p className="text-xs text-muted-foreground mt-3">
-          * Narxlar taxminiy. Haqiqiy narx buyurtma xususiyatlariga qarab farq qiladi.
+          {t("narxlarTaxminiyHaqiqiyNarxBuyurtma")}
         </p>
       </CardContent>
     </Card>
@@ -143,17 +145,18 @@ export function CostingTab({ costData, totalCost }: CostingTabProps) {
 // ─── Library Tab ──────────────────────────────────────────────────────────────
 
 export function LibraryTab() {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <CardTitle className="text-base">Dizayn asset kutubxonasi</CardTitle>
-          <Button size="sm" variant="outline">Yangi asset qo'shish</Button>
+          <CardTitle className="text-base">{t("dizaynAssetKutubxonasi")}</CardTitle>
+          <Button size="sm" variant="outline">{t("yangiAssetQoshish")}</Button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="text-center py-12 text-[13px] text-muted-foreground">
-          Brend kutubxonasi fayllari mavjud emas. Administrator tomonidan qo'shilishi kerak.
+          {t("brendKutubxonasiFayllariMavjudEmas")}
         </div>
       </CardContent>
     </Card>

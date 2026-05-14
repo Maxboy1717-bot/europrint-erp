@@ -111,7 +111,7 @@ export default function PricingTiers() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('pricingTiers')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('pricingTiers')}</b></>}
         title={t('pricingTiers')}
         subtitle={t('pricingSubtitle')}
       />
@@ -177,7 +177,7 @@ export default function PricingTiers() {
               <div>
                 <Label>{t('productNameLabel')}</Label>
                 <Input
-                  placeholder="Offset A4"
+                  placeholder={t("offsetA4")}
                   value={calcForm.productName}
                   onChange={e => setCalcForm(f => ({ ...f, productName: e.target.value }))}
                 />
@@ -244,11 +244,11 @@ export default function PricingTiers() {
             <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
               <div>
                 <Label>{t('productNameLabel')} *</Label>
-                <Input value={tierForm.productName} onChange={e => setTierForm(f => ({ ...f, productName: e.target.value }))} placeholder="Offset A4" />
+                <Input value={tierForm.productName} onChange={e => setTierForm(f => ({ ...f, productName: e.target.value }))} placeholder={t("offsetA4")} />
               </div>
               <div>
                 <Label>{t('tierNameLabel')} *</Label>
-                <Input value={tierForm.tierName} onChange={e => setTierForm(f => ({ ...f, tierName: e.target.value }))} placeholder="Ulgurji" />
+                <Input value={tierForm.tierName} onChange={e => setTierForm(f => ({ ...f, tierName: e.target.value }))} placeholder={t("ulgurji")} />
               </div>
               <div>
                 <Label>{t('priceUzsLabel')} *</Label>

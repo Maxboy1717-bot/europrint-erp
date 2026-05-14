@@ -68,15 +68,15 @@ export function LabSection({activeTab }: LabSectionProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Laboratoriya Testlari</h2>
-          <p className="text-sm text-muted-foreground">Qog'oz va gofrokarton parametrlari o'lchovi</p>
+          <h2 className="text-lg font-semibold">{t("laboratoriyaTestlari")}</h2>
+          <p className="text-sm text-muted-foreground">{t("qogozVaGofrokartonParametrlariOlchovi")}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetchLab()} data-testid="button-refresh-lab">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button onClick={() => setShowLabDialog(true)} data-testid="button-add-lab-test">
-            <Plus className="h-4 w-4 mr-2" />Test Qo'shish
+            <Plus className="h-4 w-4 mr-2" />{t("testQoshish")}
           </Button>
         </div>
       </div>
@@ -96,15 +96,15 @@ export function LabSection({activeTab }: LabSectionProps) {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-sm font-semibold">Qog'oz Sifat Parametrlari Normalari</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-sm font-semibold">{t("qogozSifatParametrlariNormalari")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Parametr</TableHead>
-              <TableHead>Birlik</TableHead>
-              <TableHead>Min norma</TableHead>
-              <TableHead>Max norma</TableHead>
-              <TableHead>Standart</TableHead>
+              <TableHead>{t("parametr")}</TableHead>
+              <TableHead>{t("unit")}</TableHead>
+              <TableHead>{t("minNorma")}</TableHead>
+              <TableHead>{t("maxNorma")}</TableHead>
+              <TableHead>{t("standart")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {([
@@ -128,25 +128,25 @@ export function LabSection({activeTab }: LabSectionProps) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-sm font-semibold">Test Jurnali</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-sm font-semibold">{t("testJurnali")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Sana</TableHead>
+              <TableHead>{t("date")}</TableHead>
               <TableHead>{t('Material')}</TableHead>
-              <TableHead>Lot</TableHead>
-              <TableHead>Grammatura</TableHead>
-              <TableHead>Qalinlik</TableHead>
-              <TableHead>Bosim</TableHead>
-              <TableHead>Namlik</TableHead>
-              <TableHead>Natija</TableHead>
+              <TableHead>{t("lot")}</TableHead>
+              <TableHead>{t("grammatura")}</TableHead>
+              <TableHead>{t("qalinlik")}</TableHead>
+              <TableHead>{t("bosim")}</TableHead>
+              <TableHead>{t("namlik")}</TableHead>
+              <TableHead>{t("natija")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {labLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : labTests.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <FileCheck className="h-8 w-8 mx-auto mb-2 opacity-30" />Laboratoriya testlari yo'q
+                  <FileCheck className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("laboratoriyaTestlariYoq")}
                 </TableCell></TableRow>
               ) : labTests.slice(0, 20).map((t: QCLabTest) => (
                 <TableRow key={t.id} data-testid={`row-lab-${t.id}`} className="hover:bg-muted/40 transition-colors">
@@ -173,16 +173,16 @@ export function LabSection({activeTab }: LabSectionProps) {
 
       <Dialog open={showLabDialog} onOpenChange={setShowLabDialog}>
         <DialogContent className="max-w-lg p-6">
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Lab Testi</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiLabTesti")}</DialogTitle></DialogHeader>
           <form onSubmit={labForm.handleSubmit((d) => createLabTest.mutate(d))} className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Material nomi</Label>
-                <Input {...labForm.register("materialName")} placeholder="Kraft qog'oz..." data-testid="input-lab-material" />
+                <Label>{t("materialNomi")}</Label>
+                <Input {...labForm.register("materialName")} placeholder={t("kraftQogoz")} data-testid="input-lab-material" />
                 {labForm.formState.errors.materialName && <p className="text-xs text-destructive">{labForm.formState.errors.materialName.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Lot raqami</Label>
+                <Label>{t("lotRaqami")}</Label>
                 <Input {...labForm.register("lotNumber")} placeholder="LOT-2024-001" data-testid="input-lab-lot" />
               </div>
             </div>
@@ -208,26 +208,26 @@ export function LabSection({activeTab }: LabSectionProps) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Operator</Label>
+                <Label>{t("Operator")}</Label>
                 <Input {...labForm.register("operatorName")} placeholder="F.I.O" data-testid="input-lab-operator" />
                 {labForm.formState.errors.operatorName && <p className="text-xs text-destructive">{labForm.formState.errors.operatorName.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Natija</Label>
+                <Label>{t("natija")}</Label>
                 <Select onValueChange={(v) => labForm.setValue("result", v)} defaultValue="pass">
                   <SelectTrigger data-testid="select-lab-result" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pass">O'tdi</SelectItem>
-                    <SelectItem value="fail">Rad etildi</SelectItem>
-                    <SelectItem value="conditional">Shartli qabul</SelectItem>
+                    <SelectItem value="pass">{t("otdi")}</SelectItem>
+                    <SelectItem value="fail">{t("radEtildi")}</SelectItem>
+                    <SelectItem value="conditional">{t("shartliQabul")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowLabDialog(false)}>Bekor</Button>
+              <Button type="button" variant="outline" onClick={() => setShowLabDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createLabTest.isPending} data-testid="button-save-lab-test">
                 {createLabTest.isPending ? "Saqlanmoqda..." : "Saqlash"}
               </Button>

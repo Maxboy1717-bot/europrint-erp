@@ -65,12 +65,12 @@ export default function CameraAIAnalytics() {
           <p className="text-sm text-muted-foreground" data-testid="text-page-subtitle">{l.subtitle}</p>
           <Button variant="ghost" size="sm" onClick={() => refetch()} className="mt-1 px-0 text-muted-foreground">
             <RefreshCw className="h-3 w-3 mr-1" />
-            <span className="text-xs">Yangilash</span>
+            <span className="text-xs">{t("refresh")}</span>
           </Button>
         </div>
         <Badge variant="outline" className="gap-1" data-testid="badge-ai-status">
           <Sparkles className="w-3 h-3" />
-          AI Analytics
+          {t("aiAnalytics")}
         </Badge>
       </div>
 

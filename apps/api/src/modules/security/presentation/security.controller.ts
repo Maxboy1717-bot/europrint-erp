@@ -1,25 +1,13 @@
 /**
  * @module security.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
- */
+ */import { BadRequestException, Controller, Get, HttpCode, HttpException, HttpStatus, Inject, InternalServerErrorException, Logger, NotFoundException, Param, Patch, Post, Query } from '@nestjs/common';
+
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Inject,
-  Logger,
-  NotFoundException,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-  UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+  Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, assertOk, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { Throttle } from '@nestjs/throttler';
@@ -168,7 +156,7 @@ export class SecurityController {
 
  @Get('fire-sensors')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getFireSensors() { throw new ('Yong\'in sensorlari tez orada'); }
+ getFireSensors() { throw new HttpException('Yong\'in sensorlari tez orada', HttpStatus.NOT_IMPLEMENTED); }
 
  @Get('ppe-checks')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)

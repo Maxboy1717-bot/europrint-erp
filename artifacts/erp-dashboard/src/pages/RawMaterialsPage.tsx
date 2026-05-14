@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Layers, Search } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface RawMaterial {
   id: string | number;
   name?: string;
@@ -33,6 +34,7 @@ const fmtMoney = (v?: number) =>
   v !== undefined ? `${Number(v).toLocaleString("uz-UZ")} so'm` : "—";
 
 export default function RawMaterialsPage() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
@@ -59,14 +61,14 @@ export default function RawMaterialsPage() {
   return (
     <ModulePage
       module="mm"
-      title="Xom Ashyolar"
+      title={t("xomAshyolar")}
       icon={<Layers className="h-5 w-5" />}
     >
       <div className="space-y-4">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Xom ashyo qidirish..."
+            placeholder={t("xomAshyoQidirish")}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             className="pl-9"
@@ -114,7 +116,7 @@ export default function RawMaterialsPage() {
                         )}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5 text-xs text-muted-foreground">
-                        <span>Qoldiq: <span className={isLow ? "text-destructive font-medium" : ""}>{stock} {m.unit ?? ""}</span></span>
+                        <span>{t("qoldiq1")}<span className={isLow ? "text-destructive font-medium" : ""}>{stock} {m.unit ?? ""}</span></span>
                         {minStock !== undefined && (
                           <span>Min: {minStock} {m.unit ?? ""}</span>
                         )}
@@ -129,7 +131,7 @@ export default function RawMaterialsPage() {
                         <Badge variant="outline" className="text-xs">{m.category}</Badge>
                       )}
                       {isLow && (
-                        <EPStatusPill tone="danger" className="text-xs">Kam qoldiq</EPStatusPill>
+                        <EPStatusPill tone="danger" className="text-xs">{t("kamQoldiq")}</EPStatusPill>
                       )}
                     </div>
                   </CardContent>

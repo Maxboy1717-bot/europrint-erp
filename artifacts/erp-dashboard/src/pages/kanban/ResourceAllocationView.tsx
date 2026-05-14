@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { RefreshCw } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz; boardId: string | null }) {
+  const { t } = useTranslation("common");
   const { data: allocation = [], isLoading } = useQuery<AllocationData[]>({
     queryKey: ['/api/kanban/resource-allocation', boardId],
     enabled: true,
@@ -29,7 +31,7 @@ export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz; boardId
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="p-4" data-testid="allocation-view">
       <h2 className="text-lg font-semibold mb-4">{t.allocation.title}</h2>
       {allocation.length === 0 ? (

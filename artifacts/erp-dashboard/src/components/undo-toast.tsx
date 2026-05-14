@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Undo2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { logClientError } from "@/lib/errorLogger";
+import { useTranslation } from '@/lib/i18n';
 
 export function useUndoDelete() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const showUndoToast = (
@@ -38,7 +40,7 @@ export function useUndoDelete() {
           data-testid="button-undo-delete"
         >
           <Undo2 className="h-4 w-4 mr-1" />
-          Qaytarish
+          {t("reset")}
         </Button>
       ),
     });

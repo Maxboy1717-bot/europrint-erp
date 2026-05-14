@@ -65,14 +65,14 @@ export function WarehouseEmployeesTab({ warehouseId, warehouseName, }: {
         </p>
       </CardHeader>
       <CardContent className="p-0">
-        {loading && <div className="p-6 text-center text-sm text-muted-foreground">⏳ Yuklanmoqda...</div>}
+        {loading && <div className="p-6 text-center text-sm text-muted-foreground">{t("yuklanmoqda")}</div>}
 
         {!loading && employees.length === 0 && (
           <div className="p-10 text-center">
             <div className="text-5xl">👥</div>
-            <div className="mt-2 font-semibold">Xodimlar biriktirilmagan</div>
+            <div className="mt-2 font-semibold">{t("xodimlarBiriktirilmagan")}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              Bu omborga hech qanday xodim biriktirilmagan
+              {t("buOmborgaHechQandayXodim")}
             </div>
           </div>
         )}
@@ -81,11 +81,11 @@ export function WarehouseEmployeesTab({ warehouseId, warehouseName, }: {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Foydalanuvchi</TableHead>
+                <TableHead>{t("foydalanuvchi")}</TableHead>
                 <TableHead>{t('login1')}</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Asosiy</TableHead>
-                <TableHead className="text-right">Biriktirilgan</TableHead>
+                <TableHead>{t("role")}</TableHead>
+                <TableHead>{t("primary")}</TableHead>
+                <TableHead className="text-right">{t("biriktirilgan")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -102,7 +102,7 @@ export function WarehouseEmployeesTab({ warehouseId, warehouseName, }: {
                         {role.emoji} {role.label}
                       </span>
                     </TableCell>
-                    <TableCell>{e.isPrimary ? <Badge className="bg-amber-500">⭐ Asosiy</Badge> : "—"}</TableCell>
+                    <TableCell>{e.isPrimary ? <Badge className="bg-amber-500">{t("asosiy")}</Badge> : "—"}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
                       {e.assignedAt ? new Date(e.assignedAt).toLocaleDateString("uz-UZ") : "—"}
                     </TableCell>

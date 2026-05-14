@@ -159,8 +159,8 @@ export default function Courses() {
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Kurslar Katalogi</b></>}
-        title="Kurslar Katalogi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("kurslarKatalogi")}</b></>}
+        title={t("kurslarKatalogi")}
         subtitle={t('courseContent')}
       />
         </div>
@@ -308,8 +308,8 @@ export default function Courses() {
       <ConfirmDialog
         open={!!deleteCourseId}
         onOpenChange={(v) => { if (!v) setDeleteCourseId(null); }}
-        title="Kursni o'chirish"
-        description="Ushbu kursni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("kursniOchirish")}
+        description={t("ushbuKursniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteCourseId) { deleteMutation.mutate(deleteCourseId); setDeleteCourseId(null); } }}

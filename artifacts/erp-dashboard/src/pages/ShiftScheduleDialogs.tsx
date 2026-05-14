@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Employee, ShiftType } from "./ShiftScheduleTypes";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Assign Shift Dialog ─────────────────────────────────────────────────────
 
 interface AssignDialogProps {
@@ -35,26 +36,27 @@ export function AssignShiftDialog({
   onSave,
   isPending,
 }: AssignDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={!!assignDialog?.open} onOpenChange={open => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Smena Tayinlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("smenaTayinlash")}</DialogTitle>
         </DialogHeader>
         {assignDialog && (
           <div className="space-y-4">
             <div>
-              <Label>Xodim</Label>
+              <Label>{t("xodim1")}</Label>
               <p className="font-medium">
                 {(Array.isArray(employees) ? employees : []).find(e => e.id === assignDialog.userId)?.fullName ?? assignDialog.userId}
               </p>
             </div>
             <div>
-              <Label>Sana</Label>
+              <Label>{t("date")}</Label>
               <p className="font-medium">{assignDialog.date}</p>
             </div>
             <div>
-              <Label>Smena turi</Label>
+              <Label>{t("smenaTuri")}</Label>
               <Select value={selectedShift} onValueChange={v => onShiftChange(v as ShiftType)}>
                 <SelectTrigger data-testid="select-shift-type" className="h-9">
                   <SelectValue />
@@ -83,7 +85,7 @@ export function AssignShiftDialog({
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={onClose} data-testid="btn-assign-cancel">
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button onClick={onSave} disabled={isPending} data-testid="btn-assign-save">
                 {isPending && <EPLoader className="mr-2" />}
@@ -126,18 +128,18 @@ export function SwapRequestDialog({
     <Dialog open={!!swapDialog?.open} onOpenChange={open => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Smena Almashish So'rovi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("smenaAlmashishSorovi")}</DialogTitle>
         </DialogHeader>
         {swapDialog && (
           <div className="space-y-4">
             <div>
-              <Label>Xodim</Label>
+              <Label>{t("xodim1")}</Label>
               <p className="font-medium">
                 {(Array.isArray(employees) ? employees : []).find(e => e.id === swapDialog.userId)?.fullName ?? swapDialog.userId}
               </p>
             </div>
             <div>
-              <Label>Sana</Label>
+              <Label>{t("date")}</Label>
               <p className="font-medium">{swapDialog.date}</p>
             </div>
             <div>
@@ -156,18 +158,18 @@ export function SwapRequestDialog({
               </Select>
             </div>
             <div>
-              <Label>Sabab</Label>
+              <Label>{t("sabab")}</Label>
               <Textarea
                 value={swapReason}
                 onChange={e => onSwapReasonChange(e.target.value)}
-                placeholder="Almashish sababi..."
+                placeholder={t("almashishSababi")}
                 rows={3}
                 data-testid="textarea-swap-reason"
               />
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={onClose} data-testid="btn-swap-cancel">
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button onClick={onSend} disabled={isPending} data-testid="btn-swap-send">
                 {isPending && <EPLoader className="mr-2" />}
@@ -194,8 +196,8 @@ export function DeleteEntryConfirm({ deleteEntryId, onOpenChange, onConfirm }: D
     <ConfirmDialog
       open={deleteEntryId !== null}
       onOpenChange={onOpenChange}
-      title="Smena yozuvini o'chirish"
-      description="Ushbu smena yozuvini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("smenaYozuviniOchirish")}
+      description={t("ushbuSmenaYozuviniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       variant="destructive"
       onConfirm={onConfirm}

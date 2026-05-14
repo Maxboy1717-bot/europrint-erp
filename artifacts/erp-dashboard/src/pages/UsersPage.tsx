@@ -15,8 +15,10 @@ import { EMPTY_FORM } from "./UsersPageTypes";
 import { UsersToolbar, UserList, UsersPagination } from "./UsersPageSections";
 import { RoleChangeDialog, DeactivateAlert, CreateUserDialog } from "./UsersPageDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function UsersPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { isAdmin, hasPermission } = usePermissions();
   const canManage = isAdmin || hasPermission("USERS", "WRITE");
@@ -90,7 +92,7 @@ export default function UsersPage() {
   if (isError) return <EPErrorState onRetry={refetch} />;
 
   return (
-    <ModulePage module="hr" title="Foydalanuvchilar" icon={<UsersIcon className="h-5 w-5" />}>
+    <ModulePage module="hr" title={t("foydalanuvchilar")} icon={<UsersIcon className="h-5 w-5" />}>
       <div className="space-y-4">
         <UsersToolbar
           search={search}

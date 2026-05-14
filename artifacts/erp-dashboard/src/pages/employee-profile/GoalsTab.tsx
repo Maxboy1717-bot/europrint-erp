@@ -24,6 +24,7 @@ import { Target, CheckCircle2, TrendingUp, Calendar } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { TranslationFn } from "./profile-types";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Goal {
   id: number;
@@ -57,6 +58,7 @@ const EMPTY_FORM = {
 };
 
 export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
+  const { t } = useTranslation("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -117,7 +119,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Jami maqsadlar</p>
+                <p className="text-sm text-muted-foreground">{t("jamiMaqsadlar")}</p>
                 <p className="text-3xl font-bold text-[var(--ep-blue)]">{totalGoals}</p>
               </div>
               <Target className="h-8 w-8 text-[var(--ep-blue)]" />
@@ -129,7 +131,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Bajarilgan</p>
+                <p className="text-sm text-muted-foreground">{t("bajarilgan")}</p>
                 <p className="text-3xl font-bold text-[var(--ep-green)]">{completedGoals}</p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-[var(--ep-green)]" />
@@ -141,7 +143,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Jarayonda</p>
+                <p className="text-sm text-muted-foreground">{t("inProgress")}</p>
                 <p className="text-3xl font-bold text-[var(--ep-yellow)]">{inProgressGoals}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-[var(--ep-yellow)]" />
@@ -153,7 +155,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Muddati o'tgan</p>
+                <p className="text-sm text-muted-foreground">{t("muddatiOtgan")}</p>
                 <p className="text-3xl font-bold text-[var(--ep-red)]">{overdueGoals}</p>
               </div>
               <Calendar className="h-8 w-8 text-[var(--ep-red)]" />
@@ -169,12 +171,12 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
-                Maqsadlar va OKR
+                {t("maqsadlarVaOkr")}
               </CardTitle>
-              <CardDescription>Xodimning shaxsiy va professional maqsadlari</CardDescription>
+              <CardDescription>{t("xodimningShaxsiyVaProfessionalMaqsadlari")}</CardDescription>
             </div>
             <Button onClick={() => setDialogOpen(true)} size="sm">
-              Maqsad qo'shish
+              {t("maqsadQoshish")}
             </Button>
           </div>
         </CardHeader>
@@ -182,12 +184,12 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
           {list.length === 0 ? (
             <div className="flex flex-col items-center py-12 text-muted-foreground">
               <Target className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-lg font-medium">Maqsadlar belgilanmagan</p>
+              <p className="text-lg font-medium">{t("maqsadlarBelgilanmagan")}</p>
               <p className="text-sm opacity-60 mt-1 mb-4">
-                Xodim uchun birinchi maqsadni qo'shing
+                {t("xodimUchunBirinchiMaqsadniQoshing")}
               </p>
               <Button onClick={() => setDialogOpen(true)} variant="outline">
-                Maqsad qo'shish
+                {t("maqsadQoshish")}
               </Button>
             </div>
           ) : (
@@ -218,7 +220,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
                       <div className="flex items-center gap-2 shrink-0">
                         {isOverdue && (
                           <EPStatusPill tone="danger" className="text-xs">
-                            Muddati o'tgan
+                            {t("muddatiOtgan")}
                           </EPStatusPill>
                         )}
                         <Badge variant={statusCfg.variant} className="text-xs">
@@ -229,7 +231,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
 
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Taraqqiyot</span>
+                        <span>{t("taraqqiyot")}</span>
                         <span className="font-medium">{progressValue}%</span>
                       </div>
                       <Progress value={progressValue} className="h-2" />
@@ -257,24 +259,24 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Target className="h-4 w-4" />
-              Yangi maqsad qo'shish
+              {t("yangiMaqsadQoshish")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="goal-title">Maqsad nomi *</Label>
+              <Label htmlFor="goal-title">{t("maqsadNomi")}</Label>
               <Input
                 id="goal-title"
-                placeholder="Masalan: Mahsuldorlikni 20% oshirish"
+                placeholder={t("masalanMahsuldorlikni20Oshirish")}
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="goal-description">Tavsif</Label>
+              <Label htmlFor="goal-description">{t("progress.description")}</Label>
               <Textarea
                 id="goal-description"
-                placeholder="Maqsad haqida qo'shimcha ma'lumot..."
+                placeholder={t("maqsadHaqidaQoshimchaMalumot")}
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
@@ -282,7 +284,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="goal-target-date">Maqsad sana</Label>
+                <Label htmlFor="goal-target-date">{t("maqsadSana")}</Label>
                 <Input
                   id="goal-target-date"
                   type="date"
@@ -291,11 +293,11 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="goal-target-value">Maqsad qiymati</Label>
+                <Label htmlFor="goal-target-value">{t("maqsadQiymati")}</Label>
                 <Input
                   id="goal-target-value"
                   type="number"
-                  placeholder="Masalan: 100"
+                  placeholder={t("masalan100")}
                   value={form.target_value}
                   onChange={(e) => setForm({ ...form, target_value: e.target.value })}
                 />
@@ -310,7 +312,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
                 setForm(EMPTY_FORM);
               }}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={() => createGoalMutation.mutate(form)}

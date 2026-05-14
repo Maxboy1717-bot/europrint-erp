@@ -53,8 +53,8 @@ export function CartPanel({
         {cart.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
             <ScanBarcode className="h-12 w-12 mb-2 opacity-30" />
-            <p className="text-sm">Shtrix-kodni skanerlang</p>
-            <p className="text-xs">Scan barcode to add products</p>
+            <p className="text-sm">{t("shtrixKodniSkanerlang")}</p>
+            <p className="text-xs">{t("scanBarcodeToAddProducts")}</p>
           </div>
         ) : (
           <div className="ep-table-scroll"><Table>

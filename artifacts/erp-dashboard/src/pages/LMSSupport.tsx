@@ -28,6 +28,7 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const FAQ_ITEMS = [
   {
@@ -82,6 +83,7 @@ const CONTACT_CHANNELS = [
 ];
 
 export default function LMSSupport() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const [ticketForm, setTicketForm] = useState({ subject: "", message: "", priority: "medium" });
@@ -115,10 +117,10 @@ export default function LMSSupport() {
             </Link>
             <div>
               <h1 className="text-2xl font-semibold text-foreground">
-                Yordam markazi
+                {t("yordamMarkazi")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                LMS platformasi bo'yicha savol va muammolaringizga yordam
+                {t("lmsPlatformasiBoyichaSavolVa")}
               </p>
             </div>
           </div>
@@ -126,29 +128,29 @@ export default function LMSSupport() {
             <DialogTrigger asChild>
               <Button size="sm" data-testid="button-new-ticket">
                 <PlusCircle className="h-4 w-4 mr-2" />
-                Yangi murojaat
+                {t("yangiMurojaat")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-6">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold">Yangi murojaat yaratish</DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold">{t("yangiMurojaatYaratish")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-1">
-                  <Label htmlFor="ticket-subject">Mavzu</Label>
+                  <Label htmlFor="ticket-subject">{t("mavzu")}</Label>
                   <Input
                     id="ticket-subject"
-                    placeholder="Muammo mavzusi..."
+                    placeholder={t("muammoMavzusi")}
                     value={ticketForm.subject}
                     onChange={(e) => setTicketForm((f) => ({ ...f, subject: e.target.value }))}
                     data-testid="input-ticket-subject"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="ticket-message">Xabar</Label>
+                  <Label htmlFor="ticket-message">{t("xabar")}</Label>
                   <Textarea
                     id="ticket-message"
-                    placeholder="Muammoni batafsil yozing..."
+                    placeholder={t("muammoniBatafsilYozing")}
                     rows={4}
                     value={ticketForm.message}
                     onChange={(e) => setTicketForm((f) => ({ ...f, message: e.target.value }))}
@@ -156,15 +158,15 @@ export default function LMSSupport() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="ticket-priority">Muhimlik darajasi</Label>
+                  <Label htmlFor="ticket-priority">{t("muhimlikDarajasi")}</Label>
                   <Select value={ticketForm.priority} onValueChange={(v) => setTicketForm((f) => ({ ...f, priority: v }))}>
                     <SelectTrigger id="ticket-priority" data-testid="select-ticket-priority" className="h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Past</SelectItem>
-                      <SelectItem value="medium">O'rta</SelectItem>
-                      <SelectItem value="high">Yuqori</SelectItem>
+                      <SelectItem value="low">{t("low")}</SelectItem>
+                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                      <SelectItem value="high">{t("high")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -231,7 +233,7 @@ export default function LMSSupport() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <BookOpen className="h-4 w-4 text-primary" />
-                Foydalanuvchi qo'llanmasi
+                {t("foydalanuvchiQollanmasi")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -241,7 +243,7 @@ export default function LMSSupport() {
               </p>
               <Link href="/lms/knowledge-base">
                 <Button variant="outline" size="sm" className="mt-2" data-testid="button-knowledge-base">
-                  Bilimlar bazasiga o'tish
+                  {t("bilimlarBazasigaOtish")}
                 </Button>
               </Link>
             </CardContent>
@@ -251,7 +253,7 @@ export default function LMSSupport() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <FileText className="h-4 w-4 text-primary" />
-                Muammoni bildirib qo'ying
+                {t("muammoniBildiribQoying")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -269,7 +271,7 @@ export default function LMSSupport() {
                 }
               >
                 <LifeBuoy className="h-3.5 w-3.5 mr-1.5" />
-                Murojaat yuborish
+                {t("murojaatYuborish")}
               </Button>
             </CardContent>
           </Card>
@@ -279,7 +281,7 @@ export default function LMSSupport() {
           <Link href="/lms-dashboard">
             <Button variant="default" data-testid="button-back-to-dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              LMS bosh sahifasiga qaytish
+              {t("lmsBoshSahifasigaQaytish")}
             </Button>
           </Link>
         </div>

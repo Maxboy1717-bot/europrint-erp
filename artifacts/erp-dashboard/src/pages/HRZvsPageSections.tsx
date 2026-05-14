@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, Search, CheckCircle, XCircle, Clock, AlertTriangle, ArrowUp } from "lucide-react";
 import { type ZvsRequest, STATUS_MAP, PRIORITY_MAP, formatAmount } from "./HRZvsPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── ZvsFilterBar ──────────────────────────────────────────────────────────────
 
@@ -21,12 +22,13 @@ interface ZvsFilterBarProps {
 }
 
 export function ZvsFilterBar({ search, onSearchChange, statusFilter, onStatusChange }: ZvsFilterBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Ariza qidirish..."
+          placeholder={t("arizaQidirish")}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9"
@@ -151,7 +153,7 @@ export function ZvsCard({ r, onApprove, onReject }: ZvsCardProps) {
                   data-testid={`button-approve-zvs-${r.id}`}
                 >
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Tasdiqlash
+                  {t("verify")}
                 </Button>
                 <Button
                   size="sm"
@@ -161,7 +163,7 @@ export function ZvsCard({ r, onApprove, onReject }: ZvsCardProps) {
                   data-testid={`button-reject-zvs-${r.id}`}
                 >
                   <XCircle className="h-3 w-3 mr-1" />
-                  Rad etish
+                  {t("reject")}
                 </Button>
               </>
             )}

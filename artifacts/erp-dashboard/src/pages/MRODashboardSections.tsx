@@ -12,6 +12,7 @@ import {
 import { CheckCircle, Package, Wrench, Settings } from "lucide-react";
 import type { MroItem, MroRequest, MroEquipment } from "./MRODashboardTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Shared table header helper ────────────────────────────────────────────────
 export const TH = ({ children, rounded }: { children: React.ReactNode; rounded?: "left" | "right" }) => (
@@ -22,11 +23,12 @@ export const TH = ({ children, rounded }: { children: React.ReactNode; rounded?:
 
 // ── ItemsTab ──────────────────────────────────────────────────────────────────
 export function ItemsTab({ items }: { items: MroItem[] | undefined }) {
+  const { t } = useTranslation("common");
   if ((items || []).length === 0) {
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
         <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>Hali MRO buyum mavjud emas</p>
+        <p>{t("haliMroBuyumMavjudEmas")}</p>
       </div>
     );
   }
@@ -34,12 +36,12 @@ export function ItemsTab({ items }: { items: MroItem[] | undefined }) {
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow className="border-none hover:bg-transparent">
-          <TH rounded="left">Kod</TH>
-          <TH>Nomi</TH>
-          <TH>Kategoriya</TH>
-          <TH>Zaxira</TH>
-          <TH>Min</TH>
-          <TH rounded="right">Holat</TH>
+          <TH rounded="left">{t("code")}</TH>
+          <TH>{t("name")}</TH>
+          <TH>{t("category")}</TH>
+          <TH>{t("zaxira1")}</TH>
+          <TH>{t("min1")}</TH>
+          <TH rounded="right">{t("status28")}</TH>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -54,8 +56,8 @@ export function ItemsTab({ items }: { items: MroItem[] | undefined }) {
             <TableCell className="font-mono text-sm px-6 text-muted-foreground">{item.minStock}</TableCell>
             <TableCell className="px-6">
               {Number(item.currentStock) <= Number(item.minStock)
-                ? <EPStatusPill tone="danger">Kam</EPStatusPill>
-                : <EPStatusPill tone="success">Normal</EPStatusPill>
+                ? <EPStatusPill tone="danger">{t("kam")}</EPStatusPill>
+                : <EPStatusPill tone="success">{t("normal")}</EPStatusPill>
               }
             </TableCell>
           </TableRow>
@@ -77,7 +79,7 @@ export function RequestsTab({ requests, onApprove, isPending }: RequestsTabProps
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
         <Wrench className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>Hali so'rov mavjud emas</p>
+        <p>{t("haliSorovMavjudEmas")}</p>
       </div>
     );
   }
@@ -85,12 +87,12 @@ export function RequestsTab({ requests, onApprove, isPending }: RequestsTabProps
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow className="border-none hover:bg-transparent">
-          <TH rounded="left">Raqam</TH>
-          <TH>Buyum</TH>
-          <TH>So'rovchi</TH>
-          <TH>Miqdor</TH>
-          <TH>Holat</TH>
-          <TH rounded="right">Amal</TH>
+          <TH rounded="left">{t("raqam")}</TH>
+          <TH>{t("buyum1")}</TH>
+          <TH>{t("sorovchi")}</TH>
+          <TH>{t("quantity")}</TH>
+          <TH>{t("status28")}</TH>
+          <TH rounded="right">{t("amal")}</TH>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -130,7 +132,7 @@ export function EquipmentTab({ equipment }: { equipment: MroEquipment[] | undefi
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
         <Settings className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>Hali uskuna ma'lumoti mavjud emas</p>
+        <p>{t("haliUskunaMalumotiMavjudEmas")}</p>
       </div>
     );
   }
@@ -138,11 +140,11 @@ export function EquipmentTab({ equipment }: { equipment: MroEquipment[] | undefi
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow className="border-none hover:bg-transparent">
-          <TH rounded="left">Uskuna</TH>
-          <TH>Kod</TH>
-          <TH>Turi</TH>
-          <TH>Keyingi TA</TH>
-          <TH rounded="right">Holat</TH>
+          <TH rounded="left">{t("Uskuna")}</TH>
+          <TH>{t("code")}</TH>
+          <TH>{t("type")}</TH>
+          <TH>{t("keyingiTa")}</TH>
+          <TH rounded="right">{t("status28")}</TH>
         </TableRow>
       </TableHeader>
       <TableBody>

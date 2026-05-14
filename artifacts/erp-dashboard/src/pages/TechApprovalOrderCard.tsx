@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Clock, Eye, FileText, History } from "lucide-react";
 import type { TechOrderData } from "./TechApprovalTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface TechApprovalOrderCardProps {
   order: TechOrderData;
@@ -30,6 +31,7 @@ export function TechApprovalOrderCard({
   onReject,
   onApprove,
 }: TechApprovalOrderCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card
       className="bg-card rounded-lg border-none shadow-none"
@@ -42,26 +44,26 @@ export function TechApprovalOrderCard({
         </div>
         <Badge className="bg-amber-100 text-amber-800 no-default-hover-elevate rounded-full px-2.5 py-0.5 text-xs font-semibold">
           <Clock className="h-3 w-3 mr-1" />
-          Texnolog kutilmoqda
+          {t("texnologKutilmoqda")}
         </Badge>
       </CardHeader>
 
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mahsulot</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("Mahsulot")}</p>
             <p className="font-medium text-foreground">{order.mahsulotNomi}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Turi</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("type")}</p>
             <p className="font-medium text-foreground">{order.mahsulotTuri || "-"}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Format</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("format")}</p>
             <p className="font-medium text-foreground">{order.formatA} × {order.formatB} mm</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tiraj</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("Tiraj")}</p>
             <p className="font-medium text-foreground">{order.tiraj?.toLocaleString()}</p>
           </div>
         </div>
@@ -74,11 +76,11 @@ export function TechApprovalOrderCard({
             data-testid={`btn-history-${order.id}`}
           >
             <History className="h-4 w-4 mr-1" />
-            Tarix
+            {t("tarix")}
           </Button>
           <Button variant="outline" size="sm" data-testid={`btn-view-${order.id}`}>
             <Eye className="h-4 w-4 mr-1" />
-            Ko'rish
+            {t("view")}
           </Button>
           <Button
             variant="outline"
@@ -97,7 +99,7 @@ export function TechApprovalOrderCard({
             data-testid={`btn-reject-${order.id}`}
           >
             <XCircle className="h-4 w-4 mr-1" />
-            Rad etish
+            {t("reject")}
           </Button>
           <Button
             size="sm"
@@ -105,7 +107,7 @@ export function TechApprovalOrderCard({
             data-testid={`btn-approve-${order.id}`}
           >
             <CheckCircle className="h-4 w-4 mr-1" />
-            Tasdiqlash
+            {t("verify")}
           </Button>
         </div>
       </CardContent>

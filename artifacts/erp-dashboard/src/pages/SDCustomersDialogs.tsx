@@ -30,26 +30,26 @@ export function AddCustomerDialog({open, onOpenChange, form, onSubmit, isPending
           className="bg-primary hover:from-orange-600 hover:to-amber-600 shadow-md text-white border-0"
           data-testid="btn-add-customer"
         >
-          <Plus className="h-4 w-4 mr-1.5" />Yangi mijoz
+          <Plus className="h-4 w-4 mr-1.5" />{t("yangiMijoz")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi mijoz qo'shish</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiMijozQoshish")}</DialogTitle></DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField control={form.control} name="title" render={({ field }) => (
               <FormItem><FormLabel>Kompaniya / Ism *</FormLabel>
-                <FormControl><Input {...field} data-testid="input-customer-title" placeholder="Kompaniya nomi" /></FormControl>
+                <FormControl><Input {...field} data-testid="input-customer-title" placeholder={t("kompaniyaNomi1")} /></FormControl>
                 <FormMessage /></FormItem>
             )} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField control={form.control} name="customerType" render={({ field }) => (
-                <FormItem><FormLabel>Tur</FormLabel>
+                <FormItem><FormLabel>{t("tur")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger data-testid="select-customer-type" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="legal">Yuridik</SelectItem>
-                      <SelectItem value="individual">Jismoniy</SelectItem>
+                      <SelectItem value="legal">{t("yuridik")}</SelectItem>
+                      <SelectItem value="individual">{t("jismoniy")}</SelectItem>
                     </SelectContent>
                   </Select></FormItem>
               )} />
@@ -60,7 +60,7 @@ export function AddCustomerDialog({open, onOpenChange, form, onSubmit, isPending
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField control={form.control} name="phone" render={({ field }) => (
-                <FormItem><FormLabel>Telefon</FormLabel>
+                <FormItem><FormLabel>{t("phone")}</FormLabel>
                   <FormControl><Input {...field} placeholder="+998 ..." /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="email" render={({ field }) => (
@@ -69,24 +69,24 @@ export function AddCustomerDialog({open, onOpenChange, form, onSubmit, isPending
               )} />
             </div>
             <FormField control={form.control} name="address" render={({ field }) => (
-              <FormItem><FormLabel>Manzil</FormLabel>
+              <FormItem><FormLabel>{t("address")}</FormLabel>
                 <FormControl><Input {...field} /></FormControl></FormItem>
             )} />
             <FormField control={form.control} name="source" render={({ field }) => (
-              <FormItem><FormLabel>Manbaa</FormLabel>
+              <FormItem><FormLabel>{t("manbaa")}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Tanlang" /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger><SelectValue placeholder={t("tanlang")} /></SelectTrigger></FormControl>
                   <SelectContent>
-                    <SelectItem value="ads">Reklama</SelectItem>
-                    <SelectItem value="referral">Tavsiya</SelectItem>
-                    <SelectItem value="website">Veb-sayt</SelectItem>
-                    <SelectItem value="exhibition">Ko'rgazma</SelectItem>
-                    <SelectItem value="other">Boshqa</SelectItem>
+                    <SelectItem value="ads">{t("reklama")}</SelectItem>
+                    <SelectItem value="referral">{t("tavsiya")}</SelectItem>
+                    <SelectItem value="website">{t("vebSayt")}</SelectItem>
+                    <SelectItem value="exhibition">{t("korgazma")}</SelectItem>
+                    <SelectItem value="other">{t("boshqa")}</SelectItem>
                   </SelectContent>
                 </Select></FormItem>
             )} />
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Bekor</Button>
+              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={isPending} data-testid="btn-submit-customer"
                 className="bg-primary text-white border-0">
                 {isPending ? "Saqlanmoqda..." : "Saqlash"}

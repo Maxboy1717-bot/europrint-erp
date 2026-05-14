@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Department {
   id: string;
@@ -36,6 +37,7 @@ interface Department {
 }
 
 export default function OrgDepartmentsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -90,12 +92,12 @@ export default function OrgDepartmentsPage() {
   return (
     <ModulePage
       module="hr"
-      title="Tashkiliy Bo'limlar"
+      title={t("tashkiliyBolimlar")}
       icon={<Building2 className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-department">
           <Plus className="h-4 w-4 mr-2" />
-          Bo'lim qo'shish
+          {t("bolimQoshish")}
         </Button>
       }
     >
@@ -103,7 +105,7 @@ export default function OrgDepartmentsPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Bo'lim qidirish..."
+            placeholder={t("bolimQidirish")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -144,9 +146,9 @@ export default function OrgDepartmentsPage() {
                     <CardTitle className="text-base">{dept.name}</CardTitle>
                     <div className="flex items-center gap-1">
                       {dept.isActive !== false ? (
-                        <EPStatusPill tone="neutral" className="text-xs">Faol</EPStatusPill>
+                        <EPStatusPill tone="neutral" className="text-xs">{t("active")}</EPStatusPill>
                       ) : (
-                        <Badge variant="outline" className="text-xs text-muted-foreground">Nofaol</Badge>
+                        <Badge variant="outline" className="text-xs text-muted-foreground">{t("inactive")}</Badge>
                       )}
                       <Button
                         variant="ghost"
@@ -184,32 +186,32 @@ export default function OrgDepartmentsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi bo'lim</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiBolim")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="dept-name">Nomi *</Label>
+              <Label htmlFor="dept-name">{t("nomi")}</Label>
               <Input
                 id="dept-name"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                placeholder="Bo'lim nomi"
+                placeholder={t("bolimNomi")}
                 data-testid="input-department-name"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="dept-code">Kodi</Label>
+              <Label htmlFor="dept-code">{t("kodi")}</Label>
               <Input
                 id="dept-code"
                 value={newCode}
                 onChange={e => setNewCode(e.target.value)}
-                placeholder="BO'LIM-001"
+                placeholder={t("bolim001")}
                 data-testid="input-department-code"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => {
                 if (!newName.trim()) return;
@@ -228,18 +230,18 @@ export default function OrgDepartmentsPage() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent data-testid="dialog-confirm-delete-department">
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Haqiqatan ham bu bo'limni o'chirmoqchimisiz?
+              {t("haqiqatanHamBuBolimniOchirmoqchimisiz")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor</AlertDialogCancel>
+            <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
               data-testid="button-confirm-delete-department"
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

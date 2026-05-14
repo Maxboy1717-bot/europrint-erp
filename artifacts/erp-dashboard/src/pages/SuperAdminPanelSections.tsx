@@ -23,7 +23,7 @@ export function PlatformStatsCards({ platformStats, statsLoading, formatUptime }
 
 // ── Expiry Alerts ───────────────────────────────────────────────────────────── 
 
-export function ExpiryAlertsCard({ expiryData }: { expiryData: ExpiryAlertsData | undefined }) { if ((expiryData?.total ?? 0) === 0) return null; return ( <Card className="border-amber-500/40"> <CardHeader className="pb-3"> <CardTitle className="flex items-center gap-2 text-[var(--ep-yellow)] dark:text-amber-400"><AlertTriangle className="w-5 h-5" />Litsenziya muddati yaqinlashmoqda</CardTitle> <CardDescription>{expiryData?.expired ?? 0} ta muddati o'tgan, {expiryData?.expiring ?? 0} ta 30 kun ichida tugaydi</CardDescription> </CardHeader> <CardContent> <div className="space-y-2"> {expiryData?.tenants?.map(t => ( <div key={t.id} className="flex items-center justify-between p-3 rounded-md bg-muted/50" data-testid={`expiry-alert-${t.id}`}> <div className="flex items-center gap-3"> <div className={`w-2 h-2 rounded-full ${t.isExpired ? "bg-red-500" : t.daysRemaining <= 7 ? "bg-amber-500" : "bg-yellow-400"}`} /> <div><p className="font-medium text-sm">{t.name}</p><p className="text-xs text-muted-foreground">{t.plan} · {t.expiresAt}</p></div> </div> <div className="flex items-center gap-2"> <Badge variant={t.isExpired ? "destructive" : "outline"}><Clock className="w-3 h-3 mr-1" />{t.isExpired ? "Muddati o'tgan" : `${t.daysRemaining} kun qoldi`}</Badge> {t.contactPhone && <span className="text-xs text-muted-foreground">{t.contactPhone}</span>} </div> </div> ))} </div> </CardContent> </Card> ); } 
+export function ExpiryAlertsCard({ expiryData }: { expiryData: ExpiryAlertsData | undefined }) { if ((expiryData?.total ?? 0) === 0) return null; return ( <Card className="border-amber-500/40"> <CardHeader className="pb-3"> <CardTitle className="flex items-center gap-2 text-[var(--ep-yellow)] dark:text-amber-400"><AlertTriangle className="w-5 h-5" />{t("litsenziyaMuddatiYaqinlashmoqda")}</CardTitle> <CardDescription>{expiryData?.expired ?? 0} ta muddati o'tgan, {expiryData?.expiring ?? 0} ta 30 kun ichida tugaydi</CardDescription> </CardHeader> <CardContent> <div className="space-y-2"> {expiryData?.tenants?.map(t => ( <div key={t.id} className="flex items-center justify-between p-3 rounded-md bg-muted/50" data-testid={`expiry-alert-${t.id}`}> <div className="flex items-center gap-3"> <div className={`w-2 h-2 rounded-full ${t.isExpired ? "bg-red-500" : t.daysRemaining <= 7 ? "bg-amber-500" : "bg-yellow-400"}`} /> <div><p className="font-medium text-sm">{t.name}</p><p className="text-xs text-muted-foreground">{t.plan} · {t.expiresAt}</p></div> </div> <div className="flex items-center gap-2"> <Badge variant={t.isExpired ? "destructive" : "outline"}><Clock className="w-3 h-3 mr-1" />{t.isExpired ? "Muddati o'tgan" : `${t.daysRemaining} kun qoldi`}</Badge> {t.contactPhone && <span className="text-xs text-muted-foreground">{t.contactPhone}</span>} </div> </div> ))} </div> </CardContent> </Card> ); } 
 
 // ── Tenants Tab ─────────────────────────────────────────────────────────────── 
 
@@ -31,13 +31,13 @@ export function TenantsTab({ tenants, tenantsLoading, onboardMutation, updateSta
   const { t } = useTranslation('common');
   return (
     <Card>
-      <CardHeader><CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5" />Tenantlar</CardTitle><CardDescription>Barcha zavodlar va kompaniyalar</CardDescription></CardHeader>
+      <CardHeader><CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5" />{t("tenantlar")}</CardTitle><CardDescription>{t("barchaZavodlarVaKompaniyalar")}</CardDescription></CardHeader>
       <CardContent>
         {tenantsLoading ? <div className="flex justify-center py-8"><EPLoader className="w-6 h-6" /></div>
-          : tenants.length === 0 ? <div className="text-center py-8 text-[13px] text-muted-foreground">Tenantlar yo'q</div>
+          : tenants.length === 0 ? <div className="text-center py-8 text-[13px] text-muted-foreground">{t("tenantlarYoq")}</div>
           : (
             <div className="ep-table-scroll"><Table>
-              <TableHeader className="sticky top-0 z-10 bg-card"><TableRow><TableHead>Nomi</TableHead><TableHead>Domain</TableHead><TableHead>Reja</TableHead><TableHead>{t('status19')}</TableHead><TableHead>Foydalanuvchilar</TableHead><TableHead>Modullar</TableHead><TableHead>Muddati</TableHead><TableHead>Amallar</TableHead></TableRow></TableHeader>
+              <TableHeader className="sticky top-0 z-10 bg-card"><TableRow><TableHead>{t("name")}</TableHead><TableHead>{t("domain")}</TableHead><TableHead>{t("reja")}</TableHead><TableHead>{t('status19')}</TableHead><TableHead>{t("foydalanuvchilar")}</TableHead><TableHead>{t("modullar")}</TableHead><TableHead>{t("muddati")}</TableHead><TableHead>{t("Amallar")}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(tenants) ? tenants : []).map(t => (
                   <TableRow key={t.id} data-testid={`row-tenant-${t.id}`} className="hover:bg-muted/40 transition-colors">
@@ -48,16 +48,16 @@ export function TenantsTab({ tenants, tenantsLoading, onboardMutation, updateSta
                     <TableCell>{t.usersCount}</TableCell>
                     <TableCell><EPStatusPill tone="neutral">{t.modulesEnabled.length} modul</EPStatusPill></TableCell>
                     <TableCell className="text-sm">
-                      {t.expiresAt ? (<div><p>{t.expiresAt}</p>{(() => { const d = Math.ceil((new Date(t.expiresAt).getTime() - Date.now()) / 86400000); if (d < 0) return <EPStatusPill tone="danger" className="text-xs mt-1">O'tgan</EPStatusPill>; if (d <= 14) return <Badge variant="outline" className="text-xs mt-1 text-[var(--ep-yellow)]">{d}k qoldi</Badge>; return null; })()}</div>) : <span className="text-muted-foreground">—</span>}
+                      {t.expiresAt ? (<div><p>{t.expiresAt}</p>{(() => { const d = Math.ceil((new Date(t.expiresAt).getTime() - Date.now()) / 86400000); if (d < 0) return <EPStatusPill tone="danger" className="text-xs mt-1">{t("otgan1")}</EPStatusPill>; if (d <= 14) return <Badge variant="outline" className="text-xs mt-1 text-[var(--ep-yellow)]">{d}k qoldi</Badge>; return null; })()}</div>) : <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" title="Onboarding" data-testid={`button-onboard-${t.id}`} onClick={() => onboardMutation.mutate(t.id)} disabled={onboardMutation.isPending}><Rocket className="w-3 h-3" /></Button>
-                        <Button size="icon" variant="ghost" title="Modullarni tahrirlash" data-testid={`button-edit-modules-${t.id}`} onClick={() => onEditModules(t)}><Zap className="w-3 h-3" /></Button>
+                        <Button size="icon" variant="ghost" title={t("onboarding")} data-testid={`button-onboard-${t.id}`} onClick={() => onboardMutation.mutate(t.id)} disabled={onboardMutation.isPending}><Rocket className="w-3 h-3" /></Button>
+                        <Button size="icon" variant="ghost" title={t("modullarniTahrirlash")} data-testid={`button-edit-modules-${t.id}`} onClick={() => onEditModules(t)}><Zap className="w-3 h-3" /></Button>
                         {t.status === "active"
-                          ? <Button size="icon" variant="ghost" title="To'xtatish" data-testid={`button-suspend-${t.id}`} onClick={() => updateStatusMutation.mutate({ id: t.id, status: "suspended" })}><XCircle className="w-3 h-3 text-[var(--ep-red)]" /></Button>
-                          : <Button size="icon" variant="ghost" title="Faollashtirish" data-testid={`button-activate-${t.id}`} onClick={() => updateStatusMutation.mutate({ id: t.id, status: "active" })}><CheckCircle className="w-3 h-3 text-[var(--ep-green)]" /></Button>}
-                        <Button size="icon" variant="ghost" title="O'chirish" data-testid={`button-delete-tenant-${t.id}`} onClick={() => onDeleteTenant(t.id)}><Trash2 className="w-3 h-3 text-muted-foreground" /></Button>
+                          ? <Button size="icon" variant="ghost" title={t("toxtatish")} data-testid={`button-suspend-${t.id}`} onClick={() => updateStatusMutation.mutate({ id: t.id, status: "suspended" })}><XCircle className="w-3 h-3 text-[var(--ep-red)]" /></Button>
+                          : <Button size="icon" variant="ghost" title={t("faollashtirish")} data-testid={`button-activate-${t.id}`} onClick={() => updateStatusMutation.mutate({ id: t.id, status: "active" })}><CheckCircle className="w-3 h-3 text-[var(--ep-green)]" /></Button>}
+                        <Button size="icon" variant="ghost" title={t("delete")} data-testid={`button-delete-tenant-${t.id}`} onClick={() => onDeleteTenant(t.id)}><Trash2 className="w-3 h-3 text-muted-foreground" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -81,22 +81,22 @@ export function AddTenantDialog({ open, onOpenChange, newTenant, setNewTenant, i
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Tenant Qo'shish</DialogTitle><DialogDescription>Yangi zavod yoki kompaniyani ro'yxatdan o'tkazing</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiTenantQoshish")}</DialogTitle><DialogDescription>{t("yangiZavodYokiKompaniyaniRoyxatdan")}</DialogDescription></DialogHeader>
         <div className="space-y-4">
-          <div><Label>Kompaniya nomi *</Label><Input value={newTenant.name} onChange={e => setNewTenant(p => ({ ...p, name: e.target.value }))} placeholder="Europrint Samarkand" data-testid="input-tenant-name" /></div>
-          <div><Label>Domain *</Label><Input value={newTenant.domain} onChange={e => setNewTenant(p => ({ ...p, domain: e.target.value }))} placeholder="samarkand.europrint.uz" data-testid="input-tenant-domain" /></div>
+          <div><Label>{t("kompaniyaNomi")}</Label><Input value={newTenant.name} onChange={e => setNewTenant(p => ({ ...p, name: e.target.value }))} placeholder={t("europrintSamarkand")} data-testid="input-tenant-name" /></div>
+          <div><Label>{t("domain1")}</Label><Input value={newTenant.domain} onChange={e => setNewTenant(p => ({ ...p, domain: e.target.value }))} placeholder="samarkand.europrint.uz" data-testid="input-tenant-domain" /></div>
           <div>
-            <Label>Reja</Label>
+            <Label>{t("reja")}</Label>
             <Select value={newTenant.plan} onValueChange={v => setNewTenant(p => ({ ...p, plan: v }))}>
               <SelectTrigger data-testid="select-tenant-plan" className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="basic">Basic</SelectItem><SelectItem value="professional">Professional</SelectItem><SelectItem value="enterprise">Enterprise</SelectItem></SelectContent>
+              <SelectContent><SelectItem value="basic">{t("basic")}</SelectItem><SelectItem value="professional">{t("professional")}</SelectItem><SelectItem value="enterprise">{t("enterprise")}</SelectItem></SelectContent>
             </Select>
           </div>
           <div><Label>{"Kontakt email"}</Label><Input value={newTenant.contactEmail} onChange={e => setNewTenant(p => ({ ...p, contactEmail: e.target.value }))} placeholder="admin@company.uz" type="email" data-testid="input-tenant-email" /></div>
-          <div><Label>Telefon</Label><Input value={newTenant.contactPhone} onChange={e => setNewTenant(p => ({ ...p, contactPhone: e.target.value }))} placeholder="+998 90 000 00 00" data-testid="input-tenant-phone" /></div>
+          <div><Label>{t("phone")}</Label><Input value={newTenant.contactPhone} onChange={e => setNewTenant(p => ({ ...p, contactPhone: e.target.value }))} placeholder="+998 90 000 00 00" data-testid="input-tenant-phone" /></div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
           <Button data-testid="button-submit-tenant" disabled={isPending || !newTenant.name || !newTenant.domain} onClick={onSubmit}>
             {isPending && <EPLoader className="w-4 h-4 mr-2" />}Yaratish
           </Button>
@@ -117,7 +117,7 @@ export function EditModulesDialog({ editModulesDialog, modules, selectedModules,
   return (
     <Dialog open={!!editModulesDialog} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-lg p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Modullarni tahrirlash — {editModulesDialog.name}</DialogTitle><DialogDescription>Ushbu tenant uchun modullarni yoqing yoki o'chiring</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Modullarni tahrirlash — {editModulesDialog.name}</DialogTitle><DialogDescription>{t("ushbuTenantUchunModullarniYoqing")}</DialogDescription></DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
           {(Array.isArray(modules) ? modules : []).map(m => (
             <div key={m.key} className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export function EditModulesDialog({ editModulesDialog, modules, selectedModules,
           ))}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button data-testid="button-save-modules" disabled={isPending} onClick={onSave}>{isPending && <EPLoader className="w-4 h-4 mr-2" />}Saqlash</Button>
         </DialogFooter>
       </DialogContent>
@@ -147,25 +147,25 @@ export function AuditLogTab({ auditLogs, auditLoading, auditTotal, auditLimit, a
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Filter className="w-4 h-4" />Filtrlar<span className="ml-auto text-xs text-muted-foreground font-normal">Jami: {auditTotal} ta yozuv</span></CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Filter className="w-4 h-4" />{t("filtrlar")}<span className="ml-auto text-xs text-muted-foreground font-normal">Jami: {auditTotal} ta yozuv</span></CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div className="relative lg:col-span-2"><Search className="absolute left-2 top-2.5 w-3.5 h-3.5 text-muted-foreground" /><Input className="pl-7 h-9 text-sm" placeholder="Qidirish..." value={auditFilters.search} onChange={e => onFilterChange("search", e.target.value)} data-testid="audit-search" /></div>
-            <Select value={auditFilters.action || "__all__"} onValueChange={v => onFilterChange("action", v === "__all__" ? "" : v)}><SelectTrigger className="h-9 text-sm" data-testid="audit-filter-action"><SelectValue placeholder="Amal" /></SelectTrigger><SelectContent><SelectItem value="__all__">Barcha amallar</SelectItem><SelectItem value="CREATE">Yaratish</SelectItem><SelectItem value="INSERT">Qo'shish</SelectItem><SelectItem value="UPDATE">Yangilash</SelectItem><SelectItem value="DELETE">O'chirish</SelectItem></SelectContent></Select>
-            <Select value={auditFilters.table || "__all__"} onValueChange={v => onFilterChange("table", v === "__all__" ? "" : v)}><SelectTrigger className="h-9 text-sm" data-testid="audit-filter-table"><SelectValue placeholder="Modul" /></SelectTrigger><SelectContent><SelectItem value="__all__">Barcha modullar</SelectItem>{auditTables.map(tbl => <SelectItem key={tbl} value={tbl}>{tbl}</SelectItem>)}</SelectContent></Select>
-            <div><Input type="date" className="h-9 text-sm" value={auditFilters.from} onChange={e => onFilterChange("from", e.target.value)} data-testid="audit-filter-from" title="Boshlanish sanasi" /></div>
-            <div className="flex gap-2"><Input type="date" className="h-9 text-sm flex-1" value={auditFilters.to} onChange={e => onFilterChange("to", e.target.value)} data-testid="audit-filter-to" title="Tugash sanasi" />{hasFilters && <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={onResetFilters} title="Filtrlarni tozalash"><XCircle className="w-4 h-4 text-muted-foreground" /></Button>}</div>
+            <div className="relative lg:col-span-2"><Search className="absolute left-2 top-2.5 w-3.5 h-3.5 text-muted-foreground" /><Input className="pl-7 h-9 text-sm" placeholder={t("Qidirish...")} value={auditFilters.search} onChange={e => onFilterChange("search", e.target.value)} data-testid="audit-search" /></div>
+            <Select value={auditFilters.action || "__all__"} onValueChange={v => onFilterChange("action", v === "__all__" ? "" : v)}><SelectTrigger className="h-9 text-sm" data-testid="audit-filter-action"><SelectValue placeholder={t("amal")} /></SelectTrigger><SelectContent><SelectItem value="__all__">{t("barchaAmallar")}</SelectItem><SelectItem value="CREATE">{t("Yaratish")}</SelectItem><SelectItem value="INSERT">{t("add")}</SelectItem><SelectItem value="UPDATE">{t("refresh")}</SelectItem><SelectItem value="DELETE">{t("delete")}</SelectItem></SelectContent></Select>
+            <Select value={auditFilters.table || "__all__"} onValueChange={v => onFilterChange("table", v === "__all__" ? "" : v)}><SelectTrigger className="h-9 text-sm" data-testid="audit-filter-table"><SelectValue placeholder={t("modul1")} /></SelectTrigger><SelectContent><SelectItem value="__all__">{t("barchaModullar")}</SelectItem>{auditTables.map(tbl => <SelectItem key={tbl} value={tbl}>{tbl}</SelectItem>)}</SelectContent></Select>
+            <div><Input type="date" className="h-9 text-sm" value={auditFilters.from} onChange={e => onFilterChange("from", e.target.value)} data-testid="audit-filter-from" title={t("startDate")} /></div>
+            <div className="flex gap-2"><Input type="date" className="h-9 text-sm flex-1" value={auditFilters.to} onChange={e => onFilterChange("to", e.target.value)} data-testid="audit-filter-to" title={t("endDate")} />{hasFilters && <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={onResetFilters} title={t("filtrlarniTozalash")}><XCircle className="w-4 h-4 text-muted-foreground" /></Button>}</div>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardContent className="p-0">
           {auditLoading ? <div className="flex justify-center py-12"><EPLoader tone="muted" className="w-6 h-6" /></div>
-            : auditLogs.length === 0 ? <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2"><FileText className="w-8 h-8 opacity-40" /><p className="text-sm">Audit yozuvlari topilmadi</p></div>
+            : auditLogs.length === 0 ? <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2"><FileText className="w-8 h-8 opacity-40" /><p className="text-sm">{t("auditYozuvlariTopilmadi")}</p></div>
             : (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-card"><TableRow className="bg-muted/30 hover:bg-muted/40 transition-colors"><TableHead className="w-36">Vaqt</TableHead><TableHead className="w-40">Foydalanuvchi</TableHead><TableHead className="w-24">Amal</TableHead><TableHead className="w-36">Modul (jadval)</TableHead><TableHead className="w-32">Yozuv ID</TableHead><TableHead>O'zgargan maydonlar</TableHead><TableHead className="w-12 text-center">Ko'rish</TableHead></TableRow></TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card"><TableRow className="bg-muted/30 hover:bg-muted/40 transition-colors"><TableHead className="w-36">{t("time")}</TableHead><TableHead className="w-40">{t("foydalanuvchi")}</TableHead><TableHead className="w-24">{t("amal")}</TableHead><TableHead className="w-36">Modul (jadval)</TableHead><TableHead className="w-32">{t("yozuvId")}</TableHead><TableHead>{t("ozgarganMaydonlar")}</TableHead><TableHead className="w-12 text-center">{t("view")}</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {auditLogs.map(log => (
                       <TableRow key={log.id} className="hover:bg-muted/30" data-testid={`audit-row-${log.id}`}>
@@ -211,27 +211,27 @@ export function AuditDetailDialog({ log, onClose }: { log: AuditLogEntry | null;
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div className="space-y-1"><p className="text-xs text-muted-foreground">Foydalanuvchi</p><p className="font-medium">{log.user_display_name || log.user_full_name || log.user_id || "—"}</p></div>
-            <div className="space-y-1"><p className="text-xs text-muted-foreground">Rol</p><p className="font-medium">{log.user_role || "—"}</p></div>
-            <div className="space-y-1"><p className="text-xs text-muted-foreground">Amal</p><Badge variant={ACTION_COLORS[log.action?.toUpperCase()] ?? "outline"}>{ACTION_LABELS[log.action?.toUpperCase()] ?? log.action}</Badge></div>
+            <div className="space-y-1"><p className="text-xs text-muted-foreground">{t("foydalanuvchi")}</p><p className="font-medium">{log.user_display_name || log.user_full_name || log.user_id || "—"}</p></div>
+            <div className="space-y-1"><p className="text-xs text-muted-foreground">{t("role")}</p><p className="font-medium">{log.user_role || "—"}</p></div>
+            <div className="space-y-1"><p className="text-xs text-muted-foreground">{t("amal")}</p><Badge variant={ACTION_COLORS[log.action?.toUpperCase()] ?? "outline"}>{ACTION_LABELS[log.action?.toUpperCase()] ?? log.action}</Badge></div>
             <div className="space-y-1"><p className="text-xs text-muted-foreground">IP manzil</p><p className="font-mono text-xs">{log.ip_address || "—"}</p></div>
-            {log.reason && <div className="col-span-2 space-y-1"><p className="text-xs text-muted-foreground">Sabab</p><p className="text-sm">{log.reason}</p></div>}
+            {log.reason && <div className="col-span-2 space-y-1"><p className="text-xs text-muted-foreground">{t("sabab")}</p><p className="text-sm">{log.reason}</p></div>}
           </div>
           {log.changed_fields && log.changed_fields.length > 0 && (
-            <div><p className="text-xs text-muted-foreground mb-2">O'zgargan maydonlar</p><div className="flex flex-wrap gap-1">{log.changed_fields.map(f => <Badge key={f} variant="outline" className="text-xs">{f}</Badge>)}</div></div>
+            <div><p className="text-xs text-muted-foreground mb-2">{t("ozgarganMaydonlar")}</p><div className="flex flex-wrap gap-1">{log.changed_fields.map(f => <Badge key={f} variant="outline" className="text-xs">{f}</Badge>)}</div></div>
           )}
           {log.old_values && (
-            <div><p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />Eski qiymatlar</p>
+            <div><p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{t("eskiQiymatlar")}</p>
               <pre className="text-xs bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded p-3 overflow-x-auto max-h-48 text-[var(--ep-red)] dark:text-red-300">{JSON.stringify(log.old_values, null, 2)}</pre>
             </div>
           )}
           {log.new_values && (
-            <div><p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />Yangi qiymatlar</p>
+            <div><p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />{t("yangiQiymatlar")}</p>
               <pre className="text-xs bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded p-3 overflow-x-auto max-h-48 text-[var(--ep-green)] dark:text-green-300">{JSON.stringify(log.new_values, null, 2)}</pre>
             </div>
           )}
         </div>
-        <DialogFooter><Button variant="outline" onClick={onClose}>Yopish</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onClose}>{t("close2")}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );

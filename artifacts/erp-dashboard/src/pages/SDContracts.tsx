@@ -14,6 +14,7 @@ import { PageState } from "@/components/ui/page-state";
 import { useToast } from "@/hooks/use-toast";
 import { FileCheck, Search, CheckCircle, Clock, Eye } from "lucide-react";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ContractItem {
   id: string;
@@ -48,6 +49,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
 };
 
 export default function SDContracts() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<ContractItem | null>(null);
@@ -90,22 +92,22 @@ export default function SDContracts() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Shartnomalar Boshqaruvi</b></>}
-        title="Shartnomalar Boshqaruvi"
-        subtitle="Shartnomalar arxivi va holat boshqaruvi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("shartnomalarBoshqaruvi")}</b></>}
+        title={t("shartnomalarBoshqaruvi")}
+        subtitle={t("shartnomalarArxiviVaHolatBoshqaruvi")}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("total")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{stats.total}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Imzolandi</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("imzolandi")}</p>
           <p className="text-4xl font-bold tracking-tight text-[var(--ep-green)] mt-1">{stats.signed}</p>
         </div>
         <div className="bg-card rounded-lg p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kutilmoqda</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("Kutilmoqda")}</p>
           <p className="text-4xl font-bold tracking-tight text-[var(--ep-yellow)] mt-1">{stats.pending}</p>
         </div>
       </div>
@@ -114,7 +116,7 @@ export default function SDContracts() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Shartnoma raqami yoki buyurtma raqami..."
+            placeholder={t("shartnomaRaqamiYokiBuyurtmaRaqami")}
             className="pl-9"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -154,11 +156,11 @@ export default function SDContracts() {
           <table className="w-full text-left">
             <thead>
               <tr>
-                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Shartnoma №</th>
-                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Buyurtma</th>
-                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</th>
-                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Sana</th>
-                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">Amallar</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("shartnoma")}</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("Buyurtma")}</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("date")}</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody>
@@ -228,7 +230,7 @@ export default function SDContracts() {
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
-                  <Label className="text-muted-foreground text-xs">Holat</Label>
+                  <Label className="text-muted-foreground text-xs">{t("status28")}</Label>
                   <div className="mt-1">
                     <span className={STATUS_COLORS[selected.status] || ""}>
                       {STATUS_LABELS[selected.status] || selected.status}
@@ -236,20 +238,20 @@ export default function SDContracts() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground text-xs">Shablon turi</Label>
+                  <Label className="text-muted-foreground text-xs">{t("shablonTuri")}</Label>
                   <p className="font-medium mt-1">{TEMPLATE_LABELS[selected.templateType || ''] || selected.templateType}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground text-xs">Buyurtma</Label>
+                  <Label className="text-muted-foreground text-xs">{t("Buyurtma")}</Label>
                   <p className="font-medium mt-1">{selected.orderNumber || selected.orderId?.slice(0, 12)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground text-xs">Yaratildi</Label>
+                  <Label className="text-muted-foreground text-xs">{t("yaratildi")}</Label>
                   <p className="font-medium mt-1">{new Date(selected.createdAt).toLocaleDateString("uz-UZ")}</p>
                 </div>
                 {selected.signedAt && (
                   <div>
-                    <Label className="text-muted-foreground text-xs">Imzolandi</Label>
+                    <Label className="text-muted-foreground text-xs">{t("imzolandi")}</Label>
                     <p className="font-medium text-[var(--ep-green)] mt-1">
                       {new Date(selected.signedAt).toLocaleDateString("uz-UZ")}
                     </p>
@@ -263,7 +265,7 @@ export default function SDContracts() {
                   data-testid="btn-mark-signed"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Imzolandi deb belgilash
+                  {t("imzolandiDebBelgilash")}
                 </Button>
               )}
             </div>
@@ -274,14 +276,14 @@ export default function SDContracts() {
       <Dialog open={!!signDialog} onOpenChange={() => setSignDialog(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Shartnomani imzolandi deb belgilash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("shartnomaniImzolandiDebBelgilash")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             <strong>{signDialog?.contractNumber}</strong> shartnomasi imzolandi deb belgilanadi.
             Bu amalni qaytarib bo'lmaydi.
           </p>
           <div className="flex gap-2 mt-2">
-            <Button variant="outline" className="flex-1" onClick={() => setSignDialog(null)}>Bekor qilish</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setSignDialog(null)}>{t("cancel")}</Button>
             <Button
               className="flex-1"
               onClick={() => signMut.mutate(signDialog?.id || '')}

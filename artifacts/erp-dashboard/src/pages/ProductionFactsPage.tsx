@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ProductionFact {
   id: string | number;
@@ -42,6 +43,7 @@ interface ProductionFact {
 }
 
 export default function ProductionFactsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -94,12 +96,12 @@ export default function ProductionFactsPage() {
   return (
     <ModulePage
       module="production"
-      title="Ishlab Chiqarish Faktlari"
+      title={t("ishlabChiqarishFaktlari")}
       icon={<Factory className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-fact">
           <Plus className="h-4 w-4 mr-2" />
-          Fakt qo'shish
+          {t("faktQoshish")}
         </Button>
       }
     >
@@ -107,7 +109,7 @@ export default function ProductionFactsPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Mahsulot yoki buyurtma qidirish..."
+            placeholder={t("mahsulotYokiBuyurtmaQidirish")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -186,21 +188,21 @@ export default function ProductionFactsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi ishlab chiqarish fakti</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiIshlabChiqarishFakti")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Mahsulot nomi *</Label>
+                <Label>{t("mahsulotNomi1")}</Label>
                 <Input
                   value={form.product_name}
                   onChange={e => setForm(f => ({ ...f, product_name: e.target.value }))}
-                  placeholder="Mahsulot nomi"
+                  placeholder={t("mahsulotNomi")}
                   data-testid="input-fact-product"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Buyurtma №</Label>
+                <Label>{t("buyurtma4")}</Label>
                 <Input
                   value={form.order_number}
                   onChange={e => setForm(f => ({ ...f, order_number: e.target.value }))}
@@ -243,7 +245,7 @@ export default function ProductionFactsPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Smena</Label>
+                <Label>{t("smena")}</Label>
                 <Input
                   value={form.shift}
                   onChange={e => setForm(f => ({ ...f, shift: e.target.value }))}
@@ -252,28 +254,28 @@ export default function ProductionFactsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Operator</Label>
+                <Label>{t("Operator")}</Label>
                 <Input
                   value={form.operator}
                   onChange={e => setForm(f => ({ ...f, operator: e.target.value }))}
-                  placeholder="Ism Familya"
+                  placeholder={t("ismFamilya")}
                   data-testid="input-fact-operator"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Izoh</Label>
+              <Label>{t("Izoh")}</Label>
               <Textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Qo'shimcha izoh..."
+                placeholder={t("qoshimchaIzoh")}
                 rows={2}
                 data-testid="input-fact-notes"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.product_name.trim()) createMutation.mutate(form); }}
               disabled={!form.product_name.trim() || createMutation.isPending}

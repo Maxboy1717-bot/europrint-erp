@@ -40,7 +40,7 @@ export function ErpRoadmapCard() {
           EUROPRINT ERP — SAP LIGHT → SAP NEAR (UZ BOZORI)
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-2">
-          To'liq tahlil, tuzatish va rivojlantirish yo'l xaritasi
+          {t("toliqTahlilTuzatishVaRivojlantirish")}
         </p>
       </CardHeader>
       <CardContent className="pt-6">
@@ -53,29 +53,29 @@ export function ErpRoadmapCard() {
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5 shrink-0" />
-                <span>Avval TAHLIL, keyin O'ZGARTIRISH</span>
+                <span>{t("avvalTahlilKeyinOzgartirish")}</span>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5 shrink-0" />
-                <span>Tahlilsiz hech qachon kod yozma</span>
+                <span>{t("tahlilsizHechQachonKodYozma")}</span>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5 shrink-0" />
-                <span>Har bir muammo dalil bilan tasdiqlansin</span>
+                <span>{t("harBirMuammoDalilBilan")}</span>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5 shrink-0" />
-                <span>Har bir o'zgarish biznes jarayonga bog'langan bo'lsin</span>
+                <span>{t("harBirOzgarishBiznesJarayonga")}</span>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5 shrink-0" />
-                <span>Audit trail bilan yozilsin</span>
+                <span>{t("auditTrailBilanYozilsin")}</span>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5 shrink-0" />
-                <span>O'zbekiston qonunchiligi inobatga olinsin</span>
+                <span>{t("ozbekistonQonunchiligiInobatgaOlinsin")}</span>
               </div>
             </div>
           </div>
@@ -85,23 +85,23 @@ export function ErpRoadmapCard() {
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
             <TabsTrigger value="phase1" className="text-xs md:text-sm" data-testid="tab-phase1">
               <Search className="h-4 w-4 mr-1 hidden md:inline" />
-              1-Bosqich
+              {t("k1Bosqich")}
             </TabsTrigger>
             <TabsTrigger value="phase2" className="text-xs md:text-sm" data-testid="tab-phase2">
               <FileCheck className="h-4 w-4 mr-1 hidden md:inline" />
-              2-Bosqich
+              {t("k2Bosqich")}
             </TabsTrigger>
             <TabsTrigger value="phase3" className="text-xs md:text-sm" data-testid="tab-phase3">
               <Wrench className="h-4 w-4 mr-1 hidden md:inline" />
-              3-Bosqich
+              {t("k3Bosqich")}
             </TabsTrigger>
             <TabsTrigger value="phase4" className="text-xs md:text-sm" data-testid="tab-phase4">
               <Shield className="h-4 w-4 mr-1 hidden md:inline" />
-              4-Bosqich
+              {t("k4Bosqich")}
             </TabsTrigger>
             <TabsTrigger value="phase5" className="text-xs md:text-sm" data-testid="tab-phase5">
               <BookOpen className="h-4 w-4 mr-1 hidden md:inline" />
-              5-Bosqich
+              {t("k5Bosqich")}
             </TabsTrigger>
           </TabsList>
 
@@ -116,18 +116,18 @@ export function ErpRoadmapCard() {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
                     <Database className="h-4 w-4 text-[var(--ep-blue)]" />
-                    <span>1.1 Tizim pasporti</span>
+                    <span>{t("k11TizimPasporti")}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="pl-6 space-y-2 text-sm text-muted-foreground">
-                    <p>Aniq chiqar:</p>
+                    <p>{t("aniqChiqar")}</p>
                     <ul className="list-disc pl-4 space-y-1">
                       <li>Umumiy LOC (Lines of Code)</li>
-                      <li>Fayllar soni</li>
+                      <li>{t("fayllarSoni")}</li>
                       <li>Frontend / Backend / DB nisbatlari</li>
-                      <li>Ishlatilayotgan texnologiyalar</li>
-                      <li>Runtime'da nimalar bo'ladi</li>
+                      <li>{t("ishlatilayotganTexnologiyalar")}</li>
+                      <li>{t("runtimedaNimalarBoladi")}</li>
                     </ul>
                   </div>
                 </AccordionContent>
@@ -137,24 +137,24 @@ export function ErpRoadmapCard() {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
                     <Layers className="h-4 w-4 text-[var(--ep-blue)]" />
-                    <span>1.2 Frontend ↔ Backend mosligi</span>
+                    <span>{t("k12FrontendBackendMosligi")}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="pl-6 space-y-3 text-sm">
-                    <p className="text-muted-foreground">Butun tizim bo'yicha aniqla:</p>
+                    <p className="text-muted-foreground">{t("butunTizimBoyichaAniqla")}</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <div className="p-2 bg-red-500/10 rounded border border-red-500/30">
-                        <p className="font-medium text-[var(--ep-red)]">Frontend bor → Backend yo'q</p>
+                        <p className="font-medium text-[var(--ep-red)]">{t("frontendBorBackendYoq")}</p>
                         <p className="text-xs text-muted-foreground">{t('k404DeadButton')}</p>
                       </div>
                       <div className="p-2 bg-yellow-500/10 rounded border border-yellow-500/30">
-                        <p className="font-medium text-[var(--ep-yellow)]">Backend bor → Frontend ulanmagan</p>
-                        <p className="text-xs text-muted-foreground">Ishlatilmayotgan API</p>
+                        <p className="font-medium text-[var(--ep-yellow)]">{t("backendBorFrontendUlanmagan")}</p>
+                        <p className="text-xs text-muted-foreground">{t("ishlatilmayotganApi")}</p>
                       </div>
                       <div className="p-2 bg-orange-500/10 rounded border border-orange-500/30">
-                        <p className="font-medium text-[var(--ep-primary)]">Ikkala tomonda bor</p>
-                        <p className="text-xs text-muted-foreground">Contract mos emas</p>
+                        <p className="font-medium text-[var(--ep-primary)]">{t("ikkalaTomondaBor")}</p>
+                        <p className="text-xs text-muted-foreground">{t("contractMosEmas")}</p>
                       </div>
                     </div>
                     <div className="mt-2">
@@ -178,22 +178,22 @@ export function ErpRoadmapCard() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="pl-6 space-y-2 text-sm text-muted-foreground">
-                    <p>Tekshiriladigan tugmalar:</p>
+                    <p>{t("tekshiriladiganTugmalar")}</p>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      <Badge variant="outline">Yaratish</Badge>
-                      <Badge variant="outline">Qo'shish</Badge>
-                      <Badge variant="outline">Saqlash</Badge>
-                      <Badge variant="outline">Tahrirlash</Badge>
-                      <Badge variant="outline">O'chirish</Badge>
-                      <Badge variant="outline">Sozlamalar</Badge>
-                      <Badge variant="outline">Holat</Badge>
-                      <Badge variant="outline">onClick handlerlar</Badge>
+                      <Badge variant="outline">{t("Yaratish")}</Badge>
+                      <Badge variant="outline">{t("add")}</Badge>
+                      <Badge variant="outline">{t("Saqlash")}</Badge>
+                      <Badge variant="outline">{t("edit")}</Badge>
+                      <Badge variant="outline">{t("delete")}</Badge>
+                      <Badge variant="outline">{t("settings")}</Badge>
+                      <Badge variant="outline">{t("status28")}</Badge>
+                      <Badge variant="outline">{t("onclickHandlerlar")}</Badge>
                     </div>
-                    <p className="mt-2">Aniqla:</p>
+                    <p className="mt-2">{t("aniqla")}</p>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li>Bosilganda network ketadimi</li>
-                      <li>Real data yoziladimi</li>
-                      <li>Faqat UI harakatimi</li>
+                      <li>{t("bosilgandaNetworkKetadimi")}</li>
+                      <li>{t("realDataYoziladimi")}</li>
+                      <li>{t("faqatUiHarakatimi")}</li>
                     </ul>
                   </div>
                 </AccordionContent>
@@ -208,30 +208,30 @@ export function ErpRoadmapCard() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="pl-6 space-y-3 text-sm">
-                    <p className="text-muted-foreground font-medium">Modul emas, jarayon asosida tekshir:</p>
+                    <p className="text-muted-foreground font-medium">{t("modulEmasJarayonAsosidaTekshir")}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="p-2 border rounded flex items-center gap-2">
                         <span className="text-[var(--ep-green)]">→</span>
-                        <span>Sotuv → Invoice → To'lov</span>
+                        <span>{t("sotuvInvoiceTolov")}</span>
                       </div>
                       <div className="p-2 border rounded flex items-center gap-2">
                         <span className="text-[var(--ep-green)]">→</span>
-                        <span>Xarid → Qabul → Qarzdorlik</span>
+                        <span>{t("xaridQabulQarzdorlik")}</span>
                       </div>
                       <div className="p-2 border rounded flex items-center gap-2">
                         <span className="text-[var(--ep-green)]">→</span>
-                        <span>Ishlab chiqarish → Material sarfi → Ombor</span>
+                        <span>{t("ishlabChiqarishMaterialSarfiOmbor")}</span>
                       </div>
                       <div className="p-2 border rounded flex items-center gap-2">
                         <span className="text-[var(--ep-green)]">→</span>
-                        <span>Xarajat → Tasdiqlash → Moliyaga tushish</span>
+                        <span>{t("xarajatTasdiqlashMoliyagaTushish")}</span>
                       </div>
                     </div>
                     <div className="mt-2 p-2 bg-muted rounded">
-                      <p className="font-medium">Aniqla:</p>
+                      <p className="font-medium">{t("aniqla")}</p>
                       <ul className="list-disc pl-4">
-                        <li>Qayerda zanjir uzilgan</li>
-                        <li>Qayerda chetlab o'tish mumkin</li>
+                        <li>{t("qayerdaZanjirUzilgan")}</li>
+                        <li>{t("qayerdaChetlabOtishMumkin")}</li>
                       </ul>
                     </div>
                   </div>
@@ -243,19 +243,19 @@ export function ErpRoadmapCard() {
           <TabsContent value="phase2" className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Badge className="bg-orange-500">2-BOSQICH</Badge>
-              <h3 className="text-lg font-bold">MUAMMOLAR RO'YXATI VA FIX-PLAN</h3>
+              <h3 className="text-lg font-bold">{t("muammolarRoyxatiVaFixPlan")}</h3>
             </div>
             
             <div className="p-4 bg-muted rounded-lg">
-              <p className="font-medium mb-3">Faqat CONFIRMED ISSUE uchun har bir muammo bo'yicha yoz:</p>
+              <p className="font-medium mb-3">{t("faqatConfirmedIssueUchunHar")}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="p-3 border rounded-lg bg-background">
-                    <p className="font-bold text-primary mb-2">Issue ID</p>
+                    <p className="font-bold text-primary mb-2">{t("issueId")}</p>
                     <div className="space-y-1 text-sm text-muted-foreground">
-                      <p>• Biznes jarayon</p>
-                      <p>• Muammo tavsifi</p>
-                      <p>• Ta'siri</p>
+                      <p>{t("biznesJarayon")}</p>
+                      <p>{t("muammoTavsifi")}</p>
+                      <p>{t("tasiri")}</p>
                     </div>
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export function ErpRoadmapCard() {
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <p>• Nima qilish kerak (aniq)</p>
                       <p>• Qaysi qatlamda (UI/API/DB/AUTH)</p>
-                      <p>• Qanday yondashuv bilan</p>
+                      <p>{t("qandayYondashuvBilan")}</p>
                     </div>
                   </div>
                 </div>
@@ -273,10 +273,10 @@ export function ErpRoadmapCard() {
               <div className="mt-4">
                 <p className="font-medium mb-2">USTUVORLIK:</p>
                 <div className="flex flex-wrap gap-2">
-                  <EPStatusPill tone="danger">Kritik</EPStatusPill>
-                  <Badge className="bg-orange-500">Yuqori</Badge>
-                  <EPStatusPill tone="warning">O'rta</EPStatusPill>
-                  <EPStatusPill tone="neutral">Past</EPStatusPill>
+                  <EPStatusPill tone="danger">{t("kritik")}</EPStatusPill>
+                  <Badge className="bg-orange-500">{t("high")}</Badge>
+                  <EPStatusPill tone="warning">{t("medium")}</EPStatusPill>
+                  <EPStatusPill tone="neutral">{t("low")}</EPStatusPill>
                 </div>
               </div>
             </div>
@@ -293,25 +293,25 @@ export function ErpRoadmapCard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Lock className="h-4 w-4 text-[var(--ep-green)]" />
-                    3.1 Qat'iy biznes qoidalar
+                    {t("k31QatiyBiznesQoidalar")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5" />
-                    <span>Ombor manfiy bo'lsa → sotuv bloklansin</span>
+                    <span>{t("omborManfiyBolsaSotuvBloklansin")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5" />
-                    <span>Hujjatsiz to'lov bo'lmasin</span>
+                    <span>{t("hujjatsizTolovBolmasin")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5" />
-                    <span>Ishlab chiqarishsiz material chiqmasin</span>
+                    <span>{t("ishlabChiqarishsizMaterialChiqmasin")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-[var(--ep-red)] mt-0.5" />
-                    <span>Budgetdan chiqsa → xarajat o'tmasin</span>
+                    <span>{t("budgetdanChiqsaXarajatOtmasin")}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -326,11 +326,11 @@ export function ErpRoadmapCard() {
                 <CardContent className="text-sm space-y-2">
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-blue)] mt-0.5" />
-                    <span>Har bir muhim obyekt uchun</span>
+                    <span>{t("harBirMuhimObyektUchun")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-blue)] mt-0.5" />
-                    <span>Delete yo'q → faqat reversal</span>
+                    <span>{t("deleteYoqFaqatReversal")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-blue)] mt-0.5" />
@@ -343,7 +343,7 @@ export function ErpRoadmapCard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Clock className="h-4 w-4 text-[var(--ep-purple)]" />
-                    3.3 Period close
+                    {t("k33PeriodClose")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2">
@@ -353,11 +353,11 @@ export function ErpRoadmapCard() {
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-purple)] mt-0.5" />
-                    <span>Yopilgan davrga yozib bo'lmasin</span>
+                    <span>{t("yopilganDavrgaYozibBolmasin")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-purple)] mt-0.5" />
-                    <span>Override — faqat maxsus rol bilan</span>
+                    <span>{t("overrideFaqatMaxsusRolBilan")}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -371,13 +371,13 @@ export function ErpRoadmapCard() {
                 </CardHeader>
                 <CardContent className="text-sm">
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">Mahsulot</Badge>
-                    <Badge variant="outline">Birlik</Badge>
-                    <Badge variant="outline">Narx</Badge>
-                    <Badge variant="outline">Mijoz</Badge>
+                    <Badge variant="outline">{t("Mahsulot")}</Badge>
+                    <Badge variant="outline">{t("unit")}</Badge>
+                    <Badge variant="outline">{t("price")}</Badge>
+                    <Badge variant="outline">{t("mijoz1")}</Badge>
                   </div>
                   <p className="text-muted-foreground mt-2">
-                    Faqat 1 joyda yaratiladi, boshqa joylar referens.
+                    {t("faqat1JoydaYaratiladiBoshqa")}
                   </p>
                 </CardContent>
               </Card>
@@ -391,13 +391,13 @@ export function ErpRoadmapCard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm">
-                <p className="mb-2">Avtomatik aniqlansin:</p>
+                <p className="mb-2">{t("avtomatikAniqlansin")}</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div className="p-2 bg-red-500/10 rounded">To'lov bor → invoice yo'q</div>
-                  <div className="p-2 bg-red-500/10 rounded">Ishlab chiqarish bor → tannarx yo'q</div>
-                  <div className="p-2 bg-red-500/10 rounded">Ombor harakati mantiqsiz</div>
+                  <div className="p-2 bg-red-500/10 rounded">{t("tolovBorInvoiceYoq")}</div>
+                  <div className="p-2 bg-red-500/10 rounded">{t("ishlabChiqarishBorTannarxYoq")}</div>
+                  <div className="p-2 bg-red-500/10 rounded">{t("omborHarakatiMantiqsiz")}</div>
                 </div>
-                <p className="text-muted-foreground mt-2">Alert va log bilan.</p>
+                <p className="text-muted-foreground mt-2">{t("alertVaLogBilan")}</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -405,7 +405,7 @@ export function ErpRoadmapCard() {
           <TabsContent value="phase4" className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Badge className="bg-purple-500">4-BOSQICH</Badge>
-              <h3 className="text-lg font-bold">O'ZBEKISTON UCHUN SAP NEAR MOSLASHUV</h3>
+              <h3 className="text-lg font-bold">{t("ozbekistonUchunSapNearMoslashuv")}</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -413,10 +413,10 @@ export function ErpRoadmapCard() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Users className="h-5 w-5 text-[var(--ep-purple)]" />
-                    <span className="font-medium">Tasdiqlash matritsasi</span>
+                    <span className="font-medium">{t("tasdiqlashMatritsasi")}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Tasdiqlash matritsasi - kim nimani tasdiqlashi mumkin
+                    {t("tasdiqlashMatritsasiKimNimaniTasdiqlashi")}
                   </p>
                 </CardContent>
               </Card>
@@ -425,7 +425,7 @@ export function ErpRoadmapCard() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className="h-5 w-5 text-[var(--ep-purple)]" />
-                    <span className="font-medium">Accrual buxgalteriya</span>
+                    <span className="font-medium">{t("accrualBuxgalteriya")}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Hisoblash usuli (minimal darajada)
@@ -437,10 +437,10 @@ export function ErpRoadmapCard() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="h-5 w-5 text-[var(--ep-purple)]" />
-                    <span className="font-medium">Ko'p valyuta</span>
+                    <span className="font-medium">{t("kopValyuta")}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    UZS + USD + EUR qo'llab-quvvatlash
+                    {t("uzsUsdEurQollabQuvvatlash")}
                   </p>
                 </CardContent>
               </Card>
@@ -449,10 +449,10 @@ export function ErpRoadmapCard() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Shield className="h-5 w-5 text-[var(--ep-purple)]" />
-                    <span className="font-medium">Auditor rejimi</span>
+                    <span className="font-medium">{t("auditorRejimi")}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Faqat o'qish rejimi, barcha loglar
+                    {t("faqatOqishRejimiBarchaLoglar")}
                   </p>
                 </CardContent>
               </Card>
@@ -476,19 +476,19 @@ export function ErpRoadmapCard() {
                   <div className="p-3 bg-background rounded-lg border">
                     <div className="flex items-center gap-2 mb-1">
                       <Database className="h-4 w-4 text-[var(--ep-green)]" />
-                      <span className="font-medium">Tizim pasporti</span>
+                      <span className="font-medium">{t("tizimPasporti")}</span>
                     </div>
                   </div>
                   <div className="p-3 bg-background rounded-lg border">
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle className="h-4 w-4 text-[var(--ep-red)]" />
-                      <span className="font-medium">Topilgan muammolar</span>
+                      <span className="font-medium">{t("topilganMuammolar")}</span>
                     </div>
                   </div>
                   <div className="p-3 bg-background rounded-lg border">
                     <div className="flex items-center gap-2 mb-1">
                       <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
-                      <span className="font-medium">Tuzatilgan muammolar</span>
+                      <span className="font-medium">{t("tuzatilganMuammolar")}</span>
                     </div>
                   </div>
                   <div className="p-3 bg-background rounded-lg border">
@@ -506,14 +506,14 @@ export function ErpRoadmapCard() {
                   <div className="p-3 bg-background rounded-lg border">
                     <div className="flex items-center gap-2 mb-1">
                       <Target className="h-4 w-4 text-[var(--ep-green)]" />
-                      <span className="font-medium">Keyingi qadamlar</span>
+                      <span className="font-medium">{t("keyingiQadamlar")}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-6 p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
                   <h3 className="font-bold text-[var(--ep-green)] dark:text-emerald-400 mb-2">
-                    MAQSAD: SAP NEAR — O'zbekiston bozorining eng ishonchli ERP tizimi
+                    {t("maqsadSapNearOzbekistonBozorining")}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center gap-2">
@@ -522,15 +522,15 @@ export function ErpRoadmapCard() {
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-[var(--ep-green)]" />
-                      <span>Soliq kodeksiga moslik</span>
+                      <span>{t("soliqKodeksigaMoslik")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-[var(--ep-green)]" />
-                      <span>Biznes jarayonlar uzluksiz</span>
+                      <span>{t("biznesJarayonlarUzluksiz")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-[var(--ep-green)]" />
-                      <span>O'zbekiston bozorida eng kuchli lokal ERP</span>
+                      <span>{t("ozbekistonBozoridaEngKuchliLokal")}</span>
                     </div>
                   </div>
                 </div>

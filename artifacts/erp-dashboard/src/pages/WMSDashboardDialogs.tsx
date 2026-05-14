@@ -26,25 +26,25 @@ export function CreateWarehouseDialog({open, onOpenChange, form, onSubmit, isPen
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi ombor yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiOmborYaratish")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-          <Label>Nomi</Label>
-            <Input {...form.register("name")} placeholder="Ombor nomi" />
+          <Label>{t("name")}</Label>
+            <Input {...form.register("name")} placeholder={t("omborNomi")} />
             {form.formState.errors.name && (
               <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
             )}
           </div>
           <div className="space-y-1">
-          <Label>Kodi</Label>
+          <Label>{t("kodi")}</Label>
             <Input {...form.register("code")} placeholder="WH-001" />
             {form.formState.errors.code && (
               <p className="text-xs text-destructive">{form.formState.errors.code.message}</p>
             )}
           </div>
           <div className="space-y-1">
-          <Label>Turi</Label>
+          <Label>{t("type")}</Label>
             <Controller
               control={form.control}
               name="type"
@@ -52,25 +52,25 @@ export function CreateWarehouseDialog({open, onOpenChange, form, onSubmit, isPen
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="main">Asosiy</SelectItem>
-                    <SelectItem value="raw_material">Xom ashyo</SelectItem>
-                    <SelectItem value="finished_goods">Tayyor mahsulot</SelectItem>
-                    <SelectItem value="transit">Tranzit</SelectItem>
-                    <SelectItem value="semi_finished">Yarim tayyor</SelectItem>
+                    <SelectItem value="main">{t("primary")}</SelectItem>
+                    <SelectItem value="raw_material">{t("xomAshyo")}</SelectItem>
+                    <SelectItem value="finished_goods">{t("tayyorMahsulot")}</SelectItem>
+                    <SelectItem value="transit">{t("tranzit")}</SelectItem>
+                    <SelectItem value="semi_finished">{t("yarimTayyor")}</SelectItem>
                     <SelectItem value="defective">Brak / Nuqsonli</SelectItem>
-                    <SelectItem value="quarantine">Karantin</SelectItem>
-                    <SelectItem value="tools_equipment">Asbob-uskuna</SelectItem>
+                    <SelectItem value="quarantine">{t("karantin")}</SelectItem>
+                    <SelectItem value="tools_equipment">{t("asbobUskuna")}</SelectItem>
                     <SelectItem value="household_mro">Xo'jalik (MRO)</SelectItem>
                     <SelectItem value="mro">MRO</SelectItem>
-                    <SelectItem value="production">Ishlab chiqarish</SelectItem>
+                    <SelectItem value="production">{t("ishlabChiqarish2")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
-            <Button type="submit" disabled={isPending}>Yaratish</Button>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
+            <Button type="submit" disabled={isPending}>{t("Yaratish")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -91,7 +91,7 @@ export function CreateRequestDialog({ open, onOpenChange, form, onSubmit, isPend
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Ichki so'rov yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("ichkiSorovYaratish")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
@@ -102,22 +102,22 @@ export function CreateRequestDialog({ open, onOpenChange, form, onSubmit, isPend
             )}
           </div>
           <div className="space-y-1">
-          <Label>Miqdor</Label>
+          <Label>{t("quantity")}</Label>
             <Input type="number" {...form.register("quantity")} placeholder="0" />
             {form.formState.errors.quantity && (
               <p className="text-xs text-destructive">{form.formState.errors.quantity.message}</p>
             )}
           </div>
           <div className="space-y-1">
-          <Label>Sabab</Label>
-            <Input {...form.register("reason")} placeholder="So'rov sababi" />
+          <Label>{t("sabab")}</Label>
+            <Input {...form.register("reason")} placeholder={t("sorovSababi")} />
             {form.formState.errors.reason && (
               <p className="text-xs text-destructive">{form.formState.errors.reason.message}</p>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
-            <Button type="submit" disabled={isPending}>Yuborish</Button>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
+            <Button type="submit" disabled={isPending}>{t("submitBtn")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

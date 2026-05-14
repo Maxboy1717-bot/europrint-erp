@@ -22,6 +22,7 @@ import { GridTab, SwapsTab } from "./ShiftScheduleSections";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 export default function ShiftSchedule() {
+  const { t } = useTranslation("common");
   const { t: tCommon } = useTranslation("common");
   const { user: authUser } = useAuth();
   const { toast } = useToast();
@@ -185,12 +186,12 @@ export default function ShiftSchedule() {
         <div className="flex items-center gap-3">
           <Calendar className="h-8 w-8 text-primary" />
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{tCommon("shiftScheduleTitle")}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{tCommon("shiftScheduleTitle")}</b></>}
         title={tCommon("shiftScheduleTitle")}
       />
         </div>
         <Button variant="outline" size="sm" onClick={() => { refetchSchedules(); refetchSwaps(); }} data-testid="button-refresh">
-          <RefreshCw className="h-4 w-4 mr-2" />Yangilash
+          <RefreshCw className="h-4 w-4 mr-2" />{t("refresh")}
         </Button>
       </div>
 
@@ -227,7 +228,7 @@ export default function ShiftSchedule() {
 
       <div className="flex items-center gap-2">
         <Button variant={activeTab === "grid" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("grid")} data-testid="tab-grid">
-          <Calendar className="h-4 w-4 mr-2" />Haftalik Jadval
+          <Calendar className="h-4 w-4 mr-2" />{t("haftalikJadval")}
         </Button>
         <Button variant={activeTab === "swaps" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("swaps")} data-testid="tab-swaps">
           <ArrowRightLeft className="h-4 w-4 mr-2" />Almashish So'rovlari

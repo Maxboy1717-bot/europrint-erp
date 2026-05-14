@@ -5,6 +5,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { HRRequest } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface HRRequestsHistoryProps {
   requests: HRRequest[];
@@ -26,12 +27,13 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function HRRequestsHistory({ requests }: HRRequestsHistoryProps) {
+  const { t } = useTranslation("common");
   if (requests.length === 0) return null;
 
   return (
     <div className="border-t pt-4">
       <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-        HR So'rovlar tarixi
+        {t("hrSorovlarTarixi")}
       </h4>
       <div className="flex flex-col gap-2">
         {(Array.isArray(requests) ? requests : []).map(r => {
@@ -50,7 +52,7 @@ export function HRRequestsHistory({ requests }: HRRequestsHistoryProps) {
                 </p>
               </div>
               {r.priority === "urgent" && (
-                <Badge className="bg-[var(--ep-red)] text-white text-[9px] shrink-0">Shoshilinch</Badge>
+                <Badge className="bg-[var(--ep-red)] text-white text-[9px] shrink-0">{t("Shoshilinch")}</Badge>
               )}
             </div>
           );

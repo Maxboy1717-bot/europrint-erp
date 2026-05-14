@@ -31,6 +31,7 @@ import { ForecastTab } from "./wms/material360/ForecastTab";
 import { StorageTab } from "./wms/material360/StorageTab";
 import { InventoryTab } from "./wms/material360/InventoryTab";
 import { StockStatusBadge } from "./wms/material360/StockStatusBadge";
+import { useTranslation } from '@/lib/i18n';
 
 const TABS = [
   { value: "basic", label: "Asosiy" }, { value: "stock", label: "Ombor" },
@@ -41,6 +42,7 @@ const TABS = [
 ];
 
 export function Material360Card({ materialId, onBack, onEdit }: { materialId: string; onBack: () => void; onEdit?: () => void }) {
+  const { t } = useTranslation("common");
   const { data, isLoading } = useQuery<Material360CardResponse>({
     queryKey: ["/api/inventory/materials", materialId, "360-card"],
     enabled: !!materialId,
@@ -61,9 +63,9 @@ export function Material360Card({ materialId, onBack, onEdit }: { materialId: st
     return (
       <div className="p-8 text-center text-muted-foreground">
         <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
-        <p className="text-base font-medium mb-1">Material topilmadi</p>
+        <p className="text-base font-medium mb-1">{t("materialTopilmadi")}</p>
         <p className="text-sm mb-4">ID: {materialId}</p>
-        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4 mr-1" /> Orqaga</Button>
+        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4 mr-1" /> {t("back")}</Button>
       </div>
     );
   }
@@ -115,7 +117,7 @@ export function Material360Card({ materialId, onBack, onEdit }: { materialId: st
                     {basic.xomAshyoRu && <p className="text-sm text-muted-foreground mt-0.5">{basic.xomAshyoRu}</p>}
                     <div className="flex flex-wrap gap-2 mt-2">
                       <StockStatusBadge status={stockStatus} />
-                      {basic.isActive !== false && <Badge className="bg-green-100 text-green-800 border-none">Aktiv</Badge>}
+                      {basic.isActive !== false && <Badge className="bg-green-100 text-green-800 border-none">{t("aktiv")}</Badge>}
                       {basic.category && <Badge variant="outline">{basic.category}</Badge>}
                       {basic.materialType && <Badge variant="outline">{basic.materialType}</Badge>}
                     </div>
@@ -123,25 +125,25 @@ export function Material360Card({ materialId, onBack, onEdit }: { materialId: st
                   {onEdit && (
                     <Button size="sm" variant="outline" onClick={onEdit} data-testid="button-material-edit" className="flex-shrink-0 mt-1">
                       <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                      Tahrirlash
+                      {t("edit")}
                     </Button>
                   )}
                 </div>
                 <div className="px-5 pb-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Box className="h-3.5 w-3.5 text-primary" />
-                    <span>O'lchov: <strong className="text-foreground">{basic.unitOfMeasure}</strong></span>
+                    <span>{t("olchov")}<strong className="text-foreground">{basic.unitOfMeasure}</strong></span>
                   </span>
                   {stock?.totalQty != null && (
                     <span className="flex items-center gap-1.5">
                       <Package className="h-3.5 w-3.5 text-primary" />
-                      <span>Zaxira: <strong className="text-foreground">{fmtQty(stock.totalQty, basic.unitOfMeasure)}</strong></span>
+                      <span>{t("zaxira")}<strong className="text-foreground">{fmtQty(stock.totalQty, basic.unitOfMeasure)}</strong></span>
                     </span>
                   )}
                   {basic.lastPurchaseDate && (
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-primary" />
-                      <span>Oxirgi xarid: <strong className="text-foreground">{fmtDate(basic.lastPurchaseDate)}</strong></span>
+                      <span>{t("oxirgiXarid")}<strong className="text-foreground">{fmtDate(basic.lastPurchaseDate)}</strong></span>
                     </span>
                   )}
                   {basic.supplierName && (
@@ -150,13 +152,13 @@ export function Material360Card({ materialId, onBack, onEdit }: { materialId: st
                   {stock?.daysRemaining != null && (
                     <span className={`flex items-center gap-1.5 ${stock.daysRemaining < 7 ? "text-destructive" : ""}`}>
                       <Clock className="h-3.5 w-3.5" />
-                      <span>Yetadi: <strong>{stock.daysRemaining} kun</strong></span>
+                      <span>{t("yetadi")}<strong>{stock.daysRemaining} kun</strong></span>
                     </span>
                   )}
                   {finance?.currentAvgPrice ? (
                     <span className="flex items-center gap-1.5">
                       <DollarSign className="h-3.5 w-3.5" />
-                      <span>Narx: <strong className="text-foreground">{fmtMoney(finance.currentAvgPrice, finance.currency)}/{basic.unitOfMeasure}</strong></span>
+                      <span>{t("narx")}<strong className="text-foreground">{fmtMoney(finance.currentAvgPrice, finance.currency)}/{basic.unitOfMeasure}</strong></span>
                     </span>
                   ) : null}
                 </div>

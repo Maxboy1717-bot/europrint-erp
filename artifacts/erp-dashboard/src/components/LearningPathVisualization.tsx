@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Circle, Lock, TrendingUp, Clock, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface LearningStep {
   id: string;
@@ -29,6 +30,7 @@ interface LearningPathProps {
 }
 
 export function LearningPathVisualization({ userId, userName, position, steps, overallProgress }: LearningPathProps) {
+  const { t } = useTranslation("common");
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
@@ -99,7 +101,7 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-primary">{overallProgress}%</div>
-            <div className="text-xs text-muted-foreground">Umumiy progress</div>
+            <div className="text-xs text-muted-foreground">{t("umumiyProgress")}</div>
           </div>
         </div>
         <Progress value={overallProgress} className="mt-4" />
@@ -145,7 +147,7 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
                         {step.progress !== undefined && step.status === "in_progress" && (
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">Jarayon</span>
+                              <span className="text-muted-foreground">{t("jarayon")}</span>
                               <span className="font-medium">{step.progress}%</span>
                             </div>
                             <Progress value={step.progress} className="h-1.5" />
@@ -188,19 +190,19 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
             <div className="text-2xl font-bold text-[var(--ep-green)] dark:text-green-400">
               {(Array.isArray(steps) ? steps : []).filter(s => s.status === "completed").length}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Yakunlangan</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("yakunlangan")}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-primary">
               {(Array.isArray(steps) ? steps : []).filter(s => s.status === "in_progress").length}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Jarayonda</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("inProgress")}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-muted-foreground">
               {(Array.isArray(steps) ? steps : []).filter(s => s.status === "available" || s.status === "locked").length}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Qolgan</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("qolgan")}</div>
           </div>
         </div>
       </CardContent>

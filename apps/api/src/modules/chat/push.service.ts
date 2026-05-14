@@ -53,7 +53,7 @@ export class PushService {
 
   async unregister(userId: string): Promise<Result<{ removed: number }>> {
     const r = await this.pushRepo.deactivateForUser(userId);
-    if (!r.ok) return r;
+    if (!r.ok) return { ok: false, error: r.error };
     return { ok: true, data: { removed: 1 } };
   }
 

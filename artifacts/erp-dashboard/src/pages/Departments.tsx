@@ -36,6 +36,7 @@ import {
   EPPageHeader, EPCard, EPKpiCard, EPStatusPill,
   EPEmptyState, EPErrorState, EPSkeletonKpiRow, EPSkeletonTable,
 } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 interface Department {
   id: string;
@@ -56,6 +57,9 @@ const EMPTY_FORM = {
 };
 
 export default function Departments() {
+  const { t } = useTranslation("hr");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tNav } = useTranslation("navigation");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -80,23 +84,23 @@ export default function Departments() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/departments"] });
-      toast({ title: editing ? "Bo'lim yangilandi" : "Bo'lim qo'shildi" });
+      toast({ title: editing ? t("departments.toastUpdated") : t("departments.toastAdded") });
       setDialogOpen(false);
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: tCommon("errorOccurred"), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/departments/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/departments"] });
-      toast({ title: "Bo'lim o'chirildi" });
+      toast({ title: t("departments.toastDeleted") });
       setDeleteId(null);
     },
     onError: (err: Error) => {
-      const msg = err?.message || "O'chirishda xatolik";
+      const msg = err?.message || t("departments.errorDeleting");
       toast({
-        title: msg.includes("employees") ? "Xodimlari bor bo'limni o'chirish mumkin emas" : msg,
+        title: msg.includes("employees") ? t("departments.errorHasEmployees") : msg,
         variant: "destructive",
       });
       setDeleteId(null);
@@ -152,13 +156,13 @@ export default function Departments() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · HR · <b className="text-foreground">Bo'limlar</b></>}
-        title="Bo'limlar"
-        subtitle="Kompaniya bo'limlari ro'yxati va boshqaruvi"
+        breadcrumb={<>{tCommon("dashboard")} · {tNav("HR")} · <b className="text-foreground">{t("departments.title")}</b></>}
+        title={t("departments.title")}
+        subtitle={t("departments.subtitle")}
         actions={
           <Button onClick={openAdd} className="ep-btn-primary-shimmer gap-1.5">
             <Plus className="h-4 w-4" />
-            Yangi bo'lim qo'shish
+            {t("departments.addNew")}
           </Button>
         }
       />
@@ -169,28 +173,28 @@ export default function Departments() {
       ) : !isError && (
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <EPKpiCard
-            label="Jami bo'limlar"
+            label={t("departments.totalDepartments")}
             value={stats.total}
             icon={Building2}
             iconBg="hr"
             enterDelayMs={0}
           />
           <EPKpiCard
-            label="Faol"
+            label={t("departments.active")}
             value={stats.active}
             icon={CheckCircle2}
             iconBg="var(--ep-green)"
             enterDelayMs={60}
           />
           <EPKpiCard
-            label="Nofaol"
+            label={t("departments.inactive")}
             value={stats.inactive}
             icon={MinusCircle}
             iconBg="var(--ep-muted)"
             enterDelayMs={120}
           />
           <EPKpiCard
-            label="Darajalar"
+            label={t("departments.levels")}
             value={stats.levels}
             icon={Layers}
             iconBg="var(--ep-blue)"
@@ -207,13 +211,13 @@ export default function Departments() {
             style={{ color: "hsl(var(--muted-foreground))" }}
           />
           <Input
-            placeholder="Bo'lim nomini qidirish..."
+            placeholder={t("departments.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-9"
           />
         </div>
-        <span className="ep-caption">{filtered.length} ta bo'lim</span>
+        <span className="ep-caption">{t("departments.countSuffix", { n: String(filtered.length) })}</span>
       </div>
 
       {/* ── Table / states ────────────────────────────────────────────── */}
@@ -225,17 +229,17 @@ export default function Departments() {
         ) : filtered.length === 0 ? (
           <EPEmptyState
             icon={Building2}
-            title={search ? "Hech narsa topilmadi" : "Hali bo'lim yo'q"}
+            title={search ? t("departments.emptySearchTitle") : t("departments.emptyTitle")}
             description={
               search
-                ? "Boshqa qidiruv so'zini sinab ko'ring yoki filterni tozalang."
-                : "Birinchi bo'limni qo'shing — xodimlar va lavozimlar shu yerga biriktiriladi."
+                ? t("departments.emptySearchDesc")
+                : t("departments.emptyDesc")
             }
             action={
               !search && (
                 <Button onClick={openAdd} className="ep-btn-primary-shimmer gap-1.5">
                   <Plus className="h-4 w-4" />
-                  Yangi bo'lim qo'shish
+                  {t("departments.addNew")}
                 </Button>
               )
             }
@@ -246,12 +250,12 @@ export default function Departments() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-muted/40 transition-colors">
-                  <TableHead className="w-[80px] ep-eyebrow">Kod</TableHead>
-                  <TableHead className="ep-eyebrow">Nomi (UZ)</TableHead>
-                  <TableHead className="ep-eyebrow">Nomi (RU)</TableHead>
-                  <TableHead className="w-[90px] ep-eyebrow">Daraja</TableHead>
-                  <TableHead className="w-[100px] ep-eyebrow">Holat</TableHead>
-                  <TableHead className="w-[100px] text-right ep-eyebrow">Amallar</TableHead>
+                  <TableHead className="w-[80px] ep-eyebrow">{t("departments.code")}</TableHead>
+                  <TableHead className="ep-eyebrow">{t("departments.nameUz")}</TableHead>
+                  <TableHead className="ep-eyebrow">{t("departments.nameRu")}</TableHead>
+                  <TableHead className="w-[90px] ep-eyebrow">{t("departments.level")}</TableHead>
+                  <TableHead className="w-[100px] ep-eyebrow">{t("departments.status")}</TableHead>
+                  <TableHead className="w-[100px] text-right ep-eyebrow">{t("departments.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -276,13 +280,13 @@ export default function Departments() {
                     <TableCell>
                       {dept.level != null ? (
                         <EPStatusPill tone="neutral" hideDot>
-                          {dept.level}-daraja
+                          {t("departments.levelN", { n: String(dept.level) })}
                         </EPStatusPill>
                       ) : "—"}
                     </TableCell>
                     <TableCell>
                       <EPStatusPill tone={dept.is_active ? "success" : "neutral"}>
-                        {dept.is_active ? "Faol" : "Nofaol"}
+                        {dept.is_active ? t("departments.active") : t("departments.inactive")}
                       </EPStatusPill>
                     </TableCell>
                     <TableCell className="text-right">
@@ -290,7 +294,7 @@ export default function Departments() {
                         <Button
                           variant="ghost" size="icon" className="h-7 w-7"
                           onClick={() => openEdit(dept)}
-                          aria-label="Tahrirlash"
+                          aria-label={tCommon("edit")}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -298,7 +302,7 @@ export default function Departments() {
                           variant="ghost" size="icon" className="h-7 w-7"
                           style={{ color: "var(--ep-red)" }}
                           onClick={() => setDeleteId(dept.id)}
-                          aria-label="O'chirish"
+                          aria-label={tCommon("delete")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -317,31 +321,31 @@ export default function Departments() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold"> {editing ? "Bo'limni tahrirlash" : "Yangi bo'lim qo'shish"}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold"> {editing ? t("departments.editTitle") : t("departments.addNew")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="ep-label">Nomi (UZ) *</Label>
+                <Label className="ep-label">{t("departments.nameUzRequired")}</Label>
                 <Input
                   value={form.name_uz}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, name_uz: e.target.value, name: e.target.value }))
                   }
-                  placeholder="Bo'lim nomi"
+                  placeholder={t("departments.namePlaceholder")}
                 />
               </div>
               <div className="space-y-1">
-                <Label className="ep-label">Nomi (RU)</Label>
+                <Label className="ep-label">{t("departments.nameRu")}</Label>
                 <Input
                   value={form.name_ru}
                   onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
-                  placeholder="Название отдела"
+                  placeholder={t("departments.nameRuPlaceholder")}
                 />
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="ep-label">Kod</Label>
+              <Label className="ep-label">{t("departments.code")}</Label>
               <Input
                 value={form.code}
                 onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
@@ -350,11 +354,11 @@ export default function Departments() {
               />
             </div>
             <div className="space-y-1">
-              <Label className="ep-label">Tavsif</Label>
+              <Label className="ep-label">{t("departments.descriptionLabel")}</Label>
               <Input
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Qisqacha tavsif"
+                placeholder={t("departments.descriptionPlaceholder")}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -363,19 +367,19 @@ export default function Departments() {
                 onCheckedChange={(v) => setForm((f) => ({ ...f, is_active: v }))}
                 id="dept-active"
               />
-              <Label htmlFor="dept-active" className="ep-label">Faol</Label>
+              <Label htmlFor="dept-active" className="ep-label">{t("departments.active")}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Bekor qilish
+              {tCommon("cancel")}
             </Button>
             <Button
               onClick={() => saveMutation.mutate(form)}
               disabled={!form.name_uz || saveMutation.isPending}
               className="ep-btn-primary-shimmer"
             >
-              {saveMutation.isPending ? "Saqlanmoqda..." : editing ? "O'zgarishlarni saqlash" : "Saqlash"}
+              {saveMutation.isPending ? t("departments.saving") : editing ? t("departments.saveChanges") : tCommon("save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -384,10 +388,10 @@ export default function Departments() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
-        title="Bo'limni o'chirish"
-        description="Ushbu bo'limni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
+        title={t("departments.deleteTitle")}
+        description={t("departments.deleteDesc")}
+        confirmText={tCommon("delete")}
+        cancelText={tCommon("cancel")}
         variant="destructive"
         onConfirm={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
       />

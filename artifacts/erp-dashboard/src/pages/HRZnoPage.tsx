@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ZnoRequest {
   id: string | number;
@@ -48,6 +49,7 @@ const formatAmount = (v: number | string) =>
   Number(v).toLocaleString("uz-UZ") + " so'm";
 
 export default function HRZnoPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -145,12 +147,12 @@ export default function HRZnoPage() {
   return (
     <ModulePage
       module="hr"
-      title="ZNO — Naqd Pul Arizalari"
+      title={t("znoNaqdPulArizalari")}
       icon={<Banknote className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-zno">
           <Plus className="h-4 w-4 mr-2" />
-          Ariza yaratish
+          {t("arizaYaratish")}
         </Button>
       }
     >
@@ -160,7 +162,7 @@ export default function HRZnoPage() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Ariza qidirish..."
+              placeholder={t("arizaQidirish")}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9"
@@ -248,7 +250,7 @@ export default function HRZnoPage() {
                               data-testid={`button-approve-zno-${r.id}`}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              Tasdiqlash
+                              {t("verify")}
                             </Button>
                             <Button
                               size="sm"
@@ -258,7 +260,7 @@ export default function HRZnoPage() {
                               data-testid={`button-reject-zno-${r.id}`}
                             >
                               <XCircle className="h-3 w-3 mr-1" />
-                              Rad etish
+                              {t("reject")}
                             </Button>
                           </>
                         )}
@@ -276,15 +278,15 @@ export default function HRZnoPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi ZNO arizasi</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiZnoArizasi")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Maqsad *</Label>
+              <Label>{t("maqsad")}</Label>
               <Textarea
                 value={form.purpose}
                 onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))}
-                placeholder="Naqd pul maqsadi..."
+                placeholder={t("naqdPulMaqsadi")}
                 rows={3}
                 data-testid="input-zno-purpose"
               />
@@ -301,16 +303,16 @@ export default function HRZnoPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Ariza beruvchi</Label>
+              <Label>{t("arizaBeruvchi")}</Label>
               <Input
                 value={form.submitter_name}
                 onChange={e => setForm(f => ({ ...f, submitter_name: e.target.value }))}
-                placeholder="Ism Familya"
+                placeholder={t("ismFamilya")}
                 data-testid="input-zno-submitter"
               />
             </div>
             <div className="space-y-1.5">
-              <Label>To'lov sanasi</Label>
+              <Label>{t("tolovSanasi")}</Label>
               <Input
                 type="date"
                 value={form.payment_date}
@@ -320,7 +322,7 @@ export default function HRZnoPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => { if (form.purpose.trim() && form.amount) createMutation.mutate(form); }}
               disabled={!form.purpose.trim() || !form.amount || createMutation.isPending}
@@ -344,14 +346,14 @@ export default function HRZnoPage() {
               <Textarea
                 value={comment}
                 onChange={e => setComment(e.target.value)}
-                placeholder="Izoh..."
+                placeholder={t("izoh1")}
                 rows={3}
                 data-testid="input-action-comment"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setActionDialog(null); setComment(""); }}>Bekor</Button>
+            <Button variant="outline" onClick={() => { setActionDialog(null); setComment(""); }}>{t("Bekor")}</Button>
             <Button
               variant={actionDialog?.type === "approve" ? "default" : "destructive"}
               onClick={handleAction}

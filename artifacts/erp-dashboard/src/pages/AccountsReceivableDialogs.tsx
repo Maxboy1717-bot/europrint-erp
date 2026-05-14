@@ -33,16 +33,16 @@ export function AddArEntryDialog({open,
       <DialogTrigger asChild>
         <Button data-testid="button-add-ar-entry">
           <Plus className="h-4 w-4 mr-2" />
-          Yozuv qo'shish
+          {t("yozuvQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Yangi yozuv qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiYozuvQoshish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="space-y-1">
-            <Label htmlFor="ar-customerId">Mijoz ID</Label>
+            <Label htmlFor="ar-customerId">{t("mijozId")}</Label>
             <Input
               id="ar-customerId"
               value={form.customerId}
@@ -51,7 +51,7 @@ export function AddArEntryDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="ar-amount">Summa</Label>
+            <Label htmlFor="ar-amount">{t("summa")}</Label>
             <Input
               id="ar-amount"
               type="number"
@@ -61,7 +61,7 @@ export function AddArEntryDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="ar-dueDate">Muddat</Label>
+            <Label htmlFor="ar-dueDate">{t("muddat")}</Label>
             <Input
               id="ar-dueDate"
               type="date"
@@ -70,12 +70,12 @@ export function AddArEntryDialog({open,
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="ar-description">Tavsif</Label>
+            <Label htmlFor="ar-description">{t("progress.description")}</Label>
             <Input
               id="ar-description"
               value={form.description}
               onChange={(e) => onFormChange((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Tavsif..."
+              placeholder={t("tavsif1")}
             />
           </div>
           <Button

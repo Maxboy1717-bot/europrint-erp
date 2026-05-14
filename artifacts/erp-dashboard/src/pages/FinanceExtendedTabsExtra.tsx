@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, CheckCircle, AlertTriangle } from "lucide-react";
 import type { TaxCalendarItem } from "./FinanceExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface TaxTabProps {
   taxItems: TaxCalendarItem[];
@@ -18,10 +19,11 @@ interface TaxTabProps {
 }
 
 export function TaxTab({ taxItems, taxLoading }: TaxTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tax" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Ichki Soliqlar Boshqaruvi</h2>
+        <h2 className="text-lg font-semibold">{t("ichkiSoliqlarBoshqaruvi")}</h2>
         <Button variant="outline" size="sm">
           <Download className="h-3.5 w-3.5 mr-1.5" />Export
         </Button>
@@ -45,13 +47,13 @@ export function TaxTab({ taxItems, taxLoading }: TaxTabProps) {
             <div className="p-4 space-y-2">{([...Array(4)]).map((_,i)=><Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg"/>)}</div>
           ) : taxItems.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              Soliq qoidalari kiritilmagan. Administrator tomonidan qo'shilishi kerak.
+              {t("soliqQoidalariKiritilmaganAdministratorTomonidan")}
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Soliq turi</TableHead><TableHead>Davr</TableHead>
-                <TableHead>Muddat</TableHead><TableHead>Stavka</TableHead><TableHead>Holati</TableHead>
+                <TableHead>{t("soliqTuri")}</TableHead><TableHead>{t("period")}</TableHead>
+                <TableHead>{t("muddat")}</TableHead><TableHead>{t("stavka")}</TableHead><TableHead>{t("holati")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(taxItems) ? taxItems : []).map((t, i) => (
@@ -79,9 +81,10 @@ export function TaxTab({ taxItems, taxLoading }: TaxTabProps) {
 }
 
 export function TaxCalendarTab() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="taxcal" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Soliq Muddatlari Kalendari</h2>
+      <h2 className="text-lg font-semibold">{t("soliqMuddatlariKalendari")}</h2>
       <div className="space-y-3">
         {([
           { month: "Aprel 2026", tasks: [
@@ -124,9 +127,10 @@ export function TaxCalendarTab() {
 }
 
 export function RiskAITab() {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="risk" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">AI Moliyaviy Risk Tahlili</h2>
+      <h2 className="text-lg font-semibold">{t("aiMoliyaviyRiskTahlili")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Umumiy risk bali", v: "—", c: "text-[var(--ep-primary)]", note: "" },
@@ -141,7 +145,7 @@ export function RiskAITab() {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">AI Risk Bashoratlari</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("aiRiskBashoratlari")}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {([
             { risk: "Pul oqimi tanqisligi", prob: 35, impact: "Yuqori", action: "Debitor qayta ko'rib chiqish kerak" },
@@ -165,7 +169,7 @@ export function RiskAITab() {
                 />
               </div>
               <div className="text-xs text-muted-foreground">
-                <span className="font-medium">Tavsiya: </span>{r.action}
+                <span className="font-medium">{t("tavsiya1")}</span>{r.action}
               </div>
             </div>
           ))}

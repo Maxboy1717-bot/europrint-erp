@@ -54,11 +54,11 @@ export function DefectSection() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Brak Ma'lumotlari</h2>
-          <p className="text-sm text-muted-foreground">Ishlab chiqarish va xomashyo nuqsonlari hisobi</p>
+          <h2 className="text-lg font-semibold">{t("brakMalumotlari")}</h2>
+          <p className="text-sm text-muted-foreground">{t("ishlabChiqarishVaXomashyoNuqsonlari")}</p>
         </div>
         <Button onClick={() => setShowDefectDialog(true)} data-testid="button-add-defect">
-          <Plus className="h-4 w-4 mr-2" />Brak Qayd Etish
+          <Plus className="h-4 w-4 mr-2" />{t("brakQaydEtish")}
         </Button>
       </div>
 
@@ -80,25 +80,25 @@ export function DefectSection() {
         <CardHeader className="pb-3">
           <div className="relative max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Material yoki sabab bo'yicha qidirish..." className="pl-8" value={searchQ} onChange={e => setSearchQ(e.target.value)} data-testid="input-defect-search" />
+            <Input placeholder={t("materialYokiSababBoyichaQidirish")} className="pl-8" value={searchQ} onChange={e => setSearchQ(e.target.value)} data-testid="input-defect-search" />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
               <TableHead>{t('Material')}</TableHead>
-              <TableHead>Miqdor</TableHead>
-              <TableHead>Sabab</TableHead>
-              <TableHead>Bosqich</TableHead>
-              <TableHead>Operator</TableHead>
-              <TableHead>Sana</TableHead>
+              <TableHead>{t("quantity")}</TableHead>
+              <TableHead>{t("sabab")}</TableHead>
+              <TableHead>{t("milestone1")}</TableHead>
+              <TableHead>{t("Operator")}</TableHead>
+              <TableHead>{t("date")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {bLoad ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : brakList.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-30" />Braklar topilmadi
+                  <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("braklarTopilmadi")}
                 </TableCell></TableRow>
               ) : (Array.isArray(brakList) ? brakList : []).filter((b: QCBrak) => !searchQ || b.materialName?.toLowerCase().includes(searchQ.toLowerCase()) || b.reason?.toLowerCase().includes(searchQ.toLowerCase())).map((b: QCBrak) => (
                 <TableRow key={b.id} data-testid={`row-defect-${b.id}`} className="hover:bg-muted/40 transition-colors">
@@ -119,11 +119,11 @@ export function DefectSection() {
 
       <Dialog open={showDefectDialog} onOpenChange={setShowDefectDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Brak Qayd Etish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("brakQaydEtish")}</DialogTitle></DialogHeader>
           <form onSubmit={defectForm.handleSubmit(d => createDefect.mutate(d))} className="space-y-4">
             <div className="space-y-1.5">
               <Label>{t('materialMahsulot')}</Label>
-              <Input {...defectForm.register("materialName")} placeholder="Gofrokarton T-24..." data-testid="input-defect-material" />
+              <Input {...defectForm.register("materialName")} placeholder={t("gofrokartonT24")} data-testid="input-defect-material" />
               {defectForm.formState.errors.materialName && <p className="text-xs text-destructive">{defectForm.formState.errors.materialName.message}</p>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -133,29 +133,29 @@ export function DefectSection() {
                 {defectForm.formState.errors.quantity && <p className="text-xs text-destructive">{defectForm.formState.errors.quantity.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Bosqich</Label>
+                <Label>{t("milestone1")}</Label>
                 <Select onValueChange={v => defectForm.setValue("stage", v)} defaultValue="incoming">
                   <SelectTrigger data-testid="select-defect-stage" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="incoming">Kiruvchi nazorat</SelectItem>
-                    <SelectItem value="production">Ishlab chiqarish</SelectItem>
-                    <SelectItem value="finished">Tayyor mahsulot</SelectItem>
+                    <SelectItem value="incoming">{t("kiruvchiNazorat")}</SelectItem>
+                    <SelectItem value="production">{t("ishlabChiqarish2")}</SelectItem>
+                    <SelectItem value="finished">{t("tayyorMahsulot")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Sabab</Label>
-              <Input {...defectForm.register("reason")} placeholder="Yirtilish, rang nomutanosibligi..." data-testid="input-defect-reason" />
+              <Label>{t("sabab")}</Label>
+              <Input {...defectForm.register("reason")} placeholder={t("yirtilishRangNomutanosibligi")} data-testid="input-defect-reason" />
               {defectForm.formState.errors.reason && <p className="text-xs text-destructive">{defectForm.formState.errors.reason.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Mas'ul operator</Label>
-              <Input {...defectForm.register("operatorName")} placeholder="Ism sharif" data-testid="input-defect-operator" />
+              <Label>{t("masulOperator")}</Label>
+              <Input {...defectForm.register("operatorName")} placeholder={t("ismSharif1")} data-testid="input-defect-operator" />
               {defectForm.formState.errors.operatorName && <p className="text-xs text-destructive">{defectForm.formState.errors.operatorName.message}</p>}
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowDefectDialog(false)}>Bekor</Button>
+              <Button type="button" variant="outline" onClick={() => setShowDefectDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createDefect.isPending} data-testid="button-save-defect">
                 {createDefect.isPending ? "Saqlanmoqda..." : "Saqlash"}
               </Button>

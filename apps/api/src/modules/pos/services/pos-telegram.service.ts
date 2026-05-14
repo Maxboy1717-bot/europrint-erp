@@ -59,14 +59,13 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[pos-telegram.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
     const redisUrl = this.config.get<string>('REDIS_URL');
-    if (!redisUrl) return Ok();
+    if (!redisUrl) return;
     const r = await safeCall(async () => {
       const { default: Redis } = await import('ioredis');
       this.redisClient = new Redis(redisUrl, { maxRetriesPerRequest: 2, lazyConnect: true }) as RedisLike;
       await (this.redisClient)?.connect?.();
     });
     if (!r.ok) this.redisClient = null;
-    return r;
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -235,6 +234,32 @@ export class PosTelegramService implements OnModuleInit, OnModuleDestroy {
       }
     } catch (err) {
       this.logger.error(`Telegram API xato: ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Broadcast an alert to all admin telegram chats. Used by background jobs
+   * (low-stock, inactive-materials, inventory-passport) where there's no
+   * specific recipient. Best-effort: failures are logged but not thrown.
+   */
+  async sendAlert(input: {
+    title:    string;
+    body:     string;
+    severity: 'info' | 'warning' | 'critical';
+  }): Promise<void> {
+    if (!this.botToken) return;
+    const icon = input.severity === 'critical' ? '🚨' : input.severity === 'warning' ? '⚠️' : 'ℹ️';
+    const text = `${icon} <b>${input.title}</b>\n\n${input.body}`;
+    try {
+      const admins = await this.telegramRepo.getAdminChatIds();
+      const chatIds = admins.ok ? admins.data : [];
+      for (const chatId of chatIds) {
+        await this.sendNotification(BigInt(chatId), text).catch((e: unknown) =>
+          this.logger.warn(`sendAlert to chat ${chatId} failed: ${(e as Error).message}`),
+        );
+      }
+    } catch (err) {
+      this.logger.warn(`sendAlert failed: ${(err as Error).message}`);
     }
   }
 

@@ -4,13 +4,14 @@
  */
 
 import { sql, db } from '@workspace/db';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 
 import { Injectable } from '@nestjs/common';
 import { execEmployeeIssuanceLogInsert } from '@common/database/queries-remaining';
 import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await db.execute(q)).rows as Row[];
 };
 

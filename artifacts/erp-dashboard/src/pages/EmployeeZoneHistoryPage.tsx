@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Search } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface ZoneEntry {
   id: string | number;
   employee_id?: string | number;
@@ -41,6 +42,7 @@ const ACCESS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 export default function EmployeeZoneHistoryPage() {
+  const { t } = useTranslation("common");
   const [employeeId, setEmployeeId] = useState("");
   const [searched, setSearched]     = useState("");
   const [fromDate, setFromDate]     = useState("");
@@ -71,7 +73,7 @@ export default function EmployeeZoneHistoryPage() {
   return (
     <ModulePage
       module="hr"
-      title="Xodim Zona Tarixi"
+      title={t("xodimZonaTarixi")}
       icon={<MapPin className="h-5 w-5" />}
     >
       <div className="space-y-4">
@@ -79,7 +81,7 @@ export default function EmployeeZoneHistoryPage() {
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Xodim ID..."
+              placeholder={t("xodimId1")}
               value={employeeId}
               onChange={e => setEmployeeId(e.target.value)}
               onKeyDown={e => e.key === "Enter" && doSearch()}
@@ -102,7 +104,7 @@ export default function EmployeeZoneHistoryPage() {
             data-testid="input-to-date"
           />
           <Button onClick={doSearch} disabled={!employeeId} data-testid="button-search">
-            Qidirish
+            {t("search")}
           </Button>
         </div>
 
@@ -110,7 +112,7 @@ export default function EmployeeZoneHistoryPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Xodim ID kiriting va qidiring</p>
+              <p className="text-muted-foreground">{t("xodimIdKiritingVaQidiring")}</p>
             </CardContent>
           </Card>
         ) : isLoading ? (

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { PosProduct } from "./POSInventoryPageTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface AdjustDialogProps {
   adjustProduct: PosProduct | null;
@@ -37,11 +38,12 @@ export function AdjustDialog({
   onReasonChange,
   onConfirm,
 }: AdjustDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={!!adjustProduct} onOpenChange={open => !open && onClose()}>
       <DialogContent className="max-w-sm p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Inventar tuzatish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("inventarTuzatish")}</DialogTitle>
         </DialogHeader>
         {adjustProduct && (
           <div className="space-y-4">
@@ -49,13 +51,13 @@ export function AdjustDialog({
               <p className="font-semibold">{adjustProduct.name}</p>
               <p className="text-gray-500 font-mono">{adjustProduct.barcode}</p>
               <p className="text-gray-500">
-                Joriy qoldiq:
+                {t("joriyQoldiq")}
                 <span className="font-bold ml-1">{Number(adjustProduct.stockQuantity ?? 0)} {adjustProduct.unit}</span>
               </p>
             </div>
 
             <div className="space-y-1">
-          <Label>Harakat turi</Label>
+          <Label>{t("harakatTuri1")}</Label>
               <Select value={adjustType} onValueChange={onTypeChange}>
                 <SelectTrigger>
                   <SelectValue />
@@ -86,7 +88,7 @@ export function AdjustDialog({
               <Textarea
                 value={adjustReason}
                 onChange={e => onReasonChange(e.target.value)}
-                placeholder="Tuzatish sababi..."
+                placeholder={t("tuzatishSababi")}
                 rows={2}
               />
             </div>
@@ -107,7 +109,7 @@ export function AdjustDialog({
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             onClick={onConfirm}
             disabled={!adjustQty || Number(adjustQty) < 0 || isPending}

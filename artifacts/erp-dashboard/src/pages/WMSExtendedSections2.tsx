@@ -31,7 +31,7 @@ export function LotSection({lots, lotsLoading, lotSearch, onSearchChange }: LotS
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Lot raqami yoki material kiriting..."
+            placeholder={t("lotRaqamiYokiMaterialKiriting")}
             className="pl-8"
             data-testid="input-lot-search"
             value={lotSearch}
@@ -43,7 +43,7 @@ export function LotSection({lots, lotsLoading, lotSearch, onSearchChange }: LotS
           onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/warehouse/lots"] })}
           data-testid="button-scan-lot"
         >
-          <QrCode className="h-4 w-4 mr-1.5" />Yangilash
+          <QrCode className="h-4 w-4 mr-1.5" />{t("refresh")}
         </Button>
       </div>
       <Card>
@@ -51,18 +51,18 @@ export function LotSection({lots, lotsLoading, lotSearch, onSearchChange }: LotS
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Lot №</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("lot2")}</TableHead>
                 <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('Material')}</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Kirgan sana</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Yetkazuvchi</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Qoldig'i</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Holati</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("kirganSana")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("yetkazuvchi")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("qoldigi")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("holati")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {lotsLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">Yuklanmoqda...</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">{t("Yuklanmoqda...")}</TableCell>
                 </TableRow>
               ) : (() => {
                 const filtered = (Array.isArray(lots) ? lots : []).filter((l) =>
@@ -108,10 +108,10 @@ export function RequestsSection({ internalReqs, onCreateClick }: RequestsSection
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Jami: <span className="font-semibold text-foreground dark:text-slate-100">{internalReqs.length} ta so'rov</span>
+          {t("jami")}<span className="font-semibold text-foreground dark:text-slate-100">{internalReqs.length} ta so'rov</span>
         </p>
         <Button onClick={onCreateClick} data-testid="button-create-request">
-          <Plus className="h-4 w-4 mr-1.5" />So'rov Yuborish
+          <Plus className="h-4 w-4 mr-1.5" />{t("sorovYuborish1")}
         </Button>
       </div>
       <Card>
@@ -119,17 +119,17 @@ export function RequestsSection({ internalReqs, onCreateClick }: RequestsSection
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Bo'lim</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("bolim1")}</TableHead>
                 <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{"Material"}</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Miqdor</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sabab</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Holati</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("quantity")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("sabab")}</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("holati")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {internalReqs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-sm">So'rovlar yo'q</TableCell>
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-sm">{t("sorovlarYoq")}</TableCell>
                 </TableRow>
               ) : (Array.isArray(internalReqs) ? internalReqs : []).slice(0, 10).map((r) => (
                 <TableRow key={r.id} data-testid={`row-req-${r.id}`} className="hover:bg-background dark:hover:bg-slate-800/50">
@@ -160,9 +160,9 @@ export function KpiSection({ wmsKpis, occupancy, onRefresh }: KpiSectionProps) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Ombor KPI Dashboard</p>
+        <p className="text-sm text-muted-foreground">{t("omborKpiDashboard")}</p>
         <Button variant="outline" size="sm" onClick={onRefresh}>
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -185,7 +185,7 @@ export function KpiSection({ wmsKpis, occupancy, onRefresh }: KpiSectionProps) {
       {Array.isArray(occupancy?.warehouses) && (occupancy?.warehouses?.length ?? 0) > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Omborlar To'liqligi</CardTitle>
+            <CardTitle className="text-sm">{t("omborlarToliqligi")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {(occupancy?.warehouses ?? []).slice(0, 6).map((w: WarehouseOccupancy) => (
@@ -220,22 +220,22 @@ export function RentalSection({ rentalData, rentalLoading }: RentalSectionProps)
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Tayyor Mahsulot Saqlash Ijara</p>
+        <p className="text-sm text-muted-foreground">{t("tayyorMahsulotSaqlashIjara")}</p>
         <Button data-testid="button-add-rental">
-          <Plus className="h-4 w-4 mr-1.5" />Ijara Shartnomasi
+          <Plus className="h-4 w-4 mr-1.5" />{t("ijaraShartnomasi")}
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-xl bg-card dark:bg-slate-900 shadow-sm p-4">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Faol Shartnomalar</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("faolShartnomalar")}</p>
           <p className="text-2xl font-bold text-foreground dark:text-slate-100">{rentalData.length}</p>
         </div>
         <div className="rounded-xl bg-card dark:bg-slate-900 shadow-sm p-4">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Jami Maydon</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("jamiMaydon1")}</p>
           <p className="text-2xl font-bold text-[var(--ep-blue)]">{(Array.isArray(rentalData) ? rentalData : []).reduce((s, r) => s + Number(r.areaM2 || 0), 0)} m²</p>
         </div>
         <div className="rounded-xl bg-card dark:bg-slate-900 shadow-sm p-4">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">To'langan</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("tolangan")}</p>
           <p className="text-2xl font-bold text-[var(--ep-green)]">{(Array.isArray(rentalData) ? rentalData : []).filter(r => r.billed).length} ta</p>
         </div>
       </div>
@@ -251,18 +251,18 @@ export function RentalSection({ rentalData, rentalLoading }: RentalSectionProps)
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Mijoz</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Maydon</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Kunlik narx</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Muddat</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Holati</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("mijoz1")}</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("maydon1")}</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("kunlikNarx")}</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("muddat")}</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("holati")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rentalData.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-sm">
-                      Faol ijara shartnomalari mavjud emas
+                      {t("faolIjaraShartnomalariMavjudEmas")}
                     </TableCell>
                   </TableRow>
                 ) : (Array.isArray(rentalData) ? rentalData : []).map((r, i) => (

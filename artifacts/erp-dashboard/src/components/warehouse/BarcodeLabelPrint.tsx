@@ -8,6 +8,7 @@
  * Print qilish: window.print() yoki "🖨️ Chop etish" tugma orqali.
  */
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from '@/lib/i18n';
 
 interface LabelData {
   barcode:        string;
@@ -27,6 +28,7 @@ interface LabelData {
 }
 
 export function BarcodeLabelPrint({ data, onClose }: { data: LabelData; onClose?: () => void }) {
+  const { t } = useTranslation("common");
   const barcodeRef = useRef<HTMLDivElement>(null);
 
   // Code128 oddiy chiziq simulyatsiyasi
@@ -67,10 +69,10 @@ export function BarcodeLabelPrint({ data, onClose }: { data: LabelData; onClose?
       <div style={{ background: "#FFF", borderRadius: 12, padding: 20, maxWidth: 500, width: "90%", maxHeight: "90vh", overflowY: "auto" }}>
         {/* Header */}
         <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>🏷️ Barcode Label</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{t("barcodeLabel")}</h3>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={handlePrint} style={{ padding: "6px 14px", background: "#10B981", color: "#FFF", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>
-              🖨️ Chop etish
+              {t("chopEtish")}
             </button>
             {onClose && (
               <button onClick={onClose} style={{ padding: "6px 14px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 6, cursor: "pointer" }}>
@@ -88,7 +90,7 @@ export function BarcodeLabelPrint({ data, onClose }: { data: LabelData; onClose?
           {/* Company header */}
           <div style={{ textAlign: "center", marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid #000" }}>
             <div style={{ fontWeight: 800, fontSize: 14 }}>EUROPRINT ERP</div>
-            <div style={{ fontSize: 10, color: "#666" }}>Inventar Yorlig'i</div>
+            <div style={{ fontSize: 10, color: "#666" }}>{t("inventarYorligi")}</div>
           </div>
 
           {/* Material info */}
@@ -97,36 +99,36 @@ export function BarcodeLabelPrint({ data, onClose }: { data: LabelData; onClose?
               {data.materialName}
             </div>
             {data.materialCode && (
-              <div style={{ fontSize: 11, color: "#666" }}>Kod: <b>{data.materialCode}</b></div>
+              <div style={{ fontSize: 11, color: "#666" }}>{t("kod")}<b>{data.materialCode}</b></div>
             )}
           </div>
 
           {/* Key info grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, marginBottom: 12 }}>
-            <InfoRow label="Miqdor" value={`${data.quantity} ${data.unit}`} bold />
+            <InfoRow label={t("quantity")} value={`${data.quantity} ${data.unit}`} bold />
             {data.weightKg != null && data.weightKg > 0 && (
-              <InfoRow label="Og'irlik" value={`${data.weightKg} kg`} />
+              <InfoRow label={t("weight")} value={`${data.weightKg} kg`} />
             )}
             {data.batchNumber && (
-              <InfoRow label="Partiya №" value={data.batchNumber} bold colSpan={2} />
+              <InfoRow label={t("partiya")} value={data.batchNumber} bold colSpan={2} />
             )}
             {data.warehouseCode && (
-              <InfoRow label="Ombor" value={data.warehouseCode} />
+              <InfoRow label={t("ombor")} value={data.warehouseCode} />
             )}
             {data.movementNumber && (
-              <InfoRow label="Hujjat" value={data.movementNumber} />
+              <InfoRow label={t("hujjat")} value={data.movementNumber} />
             )}
             {data.supplierName && (
-              <InfoRow label="Ta'minotchi" value={data.supplierName} colSpan={2} />
+              <InfoRow label={t("taminotchi")} value={data.supplierName} colSpan={2} />
             )}
             {data.arrivalDate && (
-              <InfoRow label="Kelish sanasi" value={data.arrivalDate} />
+              <InfoRow label={t("kelishSanasi")} value={data.arrivalDate} />
             )}
             {data.expiryDate && (
-              <InfoRow label="Muddat" value={data.expiryDate} />
+              <InfoRow label={t("muddat")} value={data.expiryDate} />
             )}
             {data.certificateNumber && (
-              <InfoRow label="Sertifikat" value={data.certificateNumber} colSpan={2} />
+              <InfoRow label={t("sertifikat")} value={data.certificateNumber} colSpan={2} />
             )}
           </div>
 

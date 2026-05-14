@@ -4,6 +4,7 @@
  */
 
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from '@/lib/i18n';
 
 export const fmtMoney = (n: number | string | null | undefined) => {
   const v = parseFloat(String(n || "0")) || 0;
@@ -31,9 +32,10 @@ export const CategoryBadge = ({ cat }: { cat: string | null | undefined }) => {
 };
 
 export const StatusBadge = ({ status }: { status: string | null | undefined }) => {
-  if (status === "blacklist") return <Badge variant="destructive" className="text-[10px]">Qora ro'yxat</Badge>;
-  if (status === "inactive") return <Badge variant="secondary" className="text-[10px]">Nofaol</Badge>;
-  return <Badge className="text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800" variant="outline">Aktiv</Badge>;
+  const { t } = useTranslation("common");
+  if (status === "blacklist") return <Badge variant="destructive" className="text-[10px]">{t("qoraRoyxat")}</Badge>;
+  if (status === "inactive") return <Badge variant="secondary" className="text-[10px]">{t("inactive")}</Badge>;
+  return <Badge className="text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800" variant="outline">{t("aktiv")}</Badge>;
 };
 
 export const ComplaintStatusBadge = ({ status }: { status: string }) => {
@@ -68,6 +70,7 @@ export function KpiCard({ icon: Icon, label, value, sub, color = "text-primary",
   label: string; value: string | number; sub?: string; color?: string;
   gradient?: string;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="relative overflow-hidden rounded-xl border bg-card p-3.5 hover:shadow-sm transition-shadow">
       {gradient && (

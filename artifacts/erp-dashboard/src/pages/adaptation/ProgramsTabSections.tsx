@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, X, CheckSquare, Flag } from "lucide-react";
 import type { TaskItem, CheckpointItem } from "./ProgramsTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // TaskEditor
@@ -16,6 +17,7 @@ interface TaskEditorProps {
 }
 
 export function TaskEditor({ tasks, onChange }: TaskEditorProps) {
+  const { t } = useTranslation("common");
   const addTask = () => onChange([...tasks, { title: "", description: "", day: 1 }]);
   const removeTask = (i: number) =>
     onChange((Array.isArray(tasks) ? tasks : []).filter((_, idx) => idx !== i));
@@ -40,13 +42,13 @@ export function TaskEditor({ tasks, onChange }: TaskEditorProps) {
           onClick={addTask}
           data-testid="button-add-task"
         >
-          <Plus className="w-3.5 h-3.5 mr-1" /> Vazifa qo'shish
+          <Plus className="w-3.5 h-3.5 mr-1" /> {t("vazifaQoshish")}
         </Button>
       </div>
 
       {tasks.length === 0 && (
         <p className="text-xs text-muted-foreground bg-muted/40 rounded-md p-3 text-center">
-          Hali vazifalar yo'q. "Vazifa qo'shish" tugmasini bosing.
+          {t("haliVazifalarYoqVazifaQoshish")}
         </p>
       )}
 
@@ -60,7 +62,7 @@ export function TaskEditor({ tasks, onChange }: TaskEditorProps) {
             <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-2">
               <div className="col-span-2">
                 <Input
-                  placeholder="Vazifa nomi *"
+                  placeholder={t("vazifaNomi1")}
                   value={task.title}
                   onChange={e => updateTask(i, "title", e.target.value)}
                   className="h-8 text-xs"
@@ -69,7 +71,7 @@ export function TaskEditor({ tasks, onChange }: TaskEditorProps) {
               </div>
               <div className="col-span-2">
                 <Input
-                  placeholder="Tavsif"
+                  placeholder={t("progress.description")}
                   value={task.description}
                   onChange={e => updateTask(i, "description", e.target.value)}
                   className="h-8 text-xs"
@@ -79,7 +81,7 @@ export function TaskEditor({ tasks, onChange }: TaskEditorProps) {
               <div>
                 <Input
                   type="number"
-                  placeholder="Kun"
+                  placeholder={t("kun")}
                   value={task.day}
                   min={1}
                   onChange={e => updateTask(i, "day", parseInt(e.target.value) || 1)}
@@ -144,13 +146,13 @@ export function CheckpointEditor({ checkpoints, onChange }: CheckpointEditorProp
           onClick={addCheckpoint}
           data-testid="button-add-checkpoint"
         >
-          <Plus className="w-3.5 h-3.5 mr-1" /> Nuqta qo'shish
+          <Plus className="w-3.5 h-3.5 mr-1" /> {t("nuqtaQoshish")}
         </Button>
       </div>
 
       {checkpoints.length === 0 && (
         <p className="text-xs text-muted-foreground bg-muted/40 rounded-md p-3 text-center">
-          Hali tekshirish nuqtalari yo'q.
+          {t("haliTekshirishNuqtalariYoq")}
         </p>
       )}
 
@@ -165,7 +167,7 @@ export function CheckpointEditor({ checkpoints, onChange }: CheckpointEditorProp
               <div>
                 <Input
                   type="number"
-                  placeholder="Kun"
+                  placeholder={t("kun")}
                   value={cp.day}
                   min={1}
                   onChange={e => updateCheckpoint(i, "day", parseInt(e.target.value) || 1)}
@@ -175,7 +177,7 @@ export function CheckpointEditor({ checkpoints, onChange }: CheckpointEditorProp
               </div>
               <div className="col-span-2">
                 <Input
-                  placeholder="Nomi *"
+                  placeholder={t("nomi")}
                   value={cp.title}
                   onChange={e => updateCheckpoint(i, "title", e.target.value)}
                   className="h-8 text-xs"
@@ -184,7 +186,7 @@ export function CheckpointEditor({ checkpoints, onChange }: CheckpointEditorProp
               </div>
               <div className="col-span-2">
                 <Input
-                  placeholder="Tavsif"
+                  placeholder={t("progress.description")}
                   value={cp.description}
                   onChange={e => updateCheckpoint(i, "description", e.target.value)}
                   className="h-8 text-xs"

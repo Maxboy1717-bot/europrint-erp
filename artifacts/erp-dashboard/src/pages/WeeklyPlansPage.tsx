@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface WeeklyPlan {
   id: string;
@@ -46,6 +47,7 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; varia
 };
 
 export default function WeeklyPlansPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showCreate, setShowCreate] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -99,12 +101,12 @@ export default function WeeklyPlansPage() {
   return (
     <ModulePage
       module="hr"
-      title="Haftalik Rejalar"
+      title={t("haftalikRejalar")}
       icon={<CalendarDays className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-plan">
           <Plus className="h-4 w-4 mr-2" />
-          Reja yaratish
+          {t("rejaYaratish")}
         </Button>
       }
     >
@@ -123,10 +125,10 @@ export default function WeeklyPlansPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">Haftalik rejalar mavjud emas</p>
+            <p className="text-muted-foreground mb-4">{t("haftalikRejalarMavjudEmas")}</p>
             <Button onClick={() => setShowCreate(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Birinchi rejani yarating
+              {t("birinchiRejaniYarating")}
             </Button>
           </CardContent>
         </Card>
@@ -189,33 +191,33 @@ export default function WeeklyPlansPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi haftalik reja</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiHaftalikReja")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="plan-title">Sarlavha *</Label>
+              <Label htmlFor="plan-title">{t("sarlavha")}</Label>
               <Input
                 id="plan-title"
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
-                placeholder="Reja sarlavhasi"
+                placeholder={t("rejaSarlavhasi")}
                 data-testid="input-plan-title"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="plan-desc">Tavsif</Label>
+              <Label htmlFor="plan-desc">{t("progress.description")}</Label>
               <Textarea
                 id="plan-desc"
                 value={newDesc}
                 onChange={e => setNewDesc(e.target.value)}
-                placeholder="Reja tavsifi..."
+                placeholder={t("rejaTavsifi")}
                 rows={3}
                 data-testid="input-plan-description"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => {
                 if (!newTitle.trim()) return;
@@ -234,18 +236,18 @@ export default function WeeklyPlansPage() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent data-testid="dialog-confirm-delete-plan">
           <AlertDialogHeader>
-            <AlertDialogTitle>O'chirishni tasdiqlash</AlertDialogTitle>
+            <AlertDialogTitle>{t("ochirishniTasdiqlash")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Haqiqatan ham bu rejani o'chirmoqchimisiz?
+              {t("haqiqatanHamBuRejaniOchirmoqchimisiz")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Bekor</AlertDialogCancel>
+            <AlertDialogCancel>{t("Bekor")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
               data-testid="button-confirm-delete-plan"
             >
-              O'chirish
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

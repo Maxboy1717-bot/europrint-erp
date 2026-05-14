@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Send, UserCheck } from "lucide-react";
 import { InternalVacancy } from "./InternalJobBoardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface ApplyDialogProps {
   vacancy: InternalVacancy | null;
@@ -23,6 +24,7 @@ interface ApplyDialogProps {
 }
 
 export function ApplyDialog({ vacancy, open, onClose }: ApplyDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [coverNote, setCoverNote] = useState("");
 
@@ -79,7 +81,7 @@ export function ApplyDialog({ vacancy, open, onClose }: ApplyDialogProps) {
               <Textarea
                 value={coverNote}
                 onChange={e => setCoverNote(e.target.value)}
-                placeholder="Nega ushbu lavozim siz uchun mos? Tajriba va ko'nikmalaringiz haqida qisqacha yozing..."
+                placeholder={t("negaUshbuLavozimSizUchun")}
                 rows={4}
                 className="text-sm"
                 data-testid="textarea-cover-note"
@@ -87,7 +89,7 @@ export function ApplyDialog({ vacancy, open, onClose }: ApplyDialogProps) {
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-[var(--ep-blue)]">
-              <p className="font-medium mb-1">Muhim eslatma:</p>
+              <p className="font-medium mb-1">{t("muhimEslatma")}</p>
               <p>
                 Arizangiz HR menejeriga tushadi va standart tanlov bosqichlari bo'yicha ko'rib chiqiladi.
                 Natija haqida Telegram orqali xabar olasiz.
@@ -97,7 +99,7 @@ export function ApplyDialog({ vacancy, open, onClose }: ApplyDialogProps) {
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             onClick={() => applyMutation.mutate()}
             disabled={applyMutation.isPending}

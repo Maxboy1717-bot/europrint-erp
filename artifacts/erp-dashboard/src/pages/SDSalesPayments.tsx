@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Plus, CheckCircle } from "lucide-react";
 import { fmt, PAYMENT_STATUS_COLORS } from "@/lib/sd-helpers";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface SalesPayment {
   id: string;
@@ -69,6 +70,7 @@ const PaymentSchema = z.object({
 });
 
 export default function SDSalesPayments() {
+  const { t } = useTranslation("common");
   const [view, setView] = useState<"all" | "overdue" | "debitors">("all");
   const [isNew, setIsNew] = useState(false);
   const [form, setForm] = useState({ orderId: "", customerId: "", amount: "", type: "advance", dueDate: "", notes: "" });
@@ -120,9 +122,9 @@ export default function SDSalesPayments() {
         </div>
         <div className="flex-1">
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">To'lovlar Nazorati</b></>}
-        title="To'lovlar Nazorati"
-        subtitle="Avans, qoldiq, debitorlik va aging hisobot"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("tolovlarNazorati")}</b></>}
+        title={t("tolovlarNazorati")}
+        subtitle={t("avansQoldiqDebitorlikVaAging")}
       />
         </div>
         <div className="flex gap-1 border border-border rounded-lg p-0.5 bg-card">
@@ -137,15 +139,15 @@ export default function SDSalesPayments() {
         <Dialog open={isNew} onOpenChange={setIsNew}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-payment" className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold">
-              <Plus className="w-4 h-4 mr-1" />To'lov kiritish
+              <Plus className="w-4 h-4 mr-1" />{t("tolovKiritish")}
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi to'lov</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiTolov")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Buyurtma</Label>
+              <div><Label>{t("Buyurtma")}</Label>
                 <Select value={form.orderId} onValueChange={v => setForm({ ...form, orderId: v })}>
-                  <SelectTrigger data-testid="select-payment-order" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-payment-order" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                   <SelectContent>
                     {orders?.data?.map((o) => (
                       <SelectItem key={o.id} value={o.id}>{o.orderNumber} — {fmt(o.totalAmount)} so'm</SelectItem>
@@ -153,22 +155,22 @@ export default function SDSalesPayments() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>To'lov turi</Label>
+              <div><Label>{t("tolovTuri")}</Label>
                 <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
                   <SelectTrigger data-testid="select-payment-type" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="advance">Avans</SelectItem>
-                    <SelectItem value="balance">Qoldiq</SelectItem>
-                    <SelectItem value="partial">Qisman</SelectItem>
+                    <SelectItem value="advance">{t("avans")}</SelectItem>
+                    <SelectItem value="balance">{t("qoldiq")}</SelectItem>
+                    <SelectItem value="partial">{t("qisman")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div><Label>Summa (so'm) *</Label>
                 <Input data-testid="input-payment-amount" type="number" value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-              <div><Label>To'lov muddati</Label>
+              <div><Label>{t("tolovMuddati")}</Label>
                 <Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
-              <div><Label>Izoh</Label>
+              <div><Label>{t("Izoh")}</Label>
                 <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
               <Button data-testid="button-save-payment" className="w-full"
                 onClick={() => createMut.mutate({ ...form, amount: parseFloat(form.amount) || 0 })}
@@ -181,7 +183,7 @@ export default function SDSalesPayments() {
       </div>
 
       <div className="space-y-2">
-        {isLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+        {isLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
 
         {view === "debitors" ? (
           (payments as DebitEntry[]).map((d, i) => (
@@ -218,13 +220,13 @@ export default function SDSalesPayments() {
                 {p.status === "pending" && p.type !== "advance" && (
                   <Button size="sm" variant="outline" data-testid={`button-advance-payment-${p.id}`}
                     onClick={() => advancePaymentMut.mutate(p.orderId)} disabled={advancePaymentMut.isPending}>
-                    Avans
+                    {t("avans")}
                   </Button>
                 )}
                 {p.status === "pending" && (
                   <Button size="sm" data-testid={`button-mark-paid-${p.id}`}
                     onClick={() => markPaidMut.mutate(p.id)} disabled={markPaidMut.isPending}>
-                    <CheckCircle className="w-3 h-3 mr-1" />To'landi
+                    <CheckCircle className="w-3 h-3 mr-1" />{t("tolandi1")}
                   </Button>
                 )}
               </CardContent>

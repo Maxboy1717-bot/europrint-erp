@@ -41,8 +41,10 @@ import {
 import { CategoryDialog, TaskDialog } from "./StrategicTasksPanelDialogs";
 import { TasksTable } from "./StrategicTasksPanelTable";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function StrategicTasksPanel() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -152,7 +154,7 @@ export default function StrategicTasksPanel() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="ep-h1" data-testid="text-page-title">
-            Strategik Rejalashtirish
+            {t("strategikRejalashtirish")}
           </h1>
           <p className="text-muted-foreground" data-testid="text-page-subtitle">
             Стратегическое планирование — 721 tashabbusdan {dashboard?.completedCount || 0} ta bajarildi
@@ -186,9 +188,9 @@ export default function StrategicTasksPanel() {
           <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
             <Database className="h-12 w-12 text-muted-foreground" />
             <div className="text-center">
-              <h3 className="text-lg font-semibold">Boshlang'ich ma'lumotlar topilmadi</h3>
+              <h3 className="text-lg font-semibold">{t("boshlangichMalumotlarTopilmadi")}</h3>
               <p className="text-muted-foreground text-sm">
-                Strategik kategoriyalarni yuklash uchun quyidagi tugmani bosing
+                {t("strategikKategoriyalarniYuklashUchunQuyidagi")}
               </p>
             </div>
             <Button
@@ -206,7 +208,7 @@ export default function StrategicTasksPanel() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jami vazifalar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("jamiVazifalar")}</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -224,7 +226,7 @@ export default function StrategicTasksPanel() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bajarilgan</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("bajarilgan")}</CardTitle>
             <CheckCircle2 className="h-5 w-5 text-[var(--ep-green)]" />
           </CardHeader>
           <CardContent>
@@ -238,7 +240,7 @@ export default function StrategicTasksPanel() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jarayonda</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("inProgress")}</CardTitle>
             <Clock className="h-5 w-5 text-[var(--ep-blue)]" />
           </CardHeader>
           <CardContent>
@@ -252,7 +254,7 @@ export default function StrategicTasksPanel() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Muddati o'tgan</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("muddatiOtgan")}</CardTitle>
             <AlertTriangle className="h-5 w-5 text-[var(--ep-red)]" />
           </CardHeader>
           <CardContent>
@@ -273,7 +275,7 @@ export default function StrategicTasksPanel() {
               <Input
                 data-testid="input-search"
                 className="pl-9"
-                placeholder="Qidirish..."
+                placeholder={t("Qidirish...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -281,10 +283,10 @@ export default function StrategicTasksPanel() {
 
             <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val === "all" ? "" : val)}>
               <SelectTrigger className="w-full sm:w-[160px] h-9" data-testid="select-filter-status">
-                <SelectValue placeholder="Holat" />
+                <SelectValue placeholder={t("status28")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
                 {(Array.isArray(STATUS_OPTIONS) ? STATUS_OPTIONS : []).map((s) => (
                   <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                 ))}
@@ -293,10 +295,10 @@ export default function StrategicTasksPanel() {
 
             <Select value={priorityFilter} onValueChange={(val) => setPriorityFilter(val === "all" ? "" : val)}>
               <SelectTrigger className="w-full sm:w-[160px] h-9" data-testid="select-filter-priority">
-                <SelectValue placeholder="Muhimlik" />
+                <SelectValue placeholder={t("priority")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
                 {(Array.isArray(PRIORITY_OPTIONS) ? PRIORITY_OPTIONS : []).map((p) => (
                   <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                 ))}
@@ -305,10 +307,10 @@ export default function StrategicTasksPanel() {
 
             <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val === "all" ? "" : val)}>
               <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-filter-category">
-                <SelectValue placeholder="Kategoriya" />
+                <SelectValue placeholder={t("category")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
                 {(Array.isArray(categories) ? categories : []).map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                 ))}

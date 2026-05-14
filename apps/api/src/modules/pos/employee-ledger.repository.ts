@@ -4,6 +4,7 @@
  */
 
 import { Ok, Err, Result, safeCall } from '@common/result';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 
 import { Injectable } from '@nestjs/common';
 import { employeeInventoryLedger, db, eq, and, sql } from '@workspace/db';
@@ -16,7 +17,7 @@ export interface EmployeeBalance {
 
 type Row = Record<string, unknown>;
 type LedgerRow = typeof employeeInventoryLedger.$inferSelect;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
 
 const BALANCE_COLS = sql`
   eil.user_id, eil.material_card_id, eil.warehouse_id,

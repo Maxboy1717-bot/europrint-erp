@@ -30,6 +30,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useTranslation } from '@/lib/i18n';
 
 export interface Employee {
   id: string;
@@ -59,6 +60,7 @@ interface EmployeeTableProps {
 }
 
 export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTableProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [confirmDeleteEmployee, setConfirmDeleteEmployee] = useState<{ id: string; name: string } | null>(null);
 
@@ -139,16 +141,16 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Xodim</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Telegram ID</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tabel raqami</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Ish staji</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Tashkiliy tuzilma</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Attestatsiya</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Reyting</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Yiqilgan testlar</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Bonus</TableHead>
-              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">Holat</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("xodim1")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("telegramId")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tabelRaqami")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ishStaji")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tashkiliyTuzilma")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("attestatsiya")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("reyting")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("yiqilganTestlar")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("bonus")}</TableHead>
+              <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28")}</TableHead>
               <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -207,7 +209,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                 ) : (
                   <span className="text-[var(--ep-red)] text-xs flex items-center gap-1 font-medium">
                     <Building2 className="w-3 h-3" />
-                    Tayinlanmagan
+                    {t("tayinlanmagan")}
                   </span>
                 )}
               </TableCell>
@@ -274,7 +276,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenuLabel>Harakatlar</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {onEdit && (
                       <DropdownMenuItem 
@@ -285,7 +287,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                         data-testid={`action-edit-${employee.id}`}
                       >
                         <Pencil className="w-4 h-4 mr-2" />
-                        Tahrirlash
+                        {t("edit")}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem 
@@ -296,7 +298,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                       data-testid={`action-org-structure-${employee.id}`}
                     >
                       <Building2 className="w-4 h-4 mr-2" />
-                      Tashkiliy tuzilmaga o'tish
+                      {t("tashkiliyTuzilmagaOtish")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {employee.status !== "active" && (
@@ -308,7 +310,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                         data-testid={`action-set-active-${employee.id}`}
                       >
                         <UserCheck className="w-4 h-4 mr-2" />
-                        Ishlamoqda
+                        {t("ishlamoqda")}
                       </DropdownMenuItem>
                     )}
                     {employee.status !== "resigned" && (
@@ -320,7 +322,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                         data-testid={`action-set-resigned-${employee.id}`}
                       >
                         <UserX className="w-4 h-4 mr-2" />
-                        Ishdan ketgan
+                        {t("ishdanKetgan")}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
@@ -333,7 +335,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                       data-testid={`action-delete-${employee.id}`}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      O'chirish
+                      {t("delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -347,7 +349,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
     <ConfirmDialog
       open={confirmDeleteEmployee !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteEmployee(null); }}
-      title="Xodimni o'chirish"
+      title={t("xodimniOchirish")}
       description={`Haqiqatan ham ${confirmDeleteEmployee?.name ?? ''} ni o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.`}
       confirmText="O'chirish"
       cancelText="Bekor qilish"

@@ -13,9 +13,11 @@ import { Bot, Send, Star, AlertTriangle } from "lucide-react";
 import type { NpsStats, ChurnData } from "./MarketingDashboardTypes";
 import { RISK_COLORS, RISK_LABELS } from "./MarketingDashboardTypes";
 import { NpsSubmitDialog, AiChurnSignal } from "./MarketingDashboardDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── AI Marketing Assistant ───────────────────────────────────────────────────
 export function AiAssistantSection() {
+  const { t } = useTranslation("common");
   const [aiQuestion, setAiQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
 
@@ -28,10 +30,10 @@ export function AiAssistantSection() {
     <div className="bg-card rounded-xl p-6 mb-6" data-testid="card-ai-assistant">
       <div className="flex items-center gap-2 mb-4">
         <Bot className="h-5 w-5 text-primary" />
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Marketing yordamchisi</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("aiMarketingYordamchisi")}</h3>
       </div>
       <div className="flex gap-2 mb-4">
-        <Input placeholder="Marketing bo'yicha savol bering..." value={aiQuestion}
+        <Input placeholder={t("marketingBoyichaSavolBering")} value={aiQuestion}
           onChange={(e) => setAiQuestion(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && aiQuestion.trim()) { aiMutation.mutate(aiQuestion); setAiQuestion(""); } }}
           data-testid="input-ai-question" className="flex-1" />
@@ -73,19 +75,19 @@ export function NpsPanel({ npsStats }: { npsStats: NpsStats | undefined }) {
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
           <Star className="h-4 w-4 text-[var(--ep-yellow)]" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NPS — Mijoz Mamnuniyati</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("npsMijozMamnuniyati")}</h3>
         </div>
         <NpsSubmitDialog />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div className="p-3 rounded-lg bg-muted/40 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">O'rtacha Ball</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("ortachaBall")}</p>
           <p className="text-2xl font-bold text-foreground" data-testid="text-nps-avg">
             {npsStats?.avgScore ?? "—"} <span className="text-sm font-normal text-muted-foreground">/ 10</span>
           </p>
         </div>
         <div className="p-3 rounded-lg bg-muted/40 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">30 Kunlik O'rtacha</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("k30KunlikOrtacha")}</p>
           <p className="text-2xl font-bold text-foreground" data-testid="text-nps-monthly">
             {npsStats?.monthlyAvg ?? "—"} <span className="text-sm font-normal text-muted-foreground">/ 10</span>
           </p>
@@ -99,7 +101,7 @@ export function NpsPanel({ npsStats }: { npsStats: NpsStats | undefined }) {
       </div>
       {npsStats?.lastComments && npsStats.lastComments.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">So'nggi izohlar:</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("songgiIzohlar")}</p>
           {(Array.isArray(npsStats.lastComments) ? npsStats.lastComments : []).map((c) => (
             <div key={c.id} className="flex items-start gap-2 p-3 rounded-lg bg-muted/40 text-sm"
               data-testid={`nps-comment-${c.id}`}>
@@ -111,7 +113,7 @@ export function NpsPanel({ npsStats }: { npsStats: NpsStats | undefined }) {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Hali NPS baholari yo'q</p>
+        <p className="text-sm text-muted-foreground">{t("haliNpsBaholariYoq")}</p>
       )}
     </div>
   );
@@ -144,7 +146,7 @@ export function ChurnRiskPanel({ churnData }: { churnData: ChurnData | undefined
       <AiChurnSignal />
       {churnData?.customers && churnData.customers.length > 0 && (
         <div className="space-y-2 mt-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase">Eng yuqori xavf:</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase">{t("engYuqoriXavf")}</p>
           {(Array.isArray(churnData.customers) ? churnData.customers : []).slice(0, 5).map((c) => (
             <div key={c.id} className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/40 text-sm"
               data-testid={`churn-customer-${c.id}`}>
@@ -164,7 +166,7 @@ export function ChurnRiskPanel({ churnData }: { churnData: ChurnData | undefined
         </div>
       )}
       {(!churnData?.customers || churnData.customers.length === 0) && (
-        <p className="text-sm text-[var(--ep-green)] font-medium mt-4">Barcha mijozlar faol</p>
+        <p className="text-sm text-[var(--ep-green)] font-medium mt-4">{t("barchaMijozlarFaol")}</p>
       )}
     </div>
   );

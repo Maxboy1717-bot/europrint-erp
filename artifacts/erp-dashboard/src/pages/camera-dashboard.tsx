@@ -96,8 +96,8 @@ export default function CameraDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Kamera AI Monitoring</b></>}
-        title="Kamera AI Monitoring"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("kameraAiMonitoring")}</b></>}
+        title={t("kameraAiMonitoring")}
         subtitle={language === "uz" ? "Real-vaqt monitoring va analitika" : "Мониторинг и аналитика в реальном времени"}
       />
         </div>

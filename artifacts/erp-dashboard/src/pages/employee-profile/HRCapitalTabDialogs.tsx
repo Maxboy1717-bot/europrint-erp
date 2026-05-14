@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FormState } from "./HRCapitalTabTypes";
 import { TOOL_TEST_SCORES } from "./HRCapitalTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface HRCapitalEditFormProps {
   form: FormState;
@@ -15,16 +16,17 @@ interface HRCapitalEditFormProps {
 }
 
 export function HRCapitalEditForm({ form, onChange }: HRCapitalEditFormProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-1">
-          <Label>Visotskiy kategoriyasi</Label>
+          <Label>{t("visotskiyKategoriyasi")}</Label>
         <Select
           value={form.visotskiyCategory}
           onValueChange={(v) => onChange({ ...form, visotskiyCategory: v })}
         >
           <SelectTrigger data-testid="select-visotskiy" className="h-9">
-            <SelectValue placeholder="Tanlang..." />
+            <SelectValue placeholder={t("tanlang1")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Flagman">Flagman (Yetakchi)</SelectItem>
@@ -41,7 +43,7 @@ export function HRCapitalEditForm({ form, onChange }: HRCapitalEditFormProps) {
           onValueChange={(v) => onChange({ ...form, toolTestScore: v })}
         >
           <SelectTrigger data-testid="select-tool-test" className="h-9">
-            <SelectValue placeholder="Shkala..." />
+            <SelectValue placeholder={t("shkala")} />
           </SelectTrigger>
           <SelectContent>
             {(Array.isArray(TOOL_TEST_SCORES) ? TOOL_TEST_SCORES : []).map((s) => (
@@ -52,17 +54,17 @@ export function HRCapitalEditForm({ form, onChange }: HRCapitalEditFormProps) {
       </div>
 
       <div className="space-y-1">
-          <Label>Psixologik profil sindromi</Label>
+          <Label>{t("psixologikProfilSindromi")}</Label>
         <Input
           value={form.psychologicalProfile}
           onChange={(e) => onChange({ ...form, psychologicalProfile: e.target.value })}
-          placeholder="Masalan: DISC — D turi"
+          placeholder={t("masalanDiscDTuri")}
           data-testid="input-psych-profile"
         />
       </div>
 
       <div className="space-y-1">
-          <Label>Onboarding holati</Label>
+          <Label>{t("onboardingHolati")}</Label>
         <Select
           value={form.onboardingStatus}
           onValueChange={(v) => onChange({ ...form, onboardingStatus: v })}
@@ -71,25 +73,25 @@ export function HRCapitalEditForm({ form, onChange }: HRCapitalEditFormProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="not_started">Boshlanmagan</SelectItem>
-            <SelectItem value="in_progress">Davom etmoqda</SelectItem>
-            <SelectItem value="completed">Yakunlangan</SelectItem>
+            <SelectItem value="not_started">{t("boshlanmagan")}</SelectItem>
+            <SelectItem value="in_progress">{t("davomEtmoqda")}</SelectItem>
+            <SelectItem value="completed">{t("yakunlangan")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-1">
-          <Label>Recruiting kanali</Label>
+          <Label>{t("recruitingKanali")}</Label>
         <Input
           value={form.recruitingChannel}
           onChange={(e) => onChange({ ...form, recruitingChannel: e.target.value })}
-          placeholder="Masalan: LinkedIn, Do'stlar tavsiyasi"
+          placeholder={t("masalanLinkedinDostlarTavsiyasi")}
           data-testid="input-recruiting-channel"
         />
       </div>
 
       <div className="space-y-1">
-          <Label>Offboarding holati</Label>
+          <Label>{t("offboardingHolati")}</Label>
         <Input
           value={form.offboardingStatus}
           onChange={(e) => onChange({ ...form, offboardingStatus: e.target.value })}
@@ -99,7 +101,7 @@ export function HRCapitalEditForm({ form, onChange }: HRCapitalEditFormProps) {
       </div>
 
       <div className="space-y-2 md:col-span-2">
-        <Label>Eslatmalar</Label>
+        <Label>{t("eslatmalar")}</Label>
         <Input
           value={form.notes}
           onChange={(e) => onChange({ ...form, notes: e.target.value })}

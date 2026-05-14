@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -88,11 +89,11 @@ export type InterviewFormData = z.infer<typeof interviewSchema>;
 export function getStatusBadge(status: string): JSX.Element {
   switch (status) {
     case "scheduled":
-      return <Badge variant="outline" className="bg-blue-50 text-[var(--ep-blue)] dark:bg-blue-950 dark:text-blue-300">Rejalashtirilgan</Badge>;
+      return <Badge variant="outline" className="bg-blue-50 text-[var(--ep-blue)] dark:bg-blue-950 dark:text-blue-300">{t("rejalashtirilgan")}</Badge>;
     case "in_progress":
-      return <Badge variant="outline" className="bg-yellow-50 text-[var(--ep-yellow)] dark:bg-yellow-950 dark:text-yellow-300">Jarayonda</Badge>;
+      return <Badge variant="outline" className="bg-yellow-50 text-[var(--ep-yellow)] dark:bg-yellow-950 dark:text-yellow-300">{t("inProgress")}</Badge>;
     case "completed":
-      return <Badge variant="outline" className="bg-green-50 text-[var(--ep-green)] dark:bg-green-950 dark:text-green-300">Tugallangan</Badge>;
+      return <Badge variant="outline" className="bg-green-50 text-[var(--ep-green)] dark:bg-green-950 dark:text-green-300">{t("completed")}</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -102,9 +103,9 @@ export function getProviderBadge(provider?: string): JSX.Element | null {
   if (!provider) return null;
   switch (provider) {
     case "gemini":
-      return <EPStatusPill tone="neutral">Gemini</EPStatusPill>;
+      return <EPStatusPill tone="neutral">{t("gemini")}</EPStatusPill>;
     case "openai":
-      return <EPStatusPill tone="neutral">OpenAI</EPStatusPill>;
+      return <EPStatusPill tone="neutral">{t("openai")}</EPStatusPill>;
     default:
       return <EPStatusPill tone="neutral">{provider}</EPStatusPill>;
   }
@@ -120,6 +121,7 @@ export function formatDuration(seconds?: number): string {
 // ── Skeleton Component ────────────────────────────────────────────────────────
 
 export function InterviewCardSkeleton() {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-6">

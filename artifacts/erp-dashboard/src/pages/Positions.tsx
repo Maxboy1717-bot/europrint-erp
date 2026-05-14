@@ -28,11 +28,13 @@ import {
 } from "./PositionsTypes";
 import { PositionFormDialog, PositionDeleteDialog, KpiTemplateDialog } from "./PositionsDialogs";
 import { PositionsFilters, PositionsTable } from "./PositionsSections";
+import { useTranslation } from '@/lib/i18n';
 import {
   EPPageHeader, EPKpiCard, EPErrorState, EPSkeletonKpiRow,
 } from "@/components/ep";
 
 export default function Positions() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -192,13 +194,13 @@ export default function Positions() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · HR · <b className="text-foreground">Lavozimlar</b></>}
-        title="Lavozimlar"
-        subtitle="Kompaniya lavozimlari ro'yxati va boshqaruvi"
+        breadcrumb={<>{t("dashboardHr")}<b className="text-foreground">{t("lavozimlar")}</b></>}
+        title={t("lavozimlar")}
+        subtitle={t("kompaniyaLavozimlariRoyxatiVaBoshqaruvi")}
         actions={
           <Button onClick={openAdd} className="ep-btn-primary-shimmer gap-1.5">
             <Plus className="h-4 w-4" />
-            Yangi lavozim qo'shish
+            {t("yangiLavozimQoshish")}
           </Button>
         }
       />
@@ -209,28 +211,28 @@ export default function Positions() {
       ) : !isError && (
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <EPKpiCard
-            label="Jami lavozimlar"
+            label={t("jamiLavozimlar")}
             value={stats.total}
             icon={Briefcase}
             iconBg="hr"
             enterDelayMs={0}
           />
           <EPKpiCard
-            label="Faol"
+            label={t("active")}
             value={stats.active}
             icon={Users}
             iconBg="var(--ep-green)"
             enterDelayMs={60}
           />
           <EPKpiCard
-            label="Boshqaruv"
+            label={t("boshqaruv")}
             value={stats.management}
             icon={ShieldCheck}
             iconBg="var(--ep-blue)"
             enterDelayMs={120}
           />
           <EPKpiCard
-            label="Jami shtat"
+            label={t("jamiShtat")}
             value={stats.totalHeadcount}
             icon={UserSearch}
             iconBg="primary"

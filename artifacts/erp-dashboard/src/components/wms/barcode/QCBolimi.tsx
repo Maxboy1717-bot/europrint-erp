@@ -11,8 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
 import { QcBarcodeItem } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function QCBolimi() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data: qcMateriallar, isLoading } = useQuery<QcBarcodeItem[]>({
@@ -55,7 +57,7 @@ export function QCBolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {!qcMateriallar || qcMateriallar.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">QC kutayotgan material yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("qcKutayotganMaterialYoq")}</p>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(qcMateriallar) ? qcMateriallar : []).map((item: QcBarcodeItem) => (
@@ -75,7 +77,7 @@ export function QCBolimi() {
                       disabled={qcMutation.isPending}
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Tasdiqlash
+                      {t("verify")}
                     </Button>
                     <Button
                       data-testid={`button-qc-reject-${item.barcode.id}`}
@@ -85,7 +87,7 @@ export function QCBolimi() {
                       disabled={qcMutation.isPending}
                     >
                       <XCircle className="h-3 w-3 mr-1" />
-                      Rad
+                      {t("rad")}
                     </Button>
                   </div>
                 </div>

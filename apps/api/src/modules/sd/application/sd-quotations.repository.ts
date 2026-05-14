@@ -4,13 +4,13 @@
  */
 
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall, Ok, Err, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
-const execOne = async (q: Parameters<typeof db.execute>[0]): Promise<Row | null> => {
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+const execOne = async (q: SQL | SQLWrapper): Promise<Row | null> => {
   const rows = await exec(q);
   if (!rows.ok) throw new Error(rows.error.message);
   return rows.data[0] ?? null;

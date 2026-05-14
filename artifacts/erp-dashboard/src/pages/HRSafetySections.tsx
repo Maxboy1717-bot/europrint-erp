@@ -10,9 +10,11 @@ import { Trash2 } from "lucide-react";
 import type { SafetyIncident, PpeRecord, SafetyTraining, HazardZone, SafetySummary } from "./HRSafetyTypes";
 import { RISK_COLORS } from "./HRSafetyTypes";
 import { AlertTriangle, HardHat, BookOpen, ShieldAlert } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Summary cards ────────────────────────────────────────────────────────────
 export function SafetySummaryCards({ summary }: { summary: SafetySummary | undefined }) {
+  const { t } = useTranslation("common");
   const cards = [
     { label: "Bu oydagi hodisalar", value: summary?.incidentsThisMonth ?? "—", color: "text-[var(--ep-red)]", icon: AlertTriangle },
     { label: "PPE Compliance", value: summary?.ppeCompliancePercent !== undefined ? `${summary.ppeCompliancePercent}%` : "—", color: "text-[var(--ep-green)]", icon: HardHat },
@@ -49,20 +51,20 @@ export function IncidentsSection({ incidents, loading, onDeleteRequest }: Incide
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tur</TableHead>
-              <TableHead>Jiddiylik</TableHead>
-              <TableHead>Tavsif</TableHead>
-              <TableHead>Joylashuv</TableHead>
-              <TableHead>Sana</TableHead>
-              <TableHead>Holat</TableHead>
+              <TableHead>{t("tur")}</TableHead>
+              <TableHead>{t("jiddiylik")}</TableHead>
+              <TableHead>{t("progress.description")}</TableHead>
+              <TableHead>{t("location")}</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-4 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : incidents.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">Hodisalar yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">{t("hodisalarYoq")}</TableCell></TableRow>
             ) : (Array.isArray(incidents) ? incidents : []).map((inc) => (
               <TableRow key={inc.id} data-testid={`row-safety-incident-${inc.id}`} className="hover:bg-muted/40 transition-colors">
                 <TableCell>{inc.incidentType || "—"}</TableCell>
@@ -104,18 +106,18 @@ export function PpeSection({ ppeRecords, loading }: PpeSectionProps) {
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Xodim ID</TableHead>
-              <TableHead>PPE Turi</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>Berilgan sana</TableHead>
-              <TableHead>Muddati</TableHead>
+              <TableHead>{t("xodimId")}</TableHead>
+              <TableHead>{t("ppeTuri")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("berilganSana")}</TableHead>
+              <TableHead>{t("muddati")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-4 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : ppeRecords.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">PPE yozuvlari yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("ppeYozuvlariYoq")}</TableCell></TableRow>
             ) : ppeRecords.map((p) => (
               <TableRow key={p.id} data-testid={`row-ppe-${p.id}`} className="hover:bg-muted/40 transition-colors">
                 <TableCell>{p.userId || "—"}</TableCell>
@@ -149,18 +151,18 @@ export function TrainingsSection({ trainings, loading }: TrainingsSectionProps) 
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Xodim ID</TableHead>
-              <TableHead>Trening nomi</TableHead>
-              <TableHead>Holat</TableHead>
-              <TableHead>Rejalashtirilgan</TableHead>
-              <TableHead>Muddati</TableHead>
+              <TableHead>{t("xodimId")}</TableHead>
+              <TableHead>{t("treningNomi")}</TableHead>
+              <TableHead>{t("status28")}</TableHead>
+              <TableHead>{t("rejalashtirilgan")}</TableHead>
+              <TableHead>{t("muddati")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-4 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : trainings.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Treninglar yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("treninglarYoq")}</TableCell></TableRow>
             ) : trainings.map((t) => (
               <TableRow key={t.id} data-testid={`row-training-${t.id}`} className="hover:bg-muted/40 transition-colors">
                 <TableCell>{t.userId || "—"}</TableCell>
@@ -193,17 +195,17 @@ export function ZonesSection({ zones, loading }: ZonesSectionProps) {
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Zona nomi</TableHead>
-              <TableHead>Joylashuv</TableHead>
-              <TableHead>Xavf turi</TableHead>
-              <TableHead>Xavf darajasi</TableHead>
+              <TableHead>{t("zonaNomi")}</TableHead>
+              <TableHead>{t("location")}</TableHead>
+              <TableHead>{t("xavfTuri")}</TableHead>
+              <TableHead>{t("xavfDarajasi")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-4 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} className="text-center py-4 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
             ) : activeZones.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-6 text-[13px] text-muted-foreground">Xavfli zonalar yo'q</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} className="text-center py-6 text-[13px] text-muted-foreground">{t("xavfliZonalarYoq")}</TableCell></TableRow>
             ) : activeZones.map((z) => (
               <TableRow key={z.id} data-testid={`row-zone-${z.id}`} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium">{z.zoneName || "—"}</TableCell>

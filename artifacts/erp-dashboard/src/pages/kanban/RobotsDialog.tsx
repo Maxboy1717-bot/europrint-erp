@@ -16,6 +16,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import type { KanbanColumn, AutomationRobot } from "@shared/schema";
 import { type T, type Employee } from "./kanban-types";
+import { useTranslation } from '@/lib/i18n';
 
 export function RobotsDialog({
   open,
@@ -32,6 +33,7 @@ export function RobotsDialog({
   employees: Employee[];
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showAddRobot, setShowAddRobot] = useState(false);
   const [newRobot, setNewRobot] = useState({
@@ -109,12 +111,12 @@ export function RobotsDialog({
                 </p>
               </div>
               <DeleteConfirmDialog
-                title="Robotni o'chirish"
-                description="Bu amalni qaytarib bo'lmaydi."
+                title={t("robotniOchirish")}
+                description={t("buAmalniQaytaribBolmaydi")}
                 onConfirm={() => deleteRobotMutation.mutate(robot.id)}
                 isPending={deleteRobotMutation.isPending}
               >
-                <Button variant="ghost" size="icon" aria-label="O'chirish" data-testid={`button-delete-robot-${robot.id}`}>
+                <Button variant="ghost" size="icon" aria-label={t("delete")} data-testid={`button-delete-robot-${robot.id}`}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </DeleteConfirmDialog>
@@ -124,18 +126,18 @@ export function RobotsDialog({
           {robots.length === 0 && !showAddRobot && (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
               <Bot className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>Robotlar yo'q</p>
+              <p>{t("robotlarYoq")}</p>
             </div>
           )}
 
           {showAddRobot ? (
             <div className="space-y-4 p-4 border rounded-md">
               <div>
-                <Label>Nomi</Label>
+                <Label>{t("name")}</Label>
                 <Input
                   value={newRobot.name}
                   onChange={(e) => setNewRobot({ ...newRobot, name: e.target.value })}
-                  placeholder="Robot nomi"
+                  placeholder={t("robotNomi")}
                   data-testid="input-robot-name"
                 />
               </div>
@@ -172,13 +174,13 @@ export function RobotsDialog({
 
               {newRobot.actionType === "move_to_column" && (
                 <div>
-                  <Label>Maqsad ustun</Label>
+                  <Label>{t("maqsadUstun")}</Label>
                   <Select
                     value={newRobot.actionConfig.targetColumnId || ""}
                     onValueChange={(v) => setNewRobot({ ...newRobot, actionConfig: { ...newRobot.actionConfig, targetColumnId: v } })}
                   >
                     <SelectTrigger data-testid="select-target-column" className="h-9">
-                      <SelectValue placeholder="Ustunni tanlang" />
+                      <SelectValue placeholder={t("ustunniTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Array.isArray(columns) ? columns : []).map((col) => (
@@ -191,13 +193,13 @@ export function RobotsDialog({
 
               {newRobot.actionType === "assign_user" && (
                 <div>
-                  <Label>Foydalanuvchi</Label>
+                  <Label>{t("foydalanuvchi")}</Label>
                   <Select
                     value={newRobot.actionConfig.targetUserId || ""}
                     onValueChange={(v) => setNewRobot({ ...newRobot, actionConfig: { ...newRobot.actionConfig, targetUserId: v } })}
                   >
                     <SelectTrigger data-testid="select-target-user" className="h-9">
-                      <SelectValue placeholder="Foydalanuvchini tanlang" />
+                      <SelectValue placeholder={t("foydalanuvchiniTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Array.isArray(employees) ? employees : []).map((emp) => (

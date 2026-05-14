@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface QualityDefect {
   id: string | number;
   defect_type?: string;
@@ -48,6 +49,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function QualityDefectsCameraPage() {
+  const { t } = useTranslation("common");
   const [statusFilter, setStatusFilter]   = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
 
@@ -74,14 +76,14 @@ export default function QualityDefectsCameraPage() {
   return (
     <ModulePage
       module="iot"
-      title="Kamera Sifat Kamchiliklari"
+      title={t("kameraSifatKamchiliklari")}
       icon={<Camera className="h-5 w-5" />}
     >
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-muted-foreground">Daraja:</span>
+            <span className="text-xs text-muted-foreground">{t("daraja1")}</span>
             {["all", "critical", "high", "medium", "low"].map(s => (
               <Button
                 key={s}
@@ -96,7 +98,7 @@ export default function QualityDefectsCameraPage() {
             ))}
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-muted-foreground">Holat:</span>
+            <span className="text-xs text-muted-foreground">{t("holat1")}</span>
             {["all", "open", "in_review", "resolved"].map(s => (
               <Button
                 key={s}
@@ -131,7 +133,7 @@ export default function QualityDefectsCameraPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <CheckCircle2 className="h-12 w-12 mx-auto text-[var(--ep-green)] mb-4" />
-              <p className="text-muted-foreground">Kamchilik topilmadi</p>
+              <p className="text-muted-foreground">{t("kamchilikTopilmadi")}</p>
             </CardContent>
           </Card>
         ) : (

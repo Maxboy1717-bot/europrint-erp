@@ -6,6 +6,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   created:     { label: "Yaratildi",    variant: "secondary" },
@@ -30,12 +31,13 @@ export interface ProductionOrder360TimelineProps {
 }
 
 export default function ProductionOrder360Timeline({ statusHistory }: ProductionOrder360TimelineProps) {
+  const { t } = useTranslation("common");
   if (!statusHistory || statusHistory.length === 0) return null;
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">Holat tarixi</CardTitle>
+        <CardTitle className="text-sm font-semibold">{t("holatTarixi")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">

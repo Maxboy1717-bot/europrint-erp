@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import type { CompetencyData } from "./ProductivityInterviewDialogTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface Step3Props {
   competency: CompetencyData;
@@ -11,21 +12,22 @@ interface Step3Props {
 }
 
 export function Step3Competency({ competency, onChange }: Step3Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">Bo'lim 3: Kompetensiya</h3>
+        <h3 className="font-semibold text-sm text-primary">{t("bolim3Kompetensiya")}</h3>
         <Badge variant="outline" className="text-[9px]">3 savol + amaliy topshiriq</Badge>
       </div>
 
       <div>
         <Label className="text-xs mb-1 block">
-          <span className="text-primary font-semibold">K1.</span> Murakkab muammo va qanday hal qilgansiz?
+          <span className="text-primary font-semibold">K1.</span> {t("murakkabMuammoVaQandayHal")}
         </Label>
         <Textarea
           rows={3}
           className="text-xs"
-          placeholder="Konkret misol keltiring: qanday vaziyat, nima qildi, nima natija?"
+          placeholder={t("konkretMisolKeltiringQandayVaziyat")}
           value={competency.q1_problem}
           onChange={e => onChange("q1_problem", e.target.value)}
         />
@@ -33,12 +35,12 @@ export function Step3Competency({ competency, onChange }: Step3Props) {
 
       <div>
         <Label className="text-xs mb-1 block">
-          <span className="text-primary font-semibold">K2.</span> Jamoadagi qiyin vaziyat misoli?
+          <span className="text-primary font-semibold">K2.</span> {t("jamoadagiQiyinVaziyatMisoli")}
         </Label>
         <Textarea
           rows={3}
           className="text-xs"
-          placeholder="Konflikt, kelishmovchilik yoki hamkorlik qiyinligi..."
+          placeholder={t("konfliktKelishmovchilikYokiHamkorlikQiyinligi")}
           value={competency.q2_team}
           onChange={e => onChange("q2_team", e.target.value)}
         />
@@ -46,12 +48,12 @@ export function Step3Competency({ competency, onChange }: Step3Props) {
 
       <div>
         <Label className="text-xs mb-1 block">
-          <span className="text-primary font-semibold">K3.</span> So'nggi 6 oyda nima o'rgandingiz?
+          <span className="text-primary font-semibold">K3.</span> {t("songgi6OydaNimaOrgandingiz")}
         </Label>
         <Textarea
           rows={2}
           className="text-xs"
-          placeholder="Ko'nikma, bilim yoki tajriba..."
+          placeholder={t("konikmaBilimYokiTajriba")}
           value={competency.q3_growth}
           onChange={e => onChange("q3_growth", e.target.value)}
         />
@@ -59,7 +61,7 @@ export function Step3Competency({ competency, onChange }: Step3Props) {
 
       <div className="border border-amber-500/30 rounded-lg p-3 bg-amber-500/5">
         <Label className="text-xs mb-1.5 block font-medium text-amber-300">
-          📋 Amaliy topshiriq natijasi
+          {t("amaliyTopshiriqNatijasi")}
         </Label>
         <Textarea
           rows={3}

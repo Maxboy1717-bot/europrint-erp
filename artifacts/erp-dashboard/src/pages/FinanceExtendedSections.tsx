@@ -12,6 +12,7 @@ import { BarChart3, TrendingUp, CreditCard, Receipt, RefreshCw, Plus } from "luc
 import { queryClient } from "@/lib/queryClient";
 import type { CostCenter, ProfitCenter, FinPayment, GLDocument } from "./FinanceExtendedTypes";
 import { fmtMoney } from "./FinanceExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface CostCentersTabProps {
   costCenters: CostCenter[];
@@ -24,16 +25,17 @@ interface CostCentersTabProps {
 }
 
 export function CostCentersTab({ costCenters, profitCenters, glDocuments, ccLoading, totalBudget, onRefetch, onAddClick }: CostCentersTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="costcenters" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Xarajat Markazlari</h2>
+        <h2 className="text-lg font-semibold">{t("xarajatMarkazlari")}</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onRefetch}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button size="sm" onClick={onAddClick} data-testid="button-add-cc">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />Markaz Qo'shish
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("markazQoshish")}
           </Button>
         </div>
       </div>
@@ -54,15 +56,15 @@ export function CostCentersTab({ costCenters, profitCenters, glDocuments, ccLoad
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Kod</TableHead><TableHead>Nomi</TableHead>
-              <TableHead>Byudjet</TableHead><TableHead>Tavsif</TableHead>
+              <TableHead>{t("code")}</TableHead><TableHead>{t("name")}</TableHead>
+              <TableHead>{t("byudjet")}</TableHead><TableHead>{t("progress.description")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {ccLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : costCenters.length === 0 ? (
                 <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-30" />Xarajat markazlari yo'q
+                  <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("xarajatMarkazlariYoq")}
                 </TableCell></TableRow>
               ) : (Array.isArray(costCenters) ? costCenters : []).slice(0, 15).map((cc: CostCenter) => (
                 <TableRow key={cc.id} data-testid={`row-cc-${cc.id}`} className="hover:bg-muted/40 transition-colors">
@@ -88,20 +90,20 @@ interface ProfitCentersTabProps {
 export function ProfitCentersTab({ profitCenters, pcLoading }: ProfitCentersTabProps) {
   return (
     <TabsContent value="profitcenters" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Foyda Markazlari</h2>
+      <h2 className="text-lg font-semibold">{t("foydaMarkazlari")}</h2>
       <Card>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Kod</TableHead><TableHead>Nomi</TableHead>
-              <TableHead>Daromad</TableHead><TableHead>Xarajat</TableHead><TableHead>Foyda</TableHead>
+              <TableHead>{t("code")}</TableHead><TableHead>{t("name")}</TableHead>
+              <TableHead>{t("daromad")}</TableHead><TableHead>{t("xarajat1")}</TableHead><TableHead>{t("foyda")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {pcLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : profitCenters.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />Foyda markazlari yo'q
+                  <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("foydaMarkazlariYoq")}
                 </TableCell></TableRow>
               ) : (Array.isArray(profitCenters) ? profitCenters : []).slice(0, 15).map((pc: ProfitCenter) => {
                 const profit = Number(pc.revenue || 0) - Number(pc.expenses || 0);
@@ -134,24 +136,24 @@ export function PaymentsTab({ payments, paymentsLoading }: PaymentsTabProps) {
   return (
     <TabsContent value="payments" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">To'lovlar Jurnali</h2>
+        <h2 className="text-lg font-semibold">{t("tolovlarJurnali")}</h2>
         <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/fi/payments"] })}>
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
       <Card>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Sana</TableHead><TableHead>Tur</TableHead>
-              <TableHead>Summa</TableHead><TableHead>Holati</TableHead>
+              <TableHead>{t("date")}</TableHead><TableHead>{t("tur")}</TableHead>
+              <TableHead>{t("summa")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {paymentsLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : !Array.isArray(payments) || payments.length === 0 ? (
                 <TableRow><TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-30" />To'lovlar yo'q
+                  <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("tolovlarYoq")}
                 </TableCell></TableRow>
               ) : payments.slice(0, 15).map((p: FinPayment) => (
                 <TableRow key={p.id} data-testid={`row-payment-${p.id}`} className="hover:bg-muted/40 transition-colors">
@@ -189,7 +191,7 @@ export function GLDocumentsTab({ glDocuments, glLoading, onRefetch }: GLDocument
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">GL Hujjatlar (Audit Log)</h2>
         <Button variant="outline" size="sm" onClick={onRefetch}>
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -208,15 +210,15 @@ export function GLDocumentsTab({ glDocuments, glLoading, onRefetch }: GLDocument
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Hujjat №</TableHead><TableHead>Sana</TableHead>
-              <TableHead>Tavsif</TableHead><TableHead>Debet</TableHead><TableHead>Kredit</TableHead><TableHead>Holati</TableHead>
+              <TableHead>{t("hujjat1")}</TableHead><TableHead>{t("date")}</TableHead>
+              <TableHead>{t("progress.description")}</TableHead><TableHead>{t("debet")}</TableHead><TableHead>{t("loan")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {glLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : glDocuments.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">
-                  <Receipt className="h-8 w-8 mx-auto mb-2 opacity-30" />GL hujjatlar yo'q
+                  <Receipt className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("glHujjatlarYoq")}
                 </TableCell></TableRow>
               ) : (Array.isArray(glDocuments) ? glDocuments : []).slice(0, 15).map((doc: GLDocument) => (
                 <TableRow key={doc.id} data-testid={`row-gl-${doc.id}`} className="hover:bg-muted/40 transition-colors">

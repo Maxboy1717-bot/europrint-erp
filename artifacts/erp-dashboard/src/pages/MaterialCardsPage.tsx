@@ -82,9 +82,9 @@ export default function MaterialCardsPage() {
 
   const getStatusBadge = (status: string, current: number, min: number) => {
     const low = current <= min;
-    if (status === "inactive") return <Badge className="bg-gray-100 text-gray-600">Nofaol</Badge>;
-    if (low) return <EPStatusPill tone="danger">Kam qoldi</EPStatusPill>;
-    return <EPStatusPill tone="success">Faol</EPStatusPill>;
+    if (status === "inactive") return <Badge className="bg-gray-100 text-gray-600">{t("inactive")}</Badge>;
+    if (low) return <EPStatusPill tone="danger">{t("kamQoldi")}</EPStatusPill>;
+    return <EPStatusPill tone="success">{t("active")}</EPStatusPill>;
   };
 
   return (
@@ -93,14 +93,14 @@ export default function MaterialCardsPage() {
         <h1 className="text-2xl font-bold">{t('materialKartalar')}</h1>
         <Button onClick={() => setIsDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Yangi material
+          {t("yangiMaterial")}
         </Button>
       </div>
 
       <div className="relative w-72">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Qidirish..."
+          placeholder={t("Qidirish...")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -110,23 +110,23 @@ export default function MaterialCardsPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+            <div className="p-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : list.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Package className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>Materiallar topilmadi</p>
+              <p>{t("materiallarTopilmadi")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kod</TableHead>
-                  <TableHead>Nomi</TableHead>
-                  <TableHead>O'lchov</TableHead>
-                  <TableHead>Kategoriya</TableHead>
-                  <TableHead className="text-right">Joriy qoldiq</TableHead>
-                  <TableHead className="text-right">Min. qoldiq</TableHead>
-                  <TableHead>Holat</TableHead>
+                  <TableHead>{t("code")}</TableHead>
+                  <TableHead>{t("name")}</TableHead>
+                  <TableHead>{t("olchov1")}</TableHead>
+                  <TableHead>{t("category")}</TableHead>
+                  <TableHead className="text-right">{t("currentBalance")}</TableHead>
+                  <TableHead className="text-right">{t("minQoldiq")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -154,7 +154,7 @@ export default function MaterialCardsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi material qo'shish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiMaterialQoshish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -163,7 +163,7 @@ export default function MaterialCardsPage() {
                 <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="MAT-001" />
               </div>
               <div>
-                <Label>O'lchov birligi</Label>
+                <Label>{t("olchovBirligi")}</Label>
                 <Select value={unit} onValueChange={setUnit}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -176,20 +176,20 @@ export default function MaterialCardsPage() {
               </div>
             </div>
             <div>
-              <Label>Nomi</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Material nomi" />
+              <Label>{t("name")}</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("materialNomi")} />
             </div>
             <div>
-              <Label>Kategoriya</Label>
-              <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Masalan: Qog'oz" />
+              <Label>{t("category")}</Label>
+              <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder={t("masalanQogoz")} />
             </div>
             <div>
-              <Label>Minimal qoldiq</Label>
+              <Label>{t("minimalQoldiq")}</Label>
               <Input type="number" value={minStock} onChange={(e) => setMinStock(e.target.value)} placeholder="0" />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={resetForm}>Bekor qilish</Button>
-              <Button onClick={handleSave} disabled={createMutation.isPending}>Saqlash</Button>
+              <Button variant="outline" onClick={resetForm}>{t("cancel")}</Button>
+              <Button onClick={handleSave} disabled={createMutation.isPending}>{t("Saqlash")}</Button>
             </div>
           </div>
         </DialogContent>

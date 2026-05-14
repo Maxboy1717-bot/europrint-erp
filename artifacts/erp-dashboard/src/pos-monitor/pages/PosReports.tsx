@@ -6,6 +6,7 @@
 import { useState, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { reportsApi, stockApi, glApi, syncApi, inventoryApi, movementsApi } from "../api/pos-monitor.api";
+import { useTranslation } from '@/lib/i18n';
 
 function exportCsv(data: unknown, filename: string) {
   const rows = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
@@ -84,6 +85,7 @@ async function fetchReport(selected: ReportType, warehouseId: string, dateFrom: 
 }
 
 export default function PosReports() {
+  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const [selected, setSelected] = useState<ReportType>("stock_balance");
   const [dateFrom, setDateFrom] = useState("");
@@ -126,11 +128,11 @@ export default function PosReports() {
             </div>
           </div>
           <div className="pos-card">
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--pos-text-muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Filtrlar</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--pos-text-muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{t("filtrlar")}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div><label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 2, display: "block" }}>{t("reports.dateFrom")}</label><input className="pos-input" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} /></div>
               <div><label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 2, display: "block" }}>{t("reports.dateTo")}</label><input className="pos-input" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} /></div>
-              <div><label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 2, display: "block" }}>Ombor ID</label><input className="pos-input" placeholder="Barchasi" value={warehouseId} onChange={e => setWhId(e.target.value)} /></div>
+              <div><label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 2, display: "block" }}>{t("omborId")}</label><input className="pos-input" placeholder={t("Barchasi")} value={warehouseId} onChange={e => setWhId(e.target.value)} /></div>
               <button className="pos-btn pos-btn-primary" style={{ justifyContent: "center" }} onClick={() => void generate()} disabled={loading}>
                 {loading ? "⏳ Yuklanmoqda..." : `${REPORT_ICON[selected] ?? "📊"} ${t("reports.generate")}`}
               </button>
@@ -151,7 +153,7 @@ export default function PosReports() {
               <div style={{ textAlign: "center", padding: 48, color: "var(--pos-text-muted)" }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>{REPORT_ICON[selected] ?? "📊"}</div>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{REPORT_LABELS[selected]}</div>
-                <div style={{ fontSize: 12 }}>Hisobotni yuklash uchun tugmani bosing</div>
+                <div style={{ fontSize: 12 }}>{t("hisobotniYuklashUchunTugmaniBosing")}</div>
               </div>
             )}
             {loading && <div style={{ textAlign: "center", padding: 48, color: "var(--pos-text-muted)" }}><div className="pos-live" style={{ fontSize: 32, marginBottom: 12 }}>⏳</div><div>{t("common.loading")}</div></div>}
@@ -185,7 +187,7 @@ export default function PosReports() {
                       </div>
                       <div style={{ overflowX: "auto" }}>
                         <table className="pos-table">
-                          <thead><tr><th>Sinf</th><th>{t('common.Material')}</th><th>Birlik</th><th className="pos-mono">Qoldiq</th><th className="pos-mono">Qiymat</th><th className="pos-mono">Ulushi %</th><th className="pos-mono">Yig'ma %</th></tr></thead>
+                          <thead><tr><th>{t("sinf")}</th><th>{t('common.Material')}</th><th>{t("unit")}</th><th className="pos-mono">{t("qoldiq")}</th><th className="pos-mono">{t("qiymat")}</th><th className="pos-mono">{t("ulushi")}</th><th className="pos-mono">{t("yigma")}</th></tr></thead>
                           <tbody>
                             {rows.slice(0, 200).map((r, i) => (
                               <tr key={i} style={{ background: r.abc_class === "A" ? "rgba(0,255,148,0.04)" : r.abc_class === "B" ? "rgba(255,184,0,0.04)" : undefined }}>

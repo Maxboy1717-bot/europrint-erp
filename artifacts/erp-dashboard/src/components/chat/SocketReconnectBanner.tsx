@@ -9,7 +9,9 @@ import { Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 export function SocketReconnectBanner() {
+  const { t } = useTranslation("common");
   const { connected } = useChatSocketContext();
   const [showDisconnected, setShowDisconnected] = useState(false);
   const [showReconnected, setShowReconnected] = useState(false);
@@ -44,12 +46,12 @@ export function SocketReconnectBanner() {
       {showDisconnected ? (
         <>
           <EPLoader className="w-4 h-4" />
-          <span>Ulanmoqda...</span>
+          <span>{t("ulanmoqda")}</span>
         </>
       ) : (
         <>
           <Wifi className="w-4 h-4" />
-          <span>Ulandi</span>
+          <span>{t("ulandi")}</span>
         </>
       )}
     </div>

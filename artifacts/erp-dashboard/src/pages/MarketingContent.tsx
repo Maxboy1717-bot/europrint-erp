@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, FileText, Pencil, Trash2, Sparkles, Send, Clock, Archive, Eye, Calendar } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const statusLabels: Record<string, string> = { draft: "Qoralama", scheduled: "Rejalashtirilgan", published: "Nashr qilingan", failed: "Xatolik" };
 const statusIcons: Record<string, ElementType> = { draft: FileText, scheduled: Clock, published: Send, failed: Archive };
@@ -45,6 +46,7 @@ interface ContentPost {
 }
 
 export default function MarketingContent() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -162,36 +164,36 @@ export default function MarketingContent() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-content">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing Kontent</b></>}
-        title="Marketing Kontent"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("marketingKontent")}</b></>}
+        title={t("marketingKontent")}
       />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-content">
               <Plus className="h-4 w-4" />
-              Yangi Kontent
+              {t("yangiKontent")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto bg-card border-none p-6">
             <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "Kontentni tahrirlash" : "Yangi Kontent"}</DialogTitle></DialogHeader>
             <Tabs defaultValue="content" className="mt-4">
               <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 bg-muted/40 p-1 rounded-lg">
-                <TabsTrigger value="content" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">Kontent</TabsTrigger>
-                <TabsTrigger value="ai" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">AI Yordamchi</TabsTrigger>
+                <TabsTrigger value="content" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("kontent")}</TabsTrigger>
+                <TabsTrigger value="ai" className="data-[state=active]:bg-card data-[state=active]:text-primary rounded-md">{t("aiYordamchi")}</TabsTrigger>
               </TabsList>
               <TabsContent value="content" className="space-y-4 mt-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Sarlavha *</Label><Input className="bg-background border-border" data-testid="input-content-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Matn *</Label><Textarea className="bg-background border-border min-h-[120px]" data-testid="input-content-body" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("sarlavha")}</Label><Input className="bg-background border-border" data-testid="input-content-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("matn1")}</Label><Textarea className="bg-background border-border min-h-[120px]" data-testid="input-content-body" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-muted-foreground">Platforma</Label>
+                    <Label className="text-muted-foreground">{t("platforma")}</Label>
                     <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}>
                       <SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger>
                       <SelectContent className="bg-card border-border">{Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-muted-foreground">Holat</Label>
+                    <Label className="text-muted-foreground">{t("status28")}</Label>
                     <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                       <SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger>
                       <SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -199,10 +201,10 @@ export default function MarketingContent() {
                   </div>
                 </div>
                 <div className="space-y-1.5"><Label className="text-muted-foreground">Hashtag'lar (vergul bilan)</Label><Input className="bg-background border-border" value={form.hashtags} onChange={(e) => setForm({ ...form, hashtags: e.target.value })} placeholder="#europrint, #quti" /></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Rejali vaqt</Label><Input className="bg-background border-border" type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("rejaliVaqt")}</Label><Input className="bg-background border-border" type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} /></div>
               </TabsContent>
               <TabsContent value="ai" className="space-y-4 mt-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">AI prompt</Label><Textarea className="bg-background border-border min-h-[100px]" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="Qadoqlash sifati haqida post yozing..." /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">AI prompt</Label><Textarea className="bg-background border-border min-h-[100px]" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder={t("qadoqlashSifatiHaqidaPostYozing")} /></div>
                 <Button onClick={() => aiMutation.mutate({ prompt: aiPrompt, platform: form.platform })} disabled={!aiPrompt || aiMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-ai-generate">
                   <Sparkles className="h-4 w-4 mr-2" />{aiMutation.isPending ? "Yaratilmoqda..." : "AI bilan yaratish"}
                 </Button>
@@ -217,42 +219,42 @@ export default function MarketingContent() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("total")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{stats.total}</p>
         </Card>
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Nashr</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("nashr")}</p>
           <p className="text-4xl font-bold tracking-tight text-[var(--ep-green)]">{stats.published}</p>
         </Card>
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Rejada</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("rejada")}</p>
           <p className="text-4xl font-bold tracking-tight text-primary">{stats.scheduled}</p>
         </Card>
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Qoralama</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("draft")}</p>
           <p className="text-4xl font-bold tracking-tight text-muted-foreground">{stats.draft}</p>
         </Card>
       </div>
 
       <div className="flex gap-3 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-44 bg-card border-none h-9" data-testid="select-status-filter"><SelectValue placeholder="Holat" /></SelectTrigger>
+          <SelectTrigger className="w-44 bg-card border-none h-9" data-testid="select-status-filter"><SelectValue placeholder={t("status28")} /></SelectTrigger>
           <SelectContent className="bg-card border-border">
-            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={platformFilter} onValueChange={setPlatformFilter}>
-          <SelectTrigger className="w-44 bg-card border-none h-9" data-testid="select-platform-filter"><SelectValue placeholder="Platforma" /></SelectTrigger>
+          <SelectTrigger className="w-44 bg-card border-none h-9" data-testid="select-platform-filter"><SelectValue placeholder={t("platforma")} /></SelectTrigger>
           <SelectContent className="bg-card border-border">
-            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {Object.entries(platformLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">Kontent topilmadi</CardContent></Card>
+        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">{t("kontentTopilmadi")}</CardContent></Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {(Array.isArray(filtered) ? filtered : []).map((c) => {
@@ -295,8 +297,8 @@ export default function MarketingContent() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Kontentni o'chirish"
-        description="Ushbu kontent postni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("kontentniOchirish")}
+        description={t("ushbuKontentPostniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

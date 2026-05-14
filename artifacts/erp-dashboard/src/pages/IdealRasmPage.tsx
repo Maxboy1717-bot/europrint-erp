@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
   ResponsiveContainer, Tooltip,
@@ -79,6 +80,7 @@ function PctBadge({ pct }: { pct: number }) {
 }
 
 export default function IdealRasmPage() {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -140,19 +142,19 @@ export default function IdealRasmPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Target className="w-6 h-6 text-primary" />
-            Ideal Rasm
+            {t("idealRasm")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Kompaniyaning 3 yillik maqsad holati va real ko'rsatkichlar taqqoslash dashboardi
+            {t("kompaniyaning3YillikMaqsadHolati")}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> {t("refresh")}
           </Button>
           {isDirector && !editMode && (
             <Button size="sm" onClick={startEdit}>
-              <Edit3 className="h-3.5 w-3.5 mr-1.5" /> Maqsadlarni Tahrirlash
+              <Edit3 className="h-3.5 w-3.5 mr-1.5" /> {t("maqsadlarniTahrirlash")}
             </Button>
           )}
           {editMode && (
@@ -172,7 +174,7 @@ export default function IdealRasmPage() {
       {/* Horizon Badge */}
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="text-xs">
-          <BarChart3 className="w-3 h-3 mr-1" /> 3 Yillik Maqsad Oralig'i
+          <BarChart3 className="w-3 h-3 mr-1" /> {t("k3YillikMaqsadOraligi")}
         </Badge>
         {data?.generatedAt && (
           <span className="text-xs text-muted-foreground">
@@ -220,13 +222,13 @@ export default function IdealRasmPage() {
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Haqiqat</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("haqiqat")}</p>
                         <p className="text-lg font-bold text-foreground mt-0.5">
                           {formatValue(target.actualValue, target.unit)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Maqsad</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("Maqsad")}</p>
                         <p className="text-lg font-bold text-muted-foreground mt-0.5">
                           {formatValue(parseFloat(target.targetValue), target.unit)}
                         </p>
@@ -235,7 +237,7 @@ export default function IdealRasmPage() {
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Bajarilish</span>
+                        <span className="text-muted-foreground">{t("progress5")}</span>
                         <span className={cn("font-semibold", pctColor(target.achievementPct))}>
                           {target.achievementPct}%
                         </span>
@@ -268,7 +270,7 @@ export default function IdealRasmPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-primary" />
-              Ideal vs Haqiqat — Radar Tahlil
+              {t("idealVsHaqiqatRadarTahlil")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -314,7 +316,7 @@ export default function IdealRasmPage() {
               </div>
               <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
                 <span className="w-4 h-0.5 bg-primary inline-block" />
-                Haqiqat
+                {t("haqiqat")}
               </div>
             </div>
           </CardContent>
@@ -325,7 +327,7 @@ export default function IdealRasmPage() {
       {!isLoading && targets.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Umumiy Baholash</CardTitle>
+            <CardTitle className="text-base">{t("umumiyBaholash")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">

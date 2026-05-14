@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, BarChart3, UserCheck, Target, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { HRCapitalProfile, HRCSession } from "./HRCapitalTabTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   VISOTSKIY_COLORS,
   ONBOARDING_LABELS,
@@ -20,6 +21,7 @@ import {
 // ─── Centered bar for tool test indicators ─────────────────────────────────────
 
 export function CenteredBar({ value, color }: { value: number; color: string }) {
+  const { t } = useTranslation("common");
   const center = 50;
   const pct = Math.max(0, Math.min(100, ((value + 100) / 200) * 100));
   const isNeg = value < 0;
@@ -45,7 +47,7 @@ export function HRCapitalSummaryCards({ profile }: { profile: HRCapitalProfile |
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Visotskiy kategoriyasi</p>
+              <p className="text-xs text-muted-foreground">{t("visotskiyKategoriyasi")}</p>
               {profile?.visotskiyCategory ? (
                 <p className="text-xl font-bold mt-1">{profile.visotskiyCategory}</p>
               ) : (
@@ -61,7 +63,7 @@ export function HRCapitalSummaryCards({ profile }: { profile: HRCapitalProfile |
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Tool Test natijasi</p>
+              <p className="text-xs text-muted-foreground">{t("toolTestNatijasi")}</p>
               <p className="text-2xl font-bold text-[var(--ep-purple)]">{profile?.toolTestScore || "—"}</p>
               <p className="text-xs text-muted-foreground">A-J shkala</p>
             </div>
@@ -74,7 +76,7 @@ export function HRCapitalSummaryCards({ profile }: { profile: HRCapitalProfile |
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Onboarding holati</p>
+              <p className="text-xs text-muted-foreground">{t("onboardingHolati")}</p>
               {profile?.onboardingStatus ? (
                 <Badge className={`mt-1 ${ONBOARDING_LABELS[profile.onboardingStatus]?.color}`}>
                   {ONBOARDING_LABELS[profile.onboardingStatus]?.label}
@@ -97,7 +99,7 @@ export function HRCapitalProfileView({ profile }: { profile: HRCapitalProfile })
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <p className="text-sm text-muted-foreground">Visotskiy kategoriyasi</p>
+        <p className="text-sm text-muted-foreground">{t("visotskiyKategoriyasi")}</p>
         {profile.visotskiyCategory ? (
           <Badge className={`mt-1 ${VISOTSKIY_COLORS[profile.visotskiyCategory] || ""}`}>
             {profile.visotskiyCategory}
@@ -107,19 +109,19 @@ export function HRCapitalProfileView({ profile }: { profile: HRCapitalProfile })
         )}
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Tool Test natijasi</p>
+        <p className="text-sm text-muted-foreground">{t("toolTestNatijasi")}</p>
         <p className="font-bold text-2xl mt-1 text-[var(--ep-purple)]">{profile.toolTestScore || "—"}</p>
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Psixologik profil</p>
+        <p className="text-sm text-muted-foreground">{t("psixologikProfil")}</p>
         <p className="font-medium mt-1">{profile.psychologicalProfile || "—"}</p>
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Recruiting kanali</p>
+        <p className="text-sm text-muted-foreground">{t("recruitingKanali")}</p>
         <p className="font-medium mt-1">{profile.recruitingChannel || "—"}</p>
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Onboarding holati</p>
+        <p className="text-sm text-muted-foreground">{t("onboardingHolati")}</p>
         {profile.onboardingStatus ? (
           <Badge className={`mt-1 ${ONBOARDING_LABELS[profile.onboardingStatus]?.color || ""}`}>
             {ONBOARDING_LABELS[profile.onboardingStatus]?.label}
@@ -129,12 +131,12 @@ export function HRCapitalProfileView({ profile }: { profile: HRCapitalProfile })
         )}
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Offboarding holati</p>
+        <p className="text-sm text-muted-foreground">{t("offboardingHolati")}</p>
         <p className="font-medium mt-1">{profile.offboardingStatus || "—"}</p>
       </div>
       {profile.notes && (
         <div className="md:col-span-2">
-          <p className="text-sm text-muted-foreground">Eslatmalar</p>
+          <p className="text-sm text-muted-foreground">{t("eslatmalar")}</p>
           <p className="font-medium mt-1">{profile.notes}</p>
         </div>
       )}
@@ -163,9 +165,9 @@ export function HRCapitalTestHistory({ employeeId }: { employeeId: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-[var(--ep-purple)]" />
-          HR Capital Test Tarixi
+          {t("hrCapitalTestTarixi")}
         </CardTitle>
-        <CardDescription>Barcha test natijalari</CardDescription>
+        <CardDescription>{t("barchaTestNatijalari")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
@@ -227,12 +229,13 @@ export function HRCapitalTestHistory({ employeeId }: { employeeId: string }) {
 // ─── Visotskiy Info Card ───────────────────────────────────────────────────────
 
 export function VisotskiyInfoCard() {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5" />
-          Visotskiy Metodologiyasi Haqida
+          {t("visotskiyMetodologiyasiHaqida")}
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -4,6 +4,7 @@
  */
 
 import { sql, db } from '@workspace/db';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
 import { Ok, Err, Result, safeCall } from '@common/result';
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -12,7 +13,7 @@ import { execPosBarcodePrintQueueInsert } from '@common/database/queries-remaini
 export type LabelFormat = 'ZPL' | 'EPL' | 'PDF';
 type Row = Record<string, unknown>;
 const execLog = new Logger('LabelRepository');
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   try { return (await db.execute(q)).rows as Row[]; } catch (e) { execLog.warn('[Label] DB exec failed', String(e)); return []; }
 };
 

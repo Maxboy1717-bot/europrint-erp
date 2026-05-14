@@ -119,15 +119,15 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
               <Input id="m-kod" data-testid="input-material-kod" value={form.kod} onChange={set("kod")} placeholder="MAT-001" disabled={isEdit} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="m-type">Tur</Label>
+              <Label htmlFor="m-type">{t("tur")}</Label>
               <Select value={form.materialType} onValueChange={setVal("materialType")}>
                 <SelectTrigger data-testid="select-material-type" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="raw">Xom ashyo</SelectItem>
-                  <SelectItem value="semi">Yarim tayyor</SelectItem>
-                  <SelectItem value="finished">Tayyor mahsulot</SelectItem>
-                  <SelectItem value="consumable">Sarflanadigan</SelectItem>
-                  <SelectItem value="spare">Ehtiyot qism</SelectItem>
+                  <SelectItem value="raw">{t("xomAshyo")}</SelectItem>
+                  <SelectItem value="semi">{t("yarimTayyor")}</SelectItem>
+                  <SelectItem value="finished">{t("tayyorMahsulot")}</SelectItem>
+                  <SelectItem value="consumable">{t("sarflanadigan")}</SelectItem>
+                  <SelectItem value="spare">{t("ehtiyotQism")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -135,7 +135,7 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
 
           <div className="space-y-1">
             <Label htmlFor="m-name">Nomi (O'zbek) *</Label>
-            <Input id="m-name" data-testid="input-material-name" value={form.xomAshyo} onChange={set("xomAshyo")} placeholder="Material nomi" />
+            <Input id="m-name" data-testid="input-material-name" value={form.xomAshyo} onChange={set("xomAshyo")} placeholder={t("materialNomi")} />
           </div>
 
           <div className="space-y-1">
@@ -145,14 +145,14 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label>Kategoriya *</Label>
+              <Label>{t("kategoriya")}</Label>
               <Select value={form.category} onValueChange={setVal("category")}>
                 <SelectTrigger data-testid="select-material-category" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>{(Array.isArray(categories) ? categories : []).map(c => <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>O'lchov birligi *</Label>
+              <Label>{t("olchovBirligi1")}</Label>
               <Select value={form.unitOfMeasure} onValueChange={setVal("unitOfMeasure")}>
                 <SelectTrigger data-testid="select-material-unit" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>{(Array.isArray(units) ? units : []).map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
@@ -164,7 +164,7 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
             <div className="space-y-1">
               <Label htmlFor="m-abc">ABC segment</Label>
               <Select value={form.abcSegment || "none"} onValueChange={v => setVal("abcSegment")(v === "none" ? "" : v)}>
-                <SelectTrigger data-testid="select-material-abc" className="h-9"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                <SelectTrigger data-testid="select-material-abc" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">—</SelectItem>
                   <SelectItem value="A">A (Yuqori prioritet)</SelectItem>
@@ -196,17 +196,17 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="m-min">Min zaxira</Label>
+              <Label htmlFor="m-min">{t("minZaxira")}</Label>
               <Input id="m-min" data-testid="input-material-min-stock" type="number" min="0" value={form.minStock} onChange={set("minStock")} placeholder="500" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="m-max">Max zaxira</Label>
+              <Label htmlFor="m-max">{t("maxZaxira")}</Label>
               <Input id="m-max" data-testid="input-material-max-stock" type="number" min="0" value={form.maxStock} onChange={set("maxStock")} placeholder="5000" />
             </div>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending} data-testid="button-material-cancel">Bekor qilish</Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending} data-testid="button-material-cancel">{t("cancel")}</Button>
             <Button type="submit" disabled={isPending} data-testid="button-material-save">
               {isPending ? "Saqlanmoqda..." : isEdit ? "Saqlash" : "Yaratish"}
             </Button>

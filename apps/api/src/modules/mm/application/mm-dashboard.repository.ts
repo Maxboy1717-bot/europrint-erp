@@ -6,11 +6,10 @@
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
-
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { SECONDS_PER_DAY, MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
 @Injectable()
 export class MmDashboardRepository {

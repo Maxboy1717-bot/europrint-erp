@@ -10,8 +10,10 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useTranslation } from '@/lib/i18n';
 
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
+  const { t } = useTranslation("common");
   return (
     <div
       data-slot="input-group"
@@ -64,7 +66,7 @@ function InputGroupAddon({
   className,
   align = "inline-start",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+}: React.ComponentProps<"div"> {t("variantprops")}<typeof inputGroupAddonVariants>) {
   return (
     <div
       role="group"

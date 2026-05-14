@@ -238,7 +238,7 @@ export default function ForecastAnalytics() {
               {model === "ema" && result && (
                 <>
                   <Card className="p-3">
-                    <p className="text-xs text-muted-foreground">Alpha</p>
+                    <p className="text-xs text-muted-foreground">{t("alpha")}</p>
                     <p className="text-xl font-bold">{((result as EmaResult).alpha ?? 0).toFixed(3)}</p>
                   </Card>
                   <Card className="p-3">

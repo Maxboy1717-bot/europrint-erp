@@ -63,7 +63,9 @@ export class AiDataRepository {
       .from(crmDeals)
       .where(eq(crmDeals.id, dealId))
       .limit(1);
-    return rows[0] ?? null;
+    const row = rows[0];
+    if (!row) return null;
+    return { title: row.title, amount: row.amount, stage_id: row.stage_id != null ? String(row.stage_id) : null };
   }
 
   async getContactById(contactId: number): Promise<Record<string, unknown> | null> {

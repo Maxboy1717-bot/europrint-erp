@@ -23,8 +23,10 @@ import {
 import { AdjustDialog } from "./POSInventoryPageDialogs";
 import { MovementsTab, ProductsTab, LowStockTab } from "./POSInventoryPageSections";
 import { ChartTab } from "./POSInventoryPageChart";
+import { useTranslation } from '@/lib/i18n';
 
 export default function POSInventoryPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("movements");
   const [adjustProduct, setAdjustProduct] = useState<PosProduct | null>(null);
@@ -128,7 +130,7 @@ export default function POSInventoryPage() {
       <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Package className="h-6 w-6 text-[var(--ep-green)]" />
-          <h1 className="text-xl font-bold">Inventar Boshqaruvi</h1>
+          <h1 className="text-xl font-bold">{t("inventarBoshqaruvi")}</h1>
           {lowStock.length > 0 && (
             <Badge variant="destructive" className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3" />
@@ -137,7 +139,7 @@ export default function POSInventoryPage() {
           )}
         </div>
         <Button variant="outline" size="sm" onClick={() => { refetchMovements(); refetchLowStock(); }}>
-          <RefreshCw className="h-4 w-4 mr-1" />Yangilash
+          <RefreshCw className="h-4 w-4 mr-1" />{t("refresh")}
         </Button>
       </div>
 
@@ -146,15 +148,15 @@ export default function POSInventoryPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <div className="px-4 pt-3 bg-white dark:bg-gray-800 border-b">
             <TabsList>
-              <TabsTrigger value="movements"><List className="h-4 w-4 mr-1" />Harakatlar</TabsTrigger>
-              <TabsTrigger value="products"><Package className="h-4 w-4 mr-1" />Mahsulotlar</TabsTrigger>
+              <TabsTrigger value="movements"><List className="h-4 w-4 mr-1" />{t("actions")}</TabsTrigger>
+              <TabsTrigger value="products"><Package className="h-4 w-4 mr-1" />{t("mahsulotlar")}</TabsTrigger>
               <TabsTrigger value="low-stock" className="relative">
                 <AlertTriangle className="h-4 w-4 mr-1" />Kam qoldiq
                 {lowStock.length > 0 && (
                   <Badge className="ml-1 h-5 px-1 text-xs bg-red-500">{lowStock.length}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="chart"><BarChart3 className="h-4 w-4 mr-1" />Grafik</TabsTrigger>
+              <TabsTrigger value="chart"><BarChart3 className="h-4 w-4 mr-1" />{t("grafik")}</TabsTrigger>
             </TabsList>
           </div>
 

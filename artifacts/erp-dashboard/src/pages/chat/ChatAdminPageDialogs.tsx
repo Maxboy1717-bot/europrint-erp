@@ -43,7 +43,7 @@ export function RoomMembersSheet({selectedRoom, onClose, membersLoading, roomMem
           </SheetTitle>
         </SheetHeader>
         {membersLoading ? (
-          <div className="text-center text-muted-foreground py-8">Yuklanmoqda...</div>
+          <div className="text-center text-muted-foreground py-8">{t("Yuklanmoqda...")}</div>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(roomMembers) ? roomMembers : []).map((m) => (
@@ -79,9 +79,9 @@ export function RoomMembersSheet({selectedRoom, onClose, membersLoading, roomMem
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="OWNER">Egasi</SelectItem>
+                        <SelectItem value="OWNER">{t("egasi")}</SelectItem>
                         <SelectItem value="ADMIN">{t('admin')}</SelectItem>
-                        <SelectItem value="MEMBER">A'zo</SelectItem>
+                        <SelectItem value="MEMBER">{t("azo")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button
@@ -90,14 +90,14 @@ export function RoomMembersSheet({selectedRoom, onClose, membersLoading, roomMem
                       onClick={() => setConfirmRemove({ roomId: selectedRoom?.id ?? '', userId: m.userId, name: m.fullName })}
                       disabled={removeMemberMutation.isPending}
                     >
-                      Chiqarish
+                      {t("chiqarish")}
                     </Button>
                   </div>
                 )}
               </div>
             ))}
             {roomMembers.length === 0 && (
-              <p className="text-center text-muted-foreground py-8 text-sm">A'zolar topilmadi</p>
+              <p className="text-center text-muted-foreground py-8 text-sm">{t("azolarTopilmadi")}</p>
             )}
           </div>
         )}
@@ -117,7 +117,7 @@ export function RemoveMemberConfirm({ confirmRemove, onClose, onConfirm }: Remov
     <ConfirmDialog
       open={confirmRemove !== null}
       onOpenChange={(open) => { if (!open) onClose(); }}
-      title="A'zoni chiqarish"
+      title={t("azoniChiqarish")}
       description={`${confirmRemove?.name ?? ''} ni chatdan chiqarishni tasdiqlaysizmi?`}
       confirmText="Chiqarish"
       cancelText="Bekor qilish"

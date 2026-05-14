@@ -10,6 +10,7 @@ import { Brain, Send } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 const QUICK_QUESTIONS = [
   'Bugungi eng katta muammo nima?',
   'Hafta prognozi qanday?',
@@ -18,6 +19,7 @@ const QUICK_QUESTIONS = [
 ];
 
 export function AIAdvisor() {
+  const { t } = useTranslation("common");
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<Array<{ q: string; a?: string; loading?: boolean }>>([]);
 
@@ -44,7 +46,7 @@ export function AIAdvisor() {
     <Card className="p-4 flex flex-col" style={{ height: 480 }}>
       <div className="flex items-center gap-2 mb-3">
         <Brain className="h-4 w-4 text-[var(--ep-blue)]" />
-        <h3 className="font-bold text-sm">AI Maslahatchi</h3>
+        <h3 className="font-bold text-sm">{t("aiMaslahatchi")}</h3>
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -59,7 +61,7 @@ export function AIAdvisor() {
       <div className="flex-1 overflow-y-auto space-y-3 mb-3">
         {history.length === 0 && (
           <div className="text-center py-8 text-xs text-muted-foreground">
-            Tez savol tanlang yoki o'zingiz yozing
+            {t("tezSavolTanlangYokiOzingiz")}
           </div>
         )}
         {history.map((m, i) => (
@@ -86,7 +88,7 @@ export function AIAdvisor() {
         <input
           type="text"
           className="flex-1 px-3 py-2 rounded-md border text-sm"
-          placeholder="Strategik savol yozing..."
+          placeholder={t("strategikSavolYozing")}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit(input)}

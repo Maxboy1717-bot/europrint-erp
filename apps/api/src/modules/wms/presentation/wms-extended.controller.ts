@@ -1,28 +1,13 @@
 /**
  * @module wms-extended.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
- */
+ */import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+
 
 import { assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  NotFoundException,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-  Logger,
-  UseInterceptors,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { BadRequestException, ParseIntPipe } from '@nestjs/common';
 import { assertOk, throwFromError, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';

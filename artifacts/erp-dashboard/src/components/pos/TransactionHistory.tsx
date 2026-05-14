@@ -54,7 +54,7 @@ export function TransactionHistory({
             {transactions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">
-                  Tranzaksiyalar mavjud emas
+                  {t("tranzaksiyalarMavjudEmas")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -107,8 +107,8 @@ export function TransactionHistory({
     <ConfirmDialog
       open={confirmRefundId !== null}
       onOpenChange={(open) => { if (!open) setConfirmRefundId(null); }}
-      title="Tranzaksiyani qaytarish"
-      description="Ushbu tranzaksiyani qaytarishni tasdiqlaysizmi?"
+      title={t("tranzaksiyaniQaytarish")}
+      description={t("ushbuTranzaksiyaniQaytarishniTasdiqlaysizmi")}
       confirmText="Qaytarish"
       cancelText="Bekor qilish"
       variant="destructive"

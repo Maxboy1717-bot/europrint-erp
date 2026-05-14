@@ -19,7 +19,8 @@ import {
   getDay,
   addDays,
 } from "date-fns";
-import { uz } from "date-fns/locale";
+import { uz, ru } from "date-fns/locale";
+import { useTranslation } from "@/lib/i18n";
 import { QuickCreateModal } from "@/pages/crm/QuickCreateModal";
 import { DetailSheet } from "@/pages/crm/DetailSheet";
 import { RobotsView } from "@/pages/crm/RobotsView";
@@ -36,6 +37,7 @@ import { useCRMWorkspace } from "@/components/crm/workspace/useCRMWorkspace";
 import { EPErrorState } from "@/components/ep";
 
 export default function CRMWorkspace() {
+  const { t } = useTranslation("crm");
   const {
     activeEntity, setActiveEntity,
     viewMode, setViewMode,
@@ -203,11 +205,11 @@ export default function CRMWorkspace() {
         onSubmit={(f) => createActivityMutation.mutate(f)}
         isPending={createActivityMutation.isPending}
         activityTypes={[
-          { value: "call",      label: "Qo'ng'iroq" },
-          { value: "meeting",   label: "Uchrashuv" },
-          { value: "email",     label: "Email" },
-          { value: "follow_up", label: "Kuzatuv" },
-          { value: "other",     label: "Boshqa" },
+          { value: "call",      label: t("activityType.call") },
+          { value: "meeting",   label: t("activityType.meeting") },
+          { value: "email",     label: t("activityType.email") },
+          { value: "follow_up", label: t("activityType.followUp") },
+          { value: "other",     label: t("activityType.other") },
         ]}
       />
     </div>
@@ -229,6 +231,8 @@ function CrmCalendarView({
   stages: CalStage[];
   onItemClick: (id: number) => void;
 }) {
+  const { t, language } = useTranslation("crm");
+  const dateLocale = language === "ru" ? ru : uz;
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const monthStart = startOfMonth(currentMonth);
@@ -237,7 +241,9 @@ function CrmCalendarView({
   const endDay     = addDays(monthEnd, (7 - ((getDay(monthEnd) + 6) % 7)) % 7);
   const days       = eachDayOfInterval({ start: startDay, end: endDay });
 
-  const WEEK_LABELS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+  const WEEK_LABELS = language === "ru"
+    ? ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+    : ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
 
   const stageColorMap = useMemo(() => {
     const m: Record<string, string> = {};
@@ -281,19 +287,19 @@ function CrmCalendarView({
             variant="outline"
             size="icon"
             onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
-            aria-label="Oldingi oy"
+            aria-label={t("calendar.prevMonth")}
             data-testid="crm-cal-prev"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h2 className="text-base font-semibold min-w-[180px] text-center capitalize">
-            {format(currentMonth, "MMMM yyyy", { locale: uz })}
+            {format(currentMonth, "MMMM yyyy", { locale: dateLocale })}
           </h2>
           <Button
             variant="outline"
             size="icon"
             onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
-            aria-label="Keyingi oy"
+            aria-label={t("calendar.nextMonth")}
             data-testid="crm-cal-next"
           >
             <ChevronRight className="h-4 w-4" />
@@ -305,7 +311,7 @@ function CrmCalendarView({
           onClick={() => setCurrentMonth(new Date())}
           data-testid="crm-cal-today"
         >
-          Bugun
+          {t("calendar.today")}
         </Button>
       </div>
 
@@ -363,7 +369,7 @@ function CrmCalendarView({
                 ))}
                 {dayItems.length > 3 && (
                   <p className="text-[10px] text-muted-foreground px-1 leading-tight">
-                    +{dayItems.length - 3} ta
+                    {t("calendar.morePlus", { n: String(dayItems.length - 3) })}
                   </p>
                 )}
               </div>

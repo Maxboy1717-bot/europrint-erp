@@ -6,6 +6,7 @@
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { Language, Translation } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface WizardHeaderProps {
   t: Translation;
@@ -15,6 +16,7 @@ interface WizardHeaderProps {
 }
 
 export function WizardHeader({ t, lang, setLang, onSaveDraft }: WizardHeaderProps) {
+  const { t } = useTranslation("common");
   const [titleFirst, ...titleRest] = t.title.split(' ');
   
   return (
@@ -23,7 +25,7 @@ export function WizardHeader({ t, lang, setLang, onSaveDraft }: WizardHeaderProp
         <h1 className="ep-h1 text-foreground">
           {titleFirst} <span className="font-bold text-primary">{titleRest.join(' ')}</span>
         </h1>
-        <p className="text-muted-foreground mt-1">Sotuv va ishlab chiqarish - yangi buyurtma yaratish ustasi</p>
+        <p className="text-muted-foreground mt-1">{t("sotuvVaIshlabChiqarishYangi")}</p>
       </div>
       <div className="flex items-center gap-3">
         <div className="flex bg-muted/40 p-1 rounded-lg border border-border/30">

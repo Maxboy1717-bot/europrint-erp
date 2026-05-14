@@ -10,6 +10,7 @@ import {
   ScrollText, FileText, FileCheck, Clock, CheckCircle2, FolderOpen,
   Download, Trash2, File, Image, FileType2, Plus,
 } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   type EmploymentContract, type EmployeeDocument,
   EMP_DOC_CATEGORIES,
@@ -18,6 +19,7 @@ import {
 // ─── FileIcon ─────────────────────────────────────────────────────────────────
 
 export function FileIcon({ mimeType }: { mimeType?: string }) {
+  const { t } = useTranslation("common");
   if (!mimeType)                                              return <File      className="h-4 w-4 text-muted-foreground" />;
   if (mimeType.startsWith("image/"))                         return <Image     className="h-4 w-4 text-blue-400"         />;
   if (mimeType === "application/pdf")                        return <FileText  className="h-4 w-4 text-red-400"          />;
@@ -46,7 +48,7 @@ export function KPICards({
         <CardContent className="pt-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Shartnomalar</p>
+              <p className="text-xs text-muted-foreground">{t("shartnomalar")}</p>
               <p className="text-2xl font-bold text-[var(--ep-blue)]">{totalContracts}</p>
               {activeContract && <p className="text-xs text-[var(--ep-blue)] mt-0.5">1 ta faol</p>}
             </div>
@@ -59,7 +61,7 @@ export function KPICards({
         <CardContent className="pt-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Kutilayotgan</p>
+              <p className="text-xs text-muted-foreground">{t("kutilayotgan")}</p>
               <p className="text-2xl font-bold text-[var(--ep-yellow)]">{pendingDocs}</p>
             </div>
             <Clock className="h-7 w-7 text-[var(--ep-yellow)]" />
@@ -71,7 +73,7 @@ export function KPICards({
         <CardContent className="pt-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Tasdiqlangan</p>
+              <p className="text-xs text-muted-foreground">{t("approved")}</p>
               <p className="text-2xl font-bold text-[var(--ep-green)]">{approvedDocs}</p>
             </div>
             <FileCheck className="h-7 w-7 text-[var(--ep-green)]" />
@@ -83,7 +85,7 @@ export function KPICards({
         <CardContent className="pt-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Yuklangan fayllar</p>
+              <p className="text-xs text-muted-foreground">{t("yuklanganFayllar")}</p>
               <p className="text-2xl font-bold text-[var(--ep-purple)]">{totalFiles}</p>
             </div>
             <FolderOpen className="h-7 w-7 text-[var(--ep-purple)]" />
@@ -116,7 +118,7 @@ export function EmployeeDocsSection({
           <div>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-[var(--ep-blue)]" />
-              Hujjatlar
+              {t("hujjatlar")}
             </CardTitle>
             <CardDescription>
               Xodimning rasmiy hujjatlari (kategoriya bo'yicha guruhlangan)
@@ -129,7 +131,7 @@ export function EmployeeDocsSection({
               className="gap-2 bg-primary hover:bg-primary/90"
               data-testid="button-add-document"
             >
-              <Plus className="h-4 w-4" /> Hujjat qo'shish
+              <Plus className="h-4 w-4" /> {t("hujjatQoshish")}
             </Button>
           )}
         </div>
@@ -138,11 +140,11 @@ export function EmployeeDocsSection({
         {docs.length === 0 ? (
           <div className="flex flex-col items-center py-12 text-muted-foreground">
             <FileText className="h-12 w-12 mb-3 opacity-15" />
-            <p className="text-sm font-medium">Hujjat qo'shilmagan</p>
-            <p className="text-xs opacity-60 mt-1">Xodim uchun hali hujjat yuklanmagan</p>
+            <p className="text-sm font-medium">{t("hujjatQoshilmagan")}</p>
+            <p className="text-xs opacity-60 mt-1">{t("xodimUchunHaliHujjatYuklanmagan")}</p>
             {isAdminOrHrManager && (
               <Button size="sm" variant="outline" className="mt-4 gap-2" onClick={onAddDocClick}>
-                <Plus className="h-3.5 w-3.5" /> Hujjat qo'shish
+                <Plus className="h-3.5 w-3.5" /> {t("hujjatQoshish")}
               </Button>
             )}
           </div>
@@ -189,7 +191,7 @@ export function EmployeeDocsSection({
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center justify-center rounded h-7 w-7 hover:bg-muted transition-colors"
-                              title="Ko'rish"
+                              title={t("view")}
                             >
                               <Download className="h-3.5 w-3.5 text-muted-foreground" />
                             </a>
@@ -199,7 +201,7 @@ export function EmployeeDocsSection({
                               onClick={() => onDeleteDocClick(doc.id)}
                               disabled={deletingDocId === doc.id}
                               className="inline-flex items-center justify-center rounded h-7 w-7 hover:bg-destructive/10 transition-colors"
-                              title="O'chirish"
+                              title={t("delete")}
                               data-testid={`button-delete-doc-${doc.id}`}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />

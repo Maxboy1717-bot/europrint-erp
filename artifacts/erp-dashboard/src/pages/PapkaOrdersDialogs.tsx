@@ -31,6 +31,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { FormData, Lang } from "./PapkaOrdersTypes";
 import { TRANSLATIONS } from "./PapkaOrdersTypes";
 import type { PapkaOrder } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 interface OrderDialogProps {
   open: boolean;
@@ -45,6 +46,7 @@ interface OrderDialogProps {
 export function OrderDialog({
   open, onOpenChange, editingOrder, form, onSubmit, isSubmitting, lang,
 }: OrderDialogProps) {
+  const { t } = useTranslation("common");
   const t = TRANSLATIONS[lang];
 
   return (
@@ -123,10 +125,10 @@ export function OrderDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-background border-border">
-                        <SelectItem value="gofra">Gofra</SelectItem>
-                        <SelectItem value="gladkiy">Gladkiy</SelectItem>
-                        <SelectItem value="laminated">Laminated</SelectItem>
-                        <SelectItem value="other">Boshqa</SelectItem>
+                        <SelectItem value="gofra">{t("gofra")}</SelectItem>
+                        <SelectItem value="gladkiy">{t("gladkiy")}</SelectItem>
+                        <SelectItem value="laminated">{t("laminated")}</SelectItem>
+                        <SelectItem value="other">{t("boshqa")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

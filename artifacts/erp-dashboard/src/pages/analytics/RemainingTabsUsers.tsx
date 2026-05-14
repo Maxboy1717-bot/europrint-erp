@@ -11,62 +11,64 @@ import {
 } from "recharts";
 import type { RemainingTabsProps } from "./RemainingTabsTypes";
 import type { TopUser } from "./analytics-types";
+import { useTranslation } from '@/lib/i18n';
 
 export function UsersTab({
   stats,
   learningOutcomes,
   userActivity,
 }: Pick<RemainingTabsProps, 'stats' | 'learningOutcomes' | 'userActivity'>) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jami Xodimlar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("jamiXodimlar")}</CardTitle>
             <Users className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">Barcha xodimlar</p>
+            <p className="text-xs text-muted-foreground">{t("barchaXodimlar")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Faol O'quvchilar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("faolOquvchilar")}</CardTitle>
             <Activity className="w-4 h-4 text-[var(--ep-green)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--ep-green)]">
               {stats?.topUsers?.length || 0}
             </div>
-            <p className="text-xs text-muted-foreground">Progress qilmoqda</p>
+            <p className="text-xs text-muted-foreground">{t("progressQilmoqda")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'rtacha Ball</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("ortachaBall")}</CardTitle>
             <Target className="w-4 h-4 text-[var(--ep-blue)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--ep-blue)]">
               {learningOutcomes?.averageScore || 0}
             </div>
-            <p className="text-xs text-muted-foreground">Umumiy o'rtacha</p>
+            <p className="text-xs text-muted-foreground">{t("umumiyOrtacha")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">O'quv Soatlari</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("oquvSoatlari")}</CardTitle>
             <Clock className="w-4 h-4 text-[var(--ep-purple)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--ep-purple)]">
               {Math.round((stats?.totalUsers || 0) * 12.5)}
             </div>
-            <p className="text-xs text-muted-foreground">Jami soatlar</p>
+            <p className="text-xs text-muted-foreground">{t("jamiSoatlar")}</p>
           </CardContent>
         </Card>
       </div>
@@ -74,8 +76,8 @@ export function UsersTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>📊 Xodimlar Faolligi</CardTitle>
-            <CardDescription>Haftalik aktiv xodimlar soni</CardDescription>
+            <CardTitle>{t("xodimlarFaolligi")}</CardTitle>
+            <CardDescription>{t("haftalikAktivXodimlarSoni")}</CardDescription>
           </CardHeader>
           <CardContent>
             {userActivity.length > 0 ? (
@@ -106,7 +108,7 @@ export function UsersTab({
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -114,8 +116,8 @@ export function UsersTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>🎯 Performance Matrix</CardTitle>
-            <CardDescription>Xodimlarning natijalar bo'yicha taqsimlanishi</CardDescription>
+            <CardTitle>{t("performanceMatrix")}</CardTitle>
+            <CardDescription>{t("xodimlarningNatijalarBoyichaTaqsimlanishi")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="glass-chart">
@@ -146,8 +148,8 @@ export function UsersTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>⭐ TOP 10 Xodimlar</CardTitle>
-          <CardDescription>Eng ko'p progress qilgan xodimlar</CardDescription>
+          <CardTitle>{t("top10Xodimlar")}</CardTitle>
+          <CardDescription>{t("engKopProgressQilganXodimlar")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -173,7 +175,7 @@ export function UsersTab({
                 </div>
               </div>
             )) || (
-              <p className="text-center text-muted-foreground py-8">Ma'lumot topilmadi</p>
+              <p className="text-center text-muted-foreground py-8">{t("noData")}</p>
             )}
           </div>
         </CardContent>
@@ -181,8 +183,8 @@ export function UsersTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>⏰ O'quv Vaqti Taqsimoti</CardTitle>
-          <CardDescription>Xodimlarning o'quv vaqtlari bo'yicha</CardDescription>
+          <CardTitle>{t("oquvVaqtiTaqsimoti")}</CardTitle>
+          <CardDescription>{t("xodimlarningOquvVaqtlariBoyicha")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="glass-chart">

@@ -154,14 +154,14 @@ export default function MarketingExhibitions() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-exhibitions">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing Ko'rgazmalar</b></>}
-        title="Marketing Ko'rgazmalar"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("marketingKorgazmalar")}</b></>}
+        title={t("marketingKorgazmalar")}
       />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" data-testid="button-create-exhibition">
               <Plus className="h-4 w-4" />
-              Yangi Ko'rgazma
+              {t("yangiKorgazma")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto bg-card border-none p-6">
@@ -170,25 +170,25 @@ export default function MarketingExhibitions() {
               <div className="space-y-1.5"><Label className="text-muted-foreground">Nomi (UZ) *</Label><Input className="bg-background border-border" data-testid="input-exhibition-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               <div className="space-y-1.5"><Label className="text-muted-foreground">Nomi (RU)</Label><Input className="bg-background border-border" value={form.nameRu} onChange={(e) => setForm({ ...form, nameRu: e.target.value })} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Manzil</Label><Input className="bg-background border-border" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Davlat</Label><Input className="bg-background border-border" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder="O'zbekiston" /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("address")}</Label><Input className="bg-background border-border" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("davlat")}</Label><Input className="bg-background border-border" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder={t("ozbekiston")} /></div>
               </div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Tavsif</Label><Textarea className="bg-background border-border" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("progress.description")}</Label><Textarea className="bg-background border-border" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-muted-foreground">Holat</Label>
+                  <Label className="text-muted-foreground">{t("status28")}</Label>
                   <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                     <SelectTrigger className="bg-background border-border h-9"><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-card border-border">{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Byudjet</Label><Input className="bg-background border-border" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="0" /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("byudjet")}</Label><Input className="bg-background border-border" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="0" /></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Boshlanish</Label><Input className="bg-background border-border" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Tugash</Label><Input className="bg-background border-border" type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("boshlanish")}</Label><Input className="bg-background border-border" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("tugash")}</Label><Input className="bg-background border-border" type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
               </div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Jamoa a'zolari</Label><Input className="bg-background border-border" value={form.teamMembers} onChange={(e) => setForm({ ...form, teamMembers: e.target.value })} placeholder="Ali, Vali..." /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("jamoaAzolari")}</Label><Input className="bg-background border-border" value={form.teamMembers} onChange={(e) => setForm({ ...form, teamMembers: e.target.value })} placeholder={t("aliVali")} /></div>
               <Button onClick={handleSubmit} disabled={!form.name || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-exhibition">{editId ? "Saqlash" : "Yaratish"}</Button>
             </div>
           </DialogContent>
@@ -197,25 +197,25 @@ export default function MarketingExhibitions() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Jami</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("total")}</p>
           <p className="text-4xl font-bold tracking-tight text-foreground">{exhList?.length || 0}</p>
         </Card>
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Faol</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("active")}</p>
           <p className="text-4xl font-bold tracking-tight text-[var(--ep-green)]">{exhList?.filter(e => e.status === "active").length || 0}</p>
         </Card>
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Lidlar</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("lidlar")}</p>
           <p className="text-4xl font-bold tracking-tight text-primary">{exhList?.reduce((s, e) => s + (e.leadCount || 0), 0)}</p>
         </Card>
         <Card className="bg-card rounded-lg p-5 border-none text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Bitimlar</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("bitimlar")}</p>
           <p className="text-4xl font-bold tracking-tight text-[var(--ep-yellow)]">{exhList?.reduce((s, e) => s + (e.dealCount || 0), 0)}</p>
         </Card>
       </div>
 
       {exhList?.length === 0 ? (
-        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">Hozircha ko'rgazmalar yo'q</CardContent></Card>
+        <Card className="bg-card border-none"><CardContent className="p-12 text-center text-muted-foreground">{t("hozirchaKorgazmalarYoq")}</CardContent></Card>
       ) : (
         <div className="space-y-6">
           {exhList?.map((e) => (
@@ -259,21 +259,21 @@ export default function MarketingExhibitions() {
                         <DialogTrigger asChild>
                           <Button size="sm" className="bg-primary text-white font-semibold h-9 rounded-lg" data-testid="button-add-lead">
                             <Plus className="h-3.5 w-3.5 mr-1.5" />
-                            Lid qo'shish
+                            {t("lidQoshish")}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-md bg-card border-none p-6">
-                          <DialogHeader><DialogTitle className="text-foreground font-bold">Yangi Lead</DialogTitle></DialogHeader>
+                          <DialogHeader><DialogTitle className="text-foreground font-bold">{t("yangiLead")}</DialogTitle></DialogHeader>
                           <div className="space-y-4">
-                            <div className="space-y-1.5"><Label className="text-muted-foreground">Kompaniya *</Label><Input className="bg-background border-border" data-testid="input-lead-company" value={leadForm.companyName} onChange={(ev) => setLeadForm({ ...leadForm, companyName: ev.target.value })} /></div>
-                            <div className="space-y-1.5"><Label className="text-muted-foreground">Kontakt shaxs</Label><Input className="bg-background border-border" value={leadForm.contactPerson} onChange={(ev) => setLeadForm({ ...leadForm, contactPerson: ev.target.value })} /></div>
+                            <div className="space-y-1.5"><Label className="text-muted-foreground">{t("kompaniya2")}</Label><Input className="bg-background border-border" data-testid="input-lead-company" value={leadForm.companyName} onChange={(ev) => setLeadForm({ ...leadForm, companyName: ev.target.value })} /></div>
+                            <div className="space-y-1.5"><Label className="text-muted-foreground">{t("kontaktShaxs")}</Label><Input className="bg-background border-border" value={leadForm.contactPerson} onChange={(ev) => setLeadForm({ ...leadForm, contactPerson: ev.target.value })} /></div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div className="space-y-1.5"><Label className="text-muted-foreground">Telefon</Label><Input className="bg-background border-border" value={leadForm.phone} onChange={(ev) => setLeadForm({ ...leadForm, phone: ev.target.value })} /></div>
+                              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("phone")}</Label><Input className="bg-background border-border" value={leadForm.phone} onChange={(ev) => setLeadForm({ ...leadForm, phone: ev.target.value })} /></div>
                               <div className="space-y-1.5"><Label className="text-muted-foreground">{t('email1')}</Label><Input className="bg-background border-border" value={leadForm.email} onChange={(ev) => setLeadForm({ ...leadForm, email: ev.target.value })} /></div>
                             </div>
-                            <div className="space-y-1.5"><Label className="text-muted-foreground">Qiziqish</Label><Input className="bg-background border-border" value={leadForm.interest} onChange={(ev) => setLeadForm({ ...leadForm, interest: ev.target.value })} /></div>
-                            <div className="space-y-1.5"><Label className="text-muted-foreground">Izoh</Label><Textarea className="bg-background border-border" value={leadForm.notes} onChange={(ev) => setLeadForm({ ...leadForm, notes: ev.target.value })} /></div>
-                            <Button onClick={() => addLeadMutation.mutate(leadForm)} disabled={!leadForm.companyName || addLeadMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-lead">Qo'shish</Button>
+                            <div className="space-y-1.5"><Label className="text-muted-foreground">{t("qiziqish")}</Label><Input className="bg-background border-border" value={leadForm.interest} onChange={(ev) => setLeadForm({ ...leadForm, interest: ev.target.value })} /></div>
+                            <div className="space-y-1.5"><Label className="text-muted-foreground">{t("Izoh")}</Label><Textarea className="bg-background border-border" value={leadForm.notes} onChange={(ev) => setLeadForm({ ...leadForm, notes: ev.target.value })} /></div>
+                            <Button onClick={() => addLeadMutation.mutate(leadForm)} disabled={!leadForm.companyName || addLeadMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-lead">{t("add")}</Button>
                           </div>
                         </DialogContent>
                       </Dialog>
@@ -294,7 +294,7 @@ export default function MarketingExhibitions() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-6 bg-muted/40 rounded-lg">Hozircha lidlar yo'q</p>
+                      <p className="text-sm text-muted-foreground text-center py-6 bg-muted/40 rounded-lg">{t("hozirchaLidlarYoq")}</p>
                     )}
                   </div>
                 )}
@@ -306,8 +306,8 @@ export default function MarketingExhibitions() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Ko'rgazmani o'chirish"
-        description="Ushbu ko'rgazmani o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("korgazmaniOchirish")}
+        description={t("ushbuKorgazmaniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}

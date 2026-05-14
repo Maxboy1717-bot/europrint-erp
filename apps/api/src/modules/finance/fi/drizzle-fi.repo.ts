@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { accountingPeriods, glDocuments } from '@europrint/schemas';
-import { payments, income_expense_transactions, gl_documents, profit_centers, cost_centers } from '@shared/db';
+import { payments, income_expense_transactions, profit_centers, cost_centers } from '@shared/db';
 import { eq, count, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IFiRepository } from './i-fi.repo';
@@ -141,8 +141,8 @@ export class DrizzleFiRepository implements IFiRepository {
   async findGlDocuments(limit: number, offset: number): Promise<Result<{ data: Record<string, unknown>[]; count: number }>> {
     try {
       const [data, countResult] = await Promise.all([
-        db.select().from(gl_documents).orderBy(desc(gl_documents.created_at)).limit(limit).offset(offset),
-        db.select({ count: count() }).from(gl_documents),
+        db.select().from(glDocuments).orderBy(desc(glDocuments.createdAt)).limit(limit).offset(offset),
+        db.select({ count: count() }).from(glDocuments),
       ]);
       return Ok({ data: data as Record<string, unknown>[], count: Number(countResult[0]?.count ?? 0) });
     } catch (e: unknown) { return Err((e as Error).message || 'GL hujjatlar topilmadi'); }
@@ -150,7 +150,7 @@ export class DrizzleFiRepository implements IFiRepository {
 
   async createGlDoc(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
-      const result = await db.insert(gl_documents).values(dto as typeof gl_documents.$inferInsert).returning();
+      const result = await db.insert(glDocuments).values(dto as typeof glDocuments.$inferInsert).returning();
       return Ok(result[0] as Record<string, unknown>);
     } catch (e: unknown) { return Err((e as Error).message || 'Yaratishda xatolik'); }
   }

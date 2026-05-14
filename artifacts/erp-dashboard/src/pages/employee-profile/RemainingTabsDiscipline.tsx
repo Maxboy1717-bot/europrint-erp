@@ -23,6 +23,7 @@ import { useTranslation } from "@/lib/i18n";
 // ---------------------------------------------------------------------------
 
 export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disciplineStats, customerComplaints, loadingComplaints, assessmentSkips, loadingSkips, }: DisciplineTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       <Button
@@ -30,7 +31,7 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
         size="sm"
         onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })}
         className="sr-only"
-        aria-label="Yangilash"
+        aria-label={t("refresh")}
       >
         <RefreshCw className="h-4 w-4" />
       </Button>
@@ -53,7 +54,7 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Ogohlantirishlar</p>
+                      <p className="text-sm text-muted-foreground">{t("ogohlantirishlar")}</p>
                       <p className="text-3xl font-bold text-[var(--ep-yellow)]">{disciplineStats.warnings}</p>
                     </div>
                     <AlertCircle className="h-8 w-8 text-[var(--ep-yellow)]" />
@@ -65,7 +66,7 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Jarimalar</p>
+                      <p className="text-sm text-muted-foreground">{t("jarimalar")}</p>
                       <p className="text-3xl font-bold text-[var(--ep-red)]">{disciplineStats.penalties}</p>
                       {disciplineStats.totalPenaltyAmount > 0 && (
                         <p className="text-xs text-muted-foreground">
@@ -82,7 +83,7 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Mukofotlar</p>
+                      <p className="text-sm text-muted-foreground">{t("mukofotlar")}</p>
                       <p className="text-3xl font-bold text-[var(--ep-green)]">{disciplineStats.rewards}</p>
                       {disciplineStats.totalRewardAmount > 0 && (
                         <p className="text-xs text-muted-foreground">
@@ -103,13 +104,13 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="h-4 w-4" />
-                      Intizom tarixi
+                      {t("intizomTarixi")}
                     </CardTitle>
-                    <CardDescription>Ogohlantirish, jarima va mukofotlar</CardDescription>
+                    <CardDescription>{t("ogohlantirishJarimaVaMukofotlar")}</CardDescription>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 rounded-md px-2.5 py-1.5">
                     <Lock className="h-3.5 w-3.5 text-slate-500" />
-                    <span>O'zgarmas jurnal — o'chirib bo'lmaydi</span>
+                    <span>{t("ozgarmasJurnalOchiribBolmaydi")}</span>
                   </div>
                 </div>
               </CardHeader>
@@ -118,12 +119,12 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
                   <div className="ep-table-scroll"><Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Sana</TableHead>
-                        <TableHead>Turi</TableHead>
-                        <TableHead>Sabab</TableHead>
-                        <TableHead>Summa</TableHead>
-                        <TableHead>Bergan</TableHead>
-                        <TableHead>Holat</TableHead>
+                        <TableHead>{t("date")}</TableHead>
+                        <TableHead>{t("type")}</TableHead>
+                        <TableHead>{t("sabab")}</TableHead>
+                        <TableHead>{t("summa")}</TableHead>
+                        <TableHead>{t("bergan")}</TableHead>
+                        <TableHead>{t("status28")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -135,9 +136,9 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
                               : "-"}
                           </TableCell>
                           <TableCell>
-                            {record.type === "warning" && <EPStatusPill tone="warning">Ogohlantirish</EPStatusPill>}
-                            {record.type === "penalty" && <EPStatusPill tone="danger">Jarima</EPStatusPill>}
-                            {record.type === "reward"  && <EPStatusPill tone="success">Mukofot</EPStatusPill>}
+                            {record.type === "warning" && <EPStatusPill tone="warning">{t("warning")}</EPStatusPill>}
+                            {record.type === "penalty" && <EPStatusPill tone="danger">{t("jarima")}</EPStatusPill>}
+                            {record.type === "reward"  && <EPStatusPill tone="success">{t("mukofot")}</EPStatusPill>}
                           </TableCell>
                           <TableCell className="max-w-[200px]">{record.reason || "-"}</TableCell>
                           <TableCell>
@@ -154,7 +155,7 @@ export function DisciplineTab({ tCommon, loadingDiscipline, disciplineData, disc
                           <TableCell>
                             <div className="flex items-center gap-1 text-xs text-slate-400">
                               <Lock className="h-3 w-3" />
-                              <span>Yozildi</span>
+                              <span>{t("yozildi")}</span>
                             </div>
                           </TableCell>
                         </TableRow>

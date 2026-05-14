@@ -145,7 +145,7 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Umumiy 360° baho</p>
+                <p className="text-xs text-muted-foreground">{t("umumiy360Baho")}</p>
                 {overallAvg ? (
                   <>
                     <p className="text-2xl font-bold text-[var(--ep-yellow)]">{overallAvg.toFixed(1)}/5</p>
@@ -164,7 +164,7 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Baholar soni</p>
+                <p className="text-xs text-muted-foreground">{t("baholarSoni")}</p>
                 <p className="text-2xl font-bold text-[var(--ep-blue)]">{assessments.length}</p>
               </div>
               <Users className="h-6 w-6 text-[var(--ep-blue)]" />
@@ -182,22 +182,22 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
                     {trendData[trendData.length - 1].avg > trendData[trendData.length - 2].avg ? (
                       <>
                         <TrendingUp className="h-5 w-5 text-[var(--ep-green)]" />
-                        <span className="text-lg font-bold text-[var(--ep-green)]">O'sish</span>
+                        <span className="text-lg font-bold text-[var(--ep-green)]">{t("osish")}</span>
                       </>
                     ) : trendData[trendData.length - 1].avg < trendData[trendData.length - 2].avg ? (
                       <>
                         <TrendingDown className="h-5 w-5 text-[var(--ep-red)]" />
-                        <span className="text-lg font-bold text-[var(--ep-red)]">Kamayish</span>
+                        <span className="text-lg font-bold text-[var(--ep-red)]">{t("kamayish")}</span>
                       </>
                     ) : (
                       <>
                         <Minus className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-lg font-bold text-muted-foreground">Barqaror</span>
+                        <span className="text-lg font-bold text-muted-foreground">{t("barqaror")}</span>
                       </>
                     )}
                   </div>
                 ) : (
-                  <p className="text-lg font-bold text-muted-foreground">Ma'lumot yo'q</p>
+                  <p className="text-lg font-bold text-muted-foreground">{t("malumotYoq")}</p>
                 )}
               </div>
               <TrendingUp className="h-6 w-6 text-[var(--ep-green)]" />
@@ -207,21 +207,21 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold">Kategoriyalar bo'yicha baholar</h2>
+        <h2 className="text-lg font-semibold">{t("kategoriyalarBoyichaBaholar")}</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" data-testid="button-add-assessment">
               <Plus className="h-4 w-4 mr-2" />
-              Baho qo'shish
+              {t("bahoQoshish")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md p-6">
             <DialogHeader>
-              <DialogTitle className="text-[18px] font-semibold">Yangi 360° baho</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold">{t("yangi360Baho")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-1">
-          <Label>Bahovchi turi</Label>
+          <Label>{t("bahovchiTuri")}</Label>
                 <Select value={form.reviewerType} onValueChange={(v) => setForm({ ...form, reviewerType: v })}>
                   <SelectTrigger data-testid="select-reviewer-type" className="h-9">
                     <SelectValue />
@@ -243,16 +243,16 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
                     className="h-4 w-4"
                     data-testid="checkbox-anonymous"
                   />
-                  <Label htmlFor="anon-check">Anonim</Label>
+                  <Label htmlFor="anon-check">{t("anonim")}</Label>
                 </div>
               </div>
               {!form.isAnonymous && (
                 <div className="space-y-1">
-          <Label>Bahovchi ismi</Label>
+          <Label>{t("bahovchiIsmi")}</Label>
                   <Input
                     value={form.reviewerName}
                     onChange={(e) => setForm({ ...form, reviewerName: e.target.value })}
-                    placeholder="Ism Familiya"
+                    placeholder={t("ismFamiliya")}
                     data-testid="input-reviewer-name"
                   />
                 </div>
@@ -277,11 +277,11 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
                 </div>
               </div>
               <div className="space-y-1">
-          <Label>Izoh</Label>
+          <Label>{t("Izoh")}</Label>
                 <Input
                   value={form.comment}
                   onChange={(e) => setForm({ ...form, comment: e.target.value })}
-                  placeholder="Qo'shimcha izoh..."
+                  placeholder={t("qoshimchaIzoh")}
                   data-testid="input-assessment-comment"
                 />
               </div>
@@ -347,7 +347,7 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-center py-4 text-sm">Baho yo'q</p>
+                  <p className="text-muted-foreground text-center py-4 text-sm">{t("bahoYoq")}</p>
                 )}
               </CardContent>
             </Card>
@@ -362,7 +362,7 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
               <TrendingUp className="h-4 w-4" />
               Baho trendi (so'nggi 6 oy)
             </CardTitle>
-            <CardDescription>Oylik o'rtacha 360° baho dinamikasi</CardDescription>
+            <CardDescription>{t("oylikOrtacha360BahoDinamikasi")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-64">

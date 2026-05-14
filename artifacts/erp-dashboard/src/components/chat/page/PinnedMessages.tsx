@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from '@/lib/queryClient';
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface PinnedMessage {
   id: string;
   roomId: string;
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export function PinnedMessages({ roomId, canPin }: Props) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -64,7 +66,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/40 flex-shrink-0">
         <Pin className="w-3.5 h-3.5 text-muted-foreground" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Pinlangan xabarlar
+          {t("pinlanganXabarlar")}
         </span>
         <span className="ml-auto text-xs text-muted-foreground">{pinned.length}</span>
       </div>
@@ -77,7 +79,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
         ) : pinned.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-24 gap-2 text-muted-foreground">
             <Pin className="w-8 h-8 opacity-30" />
-            <p className="text-xs">Pinlangan xabarlar yo'q</p>
+            <p className="text-xs">{t("pinlanganXabarlarYoq")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -105,7 +107,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
                     className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-muted-foreground hover:text-red-500"
                     onClick={() => unpinMutation.mutate(msg.id)}
                     disabled={unpinMutation.isPending}
-                    title="Pin olib tashlash"
+                    title={t("pinOlibTashlash")}
                   >
                     <PinOff className="w-3 h-3" />
                   </Button>

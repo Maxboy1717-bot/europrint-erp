@@ -18,6 +18,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { formatMoney, type RentalSummary } from "./WarehouseRentalTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── KpiCards ─────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ interface KpiCardsProps {
 }
 
 export function KpiCards({ summary, isLoading }: KpiCardsProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -43,7 +45,7 @@ export function KpiCards({ summary, isLoading }: KpiCardsProps) {
         <CardContent className="pt-4">
           <div className="flex items-center gap-2 mb-1">
             <Package className="h-4 w-4 text-[var(--ep-blue)]" />
-            <span className="text-sm text-muted-foreground">Aktiv yozuvlar</span>
+            <span className="text-sm text-muted-foreground">{t("aktivYozuvlar")}</span>
           </div>
           <p className="text-2xl font-bold" data-testid="stat-active-count">
             {summary?.activeCount ?? 0}
@@ -57,7 +59,7 @@ export function KpiCards({ summary, isLoading }: KpiCardsProps) {
         <CardContent className="pt-4">
           <div className="flex items-center gap-2 mb-1">
             <DollarSign className="h-4 w-4 text-[var(--ep-primary)]" />
-            <span className="text-sm text-muted-foreground">Joriy ijara</span>
+            <span className="text-sm text-muted-foreground">{t("joriyIjara")}</span>
           </div>
           <p
             className="text-xl font-bold text-[var(--ep-primary)] dark:text-orange-400"
@@ -65,14 +67,14 @@ export function KpiCards({ summary, isLoading }: KpiCardsProps) {
           >
             {formatMoney(summary?.totalActiveAmount ?? 0)}
           </p>
-          <p className="text-xs text-muted-foreground">Aktiv yozuvlar jami</p>
+          <p className="text-xs text-muted-foreground">{t("aktivYozuvlarJami")}</p>
         </CardContent>
       </Card>
       <Card>
         <CardContent className="pt-4">
           <div className="flex items-center gap-2 mb-1">
             <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
-            <span className="text-sm text-muted-foreground">To'langan</span>
+            <span className="text-sm text-muted-foreground">{t("tolangan")}</span>
           </div>
           <p
             className="text-xl font-bold text-[var(--ep-green)] dark:text-green-400"
@@ -80,19 +82,19 @@ export function KpiCards({ summary, isLoading }: KpiCardsProps) {
           >
             {formatMoney(summary?.totalPaidAmount ?? 0)}
           </p>
-          <p className="text-xs text-muted-foreground">Jami to'lov</p>
+          <p className="text-xs text-muted-foreground">{t("jamiTolov")}</p>
         </CardContent>
       </Card>
       <Card>
         <CardContent className="pt-4">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4 text-[var(--ep-purple)]" />
-            <span className="text-sm text-muted-foreground">Yopilgan</span>
+            <span className="text-sm text-muted-foreground">{t("yopilgan")}</span>
           </div>
           <p className="text-xl font-bold" data-testid="stat-closed-amount">
             {formatMoney(summary?.totalClosedAmount ?? 0)}
           </p>
-          <p className="text-xs text-muted-foreground">Jami yopilgan</p>
+          <p className="text-xs text-muted-foreground">{t("jamiYopilgan")}</p>
         </CardContent>
       </Card>
     </div>

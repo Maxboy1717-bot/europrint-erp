@@ -72,7 +72,7 @@ export default function PosKpiDashboard() {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>OMBOR KPI</div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>
-            Real-time Ko'rsatgichlar
+            {t("realTimeKorsatgichlar")}
           </h1>
         </div>
         <button
@@ -80,26 +80,26 @@ export default function PosKpiDashboard() {
           style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB",
                    borderRadius: 8, cursor: "pointer", fontSize: 13 }}
         >
-          🔄 Yangilash
+          {t("yangilash")}
         </button>
       </div>
 
-      {loading && <div style={{ textAlign: "center", padding: 40 }}>⏳ Yuklanmoqda...</div>}
+      {loading && <div style={{ textAlign: "center", padding: 40 }}>{t("yuklanmoqda")}</div>}
 
       {/* System KPI */}
       {!loading && sysKpi && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
                         gap: 12, marginBottom: 24 }}>
-            <KpiCard icon="🏭" label="Omborlar" value={String(sysKpi.totalWarehouses)} />
-            <KpiCard icon="📦" label="Materiallar" value={String(sysKpi.totalMaterials)} />
-            <KpiCard icon="💰" label="Jami qiymat" value={fmtMoney(sysKpi.totalStockValue) + " so'm"} color="#059669" />
-            <KpiCard icon="⚠️" label="Past stok" value={String(sysKpi.lowStockAlerts)} color={sysKpi.lowStockAlerts > 0 ? "#DC2626" : "#059669"} />
-            <KpiCard icon="⏳" label="Tasdiqlash kutmoqda" value={String(sysKpi.pendingMovements)} color={sysKpi.pendingMovements > 0 ? "#D97706" : "#059669"} />
+            <KpiCard icon="🏭" label={t("omborlar")} value={String(sysKpi.totalWarehouses)} />
+            <KpiCard icon="📦" label={t("Materiallar")} value={String(sysKpi.totalMaterials)} />
+            <KpiCard icon="💰" label={t("jamiQiymat1")} value={fmtMoney(sysKpi.totalStockValue) + " so'm"} color="#059669" />
+            <KpiCard icon="⚠️" label={t("pastStok")} value={String(sysKpi.lowStockAlerts)} color={sysKpi.lowStockAlerts > 0 ? "#DC2626" : "#059669"} />
+            <KpiCard icon="⏳" label={t("tasdiqlashKutmoqda")} value={String(sysKpi.pendingMovements)} color={sysKpi.pendingMovements > 0 ? "#D97706" : "#059669"} />
             <KpiCard icon="🔬" label="QC kutmoqda" value={String(sysKpi.qcPending)} color={sysKpi.qcPending > 0 ? "#D97706" : "#059669"} />
-            <KpiCard icon="📅" label="Bugungi harakatlar" value={String(sysKpi.todayMovements)} />
-            <KpiCard icon="📊" label="Haftalik" value={String(sysKpi.weeklyMovements)} />
-            <KpiCard icon="📈" label="Oylik" value={String(sysKpi.monthlyMovements)} />
+            <KpiCard icon="📅" label={t("bugungiHarakatlar")} value={String(sysKpi.todayMovements)} />
+            <KpiCard icon="📊" label={t("weekly")} value={String(sysKpi.weeklyMovements)} />
+            <KpiCard icon="📈" label={t("monthly")} value={String(sysKpi.monthlyMovements)} />
           </div>
 
           {/* Top warehouses + Movement types */}
@@ -133,7 +133,7 @@ export default function PosKpiDashboard() {
                 </div>
               ))}
               {(!sysKpi.movementsByType || sysKpi.movementsByType.length === 0) && (
-                <div style={{ textAlign: "center", color: "#9CA3AF", padding: 16, fontSize: 13 }}>Harakatlar yo'q</div>
+                <div style={{ textAlign: "center", color: "#9CA3AF", padding: 16, fontSize: 13 }}>{t("harakatlarYoq")}</div>
               )}
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function PosKpiDashboard() {
       {/* Per-warehouse KPI */}
       {!loading && whKpis.length > 0 && (
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>🏪 Har ombor bo'yicha KPI</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>{t("harOmborBoyichaKpi")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
             {whKpis.map(w => (
               <div
@@ -168,11 +168,11 @@ export default function PosKpiDashboard() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
                   <Stat label={t('Material')} value={String(w.totalMaterials)} />
-                  <Stat label="Past stok" value={String(w.lowStockCount)} color={w.lowStockCount > 0 ? "#DC2626" : undefined} />
-                  <Stat label="Tugagan" value={String(w.outOfStockCount)} color={w.outOfStockCount > 0 ? "#DC2626" : undefined} />
-                  <Stat label="Bugun" value={String(w.movementsToday)} />
-                  <Stat label="Hafta" value={String(w.movementsThisWeek)} />
-                  <Stat label="Kutmoqda" value={String(w.pendingApprovals)} color={w.pendingApprovals > 0 ? "#D97706" : undefined} />
+                  <Stat label={t("pastStok")} value={String(w.lowStockCount)} color={w.lowStockCount > 0 ? "#DC2626" : undefined} />
+                  <Stat label={t("tugagan")} value={String(w.outOfStockCount)} color={w.outOfStockCount > 0 ? "#DC2626" : undefined} />
+                  <Stat label={t("today")} value={String(w.movementsToday)} />
+                  <Stat label={t("hafta")} value={String(w.movementsThisWeek)} />
+                  <Stat label={t("kutmoqda1")} value={String(w.pendingApprovals)} color={w.pendingApprovals > 0 ? "#D97706" : undefined} />
                 </div>
 
                 {/* Jami qiymat */}
@@ -186,7 +186,7 @@ export default function PosKpiDashboard() {
                 {/* Unit breakdown */}
                 {(w.units ?? []).length > 0 && (
                   <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 10 }}>
-                    <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>O'LCHOV BIRLIKLARI</div>
+                    <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>{t("olchovBirliklari")}</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                       {(w.units ?? []).slice(0, 5).map(u => (
                         <div key={u.unit} style={{ background: "#F9FAFB", borderRadius: 6, padding: "3px 8px",

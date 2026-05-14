@@ -35,7 +35,7 @@ import {
 
 export default function HRDashboard() {
   const { t } = useTranslation('common');
-  const { language } = useTranslation("hr");
+  const { t: tHr, language } = useTranslation("hr");
   const [activeTab, setActiveTab] = useState("overview");
 
   // -------------------------------------------------------------------------
@@ -192,9 +192,9 @@ export default function HRDashboard() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
         <EPPageHeader
-          breadcrumb={<>Dashboard · <b className="text-foreground">{t('hrPanel')}</b></>}
-          title="Xodimlar resurslari"
-          subtitle="Xodimlar samaradorligi, intizom va kadrlar almashinuvi"
+          breadcrumb={<>{t('dashboard')} · <b className="text-foreground">{t('hrPanel')}</b></>}
+          title={tHr('humanResources')}
+          subtitle={tHr('humanResourcesSubtitle')}
         />
         <EPErrorState onRetry={refetch} />
       </div>
@@ -208,9 +208,9 @@ export default function HRDashboard() {
   return (
     <div className="flex flex-col p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('hrPanel')}</b></>}
-        title="Xodimlar resurslari"
-        subtitle="Xodimlar samaradorligi, intizom va kadrlar almashinuvi"
+        breadcrumb={<>{t('dashboard')} · <b className="text-foreground">{t('hrPanel')}</b></>}
+        title={tHr('humanResources')}
+        subtitle={tHr('humanResourcesSubtitle')}
       />
 
       <KpiGrid
@@ -244,7 +244,7 @@ export default function HRDashboard() {
         activeSurveys={activeSurveys}
       />
 
-      <PillTabs tabs={HR_TABS} active={activeTab} onChange={setActiveTab} />
+      <PillTabs tabs={HR_TABS.map(tab => ({ ...tab, label: tHr(`tabs.${tab.key}`) }))} active={activeTab} onChange={setActiveTab} />
 
       {activeTab === "overview" && (
         <OverviewTab
@@ -273,7 +273,7 @@ export default function HRDashboard() {
 
       {activeTab === "v2" && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground">HR V2 — Jonli Holat</h2>
+          <h2 className="text-lg font-semibold text-foreground">{tHr('hrV2LiveStatus')}</h2>
 
           <V2LiveKpiRow
             blockedCount={blockedCount}

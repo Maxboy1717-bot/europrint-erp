@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { KirimConfig, Warehouse } from "./WarehouseKirimWizardTypes";
 import { STEPS } from "./WarehouseKirimWizardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Page header ──────────────────────────────────────────────────────────────
 interface WizardHeaderProps {
@@ -14,6 +15,7 @@ interface WizardHeaderProps {
   onBack: () => void;
 }
 export function WizardHeader({ cfg, activeWarehouse, onBack }: WizardHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-3 mb-6">
       <div className={`w-10 h-10 rounded-lg ${cfg.badgeColor} flex items-center justify-center text-xl text-white`}>
@@ -25,7 +27,7 @@ export function WizardHeader({ cfg, activeWarehouse, onBack }: WizardHeaderProps
         </div>
         <h1 className="text-xl font-bold">{cfg.title}</h1>
       </div>
-      <Button onClick={onBack} variant="outline">← Orqaga</Button>
+      <Button onClick={onBack} variant="outline">{t("orqaga")}</Button>
     </div>
   );
 }
@@ -73,11 +75,11 @@ export function NavigationBar({ step, saving, canNext, cfg, onBack, onNext, onSu
   return (
     <div className="flex justify-between mt-6 pt-4 border-t">
       <Button onClick={onBack} disabled={step === 1} variant="outline">
-        <ChevronLeft className="h-4 w-4 mr-1" /> Orqaga
+        <ChevronLeft className="h-4 w-4 mr-1" /> {t("back")}
       </Button>
       {step < 4 ? (
         <Button onClick={onNext} disabled={!canNext}>
-          Keyingi <ChevronRight className="h-4 w-4 ml-1" />
+          {t("nextBtn")}<ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       ) : (
         <Button onClick={onSubmit} disabled={saving} className="bg-emerald-600 hover:bg-[var(--ep-green)]/90">

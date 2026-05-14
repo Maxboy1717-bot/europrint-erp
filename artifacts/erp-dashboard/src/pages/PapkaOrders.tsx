@@ -19,8 +19,10 @@ import {
 import { StatsRow, OrdersList } from "./PapkaOrdersSections";
 import { OrderDialog } from "./PapkaOrdersDialogs";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function PapkaOrders() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { showUndoToast } = useUndoDelete();
   const [lang, setLang] = useState<Lang>("uz");
@@ -144,9 +146,9 @@ export default function PapkaOrders() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t.title}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t.title}</b></>}
         title={t.title}
-        subtitle="Ofset bosma, papka va qadoqlash buyurtmalarini boshqaring"
+        subtitle={t("ofsetBosmaPapkaVaQadoqlash")}
       />
         </div>
         <div className="flex items-center gap-3">

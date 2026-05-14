@@ -15,8 +15,10 @@ import { UserPlus } from "lucide-react";
 import { Referral, BoomerangAlumni, AddForm, EditForm } from "./ReferralPageTypes";
 import { StatsGrid, MyReferralsTab, AllReferralsTab, BoomerangTab } from "./ReferralPageSections";
 import { AddReferralDialog, EditReferralDialog } from "./ReferralPageDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function ReferralPage() {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const currentUserId = user?.employeeId ?? user?.id ?? 0;
   const { toast } = useToast();
@@ -116,10 +118,10 @@ export default function ReferralPage() {
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <UserPlus className="h-5 w-5 text-[var(--ep-green)]" />
-          <h1 className="font-semibold text-base">Referral Tizimi</h1>
+          <h1 className="font-semibold text-base">{t("referralTizimi")}</h1>
         </div>
         <Button size="sm" onClick={() => setAddOpen(true)}>
-          <UserPlus className="h-3.5 w-3.5 mr-1" />Do'st tavsiya qilish
+          <UserPlus className="h-3.5 w-3.5 mr-1" />{t("dostTavsiyaQilish")}
         </Button>
       </div>
 
@@ -128,9 +130,9 @@ export default function ReferralPage() {
 
         <Tabs defaultValue="my">
           <TabsList>
-            <TabsTrigger value="my">Mening tavsiyalarim</TabsTrigger>
+            <TabsTrigger value="my">{t("meningTavsiyalarim")}</TabsTrigger>
             <TabsTrigger value="all">Barcha tavsiyalar (HR)</TabsTrigger>
-            <TabsTrigger value="boomerang">🔄 Boomerang Hire</TabsTrigger>
+            <TabsTrigger value="boomerang">{t("boomerangHire")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="my" className="mt-4">

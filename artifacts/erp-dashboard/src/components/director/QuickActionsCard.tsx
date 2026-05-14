@@ -6,12 +6,14 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronRight, Zap, Play, Star, Wrench, Building2 } from "lucide-react";
 import { SectionTitle } from "@/components/director/helpers";
+import { useTranslation } from '@/lib/i18n';
 
 interface QuickActionsCardProps {
   onAction: (label: string) => void;
 }
 
 export function QuickActionsCard({ onAction }: QuickActionsCardProps) {
+  const { t } = useTranslation("common");
   const actions = [
     { label: "Buyurtmaga istisno", sub: "Avans kutmasdan ishlab chiqarishga", icon: Play, testId: "btn-action-exception" },
     { label: "Kechikkan buyurtmani VIP", sub: "Yuqori ustuvorlik berish", icon: Star, testId: "btn-action-vip" },
@@ -22,7 +24,7 @@ export function QuickActionsCard({ onAction }: QuickActionsCardProps) {
   return (
     <Card data-testid="card-quick-actions">
       <CardHeader className="pb-3">
-        <SectionTitle icon={Zap} title="Tezkor Harakatlar" sub="Direktor buyruqlari" accent="text-primary" />
+        <SectionTitle icon={Zap} title={t("tezkorHarakatlar")} sub="Direktor buyruqlari" accent="text-primary" />
       </CardHeader>
       <CardContent>
         <div className="space-y-2">

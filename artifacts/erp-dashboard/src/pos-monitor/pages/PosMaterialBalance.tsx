@@ -84,7 +84,7 @@ export default function PosMaterialBalance() {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>{t('materialBalans')}</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Aggregat balans</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{t("aggregatBalans")}</h1>
           <p style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>
             Material qiymati bo'yicha guruhlangan — ABC tahlil (A: 80%, B: 15%, C: 5%)
           </p>
@@ -115,27 +115,27 @@ export default function PosMaterialBalance() {
           onChange={e => setCategoryFilter(e.target.value)}
           style={{ padding: "8px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13 }}
         >
-          <option value="all">Barcha kategoriyalar</option>
+          <option value="all">{t("barchaKategoriyalar")}</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
       <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>⏳ Yuklanmoqda...</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>{t("yuklanmoqda")}</div>
         ) : (
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead style={{ background: "#F9FAFB" }}>
               <tr>
                 <th style={th}>ABC</th>
                 <th style={th}>{t('Material')}</th>
-                <th style={th}>Kod</th>
-                <th style={th}>Kategoriya</th>
-                <th style={{ ...th, textAlign: "right" }}>Miqdor</th>
-                <th style={th}>Birlik</th>
-                <th style={{ ...th, textAlign: "right" }}>Narx</th>
-                <th style={{ ...th, textAlign: "right" }}>Qiymat</th>
-                <th style={{ ...th, textAlign: "right" }}>Ulush</th>
+                <th style={th}>{t("code")}</th>
+                <th style={th}>{t("category")}</th>
+                <th style={{ ...th, textAlign: "right" }}>{t("quantity")}</th>
+                <th style={th}>{t("unit")}</th>
+                <th style={{ ...th, textAlign: "right" }}>{t("price")}</th>
+                <th style={{ ...th, textAlign: "right" }}>{t("qiymat")}</th>
+                <th style={{ ...th, textAlign: "right" }}>{t("ulush")}</th>
               </tr>
             </thead>
             <tbody>

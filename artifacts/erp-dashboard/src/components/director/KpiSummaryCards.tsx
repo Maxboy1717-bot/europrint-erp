@@ -8,6 +8,7 @@ import { DollarSign, Package, Factory, Users, AlertTriangle, Gauge } from "lucid
 import { cn } from "@/lib/utils";
 import { TrendChip, formatMoney } from "@/components/director/helpers";
 import type { DirectorSummary, DirDashboard, DirSummary } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface KpiSummaryCardsProps {
   erp: DirectorSummary | undefined;
@@ -21,6 +22,7 @@ interface KpiSummaryCardsProps {
 export function KpiSummaryCards({
   erp, dash, dirSum, isLoading, runningMachines, totalMachines,
 }: KpiSummaryCardsProps) {
+  const { t } = useTranslation("common");
   const items = [
     { label: "Oylik Daromad", value: erp?.revenue?.formatted ?? `${formatMoney(dirSum?.orders?.monthRevenue ?? 0)} so'm`, sub: "vs o'tgan oy", change: erp?.revenue?.change, trend: erp?.revenue?.trend, icon: DollarSign, color: "text-[var(--ep-green)]", bg: "bg-emerald-50" },
     { label: "Jami Buyurtma", value: erp?.orders?.formatted ?? String(dash?.orders?.month ?? 0), sub: `${dirSum?.orders?.today ?? 0} ta bugun`, change: erp?.orders?.change, trend: erp?.orders?.trend, icon: Package, color: "text-[var(--ep-blue)]", bg: "bg-blue-50" },
@@ -32,7 +34,7 @@ export function KpiSummaryCards({
 
   return (
     <div>
-      <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Bugungi Holat</h2>
+      <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">{t("bugungiHolat")}</h2>
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {Array(6).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />)}

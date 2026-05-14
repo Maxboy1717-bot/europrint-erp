@@ -14,10 +14,12 @@ import {
 import { fmtMoney } from "@/components/sd/helpers";
 import { Customer, SEGMENT_CONF, STATUS_CONF } from "./SDCustomersTypes";
 import { EPKpiCard } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 /* ── Small reusable atoms ─────────────────────────────────────── */
 
 export function SegBadge({ seg }: { seg?: string }) {
+  const { t } = useTranslation("common");
   const s = SEGMENT_CONF[seg || "C"] || SEGMENT_CONF.C;
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ring-1 ${s.bg} ${s.text} ${s.ring}`}>
@@ -51,7 +53,7 @@ export function CustomerKpiCards({ total, segs, totalVal }: StatsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       <EPKpiCard
-        label="Jami mijozlar"
+        label={t("jamiMijozlar")}
         value={total}
         icon={Users}
         iconBg="sd"
@@ -79,7 +81,7 @@ export function CustomerKpiCards({ total, segs, totalVal }: StatsProps) {
         enterDelayMs={180}
       />
       <EPKpiCard
-        label="Umumiy qiymat"
+        label={t("umumiyQiymat")}
         staticValue={fmtMoney(totalVal)}
         icon={TrendingUp}
         iconBg="var(--ep-purple)"
@@ -138,15 +140,15 @@ export function CustomerFilterBar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha holat</SelectItem>
-          <SelectItem value="active">Aktiv</SelectItem>
-          <SelectItem value="inactive">Nofaol</SelectItem>
-          <SelectItem value="blacklist">Qora ro'yxat</SelectItem>
+          <SelectItem value="all">{t("barchaHolat")}</SelectItem>
+          <SelectItem value="active">{t("aktiv")}</SelectItem>
+          <SelectItem value="inactive">{t("inactive")}</SelectItem>
+          <SelectItem value="blacklist">{t("qoraRoyxat")}</SelectItem>
         </SelectContent>
       </Select>
       {hasFilters && (
         <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={onClear}>
-          <X className="h-3.5 w-3.5 mr-1" />Tozalash
+          <X className="h-3.5 w-3.5 mr-1" />{t("tozalash")}
         </Button>
       )}
     </div>
@@ -182,8 +184,8 @@ export function CustomerTable({ customers, filtered, isLoading, onSelect }: Cust
         <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
           <Users className="h-8 w-8 text-muted-foreground/50" />
         </div>
-        <p className="text-muted-foreground font-medium">Mijozlar topilmadi</p>
-        <p className="text-xs text-muted-foreground/70 mt-1">Filtrlarni o'zgartiring yoki yangi mijoz qo'shing</p>
+        <p className="text-muted-foreground font-medium">{t("mijozlarTopilmadi")}</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">{t("filtrlarniOzgartiringYokiYangiMijoz")}</p>
       </div>
     );
   }
@@ -224,11 +226,11 @@ export function CustomerTable({ customers, filtered, isLoading, onSelect }: Cust
               {/* Stats */}
               <div className="hidden md:flex items-center gap-6 shrink-0">
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Buyurtmalar</p>
+                  <p className="text-xs text-muted-foreground">{t("buyurtmalar")}</p>
                   <p className="text-sm font-semibold">{c.order_count || 0}</p>
                 </div>
                 <div className="text-right min-w-[100px]">
-                  <p className="text-xs text-muted-foreground">Qiymat</p>
+                  <p className="text-xs text-muted-foreground">{t("qiymat")}</p>
                   <p className="text-sm font-semibold">{fmtMoney(val)}</p>
                 </div>
                 <div className="text-center min-w-[60px]">

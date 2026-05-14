@@ -5,11 +5,10 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { runQuery } from '@shared/db';
+import { runQuery, db } from '@shared/db';
 import { castTo } from '@common/db-rows';
 import { Injectable } from '@nestjs/common';
 import { Result } from '@common/types/result.type';
-import { db } from '@workspace/db';
 import { sql } from 'drizzle-orm';
 import { execSdSalesOrderInsert, execSdSalesOrderUpdate, execSdSalesOrderDelete } from '@common/database/queries-sd';
 import { Err } from '@common/result';

@@ -46,7 +46,7 @@ export class HrSafetyController {
 
   @Delete('incidents/:id')
   async deleteIncident(@Param('id', ParseIntPipe) id: number) {
-    const r = await this.svc.updateIncident(id, { status: 'deleted' } as HrSafetyUpdateIncidentDto);
+    const r = await this.svc.updateIncident(id, { status: 'closed' } as HrSafetyUpdateIncidentDto);
     return { data: r.ok ? { deleted: true, id } : { deleted: false, id } };
   }
 

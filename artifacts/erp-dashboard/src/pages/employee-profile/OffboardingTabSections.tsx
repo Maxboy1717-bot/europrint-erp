@@ -46,7 +46,7 @@ export function CaseOverviewCard({oCase, pct }: CaseOverviewCardProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <UserX className="h-4 w-4 text-[var(--ep-primary)]" />
-          Offboarding Ma'lumotlari
+          {t("offboardingMalumotlari")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -58,12 +58,12 @@ export function CaseOverviewCard({oCase, pct }: CaseOverviewCardProps) {
             </Badge>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Ketish sababi</p>
+            <p className="text-xs text-muted-foreground">{t("ketishSababi")}</p>
             <p className="font-medium text-sm">{DISMISSAL_MAP[oCase.dismissal_type] ?? oCase.dismissal_type}</p>
           </div>
           {oCase.last_working_day && (
             <div>
-              <p className="text-xs text-muted-foreground">Oxirgi ish kuni</p>
+              <p className="text-xs text-muted-foreground">{t("oxirgiIshKuni")}</p>
               <p className="font-medium text-sm flex items-center gap-1">
                 <Clock className="h-3 w-3 text-muted-foreground" />
                 {new Date(oCase.last_working_day).toLocaleDateString("uz-UZ")}
@@ -71,7 +71,7 @@ export function CaseOverviewCard({oCase, pct }: CaseOverviewCardProps) {
             </div>
           )}
           <div>
-            <p className="text-xs text-muted-foreground">Boshlangan</p>
+            <p className="text-xs text-muted-foreground">{t("boshlangan")}</p>
             <p className="text-sm">{new Date(oCase.created_at).toLocaleDateString("uz-UZ")}</p>
           </div>
         </div>
@@ -88,9 +88,9 @@ export function CaseOverviewCard({oCase, pct }: CaseOverviewCardProps) {
           <div className="flex items-start gap-2 rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/10 p-3">
             <AlertTriangle className="h-4 w-4 text-[var(--ep-red)] shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-[var(--ep-red)] dark:text-red-400">Hisob-kitob blokda</p>
+              <p className="text-sm font-semibold text-[var(--ep-red)] dark:text-red-400">{t("hisobKitobBlokda")}</p>
               <p className="text-xs text-[var(--ep-red)]/80 dark:text-red-400/70">
-                Chiqish suhbatining barcha savollari to'ldirilmagan. Moliya bo'limi to'lovni amalga oshira olmaydi.
+                {t("chiqishSuhbatiningBarchaSavollariToldirilmagan")}
               </p>
             </div>
           </div>
@@ -115,11 +115,11 @@ export function ExitInterviewCard({ oCase, showInterviewForm, onShowForm, formSl
         <CardTitle className="text-sm flex items-center justify-between">
           <span className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-[var(--ep-blue)]" />
-            Chiqish Suhbati
+            {t("chiqishSuhbati")}
           </span>
           {!oCase.exit_interview_done && oCase.status === "active" && !showInterviewForm && (
             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onShowForm}>
-              O'tkazish
+              {t("otkazish")}
             </Button>
           )}
           {oCase.exit_interview_done && (
@@ -142,7 +142,7 @@ export function ExitInterviewCard({ oCase, showInterviewForm, onShowForm, formSl
         ) : oCase.exit_interview_done ? (
           <div className="flex items-center gap-2 text-sm text-[var(--ep-green)] dark:text-green-400">
             <CheckCircle2 className="h-4 w-4" />
-            <span>Suhbat o'tkazildi</span>
+            <span>{t("suhbatOtkazildi")}</span>
             {oCase.exit_interview_notes && (
               <span className="text-muted-foreground ml-1">— {oCase.exit_interview_notes}</span>
             )}
@@ -150,7 +150,7 @@ export function ExitInterviewCard({ oCase, showInterviewForm, onShowForm, formSl
         ) : (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <AlertCircle className="h-4 w-4" />
-            <span>Suhbat hali o'tkazilmagan</span>
+            <span>{t("suhbatHaliOtkazilmagan")}</span>
           </div>
         )}
       </CardContent>
@@ -173,7 +173,7 @@ export function EquipmentReturnCard({ oCase, equipmentItems, onMarkItem, isPendi
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <Package className="h-4 w-4 text-[var(--ep-purple)]" />
-          Mulk Qaytarish Holati
+          {t("mulkQaytarishHolati")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -201,9 +201,9 @@ export function EquipmentReturnCard({ oCase, equipmentItems, onMarkItem, isPendi
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="returned">Qaytarildi</SelectItem>
-                      <SelectItem value="damaged">Shikastlangan</SelectItem>
-                      <SelectItem value="missing">Yo'qolgan</SelectItem>
+                      <SelectItem value="returned">{t("qaytarildi")}</SelectItem>
+                      <SelectItem value="damaged">{t("shikastlangan")}</SelectItem>
+                      <SelectItem value="missing">{t("yoqolgan")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -266,7 +266,7 @@ export function FullChecklistCard({ oCase, checklist, onMarkItem, isPending }: F
                 onClick={() => onMarkItem({ caseId: oCase.id, itemId: item.id, done: true })}
                 disabled={isPending}
               >
-                Bajarildi
+                {t("Bajarildi")}
               </Button>
             )}
           </div>

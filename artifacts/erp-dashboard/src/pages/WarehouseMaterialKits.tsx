@@ -13,8 +13,10 @@ import type { PapkaOrder, MaterialKit, MaterialKitItem } from "./WarehouseMateri
 import { SummaryCards, KitsTable } from "./WarehouseMaterialKitsSections";
 import { CreateKitDialog, KitDetailsDialog } from "./WarehouseMaterialKitsDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseMaterialKits() {
+  const { t } = useTranslation("common");
   const [lang, setLang] = useState<"uz" | "ru">("uz");
   const [selectedTab, setSelectedTab] = useState("pending");
   const [searchQuery, setSearchQuery] = useState("");

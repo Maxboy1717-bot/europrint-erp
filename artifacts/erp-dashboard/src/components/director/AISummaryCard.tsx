@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, Sparkles } from "lucide-react";
 import type { AISummary } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface AISummaryCardProps {
   ai: AISummary | undefined;
@@ -16,6 +17,7 @@ interface AISummaryCardProps {
 }
 
 export function AISummaryCard({ ai, aiLoad }: AISummaryCardProps) {
+  const { t } = useTranslation("common");
   const [aiExpanded, setAiExpanded] = useState(false);
 
   return (
@@ -27,7 +29,7 @@ export function AISummaryCard({ ai, aiLoad }: AISummaryCardProps) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <p className="text-xs font-bold uppercase tracking-wider text-primary">AI Kunlik Xulosa</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">{t("aiKunlikXulosa")}</p>
               {ai?.aiGenerated && (
                 <Badge variant="secondary" className="text-[9px] px-1.5 py-0">GPT-4o</Badge>
               )}

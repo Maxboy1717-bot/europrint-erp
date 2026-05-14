@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RefreshCw, ClipboardList, Wrench, Plus } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { type MESTask, type MaintenanceRequest, type MESMachine } from "./MESExtendedTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Zones / Tasks Tab ───────────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ interface ZonesTabProps {
 
 /** Tab content: Ishlab Chiqarish Vazifalari */
 export function ZonesTab({ mesTasks, isLoading }: ZonesTabProps) {
+  const { t } = useTranslation("common");
   const tasks = Array.isArray(mesTasks) ? mesTasks : [];
   const stats = [
     { l: "Jami vazifalar",  v: tasks.length,                                                c: "text-primary"   },
@@ -28,12 +30,12 @@ export function ZonesTab({ mesTasks, isLoading }: ZonesTabProps) {
   return (
     <TabsContent value="zones" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Ishlab Chiqarish Vazifalari</h2>
+        <h2 className="text-lg font-semibold">{t("ishlabChiqarishVazifalari")}</h2>
         <Button
           variant="outline" size="sm"
           onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/mes/tasks"] })}
         >
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>
       </div>
 
@@ -53,25 +55,25 @@ export function ZonesTab({ mesTasks, isLoading }: ZonesTabProps) {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Vazifa</TableHead>
-                <TableHead>Stanoq</TableHead>
-                <TableHead>Miqdor</TableHead>
-                <TableHead>Holati</TableHead>
-                <TableHead>Sana</TableHead>
+                <TableHead>{t("vazifa")}</TableHead>
+                <TableHead>{t("stanoq")}</TableHead>
+                <TableHead>{t("quantity")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">
-                    Yuklanmoqda...
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : tasks.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
                     <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    Vazifalar yo'q
+                    {t("vazifalarYoq")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -139,13 +141,13 @@ export function MaintenanceTab({
   return (
     <TabsContent value="maintenance" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Texnik Xizmat So'rovlari</h2>
+        <h2 className="text-lg font-semibold">{t("texnikXizmatSorovlari")}</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onRefetch}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
           </Button>
           <Button size="sm" onClick={onOpenDialog} data-testid="button-add-maintenance">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />So'rov Yaratish
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("sorovYaratish")}
           </Button>
         </div>
       </div>
@@ -166,25 +168,25 @@ export function MaintenanceTab({
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Stanoq</TableHead>
-                <TableHead>Muammo</TableHead>
-                <TableHead>Ustuvorlik</TableHead>
-                <TableHead>Holati</TableHead>
-                <TableHead>Sana</TableHead>
+                <TableHead>{t("stanoq")}</TableHead>
+                <TableHead>{t("muammo")}</TableHead>
+                <TableHead>{t("ustuvorlik")}</TableHead>
+                <TableHead>{t("holati")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">
-                    Yuklanmoqda...
+                    {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : requests.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
                     <Wrench className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    So'rovlar yo'q
+                    {t("sorovlarYoq")}
                   </TableCell>
                 </TableRow>
               ) : (

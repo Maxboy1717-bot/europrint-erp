@@ -30,6 +30,7 @@ import {
   SHIFT_STATUS, DOWNTIME_REASONS,
 } from "./helpers";
 import { ShiftReport, DowntimeRecord, HourlyProduction } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface ShiftDetailModalProps {
   reportId: number | null;
@@ -38,6 +39,7 @@ interface ShiftDetailModalProps {
 }
 
 export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [closeForm, setCloseForm] = useState({ produced_qty: "", defective_qty: "", rework_qty: "", supervisor_notes: "", next_shift_plan: "" });
   const [dtForm, setDtForm] = useState({ started_at: "", duration_min: "", reason_type: "machine_failure", reason_description: "", is_planned: false });
@@ -127,11 +129,11 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                   <p className={`text-xl font-bold ${oeeColor(Number(report.oee_percent))}`}>{Number(report.oee_percent).toFixed(1)}%</p>
                 </div>
                 <div className="ml-4">
-                  <p className="text-xs text-muted-foreground">Ish vaqti</p>
+                  <p className="text-xs text-muted-foreground">{t("ishVaqti")}</p>
                   <p className="font-medium">{report.net_working_min || "—"} min</p>
                 </div>
                 <div className="ml-4">
-                  <p className="text-xs text-muted-foreground">To'xtatish</p>
+                  <p className="text-xs text-muted-foreground">{t("toxtatish")}</p>
                   <p className="font-medium text-[var(--ep-primary)]">{report.actual_stop_min || 0} min</p>
                 </div>
               </div>
@@ -142,7 +144,7 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                 <h4 className="font-medium text-sm">To'xtatishlar jurnali ({downtimes.length})</h4>
                 {report.status === "in_progress" && (
                   <Button size="sm" variant="outline" onClick={() => setShowDtForm(!showDtForm)} data-testid="button-add-downtime">
-                    <Plus className="w-3 h-3 mr-1" /> Qo'shish
+                    <Plus className="w-3 h-3 mr-1" /> {t("add")}
                   </Button>
                 )}
               </div>
@@ -150,7 +152,7 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                 <div className="border rounded-md p-3 mb-3 space-y-2 bg-muted/10">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-xs">Boshlanish vaqti</Label>
+                      <Label className="text-xs">{t("boshlanishVaqti1")}</Label>
                       <Input type="datetime-local" value={dtForm.started_at} onChange={(e) => setDtForm(f => ({ ...f, started_at: e.target.value }))} data-testid="input-dt-start" />
                     </div>
                     <div>
@@ -159,7 +161,7 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs">Sabab</Label>
+                    <Label className="text-xs">{t("sabab")}</Label>
                     <Select value={dtForm.reason_type} onValueChange={(v) => setDtForm(f => ({ ...f, reason_type: v }))}>
                       <SelectTrigger data-testid="select-dt-reason" className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -168,16 +170,16 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Izoh</Label>
-                    <Input placeholder="Qo'shimcha ma'lumot" value={dtForm.reason_description} onChange={(e) => setDtForm(f => ({ ...f, reason_description: e.target.value }))} data-testid="input-dt-desc" />
+                    <Label className="text-xs">{t("Izoh")}</Label>
+                    <Input placeholder={t("qoshimchaMalumot1")} value={dtForm.reason_description} onChange={(e) => setDtForm(f => ({ ...f, reason_description: e.target.value }))} data-testid="input-dt-desc" />
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" disabled={!dtForm.started_at || !dtForm.duration_min || dtMut.isPending}
                       onClick={() => dtMut.mutate({ ...dtForm, duration_min: Number(dtForm.duration_min) })}
                       data-testid="button-save-downtime">
-                      Saqlash
+                      {t("Saqlash")}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => setShowDtForm(false)}>Bekor</Button>
+                    <Button size="sm" variant="outline" onClick={() => setShowDtForm(false)}>{t("Bekor")}</Button>
                   </div>
                 </div>
               )}
@@ -185,10 +187,10 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                 <div className="ep-table-scroll"><Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead>Boshlanish</TableHead>
-                      <TableHead>Davomiylik</TableHead>
-                      <TableHead>Sabab</TableHead>
-                      <TableHead>Tur</TableHead>
+                      <TableHead>{t("boshlanish")}</TableHead>
+                      <TableHead>{t("davomiylik")}</TableHead>
+                      <TableHead>{t("sabab")}</TableHead>
+                      <TableHead>{t("tur")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -207,20 +209,20 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                   </TableBody>
                 </Table></div>
               ) : (
-                <p className="text-sm text-muted-foreground py-2">To'xtatish hodisalari yo'q</p>
+                <p className="text-sm text-muted-foreground py-2">{t("toxtatishHodisalariYoq")}</p>
               )}
             </div>
 
             {hourly.length > 0 && (
               <div>
-                <h4 className="font-medium text-sm mb-2">Soatlik unumdorlik</h4>
+                <h4 className="font-medium text-sm mb-2">{t("soatlikUnumdorlik")}</h4>
                 <div className="ep-table-scroll"><Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead>Soat</TableHead>
-                      <TableHead className="text-right">Reja</TableHead>
-                      <TableHead className="text-right">Amalda</TableHead>
-                      <TableHead className="text-right">Jami</TableHead>
+                      <TableHead>{t("soat")}</TableHead>
+                      <TableHead className="text-right">{t("reja")}</TableHead>
+                      <TableHead className="text-right">{t("amalda")}</TableHead>
+                      <TableHead className="text-right">{t("total")}</TableHead>
                       <TableHead>%</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -269,11 +271,11 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
                       </div>
                     </div>
                     <div>
-                      <Label>Ustaning izohi</Label>
+                      <Label>{t("ustaningIzohi")}</Label>
                       <Textarea rows={2} value={closeForm.supervisor_notes} onChange={(e) => setCloseForm(f => ({ ...f, supervisor_notes: e.target.value }))} data-testid="input-close-notes" />
                     </div>
                     <div>
-                      <Label>Keyingi smena uchun reja</Label>
+                      <Label>{t("keyingiSmenaUchunReja")}</Label>
                       <Textarea rows={2} value={closeForm.next_shift_plan} onChange={(e) => setCloseForm(f => ({ ...f, next_shift_plan: e.target.value }))} data-testid="input-close-next-plan" />
                     </div>
                     <Button
@@ -296,7 +298,7 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
             )}
           </div>
         ) : (
-          <p className="py-12 text-center text-muted-foreground">Ma'lumot topilmadi</p>
+          <p className="py-12 text-center text-muted-foreground">{t("noData")}</p>
         )}
       </DialogContent>
     </Dialog>

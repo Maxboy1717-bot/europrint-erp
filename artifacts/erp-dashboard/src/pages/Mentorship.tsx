@@ -111,8 +111,8 @@ export default function Mentorship() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">LMS Mentorlik</b></>}
-        title="LMS Mentorlik"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("lmsMentorlik")}</b></>}
+        title={t("lmsMentorlik")}
         subtitle={t('mentors')}
       />
         </div>

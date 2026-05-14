@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X, Users, AlertCircle, Search } from "lucide-react";
 import { OrgDepartment, EmployeeDialogProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface OrgStructureSectionProps {
   orgSearchQuery: string;
@@ -36,6 +37,7 @@ export function OrgStructureSection({
   orgDepartments,
   employee,
 }: OrgStructureSectionProps) {
+  const { t } = useTranslation("common");
   // Xavfsizlik: backend kutilmagan format yuborsa ham crash bo'lmaydi
   const safeOrgDepts = Array.isArray(orgDepartments) ? orgDepartments : [];
   const safeSelected = Array.isArray(selectedOrgDepts) ? selectedOrgDepts : [];
@@ -77,10 +79,10 @@ export function OrgStructureSection({
     <div className="p-4 bg-muted/50 rounded-lg space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-medium">Tashkiliy tuzilma funksiyalari</p>
+          <p className="font-medium">{t("tashkiliyTuzilmaFunksiyalari")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Xodimning tashkiliy tuzilmadagi rolini tanlang. Bitta xodim bir nechta funksiyada ishlashi mumkin.
-            <span className="text-destructive ml-1">Kamida bitta funksiya tanlash shart.</span>
+            {t("xodimningTashkiliyTuzilmadagiRoliniTanlang")}
+            <span className="text-destructive ml-1">{t("kamidaBittaFunksiyaTanlashShart")}</span>
           </p>
         </div>
         {safeSelected.length > 0 && (
@@ -93,7 +95,7 @@ export function OrgStructureSection({
       {safeSelected.length === 0 && (
         <div className="flex items-center gap-2 p-2 bg-destructive/10 text-destructive rounded text-xs">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          <span>Saqlash uchun kamida 1 ta funksiyani tanlang</span>
+          <span>{t("saqlashUchunKamida1Ta")}</span>
         </div>
       )}
 
@@ -116,7 +118,7 @@ export function OrgStructureSection({
                   onClick={() => removeDept(deptId)}
                   className="ml-1 hover:text-destructive"
                   data-testid={`button-remove-org-${deptId}`}
-                  title="Olib tashlash"
+                  title={t("remove")}
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -137,7 +139,7 @@ export function OrgStructureSection({
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
-          placeholder="Funksiya, bo'lim yoki rahbar bo'yicha qidirish..."
+          placeholder={t("funksiyaBolimYokiRahbarBoyicha")}
           value={orgSearchQuery}
           onChange={(e) => setOrgSearchQuery(e.target.value)}
           className="pl-8"
@@ -206,7 +208,7 @@ export function OrgStructureSection({
 
                   {/* TSKP (vakansiya soni) */}
                   {dept.tskp && Number(dept.tskp) > 0 && (
-                    <Badge variant="outline" className="text-xs h-5" title="Vakansiya soni">
+                    <Badge variant="outline" className="text-xs h-5" title={t("vakansiyaSoni")}>
                       / {dept.tskp}
                     </Badge>
                   )}

@@ -15,8 +15,10 @@ import {
   KaizenKanbanBoard, KaizenFilteredGrid,
 } from "./KaizenPageSections";
 import { KaizenSubmitDialog, KaizenStatusDialog } from "./KaizenPageDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function KaizenPage() {
+  const { t } = useTranslation("common");
   const [showSubmit, setShowSubmit]       = useState(false);
   const [statusTarget, setStatusTarget]   = useState<KaizenSuggestion | null>(null);
   const [filterStatus, setFilterStatus]   = useState("all");
@@ -45,16 +47,16 @@ export default function KaizenPage() {
             <Lightbulb className="w-5 h-5 text-[var(--ep-blue)]" />
           </div>
           <div>
-            <h1 className="text-xl font-bold">Kaizen — Doimiy Takomillashtirish</h1>
-            <p className="text-sm text-muted-foreground">Xodimlar g'oyalarini topshiring va kuzating</p>
+            <h1 className="text-xl font-bold">{t("kaizenDoimiyTakomillashtirish")}</h1>
+            <p className="text-sm text-muted-foreground">{t("xodimlarGoyalariniTopshiringVaKuzating")}</p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="w-4 h-4 mr-1" /> Yangilash
+            <RefreshCw className="w-4 h-4 mr-1" /> {t("refresh")}
           </Button>
           <Button size="sm" onClick={() => setShowSubmit(true)}>
-            <Plus className="w-4 h-4 mr-1" /> G'oya topshirish
+            <Plus className="w-4 h-4 mr-1" /> {t("goyaTopshirish")}
           </Button>
         </div>
       </div>

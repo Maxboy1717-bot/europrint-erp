@@ -106,7 +106,7 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
                   <TableHead className="text-right">{tFinance('grossSalary')}</TableHead>
                   <TableHead className="text-right">{tFinance('totalTaxes')}</TableHead>
                   <TableHead className="text-right">{tFinance('netSalary')}</TableHead>
-                  <TableHead className="text-center">Drift</TableHead>
+                  <TableHead className="text-center">{t("drift")}</TableHead>
                   <TableHead>{tCommon('status')}</TableHead>
                   <TableHead>{tCommon('actions')}</TableHead>
                 </TableRow>

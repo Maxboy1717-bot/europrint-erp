@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>html,body{margin:0;padding:0;background:var(--bg1);color:var(--fg1);font-family:var(--font-sans);}
+.wrap{padding:24px;display:flex;gap:36px;align-items:center;}
+.col{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.av{border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;background:#FF902F;}
+.s24{width:24px;height:24px;font-size:10px;}
+.s36{width:36px;height:36px;font-size:13px;}
+.s48{width:48px;height:48px;font-size:16px;}
+.s72{width:72px;height:72px;font-size:24px;}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--fg2);}
+.group{display:inline-flex;}
+.group .av{border:2px solid #fff;margin-left:-10px;}
+.group .av:first-child{margin-left:0;}</style></head>
+<body><div class="wrap">
+<div class="col"><div class="av s24">A</div><div class="lbl">24px</div></div>
+<div class="col"><div class="av s36" style="background:#3563AC">D</div><div class="lbl">36px ★</div></div>
+<div class="col"><div class="av s48" style="background:#7A4FB1">B</div><div class="lbl">48px</div></div>
+<div class="col"><div class="av s72" style="background:#2E8A5A">M</div><div class="lbl">72px</div></div>
+<div class="col">
+<div class="group"><div class="av s36">A</div><div class="av s36" style="background:#3563AC">D</div><div class="av s36" style="background:#7A4FB1">B</div><div class="av s36" style="background:#C45C7A">M</div><div class="av s36" style="background:#15171A">+5</div></div>
+<div class="lbl">overlap group</div>
+</div>
+</div></body></html>

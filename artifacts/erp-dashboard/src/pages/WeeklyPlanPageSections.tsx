@@ -19,13 +19,15 @@ import {
 import type { WeeklyPlan } from "./WeeklyPlanPageTypes";
 import { getWeekLabel, offsetWeek } from "./WeeklyPlanPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function statusBadge(status: WeeklyPlan["status"]) {
+  const { t } = useTranslation("common");
   if (status === "approved")
-    return <Badge className="bg-emerald-100 text-[var(--ep-green)] border-0">Tasdiqlangan</Badge>;
+    return <Badge className="bg-emerald-100 text-[var(--ep-green)] border-0">{t("approved")}</Badge>;
   if (status === "submitted")
-    return <EPStatusPill tone="info">Yuborilgan</EPStatusPill>;
-  return <EPStatusPill tone="neutral">Qoralama</EPStatusPill>;
+    return <EPStatusPill tone="info">{t("yuborilgan")}</EPStatusPill>;
+  return <EPStatusPill tone="neutral">{t("draft")}</EPStatusPill>;
 }
 
 interface WeekNavigatorProps {
@@ -38,7 +40,7 @@ export function WeekNavigator({ week, onWeekChange }: WeekNavigatorProps) {
     <Card>
       <CardContent className="py-3 flex items-center justify-between gap-4">
         <Button variant="ghost" size="sm" onClick={() => onWeekChange(offsetWeek(week, -1))}>
-          <ChevronLeft className="h-4 w-4 mr-1" /> Oldingi
+          <ChevronLeft className="h-4 w-4 mr-1" /> {t("previous")}
         </Button>
         <div className="text-center">
           <div className="flex items-center gap-2 justify-center">
@@ -48,7 +50,7 @@ export function WeekNavigator({ week, onWeekChange }: WeekNavigatorProps) {
           <p className="text-xs text-muted-foreground mt-0.5">Hafta boshlanishi: {week}</p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => onWeekChange(offsetWeek(week, 1))}>
-          Keyingi <ChevronRight className="h-4 w-4 ml-1" />
+          {t("nextBtn")}<ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </CardContent>
     </Card>
@@ -65,14 +67,14 @@ export function WeeklyPlanHeader({ onRefresh }: PageHeaderProps) {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <ClipboardList className="w-6 h-6 text-primary" />
-          Haftalik Reja
+          {t("haftalikReja1")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          GSD maqsad + Top-5 vazifa topshirish va tasdiqlash tizimi
+          {t("gsdMaqsadTop5Vazifa")}
         </p>
       </div>
       <Button variant="outline" size="sm" onClick={onRefresh}>
-        <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Yangilash
+        <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> {t("refresh")}
       </Button>
     </div>
   );
@@ -105,7 +107,7 @@ export function ManagerApprovalSection({ plans, isLoading, onApprove, isApproveP
         ) : plans.length === 0 ? (
           <div className="text-center py-8 text-[13px] text-muted-foreground">
             <ClipboardList className="w-10 h-10 mx-auto mb-3 opacity-40" />
-            <p className="text-sm">Bu hafta uchun hech qanday reja topshirilmagan</p>
+            <p className="text-sm">{t("buHaftaUchunHechQanday")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -134,16 +136,16 @@ export function ManagerApprovalSection({ plans, isLoading, onApprove, isApproveP
                       className="bg-emerald-600 hover:bg-[var(--ep-green)]/90"
                     >
                       <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                      Tasdiqlash
+                      {t("verify")}
                     </Button>
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">GSD Maqsad</p>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">{t("gsdMaqsad")}</p>
                   <p className="text-sm text-foreground">{plan.gsdTarget}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Top-5 Vazifalar</p>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">{t("top5Vazifalar")}</p>
                   <ol className="space-y-1">
                     {(Array.isArray(plan.top5Tasks) ? plan.top5Tasks as string[] : []).map((task, i) => (
                       <li key={`k-${i}`} className="flex items-start gap-2 text-sm text-foreground">

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TrendingUp, UserPlus, FileText } from "lucide-react";
 import { CareerPlan } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CareerSectionProps {
   careerPlans: CareerPlan[];
@@ -18,10 +19,11 @@ export function CareerSection({
   careerPlans,
   careerLoading,
 }: CareerSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Kasbiy O'sish va Vorislik Rejalashtirish</h2>
+        <h2 className="text-lg font-semibold">{t("kasbiyOsishVaVorislikRejalashtirish")}</h2>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
@@ -40,19 +42,19 @@ export function CareerSection({
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Karyera Rivojlanish Rejalari</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("karyeraRivojlanishRejalari")}</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Xodim</TableHead><TableHead>Joriy lavozim</TableHead>
-              <TableHead>Maqsadli lavozim</TableHead><TableHead>Sana</TableHead>
-              <TableHead>Holati</TableHead>
+              <TableHead>{t("xodim1")}</TableHead><TableHead>{t("joriyLavozim")}</TableHead>
+              <TableHead>{t("maqsadliLavozim")}</TableHead><TableHead>{t("date")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {careerLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-6">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : careerPlans.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">Rejalar mavjud emas</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("rejalarMavjudEmas")}</TableCell></TableRow>
               ) : (Array.isArray(careerPlans) ? careerPlans : []).map((plan) => (
                 <TableRow key={plan.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{plan.employee_name}</TableCell>

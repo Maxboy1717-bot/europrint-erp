@@ -53,7 +53,7 @@ export function AddProductDialog({
                 name="barcode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shtrix-kod</FormLabel>
+                    <FormLabel>{t("shtrixKod")}</FormLabel>
                     <FormControl><Input {...field} data-testid="input-product-barcode" /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -116,10 +116,10 @@ export function AddProductDialog({
                         <SelectTrigger data-testid="select-product-unit" className="h-9"><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="dona">Dona</SelectItem>
+                        <SelectItem value="dona">{t("dona1")}</SelectItem>
                         <SelectItem value="kg">Kg</SelectItem>
                         <SelectItem value="m2">m²</SelectItem>
-                        <SelectItem value="rulon">Rulon</SelectItem>
+                        <SelectItem value="rulon">{t("rulon")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

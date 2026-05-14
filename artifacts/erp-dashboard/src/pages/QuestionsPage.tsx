@@ -25,8 +25,10 @@ import {
 } from "./QuestionsPageSections";
 import { CreateQuestionDialog, DeleteQuestionAlert } from "./QuestionsPageDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function QuestionsPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // ── State ───────────────────────────────────────────────────────────────────
@@ -93,12 +95,12 @@ export default function QuestionsPage() {
   return (
     <ModulePage
       module="hr"
-      title="Test Savollari"
+      title={t("testSavollari")}
       icon={<HelpCircle className="h-5 w-5" />}
       actions={
         <Button onClick={() => setShowCreate(true)} data-testid="button-create-question">
           <Plus className="h-4 w-4 mr-2" />
-          Savol qo'shish
+          {t("savolQoshish")}
         </Button>
       }
     >

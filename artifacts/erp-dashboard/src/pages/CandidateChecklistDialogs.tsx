@@ -13,6 +13,7 @@ import { ClipboardList, Clock, ChevronDown, ChevronUp, FileSearch, FileText } fr
 import { cn } from "@/lib/utils";
 import { CVScreeningGuide } from "./CVScreeningGuide";
 import { ProbationReviewDialog, type ProbationReview } from "@/components/hr/ProbationReviewDialog";
+import { useTranslation } from '@/lib/i18n';
 import {
   CHECKLIST_ITEMS, REVIEW_KEYS, ChecklistKey, ChecklistData, STEP_COLORS, getProgressInfo,
 } from "./CandidateChecklistTypes";
@@ -41,6 +42,7 @@ export function ChecklistSheetBody({
   setNoteText, setNoteEditing, patchIsPending, reviewMap, probationDialog,
   setProbationDialog, pipelineEntryId, toggleStep, handleToggle, handleSaveNote,
 }: ChecklistSheetBodyProps) {
+  const { t } = useTranslation("common");
   const { done, total, pct } = getProgressInfo(checklistData);
 
   const steps = [4, 5, 6, 7];
@@ -55,12 +57,12 @@ export function ChecklistSheetBody({
       <SheetHeader className="px-5 pt-5 pb-3 border-b bg-card text-foreground rounded-none sticky top-0 z-10">
         <SheetTitle className="text-foreground flex items-center gap-2 text-base">
           <ClipboardList className="w-4 h-4 text-orange-400" />
-          Kandidat Cheklisti
+          {t("kandidatCheklisti")}
         </SheetTitle>
         <p className="text-sm text-muted-foreground mt-0.5">{candidateName}</p>
         <div className="mt-3">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Majburiy bandlar</span>
+            <span>{t("majburiyBandlar")}</span>
             <span className={pct === 100 ? "text-[var(--ep-green)] font-semibold" : ""}>{done}/{total} — {pct}%</span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -77,7 +79,7 @@ export function ChecklistSheetBody({
 
       {isLoading ? (
         <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-          Yuklanmoqda…
+          {t("yuklanmoqda1")}
         </div>
       ) : (
         <div className="px-4 py-4 space-y-3">
@@ -205,7 +207,7 @@ export function ChecklistSheetBody({
                                     onChange={e => setNoteText(e.target.value)}
                                     rows={2}
                                     className="text-xs py-1 px-2 h-auto resize-none flex-1"
-                                    placeholder="Izoh yozing…"
+                                    placeholder={t("izohYozing1")}
                                     autoFocus
                                   />
                                   <div className="flex flex-col gap-1">
@@ -214,7 +216,7 @@ export function ChecklistSheetBody({
                                       className="h-7 text-xs px-2 bg-primary hover:bg-primary/90 text-primary-foreground"
                                       onClick={() => handleSaveNote(item.key as ChecklistKey)}
                                     >
-                                      Saqlash
+                                      {t("Saqlash")}
                                     </Button>
                                     <Button
                                       size="sm"
@@ -222,7 +224,7 @@ export function ChecklistSheetBody({
                                       className="h-7 text-xs px-2"
                                       onClick={() => { setNoteEditing(null); setNoteText(""); }}
                                     >
-                                      Bekor
+                                      {t("Bekor")}
                                     </Button>
                                   </div>
                                 </div>
@@ -234,7 +236,7 @@ export function ChecklistSheetBody({
                                   }}
                                   className="mt-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
                                 >
-                                  + Izoh qo'shish
+                                  {t("izohQoshish")}
                                 </button>
                               )}
                             </div>

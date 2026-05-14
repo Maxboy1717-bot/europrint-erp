@@ -36,8 +36,10 @@ import {
   RatingSection,
 } from "./SecurityExtendedSections";
 import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function SecurityExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "zones");
 
@@ -112,8 +114,8 @@ export default function SecurityExtended() {
         <div className="flex items-center gap-3">
           <Shield className="h-6 w-6 text-primary" />
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Security Kengaytirilgan</b></>}
-        title="Security Kengaytirilgan"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("securityKengaytirilgan")}</b></>}
+        title={t("securityKengaytirilgan")}
       />
           {activeVisitors.length > 0 && (
             <Badge className="ml-2 bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none">

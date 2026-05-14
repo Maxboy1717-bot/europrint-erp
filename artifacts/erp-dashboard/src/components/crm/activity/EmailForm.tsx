@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, Paperclip } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
 interface EmailFormProps {
   entityType: string;
@@ -19,6 +20,7 @@ interface EmailFormProps {
 }
 
 export function EmailForm({ entityType, entityId, email }: EmailFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [emailForm, setEmailForm] = useState({
     to: email || "",
@@ -62,17 +64,17 @@ export function EmailForm({ entityType, entityId, email }: EmailFormProps) {
           data-testid="input-email-to"
         />
         {emailForm.to && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailForm.to) && (
-          <p className="text-xs text-destructive mt-1">To'g'ri email manzil kiriting</p>
+          <p className="text-xs text-destructive mt-1">{t("togriEmailManzilKiriting")}</p>
         )}
       </div>
       <Input
-        placeholder="Mavzu"
+        placeholder={t("mavzu")}
         value={emailForm.subject}
         onChange={(e) => setEmailForm((prev) => ({ ...prev, subject: e.target.value }))}
         data-testid="input-email-subject"
       />
       <Textarea
-        placeholder="Xat matni..."
+        placeholder={t("xatMatni")}
         value={emailForm.body}
         onChange={(e) => setEmailForm((prev) => ({ ...prev, body: e.target.value }))}
         className="min-h-[150px] resize-none"
@@ -81,7 +83,7 @@ export function EmailForm({ entityType, entityId, email }: EmailFormProps) {
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" data-testid="button-email-attach">
           <Paperclip className="h-3.5 w-3.5 mr-1.5" />
-          Fayl biriktirish
+          {t("faylBiriktirish")}
         </Button>
       </div>
       <Button
@@ -96,7 +98,7 @@ export function EmailForm({ entityType, entityId, email }: EmailFormProps) {
         data-testid="button-send-email"
       >
         <Mail className="h-4 w-4 mr-2" />
-        Yuborish
+        {t("submitBtn")}
       </Button>
     </div>
   );

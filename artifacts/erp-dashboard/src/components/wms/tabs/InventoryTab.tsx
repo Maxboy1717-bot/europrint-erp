@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fmtQty, fmtDate, fmtNum } from "@/components/wms/helpers";
 import type { InventoryData, MaterialBasic } from "@/components/wms/wms-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface InventoryTabProps {
   inventory: InventoryData | null | undefined;
@@ -14,13 +15,14 @@ interface InventoryTabProps {
 }
 
 export function InventoryTab({ inventory, basic }: InventoryTabProps) {
-  if (!inventory) return <div className="text-muted-foreground text-sm py-8 text-center">Inventarizatsiya ma'lumotlari yo'q</div>;
+  const { t } = useTranslation("common");
+  if (!inventory) return <div className="text-muted-foreground text-sm py-8 text-center">{t("inventarizatsiyaMalumotlariYoq")}</div>;
 
   return (
     <div className="space-y-4">
       {inventory.lastCountDate && (
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm">So'nggi inventarizatsiya</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-sm">{t("songgiInventarizatsiya")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([
               { label: "Sana", value: fmtDate(inventory.lastCountDate) },
@@ -46,7 +48,7 @@ export function InventoryTab({ inventory, basic }: InventoryTabProps) {
       </div>
       {(inventory.history || []).length > 0 ? (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Inventarizatsiya tarixi</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("inventarizatsiyaTarixi")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -76,7 +78,7 @@ export function InventoryTab({ inventory, basic }: InventoryTabProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Inventarizatsiya tarixi topilmadi</CardContent></Card>
+        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">{t("inventarizatsiyaTarixiTopilmadi")}</CardContent></Card>
       )}
     </div>
   );

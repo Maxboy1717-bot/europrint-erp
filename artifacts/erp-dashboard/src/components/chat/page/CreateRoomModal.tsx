@@ -17,6 +17,7 @@ import { ChatAvatar } from "./ChatAvatar";
 import { apiRequest } from '@/lib/queryClient';
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -31,6 +32,7 @@ interface Employee {
 }
 
 export function CreateRoomModal({ open, onClose }: Props) {
+  const { t } = useTranslation("common");
   const [name, setName] = useState("");
   const [type, setType] = useState<"GROUP" | "CHANNEL">("GROUP");
   const [search, setSearch] = useState("");
@@ -118,7 +120,7 @@ export function CreateRoomModal({ open, onClose }: Props) {
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Masalan: Marketing jamoasi"
+              placeholder={t("masalanMarketingJamoasi")}
               className="h-9"
             />
           </div>
@@ -137,13 +139,13 @@ export function CreateRoomModal({ open, onClose }: Props) {
           )}
 
           <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">A'zolar qo'shish</Label>
+            <Label className="text-xs text-muted-foreground mb-1 block">{t("azolarQoshish")}</Label>
             <div className="relative mb-2">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Xodimni qidirish..."
+                placeholder={t("xodimniQidirish")}
                 className="pl-8 h-8 text-sm"
               />
             </div>
@@ -168,13 +170,13 @@ export function CreateRoomModal({ open, onClose }: Props) {
                 );
               })}
               {(employees as Employee[]).length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Xodim topilmadi</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("xodimTopilmadi")}</p>
               )}
             </div>
           </div>
 
           <div className="flex gap-2 pt-1">
-            <Button variant="outline" onClick={handleClose} className="flex-1">Bekor</Button>
+            <Button variant="outline" onClick={handleClose} className="flex-1">{t("Bekor")}</Button>
             <Button
               onClick={handleCreate}
               disabled={!name.trim() || selected.length === 0 || loading}

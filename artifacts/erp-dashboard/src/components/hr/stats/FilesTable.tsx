@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmployeeFile } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface FilesTableProps {
   files: EmployeeFile[];
@@ -55,6 +56,7 @@ export function FilesTable({
   isDeleting,
   formatFileSize,
 }: FilesTableProps) {
+  const { t } = useTranslation("common");
   const [confirmDeleteFileId, setConfirmDeleteFileId] = useState<string | null>(null);
 
   return (
@@ -63,28 +65,28 @@ export function FilesTable({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Xodim fayllari</CardTitle>
+            <CardTitle>{t("xodimFayllari")}</CardTitle>
             <CardDescription>
-              Shartnomalar, buyruqlar va boshqa hujjatlar
+              {t("shartnomalarBuyruqlarVaBoshqaHujjatlar")}
             </CardDescription>
           </div>
           <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
             <DialogTrigger asChild>
               <Button data-testid="button-upload-file">
                 <Upload className="w-4 h-4 mr-2" />
-                Fayl yuklash
+                {t("faylYuklash")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold">Fayl yuklash</DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold">{t("faylYuklash")}</DialogTitle>
                 <DialogDescription>
-                  Xodim uchun yangi hujjat yuklang
+                  {t("xodimUchunYangiHujjatYuklang")}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-1">
-          <Label htmlFor="file">Fayl</Label>
+          <Label htmlFor="file">{t("fayl")}</Label>
                   <Input
                     id="file"
                     type="file"
@@ -98,7 +100,7 @@ export function FilesTable({
                     id="description"
                     value={fileDescription}
                     onChange={(e) => setFileDescription(e.target.value)}
-                    placeholder="Fayl haqida qisqacha ma'lumot..."
+                    placeholder={t("faylHaqidaQisqachaMalumot")}
                     data-testid="input-description"
                   />
                 </div>
@@ -109,7 +111,7 @@ export function FilesTable({
                   onClick={() => setIsUploadOpen(false)}
                   data-testid="button-cancel-upload"
                 >
-                  Bekor qilish
+                  {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleFileUpload}
@@ -126,18 +128,18 @@ export function FilesTable({
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">Yuklanmoqda...</div>
+            <div className="text-muted-foreground">{t("Yuklanmoqda...")}</div>
           </div>
         ) : files.length > 0 ? (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Fayl nomi</TableHead>
-                <TableHead>Turi</TableHead>
-                <TableHead>O'lchami</TableHead>
-                <TableHead>Tavsif</TableHead>
-                <TableHead>Yuklangan sana</TableHead>
-                <TableHead className="text-right">Amallar</TableHead>
+                <TableHead>{t("faylNomi")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("olchami")}</TableHead>
+                <TableHead>{t("progress.description")}</TableHead>
+                <TableHead>{t("yuklanganSana")}</TableHead>
+                <TableHead className="text-right">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -184,10 +186,10 @@ export function FilesTable({
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
             <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">Hozircha fayllar mavjud emas</p>
+            <p className="text-muted-foreground mb-4">{t("hozirchaFayllarMavjudEmas")}</p>
             <Button onClick={() => setIsUploadOpen(true)} data-testid="button-upload-first-file">
               <Upload className="w-4 h-4 mr-2" />
-              Birinchi faylni yuklash
+              {t("birinchiFaylniYuklash")}
             </Button>
           </div>
         )}
@@ -196,8 +198,8 @@ export function FilesTable({
     <ConfirmDialog
       open={confirmDeleteFileId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteFileId(null); }}
-      title="Faylni o'chirish"
-      description="Haqiqatan ham bu faylni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("faylniOchirish")}
+      description={t("haqiqatanHamBuFaylniOchirishni")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

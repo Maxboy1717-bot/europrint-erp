@@ -65,7 +65,7 @@ export default function SDDashboard() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">CRM / Savdo Dashbordi</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Savdo menejerining kunlik ko'rinishi</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("savdoMenejeriningKunlikKorinishi")}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {!aiLoad && aiAnalysis?.analysis && (
@@ -104,9 +104,9 @@ export default function SDDashboard() {
 
       {/* Tezkor harakatlar */}
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" asChild><Link href="/crm-workspace">CRM Workspace</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/sd/sales-management">Buyurtmalar</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/sd/dashboard/quota">Kvota</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/crm-workspace">{t("crmWorkspace")}</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/sd/sales-management">{t("buyurtmalar")}</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/sd/dashboard/quota">{t("kvota")}</Link></Button>
         <Button variant="outline" size="sm" asChild><Link href="/sd/dashboard/overview">{t('overview')}</Link></Button>
       </div>
     </div>

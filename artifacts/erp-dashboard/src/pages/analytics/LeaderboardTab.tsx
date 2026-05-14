@@ -12,6 +12,7 @@ import type { LeaderboardEmployee, DepartmentRanking, TopCourse } from "./analyt
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeaderboardTabProps {
   topEmployees: LeaderboardEmployee[];
@@ -27,9 +28,10 @@ export function LeaderboardTab({
   departmentRankings,
   topCourses,
 }: LeaderboardTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(Array.isArray(topEmployees) ? topEmployees : []).slice(0, 3).map((employee, index) => (
@@ -65,7 +67,7 @@ export function LeaderboardTab({
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Umumiy ball:</span>
+                  <span className="text-sm text-muted-foreground">{t("umumiyBall1")}</span>
                   <span className="text-2xl font-bold text-primary">{Math.round(employee.overallScore)}</span>
                 </div>
                 <Progress value={Math.min((employee.overallScore / 1000) * 100, 100)} className="h-3" />
@@ -89,17 +91,17 @@ export function LeaderboardTab({
                 </div>
                 {index === 0 && (
                   <Badge className="w-full justify-center bg-yellow-500">
-                    🏆 Yilning Eng Yaxshi O'quvchisi
+                    {t("yilningEngYaxshiOquvchisi")}
                   </Badge>
                 )}
                 {index === 1 && (
                   <EPStatusPill tone="neutral" className="w-full justify-center">
-                    🥈 Ikkinchi O'rin
+                    {t("ikkinchiOrin")}
                   </EPStatusPill>
                 )}
                 {index === 2 && (
                   <EPStatusPill tone="neutral" className="w-full justify-center">
-                    🥉 Uchinchi O'rin
+                    {t("uchinchiOrin")}
                   </EPStatusPill>
                 )}
               </div>
@@ -110,8 +112,8 @@ export function LeaderboardTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🏆 TOP 10 Xodimlar Reytingi</CardTitle>
-          <CardDescription>Eng yaxshi natijalar ko'rsatgan xodimlar</CardDescription>
+          <CardTitle>{t("top10XodimlarReytingi")}</CardTitle>
+          <CardDescription>{t("engYaxshiNatijalarKorsatganXodimlar")}</CardDescription>
         </CardHeader>
         <CardContent>
           {topEmployees.length > 0 ? (
@@ -147,7 +149,7 @@ export function LeaderboardTab({
             </div>
           ) : (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
-              Ma'lumot topilmadi
+              {t("noData")}
             </div>
           )}
         </CardContent>
@@ -155,15 +157,15 @@ export function LeaderboardTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🎖️ Yutuqlar va Mukofotlar</CardTitle>
-          <CardDescription>Turli kategoriyalarda eng yaxshi natijalar</CardDescription>
+          <CardTitle>{t("yutuqlarVaMukofotlar")}</CardTitle>
+          <CardDescription>{t("turliKategoriyalardaEngYaxshiNatijalar")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 rounded-lg border bg-blue-500 dark:from-blue-950 dark:to-blue-900">
               <div className="flex items-center gap-2 mb-2">
                 <Brain className="w-5 h-5 text-[var(--ep-blue)] dark:text-blue-400" />
-                <span className="font-semibold text-sm">Eng Ko'p O'rganuvchi</span>
+                <span className="font-semibold text-sm">{t("engKopOrganuvchi")}</span>
               </div>
               <div className="text-lg font-bold text-[var(--ep-blue)] dark:text-blue-300">
                 {topEmployees[0]?.fullName?.split(' ')[0] || '-'}
@@ -176,7 +178,7 @@ export function LeaderboardTab({
             <div className="p-4 rounded-lg border bg-green-500 dark:from-green-950 dark:to-green-900">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="w-5 h-5 text-[var(--ep-green)] dark:text-green-400" />
-                <span className="font-semibold text-sm">Eng Yuqori Ball</span>
+                <span className="font-semibold text-sm">{t("engYuqoriBall")}</span>
               </div>
               <div className="text-lg font-bold text-[var(--ep-green)] dark:text-green-300">
                 {topEmployees[0]?.fullName?.split(' ')[0] || '-'}
@@ -189,26 +191,26 @@ export function LeaderboardTab({
             <div className="p-4 rounded-lg border bg-purple-500 dark:from-purple-950 dark:to-purple-900">
               <div className="flex items-center gap-2 mb-2">
                 <Flame className="w-5 h-5 text-[var(--ep-purple)] dark:text-purple-400" />
-                <span className="font-semibold text-sm">Eng Tezkor</span>
+                <span className="font-semibold text-sm">{t("engTezkor")}</span>
               </div>
               <div className="text-lg font-bold text-[var(--ep-purple)] dark:text-purple-300">
                 {topEmployees[1]?.fullName?.split(' ')[0] || '-'}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Minimal vaqtda tugatgan
+                {t("minimalVaqtdaTugatgan")}
               </div>
             </div>
 
             <div className="p-4 rounded-lg border bg-primary dark:from-orange-950 dark:to-orange-900">
               <div className="flex items-center gap-2 mb-2">
                 <Star className="w-5 h-5 text-[var(--ep-primary)] dark:text-orange-400" />
-                <span className="font-semibold text-sm">Ustoz</span>
+                <span className="font-semibold text-sm">{t("ustoz")}</span>
               </div>
               <div className="text-lg font-bold text-[var(--ep-primary)] dark:text-orange-300">
                 {topEmployees[2]?.fullName?.split(' ')[0] || '-'}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Ko'p yordam bergan
+                {t("kopYordamBergan")}
               </div>
             </div>
           </div>
@@ -218,8 +220,8 @@ export function LeaderboardTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>🏢 Bo'limlar Reytingi</CardTitle>
-            <CardDescription>Eng samarali bo'limlar</CardDescription>
+            <CardTitle>{t("bolimlarReytingi")}</CardTitle>
+            <CardDescription>{t("engSamaraliBolimlar")}</CardDescription>
           </CardHeader>
           <CardContent>
             {departmentRankings.length > 0 ? (
@@ -248,7 +250,7 @@ export function LeaderboardTab({
               </div>
             ) : (
               <div className="text-center py-8 text-[13px] text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -256,8 +258,8 @@ export function LeaderboardTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>Bo'limlar Taqqoslash</CardTitle>
-            <CardDescription>Tugatish foizi va o'rtacha ball</CardDescription>
+            <CardTitle>{t("bolimlarTaqqoslash")}</CardTitle>
+            <CardDescription>{t("tugatishFoiziVaOrtachaBall")}</CardDescription>
           </CardHeader>
           <CardContent>
             {departmentRankings.length > 0 ? (
@@ -276,7 +278,7 @@ export function LeaderboardTab({
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -285,8 +287,8 @@ export function LeaderboardTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>📚 Eng Samarali Kurslar</CardTitle>
-          <CardDescription>Yuqori tugatish va o'tish foiziga ega kurslar</CardDescription>
+          <CardTitle>{t("engSamaraliKurslar")}</CardTitle>
+          <CardDescription>{t("yuqoriTugatishVaOtishFoiziga")}</CardDescription>
         </CardHeader>
         <CardContent>
           {topCourses.length > 0 ? (
@@ -308,15 +310,15 @@ export function LeaderboardTab({
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Tugatish</div>
+                      <div className="text-xs text-muted-foreground">{t("tugatish")}</div>
                       <div className="font-semibold text-[var(--ep-green)]">{course.completionRate}%</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">O'tish</div>
+                      <div className="text-xs text-muted-foreground">{t("otish")}</div>
                       <div className="font-semibold text-[var(--ep-blue)]">{course.passRate}%</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Samaradorlik</div>
+                      <div className="text-xs text-muted-foreground">{t("samaradorlik")}</div>
                       <Badge variant={course.effectivenessScore >= 80 ? "default" : "secondary"}>
                         {course.effectivenessScore}
                       </Badge>
@@ -327,7 +329,7 @@ export function LeaderboardTab({
             </div>
           ) : (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
-              Ma'lumot topilmadi
+              {t("noData")}
             </div>
           )}
         </CardContent>

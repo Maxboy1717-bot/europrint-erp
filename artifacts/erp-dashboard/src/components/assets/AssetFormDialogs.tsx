@@ -238,7 +238,7 @@ export function AssetFormDialogs({
               <Input type="date" value={completeMaintenanceForm.nextMaintenanceDate} onChange={(e) => setCompleteMaintenanceForm(f => ({ ...f, nextMaintenanceDate: e.target.value }))} data-testid="input-next-maintenance-date" />
             </div>
             <div className="space-y-1">
-              <Label>Izohlar</Label>
+              <Label>{t("notes")}</Label>
               <Textarea value={completeMaintenanceForm.notes} onChange={(e) => setCompleteMaintenanceForm(f => ({ ...f, notes: e.target.value }))} placeholder={t("completeMaintNotesPlaceholder")} rows={2} data-testid="input-complete-notes" />
             </div>
           </div>

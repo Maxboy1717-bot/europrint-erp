@@ -25,6 +25,7 @@ import {
   formatUZS,
 } from "./POSInventoryPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Movements Tab ────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ interface MovementsTabProps {
 }
 
 export function MovementsTab({ movements, isLoading, movementFilter, onFilterChange }: MovementsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="movements" className="m-0 p-4 space-y-3">
       <div className="flex gap-2 flex-wrap">
@@ -55,25 +57,25 @@ export function MovementsTab({ movements, isLoading, movementFilter, onFilterCha
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center h-40 text-gray-400">
-              <RefreshCw className="h-6 w-6 animate-spin mr-2" />Yuklanmoqda...
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />{t("Yuklanmoqda...")}
             </div>
           ) : movements.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-gray-400">
               <List className="h-10 w-10 mb-2" />
-              <p>Harakatlar yo'q</p>
+              <p>{t("harakatlarYoq")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mahsulot</TableHead>
-                  <TableHead>Tur</TableHead>
-                  <TableHead className="text-right">Miqdor</TableHead>
-                  <TableHead className="text-right">Oldin</TableHead>
-                  <TableHead className="text-right">Keyin</TableHead>
-                  <TableHead>Sabab</TableHead>
-                  <TableHead>Kim</TableHead>
-                  <TableHead>Sana</TableHead>
+                  <TableHead>{t("Mahsulot")}</TableHead>
+                  <TableHead>{t("tur")}</TableHead>
+                  <TableHead className="text-right">{t("quantity")}</TableHead>
+                  <TableHead className="text-right">{t("oldin")}</TableHead>
+                  <TableHead className="text-right">{t("keyin")}</TableHead>
+                  <TableHead>{t("sabab")}</TableHead>
+                  <TableHead>{t("kim1")}</TableHead>
+                  <TableHead>{t("date")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -135,7 +137,7 @@ export function ProductsTab({
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
-          placeholder="Mahsulot qidirish..."
+          placeholder={t("mahsulotQidirish")}
           value={productSearch}
           onChange={e => onSearchChange(e.target.value)}
           className="pl-10"
@@ -146,19 +148,19 @@ export function ProductsTab({
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center h-40 text-gray-400">
-              <RefreshCw className="h-6 w-6 animate-spin mr-2" />Yuklanmoqda...
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />{t("Yuklanmoqda...")}
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mahsulot</TableHead>
-                  <TableHead>Barcode</TableHead>
-                  <TableHead>Kategoriya</TableHead>
-                  <TableHead className="text-right">Narx</TableHead>
-                  <TableHead className="text-right">Qoldiq</TableHead>
-                  <TableHead className="text-right">Min</TableHead>
-                  <TableHead>Holat</TableHead>
+                  <TableHead>{t("Mahsulot")}</TableHead>
+                  <TableHead>{t("barcode2")}</TableHead>
+                  <TableHead>{t("category")}</TableHead>
+                  <TableHead className="text-right">{t("price")}</TableHead>
+                  <TableHead className="text-right">{t("qoldiq")}</TableHead>
+                  <TableHead className="text-right">{t("min1")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
@@ -179,9 +181,9 @@ export function ProductsTab({
                       <TableCell className="text-right text-gray-400">{minStock}</TableCell>
                       <TableCell>
                         {!product.isActive ? (
-                          <EPStatusPill tone="neutral">Nofaol</EPStatusPill>
+                          <EPStatusPill tone="neutral">{t("inactive")}</EPStatusPill>
                         ) : isLow ? (
-                          <EPStatusPill tone="danger">Kam</EPStatusPill>
+                          <EPStatusPill tone="danger">{t("kam")}</EPStatusPill>
                         ) : (
                           <Badge variant="outline" className="text-[var(--ep-green)]">OK</Badge>
                         )}
@@ -220,7 +222,7 @@ export function LowStockTab({ lowStock, onAdjustProduct }: LowStockTabProps) {
       {lowStock.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-60 text-gray-400">
           <Package className="h-12 w-12 mb-3 text-green-400" />
-          <p className="text-lg font-medium text-[var(--ep-green)]">Barcha mahsulotlar yetarli!</p>
+          <p className="text-lg font-medium text-[var(--ep-green)]">{t("barchaMahsulotlarYetarli")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -242,11 +244,11 @@ export function LowStockTab({ lowStock, onAdjustProduct }: LowStockTabProps) {
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Mavjud:</span>
+                        <span className="text-gray-500">{t("mavjud1")}</span>
                         <span className="font-bold text-[var(--ep-red)]">{stock} {product.unit}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Minimal:</span>
+                        <span className="text-gray-500">{t("minimal")}</span>
                         <span>{minStock} {product.unit}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -263,7 +265,7 @@ export function LowStockTab({ lowStock, onAdjustProduct }: LowStockTabProps) {
                       onClick={() => onAdjustProduct(product, "in")}
                     >
                       <ArrowUpCircle className="h-4 w-4 mr-1" />
-                      Kirim qo'shish
+                      {t("kirimQoshish")}
                     </Button>
                   </CardContent>
                 </Card>

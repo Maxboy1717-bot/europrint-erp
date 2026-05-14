@@ -34,7 +34,7 @@ export function StatsCards({auditStats }: StatsCardsProps) {
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <Database className="h-5 w-5 text-[var(--ep-blue)]" />
-            <span className="font-medium">Jami Loglar</span>
+            <span className="font-medium">{t("jamiLoglar")}</span>
           </div>
           <p className="text-2xl font-bold text-[var(--ep-blue)]">{auditStats?.totalLogs || 0}</p>
         </CardContent>
@@ -65,7 +65,7 @@ export function StatsCards({auditStats }: StatsCardsProps) {
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <Trash2 className="h-5 w-5 text-[var(--ep-red)]" />
-            <span className="font-medium">O'CHIRILDI</span>
+            <span className="font-medium">{t("ochirildi")}</span>
           </div>
           <p className="text-2xl font-bold text-[var(--ep-red)]">
             {auditStats?.actionStats?.find(s => s.actionType === "DELETE")?.count || 0}
@@ -91,7 +91,7 @@ export function TimelineTab({ auditLogs, isLoading, onRefresh, onSelectLog }: Ti
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold flex items-center gap-2">
           <Activity className="h-5 w-5" />
-          So'nggi o'zgarishlar
+          {t("songgiOzgarishlar")}
         </h3>
         <Button
           variant="outline"
@@ -101,18 +101,18 @@ export function TimelineTab({ auditLogs, isLoading, onRefresh, onSelectLog }: Ti
           data-testid="button-refresh-audit"
         >
           <RefreshCw className="h-4 w-4" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
       <div className="space-y-2 max-h-[400px] overflow-y-auto">
         {isLoading ? (
-          <div className="p-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+          <div className="p-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
         ) : auditLogs.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Hozircha audit yozuvlar yo'q</p>
-            <p className="text-sm mt-2">Tizimda biror o'zgarish qilganingizda bu yerda ko'rinadi</p>
+            <p>{t("hozirchaAuditYozuvlarYoq")}</p>
+            <p className="text-sm mt-2">{t("tizimdaBirorOzgarishQilganingizdaBu")}</p>
           </div>
         ) : (
           (Array.isArray(auditLogs) ? auditLogs : []).map((log: AuditLog) => (
@@ -164,33 +164,33 @@ export function SearchTab({ filters, actionTypes, sourceTypes, onFiltersChange }
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div>
-          <label className="text-sm font-medium mb-1 block">Action turi</label>
+          <label className="text-sm font-medium mb-1 block">{t("actionTuri")}</label>
           <select
             className="w-full p-2 border rounded-md bg-background"
             value={filters.actionType}
             onChange={(e) => onFiltersChange({ ...filters, actionType: e.target.value })}
           >
-            <option value="">Barchasi</option>
+            <option value="">{t("Barchasi")}</option>
             {(Array.isArray(actionTypes) ? actionTypes : []).map((type) => (
               <option key={type.value} value={type.value}>{type.label}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">Source</label>
+          <label className="text-sm font-medium mb-1 block">{t("source1")}</label>
           <select
             className="w-full p-2 border rounded-md bg-background"
             value={filters.source}
             onChange={(e) => onFiltersChange({ ...filters, source: e.target.value })}
           >
-            <option value="">Barchasi</option>
+            <option value="">{t("Barchasi")}</option>
             {(Array.isArray(sourceTypes) ? sourceTypes : []).map((type) => (
               <option key={type.value} value={type.value}>{type.label}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">Entity turi</label>
+          <label className="text-sm font-medium mb-1 block">{t("entityTuri")}</label>
           <input
             type="text"
             className="w-full p-2 border rounded-md bg-background"
@@ -200,7 +200,7 @@ export function SearchTab({ filters, actionTypes, sourceTypes, onFiltersChange }
           />
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">Hujjat raqami</label>
+          <label className="text-sm font-medium mb-1 block">{t("hujjatRaqami")}</label>
           <input
             type="text"
             className="w-full p-2 border rounded-md bg-background"
@@ -215,7 +215,7 @@ export function SearchTab({ filters, actionTypes, sourceTypes, onFiltersChange }
         variant="outline"
         size="sm"
       >
-        Filtrlarni tozalash
+        {t("filtrlarniTozalash")}
       </Button>
     </div>
   );
@@ -235,10 +235,10 @@ export function DocumentTraceTab({ docSearchQuery, onQueryChange, onSearch }: Do
       <div className="p-6 bg-muted rounded-lg">
         <h3 className="font-bold mb-4 flex items-center gap-2">
           <FileSearch className="h-4 w-4" />
-          Hujjat Trace
+          {t("hujjatTrace")}
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Hujjat raqamini kiriting va unga bog'liq barcha o'zgarishlarni ko'ring
+          {t("hujjatRaqaminiKiritingVaUnga")}
         </p>
         <div className="flex gap-2">
           <input
@@ -250,14 +250,14 @@ export function DocumentTraceTab({ docSearchQuery, onQueryChange, onSearch }: Do
           />
           <Button className="gap-2" onClick={onSearch} data-testid="button-doc-search">
             <Search className="h-4 w-4" />
-            Qidirish
+            {t("search")}
           </Button>
         </div>
         <div className="mt-4 p-4 bg-background rounded-lg border">
           <p className="text-sm text-muted-foreground text-center">
-            Hujjat raqamini kiritib qidiring. Natijada hujjat zanjiri ko'rsatiladi:
+            {t("hujjatRaqaminiKiritibQidiringNatijada")}
             <br />
-            <span className="text-[var(--ep-green)]">Order → Invoice → Payment → ...</span>
+            <span className="text-[var(--ep-green)]">{t("orderInvoicePayment")}</span>
           </p>
         </div>
       </div>

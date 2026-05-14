@@ -41,19 +41,19 @@ export function GoalsSummaryCards({goals, activeCount, completedCount }: Summary
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="bg-card rounded-lg p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jami Maqsadlar</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiMaqsadlar1")}</p>
         <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{goals.length}</p>
       </div>
       <div className="bg-card rounded-lg p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Faol</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("active")}</p>
         <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{activeCount}</p>
       </div>
       <div className="bg-card rounded-lg p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Bajarilgan</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("bajarilgan")}</p>
         <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{completedCount}</p>
       </div>
       <div className="bg-card rounded-lg p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">O'rtacha Progress</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("ortachaProgress")}</p>
         <p className="text-4xl font-bold tracking-tight text-foreground mt-1">{avgProgress}%</p>
       </div>
     </div>
@@ -87,18 +87,18 @@ export function GoalCard({ goal, onEdit, onDelete, isDeletePending }: GoalCardPr
               <Button
                 size="icon"
                 variant="ghost"
-                aria-label="Tahrirlash"
+                aria-label={t("edit")}
                 onClick={() => onEdit(goal)}
                 data-testid={`button-edit-goal-${goal.id}`}
               >
                 <Edit className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Tahrirlash</TooltipContent>
+            <TooltipContent>{t("edit")}</TooltipContent>
           </Tooltip>
           <DeleteConfirmDialog
-            title="Maqsadni o'chirishni tasdiqlaysizmi?"
-            description="Maqsad va unga bog'liq barcha ma'lumotlar o'chiriladi."
+            title={t("maqsadniOchirishniTasdiqlaysizmi")}
+            description={t("maqsadVaUngaBogliqBarcha")}
             onConfirm={() => onDelete(goal.id)}
             isPending={isDeletePending}
           />
@@ -140,11 +140,11 @@ export function GoalCard({ goal, onEdit, onDelete, isDeletePending }: GoalCardPr
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           <div>
-            <span className="text-muted-foreground">Metrika:</span>
+            <span className="text-muted-foreground">{t("metrika1")}</span>
             <p className="font-medium text-foreground">{goal.metric}</p>
           </div>
           <div>
-            <span className="text-muted-foreground">Muddat:</span>
+            <span className="text-muted-foreground">{t("muddat1")}</span>
             <p className="font-medium text-foreground">{goal.startDate} - {goal.endDate}</p>
           </div>
         </div>
@@ -167,9 +167,9 @@ export function GoalsList({ goals, isLoading, onEdit, onDelete, isDeletePending 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {isLoading ? (
-        <p className="text-muted-foreground col-span-2">Yuklanmoqda...</p>
+        <p className="text-muted-foreground col-span-2">{t("Yuklanmoqda...")}</p>
       ) : goals.length === 0 ? (
-        <p className="text-muted-foreground col-span-2">Hozircha maqsadlar yo'q</p>
+        <p className="text-muted-foreground col-span-2">{t("hozirchaMaqsadlarYoq")}</p>
       ) : (
         (Array.isArray(goals) ? goals : []).map(goal => (
           <GoalCard

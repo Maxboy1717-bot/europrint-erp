@@ -21,6 +21,7 @@ import { BatchesTabContent } from "./BarcodeSystemSections";
 import type { BatchFormState } from "./BarcodeSystemTypes";
 import { DEFAULT_BATCH_FORM } from "./BarcodeSystemTypes";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const escHtml = (v: unknown): string =>
   String(v ?? '')
@@ -28,6 +29,7 @@ const escHtml = (v: unknown): string =>
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 export default function BarcodeSystem() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [lang, setLang] = useState<"uz" | "ru">("uz");
   const t = translations[lang];
@@ -151,8 +153,8 @@ export default function BarcodeSystem() {
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Shtrix Kod Tizimi</b></>}
-        title="Shtrix Kod Tizimi"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("shtrixKodTizimi")}</b></>}
+        title={t("shtrixKodTizimi")}
       />
           <p className="text-muted-foreground mt-1">{t.subtitle}</p>
         </div>

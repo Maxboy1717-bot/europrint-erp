@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Clock, Users, FileText } from "lucide-react";
 import type { DailyReport, DailyReportStats, ReportFormState } from "./DailyReportPageTypes";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 // ── StatsBar ──────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface StatsBarProps {
 }
 
 export function StatsBar({ stats }: StatsBarProps) {
+  const { t } = useTranslation("common");
   const items = [
     { label: "Bugun topshirildi", value: stats?.stats?.submitted_count || 0, icon: CheckCircle, color: "text-green-400", bg: "bg-green-900/20" },
     { label: "Sababsiz yo'qlik", value: stats?.stats?.auto_absent_count || 0, icon: XCircle, color: "text-red-400", bg: "bg-red-900/20" },
@@ -72,7 +74,7 @@ export function SubmitForm({
       <Card className="bg-green-900/20 border-green-700/50 max-w-3xl">
         <CardContent className="p-6 text-center">
           <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-          <h3 className="text-xl font-bold text-green-400">Bugungi hisobot topshirildi!</h3>
+          <h3 className="text-xl font-bold text-green-400">{t("bugungiHisobotTopshirildi")}</h3>
           <p className="text-muted-foreground mt-2">
             Yuborildi: {todayReport.submitted_at
               ? new Date(todayReport.submitted_at).toLocaleTimeString()
@@ -80,18 +82,18 @@ export function SubmitForm({
           </p>
           <div className="mt-4 text-left bg-card p-4 rounded-lg space-y-3">
             <div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Bajarilgan ishlar</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">{t("bajarilganIshlar")}</div>
               <div className="text-foreground mt-1 text-sm">{todayReport.tasks_completed}</div>
             </div>
             {todayReport.metrics && (
               <div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Ko'rsatkichlar</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">{t("korsatkichlar")}</div>
                 <div className="text-foreground mt-1 text-sm">{todayReport.metrics}</div>
               </div>
             )}
             {todayReport.tomorrow_plan && (
               <div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Ertangi reja</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">{t("ertangiReja")}</div>
                 <div className="text-foreground mt-1 text-sm">{todayReport.tomorrow_plan}</div>
               </div>
             )}
@@ -105,9 +107,9 @@ export function SubmitForm({
     <Card className="bg-card border-border max-w-3xl">
       <CardHeader>
         <CardTitle className="text-foreground flex items-center justify-between">
-          <span>Bugungi hisobot</span>
+          <span>{t("bugungiHisobot")}</span>
           {deadlinePassed ? (
-            <EPStatusPill tone="danger">Muddati o'tdi</EPStatusPill>
+            <EPStatusPill tone="danger">{t("muddatiOtdi")}</EPStatusPill>
           ) : (
             <EPStatusPill tone="success">{20 - hour} soat qoldi</EPStatusPill>
           )}
@@ -116,12 +118,12 @@ export function SubmitForm({
       <CardContent className="space-y-4">
         <div>
           <Label className="text-muted-foreground">
-            1. Bajarilgan ishlar * <span className="text-muted-foreground">(kamida 30 belgi)</span>
+            {t("k1BajarilganIshlar")}<span className="text-muted-foreground">(kamida 30 belgi)</span>
           </Label>
           <Textarea
             value={form.tasks_completed}
             onChange={e => onChange("tasks_completed", e.target.value)}
-            placeholder="Bugun qanday vazifalar bajarildi? Nima amalga oshirildi?"
+            placeholder={t("bugunQandayVazifalarBajarildiNima")}
             className="bg-input border-border mt-1 min-h-28"
             maxLength={2000}
           />
@@ -136,18 +138,18 @@ export function SubmitForm({
           <Textarea
             value={form.metrics}
             onChange={e => onChange("metrics", e.target.value)}
-            placeholder="Masalan: 150 ta mahsulot tayyorlandi, 3 ta buyurtma yopildi..."
+            placeholder={t("masalan150TaMahsulotTayyorlandi")}
             className="bg-input border-border mt-1 min-h-16"
           />
         </div>
         <div>
           <Label className="text-muted-foreground">
-            3. Ertangi reja <span className="text-muted-foreground">(ixtiyoriy)</span>
+            {t("k3ErtangiReja")}<span className="text-muted-foreground">(ixtiyoriy)</span>
           </Label>
           <Textarea
             value={form.tomorrow_plan}
             onChange={e => onChange("tomorrow_plan", e.target.value)}
-            placeholder="Ertaga nima qilmoqchisiz?"
+            placeholder={t("ertagaNimaQilmoqchisiz")}
             className="bg-input border-border mt-1 min-h-16"
           />
         </div>
@@ -172,14 +174,14 @@ interface HistoryListProps {
 
 export function HistoryList({ reports, isLoading }: HistoryListProps) {
   if (isLoading) {
-    return <div className="text-center py-8 text-[13px] text-muted-foreground">Yuklanmoqda...</div>;
+    return <div className="text-center py-8 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
   }
 
   if (!reports || reports.length === 0) {
     return (
       <div className="text-center py-12 text-[13px] text-muted-foreground">
         <FileText className="w-12 h-12 mx-auto mb-3 opacity-40" />
-        <p>Hali hisobot yo'q. Birinchi hisobotingizni yuboring!</p>
+        <p>{t("haliHisobotYoqBirinchiHisobotingizni")}</p>
       </div>
     );
   }
@@ -200,11 +202,11 @@ export function HistoryList({ reports, isLoading }: HistoryListProps) {
                 })}
               </div>
               {r.is_auto_absent ? (
-                <EPStatusPill tone="danger">Sababsiz yo'qlik</EPStatusPill>
+                <EPStatusPill tone="danger">{t("sababsizYoqlik")}</EPStatusPill>
               ) : r.status === "submitted" ? (
-                <EPStatusPill tone="success">Topshirildi</EPStatusPill>
+                <EPStatusPill tone="success">{t("topshirildi")}</EPStatusPill>
               ) : (
-                <EPStatusPill tone="warning">Kutilmoqda</EPStatusPill>
+                <EPStatusPill tone="warning">{t("Kutilmoqda")}</EPStatusPill>
               )}
             </div>
             {r.tasks_completed && (

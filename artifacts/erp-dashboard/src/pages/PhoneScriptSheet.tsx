@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Phone, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Material №53: Telefon Skripti — 5 qadam ───────────────────────────────
 const PHONE_SCRIPT_STEPS = [
@@ -151,6 +152,7 @@ export function PhoneScriptSheet({
   candidateName?: string;
   trigger?: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"main" | "cold">("main");
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
@@ -167,7 +169,7 @@ export function PhoneScriptSheet({
             data-testid="button-phone-script"
           >
             <Phone className="w-2.5 h-2.5" />
-            Skript №53
+            {t("skript53")}
           </Button>
         )}
       </SheetTrigger>
@@ -177,10 +179,10 @@ export function PhoneScriptSheet({
           <div className="flex items-center justify-between">
             <SheetTitle className="text-white flex items-center gap-2 text-base">
               <Phone className="w-4 h-4 text-white/80" />
-              Telefon Skripti
+              {t("telefonSkripti")}
             </SheetTitle>
             <Badge className="bg-violet-500/20 text-violet-300 border border-violet-500/40 text-[10px]">
-              Material №53
+              {t("material53")}
             </Badge>
           </div>
           {candidateName && (
@@ -198,7 +200,7 @@ export function PhoneScriptSheet({
                   : "bg-white/10 text-slate-300 hover:bg-white/20"
               )}
             >
-              5-bosqich skript
+              {t("k5BosqichSkript")}
             </button>
             <button
               onClick={() => setActiveTab("cold")}
@@ -209,7 +211,7 @@ export function PhoneScriptSheet({
                   : "bg-white/10 text-slate-300 hover:bg-white/20"
               )}
             >
-              Sovuq qo'ng'iroq
+              {t("sovuqQongiroq")}
             </button>
           </div>
         </SheetHeader>
@@ -249,7 +251,7 @@ export function PhoneScriptSheet({
                         {/* Script lines */}
                         <div className="space-y-2">
                           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
-                            Skript matni:
+                            {t("skriptMatni")}
                           </p>
                           {(Array.isArray(step.script) ? step.script : []).map((line, i) => (
                             <div
@@ -270,7 +272,7 @@ export function PhoneScriptSheet({
                         {/* Tips */}
                         <div className="space-y-1">
                           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
-                            Maslahatlar:
+                            {t("maslahatlar")}
                           </p>
                           {(Array.isArray(step.tips) ? step.tips : []).map((tip, i) => (
                             <div key={`k-${i}`} className="flex items-start gap-1.5">
@@ -293,7 +295,7 @@ export function PhoneScriptSheet({
                 >
                   <span className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-[var(--ep-red)]" />
-                    Muhim qoidalar
+                    {t("muhimQoidalar")}
                   </span>
                   {rulesOpen
                     ? <ChevronUp className="w-3.5 h-3.5" />
@@ -319,7 +321,7 @@ export function PhoneScriptSheet({
           {activeTab === "cold" && (
             <div className="space-y-3">
               <div className="bg-violet-50 border border-violet-200 rounded-lg p-3">
-                <p className="text-xs text-[var(--ep-purple)] font-medium mb-1">Sovuq qo'ng'iroq nima?</p>
+                <p className="text-xs text-[var(--ep-purple)] font-medium mb-1">{t("sovuqQongiroqNima")}</p>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
                   Nomzod o'zi ariza topshirmagan, lekin uning tajribasi pozitsiyaga mos keladi.
                   LinkedIn, tavsiyalar yoki boshqa manbalardan topilgan nomzodlar bilan ishlash uchun.
@@ -343,19 +345,19 @@ export function PhoneScriptSheet({
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-[10px] font-semibold text-[var(--ep-yellow)] mb-1">Eslatma:</p>
+                <p className="text-[10px] font-semibold text-[var(--ep-yellow)] mb-1">{t("eslatma1")}</p>
                 <ul className="space-y-1">
                   <li className="text-[11px] text-slate-600 flex gap-1.5">
                     <span className="text-[var(--ep-yellow)]">•</span>
-                    Nomzod rad etsa, munosib munosabatda bo'ling
+                    {t("nomzodRadEtsaMunosibMunosabatda")}
                   </li>
                   <li className="text-[11px] text-slate-600 flex gap-1.5">
                     <span className="text-[var(--ep-yellow)]">•</span>
-                    Tavsiya so'rash — kuchli instrument
+                    {t("tavsiyaSorashKuchliInstrument")}
                   </li>
                   <li className="text-[11px] text-slate-600 flex gap-1.5">
                     <span className="text-[var(--ep-yellow)]">•</span>
-                    Telefon gaplashuv 5 daqiqadan oshmasin
+                    {t("telefonGaplashuv5DaqiqadanOshmasin")}
                   </li>
                 </ul>
               </div>

@@ -20,25 +20,32 @@ import { CheckCircle2, XCircle, Clock, ArrowRight, BarChart3, Package, History, 
 import { formatDate } from "@/lib/format";
 import { ApprovalItem, ApprovalFormValues, RejectionFormValues, WorkflowData, DashboardData, STAGES } from "./OrderApprovalWorkflowTypes";
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 // ── Status Badge ──────────────────────────────────────────────────────────────
 
-export function getStatusBadge(status: string) {
-  if (status === "pending") return <Badge variant="secondary" data-testid={`badge-status-${status}`}><Clock className="w-3 h-3 mr-1" />Kutilmoqda / Ожидание</Badge>;
-  if (status === "approved") return <Badge data-testid={`badge-status-${status}`}><CheckCircle2 className="w-3 h-3 mr-1" />Tasdiqlangan / Одобрено</Badge>;
-  if (status === "rejected") return <Badge variant="destructive" data-testid={`badge-status-${status}`}><XCircle className="w-3 h-3 mr-1" />Rad etilgan / Отклонено</Badge>;
+export function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("common");
+  if (status === "pending") return <Badge variant="secondary" data-testid={`badge-status-${status}`}><Clock className="w-3 h-3 mr-1" />{t("pending")}</Badge>;
+  if (status === "approved") return <Badge data-testid={`badge-status-${status}`}><CheckCircle2 className="w-3 h-3 mr-1" />{t("approved")}</Badge>;
+  if (status === "rejected") return <Badge variant="destructive" data-testid={`badge-status-${status}`}><XCircle className="w-3 h-3 mr-1" />{t("rejected")}</Badge>;
   return <Badge variant="outline">{status}</Badge>;
+}
+
+export function getStatusBadge(status: string) {
+  return <StatusBadge status={status} />;
 }
 
 // ── Dashboard Stat Cards ──────────────────────────────────────────────────────
 
 export function DashboardStatCards({ totals }: { totals: DashboardData["totals"] | undefined }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Kutilmoqda / Ожидание</CardTitle><Clock className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-pending">{totals?.pending || 0}</div></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Tasdiqlangan / Одобрено</CardTitle><CheckCircle2 className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-approved">{totals?.approved || 0}</div></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Rad etilgan / Отклонено</CardTitle><XCircle className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-rejected">{totals?.rejected || 0}</div></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">Bugun tasdiqlangan / Одобрено сегодня</CardTitle><BarChart3 className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-today">{totals?.approvedToday || 0}</div></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("pending")}</CardTitle><Clock className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-pending">{totals?.pending || 0}</div></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("approved")}</CardTitle><CheckCircle2 className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-approved">{totals?.approved || 0}</div></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("rejected")}</CardTitle><XCircle className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-rejected">{totals?.rejected || 0}</div></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("approvedToday")}</CardTitle><BarChart3 className="w-4 h-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold" data-testid="text-total-today">{totals?.approvedToday || 0}</div></CardContent></Card>
     </div>
   );
 }
@@ -89,7 +96,7 @@ export function StageFields({ stage, form }: { stage: string; form: UseFormRetur
   );
   if (stage === "qc") return (
     <>
-      <FormField control={form.control} name="qcTestId" render={({ field }) => (<FormItem><FormLabel>QC Test ID (ixtiyoriy / необязательно)</FormLabel><FormControl><Input placeholder="Test ID..." {...field} data-testid="input-qc-test-id" /></FormControl><FormMessage /></FormItem>)} />
+      <FormField control={form.control} name="qcTestId" render={({ field }) => (<FormItem><FormLabel>QC Test ID (ixtiyoriy / необязательно)</FormLabel><FormControl><Input placeholder={t("testId")} {...field} data-testid="input-qc-test-id" /></FormControl><FormMessage /></FormItem>)} />
       <FormField control={form.control} name="materialApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-material" /></FormControl><FormLabel>Material sifati tasdiqlandi / Качество материала утверждено</FormLabel></FormItem>)} />
     </>
   );
@@ -116,7 +123,7 @@ export function PendingApprovalsPanel({
 }) {
   return (
     <Card>
-      <CardHeader><CardTitle>Kutilayotgan tasdiqlar / Ожидающие утверждения</CardTitle><CardDescription>Tasdiqlash yoki rad etish kerak bo'lgan buyurtmalar</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Kutilayotgan tasdiqlar / Ожидающие утверждения</CardTitle><CardDescription>{t("tasdiqlashYokiRadEtishKerak")}</CardDescription></CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
@@ -140,7 +147,7 @@ export function PendingApprovalsPanel({
             </div>
           ) : (
             <div className="ep-table-scroll"><Table data-testid="table-pending-approvals">
-              <TableHeader><TableRow><TableHead>Papka №</TableHead><TableHead>Mijoz / Клиент</TableHead><TableHead>Mahsulot / Продукт</TableHead><TableHead>Tiraj / Тираж</TableHead><TableHead>Bosqich / Этап</TableHead><TableHead>Sana / Дата</TableHead><TableHead className="text-right">Harakatlar / Действия</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("papka2")}</TableHead><TableHead>Mijoz / Клиент</TableHead><TableHead>Mahsulot / Продукт</TableHead><TableHead>Tiraj / Тираж</TableHead><TableHead>Bosqich / Этап</TableHead><TableHead>Sana / Дата</TableHead><TableHead className="text-right">Harakatlar / Действия</TableHead></TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(pendingApprovals) ? pendingApprovals : []).map((item) => (
                   <TableRow key={item.id} data-testid={`row-approval-${item.id}`} className="hover:bg-muted/40 transition-colors">
@@ -152,8 +159,8 @@ export function PendingApprovalsPanel({
                     <TableCell>{formatDate(item.order.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button size="sm" onClick={() => onApprove(item)} data-testid={`button-approve-${item.id}`}><CheckCircle2 className="w-4 h-4 mr-1" />Tasdiqlash</Button>
-                        <Button size="sm" variant="outline" onClick={() => onReject(item)} data-testid={`button-reject-${item.id}`}><XCircle className="w-4 h-4 mr-1" />Rad etish</Button>
+                        <Button size="sm" onClick={() => onApprove(item)} data-testid={`button-approve-${item.id}`}><CheckCircle2 className="w-4 h-4 mr-1" />{t("verify")}</Button>
+                        <Button size="sm" variant="outline" onClick={() => onReject(item)} data-testid={`button-reject-${item.id}`}><XCircle className="w-4 h-4 mr-1" />{t("reject")}</Button>
                         <Button size="icon" variant="ghost" onClick={() => onView(item.orderId)} data-testid={`button-view-${item.id}`}><Eye className="w-4 h-4" /></Button>
                       </div>
                     </TableCell>
@@ -180,7 +187,7 @@ export function HistoryPanel({
 }) {
   return (
     <Card>
-      <CardHeader><CardTitle>Tasdiqlash tarixi / История утверждений</CardTitle><CardDescription>Barcha tasdiqlash va rad etishlar tarixi</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Tasdiqlash tarixi / История утверждений</CardTitle><CardDescription>{t("barchaTasdiqlashVaRadEtishlar")}</CardDescription></CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
@@ -213,7 +220,7 @@ export function HistoryPanel({
             </div>
           ) : (
             <div className="ep-table-scroll"><Table data-testid="table-approval-history">
-              <TableHeader><TableRow><TableHead>Papka №</TableHead><TableHead>Mijoz / Клиент</TableHead><TableHead>Bosqich / Этап</TableHead><TableHead>Holat / Статус</TableHead><TableHead>Tasdiqlagan / Утвердил</TableHead><TableHead>Sana / Дата</TableHead><TableHead>Izoh / Комментарий</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("papka2")}</TableHead><TableHead>Mijoz / Клиент</TableHead><TableHead>Bosqich / Этап</TableHead><TableHead>Holat / Статус</TableHead><TableHead>Tasdiqlagan / Утвердил</TableHead><TableHead>Sana / Дата</TableHead><TableHead>Izoh / Комментарий</TableHead></TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(historyData) ? historyData : []).map((item) => (
                   <TableRow key={item.id} data-testid={`row-history-${item.id}`} className="hover:bg-muted/40 transition-colors">
@@ -250,7 +257,7 @@ export function OrderDetailDialog({ selectedOrderId, workflowData, workflowLoadi
         ) : workflowData ? (
           <div className="space-y-6" data-testid="order-details-panel">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div><span className="text-muted-foreground">Papka №:</span><span className="ml-2 font-medium" data-testid="text-detail-papka">{workflowData.order.papkaNo}</span></div>
+              <div><span className="text-muted-foreground">{t("papka")}</span><span className="ml-2 font-medium" data-testid="text-detail-papka">{workflowData.order.papkaNo}</span></div>
               <div><span className="text-muted-foreground">Mijoz / Клиент:</span><span className="ml-2 font-medium">{workflowData.order.mijozNomi}</span></div>
               <div><span className="text-muted-foreground">Mahsulot / Продукт:</span><span className="ml-2 font-medium">{workflowData.order.mahsulotNomi}</span></div>
               <div><span className="text-muted-foreground">Tiraj / Тираж:</span><span className="ml-2 font-medium">{workflowData.order.tiraj?.toLocaleString()}</span></div>

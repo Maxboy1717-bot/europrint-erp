@@ -28,6 +28,7 @@ import { LeadHeader } from "./LeadHeader";
 import { LeadInfo } from "./LeadInfo";
 import { LeadActions } from "./LeadActions";
 import { LeadActivities } from "./LeadActivities";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeadDetailSheetProps {
   leadId: number | null;
@@ -36,6 +37,7 @@ interface LeadDetailSheetProps {
 }
 
 export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps) {
+  const { t } = useTranslation("common");
   const [isEditing, setIsEditing] = useState(false);
   const [showConvertDialog, setShowConvertDialog] = useState(false);
   const [convertOptions, setConvertOptions] = useState({
@@ -154,7 +156,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
           />
 
           {isLoading ? (
-            <div className="py-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+            <div className="py-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 pt-4">
               <div className="space-y-6">
@@ -172,7 +174,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                     <CardTitle className="text-base flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Lead ma'lumotlari
+                        {t("leadMalumotlari")}
                       </div>
                       {!isEditing && (
                         <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)} data-testid="button-edit-lead">
@@ -206,7 +208,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-[var(--ep-green)]" />
-              Lidni konvertatsiya qilish
+              {t("lidniKonvertatsiyaQilish")}
             </DialogTitle>
             <DialogDescription>
               "{lead?.title}" lidini Deal, Kontakt va/yoki Kompaniyaga o'tkazing
@@ -215,14 +217,14 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
           <div className="space-y-4 py-2">
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">Nima yaratilsin?</Label>
+              <Label className="text-sm font-semibold">{t("nimaYaratilsin")}</Label>
 
               <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
                 onClick={() => setConvertOptions(o => ({ ...o, createDeal: !o.createDeal }))}>
                 <Checkbox checked={convertOptions.createDeal} data-testid="checkbox-create-deal" />
                 <div>
                   <p className="font-medium text-sm">Deal (Kelishuv)</p>
-                  <p className="text-xs text-muted-foreground">CRM pipeline ga yangi deal yaratish</p>
+                  <p className="text-xs text-muted-foreground">{t("crmPipelineGaYangiDeal")}</p>
                 </div>
               </div>
 
@@ -230,7 +232,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                 onClick={() => setConvertOptions(o => ({ ...o, createContact: !o.createContact }))}>
                 <Checkbox checked={convertOptions.createContact} data-testid="checkbox-create-contact" />
                 <div>
-                  <p className="font-medium text-sm">Kontakt</p>
+                  <p className="font-medium text-sm">{t("kontakt")}</p>
                   <p className="text-xs text-muted-foreground">
                     {([lead?.name, lead?.lastName]).filter(Boolean).join(" ") || "Ismli kontakt"} yaratish
                   </p>
@@ -242,7 +244,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                   onClick={() => setConvertOptions(o => ({ ...o, createCompany: !o.createCompany }))}>
                   <Checkbox checked={convertOptions.createCompany} data-testid="checkbox-create-company" />
                   <div>
-                    <p className="font-medium text-sm">Kompaniya</p>
+                    <p className="font-medium text-sm">{t("company")}</p>
                     <p className="text-xs text-muted-foreground">"{lead.companyTitle}" kompaniyasi yaratish</p>
                   </div>
                 </div>
@@ -259,7 +261,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                 {convertLeadMutation.isPending ? "Bajarilmoqda..." : "Konvertatsiya qilish"}
               </Button>
               <Button variant="outline" onClick={() => setShowConvertDialog(false)}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
             </div>
           </div>

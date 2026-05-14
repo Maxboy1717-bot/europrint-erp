@@ -25,8 +25,10 @@ import {
   IntegrationsTab,
 } from "./CRMSettingsPlaceholders";
 import { FieldDialog } from "./CRMSettingsDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export default function CRMSettings() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   // Navigation state
   const [activeMenu, setActiveMenu] = useState("custom-fields");
@@ -219,7 +221,7 @@ export default function CRMSettings() {
           className="text-lg font-bold mb-4 text-foreground"
           data-testid="text-settings-title"
         >
-          CRM <span className="text-primary">Sozlamalari</span>
+          CRM <span className="text-primary">{t("sozlamalari")}</span>
         </h1>
         {MENU_ITEMS.map((item) => (
           <button
@@ -267,8 +269,8 @@ export default function CRMSettings() {
         onOpenChange={(open) => {
           if (!open) setConfirmDeleteFieldId(null);
         }}
-        title="Maydonni o'chirish"
-        description="Ushbu CRM maydonini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("maydonniOchirish")}
+        description={t("ushbuCrmMaydoniniOchirishniTasdiqlaysizmi")}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="destructive"

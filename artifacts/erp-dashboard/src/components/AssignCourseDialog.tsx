@@ -17,6 +17,7 @@ import { Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface AssignCourseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -25,6 +26,7 @@ interface AssignCourseDialogProps {
 }
 
 export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }: AssignCourseDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -135,7 +137,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Kursni tayinlash</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("kursniTayinlash")}</DialogTitle>
           <DialogDescription>
             "{courseTitle}" kursini xodimlarga tayinlang
           </DialogDescription>
@@ -144,7 +146,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="startDate">📅 Boshlanish sanasi</Label>
+          <Label htmlFor="startDate">{t("boshlanishSanasi")}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -154,7 +156,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="endDate">⏰ Tugash sanasi</Label>
+          <Label htmlFor="endDate">{t("tugashSanasi")}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -166,13 +168,13 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="deptFilter">Tashkiliy tuzilma bo'yicha filter</Label>
+          <Label htmlFor="deptFilter">{t("tashkiliyTuzilmaBoyichaFilter")}</Label>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger data-testid="select-org-structure-filter" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha tashkiliy tuzilma</SelectItem>
+                <SelectItem value="all">{t("barchaTashkiliyTuzilma")}</SelectItem>
                 {(Array.isArray(orgDepartments) ? orgDepartments : []).map(dept => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
@@ -200,7 +202,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
             {filteredUsers.length === 0 ? (
               <div className="text-center py-8 text-[13px] text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Xodimlar topilmadi</p>
+                <p>{t("xodimlarTopilmadi")}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -244,7 +246,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
               onClick={() => onOpenChange(false)}
               disabled={assignMutation.isPending}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={assignMutation.isPending} data-testid="button-submit-assign">
               {assignMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}

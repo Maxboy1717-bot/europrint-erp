@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Package, Search, CheckCircle, XCircle, Plus, ToggleLeft, ToggleRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ecommerceApi } from "@/lib/api/misc";
+import { useTranslation } from '@/lib/i18n';
 
 interface Product {
   id: string;
@@ -42,6 +43,7 @@ const UNITS = ["dona", "kg", "litr", "m", "m²", "m³", "quti", "rulon", "varaq"
 const CATEGORIES = ["gofreli", "quti", "rulon", "etiket", "lenta", "xaltacha", "other"];
 
 export default function MESProducts() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -93,8 +95,8 @@ export default function MESProducts() {
     <div className="flex flex-col flex-1 overflow-auto p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Mahsulotlar</h1>
-          <p className="text-sm text-muted-foreground">Ishlab chiqariladigan mahsulotlar katalogi</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("mahsulotlar")}</h1>
+          <p className="text-sm text-muted-foreground">{t("ishlabChiqariladiganMahsulotlarKatalogi")}</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <Badge variant="outline" className="gap-1.5">
@@ -104,7 +106,7 @@ export default function MESProducts() {
             <Package className="w-3 h-3 text-muted-foreground" /> {products.length} jami
           </Badge>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Mahsulot qo'shish
+            <Plus className="h-4 w-4 mr-1" /> {t("mahsulotQoshish")}
           </Button>
         </div>
       </div>
@@ -112,7 +114,7 @@ export default function MESProducts() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Nom, kod yoki kategoriya..."
+          placeholder={t("nomKodYokiKategoriya")}
           className="pl-9"
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -129,7 +131,7 @@ export default function MESProducts() {
           <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p>{search ? "Qidiruv bo'yicha topilmadi" : "Mahsulot topilmadi"}</p>
           <Button className="mt-4" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Mahsulot qo'shish
+            <Plus className="h-4 w-4 mr-2" /> {t("mahsulotQoshish")}
           </Button>
         </div>
       ) : (
@@ -149,7 +151,7 @@ export default function MESProducts() {
                     )}
                     {!p.isActive && (
                       <Badge variant="outline" className="text-[10px] px-1.5">
-                        <XCircle className="w-2.5 h-2.5 mr-0.5" /> Nofaol
+                        <XCircle className="w-2.5 h-2.5 mr-0.5" /> {t("inactive")}
                       </Badge>
                     )}
                   </div>
@@ -160,16 +162,16 @@ export default function MESProducts() {
                 </div>
                 <div className="flex items-center justify-between border-t pt-2">
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Kod</p>
+                    <p className="text-[10px] text-muted-foreground">{t("code")}</p>
                     <p className="text-xs font-mono font-semibold text-foreground">{p.code}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">O'lchov</p>
+                    <p className="text-[10px] text-muted-foreground">{t("olchov1")}</p>
                     <p className="text-xs font-semibold text-foreground">{p.unit}</p>
                   </div>
                   {p.standardCost && (
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground">Tannarx</p>
+                      <p className="text-[10px] text-muted-foreground">{t("tannarx1")}</p>
                       <p className="text-xs font-semibold text-foreground">
                         {Number(p.standardCost).toLocaleString()}
                       </p>
@@ -184,9 +186,9 @@ export default function MESProducts() {
                   disabled={toggleActiveMutation.isPending}
                 >
                   {p.isActive ? (
-                    <><ToggleLeft className="h-3 w-3 mr-1 text-[var(--ep-red)]" /> Faolsizlashtirish</>
+                    <><ToggleLeft className="h-3 w-3 mr-1 text-[var(--ep-red)]" /> {t("faolsizlashtirish")}</>
                   ) : (
-                    <><ToggleRight className="h-3 w-3 mr-1 text-[var(--ep-green)]" /> Faollashtirish</>
+                    <><ToggleRight className="h-3 w-3 mr-1 text-[var(--ep-green)]" /> {t("faollashtirish")}</>
                   )}
                 </Button>
               </CardContent>
@@ -197,12 +199,12 @@ export default function MESProducts() {
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi mahsulot qo'shish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiMahsulotQoshish")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
           <Label>Nomi (UZ)</Label>
-                <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Mahsulot nomi" />
+                <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder={t("mahsulotNomi")} />
               </div>
               <div className="space-y-1">
           <Label>Nomi (RU)</Label>
@@ -211,11 +213,11 @@ export default function MESProducts() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-          <Label>Kod</Label>
+          <Label>{t("code")}</Label>
                 <Input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="PRD-001" />
               </div>
               <div className="space-y-1">
-          <Label>O'lchov birligi</Label>
+          <Label>{t("olchovBirligi")}</Label>
                 <Select value={form.unit} onValueChange={v => setForm(p => ({ ...p, unit: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -226,7 +228,7 @@ export default function MESProducts() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-          <Label>Kategoriya</Label>
+          <Label>{t("category")}</Label>
                 <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -241,8 +243,8 @@ export default function MESProducts() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Bekor qilish</Button>
-            <Button onClick={() => createProductMutation.mutate(form)} disabled={createProductMutation.isPending || !form.name || !form.code}>Saqlash</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("cancel")}</Button>
+            <Button onClick={() => createProductMutation.mutate(form)} disabled={createProductMutation.isPending || !form.name || !form.code}>{t("Saqlash")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

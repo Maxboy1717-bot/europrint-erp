@@ -10,6 +10,7 @@ import { Trophy } from "lucide-react";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from "recharts";
 import type { HrcSession, HrcQuestion, TestResults, TestTypeConfig } from "./HRCapitalPublicTestTypes";
 import { INDICATORS, SYNDROME_DESCRIPTIONS } from "./HRCapitalPublicTestTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface ResultsScreenProps {
   testConfig: TestTypeConfig;
@@ -17,6 +18,7 @@ interface ResultsScreenProps {
 }
 
 export function ResultsScreen({ testConfig, results }: ResultsScreenProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-2xl mx-auto space-y-6 py-8">
@@ -24,7 +26,7 @@ export function ResultsScreen({ testConfig, results }: ResultsScreenProps) {
           <CardContent className="p-8 text-center">
             <Trophy className="w-12 h-12 text-[var(--ep-yellow)] mx-auto mb-3" />
             <h1 className="text-2xl font-bold">{testConfig.label} yakunlandi!</h1>
-            <p className="text-muted-foreground mt-1">Natijalaringiz HR ga yuborildi</p>
+            <p className="text-muted-foreground mt-1">{t("natijalaringizHrGaYuborildi")}</p>
             <div className="text-6xl font-bold text-primary mt-4">{results?.score}%</div>
             {results?.syndrome && (
               <div className="mt-4 p-4 bg-orange-50 rounded-xl text-left">
@@ -77,7 +79,7 @@ export function ResultsScreen({ testConfig, results }: ResultsScreenProps) {
           </CardContent>
         </Card>
         <p className="text-center text-sm text-muted-foreground">
-          Testni topshirganingiz uchun rahmat! HR mutaxassisi siz bilan bog'lanadi.
+          {t("testniTopshirganingizUchunRahmatHr")}
         </p>
       </div>
     </div>
@@ -107,7 +109,7 @@ export function QuestionScreen({
   if (!currentQuestion) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Button onClick={onFinish}>Testni yakunlash</Button>
+        <Button onClick={onFinish}>{t("testniYakunlash")}</Button>
       </div>
     );
   }
@@ -135,7 +137,7 @@ export function QuestionScreen({
             {session?.test_type === "tool_test" && (
               <div className="space-y-3">
                 <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                  <span>Mutlaqo roziman</span><span>Mutlaqo roziman emas</span>
+                  <span>{t("mutlaqoRoziman")}</span><span>{t("mutlaqoRozimanEmas")}</span>
                 </div>
                 <div className="flex gap-2">
                   {([{ val: 2, short: "5" }, { val: 1, short: "4" }, { val: 0, short: "3" }, { val: -1, short: "2" }, { val: -2, short: "1" }]).map(option => (
@@ -150,7 +152,7 @@ export function QuestionScreen({
                   ))}
                 </div>
                 <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                  <span>Juda ko'p</span><span>Umuman yo'q</span>
+                  <span>{t("judaKop")}</span><span>{t("umumanYoq")}</span>
                 </div>
               </div>
             )}
@@ -174,7 +176,7 @@ export function QuestionScreen({
               </div>
             )}
             <div className="flex justify-between items-center pt-2">
-              {currentIdx > 0 ? <Button variant="ghost" size="sm" onClick={onPrev}>← Orqaga</Button> : <div />}
+              {currentIdx > 0 ? <Button variant="ghost" size="sm" onClick={onPrev}>{t("orqaga")}</Button> : <div />}
               {answers[currentIdx] !== undefined && (
                 <Button size="sm" onClick={() => { if (currentIdx + 1 >= questions.length) onFinish(); else onNext(); }} data-testid="button-next">
                   {currentIdx + 1 >= questions.length ? "Yakunlash" : "Keyingi"} →

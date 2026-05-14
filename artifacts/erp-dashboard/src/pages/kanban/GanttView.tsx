@@ -15,6 +15,7 @@ import {
 import type { KanbanColumn } from "@shared/schema";
 import { type CardWithOwner, type T, PRIORITY_CONFIG } from "./kanban-types";
 import { getProp } from "./kanban-utils";
+import { useTranslation } from '@/lib/i18n';
 
 export function GanttView({
   cards,
@@ -27,6 +28,7 @@ export function GanttView({
   onCardClick: (card: CardWithOwner) => void;
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const [startDate, setStartDate] = useState(() => {
     const today = startOfDay(new Date());
     return addDays(today, -7);
@@ -57,7 +59,7 @@ export function GanttView({
     const left = Math.max(0, taskStartOffset * dayWidth);
     const width = task.duration * dayWidth;
     const clippedLeft = taskStartOffset < 0 ? Math.abs(taskStartOffset) * dayWidth : 0;
-    return { left, width: width - clippedLeft, visible: taskStartOffset + task.duration > 0 && taskStartOffset < daysToShow };
+    return { left, width: width - clippedLeft, visible: taskStartOffset + task.duration > {t("k0Taskstartoffset")}< daysToShow };
   };
 
   return (
@@ -66,33 +68,33 @@ export function GanttView({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Oldingi hafta" onClick={() => setStartDate(addDays(startDate, -7))} data-testid="button-gantt-prev">
+              <Button variant="outline" size="icon" aria-label={t("oldingiHafta")} onClick={() => setStartDate(addDays(startDate, -7))} data-testid="button-gantt-prev">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Oldingi hafta</TooltipContent>
+            <TooltipContent>{t("oldingiHafta")}</TooltipContent>
           </Tooltip>
           <span className="text-sm font-medium min-w-[200px] text-center">
             {format(startDate, "dd MMM")} - {format(addDays(startDate, daysToShow - 1), "dd MMM yyyy")}
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Keyingi hafta" onClick={() => setStartDate(addDays(startDate, 7))} data-testid="button-gantt-next">
+              <Button variant="outline" size="icon" aria-label={t("keyingiHafta")} onClick={() => setStartDate(addDays(startDate, 7))} data-testid="button-gantt-next">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Keyingi hafta</TooltipContent>
+            <TooltipContent>{t("keyingiHafta")}</TooltipContent>
           </Tooltip>
         </div>
         <Button variant="outline" size="sm" onClick={() => setStartDate(addDays(new Date(), -7))} data-testid="button-gantt-today">
-          Bugun
+          {t("today")}
         </Button>
       </div>
 
       <ScrollArea className="flex-1 border rounded-lg">
         <div className="min-w-max">
           <div className="flex border-b bg-muted sticky top-0 z-10">
-            <div className="w-64 p-2 border-r font-medium text-sm flex-shrink-0">Vazifa</div>
+            <div className="w-64 p-2 border-r font-medium text-sm flex-shrink-0">{t("vazifa")}</div>
             <div className="flex">
               {(Array.isArray(days) ? days : []).map((day) => {
                 const isWeekend = getDay(day) === 0 || getDay(day) === 6;

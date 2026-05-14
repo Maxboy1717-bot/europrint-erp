@@ -12,6 +12,7 @@ import {
   startOfMonth, endOfMonth, eachDayOfInterval, getDay, addDays,
 } from "date-fns";
 import { type CardWithOwner, type T, PRIORITY_CONFIG } from "./kanban-types";
+import { useTranslation } from '@/lib/i18n';
 
 export function CalendarView({
   cards,
@@ -24,6 +25,7 @@ export function CalendarView({
   onCreateTask: (date: Date) => void;
   t: typeof T.uz;
 }) {
+  const { t } = useTranslation("common");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const monthStart = startOfMonth(currentMonth);
@@ -53,26 +55,26 @@ export function CalendarView({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Oldingi oy" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} data-testid="button-prev-month">
+              <Button variant="outline" size="icon" aria-label={t("oldingiOy")} onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} data-testid="button-prev-month">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Oldingi oy</TooltipContent>
+            <TooltipContent>{t("oldingiOy")}</TooltipContent>
           </Tooltip>
           <h2 className="text-lg font-semibold min-w-[200px] text-center">
             {format(currentMonth, "MMMM yyyy")}
           </h2>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Keyingi oy" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} data-testid="button-next-month">
+              <Button variant="outline" size="icon" aria-label={t("keyingiOy")} onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} data-testid="button-next-month">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Keyingi oy</TooltipContent>
+            <TooltipContent>{t("keyingiOy")}</TooltipContent>
           </Tooltip>
         </div>
         <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} data-testid="button-today">
-          Bugun
+          {t("today")}
         </Button>
       </div>
       

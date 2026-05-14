@@ -14,6 +14,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggleModern } from "./ThemeToggleModern";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chatStore";
+import { useTranslation } from '@/lib/i18n';
 
 const TOP_H = "h-14";
 const TOP_OFFSET = "pt-14";
@@ -29,13 +30,14 @@ export interface AppShellModernProps {
 }
 
 function ChatHeaderButton() {
+  const { t } = useTranslation("common");
   const totalUnread = useChatStore((s) => s.totalUnread);
   return (
     <Link href="/chat">
       <button
         type="button"
         className="relative flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-        title="Ichki Chat"
+        title={t("ichkiChat")}
       >
         <MessageSquare className="h-4 w-4" />
         {totalUnread > 0 && (
@@ -60,6 +62,7 @@ export function AppShellModern({
   onLogout,
   children,
 }: AppShellModernProps) {
+  const { t } = useTranslation("common");
   return (
     <div
       className="min-h-screen w-full bg-background text-foreground antialiased"
@@ -79,7 +82,7 @@ export function AppShellModern({
             className="lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted transition-colors shrink-0"
             onClick={() => onMobileMenuOpenChange(true)}
             data-testid="button-mobile-menu"
-            aria-label="Menyu"
+            aria-label={t("menyu")}
           >
             <Menu className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -112,9 +115,9 @@ export function AppShellModern({
             )}
             data-testid="button-user-menu"
             onClick={onLogout}
-            title="Chiqish"
+            title={t("logout")}
           >
-            Chiqish
+            {t("logout")}
           </button>
         </div>
       </header>

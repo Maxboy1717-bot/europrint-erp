@@ -19,6 +19,7 @@ import { DealsTab } from "./company/DealsTab";
 import { CreditTab } from "./company/CreditTab";
 import { CompanyEditForm } from "./company/CompanyEditForm";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 interface CompanyDetailSheetProps {
   companyId: number | null;
@@ -26,6 +27,7 @@ interface CompanyDetailSheetProps {
 }
 
 export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetProps) {
+  const { t } = useTranslation("common");
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
 
@@ -88,10 +90,10 @@ export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetPro
               ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-                    <TabsTrigger value="info">Ma'lumotlar</TabsTrigger>
+                    <TabsTrigger value="info">{t("malumotlar")}</TabsTrigger>
                     <TabsTrigger value="contacts">Kontaktlar ({contacts.length})</TabsTrigger>
                     <TabsTrigger value="deals">Bitimlar ({deals.length})</TabsTrigger>
-                    <TabsTrigger value="credit">Kredit</TabsTrigger>
+                    <TabsTrigger value="credit">{t("loan")}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="info">
@@ -114,7 +116,7 @@ export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetPro
             </div>
           </>
         ) : (
-          <div className="text-center text-muted-foreground">Kompaniya topilmadi</div>
+          <div className="text-center text-muted-foreground">{t("kompaniyaTopilmadi")}</div>
         )}
       </SheetContent>
     </Sheet>

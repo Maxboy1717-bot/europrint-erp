@@ -13,6 +13,7 @@ export class DealWonEvent extends DomainEvent {
     public readonly companyId: number,
     public readonly totalAmount: number,
     public readonly assignedTo: number,
+    public readonly currency: string = 'UZS',
   ) {
     super(dealId, 'DealWon');
   }

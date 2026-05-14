@@ -25,10 +25,12 @@ import {
 import type { CategoryStat, LowStockItem, PendingTransfer, RecentTx } from "./WarehouseDashboardTypes";
 import { fmt } from "./WarehouseDashboardTypes";
 import { KpiCard } from "./WarehouseDashboardDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export { KpiCard, WarehouseCard } from "./WarehouseDashboardDialogs";
 
 export function LowStockPanel({ lowStock, isLoading }: { lowStock: LowStockItem[]; isLoading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <Card className="border border-border/60 shadow-sm">
       <CardHeader className="pb-3 pt-5 px-5">
@@ -37,7 +39,7 @@ export function LowStockPanel({ lowStock, isLoading }: { lowStock: LowStockItem[
             <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
               <AlertTriangle className="w-4 h-4 text-[var(--ep-red)]" />
             </div>
-            <CardTitle className="text-sm font-bold">Kam Stok</CardTitle>
+            <CardTitle className="text-sm font-bold">{t("kamStok")}</CardTitle>
           </div>
           {lowStock.length > 0 && <Badge className="bg-red-50 text-[var(--ep-red)] border-0 text-[11px]">{lowStock.length}</Badge>}
         </div>
@@ -48,8 +50,8 @@ export function LowStockPanel({ lowStock, isLoading }: { lowStock: LowStockItem[
         ) : lowStock.length === 0 ? (
           <div className="text-center py-10">
             <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-[var(--ep-green)]/40" />
-            <p className="text-sm text-muted-foreground font-medium">Barcha materiallar normal</p>
-            <p className="text-xs text-muted-foreground mt-1">Kam stok ogohlantirishlari yo'q</p>
+            <p className="text-sm text-muted-foreground font-medium">{t("barchaMateriallarNormal")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("kamStokOgohlantirishlariYoq")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -85,7 +87,7 @@ export function RecentTransactionsPanel({ txs, isLoading }: { txs: RecentTx[]; i
           <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
             <Activity className="w-4 h-4 text-[var(--ep-blue)]" />
           </div>
-          <CardTitle className="text-sm font-bold">So'nggi Harakatlar</CardTitle>
+          <CardTitle className="text-sm font-bold">{t("songgiHarakatlar1")}</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="px-5 pb-5">
@@ -94,7 +96,7 @@ export function RecentTransactionsPanel({ txs, isLoading }: { txs: RecentTx[]; i
         ) : txs.length === 0 ? (
           <div className="text-center py-10">
             <Activity className="w-10 h-10 mx-auto mb-2 text-muted-foreground/20" />
-            <p className="text-sm text-muted-foreground font-medium">Harakatlar yo'q</p>
+            <p className="text-sm text-muted-foreground font-medium">{t("harakatlarYoq")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -104,7 +106,7 @@ export function RecentTransactionsPanel({ txs, isLoading }: { txs: RecentTx[]; i
               return (
                 <div key={tx.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors">
                   <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", isIn ? "bg-emerald-100" : isOut ? "bg-red-100" : "bg-blue-100")}>
-                    {isIn ? <TrendingUp className="w-3.5 h-3.5 text-[var(--ep-green)]" /> : isOut ? <TrendingDown className="w-3.5 h-3.5 text-[var(--ep-red)]" /> : <ArrowRightLeft className="w-3.5 h-3.5 text-[var(--ep-blue)]" />}
+                    {isIn ? <TrendingUp className="w-3.5 h-3.5 text-[var(--ep-green)]" /> {t("isout")}<TrendingDown className="w-3.5 h-3.5 text-[var(--ep-red)]" /> : <ArrowRightLeft className="w-3.5 h-3.5 text-[var(--ep-blue)]" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">{tx.materialName || "—"}</p>
@@ -132,10 +134,10 @@ export function PendingTransfersPanel({ pending, isLoading, onNavigate }: { pend
             <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
               <ArrowRightLeft className="w-4 h-4 text-[var(--ep-yellow)]" />
             </div>
-            <CardTitle className="text-sm font-bold">Kutilayotgan Ko'chirishlar</CardTitle>
+            <CardTitle className="text-sm font-bold">{t("kutilayotganKochirishlar")}</CardTitle>
           </div>
           <Button variant="ghost" size="sm" className="text-xs text-primary px-2 h-7" onClick={() => onNavigate("/wms/transfer")}>
-            Barchasi <ChevronRight className="w-3 h-3 ml-0.5" />
+            {t("Barchasi")}<ChevronRight className="w-3 h-3 ml-0.5" />
           </Button>
         </div>
       </CardHeader>
@@ -145,7 +147,7 @@ export function PendingTransfersPanel({ pending, isLoading, onNavigate }: { pend
         ) : pending.length === 0 ? (
           <div className="text-center py-6">
             <PackageCheck className="w-8 h-8 mx-auto mb-2 text-[var(--ep-green)]/40" />
-            <p className="text-xs text-muted-foreground">Barcha ko'chirishlar bajarilgan</p>
+            <p className="text-xs text-muted-foreground">{t("barchaKochirishlarBajarilgan")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -175,14 +177,14 @@ export function CategoryStatsPanel({ catStats, isLoading }: { catStats: Category
           <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
             <BarChart3 className="w-4 h-4 text-[var(--ep-purple)]" />
           </div>
-          <CardTitle className="text-sm font-bold">Kategoriyalar</CardTitle>
+          <CardTitle className="text-sm font-bold">{t("kategoriyalar")}</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="px-5 pb-4">
         {isLoading ? (
           <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-7 rounded-lg" />)}</div>
         ) : catStats.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">Kategoriyalar yo'q</p>
+          <p className="text-xs text-muted-foreground text-center py-4">{t("kategoriyalarYoq")}</p>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(catStats) ? catStats : []).slice(0, 5).map((cat, i) => {
@@ -237,12 +239,12 @@ export function KpiRow({
   }
   return (
     <>
-      <KpiCard icon={Warehouse} label="Faol omborlar" value={kpis?.totalWarehouses ?? 0} bg="bg-blue-50" color="text-[var(--ep-blue)]" sub={`${kpis?.zoneCount ?? 0} zona · ${kpis?.binCount ?? 0} bin`} />
-      <KpiCard icon={Package} label="Jami materiallar" value={kpis?.totalMaterials ?? 0} bg="bg-indigo-50" color="text-[var(--ep-blue)]" accent={kpis?.abcA ? `A:${kpis.abcA} B:${kpis.abcB} C:${kpis.abcC}` : undefined} />
-      <KpiCard icon={Layers} label="Stok qiymati" value={`${fmt(kpis?.totalStockValue ?? 0)} UZS`} bg="bg-emerald-50" color="text-[var(--ep-green)]" sub={`Kirim: ${fmt(kpis?.monthlyInflow ?? 0)} · Chiqim: ${fmt(kpis?.monthlyOutflow ?? 0)}`} />
-      <KpiCard icon={AlertTriangle} label="Kam stok" value={kpis?.lowStockCount ?? 0} bg={kpis?.lowStockCount ? "bg-red-50" : "bg-slate-50"} color={kpis?.lowStockCount ? "text-[var(--ep-red)]" : "text-slate-400"} sub={kpis?.outOfStockCount ? `${kpis.outOfStockCount} ta nol stok` : "Hammasi normal"} />
-      <KpiCard icon={ArrowRightLeft} label="Ko'chirishlar" value={kpis?.pendingTransfers ?? 0} bg={kpis?.pendingTransfers ? "bg-amber-50" : "bg-slate-50"} color={kpis?.pendingTransfers ? "text-[var(--ep-yellow)]" : "text-slate-400"} sub="Pending / in-transit" />
-      <KpiCard icon={Activity} label="Bugungi harakatlar" value={kpis?.todayTransactionCount ?? 0} bg="bg-purple-50" color="text-[var(--ep-purple)]" sub="Kirdi / chiqdi / ko'chirildi" />
+      <KpiCard icon={Warehouse} label={t("faolOmborlar")} value={kpis?.totalWarehouses ?? 0} bg="bg-blue-50" color="text-[var(--ep-blue)]" sub={`${kpis?.zoneCount ?? 0} zona · ${kpis?.binCount ?? 0} bin`} />
+      <KpiCard icon={Package} label={t("jamiMateriallar")} value={kpis?.totalMaterials ?? 0} bg="bg-indigo-50" color="text-[var(--ep-blue)]" accent={kpis?.abcA ? `A:${kpis.abcA} B:${kpis.abcB} C:${kpis.abcC}` : undefined} />
+      <KpiCard icon={Layers} label={t("stokQiymati")} value={`${fmt(kpis?.totalStockValue ?? 0)} UZS`} bg="bg-emerald-50" color="text-[var(--ep-green)]" sub={`Kirim: ${fmt(kpis?.monthlyInflow ?? 0)} · Chiqim: ${fmt(kpis?.monthlyOutflow ?? 0)}`} />
+      <KpiCard icon={AlertTriangle} label={t("kamStok1")} value={kpis?.lowStockCount ?? 0} bg={kpis?.lowStockCount ? "bg-red-50" : "bg-slate-50"} color={kpis?.lowStockCount ? "text-[var(--ep-red)]" : "text-slate-400"} sub={kpis?.outOfStockCount ? `${kpis.outOfStockCount} ta nol stok` : "Hammasi normal"} />
+      <KpiCard icon={ArrowRightLeft} label={t("kochirishlar")} value={kpis?.pendingTransfers ?? 0} bg={kpis?.pendingTransfers ? "bg-amber-50" : "bg-slate-50"} color={kpis?.pendingTransfers ? "text-[var(--ep-yellow)]" : "text-slate-400"} sub="Pending / in-transit" />
+      <KpiCard icon={Activity} label={t("bugungiHarakatlar")} value={kpis?.todayTransactionCount ?? 0} bg="bg-purple-50" color="text-[var(--ep-purple)]" sub="Kirdi / chiqdi / ko'chirildi" />
     </>
   );
 }

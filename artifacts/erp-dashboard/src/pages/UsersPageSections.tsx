@@ -42,10 +42,10 @@ export function UsersToolbar({search, onSearchChange,
       </div>
       <Select value={roleFilter} onValueChange={onRoleFilterChange}>
         <SelectTrigger className="w-44 h-9">
-          <SelectValue placeholder="Barcha rollar" />
+          <SelectValue placeholder={t("barchaRollar")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha rollar</SelectItem>
+          <SelectItem value="all">{t("barchaRollar")}</SelectItem>
           {ALL_ROLES.map(r => (
             <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
           ))}
@@ -53,7 +53,7 @@ export function UsersToolbar({search, onSearchChange,
       </Select>
       {canManage && (
         <Button size="sm" onClick={onCreateClick}>
-          <UserPlus className="h-4 w-4 mr-1" /> Yangi
+          <UserPlus className="h-4 w-4 mr-1" /> {t("yangi")}
         </Button>
       )}
     </div>
@@ -137,7 +137,7 @@ export function UserList({
                 <div className="flex gap-1 shrink-0">
                   <Button
                     variant="ghost" size="icon" className="h-8 w-8"
-                    title="Rolni o'zgartirish"
+                    title={t("rolniOzgartirish")}
                     onClick={() => onRoleEdit(u)}
                   >
                     <KeyRound className="h-4 w-4" />
@@ -145,7 +145,7 @@ export function UserList({
                   <Button
                     variant="ghost" size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive"
-                    title="Nofaol qilish"
+                    title={t("nofaolQilish")}
                     onClick={() => onDeactivate(u.id)}
                   >
                     <UserX className="h-4 w-4" />
@@ -173,13 +173,13 @@ export function UsersPagination({ page, pages, total, onPrev, onNext }: Paginati
   return (
     <div className="flex justify-center items-center gap-4 pt-2">
       <Button variant="outline" size="sm" disabled={page <= 1} onClick={onPrev}>
-        ← Oldingi
+        {t("oldingi")}
       </Button>
       <span className="text-sm text-muted-foreground">
         {page} / {pages} ({total} ta)
       </span>
       <Button variant="outline" size="sm" disabled={page >= pages} onClick={onNext}>
-        Keyingi →
+        {t("keyingi1")}
       </Button>
     </div>
   );

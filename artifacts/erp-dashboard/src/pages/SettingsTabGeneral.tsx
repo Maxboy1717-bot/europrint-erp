@@ -57,7 +57,7 @@ export function SettingsTabGeneral({ loading, form, onChange, onSave, isSaving }
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="uz">O'zbek</SelectItem>
+                  <SelectItem value="uz">{t("ozbek")}</SelectItem>
                   <SelectItem value="ru">Русский</SelectItem>
                 </SelectContent>
               </Select>

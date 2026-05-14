@@ -9,6 +9,7 @@ import { AlertTriangle, Bell, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionTitle } from "@/components/director/helpers";
 import type { AlertItem } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface AlertsCardProps {
   alerts: AlertItem[] | undefined;
@@ -16,11 +17,12 @@ interface AlertsCardProps {
 }
 
 export function AlertsCard({ alerts, alertCount }: AlertsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-alerts">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <SectionTitle icon={Bell} title="Ogohlantirishlar" sub={`${alertCount} ta faol`} accent="text-[var(--ep-red)]" />
+          <SectionTitle icon={Bell} title={t("ogohlantirishlar")} sub={`${alertCount} ta faol`} accent="text-[var(--ep-red)]" />
           {alertCount > 0 && (
             <Badge className="bg-red-100 text-[var(--ep-red)] border-none">{alertCount}</Badge>
           )}
@@ -30,7 +32,7 @@ export function AlertsCard({ alerts, alertCount }: AlertsCardProps) {
         {(alerts?.length ?? 0) === 0 ? (
           <div className="text-center py-5">
             <CheckCircle className="w-8 h-8 text-[var(--ep-green)] mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Hamma yaxshi</p>
+            <p className="text-sm text-muted-foreground">{t("hammaYaxshi")}</p>
           </div>
         ) : (
           <div className="space-y-2">

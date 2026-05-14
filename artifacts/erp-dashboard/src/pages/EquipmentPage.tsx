@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Wrench, Settings2 } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface Equipment {
   id: number;
@@ -30,6 +31,7 @@ interface Equipment {
 }
 
 export default function EquipmentPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -103,11 +105,11 @@ export default function EquipmentPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <EPStatusPill tone="success">Faol</EPStatusPill>;
+        return <EPStatusPill tone="success">{t("active")}</EPStatusPill>;
       case "maintenance":
-        return <Badge className="bg-amber-100 text-amber-800">Ta'mirda</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">{t("tamirda")}</Badge>;
       case "retired":
-        return <Badge className="bg-gray-100 text-gray-600">Yechib olingan</Badge>;
+        return <Badge className="bg-gray-100 text-gray-600">{t("yechibOlingan")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -118,32 +120,32 @@ export default function EquipmentPage() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Jihozlar</h1>
+        <h1 className="text-2xl font-bold">{t("jihozlar")}</h1>
         <Button onClick={() => setIsAddOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Yangi jihoz
+          {t("yangiJihoz")}
         </Button>
       </div>
 
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+            <div className="p-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : list.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Wrench className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>Jihozlar topilmadi</p>
+              <p>{t("jihozlarTopilmadi")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Inventar №</TableHead>
-                  <TableHead>Nomi</TableHead>
-                  <TableHead>Turi</TableHead>
-                  <TableHead>Joylashuvi</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>Oxirgi TA</TableHead>
+                  <TableHead>{t("inventar1")}</TableHead>
+                  <TableHead>{t("name")}</TableHead>
+                  <TableHead>{t("type")}</TableHead>
+                  <TableHead>{t("joylashuvi")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
+                  <TableHead>{t("oxirgiTa")}</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
@@ -168,7 +170,7 @@ export default function EquipmentPage() {
                         className="whitespace-nowrap"
                       >
                         <Settings2 className="h-3.5 w-3.5 mr-1.5" />
-                        Holat o'zgartirish
+                        {t("holatOzgartirish")}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -183,34 +185,34 @@ export default function EquipmentPage() {
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Yangi jihoz qo'shish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("yangiJihozQoshish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Inventar raqami</Label>
+                <Label>{t("inventarRaqami")}</Label>
                 <Input value={invNumber} onChange={(e) => setInvNumber(e.target.value)} placeholder="INV-001" />
               </div>
               <div>
-                <Label>Xarid sanasi</Label>
+                <Label>{t("xaridSanasi")}</Label>
                 <Input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
               </div>
             </div>
             <div>
-              <Label>Nomi</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jihoz nomi" />
+              <Label>{t("name")}</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("jihozNomi")} />
             </div>
             <div>
-              <Label>Turi</Label>
-              <Input value={type} onChange={(e) => setType(e.target.value)} placeholder="Masalan: Printer, Frezer" />
+              <Label>{t("type")}</Label>
+              <Input value={type} onChange={(e) => setType(e.target.value)} placeholder={t("masalanPrinterFrezer")} />
             </div>
             <div>
-              <Label>Joylashuvi</Label>
-              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Masalan: Sexh 1, Zal B" />
+              <Label>{t("joylashuvi")}</Label>
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t("masalanSexh1ZalB")} />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={resetForm}>Bekor qilish</Button>
-              <Button onClick={handleSave} disabled={createMutation.isPending}>Saqlash</Button>
+              <Button variant="outline" onClick={resetForm}>{t("cancel")}</Button>
+              <Button onClick={handleSave} disabled={createMutation.isPending}>{t("Saqlash")}</Button>
             </div>
           </div>
         </DialogContent>
@@ -220,25 +222,25 @@ export default function EquipmentPage() {
       <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
         <DialogContent className="max-w-sm p-6">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Holatni o'zgartirish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("holatniOzgartirish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Yangi holat</Label>
+              <Label>{t("yangiHolat1")}</Label>
               <Select value={newStatus} onValueChange={setNewStatus}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Faol</SelectItem>
-                  <SelectItem value="maintenance">Ta'mirda</SelectItem>
-                  <SelectItem value="retired">Yechib olingan</SelectItem>
+                  <SelectItem value="active">{t("active")}</SelectItem>
+                  <SelectItem value="maintenance">{t("tamirda")}</SelectItem>
+                  <SelectItem value="retired">{t("yechibOlingan")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setIsStatusOpen(false)}>Bekor qilish</Button>
-              <Button onClick={handleStatusSave} disabled={statusMutation.isPending}>Saqlash</Button>
+              <Button variant="outline" onClick={() => setIsStatusOpen(false)}>{t("cancel")}</Button>
+              <Button onClick={handleStatusSave} disabled={statusMutation.isPending}>{t("Saqlash")}</Button>
             </div>
           </div>
         </DialogContent>

@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PortretData } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StepConditionsProps {
   portret: PortretData;
@@ -20,13 +21,14 @@ interface StepConditionsProps {
 }
 
 export function StepConditions({ portret, onChange, onToggleSocial, socialPackageOptions }: StepConditionsProps) {
+  const { t } = useTranslation("common");
   const p = onChange;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-sm text-primary">III bo'lim: Ish sharoitlari</h3>
-        <Badge variant="outline" className="text-[9px]">Kandidatga ma'lumot</Badge>
+        <h3 className="font-semibold text-sm text-primary">{t("iiiBolimIshSharoitlari1")}</h3>
+        <Badge variant="outline" className="text-[9px]">{t("kandidatgaMalumot")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -60,21 +62,21 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
           />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">Ish grafigi</Label>
+          <Label className="text-xs mb-1 block">{t("ishGrafigi")}</Label>
           <Select value={portret.work_schedule ?? "5/2"} onValueChange={v => p("work_schedule")(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="5/2">5/2 (Dush-Juma)</SelectItem>
               <SelectItem value="6/1">6/1 (Dush-Shan)</SelectItem>
               <SelectItem value="2/2">2/2 (Smena)</SelectItem>
-              <SelectItem value="free">Erkin grafik</SelectItem>
+              <SelectItem value="free">{t("erkinGrafik")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div>
-        <Label className="text-xs mb-2 block">Ijtimoiy paket</Label>
+        <Label className="text-xs mb-2 block">{t("ijtimoiyPaket")}</Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-2">
           {(Array.isArray(socialPackageOptions) ? socialPackageOptions : []).map(opt => (
             <button
@@ -93,9 +95,9 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">Qo'shimcha shartlar va imtiyozlar</Label>
+        <Label className="text-xs mb-1 block">{t("qoshimchaShartlarVaImtiyozlar")}</Label>
         <Textarea
-          placeholder="Boshqa barcha qo'shimcha ma'lumotlar..."
+          placeholder={t("boshqaBarchaQoshimchaMalumotlar")}
           rows={2}
           value={portret.additional_conditions ?? ""}
           onChange={e => p("additional_conditions")(e.target.value)}

@@ -21,6 +21,7 @@ import {
   ProbationReviewsResponse,
 } from "./CandidateChecklistTypes";
 import { ChecklistSheetBody } from "./CandidateChecklistDialogs";
+import { useTranslation } from '@/lib/i18n';
 
 export { ChecklistProgressBadge, ProbationReviewBadges } from "./CandidateChecklistSections";
 export { CHECKLIST_ITEMS } from "./CandidateChecklistTypes";
@@ -35,6 +36,7 @@ export function CandidateChecklistSheet({
   candidateName: string;
   trigger?: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set([4, 5, 6, 7]));
   const [noteEditing, setNoteEditing] = useState<string | null>(null);
@@ -100,7 +102,7 @@ export function CandidateChecklistSheet({
         {trigger ?? (
           <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
             <ClipboardList className="w-3.5 h-3.5" />
-            Cheklist
+            {t("cheklist")}
           </Button>
         )}
       </SheetTrigger>

@@ -23,6 +23,7 @@ export { WmsSection } from "./PerformanceTabWmsSections";
 // ─── MiniProgressBar ─────────────────────────────────────────────────────────
 
 export function MiniProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const { t } = useTranslation("common");
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
     <>
@@ -31,7 +32,7 @@ export function MiniProgressBar({ value, max, color }: { value: number; max: num
         size="sm"
         onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })}
         className="sr-only"
-        aria-label="Yangilash"
+        aria-label={t("refresh")}
       >
         <RefreshCw className="h-4 w-4" />
       </Button>
@@ -65,7 +66,7 @@ export function KpiSummaryCards({
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">ABC Daraja</p>
+              <p className="text-xs text-muted-foreground">{t("abcDaraja")}</p>
               {abcData ? (
                 <span className={`inline-flex w-10 h-10 rounded-full items-center justify-center text-white text-lg font-bold mt-1 ${getGradeColor(abcData.grade)}`}>
                   {abcData.grade}
@@ -82,7 +83,7 @@ export function KpiSummaryCards({
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Kurs tugatish</p>
+              <p className="text-xs text-muted-foreground">{t("kursTugatish")}</p>
               <p className="text-2xl font-bold text-[var(--ep-green)] mt-1">
                 {courseProgress ? (Array.isArray(courseProgress) ? courseProgress : []).filter(p => p.isCompleted).length : 0}
                 <span className="text-sm text-muted-foreground font-normal">/{courseProgress?.length || 0}</span>
@@ -96,7 +97,7 @@ export function KpiSummaryCards({
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Samaradorlik</p>
+              <p className="text-xs text-muted-foreground">{t("samaradorlik")}</p>
               <p className="text-2xl font-bold text-[var(--ep-purple)] mt-1">{abcData?.performanceRate || 0}%</p>
             </div>
             <TrendingUp className="h-6 w-6 text-[var(--ep-purple)]" />
@@ -132,9 +133,9 @@ export function AbcChartSection({ tCommon, abcData, metrics, getGradeColor }: Ab
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              ABC Baholash
+              {t("abcBaholash")}
             </CardTitle>
-            <CardDescription>Xodim samaradorlik kategoriyasi</CardDescription>
+            <CardDescription>{t("xodimSamaradorlikKategoriyasi")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
@@ -143,24 +144,24 @@ export function AbcChartSection({ tCommon, abcData, metrics, getGradeColor }: Ab
               </div>
               <div>
                 <p className="text-2xl font-bold">{abcData.score}/5 ball</p>
-                <p className="text-muted-foreground">Umumiy daraja</p>
+                <p className="text-muted-foreground">{t("umumiyDaraja")}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div>
-                <p className="text-sm text-muted-foreground">Samaradorlik</p>
+                <p className="text-sm text-muted-foreground">{t("samaradorlik")}</p>
                 <p className="font-medium">{abcData.performanceRate}%</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Yo'qlama</p>
+                <p className="text-sm text-muted-foreground">{t("yoqlama")}</p>
                 <p className="font-medium">{abcData.attendanceRate}%</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Vaqtida kelish</p>
+                <p className="text-sm text-muted-foreground">{t("vaqtidaKelish")}</p>
                 <p className="font-medium">{abcData.punctualityRate}%</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Kurs o'tkazish</p>
+                <p className="text-sm text-muted-foreground">{t("kursOtkazish")}</p>
                 <p className="font-medium">{abcData.courseCompletionRate}%</p>
               </div>
             </div>
@@ -171,7 +172,7 @@ export function AbcChartSection({ tCommon, abcData, metrics, getGradeColor }: Ab
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              ABC Baholash
+              {t("abcBaholash")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -186,7 +187,7 @@ export function AbcChartSection({ tCommon, abcData, metrics, getGradeColor }: Ab
             <BarChart3 className="h-5 w-5" />
             Oylik natijalar (HR KPI)
           </CardTitle>
-          <CardDescription>Oxirgi 6 oylik samaradorlik</CardDescription>
+          <CardDescription>{t("oxirgi6OylikSamaradorlik")}</CardDescription>
         </CardHeader>
         <CardContent>
           {metrics && metrics.length > 0 ? (
@@ -226,23 +227,23 @@ export function CourseStatsSection({ courseProgress }: CourseStatsSectionProps) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GraduationCap className="h-5 w-5" />
-          Ta'lim samaradorligi
+          {t("talimSamaradorligi")}
         </CardTitle>
-        <CardDescription>Kurslarni tugatish statistikasi</CardDescription>
+        <CardDescription>{t("kurslarniTugatishStatistikasi")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-muted/40 rounded-md">
             <p className="text-3xl font-bold text-[var(--ep-blue)]">{courseProgress.length}</p>
-            <p className="text-sm text-muted-foreground">Jami kurslar</p>
+            <p className="text-sm text-muted-foreground">{t("jamiKurslar1")}</p>
           </div>
           <div className="text-center p-4 bg-muted/40 rounded-md">
             <p className="text-3xl font-bold text-[var(--ep-green)]">{completed}</p>
-            <p className="text-sm text-muted-foreground">Tugatilgan</p>
+            <p className="text-sm text-muted-foreground">{t("progress.completed")}</p>
           </div>
           <div className="text-center p-4 bg-muted/40 rounded-md">
             <p className="text-3xl font-bold text-[var(--ep-purple)]">{completionPct}%</p>
-            <p className="text-sm text-muted-foreground">Tugatish foizi</p>
+            <p className="text-sm text-muted-foreground">{t("tugatishFoizi")}</p>
           </div>
         </div>
       </CardContent>

@@ -11,8 +11,10 @@ import type { Employee, FaceEmbedding, RegisterFacePayload } from './FaceRegistr
 import { PageHeader, EmployeeSelectionPanel, RegisteredFacesList } from './FaceRegistrationSections';
 import { CameraCaptureCard } from './FaceRegistrationCamera';
 import { EPPageHeader, EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function FaceRegistration() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [lang, setLang] = useState<'uz' | 'ru'>('uz');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -230,8 +232,8 @@ export default function FaceRegistration() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Sahifa</b></>}
-        title="Sahifa"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("page")}</b></>}
+        title={t("page")}
         text={text}
         modelsLoaded={modelsLoaded}
         lang={lang}

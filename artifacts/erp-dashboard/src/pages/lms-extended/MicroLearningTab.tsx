@@ -14,8 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Play, Video, RefreshCw, Zap } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 export function MicroLearningTab() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showMicroDialog, setShowMicroDialog] = useState(false);
   const [microForm, setMicroForm] = useState({ title: "", durationMinutes: "3", contentType: "video", telegramMessage: "", category: "" });
@@ -50,10 +52,10 @@ export function MicroLearningTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-lg font-semibold">Micro-learning Modullar</h2>
+        <h2 className="text-lg font-semibold">{t("microLearningModullar")}</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => refetchMicro()}><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Yangilash</Button>
-          <Button size="sm" onClick={() => setShowMicroDialog(true)} data-testid="button-add-micro"><Plus className="h-4 w-4 mr-2" />Modul Qo'shish</Button>
+          <Button variant="outline" size="sm" onClick={() => refetchMicro()}><RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}</Button>
+          <Button size="sm" onClick={() => setShowMicroDialog(true)} data-testid="button-add-micro"><Plus className="h-4 w-4 mr-2" />{t("modulQoshish1")}</Button>
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -68,7 +70,7 @@ export function MicroLearningTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{([1,2,3,4]).map(i => <Card key={`k-${i}`}><CardContent className="pt-3 pb-3 h-16" /></Card>)}</div>
       ) : microModules.length === 0 ? (
         <Card><CardContent className="py-10 text-center text-muted-foreground">
-          <Zap className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>Hali micro-modullar yo'q. Yangi modul qo'shing.</p>
+          <Zap className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>{t("haliMicroModullarYoqYangi")}</p>
         </CardContent></Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -94,18 +96,18 @@ export function MicroLearningTab() {
       )}
       <Dialog open={showMicroDialog} onOpenChange={setShowMicroDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Yangi Micro-Modul</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiMicroModul")}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-1">
-            <div><Label>Sarlavha</Label><Input data-testid="input-micro-title" value={microForm.title} onChange={e => setMicroForm(f => ({ ...f, title: e.target.value }))} placeholder="Modul nomi" /></div>
+            <div><Label>{t("progress.title")}</Label><Input data-testid="input-micro-title" value={microForm.title} onChange={e => setMicroForm(f => ({ ...f, title: e.target.value }))} placeholder={t("modulNomi")} /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Davomiyligi (min)</Label><Input data-testid="input-micro-duration" type="number" value={microForm.durationMinutes} onChange={e => setMicroForm(f => ({ ...f, durationMinutes: e.target.value }))} /></div>
-              <div><Label>Kategoriya</Label><Input data-testid="input-micro-category" value={microForm.category} onChange={e => setMicroForm(f => ({ ...f, category: e.target.value }))} placeholder="Kategoriya" /></div>
+              <div><Label>{t("category")}</Label><Input data-testid="input-micro-category" value={microForm.category} onChange={e => setMicroForm(f => ({ ...f, category: e.target.value }))} placeholder={t("category")} /></div>
             </div>
-            <div><Label>Telegram xabari (ixtiyoriy)</Label><Input data-testid="input-micro-telegram" value={microForm.telegramMessage} onChange={e => setMicroForm(f => ({ ...f, telegramMessage: e.target.value }))} placeholder="Telegram uchun qisqa xabar" /></div>
+            <div><Label>Telegram xabari (ixtiyoriy)</Label><Input data-testid="input-micro-telegram" value={microForm.telegramMessage} onChange={e => setMicroForm(f => ({ ...f, telegramMessage: e.target.value }))} placeholder={t("telegramUchunQisqaXabar")} /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowMicroDialog(false)}>Bekor</Button>
-            <Button data-testid="button-submit-micro" disabled={!microForm.title || createMicro.isPending} onClick={() => createMicro.mutate({ ...microForm, durationMinutes: Number(microForm.durationMinutes) })}>Saqlash</Button>
+            <Button variant="outline" onClick={() => setShowMicroDialog(false)}>{t("Bekor")}</Button>
+            <Button data-testid="button-submit-micro" disabled={!microForm.title || createMicro.isPending} onClick={() => createMicro.mutate({ ...microForm, durationMinutes: Number(microForm.durationMinutes) })}>{t("Saqlash")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

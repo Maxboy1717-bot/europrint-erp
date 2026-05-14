@@ -17,8 +17,10 @@ import {
 import { QuestionsSection, ResponsesSection } from "./QuestionnaireSections";
 import { AddQuestionDialog, ViewResponseDialog } from "./QuestionnaireDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function Questionnaire() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<QuestionnaireResponse | null>(null);
@@ -164,13 +166,13 @@ export default function Questionnaire() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="ep-h1">Anketa Boshqaruvi</h1>
-        <p className="text-muted-foreground">Yangi xodimlar uchun anketa savollarini boshqaring</p>
+        <h1 className="ep-h1">{t("anketaBoshqaruvi")}</h1>
+        <p className="text-muted-foreground">{t("yangiXodimlarUchunAnketaSavollarini")}</p>
       </div>
 
       <Tabs defaultValue="questions" className="space-y-4">
         <TabsList data-testid="tabs-list">
-          <TabsTrigger value="questions" data-testid="tab-questions">Savollar</TabsTrigger>
+          <TabsTrigger value="questions" data-testid="tab-questions">{t("questions")}</TabsTrigger>
           <TabsTrigger value="responses" data-testid="tab-responses">
             Arizalar ({responses.length})
           </TabsTrigger>

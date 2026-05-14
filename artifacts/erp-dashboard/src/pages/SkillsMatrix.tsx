@@ -22,8 +22,11 @@ import { skillFormSchema, employeeSkillFormSchema, getLevelBadge } from "./skill
 import { SkillDialog } from "./skills-matrix/SkillDialog";
 import { EmployeeSkillDialog } from "./skills-matrix/EmployeeSkillDialog";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 export default function SkillsMatrix() {
+  const { t } = useTranslation("hr");
+  const { t: tCommon } = useTranslation("common");
   const { toast } = useToast();
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [isEmployeeSkillDialogOpen, setIsEmployeeSkillDialogOpen] = useState(false);
@@ -40,32 +43,32 @@ export default function SkillsMatrix() {
 
   const createSkillMutation = useMutation({
     mutationFn: (data: SkillFormValues) => apiRequest("POST", "/api/hr/skills", data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/skills"] }); setIsSkillDialogOpen(false); skillForm.reset(); toast({ title: "Ko'nikma muvaffaqiyatli yaratildi" }); },
-    onError: () => { toast({ title: "Ko'nikma yaratishda xatolik", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/skills"] }); setIsSkillDialogOpen(false); skillForm.reset(); toast({ title: t("skills.createdOk") }); },
+    onError: () => { toast({ title: t("skills.createError"), variant: "destructive" }); },
   });
 
   const updateSkillMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<SkillFormValues> }) => apiRequest("PATCH", `/api/hr/skills/${id}`, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/skills"] }); setEditingSkill(null); setIsSkillDialogOpen(false); skillForm.reset(); toast({ title: "Ko'nikma muvaffaqiyatli yangilandi" }); },
-    onError: () => { toast({ title: "Ko'nikma yangilashda xatolik", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/skills"] }); setEditingSkill(null); setIsSkillDialogOpen(false); skillForm.reset(); toast({ title: t("skills.updatedOk") }); },
+    onError: () => { toast({ title: t("skills.updateError"), variant: "destructive" }); },
   });
 
   const deleteSkillMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/hr/skills/${id}`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/skills"] }); toast({ title: "Ko'nikma muvaffaqiyatli o'chirildi" }); },
-    onError: () => { toast({ title: "Ko'nikma o'chirishda xatolik", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/skills"] }); toast({ title: t("skills.deletedOk") }); },
+    onError: () => { toast({ title: t("skills.deleteError"), variant: "destructive" }); },
   });
 
   const createEmployeeSkillMutation = useMutation({
     mutationFn: (data: EmployeeSkillFormValues) => apiRequest("POST", "/api/hr/employee-skills", data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/employee-skills"] }); setIsEmployeeSkillDialogOpen(false); employeeSkillForm.reset(); toast({ title: "Xodim ko'nikmasi muvaffaqiyatli qo'shildi" }); },
-    onError: () => { toast({ title: "Xodim ko'nikmasi qo'shishda xatolik", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/employee-skills"] }); setIsEmployeeSkillDialogOpen(false); employeeSkillForm.reset(); toast({ title: t("skills.empAddedOk") }); },
+    onError: () => { toast({ title: t("skills.empAddError"), variant: "destructive" }); },
   });
 
   const deleteEmployeeSkillMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/hr/employee-skills/${id}`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/employee-skills"] }); toast({ title: "Xodim ko'nikmasi muvaffaqiyatli o'chirildi" }); },
-    onError: () => { toast({ title: "Xodim ko'nikmasi o'chirishda xatolik", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/employee-skills"] }); toast({ title: t("skills.empDeletedOk") }); },
+    onError: () => { toast({ title: t("skills.empDeleteError"), variant: "destructive" }); },
   });
 
   const onSkillSubmit = (data: SkillFormValues) => { editingSkill ? updateSkillMutation.mutate({ id: editingSkill.id, data }) : createSkillMutation.mutate(data); };
@@ -86,8 +89,8 @@ export default function SkillsMatrix() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="ep-h1">Ko'nikmalar Matritsasi</h1>
-          <p className="text-muted-foreground">Ko'nikmalar va xodimlar kompetensiyalarini boshqarish</p>
+          <h1 className="ep-h1">{t("skills.title")}</h1>
+          <p className="text-muted-foreground">{t("skills.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <EmployeeSkillDialog open={isEmployeeSkillDialogOpen} onOpenChange={setIsEmployeeSkillDialogOpen} form={employeeSkillForm} employees={employees as Employee[] | undefined} skills={skills as Skill[] | undefined} onSubmit={onEmployeeSkillSubmit} isPending={createEmployeeSkillMutation.isPending} onCancel={() => { setIsEmployeeSkillDialogOpen(false); employeeSkillForm.reset(); }} />
@@ -96,22 +99,22 @@ export default function SkillsMatrix() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Jami ko'nikmalar</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{(skills as Skill[] | undefined)?.length || 0}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ko'nikmali xodimlar</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{new Set((employeeSkills as EmployeeSkillRecord[] | undefined)?.map((es: EmployeeSkillRecord) => es.userId)).size || 0}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Jami belgilangan</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{(employeeSkills as EmployeeSkillRecord[] | undefined)?.length || 0}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.totalSkills")}</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{(skills as Skill[] | undefined)?.length || 0}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.skilledEmployees")}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{new Set((employeeSkills as EmployeeSkillRecord[] | undefined)?.map((es: EmployeeSkillRecord) => es.userId)).size || 0}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.totalAssigned")}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{(employeeSkills as EmployeeSkillRecord[] | undefined)?.length || 0}</div></CardContent></Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Ko'nikmalar</CardTitle><CardDescription>Tizimda mavjud ko'nikmalar</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t("skills.skillsListTitle")}</CardTitle><CardDescription>{t("skills.skillsListDesc")}</CardDescription></CardHeader>
           <CardContent>
             {loadingSkills ? (
               <div className="space-y-4">{([1,2,3,4,5]).map(i => <div key={`k-${i}`} className="flex items-center gap-4 py-2"><Skeleton className="h-6 w-20 rounded-lg" /><Skeleton className="h-6 w-40 rounded-lg" /><Skeleton className="h-6 w-24 rounded-lg" /><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></div>)}</div>
             ) : !(skills as Skill[] | undefined)?.length ? (
-              <EmptyState icon={<Target className="h-8 w-8" />} title="Ko'nikmalar topilmadi" description="Hozircha hech qanday ko'nikma mavjud emas." actionLabel="Ko'nikma yaratish" onAction={() => setIsSkillDialogOpen(true)} />
+              <EmptyState icon={<Target className="h-8 w-8" />} title={t("skills.emptySkillsTitle")} description={t("skills.emptySkillsDesc")} actionLabel={t("skills.createSkill")} onAction={() => setIsSkillDialogOpen(true)} />
             ) : (
               <div className="ep-table-scroll"><Table>
-                <TableHeader><TableRow><TableHead>Kod</TableHead><TableHead>Nom</TableHead><TableHead>Kategoriya</TableHead><TableHead className="text-right">Harakatlar</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{t("departments.code")}</TableHead><TableHead>{t("skills.name")}</TableHead><TableHead>{t("skills.category")}</TableHead><TableHead className="text-right">{t("departments.actions")}</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {(skills as Skill[]).map((skill: Skill) => (
                     <TableRow key={skill.id} data-testid={`row-skill-${skill.id}`} className="hover:bg-muted/40 transition-colors">
@@ -133,12 +136,12 @@ export default function SkillsMatrix() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Xodim ko'nikmalari</CardTitle><CardDescription>Belgilangan ko'nikmalar va darajalar</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t("skills.empSkillsTitle")}</CardTitle><CardDescription>{t("skills.empSkillsDesc")}</CardDescription></CardHeader>
           <CardContent>
             {loadingEmployeeSkills ? (
               <div className="space-y-4">{([1,2,3,4,5]).map(i => <div key={`k-${i}`} className="flex items-center gap-4 py-2"><Skeleton className="h-6 w-32 rounded-lg" /><Skeleton className="h-6 w-28 rounded-lg" /><Skeleton className="h-6 w-20 rounded-lg" /><Skeleton className="h-8 w-8 ml-auto rounded-full" /></div>)}</div>
             ) : !(employeeSkills as EmployeeSkillRecord[] | undefined)?.length ? (
-              <EmptyState icon={<TrendingUp className="h-8 w-8" />} title="Xodim ko'nikmalari topilmadi" description="Hozircha hech qanday xodimga ko'nikma belgilanmagan." actionLabel="Ko'nikma belgilash" onAction={() => setIsEmployeeSkillDialogOpen(true)} />
+              <EmptyState icon={<TrendingUp className="h-8 w-8" />} title={t("skills.emptyEmpSkillsTitle")} description={t("skills.emptyEmpSkillsDesc")} actionLabel={t("skills.assignSkill")} onAction={() => setIsEmployeeSkillDialogOpen(true)} />
             ) : (
               <div className="space-y-3">
                 {(employeeSkills as EmployeeSkillRecord[]).slice(0, 10).map((es: EmployeeSkillRecord) => {
@@ -166,20 +169,20 @@ export default function SkillsMatrix() {
       <ConfirmDialog
         open={confirmDeleteSkillId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteSkillId(null); }}
-        title="Ko'nikmani o'chirish"
-        description="Ushbu ko'nikmani o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
+        title={t("skills.deleteSkillTitle")}
+        description={t("skills.deleteSkillDesc")}
+        confirmText={tCommon("delete")}
+        cancelText={tCommon("cancel")}
         variant="destructive"
         onConfirm={() => { if (confirmDeleteSkillId !== null) deleteSkillMutation.mutate(confirmDeleteSkillId); }}
       />
       <ConfirmDialog
         open={confirmDeleteEmpSkillId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteEmpSkillId(null); }}
-        title="Xodim ko'nikmasini o'chirish"
-        description="Ushbu xodim ko'nikmasini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
+        title={t("skills.deleteEmpSkillTitle")}
+        description={t("skills.deleteEmpSkillDesc")}
+        confirmText={tCommon("delete")}
+        cancelText={tCommon("cancel")}
         variant="destructive"
         onConfirm={() => { if (confirmDeleteEmpSkillId !== null) deleteEmployeeSkillMutation.mutate(confirmDeleteEmpSkillId); }}
       />

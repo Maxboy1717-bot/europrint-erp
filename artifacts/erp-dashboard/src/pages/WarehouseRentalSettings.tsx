@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, X } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   formatMoney,
   type CustomRate,
@@ -32,6 +33,7 @@ interface SettingsPanelProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<RentalSettings>({
@@ -77,12 +79,12 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
     <div className="space-y-6 max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Asosiy sozlamalar</CardTitle>
+          <CardTitle className="text-base">{t("asosiySozlamalar")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Standart bepul kunlar</Label>
+              <Label>{t("standartBepulKunlar")}</Label>
               <Input
                 data-testid="input-settings-free-days"
                 type="number"
@@ -120,7 +122,7 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Menejer uchun maxsus tarif</CardTitle>
+          <CardTitle className="text-base">{t("menejerUchunMaxsusTarif")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {form.customRates.length > 0 && (
@@ -150,7 +152,7 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <Input
               data-testid="input-new-rate-manager"
-              placeholder="Menejer ismi"
+              placeholder={t("menejerIsmi")}
               value={newRate.managerName}
               onChange={(e) => setNewRate((p) => ({ ...p, managerName: e.target.value }))}
             />
@@ -164,7 +166,7 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
             <Input
               data-testid="input-new-rate-free-days"
               type="number"
-              placeholder="Bepul kun"
+              placeholder={t("bepulKun")}
               value={newRate.freeDays}
               onChange={(e) => setNewRate((p) => ({ ...p, freeDays: e.target.value }))}
             />
@@ -175,7 +177,7 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
             onClick={addCustomRate}
             data-testid="button-add-custom-rate"
           >
-            <Plus className="h-4 w-4 mr-1" /> Maxsus tarif qo'shish
+            <Plus className="h-4 w-4 mr-1" /> {t("maxsusTarifQoshish")}
           </Button>
         </CardContent>
       </Card>

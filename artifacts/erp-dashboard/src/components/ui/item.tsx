@@ -9,8 +9,10 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import { useTranslation } from '@/lib/i18n';
 
 function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
+  const { t } = useTranslation("common");
   return (
     <div
       role="list"
@@ -97,7 +99,7 @@ function ItemMedia({
   className,
   variant = "default",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof itemMediaVariants>) {
+}: React.ComponentProps<"div"> {t("variantprops")}<typeof itemMediaVariants>) {
   return (
     <div
       data-slot="item-media"

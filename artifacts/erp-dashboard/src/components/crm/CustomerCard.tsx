@@ -9,6 +9,7 @@ import { Building2, ShoppingBag, Wallet, MessageSquare, Sparkles, Mail, Phone, C
 import { apiRequest } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Customer360 {
   customer: Record<string, any> | null;
   deals:    Array<Record<string, any>>;
@@ -21,6 +22,7 @@ interface ChurnRes {
 }
 
 export function CustomerCard({ customerId }: { customerId: number }) {
+  const { t } = useTranslation("common");
   const c360 = useQuery<Customer360>({
     queryKey: ['/api/agents/crm/customer360', customerId],
     queryFn: () => apiRequest<Customer360>('GET', `/api/agents/crm/customer360/${customerId}`),
@@ -38,7 +40,7 @@ export function CustomerCard({ customerId }: { customerId: number }) {
     return (
       <Card className="p-12 text-center">
         <EPLoader size={24} className="mx-auto" />
-        <p className="text-sm text-muted-foreground mt-2">Yuklanmoqda...</p>
+        <p className="text-sm text-muted-foreground mt-2">{t("Yuklanmoqda...")}</p>
       </Card>
     );
   }
@@ -85,21 +87,21 @@ export function CustomerCard({ customerId }: { customerId: number }) {
       {/* Tabs */}
       <Tabs defaultValue="overview" className="p-5">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-          <TabsTrigger value="overview"><Building2 className="h-3.5 w-3.5 mr-1.5" />Umumiy</TabsTrigger>
-          <TabsTrigger value="orders"><ShoppingBag className="h-3.5 w-3.5 mr-1.5" />Buyurtmalar</TabsTrigger>
-          <TabsTrigger value="finance"><Wallet className="h-3.5 w-3.5 mr-1.5" />Moliya</TabsTrigger>
-          <TabsTrigger value="messages"><MessageSquare className="h-3.5 w-3.5 mr-1.5" />Muloqot</TabsTrigger>
+          <TabsTrigger value="overview"><Building2 className="h-3.5 w-3.5 mr-1.5" />{t("umumiy")}</TabsTrigger>
+          <TabsTrigger value="orders"><ShoppingBag className="h-3.5 w-3.5 mr-1.5" />{t("buyurtmalar")}</TabsTrigger>
+          <TabsTrigger value="finance"><Wallet className="h-3.5 w-3.5 mr-1.5" />{t("moliya")}</TabsTrigger>
+          <TabsTrigger value="messages"><MessageSquare className="h-3.5 w-3.5 mr-1.5" />{t("muloqot")}</TabsTrigger>
           <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1.5" />AI tavsiyalar</TabsTrigger>
         </TabsList>
 
         {/* Umumiy */}
         <TabsContent value="overview" className="space-y-3 mt-4">
-          <h3 className="text-xs font-bold uppercase text-muted-foreground">Asosiy ma'lumotlar</h3>
+          <h3 className="text-xs font-bold uppercase text-muted-foreground">{t("asosiyMalumotlar")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <Field label="Nomi"      value={customer.name ?? customer.title} />
-            <Field label="Manzil"    value={customer.address} />
+            <Field label={t("name")}      value={customer.name ?? customer.title} />
+            <Field label={t("address")}    value={customer.address} />
             <Field label="INN"       value={customer.inn} />
-            <Field label="Yaratilgan" value={customer.created_at ? new Date(customer.created_at).toLocaleDateString('uz-UZ') : '—'} />
+            <Field label={t("Yaratilgan")} value={customer.created_at ? new Date(customer.created_at).toLocaleDateString('uz-UZ') : '—'} />
           </div>
         </TabsContent>
 
@@ -107,7 +109,7 @@ export function CustomerCard({ customerId }: { customerId: number }) {
         <TabsContent value="orders" className="mt-4">
           <h3 className="text-xs font-bold uppercase text-muted-foreground mb-3">So'nggi 12 oy buyurtmalari ({c360.data.deals.length})</h3>
           {c360.data.deals.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Buyurtmalar yo'q</p>
+            <p className="text-sm text-muted-foreground text-center py-6">{t("buyurtmalarYoq")}</p>
           ) : (
             <div className="space-y-2">
               {c360.data.deals.slice(0, 10).map((d, i) => (
@@ -131,7 +133,7 @@ export function CustomerCard({ customerId }: { customerId: number }) {
         <TabsContent value="finance" className="mt-4">
           <h3 className="text-xs font-bold uppercase text-muted-foreground mb-3">To'lovlar tarixi ({c360.data.payments.length})</h3>
           {c360.data.payments.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">To'lovlar yo'q</p>
+            <p className="text-sm text-muted-foreground text-center py-6">{t("tolovlarYoq")}</p>
           ) : (
             <div className="space-y-2">
               {c360.data.payments.slice(0, 10).map((p, i) => (
@@ -152,7 +154,7 @@ export function CustomerCard({ customerId }: { customerId: number }) {
         {/* Muloqot */}
         <TabsContent value="messages" className="mt-4">
           <p className="text-sm text-muted-foreground text-center py-6">
-            Timeline kelajakda CRM activities jadvalidan ko'rsatiladi
+            {t("timelineKelajakdaCrmActivitiesJadvalidan")}
           </p>
         </TabsContent>
 
@@ -166,7 +168,7 @@ export function CustomerCard({ customerId }: { customerId: number }) {
             }`}>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4" />
-                <h4 className="font-bold text-sm">Churn xavfi tahlili</h4>
+                <h4 className="font-bold text-sm">{t("churnXavfiTahlili")}</h4>
               </div>
               <div className="text-2xl font-bold uppercase mb-2">{churn.data.risk}</div>
               <ul className="text-xs space-y-1">

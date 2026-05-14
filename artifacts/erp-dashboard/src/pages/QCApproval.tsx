@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest, getAuthHeaders } from "@/lib/queryClient";
 import { QCOrder, QCTestResult } from "./QCApprovalTypes";
 import { QCApprovalHeader, QCOrdersList } from "./QCApprovalSections";
+import { useTranslation } from '@/lib/i18n';
 import {
   InspectorSubmitDialog,
   ApprovalDialog,
@@ -17,6 +18,7 @@ import {
 } from "./QCApprovalDialogs";
 
 export default function QCApproval() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   // ─── Selected order & dialog visibility ─────────────────────────────────────
@@ -184,7 +186,7 @@ export default function QCApproval() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   if (isLoading) {
-    return <div className="p-6">Yuklanmoqda...</div>;
+    return <div className="p-6">{t("Yuklanmoqda...")}</div>;
   }
 
   // Suppress unused-variable warning for testResults (kept for future use / query cache)

@@ -37,13 +37,14 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface EPPageHeaderProps {
   /** 20px / semibold page title (Uzbek sentence case). */
   title: React.ReactNode;
   /** Optional 13px muted line below the title. */
   subtitle?: React.ReactNode;
-  /** Breadcrumb (e.g. <>Dashboard · HR · <b>Xodimlar</b></>). */
+  /** Breadcrumb (e.g. <>{t("dashboardHr")}<b>{t("xodimlar")}</b></>). */
   breadcrumb?: React.ReactNode;
   /** Action buttons (1-3 buttons recommended). */
   actions?: React.ReactNode;
@@ -60,6 +61,7 @@ export function EPPageHeader({
   status,
   className,
 }: EPPageHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <header
       className={cn(

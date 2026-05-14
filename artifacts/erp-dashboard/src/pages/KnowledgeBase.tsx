@@ -264,8 +264,8 @@ export default function KnowledgeBasePage() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(v) => { if (!v) setDeleteId(null); }}
-        title="Bilimlar bazasini o'chirish"
-        description="Ushbu yozuvni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+        title={t("bilimlarBazasiniOchirish")}
+        description={t("ushbuYozuvniOchirishniTasdiqlaysizmiBu")}
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import type { SystemTabProps } from "./SystemTabTypes";
+import { useTranslation } from '@/lib/i18n';
 import {
   MentorshipsCard,
   EventsCard,
@@ -28,6 +29,7 @@ export function SystemTab({
   employeeStats, employeeStatsLoading,
   aiAnalysis, aiAnalysisLoading,
 }: SystemTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       <Button
@@ -35,7 +37,7 @@ export function SystemTab({
         size="sm"
         onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })}
         className="sr-only"
-        aria-label="Yangilash"
+        aria-label={t("refresh")}
       >
         <RefreshCw className="h-4 w-4" />
       </Button>

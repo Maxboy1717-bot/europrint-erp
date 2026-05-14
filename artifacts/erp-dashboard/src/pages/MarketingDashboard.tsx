@@ -62,9 +62,9 @@ export default function MarketingDashboard() {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="marketing-dashboard-loading">
         <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('marketingDashboard')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('marketingDashboard')}</b></>}
         title={t('marketingDashboard')}
-        subtitle="Kampaniyalar, lidlar va konversiya analitikasi"
+        subtitle={t("kampaniyalarLidlarVaKonversiyaAnalitikasi")}
       />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />)}
@@ -76,7 +76,7 @@ export default function MarketingDashboard() {
   return (
     <div className="space-y-6" data-testid="marketing-dashboard">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Marketing {t('dashboard8')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Marketing {t('dashboard8')}</b></>}
         title="Marketing {t('dashboard8')}"
       />
 

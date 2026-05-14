@@ -15,9 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Star, Zap, Plus } from "lucide-react";
 import { RISK_LABELS, RISK_COLORS } from "./MarketingDashboardTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── NPS Submission Form ──────────────────────────────────────────────────────
 export function NpsSubmitDialog() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ score: "8", comment: "", customerId: "" });
@@ -51,16 +53,16 @@ export function NpsSubmitDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" data-testid="button-nps-add">
-          <Plus className="h-3 w-3 mr-1" />NPS qo'shish
+          <Plus className="h-3 w-3 mr-1" />{t("npsQoshish")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Mijoz NPS Bahosi</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("mijozNpsBahosi")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Mijoz</Label>
+            <Label>{t("mijoz1")}</Label>
             <Select value={form.customerId} onValueChange={(v) => setForm({ ...form, customerId: v })}>
               <SelectTrigger data-testid="select-nps-customer" className="h-9">
                 <SelectValue placeholder="Mijozni tanlang (ixtiyoriy)" />
@@ -89,8 +91,8 @@ export function NpsSubmitDialog() {
             </div>
           </div>
           <div>
-            <Label>Izoh</Label>
-            <Textarea placeholder="Mijoz izohi..." value={form.comment}
+            <Label>{t("Izoh")}</Label>
+            <Textarea placeholder={t("mijozIzohi")} value={form.comment}
               onChange={(e) => setForm({ ...form, comment: e.target.value })}
               rows={3} data-testid="textarea-nps-comment" />
           </div>
@@ -119,6 +121,7 @@ interface AiSignalResult {
 }
 
 export function AiChurnSignal() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [result, setResult] = useState<AiSignalResult | null>(null);
 
@@ -142,7 +145,7 @@ export function AiChurnSignal() {
       {result && (
         <div className="space-y-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Xavf darajasi:</span>
+            <span className="text-muted-foreground">{t("xavfDarajasi1")}</span>
             <Badge className={`${RISK_COLORS[result.aiSignal.churnRiskLevel || "low"]} text-xs`}>
               {RISK_LABELS[result.aiSignal.churnRiskLevel || "low"]}
             </Badge>
@@ -153,7 +156,7 @@ export function AiChurnSignal() {
           )}
           {result.aiSignal.urgentActions && result.aiSignal.urgentActions.length > 0 && (
             <div className="space-y-1">
-              <div className="font-medium text-foreground">Tezkor harakatlar:</div>
+              <div className="font-medium text-foreground">{t("tezkorHarakatlar1")}</div>
               {(Array.isArray(result.aiSignal.urgentActions) ? result.aiSignal.urgentActions : []).map((a, i) => (
                 <div key={`k-${i}`} className="flex items-start gap-1">
                   <span className="text-[var(--ep-primary)] shrink-0">•</span>

@@ -52,7 +52,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Buyurtma Tannarxi Tafsiloti</h1>
+              <h1 className="text-2xl font-bold">{t("buyurtmaTannarxiTafsiloti")}</h1>
               <p className="text-white/75 text-sm">
                 {costingDetail.salesOrderId || "Buyurtma #" + costingDetail.id.substring(0, 8)}
               </p>
@@ -65,7 +65,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card data-testid="card-detail-total">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Umumiy Xarajat</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("umumiyXarajat")}</CardTitle>
               <Calculator className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -74,7 +74,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
           </Card>
           <Card data-testid="card-detail-selling">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sotish Narxi</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("sotishNarxi")}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -83,7 +83,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
           </Card>
           <Card data-testid="card-detail-profit">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Yalpi Foyda</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("yalpiFoyda1")}</CardTitle>
               {(costingDetail.grossProfit || 0) >= 0 ? (
                 <TrendingUp className="h-4 w-4 text-[var(--ep-green)]" />
               ) : (
@@ -98,7 +98,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
           </Card>
           <Card data-testid="card-detail-margin">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Foyda Marjasi</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("foydaMarjasi1")}</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -111,7 +111,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2">
-            <CardTitle>Xarajatlar Bo'linishi</CardTitle>
+            <CardTitle>{t("xarajatlarBolinishi")}</CardTitle>
             <div className="flex items-center gap-2">
               {getStatusBadge(costingDetail.status)}
               <Button
@@ -121,7 +121,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
                 data-testid="button-recalculate"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${calculateMutation.isPending ? "animate-spin" : ""}`} />
-                Qayta Hisoblash
+                {t("qaytaHisoblash1")}
               </Button>
             </div>
           </CardHeader>
@@ -132,19 +132,19 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.materialCost)}</div>
               </div>
               <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                <div className="text-sm text-muted-foreground mb-1">Mehnat</div>
+                <div className="text-sm text-muted-foreground mb-1">{t("mehnat")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.laborCost)}</div>
               </div>
               <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                <div className="text-sm text-muted-foreground mb-1">Ustama</div>
+                <div className="text-sm text-muted-foreground mb-1">{t("ustama")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.overheadCost)}</div>
               </div>
               <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                <div className="text-sm text-muted-foreground mb-1">Energiya</div>
+                <div className="text-sm text-muted-foreground mb-1">{t("energiya1")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.energyCost)}</div>
               </div>
               <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-                <div className="text-sm text-muted-foreground mb-1">Isrof</div>
+                <div className="text-sm text-muted-foreground mb-1">{t("isrof")}</div>
                 <div className="text-xl font-bold">{formatCurrency(costingDetail.wasteCost)}</div>
               </div>
             </div>
@@ -154,18 +154,18 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
         {costingDetail.lines && costingDetail.lines.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Tannarx Qatorlari</CardTitle>
+              <CardTitle>{t("tannarxQatorlari")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Turi</TableHead>
-                    <TableHead>Element</TableHead>
-                    <TableHead className="text-right">Miqdor</TableHead>
-                    <TableHead className="text-right">Birlik Narxi</TableHead>
-                    <TableHead className="text-right">Jami</TableHead>
-                    <TableHead>Izoh</TableHead>
+                    <TableHead>{t("type")}</TableHead>
+                    <TableHead>{t("element")}</TableHead>
+                    <TableHead className="text-right">{t("quantity")}</TableHead>
+                    <TableHead className="text-right">{t("birlikNarxi1")}</TableHead>
+                    <TableHead className="text-right">{t("total")}</TableHead>
+                    <TableHead>{t("Izoh")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

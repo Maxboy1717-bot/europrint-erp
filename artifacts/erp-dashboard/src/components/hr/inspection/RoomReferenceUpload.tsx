@@ -121,8 +121,8 @@ export function RoomReferenceUpload({open, roomCode, roomName, onClose, onSaved 
                          justify-center gap-2 hover:border-blue-400 hover:bg-blue-50 transition-colors"
             >
               <Upload className="w-8 h-8 text-blue-400" />
-              <span className="text-sm text-gray-500">Rasm tanlash uchun bosing</span>
-              <span className="text-xs text-gray-400">JPEG, PNG, WebP</span>
+              <span className="text-sm text-gray-500">{t("rasmTanlashUchunBosing")}</span>
+              <span className="text-xs text-gray-400">{t("jpegPngWebp")}</span>
             </button>
           )}
 
@@ -134,7 +134,7 @@ export function RoomReferenceUpload({open, roomCode, roomName, onClose, onSaved 
               id="ref-desc"
               {...register('description')}
               rows={3}
-              placeholder="Xonaning ideal holati haqida qisqacha izoh..."
+              placeholder={t("xonaningIdealHolatiHaqidaQisqacha")}
               className="resize-none"
             />
             {errors.description && (
@@ -144,7 +144,7 @@ export function RoomReferenceUpload({open, roomCode, roomName, onClose, onSaved 
 
           {!base64 && (
             <p className="text-xs text-[var(--ep-yellow)] bg-amber-50 border border-amber-200 rounded px-2 py-1">
-              Davom etish uchun rasm tanlang
+              {t("davomEtishUchunRasmTanlang")}
             </p>
           )}
 
@@ -154,7 +154,7 @@ export function RoomReferenceUpload({open, roomCode, roomName, onClose, onSaved 
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting || !base64}>
               {isSubmitting ? 'Yuklanmoqda...' : 'Saqlash'}

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClipboardList, Search, ArrowRight } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface StatusTransition {
   from: string;
   to:   string[];
@@ -57,6 +58,7 @@ const STATUS_COLORS: Record<string, string> = {
 type TabType = "chain" | "log";
 
 export default function OrderStatusPage() {
+  const { t } = useTranslation("common");
   const [tab, setTab]         = useState<TabType>("chain");
   const [orderId, setOrderId] = useState("");
   const [searched, setSearched] = useState("");
@@ -101,7 +103,7 @@ export default function OrderStatusPage() {
     : (chainData as StatusChain)?.statuses ?? [];
 
   // Normalise transitions to Record<string,string[]>
-  const transitions: Record<string, string[]> = Array.isArray(transitionsData)
+  {t("constTransitionsRecord")}<string, string[]> = Array.isArray(transitionsData)
     ? Object.fromEntries((transitionsData as StatusTransition[]).map(t => [t.from, t.to]))
     : (transitionsData as Record<string, string[]>) ?? {};
 
@@ -114,7 +116,7 @@ export default function OrderStatusPage() {
   return (
     <ModulePage
       module="sd"
-      title="Buyurtma Holatlari"
+      title={t("buyurtmaHolatlari")}
       icon={<ClipboardList className="h-5 w-5" />}
     >
       <div className="space-y-4">
@@ -125,7 +127,7 @@ export default function OrderStatusPage() {
             onClick={() => setTab("chain")}
             data-testid="tab-chain"
           >
-            Holat zanjiri
+            {t("holatZanjiri")}
           </Button>
           <Button
             variant={tab === "log" ? "default" : "outline"}
@@ -133,7 +135,7 @@ export default function OrderStatusPage() {
             onClick={() => setTab("log")}
             data-testid="tab-log"
           >
-            Buyurtma tarixi
+            {t("buyurtmaTarixi")}
           </Button>
         </div>
 
@@ -148,7 +150,7 @@ export default function OrderStatusPage() {
               {chain.length > 0 && (
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Holat zanjiri</CardTitle>
+                    <CardTitle className="text-sm">{t("holatZanjiri")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -171,7 +173,7 @@ export default function OrderStatusPage() {
               {Object.keys(transitions).length > 0 && (
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Ruxsat etilgan o'tishlar</CardTitle>
+                    <CardTitle className="text-sm">{t("ruxsatEtilganOtishlar")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
@@ -202,7 +204,7 @@ export default function OrderStatusPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buyurtma ID..."
+                  placeholder={t("buyurtmaId1")}
                   value={orderId}
                   onChange={e => setOrderId(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && setSearched(orderId)}
@@ -211,7 +213,7 @@ export default function OrderStatusPage() {
                 />
               </div>
               <Button onClick={() => setSearched(orderId)} disabled={!orderId}>
-                Qidirish
+                {t("search")}
               </Button>
             </div>
 
@@ -232,7 +234,7 @@ export default function OrderStatusPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Buyurtma ID kiriting va qidiring</p>
+                  <p className="text-muted-foreground">{t("buyurtmaIdKiritingVaQidiring")}</p>
                 </CardContent>
               </Card>
             ) : logs.length === 0 ? (

@@ -114,15 +114,15 @@ export default function MESDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">MES — Ishlab Chiqarish</h1>
-          <p className="text-sm text-muted-foreground">Sex boshlig'ining real-time ko'rinishi</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("mesIshlabChiqarish")}</h1>
+          <p className="text-sm text-muted-foreground">{t("sexBoshliginingRealTimeKorinishi")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className={cn("text-sm font-semibold px-3", oeeGlobal >= 85 ? "bg-green-50 text-[var(--ep-green)]" : oeeGlobal >= 70 ? "bg-amber-50 text-[var(--ep-yellow)]" : "bg-red-50 text-[var(--ep-red)]")}>
             OEE: {sLoad ? "..." : `${oeeGlobal}%`}
           </Badge>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/mes/oee-monitor">MES Monitor <ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
+            <Link href="/mes/oee-monitor">{t("mesMonitor")}<ChevronRight className="w-3.5 h-3.5 ml-1" /></Link>
           </Button>
         </div>
       </div>
@@ -133,20 +133,20 @@ export default function MESDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <KpiCard title="OEE" value={`${stats?.oee?.overall || 0}%`}
             sub="Overall Equipment" icon={Gauge} color={oeeColor(oeeGlobal)} loading={sLoad} />
-          <KpiCard title="Mavjudlik" value={`${stats?.oee?.availability || 0}%`}
+          <KpiCard title={t("Mavjudlik")} value={`${stats?.oee?.availability || 0}%`}
             sub="Availability" icon={Activity} color="text-[var(--ep-blue)]" loading={sLoad} />
-          <KpiCard title="Faol vazifalar" value={activeTasks}
+          <KpiCard title={t("faolVazifalar")} value={activeTasks}
             sub="hozir ishlayapti" icon={Play} color="text-[var(--ep-green)]" loading={tLoad} />
-          <KpiCard title="Buyurtmalar" value={activeOrders}
+          <KpiCard title={t("buyurtmalar")} value={activeOrders}
             sub="ishlab chiqarishda" icon={Package} color="text-[var(--ep-purple)]" loading={pLoad} />
-          <KpiCard title="Ta'mirlash" value={stats?.maintenance?.pending || 0}
+          <KpiCard title={t("tamirlash")} value={stats?.maintenance?.pending || 0}
             sub="kutilmoqda" icon={Wrench} color="text-[var(--ep-yellow)]" loading={sLoad} />
         </div>
       </section>
 
       {/* ── SECTION 2: E'tibor kerak ─────────────────────────── */}
       <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">E'tibor kerak</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("etiborKerak")}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
           {/* Mashinalar OEE */}
@@ -154,12 +154,12 @@ export default function MESDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Factory className="w-4 h-4 text-[var(--ep-blue)]" />
-                Mashinalar OEE
+                {t("mashinalarOee")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {oLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-6 w-full rounded-lg" />)}</div> :
-               oeeList.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Mashina topilmadi</p> : (
+               oeeList.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("mashinaTopilmadi")}</p> : (
                 <div className="space-y-2">
                   {oeeList?.slice(0, 6).map((m, i) => (
                     <div key={m.machineId || i} className="flex items-center justify-between text-sm">
@@ -185,13 +185,13 @@ export default function MESDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Play className="w-4 h-4 text-[var(--ep-green)]" />
-                Faol vazifalar
+                {t("faolVazifalar")}
                 <Badge variant="outline" className="ml-auto text-xs">{tasks.length}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {tLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}</div> :
-               tasks.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Vazifa yo'q</p> : (
+               tasks.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("vazifaYoq")}</p> : (
                 <div className="space-y-2">
                   {tasks?.slice(0, 5).map(t => (
                     <div key={t.id} className="flex items-center justify-between text-sm py-0.5">
@@ -214,13 +214,13 @@ export default function MESDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Package className="w-4 h-4 text-[var(--ep-purple)]" />
-                Buyurtmalar
+                {t("buyurtmalar")}
                 <Badge variant="outline" className="ml-auto text-xs">{orders.length}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {pLoad ? <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-8 w-full rounded-lg" />)}</div> :
-               orders.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Buyurtma yo'q</p> : (
+               orders.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("buyurtmaYoq")}</p> : (
                 <div className="space-y-2">
                   {orders?.slice(0, 5).map(o => (
                     <div key={o.id} className="flex items-center justify-between text-sm py-0.5">
@@ -242,7 +242,7 @@ export default function MESDashboard() {
 
       {/* ── SECTION 3: Tarix va trend ────────────────────────── */}
       <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Smena va ta'mirlash</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("smenaVaTamirlash")}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Smenalar */}
@@ -250,12 +250,12 @@ export default function MESDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[var(--ep-blue)]" />
-                Faol smenalar
+                {t("faolSmenalar")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {seLoad ? <div className="space-y-2">{([1,2]).map(i => <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />)}</div> :
-               sessions.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Smena topilmadi</p> : (
+               sessions.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("smenaTopilmadi")}</p> : (
                 <div className="space-y-2">
                   {sessions?.slice(0, 4).map(s => (
                     <div key={s.id} className="flex items-center justify-between text-sm py-1">
@@ -278,7 +278,7 @@ export default function MESDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Wrench className="w-4 h-4 text-[var(--ep-yellow)]" />
-                Ta'mirlash holati
+                {t("tamirlashHolati")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -308,9 +308,9 @@ export default function MESDashboard() {
       {/* Tezkor harakatlar */}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild><Link href="/mes/oee-monitor">{t('oeeMonitor')}</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/mes/reason-log">To'xtash log</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/mes/maintenance-request">Ta'mirlash so'rovi</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/mes/gamification">Reyting</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/mes/reason-log">{t("toxtashLog")}</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/mes/maintenance-request">{t("tamirlashSorovi")}</Link></Button>
+        <Button variant="outline" size="sm" asChild><Link href="/mes/gamification">{t("reyting")}</Link></Button>
       </div>
     </div>
   );

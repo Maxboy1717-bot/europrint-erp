@@ -14,8 +14,10 @@ import { useUndoDelete } from "@/components/undo-toast";
 import { GoalDialog } from "./GoalsKPIDialogs";
 import { GoalsSummaryCards, GoalsList } from "./GoalsKPISections";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function GoalsKPI() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { showUndoToast } = useUndoDelete();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -149,9 +151,9 @@ export default function GoalsKPI() {
       <div className="flex items-center justify-between">
         <div>
           <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">Maqsad va KPI</b></>}
-        title="Maqsad va KPI"
-        subtitle="O'quv maqsadlarini boshqarish va kuzatish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("maqsadVaKpi")}</b></>}
+        title={t("maqsadVaKpi")}
+        subtitle={t("oquvMaqsadlariniBoshqarishVaKuzatish")}
       />
         </div>
 

@@ -6,6 +6,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from '@/lib/i18n';
 
 function fmt(n: number | null | undefined, d = 0) {
   if (n == null) return "—";
@@ -41,18 +42,19 @@ export default function ProductionOrder360Bom({
   totalActualCost,
   components,
 }: ProductionOrder360BomProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Reja material xarajati</p>
+            <p className="text-xs text-muted-foreground">{t("rejaMaterialXarajati")}</p>
             <p className="text-xl font-bold mt-0.5">{fmtMoney(totalPlannedCost)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Haqiqiy material xarajati</p>
+            <p className="text-xs text-muted-foreground">{t("haqiqiyMaterialXarajati")}</p>
             <p className={`text-xl font-bold mt-0.5 ${(totalActualCost ?? 0) > (totalPlannedCost ?? 0) ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}`}>
               {fmtMoney(totalActualCost)}
             </p>
@@ -80,18 +82,18 @@ export default function ProductionOrder360Bom({
                 </div>
                 <div className="mt-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-muted-foreground">Sarflash</span>
+                    <span className="text-muted-foreground">{t("sarflash")}</span>
                     <span>{fmt(c.issuedQuantity, 2)} / {fmt(c.requiredQuantity, 2)}</span>
                   </div>
                   <Progress value={Math.min(110, pct)} className="h-1.5" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-xs">
                   <div>
-                    <p className="text-muted-foreground">Reja tannarx</p>
+                    <p className="text-muted-foreground">{t("rejaTannarx")}</p>
                     <p className="font-medium">{fmtMoney(c.totalPlannedCost)}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Haqiqiy tannarx</p>
+                    <p className="text-muted-foreground">{t("haqiqiyTannarx")}</p>
                     <p className={`font-medium ${(c.totalActualCost ?? 0) > (c.totalPlannedCost ?? 0) ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}`}>
                       {fmtMoney(c.totalActualCost)}
                     </p>
@@ -104,7 +106,7 @@ export default function ProductionOrder360Bom({
         {(!components || components.length === 0) && (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Material ma'lumotlari yo'q
+              {t("materialMalumotlariYoq")}
             </CardContent>
           </Card>
         )}

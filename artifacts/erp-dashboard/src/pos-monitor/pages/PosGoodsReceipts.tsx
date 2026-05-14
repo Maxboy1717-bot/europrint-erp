@@ -72,7 +72,7 @@ export default function PosGoodsReceipts() {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>QABUL AKTLARI</div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>
-            GRN — Goods Receipt Notes
+            {t("grnGoodsReceiptNotes")}
           </h1>
         </div>
         <button
@@ -80,7 +80,7 @@ export default function PosGoodsReceipts() {
           style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB",
                    borderRadius: 8, cursor: "pointer", fontSize: 13 }}
         >
-          🔄 Yangilash
+          {t("yangilash")}
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export default function PosGoodsReceipts() {
       {/* Filters */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <input
-          placeholder="Qidiruv: raqam, ta'minotchi, yuk xati..."
+          placeholder={t("qidiruvRaqamTaminotchiYukXati")}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{ flex: 1, minWidth: 250, padding: "8px 12px", border: "1px solid #E5E7EB",
@@ -122,35 +122,35 @@ export default function PosGoodsReceipts() {
           onChange={e => setStatusFilter(e.target.value)}
           style={{ padding: "8px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13 }}
         >
-          <option value="all">Barchasi</option>
-          <option value="DRAFT">Qoralama</option>
-          <option value="APPROVED">Tasdiqlangan</option>
-          <option value="REJECTED">Rad etilgan</option>
-          <option value="COMPLETED">Yakunlangan</option>
+          <option value="all">{t("Barchasi")}</option>
+          <option value="DRAFT">{t("draft")}</option>
+          <option value="APPROVED">{t("approved")}</option>
+          <option value="REJECTED">{t("rejected")}</option>
+          <option value="COMPLETED">{t("yakunlangan")}</option>
         </select>
       </div>
 
       {/* Table */}
       <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: 40 }}>⏳ Yuklanmoqda...</div>
+          <div style={{ textAlign: "center", padding: 40 }}>{t("yuklanmoqda")}</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, color: "#9CA3AF" }}>
             <div style={{ fontSize: 48 }}>📭</div>
-            <div style={{ marginTop: 8 }}>Qabul aktlari yo'q</div>
+            <div style={{ marginTop: 8 }}>{t("qabulAktlariYoq")}</div>
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead style={{ background: "#F9FAFB" }}>
               <tr>
-                <Th>GRN Raqam</Th>
-                <Th>Sana</Th>
-                <Th>Ta'minotchi</Th>
-                <Th>Ombor</Th>
-                <Th>Yuk xati</Th>
-                <Th align="right">Summa</Th>
+                <Th>{t("grnRaqam")}</Th>
+                <Th>{t("date")}</Th>
+                <Th>{t("taminotchi")}</Th>
+                <Th>{t("ombor")}</Th>
+                <Th>{t("yukXati1")}</Th>
+                <Th align="right">{t("summa")}</Th>
                 <Th>{t('status24')}</Th>
-                <Th>Qabul qiluvchi</Th>
+                <Th>{t("qabulQiluvchi")}</Th>
               </tr>
             </thead>
             <tbody>

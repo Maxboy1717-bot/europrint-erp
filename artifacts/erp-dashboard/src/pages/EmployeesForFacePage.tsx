@@ -45,7 +45,7 @@ export default function EmployeesForFacePage() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>Dashboard · <b className="text-foreground">{t('faceEnroll.title', 'Yuz tanish ro\'yxatidan o\'tish')}</b></>}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('faceEnroll.title', 'Yuz tanish ro\'yxatidan o\'tish')}</b></>}
         title={t('faceEnroll.title', 'Yuz tanish ro\'yxatidan o\'tish')}
         subtitle={t('faceEnroll.description', 'Xodimlarning yuz embedding holati')}
       />

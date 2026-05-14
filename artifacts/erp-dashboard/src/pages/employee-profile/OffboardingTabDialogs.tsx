@@ -14,6 +14,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Question } from "./OffboardingTabTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ── ExitInterviewForm ─────────────────────────────────────────────────────────
 interface ExitInterviewFormProps {
@@ -22,6 +23,7 @@ interface ExitInterviewFormProps {
 }
 
 export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -54,7 +56,7 @@ export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
 
   return (
     <div className="space-y-4 p-4 rounded-lg border border-border/50 bg-muted/20">
-      <p className="text-sm font-semibold text-foreground">Chiqish suhbati — 4 savol</p>
+      <p className="text-sm font-semibold text-foreground">{t("chiqishSuhbati4Savol")}</p>
 
       {questionList.map(q => (
         <div key={q.key} className="space-y-1.5">
@@ -65,7 +67,7 @@ export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
 
           {q.type === "text" && (
             <Textarea
-              placeholder="Javobingizni kiriting..."
+              placeholder={t("javobingizniKiriting")}
               className="text-sm min-h-[60px] resize-none"
               value={answers[q.key] ?? ""}
               onChange={e => setAnswers(a => ({ ...a, [q.key]: e.target.value }))}
@@ -96,12 +98,12 @@ export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
               onValueChange={v => setAnswers(a => ({ ...a, [q.key]: v }))}
             >
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Javobni tanlang" />
+                <SelectValue placeholder={t("javobniTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="yes">Ha, tavsiya qilaman</SelectItem>
-                <SelectItem value="maybe">Balki</SelectItem>
-                <SelectItem value="no">Yo'q, tavsiya qilmayman</SelectItem>
+                <SelectItem value="maybe">{t("balki")}</SelectItem>
+                <SelectItem value="no">{t("yoqTavsiyaQilmayman")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -115,9 +117,9 @@ export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
           disabled={save.isPending}
           className="bg-primary hover:bg-primary/90 text-white"
         >
-          Saqlash
+          {t("Saqlash")}
         </Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Bekor</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t("Bekor")}</Button>
       </div>
     </div>
   );

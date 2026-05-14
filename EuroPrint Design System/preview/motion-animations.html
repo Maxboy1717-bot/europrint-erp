@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700,initial-scale=1"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg1);color:var(--fg1);font-family:var(--font-sans);}
+  .wrap{padding:18px 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .tile{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:140px;}
+  .lbl{font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--fg2);text-align:center;}
+  .sub{font-size:10.5px;color:var(--fg2);font-family:var(--font-mono);}
+
+  /* Float */
+  .float-demo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#FF902F,#EE6A1B);animation:ep-float 3s var(--ease-in-out) infinite;}
+
+  /* Pulse dot */
+  .pulse-dot{width:14px;height:14px;border-radius:50%;background:#2E8A5A;animation:ep-pulse 1.5s var(--ease-in-out) infinite;}
+
+  /* Shimmer button */
+  .shim-btn{position:relative;overflow:hidden;background:#FF902F;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .shim-btn::after{content:'';position:absolute;top:0;left:0;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:ep-shimmer 2.4s var(--ease-in-out) infinite;}
+
+  /* Drift orb */
+  .orb-stage{position:relative;width:100%;height:60px;overflow:hidden;border-radius:8px;background:#1a1a2e;}
+  .orb-stage .o{position:absolute;width:60px;height:60px;border-radius:50%;filter:blur(14px);}
+  .orb-stage .o.a{background:rgba(255,144,47,.55);left:10px;top:0;animation:ep-drift-a 6s var(--ease-in-out) infinite;}
+  .orb-stage .o.b{background:rgba(53,99,172,.55);right:10px;top:0;animation:ep-drift-b 7s var(--ease-in-out) infinite;}
+
+  /* Fade-up sample */
+  .fu{display:flex;flex-direction:column;gap:5px;}
+  .fu div{font-size:12px;color:var(--fg1);animation:ep-fade-up .6s var(--ease-out-quart) backwards;}
+  .fu div:nth-child(1){animation-delay:.0s;}
+  .fu div:nth-child(2){animation-delay:.15s;}
+  .fu div:nth-child(3){animation-delay:.30s;}
+
+  /* Breathe */
+  .breathe{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle,#FF902F 30%,rgba(255,144,47,.2) 70%);animation:ep-breathe 2.4s var(--ease-in-out) infinite;}
+
+  /* Bar grow */
+  .bars{display:flex;align-items:flex-end;gap:5px;height:50px;}
+  .bars i{width:8px;background:linear-gradient(0deg,#FF902F,#FFB875);border-radius:3px 3px 0 0;transform-origin:bottom;animation:ep-bar-grow .9s var(--ease-out-soft) backwards;}
+  .bars i:nth-child(1){height:30%;animation-delay:.0s;}
+  .bars i:nth-child(2){height:55%;animation-delay:.08s;}
+  .bars i:nth-child(3){height:42%;animation-delay:.16s;}
+  .bars i:nth-child(4){height:78%;animation-delay:.24s;}
+  .bars i:nth-child(5){height:96%;animation-delay:.32s;}
+  .bars i:nth-child(6){height:62%;animation-delay:.40s;}
+
+  /* Rotate slow */
+  .rot{width:32px;height:32px;border-radius:9px;border:3px solid #FF902F;border-top-color:transparent;animation:ep-rotate-slow 1.6s linear infinite;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tile"><div class="float-demo"></div><div class="lbl">ep-float</div><div class="sub">3s · gentle Y</div></div>
+  <div class="tile"><div class="pulse-dot"></div><div class="lbl">ep-pulse</div><div class="sub">live indicator</div></div>
+  <div class="tile"><button class="shim-btn">Bepul narx olish</button><div class="lbl">ep-shimmer</div></div>
+  <div class="tile"><div class="orb-stage"><div class="o a"></div><div class="o b"></div></div><div class="lbl">ep-drift A / B</div><div class="sub">hero orbs</div></div>
+  <div class="tile"><div class="fu"><div>15+ Yil tajriba</div><div>2,500+ mijozlar</div><div>50+ mashina</div></div><div class="lbl">ep-fade-up · stagger</div></div>
+  <div class="tile"><div class="breathe"></div><div class="lbl">ep-breathe</div><div class="sub">glow</div></div>
+  <div class="tile"><div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="lbl">ep-bar-grow</div></div>
+  <div class="tile"><div class="rot"></div><div class="lbl">ep-rotate-slow</div><div class="sub">loader</div></div>
+</div>
+</body>
+</html>

@@ -11,6 +11,7 @@ import { Result, AppError, safeCall } from '@common/result';
 import { errMsg } from "../hr-v2-error";
 import { TelegramBotsRepository } from './telegram-bots.repository';
 import type { Telegraf, Context } from 'telegraf';
+import { message } from 'telegraf/filters';
 import {
   HrSession, SickSession, LeaveSession,
   MENU_TEXT,
@@ -34,7 +35,7 @@ export class HrBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[hr-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('HR Bot token not configured (TELEGRAM_HR_BOT_TOKEN missing) — skipping');
         return;
@@ -331,7 +332,7 @@ export class HrBotService implements OnModuleInit, OnModuleDestroy {
       );
     });
 
-    bot.on('document', async (ctx: Context) => {
+    bot.on(message('document' as never), async (ctx: Context) => {
       type DocCtx = Context & {
         chat?: { id?: number };
         message?: { document?: { file_name?: string; file_id?: string } };
@@ -373,7 +374,7 @@ export class HrBotService implements OnModuleInit, OnModuleDestroy {
       );
     });
 
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       type TxtCtx = Context & { chat?: { id?: number }; message?: { text?: string } };
       const tCtx = ctx as TxtCtx;
       const chatId = tCtx.chat?.id;

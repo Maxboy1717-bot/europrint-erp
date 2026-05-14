@@ -12,11 +12,13 @@ import { cn } from "@/lib/utils";
 import { getAuthHeaders } from "@/lib/queryClient";
 import type { IdealVsActual } from "./types";
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 const FE_PROFIT_TARGET = 100_000_000;
 const FE_REVENUE_TARGET = 800_000_000;
 
 export function IdealVsActualPanel() {
+  const { t } = useTranslation("common");
   const { data, isLoading } = useQuery<IdealVsActual>({
     queryKey: ["/api/director/ideal-vs-actual"],
     queryFn: async () => {
@@ -51,8 +53,8 @@ export function IdealVsActualPanel() {
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-primary" />
-          <CardTitle className="text-base font-semibold">Ideal vs Haqiqat</CardTitle>
-          <Badge variant="secondary" className="text-[10px]">Haftalik</Badge>
+          <CardTitle className="text-base font-semibold">{t("idealVsHaqiqat")}</CardTitle>
+          <Badge variant="secondary" className="text-[10px]">{t("weekly")}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -91,7 +93,7 @@ export function IdealVsActualPanel() {
             {data && (
               <div className="pt-2 border-t">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Buyurtmalar bajarilishi</span>
+                  <span>{t("buyurtmalarBajarilishi")}</span>
                   <span className="font-semibold text-foreground">
                     {data.orders.completed}/{data.orders.total} ({data.orders.completion_pct}%)
                   </span>

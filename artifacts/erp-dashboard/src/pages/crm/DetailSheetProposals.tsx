@@ -10,6 +10,7 @@ import { FileText, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import type { Proposal, Invoice } from "./crm-types";
 import { PROPOSAL_STATUS_LABELS, INVOICE_STATUS_LABELS } from "./DetailSheetTypes";
+import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -28,15 +29,16 @@ export function ProposalsInvoicesSection({
   proposals,
   invoices,
 }: ProposalsInvoicesSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="tovarlar" className="m-0 space-y-4">
       {/* Proposals */}
       <div>
-        <h3 className="text-sm font-semibold mb-3">Takliflar</h3>
+        <h3 className="text-sm font-semibold mb-3">{t("takliflar")}</h3>
         {proposals.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground text-sm">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            Takliflar yo'q
+            {t("takliflarYoq")}
           </div>
         ) : (
           <div className="space-y-2">
@@ -65,11 +67,11 @@ export function ProposalsInvoicesSection({
 
       {/* Invoices */}
       <div className="border-t pt-4">
-        <h3 className="text-sm font-semibold mb-3">Fakturalar</h3>
+        <h3 className="text-sm font-semibold mb-3">{t("fakturalar")}</h3>
         {invoices.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground text-sm">
             <Package className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            Fakturalar yo'q
+            {t("fakturalarYoq")}
           </div>
         ) : (
           <div className="space-y-2">

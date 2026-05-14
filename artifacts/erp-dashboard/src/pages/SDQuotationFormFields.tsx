@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { QuotationFormData } from "./SDQuotationsTypes";
+import { useTranslation } from '@/lib/i18n';
 
 interface QuotationFormFieldsProps {
   form: UseFormReturn<QuotationFormData>;
@@ -17,6 +18,7 @@ interface QuotationFormFieldsProps {
 }
 
 export function QuotationFormFields({ form, companies }: QuotationFormFieldsProps) {
+  const { t } = useTranslation("common");
   const safeCompanies = Array.isArray(companies) ? companies : [];
 
   return (
@@ -27,7 +29,7 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="quotationNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Taklif raqami</FormLabel>
+              <FormLabel>{t("taklifRaqami")}</FormLabel>
               <FormControl>
                 <Input {...field} readOnly data-testid="input-quotation-number" />
               </FormControl>
@@ -52,7 +54,7 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
               >
                 <FormControl>
                   <SelectTrigger data-testid="select-customer" className="h-9">
-                    <SelectValue placeholder="Kompaniyani tanlang" />
+                    <SelectValue placeholder={t("kompaniyaniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -73,7 +75,7 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="customerName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mijoz nomi</FormLabel>
+              <FormLabel>{t("mijozNomi")}</FormLabel>
               <FormControl>
                 <Input {...field} data-testid="input-customer-name" />
               </FormControl>
@@ -87,7 +89,7 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="quotationDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Taklif sanasi</FormLabel>
+              <FormLabel>{t("taklifSanasi")}</FormLabel>
               <FormControl>
                 <Input type="date" {...field} data-testid="input-quotation-date" />
               </FormControl>
@@ -101,7 +103,7 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="validUntil"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amal qilish muddati</FormLabel>
+              <FormLabel>{t("amalQilishMuddati")}</FormLabel>
               <FormControl>
                 <Input type="date" {...field} data-testid="input-valid-until" />
               </FormControl>
@@ -115,17 +117,17 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="currency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Valyuta</FormLabel>
+              <FormLabel>{t("valyuta")}</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger data-testid="select-currency" className="h-9">
-                    <SelectValue placeholder="Tanlang" />
+                    <SelectValue placeholder={t("tanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="UZS">UZS - O'zbek so'mi</SelectItem>
-                  <SelectItem value="USD">USD - Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Evro</SelectItem>
+                  <SelectItem value="UZS">{t("uzsOzbekSomi")}</SelectItem>
+                  <SelectItem value="USD">{t("usdDollar")}</SelectItem>
+                  <SelectItem value="EUR">{t("eurEvro")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -138,15 +140,15 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="paymentTerms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>To'lov shartlari</FormLabel>
+              <FormLabel>{t("tolovShartlari")}</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger data-testid="select-payment-terms" className="h-9">
-                    <SelectValue placeholder="Tanlang" />
+                    <SelectValue placeholder={t("tanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="prepaid">Oldindan to'lov</SelectItem>
+                  <SelectItem value="prepaid">{t("oldindanTolov")}</SelectItem>
                   <SelectItem value="net14">14 kun ichida</SelectItem>
                   <SelectItem value="net30">30 kun ichida</SelectItem>
                   <SelectItem value="net60">60 kun ichida</SelectItem>
@@ -162,19 +164,19 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Holat</FormLabel>
+              <FormLabel>{t("status28")}</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger data-testid="select-status" className="h-9">
-                    <SelectValue placeholder="Tanlang" />
+                    <SelectValue placeholder={t("tanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="draft">Qoralama</SelectItem>
-                  <SelectItem value="sent">Yuborilgan</SelectItem>
-                  <SelectItem value="accepted">Qabul qilindi</SelectItem>
-                  <SelectItem value="rejected">Rad etildi</SelectItem>
-                  <SelectItem value="expired">Muddati o'tgan</SelectItem>
+                  <SelectItem value="draft">{t("draft")}</SelectItem>
+                  <SelectItem value="sent">{t("yuborilgan")}</SelectItem>
+                  <SelectItem value="accepted">{t("qabulQilindi")}</SelectItem>
+                  <SelectItem value="rejected">{t("radEtildi")}</SelectItem>
+                  <SelectItem value="expired">{t("muddatiOtgan")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -188,7 +190,7 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
         name="notes"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Izohlar</FormLabel>
+            <FormLabel>{t("notes")}</FormLabel>
             <FormControl>
               <Textarea {...field} rows={3} data-testid="input-notes" />
             </FormControl>

@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
+import { useTranslation } from '@/lib/i18n';
 import {
   generateQuotationNumber,
   type QuotationFormData,
@@ -32,41 +33,42 @@ import {
 // ---------------------------------------------------------------------------
 
 export function getStatusBadge(status: string) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "draft":
       return (
         <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <Clock className="h-3 w-3 mr-1" />Qoralama
+          <Clock className="h-3 w-3 mr-1" />{t("draft")}
         </Badge>
       );
     case "sent":
       return (
         <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <Send className="h-3 w-3 mr-1" />Yuborilgan
+          <Send className="h-3 w-3 mr-1" />{t("yuborilgan")}
         </Badge>
       );
     case "accepted":
       return (
         <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <CheckCircle className="h-3 w-3 mr-1" />Qabul qilindi
+          <CheckCircle className="h-3 w-3 mr-1" />{t("qabulQilindi")}
         </Badge>
       );
     case "rejected":
       return (
         <Badge className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <XCircle className="h-3 w-3 mr-1" />Rad etildi
+          <XCircle className="h-3 w-3 mr-1" />{t("radEtildi")}
         </Badge>
       );
     case "expired":
       return (
         <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <AlertCircle className="h-3 w-3 mr-1" />Muddati o'tgan
+          <AlertCircle className="h-3 w-3 mr-1" />{t("muddatiOtgan")}
         </Badge>
       );
     case "converted":
       return (
         <Badge className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold border-none">
-          <RefreshCw className="h-3 w-3 mr-1" />Aylantirilgan
+          <RefreshCw className="h-3 w-3 mr-1" />{t("aylantirilgan")}
         </Badge>
       );
     default:
@@ -167,7 +169,7 @@ export function QuotationTable({
     <div className="bg-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Takliflar ro'yxati
+          {t("takliflarRoyxati")}
         </h2>
         <div className="flex items-center gap-2">
           {(["all", "draft", "sent", "accepted"] as const).map((f) => (
@@ -246,7 +248,7 @@ export function QuotationTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => onConvert(quotation.id)}
-                        title="Buyurtmaga aylantirish"
+                        title={t("buyurtmagaAylantirish")}
                         data-testid={`button-convert-${quotation.id}`}
                       >
                         <ArrowRightLeft className="h-4 w-4" />

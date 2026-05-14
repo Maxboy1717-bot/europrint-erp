@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Cpu, History, Activity } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface MachineStatus {
   id: string | number;
   device_id?: string;
@@ -58,6 +59,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 type TabType = "current" | "logs";
 
 export default function MachineStatusPage() {
+  const { t } = useTranslation("common");
   const [tab, setTab] = useState<TabType>("current");
 
   const {
@@ -106,7 +108,7 @@ export default function MachineStatusPage() {
   return (
     <ModulePage
       module="iot"
-      title="Mashina Holati"
+      title={t("mashinaHolati")}
       icon={<Cpu className="h-5 w-5" />}
     >
       <div className="space-y-4">
@@ -119,7 +121,7 @@ export default function MachineStatusPage() {
             data-testid="tab-current"
           >
             <Activity className="h-4 w-4 mr-1.5" />
-            Joriy holat
+            {t("joriyHolat1")}
           </Button>
           <Button
             variant={tab === "logs" ? "default" : "outline"}
@@ -128,7 +130,7 @@ export default function MachineStatusPage() {
             data-testid="tab-logs"
           >
             <History className="h-4 w-4 mr-1.5" />
-            Holat tarixi
+            {t("holatTarixi")}
           </Button>
         </div>
 
@@ -152,7 +154,7 @@ export default function MachineStatusPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <Cpu className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Mashina holati topilmadi</p>
+                <p className="text-muted-foreground">{t("mashinaHolatiTopilmadi")}</p>
               </CardContent>
             </Card>
           ) : (
@@ -200,7 +202,7 @@ export default function MachineStatusPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Holat tarixi topilmadi</p>
+                <p className="text-muted-foreground">{t("holatTarixiTopilmadi")}</p>
               </CardContent>
             </Card>
           ) : (

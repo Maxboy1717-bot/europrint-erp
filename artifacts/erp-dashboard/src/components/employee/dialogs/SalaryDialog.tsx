@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
 interface SalaryForm {
   effectiveDate: string;
@@ -36,6 +37,7 @@ export function SalaryDialog({
   onSave,
   isPending
 }: SalaryDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const updateField = (field: keyof SalaryForm, value: string) => {
@@ -59,11 +61,11 @@ export function SalaryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Maoshni o'zgartirish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("maoshniOzgartirish")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">
-          <Label htmlFor="effectiveDate">Kuchga kirish sanasi</Label>
+          <Label htmlFor="effectiveDate">{t("kuchgaKirishSanasi")}</Label>
             <Input
               id="effectiveDate"
               type="date"
@@ -73,7 +75,7 @@ export function SalaryDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="prevSalary">Oldingi maosh</Label>
+          <Label htmlFor="prevSalary">{t("oldingiMaosh")}</Label>
               <Input
                 id="prevSalary"
                 type="number"
@@ -82,7 +84,7 @@ export function SalaryDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="newSalary">Yangi maosh</Label>
+          <Label htmlFor="newSalary">{t("yangiMaosh")}</Label>
               <Input
                 id="newSalary"
                 type="number"
@@ -92,24 +94,24 @@ export function SalaryDialog({
             </div>
           </div>
           <div className="space-y-1">
-          <Label>O'zgarish turi</Label>
+          <Label>{t("ozgarishTuri")}</Label>
             <Select
               value={form.changeType}
               onValueChange={(val) => updateField("changeType", val)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Tanlang" />
+                <SelectValue placeholder={t("tanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="annual_review">Yillik ko'rib chiqish</SelectItem>
-                <SelectItem value="promotion">Lavozim ko'tarilishi</SelectItem>
-                <SelectItem value="market_adjustment">Bozor moslashuvi</SelectItem>
-                <SelectItem value="performance">Natijadorlik uchun</SelectItem>
+                <SelectItem value="annual_review">{t("yillikKoribChiqish")}</SelectItem>
+                <SelectItem value="promotion">{t("lavozimKotarilishi")}</SelectItem>
+                <SelectItem value="market_adjustment">{t("bozorMoslashuvi")}</SelectItem>
+                <SelectItem value="performance">{t("natijadorlikUchun")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="notes">Izohlar</Label>
+          <Label htmlFor="notes">{t("notes")}</Label>
             <Textarea
               id="notes"
               value={form.notes}
@@ -118,7 +120,7 @@ export function SalaryDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button
             onClick={handleSubmit}
             disabled={!form.newSalary || Number(form.newSalary) <= 0 || !form.changeType || !form.effectiveDate || isPending}
