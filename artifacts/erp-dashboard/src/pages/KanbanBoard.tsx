@@ -25,7 +25,7 @@ import { EPErrorState } from "@/components/ep";
 
 export default function KanbanBoard() {
   const [lang] = useState<"uz" | "ru">("uz");
-  const t = T[lang];
+  const t = T[lang] as unknown as typeof T.uz & ((key: string, params?: Record<string, string | number>) => string);
 
   const {
     selectedBoardId, setSelectedBoardId,
@@ -104,7 +104,7 @@ export default function KanbanBoard() {
           selectedBoardId={selectedBoardId}
           setSelectedBoardId={setSelectedBoardId}
           columns={columns}
-          createCardMutation={createCardMutation}
+          createCardMutation={createCardMutation as unknown as Parameters<typeof BoardHeader>[0]["createCardMutation"]}
           setQuickTaskType={setQuickTaskType}
           setShowQuickTask={setShowQuickTask}
           roleFilter={roleFilter}
@@ -181,21 +181,21 @@ export default function KanbanBoard() {
         setShowCreateBoard={setShowCreateBoard}
         newBoardName={newBoardName}
         setNewBoardName={setNewBoardName}
-        createBoardMutation={createBoardMutation}
+        createBoardMutation={createBoardMutation as unknown as Parameters<typeof BoardDialogs>[0]["createBoardMutation"]}
         showQuickTask={showQuickTask}
         setShowQuickTask={setShowQuickTask}
         quickTaskType={quickTaskType}
         quickTaskTitle={quickTaskTitle}
         setQuickTaskTitle={setQuickTaskTitle}
-        createCardMutation={createCardMutation}
+        createCardMutation={createCardMutation as unknown as Parameters<typeof BoardDialogs>[0]["createCardMutation"]}
         selectedBoardId={selectedBoardId}
-        columns={columns}
+        columns={columns as unknown as Parameters<typeof BoardDialogs>[0]["columns"]}
         employees={employees}
         showAddColumn={showAddColumn}
         setShowAddColumn={setShowAddColumn}
         newColumnName={newColumnName}
         setNewColumnName={setNewColumnName}
-        createColumnMutation={createColumnMutation}
+        createColumnMutation={createColumnMutation as unknown as Parameters<typeof BoardDialogs>[0]["createColumnMutation"]}
       />
 
       <RobotsDialog open={showRobots} onOpenChange={setShowRobots} boardId={selectedBoardId} columns={columns} employees={employees} t={t} />

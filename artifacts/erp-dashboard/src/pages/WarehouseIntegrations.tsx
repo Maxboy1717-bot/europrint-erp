@@ -22,7 +22,7 @@ import { EPErrorState } from "@/components/ep";
 
 export default function WarehouseIntegrations() {
   const [lang, setLang] = useState<Lang>("uz");
-  const t = translations[lang];
+  const t = translations[lang] as typeof translations.uz;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

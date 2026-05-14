@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KanbanTranslations } from "./types";
-import { useTranslation } from '@/lib/i18n';
-
+// Permissive shape — accepts react-query UseMutationResult plus minimal handles.
+// Components only need `mutate(...)` and `isPending`. We use `unknown` for the
+// variables type, which forces callers to pass typed args through `as never`-style
+// casts but lets us accept varied concrete mutation shapes from the parent.
 interface KanbanMutation {
-  mutate: (vars: Record<string, unknown>) => void;
+  mutate: (vars: unknown) => void;
   isPending: boolean;
 }
 
@@ -58,7 +60,7 @@ const PRIORITY_OPTIONS = [
 ];
 
 export function BoardDialogs({
-  t,
+  t: tProp,
   showCreateBoard,
   setShowCreateBoard,
   newBoardName,
@@ -79,7 +81,7 @@ export function BoardDialogs({
   setNewColumnName,
   createColumnMutation,
 }: BoardDialogsProps) {
-  const { t } = useTranslation("common");
+  const t = tProp as unknown as KanbanTranslations & ((key: string) => string);
   const [quickPriority, setQuickPriority] = useState<string>("normal");
   const [quickDueDate, setQuickDueDate]   = useState<string>("");
   const [quickAssignee, setQuickAssignee] = useState<string>("");

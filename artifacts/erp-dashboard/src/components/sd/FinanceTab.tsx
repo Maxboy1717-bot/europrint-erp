@@ -20,9 +20,9 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
   const overdueDebt = finance.overdueDebt ?? 0;
   const availableCredit = finance.availableCredit ?? (creditLimit - Number(totalDebt));
   const debtPercent = creditLimit > 0 ? Math.min(100, (Number(totalDebt) / creditLimit) * 100) : 0;
-  const totalRevenue = finance.totalRevenue ?? 0;
-  const totalPaid = finance.totalPaid ?? 0;
-  const avgOrderValue = finance.avgOrderValue ?? 0;
+  const totalRevenue = (finance.totalRevenue ?? 0) as number;
+  const totalPaid = (finance.totalPaid ?? 0) as number;
+  const avgOrderValue = (finance.avgOrderValue ?? 0) as number;
 
   return (
     <div className="space-y-4">
@@ -152,7 +152,7 @@ export function FinanceTab({ finance }: { finance: SdFinanceData }) {
       )}
 
       {/* Payments list from 360 data */}
-      {(finance.payments || []).length > 0 && (
+      {((finance.payments as unknown[] | undefined) || []).length > 0 && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold">{t("tolovlarTarixi")}</h3>

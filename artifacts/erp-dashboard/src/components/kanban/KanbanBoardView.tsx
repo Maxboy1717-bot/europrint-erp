@@ -17,8 +17,6 @@ import { FolderKanban, Plus } from "lucide-react";
 import { KanbanColumn } from "@/pages/kanban/KanbanColumn";
 import { CardOverlay } from "@/pages/kanban/KanbanCard";
 import { KanbanTranslations, KanbanColumn as KanbanColumnType, CardWithOwner } from "@/components/kanban/types";
-import { useTranslation } from '@/lib/i18n';
-
 interface KanbanBoardViewProps {
   sensors:              SensorDescriptor<SensorOptions>[];
   handleDragStart:      (event: DragStartEvent) => void;
@@ -41,9 +39,9 @@ export function KanbanBoardView({
   columns, cardsByColumn,
   setShowEditCard, setShowAddColumn, setShowQuickTask, setQuickTaskTitle,
   onDeleteColumn, selectedBoardId, activeCard,
-  t, onQuickAddColumnId,
+  t: tProp, onQuickAddColumnId,
 }: KanbanBoardViewProps) {
-  const { t } = useTranslation("common");
+  const t = tProp as unknown as KanbanTranslations & ((key: string) => string);
   const [quickAddColumnId, setQuickAddColumnId] = useState<string | number | null>(null);
 
   return (

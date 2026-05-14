@@ -40,8 +40,8 @@ export interface LanguageProviderProps {
 
 export interface UseTranslationReturn {
   language: Language;
-  /** Modul ichida ishlaydi: t('key') */
-  t: (key: string, params?: Record<string, string | number>) => string;
+  /** Modul ichida ishlaydi: t('key'), t('key', {...}), yoki t('key', 'fallback') */
+  t: (key: string, paramsOrFallback?: Record<string, string | number> | string) => string;
   /** Til o'zgartirish — agar kerak bo'lsa */
   setLanguage: (lang: Language) => void;
 }

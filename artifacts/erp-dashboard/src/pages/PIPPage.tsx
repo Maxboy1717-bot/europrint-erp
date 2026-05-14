@@ -224,17 +224,17 @@ export default function PIPPage() {
                 )}
                 {/* Actions */}
                 <div className="flex gap-2 flex-wrap">
-                  {pipDetail.pip?.status === 'draft' && (
-                    <Button onClick={() => acknowledge.mutate(pipDetail.pip?.id)} size="sm"
+                  {pipDetail.pip?.status === 'draft' && pipDetail.pip.id !== undefined && (
+                    <Button onClick={() => acknowledge.mutate(pipDetail.pip!.id as number)} size="sm"
                       className="bg-[var(--ep-blue)] hover:bg-[var(--ep-blue)]/90 text-white">
                       ✅ Tasdiqlash (Xodim)
                     </Button>
                   )}
-                  {pipDetail.pip?.status === 'active' && (
+                  {pipDetail.pip?.status === 'active' && pipDetail.pip.id !== undefined && (
                     <>
-                      <Button onClick={() => complete.mutate({ id: pipDetail.pip?.id, result: "PASSED" })} size="sm"
+                      <Button onClick={() => complete.mutate({ id: pipDetail.pip!.id as number, result: "PASSED" })} size="sm"
                         className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white">{t("otdi1")}</Button>
-                      <Button onClick={() => complete.mutate({ id: pipDetail.pip?.id, result: "FAILED" })} size="sm"
+                      <Button onClick={() => complete.mutate({ id: pipDetail.pip!.id as number, result: "FAILED" })} size="sm"
                         className="bg-[var(--ep-red)] hover:bg-[var(--ep-red)]/90 text-white">{t("otmadi")}</Button>
                     </>
                   )}
@@ -260,7 +260,7 @@ export default function PIPPage() {
                         onChange={e => setProgressForm(f => ({ ...f, notes: e.target.value }))}
                         placeholder={t("buHaftadagiOzgarish")} className="bg-input border-border mt-1" />
                     </div>
-                    <Button onClick={() => addProgress.mutate({ id: pipDetail.pip?.id, data: { ...progressForm, progress_percent: parseInt(progressForm.progress_percent) } })}
+                    <Button onClick={() => pipDetail.pip?.id !== undefined && addProgress.mutate({ id: pipDetail.pip.id as number, data: { ...progressForm, progress_percent: parseInt(progressForm.progress_percent) } })}
                       className="bg-primary hover:bg-primary/90 text-white" size="sm">
                       {t("Saqlash")}
                     </Button>

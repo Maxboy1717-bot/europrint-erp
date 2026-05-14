@@ -21,18 +21,16 @@ import { BatchesTabContent } from "./BarcodeSystemSections";
 import type { BatchFormState } from "./BarcodeSystemTypes";
 import { DEFAULT_BATCH_FORM } from "./BarcodeSystemTypes";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
-
 const escHtml = (v: unknown): string =>
   String(v ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 export default function BarcodeSystem() {
-  const { t } = useTranslation("common");
+
   const { toast } = useToast();
   const [lang, setLang] = useState<"uz" | "ru">("uz");
-  const t = translations[lang];
+  const t = translations[lang] as unknown as typeof translations.uz & ((key: string) => string);
 
   const [activeTab, setActiveTab] = useState("batches");
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,7 +64,7 @@ export default function BarcodeSystem() {
       if (warehouseFilter) params.append("warehouseId", warehouseFilter);
       if (statusFilter) params.append("status", statusFilter);
       if (searchQuery) params.append("search", searchQuery);
-      const res = await apiRequest('GET', `/api/warehouse/batches?${params.toString()}`);
+      const res = await apiRequest('GET', `/api/warehouse/batches?${params.toString()}`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch batches");
       return res.json();
     }
@@ -104,7 +102,7 @@ export default function BarcodeSystem() {
 
   const fetchPrintPreview = async (id: string, type: string = "batch") => {
     try {
-      const res = await apiRequest('GET', `/api/warehouse/barcode/print/${id}?type=${type}`);
+      const res = await apiRequest('GET', `/api/warehouse/barcode/print/${id}?type=${type}`) as unknown as Response;
       if (!res.ok) throw new Error();
       setPrintPreviewData(await res.json());
       setIsPrintPreviewOpen(true);
@@ -153,8 +151,8 @@ export default function BarcodeSystem() {
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("shtrixKodTizimi")}</b></>}
-        title={t("shtrixKodTizimi")}
+        breadcrumb={<>{"Dashboard"}<b className="text-foreground">{"Shtrix kod tizimi"}</b></>}
+        title={"Shtrix kod tizimi"}
       />
           <p className="text-muted-foreground mt-1">{t.subtitle}</p>
         </div>

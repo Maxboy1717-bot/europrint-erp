@@ -54,11 +54,52 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   blacklist: { label: "Qora ro'yxat", cls: "bg-rose-100 text-[var(--ep-red)] dark:bg-rose-900/50 dark:text-rose-300" },
 };
 
+import type {
+  SdBasicData,
+  SdContactItem,
+  SdDecisionMaker,
+  SdOrdersData,
+  SdFinanceData,
+  SdCommunicationsData,
+  SdComplaintsData,
+  SdSegmentationData,
+  SdGrowthData,
+  SdCompetitorsData,
+  SdContractsData,
+  SdLtvData,
+  SdNpsData,
+  SdSentimentData,
+  SdJourneyData,
+  SdPredictiveData,
+  SdInternalIntelligenceData,
+} from "./sd-types";
+
+interface Customer360Data {
+  error?: string;
+  basic?: SdBasicData;
+  finance?: SdFinanceData;
+  orders?: SdOrdersData;
+  ltv?: SdLtvData;
+  contacts?: SdContactItem[];
+  decisionMakers?: SdDecisionMaker[];
+  communications?: SdCommunicationsData;
+  sentiment?: SdSentimentData;
+  nps?: SdNpsData;
+  complaints?: SdComplaintsData;
+  segmentation?: SdSegmentationData;
+  journey?: SdJourneyData;
+  internalIntelligence?: SdInternalIntelligenceData;
+  growth?: SdGrowthData;
+  competitors?: SdCompetitorsData;
+  contracts?: SdContractsData;
+  predictive?: SdPredictiveData;
+}
+
 export function Customer360View({ customerId, onBack }: { customerId: number; onBack: () => void }) {
   const { t } = useTranslation("common");
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<Customer360Data>({
     queryKey: ["/api/sd/customers", customerId, "360"],
-    queryFn: () => apiRequest("GET", `/api/sd/customers/${customerId}/360`),
+    queryFn: () => apiRequest<Customer360Data>("GET", `/api/sd/customers/${customerId}/360`),
   });
 
   if (isLoading) {
@@ -85,7 +126,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
     );
   }
 
-  const basic = data.basic || {};
+  const basic = (data.basic || {}) as SdBasicData;
   const seg = basic.customerCategory || "C";
   const segColor = SEG_COLORS[seg] || SEG_COLORS.C;
   const statusConf = STATUS_LABELS[basic.status || "active"] || STATUS_LABELS.active;
@@ -95,9 +136,9 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
   const primaryEmail = emails[0]?.value;
 
   // Quick stats from finance/orders
-  const totalOrders = data.finance?.totalOrders || data.orders?.totalCount || 0;
-  const totalRevenue = data.finance?.totalRevenue || data.ltv?.lifetimeValue || 0;
-  const openDebt = data.finance?.openDebt || 0;
+  const totalOrders = (data.finance?.totalOrders || data.orders?.totalCount || 0) as number;
+  const totalRevenue = (data.finance?.totalRevenue || data.ltv?.lifetimeValue || 0) as number;
+  const openDebt = (data.finance?.openDebt || 0) as number;
 
   return (
     <div className="space-y-4">
@@ -130,7 +171,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
             {/* Name + details */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h2 className="text-xl font-bold tracking-tight truncate">{basic.title || basic.name || "Nomsiz"}</h2>
+                <h2 className="text-xl font-bold tracking-tight truncate">{String(basic.title || basic.name || "Nomsiz")}</h2>
                 <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ring-1
                   ${SEG_COLORS[seg]?.ring || ""} ${SEG_COLORS[seg]?.text || ""} bg-white/80 dark:bg-black/30`}>
                   {seg} — {SEG_LABELS[seg] || "Oddiy"}
@@ -203,34 +244,34 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
 
         <div className="mt-3">
           <TabsContent value="basic">
-            <BasicTab data={basic} contacts={data.contacts || []} decisionMakers={data.decisionMakers || []} />
+            <BasicTab data={basic} contacts={(data.contacts || []) as SdContactItem[]} decisionMakers={(data.decisionMakers || []) as SdDecisionMaker[]} />
           </TabsContent>
           <TabsContent value="orders">
-            <OrdersTab orders={data.orders} />
+            <OrdersTab orders={data.orders as SdOrdersData} />
           </TabsContent>
           <TabsContent value="finance">
-            <FinanceTab finance={data.finance} />
+            <FinanceTab finance={data.finance as SdFinanceData} />
           </TabsContent>
           <TabsContent value="communications">
-            <CommunicationsTab customerId={customerId} communications={data.communications} sentiment={data.sentiment} nps={data.nps} />
+            <CommunicationsTab customerId={customerId} communications={data.communications as SdCommunicationsData} sentiment={data.sentiment as unknown as Parameters<typeof CommunicationsTab>[0]["sentiment"]} nps={data.nps} />
           </TabsContent>
           <TabsContent value="complaints">
-            <ComplaintsTab customerId={customerId} complaints={data.complaints} />
+            <ComplaintsTab customerId={customerId} complaints={data.complaints as SdComplaintsData} />
           </TabsContent>
           <TabsContent value="segmentation">
-            <SegmentationTab segmentation={data.segmentation} journey={data.journey} internalIntelligence={data.internalIntelligence} />
+            <SegmentationTab segmentation={data.segmentation as SdSegmentationData} journey={data.journey as unknown as Parameters<typeof SegmentationTab>[0]["journey"]} internalIntelligence={data.internalIntelligence} />
           </TabsContent>
           <TabsContent value="growth">
-            <GrowthTab growth={data.growth} />
+            <GrowthTab growth={data.growth as SdGrowthData} />
           </TabsContent>
           <TabsContent value="competitors">
-            <CompetitorsTab customerId={customerId} competitors={data.competitors} />
+            <CompetitorsTab customerId={customerId} competitors={data.competitors as SdCompetitorsData} />
           </TabsContent>
           <TabsContent value="contracts">
-            <ContractsTab customerId={customerId} contracts={data.contracts} />
+            <ContractsTab customerId={customerId} contracts={data.contracts as SdContractsData} />
           </TabsContent>
           <TabsContent value="ltv">
-            <LtvTab ltv={data.ltv} orders={data.orders} predictive={data.predictive} />
+            <LtvTab ltv={data.ltv as SdLtvData} orders={data.orders as SdOrdersData} predictive={data.predictive as unknown as Parameters<typeof LtvTab>[0]["predictive"]} />
           </TabsContent>
         </div>
       </Tabs>

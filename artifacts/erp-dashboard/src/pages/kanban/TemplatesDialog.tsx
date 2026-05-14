@@ -22,28 +22,26 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { format } from "date-fns";
 import type { KanbanColumn } from "@shared/schema";
 import { type T, type KanbanTemplate, PRIORITY_CONFIG } from "./kanban-types";
-import { useTranslation } from '@/lib/i18n';
-
 export function TemplatesDialog({
   open,
   onOpenChange,
   boardId,
   columns,
-  t,
+  t: tProp,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   boardId: string | null;
   columns: KanbanColumn[];
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string, params?: Record<string, string | number>) => string);
 }) {
-  const { t } = useTranslation("common");
+  const t = tProp;
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<KanbanTemplate | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", title: "", description: "", priority: "normal" });
   const itemsPerPage = 10;
 
@@ -51,8 +49,8 @@ export function TemplatesDialog({
     queryKey: ["/api/kanban/templates"],
     queryFn: async () => {
       try {
-        const res = await apiRequest("GET", "/api/kanban/templates");
-        return Array.isArray(res.data) ? res.data : [];
+        const res = await apiRequest<{ data?: unknown[] }>("GET", "/api/kanban/templates");
+        return (Array.isArray(res.data) ? res.data : []) as KanbanTemplate[];
       } catch { return []; }
     },
     enabled: open,
