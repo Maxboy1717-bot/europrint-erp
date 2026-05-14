@@ -32,7 +32,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useTranslation } from "@/lib/i18n";
-import { safeStorage } from '@/lib/safeStorage';
 import { EPErrorState } from "@/components/ep";
 
 interface OrgChartNode {
@@ -176,9 +175,9 @@ export default function OrgChartPage() {
       const endpoint = format === "pdf"
         ? "/api/org-structure/export/pdf"
         : "/api/org-structure/export/excel";
-      const token = safeStorage.getItem("access_token");
-      // NOTE: Binary blob download (PDF/Excel) — keep raw fetch; apiRequest unwraps JSON envelopes
-      const res = await fetch(endpoint, { credentials: "include", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      // NOTE: Binary blob download (PDF/Excel) — keep raw fetch; apiRequest unwraps JSON envelopes.
+      // Auth via httpOnly cookie sent with credentials: 'include' (no Authorization header needed).
+      const res = await fetch(endpoint, { credentials: "include" });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -214,11 +213,10 @@ export default function OrgChartPage() {
 
   const handleSnapshot = async () => {
     try {
-      const token = safeStorage.getItem("access_token");
-      // NOTE: Binary blob download (PNG snapshot) — keep raw fetch; apiRequest unwraps JSON envelopes
+      // NOTE: Binary blob download (PNG snapshot) — keep raw fetch; apiRequest unwraps JSON envelopes.
+      // Auth via httpOnly cookie sent with credentials: 'include'.
       const res = await fetch("/api/org-structure/export/png", {
         credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("Snapshot failed");
       const blob = await res.blob();

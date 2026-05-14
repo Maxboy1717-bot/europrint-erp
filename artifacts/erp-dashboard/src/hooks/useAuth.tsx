@@ -1,17 +1,16 @@
 /**
  * @module useAuth
- * @description Canonical auth Context + hook. Reads JWT from safeStorage
- * (key `access_token`), exposes the current AuthUser plus login/logout
- * helpers, and surfaces role aliases that mirror the backend's RBAC table
- * (so the UI never grants a permission the server would refuse).
+ * @description Canonical auth Context + hook. Reads the current user from
+ * `/api/auth/me` (auth carried by httpOnly cookies — see auth-refresh.ts).
+ * Exposes the AuthUser plus login/logout helpers, and surfaces role aliases
+ * that mirror the backend's RBAC table (so the UI never grants a permission
+ * the server would refuse).
  *
  * All new code MUST import from this file; `use-auth.ts` is a deprecated shim.
  */
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
-import { safeStorage } from '@/lib/safeStorage';
 import { apiRequest } from '@/lib/queryClient';
-import { useTranslation } from '@/lib/i18n';
 
 // Mirror backend ROLE_ALIASES so UI permissions consistently match server authorization
 const ROLE_ALIASES: Record<string, string> = {
@@ -71,7 +70,6 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation("common");
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isRefreshingRef = useRef(false);
@@ -79,16 +77,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUser = useCallback(async () => {
     setIsLoading(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      // Token yo'q bo'lsa /api/auth/me chaqirmaymiz — 401 spam'ni oldini olamiz.
-      // Foydalanuvchi login qilganda token saqlanadi va refetch() chaqiriladi.
-      if (!token) {
-        setUser(null);
-        return;
-      }
-      const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
-      // eslint-disable-next-line no-restricted-globals
-      const res = await fetch("/api/auth/me", { credentials: "include", headers });
+      // Auth carried by the httpOnly access_token cookie (sent automatically
+      // when `credentials: 'include'`). We can't tell client-side whether the
+      // cookie is present, so we just call /me and let the server respond
+      // 401 if it isn't — then attempt a refresh, mirroring api-request.ts.
+      const res = await fetch("/api/auth/me", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         setUser(data);
@@ -96,27 +89,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (res.status === 401 && !isRefreshingRef.current) {
           isRefreshingRef.current = true;
           try {
+            // Refresh: server reads refresh_token cookie and sets a new
+            // access_token cookie on success. No body / no Authorization
+            // header is required.
             const refreshRes = await fetch('/api/auth/refresh', {
               method: 'POST',
               credentials: 'include',
-              headers: { Authorization: `Bearer ${safeStorage.getItem('access_token') ?? ''}` },
             });
             if (refreshRes.ok) {
-              const data = await refreshRes.json();
-              if (data.accessToken) {
-                safeStorage.setItem('access_token', data.accessToken);
-                if (data.refreshToken) safeStorage.setItem('refresh_token', data.refreshToken);
-                isRefreshingRef.current = false;
-                // Retry once with the new token, reading it fresh
-                const retryToken = safeStorage.getItem('access_token');
-                const retryRes = await fetch('/api/auth/me', {
-                  credentials: 'include',
-                  headers: { Authorization: `Bearer ${retryToken}` },
-                });
-                if (retryRes.ok) {
-                  setUser(await retryRes.json());
-                  return;
-                }
+              isRefreshingRef.current = false;
+              const retryRes = await fetch('/api/auth/me', {
+                credentials: 'include',
+              });
+              if (retryRes.ok) {
+                setUser(await retryRes.json());
+                return;
               }
             }
           } catch { /* refresh failed, fall through to logout */ }
@@ -142,12 +129,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const logout = useCallback(async () => {
-    const token = safeStorage.getItem("access_token");
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    // eslint-disable-next-line no-restricted-globals
-    await apiRequest('POST', "/api/auth/logout");
-    safeStorage.removeItem("access_token");
-    safeStorage.removeItem("refresh_token");
+    // The server clears the httpOnly cookies on /auth/logout.
+    // We also purge any legacy tokens that might still be in localStorage
+    // from before the cookie migration, so they don't linger.
+    try {
+      await apiRequest('POST', "/api/auth/logout");
+    } catch { /* swallow — we still want to clear local state and redirect */ }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("token");
+      }
+    } catch { /* localStorage may be unavailable */ }
     setUser(null);
     window.location.href = '/login';
   }, []);

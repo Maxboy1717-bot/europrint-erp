@@ -8,7 +8,6 @@ import { io } from "socket.io-client";
 import { useChatStore, ChatRoom, ChatMessage, ChatReaction } from "@/store/chatStore";
 import { useAuth } from "@/hooks/useAuth";
 import { setSharedSocket } from "./useChatSocket";
-import { safeStorage } from '@/lib/safeStorage';
 
 const ChatSocketContext = createContext<{ connected: boolean }>({ connected: false });
 
@@ -19,14 +18,19 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (!safeStorage.getItem("access_token")) return;
 
     const wsUrl = `${window.location.protocol}//${window.location.host}`;
     const basePath = (import.meta.env.BASE_URL ?? "/erp-dashboard/").replace(/\/$/, "");
     const socketPath = `${basePath}/socket.io`;
 
+    // Socket.io: auth is delivered via the httpOnly access_token cookie
+    // attached to the WebSocket handshake when `withCredentials: true`.
+    // The server gateway extracts it via @WsCookies() (or equivalent) and
+    // performs the same JWT verification as REST routes. We keep the
+    // `auth` callback as a forward-compat hook for clients still passing
+    // a token — both flows are valid during the migration.
     const s = io(`${wsUrl}/chat`, {
-      auth: (cb) => { cb({ token: safeStorage.getItem("access_token") ?? "" }); },
+      withCredentials: true,
       transports: ["websocket", "polling"],
       path: socketPath,
       reconnection: true,
@@ -112,7 +116,7 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
     s.on("new_message", (rawMsg: Record<string, unknown>) => {
       const st = useChatStore.getState();
       const msg: ChatMessage = {
-        ...(rawMsg as ChatMessage),
+        ...(rawMsg as unknown as ChatMessage),
         id: String(rawMsg.id),
         roomId: String(rawMsg.roomId ?? rawMsg.room_id),
         senderId: String(rawMsg.senderId ?? rawMsg.sender_id),

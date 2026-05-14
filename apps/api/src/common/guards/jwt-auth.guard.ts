@@ -16,8 +16,10 @@ import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
 /**
- * Default route guard. Verifies the JWT in `Authorization: Bearer ...`,
- * attaches `request.user`, and short-circuits on `@Public()` metadata.
+ * Default route guard. Verifies the JWT from either the `access_token`
+ * httpOnly cookie (preferred — XSS-safe) or the `Authorization: Bearer ...`
+ * header (legacy — for API tools / older clients). Attaches `request.user`
+ * and short-circuits on `@Public()` metadata.
  *
  * Token blacklist: when the access token carries a `jti` claim, the guard
  * checks `refresh_tokens.is_revoked` for that jti. DB errors during the
@@ -30,6 +32,28 @@ export class JwtAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
   ) {}
+
+  /**
+   * Extract a JWT from the request. Prefers the httpOnly cookie (more secure
+   * — JavaScript cannot read it, so XSS cannot exfiltrate it) and falls back
+   * to `Authorization: Bearer <token>` for backward compatibility.
+   */
+  private extractToken(request: {
+    cookies?: Record<string, string | undefined>;
+    headers?: Record<string, string | string[] | undefined>;
+  }): string | undefined {
+    // 1) Preferred: httpOnly cookie set by /auth/login or /auth/refresh
+    const cookieToken = request.cookies?.['access_token'];
+    if (cookieToken) return cookieToken;
+
+    // 2) Fallback: Authorization header (Bearer scheme)
+    const authHeader = request.headers?.authorization;
+    if (typeof authHeader === 'string') {
+      const [scheme, value] = authHeader.split(' ');
+      if (scheme?.toLowerCase() === 'bearer' && value) return value;
+    }
+    return undefined;
+  }
 
   /**
    * Verifies the request's JWT and authorizes the handler.
@@ -48,7 +72,7 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const token = request.headers?.authorization?.split(' ')[1];
+    const token = this.extractToken(request);
 
     if (!token) {
       throw new UnauthorizedException('Token topilmadi');

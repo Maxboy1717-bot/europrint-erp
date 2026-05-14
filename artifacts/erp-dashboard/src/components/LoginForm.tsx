@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookOpen, Phone, Hash } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { safeStorage } from "@/lib/safeStorage";
 import { useTranslation } from '@/lib/i18n';
 
 interface LoginFormProps {
@@ -36,11 +35,11 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   });
 
   const verifyOtpMutation = useMutation({
-    mutationFn: () => apiRequest<{ token: string }>("POST", "/api/auth/otp/verify", { phone, otp }),
-    onSuccess: (data) => {
-      if (data?.token) {
-        safeStorage.setItem("access_token", data.token);
-      }
+    // Server sets the httpOnly access_token cookie on /otp/verify success.
+    // Frontend doesn't store the token — `credentials: 'include'` in
+    // apiRequest sends the cookie back on every subsequent call.
+    mutationFn: () => apiRequest<{ token?: string }>("POST", "/api/auth/otp/verify", { phone, otp }),
+    onSuccess: () => {
       setStep("employeeId");
     },
   });

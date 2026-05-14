@@ -50,6 +50,7 @@
     "@anatine/zod-openapi": "^2.2.8",
     "@anthropic-ai/sdk": "^0.32.0",
     "@date-fns/tz": "^1.4.1",
+    "@fastify/cookie": "^11.0.2",
     "@fastify/helmet": "^13.0.2",
     "@fastify/multipart": "^10.0.0",
     "@fastify/rate-limit": "^10.3.0",

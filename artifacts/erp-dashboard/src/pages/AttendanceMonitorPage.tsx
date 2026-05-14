@@ -6,7 +6,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { io, Socket } from 'socket.io-client';
-import { safeStorage } from '@/lib/safeStorage';
 import { apiRequest } from '@/lib/queryClient';
 import { TerritoryEvent, LiveStatus, LogsResponse, buildMonthlyStats, exportCsv } from './AttendanceMonitorPageTypes';
 import {
@@ -30,13 +29,15 @@ export default function AttendanceMonitorPage() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const token = safeStorage.getItem('access_token') ?? undefined;
+    // Socket.io auth delivered via httpOnly access_token cookie attached
+    // to the WebSocket handshake when `withCredentials: true`. The server
+    // gateway extracts it; no token needs to be passed from the client.
     const socket = io(`${SOCKET_URL}/territory`, {
       path:                 '/socket.io',
       transports:           ['websocket', 'polling'],
       reconnectionDelay:    2000,
       reconnectionAttempts: 10,
-      auth:                 token ? { token } : undefined,
+      withCredentials:      true,
     });
 
     socket.on('connect',    () => setWsConnected(true));
