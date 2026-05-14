@@ -42,6 +42,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: lib/db build (kerak: @workspace/db CJS importi uchun)
+        run: pnpm --filter @workspace/db run build
+
       - name: nestjs-api typecheck
         run: pnpm --filter @europrint/api exec tsc --noEmit
 
@@ -74,6 +77,9 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - run: pnpm install --frozen-lockfile
+
+      - name: lib/db build (kerak: @workspace/db CJS importi uchun)
+        run: pnpm --filter @workspace/db run build
 
       - name: nestjs-api testlarni ishga tushirish
         run: pnpm --filter @europrint/api run test
