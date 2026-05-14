@@ -119,6 +119,7 @@ export function ApprovalsScreen({
   onBack,
   onSelect,
 }: ApprovalsScreenProps) {
+  const { t } = useTranslation("common");
   const cardStyle = makeCardStyle(isDark);
 
   return (

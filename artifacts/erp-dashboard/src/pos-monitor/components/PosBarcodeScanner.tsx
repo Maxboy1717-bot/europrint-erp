@@ -6,7 +6,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { barcodeApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 declare class BarcodeDetector {
   constructor(options?: { formats: string[] });

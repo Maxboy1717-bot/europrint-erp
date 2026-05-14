@@ -106,6 +106,7 @@ export function EditReferralDialog({
   isPending,
   onSubmit,
 }: EditReferralDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={!!editTarget} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md p-6">

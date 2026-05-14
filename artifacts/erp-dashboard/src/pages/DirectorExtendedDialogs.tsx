@@ -57,6 +57,7 @@ export function AiSummaryTab({
   aiLoading: boolean;
   onExport: () => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="summary" className="mt-0 space-y-6">
       <div className="flex items-center justify-between">

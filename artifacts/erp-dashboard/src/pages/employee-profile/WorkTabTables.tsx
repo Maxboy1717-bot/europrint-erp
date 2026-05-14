@@ -156,6 +156,7 @@ export function SalaryHistoryTable({
   loadingSalaryHistory,
   salaryHistory,
 }: SalaryHistoryTableProps) {
+  const { t } = useTranslation("common");
   if (loadingSalaryHistory) {
     return (
       <div className="space-y-3">

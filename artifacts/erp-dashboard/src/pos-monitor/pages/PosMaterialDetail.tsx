@@ -7,13 +7,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { materialsApi, movementsApi, stockApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 interface StockRow  { materialCardId: number; warehouseId: string; balance: number; }
 interface Movement  { id: number; movementNumber?: string; movementType: string; status: string; createdAt: string; totalAmount?: number; }
 
 export default function PosMaterialDetail() {
-  const { t } = useTranslation("common");
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { t } = usePosI18n();

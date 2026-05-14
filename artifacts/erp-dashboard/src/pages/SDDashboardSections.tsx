@@ -58,6 +58,7 @@ interface KpiSectionProps {
 }
 
 export function KpiSection({ stats, pipelineValue, convRate, loading }: KpiSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <section>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("hozirgiHolat")}</p>
@@ -81,6 +82,7 @@ interface AiSummaryCardProps {
 }
 
 export function AiSummaryCard({ aiLoad, aiAnalysis }: AiSummaryCardProps) {
+  const { t } = useTranslation("common");
   if (aiLoad || !aiAnalysis?.analysis?.summary) return null;
   return (
     <Card className="border-l-4 border-l-primary">
@@ -117,6 +119,7 @@ interface AttentionSectionProps {
 export function AttentionSection({
   leads, deals, invoices, leadsByStatus, leadsLoad, dealsLoad, invLoad,
 }: AttentionSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <section>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("etiborKerak")}</p>
@@ -214,6 +217,7 @@ interface AiAnalysisSectionProps {
 }
 
 export function AiAnalysisSection({ aiLoad, aiAnalysis }: AiAnalysisSectionProps) {
+  const { t } = useTranslation("common");
   if (aiLoad || !aiAnalysis?.analysis) return null;
   return (
     <section>

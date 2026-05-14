@@ -103,6 +103,7 @@ export function MyPlanSection({
 }
 
 function MyPlanReadView({ plan }: { plan: WeeklyPlan }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div>
@@ -165,6 +166,7 @@ function MyPlanEditForm({
   onGsdTargetChange, onTaskChange, onSuccessFactorsChange, onResourcesNeededChange,
   onSubmit, onCancel,
 }: EditFormProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div>

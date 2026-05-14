@@ -53,6 +53,7 @@ interface ScanZoneProps {
 }
 
 export function ScanZone({ fromWarehouseId, scanFlash, scanning, onCameraOpen }: ScanZoneProps) {
+  const { t } = useTranslation("common");
   const borderColor = scanFlash === "success"
     ? "2px solid var(--pos-success)"
     : scanFlash === "error"
@@ -141,6 +142,7 @@ export function ContextFields({
   selectedType, returnReason, onReturnReasonChange,
   notes, onNotesChange, damagePhotos, onDamagePhotosChange,
 }: ContextFieldsProps) {
+  const { t } = useTranslation("common");
   const photoInputRef = useRef<HTMLInputElement>(null);
   const needsReturnReason = selectedType === "INTERNAL_RETURN";
   const needsDamageDesc   = selectedType === "DAMAGE";
@@ -216,6 +218,7 @@ export function BottomBar({
   notes, onNotesChange,
   submitting, linesCount, onSaveDraft, onSubmit,
 }: BottomBarProps) {
+  const { t } = useTranslation("common");
   const needsToWarehouse  = selectedType === "INTERNAL_ISSUE" || selectedType === "INTERNAL_TRANSFER";
   const needsEmployee     = selectedType === "INTERNAL_ISSUE";
   const needsDamageDesc   = selectedType === "DAMAGE";

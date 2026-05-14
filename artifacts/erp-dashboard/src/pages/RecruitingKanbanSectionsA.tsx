@@ -61,6 +61,7 @@ export function RecruitingFilterBar({
   setFilterVacancy,
   openVacancies,
 }: FilterBarProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-2 mb-3">
       <Button
@@ -101,6 +102,7 @@ export function RecruitingVacancyPanel({
   openingContextRoom,
   handleOpenVacancyChat,
 }: VacancyPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="mb-4">
       <Button

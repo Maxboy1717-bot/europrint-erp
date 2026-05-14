@@ -107,6 +107,7 @@ interface QcFlowSectionProps {
 }
 
 export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <section>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">

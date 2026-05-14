@@ -76,6 +76,7 @@ export function TaskDetailSheetActions({
   onConfirmComplete,
   t,
 }: TaskDetailSheetActionsProps) {
+  const { t } = useTranslation("common");
   return (
     <>
       {/* ── 5-button action bar ──────────────────────────────────────────── */}

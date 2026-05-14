@@ -72,6 +72,7 @@ interface OeeRatingProps {
 }
 
 export function OeeRatingCard({ oee }: OeeRatingProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-muted/20">
       <CardContent className="py-4 flex items-center justify-between">

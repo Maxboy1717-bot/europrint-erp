@@ -81,6 +81,7 @@ export function WorkflowPipeline({ dashboardData, onStageClick }: { dashboardDat
 // ── Stage-specific approval fields ───────────────────────────────────────────
 
 export function StageFields({ stage, form }: { stage: string; form: UseFormReturn<ApprovalFormValues> }) {
+  const { t } = useTranslation("common");
   if (stage === "design") return (
     <>
       <FormField control={form.control} name="designFileUrl" render={({ field }) => (<FormItem><FormLabel>Dizayn fayli URL / Ссылка на файл дизайна</FormLabel><FormControl><Input placeholder="https://..." {...field} data-testid="input-design-url" /></FormControl><FormMessage /></FormItem>)} />
@@ -185,6 +186,7 @@ export function HistoryPanel({
   filterStatus: string; setFilterStatus: (v: string) => void;
   historyLoading: boolean; historyData: ApprovalItem[];
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader><CardTitle>Tasdiqlash tarixi / История утверждений</CardTitle><CardDescription>{t("barchaTasdiqlashVaRadEtishlar")}</CardDescription></CardHeader>

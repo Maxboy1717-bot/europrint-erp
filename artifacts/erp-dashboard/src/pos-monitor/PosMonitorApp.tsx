@@ -89,6 +89,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation("common");
   if (!isAuthenticated()) return <Redirect to="/pos-monitor/login" />;
   const role = getPosRole();
   if (!POS_ADMIN_ROLES.has(role)) {

@@ -60,6 +60,7 @@ export function SaleCountCard({ loading, summary }: SaleCountCardProps) {
 
 /** Bugungi daromad (total revenue) card. */
 export function RevenueCard({ loading, summary }: RevenueCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-4">
@@ -81,6 +82,7 @@ export function RevenueCard({ loading, summary }: RevenueCardProps) {
 
 /** O'rtacha sotuv (average sale) card. */
 export function AvgSaleCard({ loading, summary }: AvgSaleCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-4">
@@ -102,6 +104,7 @@ export function AvgSaleCard({ loading, summary }: AvgSaleCardProps) {
 
 /** Kam qoldiq (low-stock) card. */
 export function LowStockCard({ count }: LowStockCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-4">

@@ -57,6 +57,7 @@ export function OverviewSection({
   warningAlerts,
   overviewLoading,
 }: OverviewSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4 mt-4">
       {criticalAlerts.length > 0 && (
@@ -178,6 +179,7 @@ export function AlertsSection({
   allAlerts,
   alertsLoading,
 }: AlertsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="mt-4">
       <Card>

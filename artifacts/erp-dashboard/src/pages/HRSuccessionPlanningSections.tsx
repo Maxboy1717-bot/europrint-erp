@@ -85,6 +85,7 @@ interface CareerPlansTabProps {
 }
 
 export function CareerPlansTab({ plans, isLoading }: CareerPlansTabProps) {
+  const { t } = useTranslation("common");
   return (
     <CardContent className="p-0">
       {isLoading ? (
@@ -197,6 +198,7 @@ interface NineBoxMatrixTabProps {
 }
 
 export function NineBoxMatrixTab({ candidates }: NineBoxMatrixTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

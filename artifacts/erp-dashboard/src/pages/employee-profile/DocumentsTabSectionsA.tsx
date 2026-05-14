@@ -42,6 +42,7 @@ interface KPICardsProps {
 export function KPICards({
   totalContracts, activeContract, pendingDocs, approvedDocs, totalFiles,
 }: KPICardsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="from-blue-500/10 to-blue-600/10 border-blue-500/20">

@@ -53,6 +53,7 @@ export function Section1MainResults({
   latestToolTest: ToolTestRecord | null;
   latestInterview: ProductivityInterview | null;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
@@ -87,6 +88,7 @@ export function Section2TestResults({
   latestToolTest: ToolTestRecord | null;
   toolTestResults: Record<string, number> | null;
 }) {
+  const { t } = useTranslation("common");
   if (!latestToolTest) {
     return <p className="text-sm text-gray-500 italic">{t("toolTestOtkazilmagan")}</p>;
   }
@@ -167,6 +169,7 @@ export function Section3InterviewResults({
 }: {
   latestInterview: ProductivityInterview | null;
 }) {
+  const { t } = useTranslation("common");
   if (!latestInterview) {
     return <p className="text-sm text-gray-500 italic">{t("produktivlikIntervyusiOtkazilmagan")}</p>;
   }

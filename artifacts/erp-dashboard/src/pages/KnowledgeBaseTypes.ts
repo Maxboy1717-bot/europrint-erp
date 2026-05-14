@@ -7,7 +7,6 @@
 
 import { z } from "zod";
 import type { KnowledgeBase } from "@shared/schema";
-import { useTranslation } from "@/lib/i18n";
 
 // ---------------------------------------------------------------------------
 // Zod schema & derived types

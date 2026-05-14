@@ -72,6 +72,7 @@ interface WebhookUrlsSectionProps {
 }
 
 export function WebhookUrlsSection({ webhookUrl }: WebhookUrlsSectionProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   return (
@@ -116,6 +117,7 @@ interface ApiConfigsListProps {
 }
 
 export function ApiConfigsList({ apiConfigs, apisLoading, onEdit }: ApiConfigsListProps) {
+  const { t } = useTranslation("common");
   if (apisLoading) return <Skeleton className="h-32 rounded-lg" />;
 
   if (apiConfigs?.length === 0) {
@@ -174,6 +176,7 @@ export function GeneralSettingsList({
   onSave,
   isSavePending,
 }: GeneralSettingsListProps) {
+  const { t } = useTranslation("common");
   if (Object.keys(grouped).length === 0) {
     return (
       <Card className="bg-card border-none">

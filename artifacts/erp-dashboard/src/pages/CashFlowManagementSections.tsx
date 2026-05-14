@@ -172,6 +172,7 @@ export function TransactionsTable({
   transactions, transactionsLoading, filterType, setFilterType,
   filterCategory, setFilterCategory, t, tCommon,
 }: TransactionsTableProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6">
       <div className="flex flex-col md:flex-row gap-4 mb-6">

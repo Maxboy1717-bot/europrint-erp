@@ -125,6 +125,7 @@ export function QuestionsSection({
   onEditQuestion,
   onDeleteQuestion,
 }: QuestionsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <CardContent>
       <div className="space-y-2">

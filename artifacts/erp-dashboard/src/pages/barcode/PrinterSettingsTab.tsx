@@ -22,7 +22,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { translations } from "./barcode-types";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 type TranslationType = typeof translations.uz;
 
@@ -42,7 +41,6 @@ interface PrinterSettingsTabProps {
 }
 
 export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const [form, setForm] = useState({

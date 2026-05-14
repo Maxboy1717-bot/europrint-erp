@@ -7,7 +7,6 @@ import { useState } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { requestsApi } from "../api/pos-monitor.api";
 import { WarehouseSelector } from "./WarehouseSelector";
-import { useTranslation } from '@/lib/i18n';
 
 interface RequisitionLine {
   materialCode: string;

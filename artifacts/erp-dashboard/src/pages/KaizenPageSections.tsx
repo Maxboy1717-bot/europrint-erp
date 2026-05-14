@@ -121,6 +121,7 @@ interface KaizenKanbanBoardProps {
 }
 
 export function KaizenKanbanBoard({ suggestions, onStatusChange }: KaizenKanbanBoardProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto">
       {(Array.isArray(KANBAN_COLUMNS) ? KANBAN_COLUMNS : []).map((col) => {
@@ -158,6 +159,7 @@ interface KaizenFilteredGridProps {
 }
 
 export function KaizenFilteredGrid({ suggestions, onStatusChange }: KaizenFilteredGridProps) {
+  const { t } = useTranslation("common");
   if (suggestions.length === 0) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -186,6 +186,7 @@ interface AlertsTabProps {
 }
 
 export function AlertsTab({ alerts }: AlertsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -247,6 +248,7 @@ interface HistoryTabProps {
 }
 
 export function HistoryTab({ history }: HistoryTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

@@ -16,7 +16,6 @@ import {
   activityTypes,
 } from "./CRMActivitiesTypes";
 
-import { useTranslation } from "@/lib/i18n";
 interface CreateActivityDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

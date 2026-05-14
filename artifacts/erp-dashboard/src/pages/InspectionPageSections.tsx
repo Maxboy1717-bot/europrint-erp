@@ -39,6 +39,7 @@ export function RoomCard({
   canUpload:  boolean;
   canInspect: boolean;
 }) {
+  const { t } = useTranslation("common");
   const cs         = data?.cleanliness_score;
   const os         = data?.order_score;
   const eq         = data?.equipment_ok;
@@ -127,6 +128,7 @@ export function AlertsTabContent({
   alerts: AlertRow[];
   onDetail: (code: string) => void;
 }) {
+  const { t } = useTranslation("common");
   if ((alerts ?? []).length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">

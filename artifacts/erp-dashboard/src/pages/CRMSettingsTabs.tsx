@@ -161,6 +161,7 @@ export function CustomFieldsTab({
   onDelete,
   onDragEnd,
 }: CustomFieldsTabProps) {
+  const { t } = useTranslation("common");
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );

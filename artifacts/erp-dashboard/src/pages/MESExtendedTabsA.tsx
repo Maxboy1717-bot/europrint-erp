@@ -100,6 +100,7 @@ interface ReasonsTabProps {
 
 /** Tab content: To'xtash Sabablar Logi */
 export function ReasonsTab({ downtimeReasons }: ReasonsTabProps) {
+  const { t } = useTranslation("common");
   const reasons = Array.isArray(downtimeReasons) ? downtimeReasons : [];
   const barColors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-gray-400"];
 

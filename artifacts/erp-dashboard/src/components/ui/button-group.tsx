@@ -31,7 +31,7 @@ function ButtonGroup({
   className,
   orientation,
   ...props
-}: React.ComponentProps<"div"> {t("variantprops")}<typeof buttonGroupVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>) {
   const { t } = useTranslation("common");
   return (
     <div

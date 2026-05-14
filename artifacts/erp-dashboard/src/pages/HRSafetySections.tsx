@@ -45,6 +45,7 @@ interface IncidentsSectionProps {
   onDeleteRequest: (id: number) => void;
 }
 export function IncidentsSection({ incidents, loading, onDeleteRequest }: IncidentsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-0">
@@ -100,6 +101,7 @@ export function IncidentsSection({ incidents, loading, onDeleteRequest }: Incide
 // ─── PPE tab ──────────────────────────────────────────────────────────────────
 interface PpeSectionProps { ppeRecords: PpeRecord[]; loading: boolean; }
 export function PpeSection({ ppeRecords, loading }: PpeSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-0">
@@ -145,6 +147,7 @@ export function PpeSection({ ppeRecords, loading }: PpeSectionProps) {
 // ─── Trainings tab ────────────────────────────────────────────────────────────
 interface TrainingsSectionProps { trainings: SafetyTraining[]; loading: boolean; }
 export function TrainingsSection({ trainings, loading }: TrainingsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-0">
@@ -188,6 +191,7 @@ export function TrainingsSection({ trainings, loading }: TrainingsSectionProps) 
 // ─── Hazard Zones tab ─────────────────────────────────────────────────────────
 interface ZonesSectionProps { zones: HazardZone[]; loading: boolean; }
 export function ZonesSection({ zones, loading }: ZonesSectionProps) {
+  const { t } = useTranslation("common");
   const activeZones = (Array.isArray(zones) ? zones : []).filter(z => z.isActive !== false);
   return (
     <Card>

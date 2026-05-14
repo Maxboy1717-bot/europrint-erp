@@ -125,6 +125,7 @@ export function ContactRow({ phone, email }: { phone: string | null; email: stri
 // ── ProgressBar ───────────────────────────────────────────────────────────────
 
 export function ProgressBar({ progressPct, stageColor }: { progressPct: number; stageColor: string }) {
+  const { t } = useTranslation("common");
   return (
     <div className="mb-2.5">
       <div className="flex items-center justify-between mb-1">

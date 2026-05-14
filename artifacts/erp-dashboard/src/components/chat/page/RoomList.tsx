@@ -44,6 +44,7 @@ function RoomItem({ room, isActive, onClick, hasBirthday, isOnline }: {
   hasBirthday?: boolean;
   isOnline?: boolean;
 }) {
+  const { t } = useTranslation("common");
   const isGroup = room.type !== "direct";
   const isChannel = room.type === "channel";
 

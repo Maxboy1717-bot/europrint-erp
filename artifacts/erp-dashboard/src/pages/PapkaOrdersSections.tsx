@@ -94,6 +94,7 @@ export function OrdersList({
   orders, lang, searchQuery, statusFilter,
   onSearchChange, onStatusFilterChange, onEdit, onDelete, isDeletePending,
 }: OrdersListProps) {
+  const { t } = useTranslation("common");
   const t = TRANSLATIONS[lang];
   return (
     <div className="bg-card rounded-xl p-6">

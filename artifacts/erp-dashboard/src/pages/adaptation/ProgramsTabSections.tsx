@@ -117,6 +117,7 @@ interface CheckpointEditorProps {
 }
 
 export function CheckpointEditor({ checkpoints, onChange }: CheckpointEditorProps) {
+  const { t } = useTranslation("common");
   const addCheckpoint = () =>
     onChange([...checkpoints, { day: 7, title: "", description: "" }]);
   const removeCheckpoint = (i: number) =>

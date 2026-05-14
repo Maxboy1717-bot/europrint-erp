@@ -26,6 +26,7 @@ import { useTranslation } from '@/lib/i18n';
 import { EPStatusPill } from "@/components/ep";
 // — MessageBubble —
 function MessageBubble({ msg }: { msg: SocialMessage }) {
+  const { t } = useTranslation("common");
   const isOut = msg.direction === "outbound";
   const timeColor = isOut ? "text-primary-foreground/70" : "text-muted-foreground";
   return (
@@ -164,6 +165,7 @@ interface ChatHeaderProps {
   onStatusChange: (s: string) => void;
 }
 function ChatHeader({ conv, onBackToList, onStatusChange }: ChatHeaderProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center gap-3 p-3 border-b">
       <Button size="icon" variant="ghost" className="md:hidden" onClick={onBackToList} data-testid="button-back-to-list">
@@ -229,6 +231,7 @@ export function ChatPanel({
   replyPending,
   aiReplyPending,
 }: ChatPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <div
       className={`flex-1 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}

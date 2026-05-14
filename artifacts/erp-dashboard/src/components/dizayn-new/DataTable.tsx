@@ -81,6 +81,7 @@ export function StatusBadge({ status }: { status: string }) {
 // ─── Sort icon ─────────────────────────────────────────────────────────────────
 
 function SortIcon({ dir }: { dir: SortDir }) {
+  const { t } = useTranslation("common");
   if (dir === "asc")  return <ChevronUp  className="w-3.5 h-3.5 text-primary" aria-label={t("ascending")} />;
   if (dir === "desc") return <ChevronDown className="w-3.5 h-3.5 text-primary" aria-label={t("descending")} />;
   return <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground/50" aria-label={t("sortBy")} />;
@@ -95,6 +96,7 @@ function RowActionMenu({
   id: string | number;
   onAction?: (id: string | number, action: string) => void;
 }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const actions = [
     { key: "view", label: "Ko'rish" },
@@ -452,6 +454,7 @@ export function EmployeeTable({
   onAdd?: () => void;
   onRowAction?: (id: string | number, action: string) => void;
 }) {
+  const { t } = useTranslation("common");
   const columns: TableColumn<EmployeeRow>[] = [
     {
       key: "name",

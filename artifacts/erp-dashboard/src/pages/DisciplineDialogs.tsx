@@ -145,6 +145,7 @@ export function EmployeeHistoryDialog({
   employees, employeeHistoryRecords,
   getTypeBadge, sumLabel, tCommon, t,
 }: EmployeeHistoryDialogProps) {
+  const { t } = useTranslation("common");
   const employeeName = (Array.isArray(employees) ? employees : []).find(
     (e) => e.id === selectedEmployeeHistory,
   )?.fullName;

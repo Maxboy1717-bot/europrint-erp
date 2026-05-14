@@ -33,9 +33,9 @@ export function RoomsSection({
   roomsLoading: boolean;
   filteredRooms: AdminRoom[];
   onSelectRoom: (room: AdminRoom) => void;
-  archiveMutation: UseMutationResult<unknown, Error, {
-  const { t } = useTranslation("common"); roomId: string; archive: boolean }, unknown>;
+  archiveMutation: UseMutationResult<unknown, Error, { roomId: string; archive: boolean }, unknown>;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex-1 min-h-0 overflow-auto">
       <div className="mb-3">
@@ -159,6 +159,7 @@ export function AuditSection({
   auditPage: number;
   setAuditPage: (fn: (p: number) => number) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex-1 min-h-0 overflow-auto">
       {auditLoading ? (

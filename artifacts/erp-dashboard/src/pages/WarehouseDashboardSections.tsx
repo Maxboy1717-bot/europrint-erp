@@ -80,6 +80,7 @@ export function LowStockPanel({ lowStock, isLoading }: { lowStock: LowStockItem[
 }
 
 export function RecentTransactionsPanel({ txs, isLoading }: { txs: RecentTx[]; isLoading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <Card className="border border-border/60 shadow-sm">
       <CardHeader className="pb-3 pt-5 px-5">
@@ -126,6 +127,7 @@ export function RecentTransactionsPanel({ txs, isLoading }: { txs: RecentTx[]; i
 }
 
 export function PendingTransfersPanel({ pending, isLoading, onNavigate }: { pending: PendingTransfer[]; isLoading: boolean; onNavigate: (url: string) => void }) {
+  const { t } = useTranslation("common");
   return (
     <Card className="border border-border/60 shadow-sm">
       <CardHeader className="pb-3 pt-5 px-5">
@@ -170,6 +172,7 @@ export function PendingTransfersPanel({ pending, isLoading, onNavigate }: { pend
 }
 
 export function CategoryStatsPanel({ catStats, isLoading }: { catStats: CategoryStat[]; isLoading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <Card className="border border-border/60 shadow-sm">
       <CardHeader className="pb-3 pt-4 px-5">
@@ -222,6 +225,7 @@ export function KpiRow({
   } | undefined;
   isLoading: boolean;
 }) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <>

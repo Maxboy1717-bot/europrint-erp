@@ -157,6 +157,7 @@ interface KpiSectionProps {
 }
 
 export function KpiSection({ wmsKpis, occupancy, onRefresh }: KpiSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -217,6 +218,7 @@ interface RentalSectionProps {
 }
 
 export function RentalSection({ rentalData, rentalLoading }: RentalSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

@@ -71,6 +71,7 @@ interface DeactivateAlertProps {
 }
 
 export function DeactivateAlert({ deleteId, onClose, onConfirm }: DeactivateAlertProps) {
+  const { t } = useTranslation("common");
   return (
     <AlertDialog open={deleteId !== null} onOpenChange={open => !open && onClose()}>
       <AlertDialogContent>

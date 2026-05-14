@@ -71,6 +71,7 @@ interface NavigationBarProps {
   onSubmit: () => void;
 }
 export function NavigationBar({ step, saving, canNext, cfg, onBack, onNext, onSubmit }: NavigationBarProps) {
+  const { t } = useTranslation("common");
   if (step >= 5) return null;
   return (
     <div className="flex justify-between mt-6 pt-4 border-t">

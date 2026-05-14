@@ -148,6 +148,7 @@ export function SeoSection() {
 }
 // --- A/B Testing section ---
 export function AbSection({ abTests }: { abTests: AbTest[] }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-xl p-6">
@@ -185,6 +186,7 @@ export function AbSection({ abTests }: { abTests: AbTest[] }) {
 }
 // --- Competitors section ---
 export function CompSection({ competitors }: { competitors: Competitor[] }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-xl p-6">
@@ -239,6 +241,7 @@ export function CompSection({ competitors }: { competitors: Competitor[] }) {
 interface NpsSectionProps { npsLoading: boolean; npsData: NpsMonthly[]; churnLoading: boolean; churnData: ChurnData | undefined; }
 
 export function NpsSection({ npsLoading, npsData, churnLoading, churnData }: NpsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       {npsLoading ? (

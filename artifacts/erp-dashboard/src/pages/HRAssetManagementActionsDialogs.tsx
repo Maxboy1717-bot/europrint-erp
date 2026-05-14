@@ -100,6 +100,7 @@ interface ReportDialogProps {
 }
 
 export function ReportDialog({ open, onOpenChange, asset, form, onFormChange, onSubmit, isPending }: ReportDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
@@ -161,6 +162,7 @@ interface DetailDialogProps {
 }
 
 export function DetailDialog({ open, onOpenChange, asset }: DetailDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">

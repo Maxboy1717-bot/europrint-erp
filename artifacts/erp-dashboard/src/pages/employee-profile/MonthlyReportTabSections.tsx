@@ -64,6 +64,7 @@ export function ReportCardHeader({ report }: { report: MonthlyReport }) {
 // ── AttendanceSection ─────────────────────────────────────────────────────────
 
 export function AttendanceSection({ report }: { report: MonthlyReport }) {
+  const { t } = useTranslation("common");
   const { attendance } = report;
   const rateColor =
     attendance.attendanceRate >= 90
@@ -110,6 +111,7 @@ export function AttendanceSection({ report }: { report: MonthlyReport }) {
 // ── DisciplineSection ─────────────────────────────────────────────────────────
 
 export function DisciplineSection({ report }: { report: MonthlyReport }) {
+  const { t } = useTranslation("common");
   const { discipline } = report;
   return (
     <div>
@@ -138,6 +140,7 @@ export function DisciplineSection({ report }: { report: MonthlyReport }) {
 // ── FinanceSection ────────────────────────────────────────────────────────────
 
 export function FinanceSection({ report }: { report: MonthlyReport }) {
+  const { t } = useTranslation("common");
   const { finance } = report;
   return (
     <div>
@@ -190,6 +193,7 @@ export function FinanceSection({ report }: { report: MonthlyReport }) {
 // ── InventorySection ──────────────────────────────────────────────────────────
 
 export function InventorySection({ report }: { report: MonthlyReport }) {
+  const { t } = useTranslation("common");
   return (
     <div>
       <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">

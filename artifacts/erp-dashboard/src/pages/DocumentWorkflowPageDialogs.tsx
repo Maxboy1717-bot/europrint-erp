@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DOC_TYPES_KEYS, ROUTE_TYPES, RouteConfig, RouteForm } from "./DocumentWorkflowPageTypes";
 import { docTypeLabel } from "./DocumentWorkflowPageHelpers";
-import { useTranslation } from "@/lib/i18n";
 
 type TFn = (key: string) => string;
 
@@ -34,7 +33,6 @@ interface AdminRoutingTabProps {
 }
 
 export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, tCommon, onRouteFormChange, onCreateRoute, onToggleRoute, onDeleteRoute, }: AdminRoutingTabProps) {
-  const { t } = useTranslation("common");
   return (
     <TabsContent value="admin" className="mt-4">
       <div className="space-y-6">

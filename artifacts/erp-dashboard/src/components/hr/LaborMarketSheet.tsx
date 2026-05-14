@@ -66,7 +66,7 @@ function generateRecommendations(em: EmployerMarket, cm: CandidateMarket): strin
 
   if (salExpMin > 0 && compAvgMin > 0 && salExpMin > compAvgMin * 1.2) {
     recs.push("💰 Nomzodlarning maosh kutilmasi raqobatchilardan 20%+ yuqori. Maosh paketini qayta ko'rib chiqishni tavsiya etamiz.");
-  } else if (compAvgMax > 0 && salExpMax > {t("k0Salexpmax")}< compAvgMax * 0.8) {
+  } else if (compAvgMax > 0 && salExpMax > 0 && salExpMax < compAvgMax * 0.8) {
     recs.push("💰 Maosh kutilmasi raqobatchilarnikidan past — bu ijobiy. Imtiyozlar (DMS, oylik bonus) bilan qo'shimcha qiziqish uyg'otish mumkin.");
   }
 

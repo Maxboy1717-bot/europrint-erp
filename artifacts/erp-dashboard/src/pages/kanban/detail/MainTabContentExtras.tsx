@@ -194,6 +194,7 @@ interface RatingProps {
 }
 
 export function TaskRatingSection({ taskRating, hoveredRating, onTaskRatingChange, onHoveredRatingChange }: RatingProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-muted/50 rounded-md p-3 space-y-2">
       <div className="flex items-center gap-2">

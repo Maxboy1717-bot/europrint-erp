@@ -33,7 +33,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { WorkCenter, CapacityFormValues } from "./CapacityPlanningTypes";
-import { useTranslation } from "@/lib/i18n";
 
 // ---------------------------------------------------------------------------
 // Props

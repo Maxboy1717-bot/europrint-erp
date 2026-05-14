@@ -80,6 +80,7 @@ export function KpiCard({
 }
 
 export function WarehouseCard({ wh, onClick }: { wh: WarehouseStat; onClick: () => void }) {
+  const { t } = useTranslation("common");
   const Icon = getWarehouseIcon(wh.code);
   const grad = WAREHOUSE_GRADIENTS[wh.code] || "";
   const fillPct = wh.capacity && wh.stats.totalQty > 0

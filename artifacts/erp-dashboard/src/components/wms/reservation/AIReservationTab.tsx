@@ -55,6 +55,7 @@ export function AIReservationTab({t,
   GRADE_COLORS,
   onClearRecommendation,
 }: AIReservationTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>

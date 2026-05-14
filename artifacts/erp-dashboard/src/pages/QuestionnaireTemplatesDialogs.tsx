@@ -112,6 +112,7 @@ export function TemplateDialog({
   onOpenNew,
   onSubmit,
 }: TemplateDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>

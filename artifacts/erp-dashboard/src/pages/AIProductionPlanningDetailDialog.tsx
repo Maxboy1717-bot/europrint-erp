@@ -21,6 +21,7 @@ function DecisionsList({ decisions, onAccept, isPending }: {
   onAccept: (id: string) => void;
   isPending: boolean;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-2">
       {(!decisions || decisions.length === 0) && (

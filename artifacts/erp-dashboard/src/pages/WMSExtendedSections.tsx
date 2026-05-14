@@ -35,6 +35,7 @@ interface BalanceSectionProps {
 }
 
 export function BalanceSection({ stock, stockLoading }: BalanceSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardContent className="p-0">
@@ -99,6 +100,7 @@ interface TransferSectionProps {
 }
 
 export function TransferSection({ transfers, onCreateClick }: TransferSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

@@ -179,6 +179,7 @@ export function ReceiptDialog({
   lastSale,
   onNewSale,
 }: ReceiptDialogProps) {
+  const { t } = useTranslation("common");
   function paymentLabel(method: string) {
     if (method === "cash") return "Naqd";
     if (method === "card") return "Karta";

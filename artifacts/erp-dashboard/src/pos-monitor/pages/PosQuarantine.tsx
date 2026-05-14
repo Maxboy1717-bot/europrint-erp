@@ -6,7 +6,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { quarantineApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
 
 interface QuarantineItem {
   id: number;
@@ -21,7 +20,6 @@ interface QuarantineItem {
 }
 
 export default function PosQuarantine() {
-  const { t } = useTranslation("common");
   const { t } = usePosI18n();
   const [items, setItems] = useState<QuarantineItem[]>([]);
   const [loading, setLoading] = useState(true);

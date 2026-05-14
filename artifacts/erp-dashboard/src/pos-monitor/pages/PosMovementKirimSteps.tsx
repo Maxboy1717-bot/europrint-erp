@@ -102,6 +102,7 @@ interface Step2Props {
 }
 
 export function Step2Lines({ lines, lineErrors, header, kirimCfg, totalQty, totalValue, totalWeight, addLine, removeLine, updateLine, goBack, goNext }: Step2Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-fade-in">
       <div className="pos-card" style={{ marginBottom: 16 }}>
@@ -178,6 +179,7 @@ export function Step2Lines({ lines, lineErrors, header, kirimCfg, totalQty, tota
 interface Step3Props { header: HeaderForm; lines: LineItem[]; totalQty: number; totalWeight: number; totalValue: number; goBack: () => void; goNext: () => void; }
 
 export function Step3Passport({ header, lines, totalQty, totalWeight, totalValue, goBack, goNext }: Step3Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-fade-in">
       <div className="pos-card" style={{ marginBottom: 16 }}>
@@ -232,6 +234,7 @@ export function Step3Passport({ header, lines, totalQty, totalWeight, totalValue
 interface Step4Props { header: HeaderForm; lines: LineItem[]; totalQty: number; totalWeight: number; totalValue: number; goBack: () => void; goNext: () => void; setStep: (n: number) => void; }
 
 export function Step4Review({ header, lines, totalQty, totalWeight, totalValue, goBack, goNext, setStep }: Step4Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-fade-in">
       <div className="pos-card" style={{ marginBottom: 16 }}>
@@ -303,6 +306,7 @@ interface Step5Props {
 }
 
 export function Step5Submit({ created, saving, header, lines, totalValue, handleSave, downloadPdf, goBack, navigate }: Step5Props) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-fade-in">
       {created ? (

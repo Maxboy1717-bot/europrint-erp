@@ -88,6 +88,7 @@ interface ProfitCentersTabProps {
 }
 
 export function ProfitCentersTab({ profitCenters, pcLoading }: ProfitCentersTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="profitcenters" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("foydaMarkazlari")}</h2>
@@ -133,6 +134,7 @@ interface PaymentsTabProps {
 }
 
 export function PaymentsTab({ payments, paymentsLoading }: PaymentsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="payments" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
@@ -186,6 +188,7 @@ interface GLDocumentsTabProps {
 }
 
 export function GLDocumentsTab({ glDocuments, glLoading, onRefetch }: GLDocumentsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="gldocs" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">

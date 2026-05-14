@@ -15,10 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IdCard, Edit, Plus } from "lucide-react";
 import type { PassportCardProps } from "./PersonalTabTypes";
-import { useTranslation } from "@/lib/i18n";
 
 export function PassportCard({ t, tCommon, passportData, loadingPassport, passportDialogOpen, setPassportDialogOpen, passportForm, setPassportForm, savePassportMutation, }: PassportCardProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">

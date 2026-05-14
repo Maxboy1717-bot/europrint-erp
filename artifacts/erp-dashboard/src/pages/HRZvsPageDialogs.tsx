@@ -123,6 +123,7 @@ interface ActionZvsDialogProps {
 export function ActionZvsDialog({
   actionDialog, comment, onCommentChange, onClose, onConfirm, isPending,
 }: ActionZvsDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog
       open={!!actionDialog}

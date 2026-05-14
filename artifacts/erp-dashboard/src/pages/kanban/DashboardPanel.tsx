@@ -14,7 +14,6 @@ import {
 import { type T, type TeamMetrics, type TaskStats } from "./kanban-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
-import { useTranslation } from '@/lib/i18n';
 
 type OverdueInboxData = {
   count: number;
@@ -31,7 +30,6 @@ type OverdueInboxData = {
 };
 
 export function DashboardPanel({ t }: { t: typeof T.uz }) {
-  const { t } = useTranslation("common");
   const { data: metrics, isLoading: metricsLoading } = useQuery<TeamMetrics>({
     queryKey: ['/api/kanban/dashboard/team-metrics'],
   });

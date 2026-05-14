@@ -110,6 +110,7 @@ export interface EditIndicatorProps {
 
 /** Action bar shown above the message input while editing an existing message. */
 export function EditIndicator({ content, onCancel }: EditIndicatorProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="mx-3 mb-1 px-3 py-2 bg-[var(--tg-action-bar-bg)] border-l-2 border-[var(--tg-sidebar-active)] rounded-lg flex items-center justify-between shadow-sm">
       <div className="min-w-0">

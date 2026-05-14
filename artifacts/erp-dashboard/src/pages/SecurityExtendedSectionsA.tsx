@@ -133,6 +133,7 @@ interface ZoneAccessSectionProps {
 }
 
 export function ZoneAccessSection({ dailySummary, attendanceRecords, presentToday, activeVisitorsCount }: ZoneAccessSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-foreground">{t("kirishZonalariNazorati")}</h2>

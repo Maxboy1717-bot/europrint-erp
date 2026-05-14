@@ -73,6 +73,7 @@ interface ProfileReadViewProps {
 }
 
 export function CareerProfileReadView({ profile, onEdit }: ProfileReadViewProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
@@ -121,6 +122,7 @@ interface EmptyProfileProps {
 }
 
 export function CareerEmptyProfile({ onStart }: EmptyProfileProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="text-center py-8">
       <Target className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
@@ -137,6 +139,7 @@ interface AiCardProps {
 }
 
 export function CareerAiCard({ aiRecommendedPosition }: AiCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -163,6 +166,7 @@ interface TransferHistoryProps {
 }
 
 export function CareerTransferHistory({ transferHistory }: TransferHistoryProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

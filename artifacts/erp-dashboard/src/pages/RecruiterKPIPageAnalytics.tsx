@@ -109,6 +109,7 @@ interface ChannelAnalyticsSectionProps {
 }
 
 export function ChannelAnalyticsSection({ channelRows }: ChannelAnalyticsSectionProps) {
+  const { t } = useTranslation("common");
   const allChannelKeys = [
     ...new Set([
       ...(Array.isArray(channelRows) ? channelRows : []).map(r => r.ch_key),

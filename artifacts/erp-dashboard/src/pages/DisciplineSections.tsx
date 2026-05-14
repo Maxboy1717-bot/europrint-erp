@@ -144,6 +144,7 @@ export function RecordsTable({
   finalLabel, writtenLabel, sumLabel,
   tCommon, t,
 }: RecordsTableProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">

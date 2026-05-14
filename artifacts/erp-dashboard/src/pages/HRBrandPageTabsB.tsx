@@ -121,6 +121,7 @@ interface StatsTabProps {
 }
 
 export function StatsTab({ brand, setBrand }: StatsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="stats">
       <Card>

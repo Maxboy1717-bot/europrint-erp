@@ -194,6 +194,7 @@ export function TaskExecutionPanel({
   onSubmit,
   onClose,
 }: TaskExecutionPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="mt-6" data-testid="card-task-execution">
       <CardHeader>

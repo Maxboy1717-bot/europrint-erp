@@ -36,7 +36,6 @@ interface PendingApprovalsTabProps {
 }
 
 export function PendingApprovalsTab({ pending, rejectReasons, approveIsPending, rejectIsPending, t, onSelectDoc, onApprove, onRejectStart, onRejectSubmit, onRejectCancel, onRejectReasonChange, }: PendingApprovalsTabProps) {
-  const { t } = useTranslation("common");
   return (
     <TabsContent value="pending" className="mt-4">
       <div className="space-y-3">
@@ -195,6 +194,7 @@ interface CreateDocumentFormProps {
 export function CreateDocumentForm({
   form, createIsPending, t, tCommon, onFormChange, onSubmit, onCancel,
 }: CreateDocumentFormProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-primary max-w-2xl">
       <CardHeader>

@@ -179,6 +179,7 @@ interface AddDocDialogProps {
 }
 
 export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc        = useQueryClient();
   const [savingDoc, setSavingDoc] = useState(false);

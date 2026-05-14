@@ -48,6 +48,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 function PlanCard({ plan }: { plan: CareerPlan }) {
+  const { t } = useTranslation("common");
   const st = STATUS_MAP[plan.status || "active"] || STATUS_MAP.active;
   const pct = plan.progress_percent ?? 0;
   const daysLeft = plan.target_date
@@ -103,6 +104,7 @@ function PlanCard({ plan }: { plan: CareerPlan }) {
 }
 
 function NewPlanDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({

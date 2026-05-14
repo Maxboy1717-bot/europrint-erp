@@ -102,6 +102,7 @@ interface ProbabilityTabContentProps {
 }
 
 export function ProbabilityTabContent({ deals, dealsLoading, aiResults, probabilityPending, probabilityVariable, onCalc }: ProbabilityTabContentProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>
@@ -162,6 +163,7 @@ interface ChurnTabContentProps {
 }
 
 export function ChurnTabContent({ contacts, contactsLoading, aiResults, churnPending, churnVariable, onAnalyze }: ChurnTabContentProps) {
+  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>

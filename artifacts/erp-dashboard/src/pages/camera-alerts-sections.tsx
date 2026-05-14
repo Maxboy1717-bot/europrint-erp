@@ -24,7 +24,6 @@ import { Link } from "wouter";
 import type { AlertTranslations, CameraAlert, Language } from "./camera-alerts-types";
 import { alertTypeIcons, alertTypeLabels, severityLabels } from "./camera-alerts-types";
 import { EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 interface StatCardsProps {
   totalAlerts: number;
@@ -34,7 +33,6 @@ interface StatCardsProps {
 }
 
 export function AlertStatCards({ totalAlerts, unresolvedAlerts, criticalAlerts, t }: StatCardsProps) {
-  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-card rounded-lg p-5" data-testid="card-total-alerts">

@@ -107,6 +107,7 @@ export function SickLeaveDialog({
   mutation: UseMutationResult<unknown, Error, unknown, unknown>;
   tCommon: (key: string) => string;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>

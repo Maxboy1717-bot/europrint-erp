@@ -57,6 +57,7 @@ export function V2LiveKpiRow({
 // ---------------------------------------------------------------------------
 
 export function AiPipelineCard({ pipeline }: { pipeline: AiPipeline }) {
+  const { t } = useTranslation("common");
   const total = pipeline.pending + pipeline.active + pipeline.completed || 1;
   const bars = [
     { label: "Kutmoqda", val: pipeline.pending,   color: "text-amber-400", bar: "bg-amber-400" },
@@ -102,6 +103,7 @@ interface DailyReportsCardProps {
 }
 
 export function DailyReportsCard({ dailyStats, operatorReportsToday, operatorTotal }: DailyReportsCardProps) {
+  const { t } = useTranslation("common");
   const statItems = [
     { label: "Topshirdi",   val: dailyStats?.stats?.submitted_count   ?? dailyStats?.submitted   ?? "—", color: "text-green-400", icon: CheckCircle2 },
     { label: "Yo'q",        val: dailyStats?.stats?.auto_absent_count ?? dailyStats?.absent      ?? "—", color: "text-red-400",   icon: XCircle },
@@ -218,6 +220,7 @@ export function AdaptationAtRiskList({ atRiskEmps, adaptationAtRiskCount }: { at
 // ---------------------------------------------------------------------------
 
 export function ModuleLinksGrid({ modules }: { modules: ModuleLink[] }) {
+  const { t } = useTranslation("common");
   return (
     <div>
       <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("modullar")}</h3>

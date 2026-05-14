@@ -133,6 +133,7 @@ interface MovementCardProps {
 }
 
 export function MovementCard({ todayMovement, weekMovement, isLoading, onReserveStock, isReserving }: MovementCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -199,6 +200,7 @@ interface AlertsCardProps {
 }
 
 export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isChecking, onReserveStock }: AlertsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">

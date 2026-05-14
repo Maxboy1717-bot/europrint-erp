@@ -72,6 +72,7 @@ interface PlansGridProps {
 }
 
 export function PlansGrid({ plans, isLoading, isGenerating, onPlanClick, onGenerate }: PlansGridProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -164,6 +165,7 @@ interface RecommendationsTabProps {
 }
 
 export function RecommendationsTab({ plans }: RecommendationsTabProps) {
+  const { t } = useTranslation("common");
   const plansWithRecs = plans?.filter((p) => p.aiRecommendations?.length > 0).slice(0, 5);
 
   if (!plansWithRecs || plansWithRecs.length === 0) {

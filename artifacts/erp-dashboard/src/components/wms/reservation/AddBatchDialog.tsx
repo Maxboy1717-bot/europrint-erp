@@ -47,6 +47,7 @@ export function AddBatchDialog({t,
   handleAddBatch,
   isPending,
 }: AddBatchDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">

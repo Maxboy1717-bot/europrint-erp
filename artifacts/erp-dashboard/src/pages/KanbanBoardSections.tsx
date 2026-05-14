@@ -199,6 +199,7 @@ export function BoardContent({
   t,
   setQuickTaskType,
 }: BoardContentProps) {
+  const { t } = useTranslation("common");
   if (boardLoading) {
     return (
       <div className="flex gap-4">

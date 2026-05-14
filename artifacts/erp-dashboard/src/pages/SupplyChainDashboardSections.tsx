@@ -90,6 +90,7 @@ export function SummaryCards({
 }
 
 export function POColumn({ pendingPOs, loading }: { pendingPOs: PurchaseOrder[]; loading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -138,6 +139,7 @@ export function POColumn({ pendingPOs, loading }: { pendingPOs: PurchaseOrder[];
 }
 
 export function GRNColumn({ goodsReceipts, loading }: { goodsReceipts: GoodsReceipt[]; loading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -189,6 +191,7 @@ export function InvoiceColumn({
   onMatch: (id: string) => void;
   onAdvanceStatus: (invoiceId: string, status: string) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-2">

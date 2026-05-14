@@ -179,6 +179,7 @@ export function CreateCaseDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({

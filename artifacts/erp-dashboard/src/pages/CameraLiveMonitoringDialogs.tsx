@@ -55,6 +55,7 @@ export function StatsCards({
   totalDetectionsCount,
   avgConfidence,
 }: StatsCardsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card className="bg-card border-none rounded-lg p-5">

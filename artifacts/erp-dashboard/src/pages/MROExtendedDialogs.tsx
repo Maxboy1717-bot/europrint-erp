@@ -71,6 +71,7 @@ interface AddRequestDialogProps {
 }
 
 export function AddRequestDialog({ open, onOpenChange, form, onSubmit, isPending }: AddRequestDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -134,6 +135,7 @@ interface AddItemDialogProps {
 }
 
 export function AddItemDialog({ open, onOpenChange, form, onSubmit, isPending }: AddItemDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

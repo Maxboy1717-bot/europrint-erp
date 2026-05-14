@@ -71,6 +71,7 @@ interface EventsCardProps {
 }
 
 export function EventsCard({ stats, loading }: EventsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-events-stats">
       <CardHeader>
@@ -121,6 +122,7 @@ interface ApplicationsCardProps {
 }
 
 export function ApplicationsCard({ stats, loading }: ApplicationsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-applications-stats">
       <CardHeader>
@@ -171,6 +173,7 @@ interface SurveysCardProps {
 }
 
 export function SurveysCard({ stats, loading }: SurveysCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-surveys-stats">
       <CardHeader>

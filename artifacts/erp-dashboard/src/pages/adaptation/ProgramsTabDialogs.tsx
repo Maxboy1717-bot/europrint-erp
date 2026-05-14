@@ -114,6 +114,7 @@ export function DeleteConfirmDialog({
   onOpenChange,
   onConfirm,
 }: DeleteConfirmDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <AlertDialog open={!!deleteId} onOpenChange={onOpenChange}>
       <AlertDialogContent>

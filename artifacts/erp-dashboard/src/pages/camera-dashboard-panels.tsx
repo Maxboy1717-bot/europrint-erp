@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import type { CameraInfo } from "./camera-dashboard-types";
+import { useTranslation } from '@/lib/i18n';
 
 type Lang = "uz" | "ru";
 
@@ -42,6 +43,7 @@ export function CameraStatusSection({
   language,
   t,
 }: CameraStatusSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card
       className="bg-card border-none rounded-lg overflow-hidden shadow-none"

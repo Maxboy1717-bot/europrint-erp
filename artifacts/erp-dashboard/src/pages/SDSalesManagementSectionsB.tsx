@@ -143,6 +143,7 @@ interface CommissionSectionProps {
 }
 
 export function CommissionSection({ commissions, leaderboard, commLoading, leaderLoading }: CommissionSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-foreground">{t("savdochilarKomissiyasi")}</h2>

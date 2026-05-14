@@ -33,8 +33,8 @@ export interface GlLog      { id: number; movementId: number; stageName: string;
 export interface AuditEntry { id: number; action: string; resource?: string; userId?: number; createdAt?: string; ipAddress?: string; }
 export interface SyncStatus { total: number; pending: number; synced: number; conflict: number; }
 
-export function SectionHeader({ title, onRefresh }: { title: string; onRefresh: () => void }) { return ( <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}> <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div> <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={onRefresh}>{t("yangilash")}</button> </div> ); } export function LoadingOrError({ loading, error }: { loading: boolean; error: string }) { if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda1")}</div>; if (error) return <div style={{ textAlign: "center", padding: 16, color: "var(--pos-danger)", fontSize: 13 }}>{error}</div>; return null; } export function WarehousesSection({ data, loading, error, onRefresh, onToggle }: { data: Warehouse[] | null; loading: boolean; error: string; onRefresh: () => void; onToggle: (id: number, active: boolean) => void; }) {
-  const { t } = useTranslation('common');
+export function SectionHeader({ title, onRefresh }: { title: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common"); return ( <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}> <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div> <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={onRefresh}>{t("yangilash")}</button> </div> ); } export function LoadingOrError({ loading, error }: { loading: boolean; error: string }) { if (loading) return <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda1")}</div>; if (error) return <div style={{ textAlign: "center", padding: 16, color: "var(--pos-danger)", fontSize: 13 }}>{error}</div>; return null; } export function WarehousesSection({ data, loading, error, onRefresh, onToggle }: { data: Warehouse[] | null; loading: boolean; error: string; onRefresh: () => void; onToggle: (id: number, active: boolean) => void; }) {
   return (
     <div className="pos-card">
       <SectionHeader title={t("omborlar")} onRefresh={onRefresh} />
@@ -61,6 +61,7 @@ export function SectionHeader({ title, onRefresh }: { title: string; onRefresh: 
 }
 
 export function CategoriesSection({ data, loading, error, onRefresh }: { data: Category[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
       <SectionHeader title={t("kategoriyalar")} onRefresh={onRefresh} />
@@ -86,6 +87,7 @@ export function CategoriesSection({ data, loading, error, onRefresh }: { data: C
 }
 
 export function UnitsSection({ data, loading, error, onRefresh }: { data: Unit[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
       <SectionHeader title={t("olchovBirliklari1")} onRefresh={onRefresh} />
@@ -111,6 +113,7 @@ export function UnitsSection({ data, loading, error, onRefresh }: { data: Unit[]
 }
 
 export function SuppliersSection({ data, loading, error, onRefresh }: { data: Supplier[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
       <SectionHeader title={t("yetkazuvchilar")} onRefresh={onRefresh} />
@@ -137,6 +140,7 @@ export function SuppliersSection({ data, loading, error, onRefresh }: { data: Su
 }
 
 export function TerminalsSection({ data, loading, error, onRefresh }: { data: SyncStatus | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
       <SectionHeader title={t("terminallar")} onRefresh={onRefresh} />
@@ -166,6 +170,7 @@ export function TerminalsSection({ data, loading, error, onRefresh }: { data: Sy
 }
 
 export function PrintersSection({ data, loading, error, onRefresh }: { data: Printer[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
       <SectionHeader title={t("printerlar")} onRefresh={onRefresh} />
@@ -195,6 +200,7 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
   data: GlLog[] | null; loading: boolean; error: string;
   onRefresh: () => void; onApprove: (id: number) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
       <SectionHeader title={t("glMappingKutayotganPostinglar")} onRefresh={onRefresh} />
@@ -225,6 +231,7 @@ export function GlMappingSection({ data, loading, error, onRefresh, onApprove }:
 }
 
 export function AuditLogSection({ data, loading, error, onRefresh }: { data: AuditEntry[] | null; loading: boolean; error: string; onRefresh: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="pos-card">
       <SectionHeader title={"Audit log"} onRefresh={onRefresh} />

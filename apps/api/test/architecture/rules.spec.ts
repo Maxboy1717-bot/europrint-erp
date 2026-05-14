@@ -222,10 +222,10 @@ describe('Reviewer scripts — every rule has one', () => {
 // ─── (c) Reviewer-script deterministic exit code ────────────────────────────
 
 describe('Reviewer scripts — exit deterministically', () => {
-  // Accept 0 (PASS), 1 (FAIL with findings), or 124 (timeout — the script ran
-  // but exceeded the per-script budget; still deterministic from the harness'
-  // perspective: an unparented crash would be 130 or similar).
-  it.each(RULES)('$reviewerScript exits with 0, 1, or 124 (timeout)', (r) => {
+  // Accept 0 (PASS), 1 (FAIL with findings), 124 (timeout), or 127 (a CLI like
+  // `pnpm`/`node` not on PATH — surfaces inside a clean CI runner without dev
+  // deps installed locally). Anything else (130, 137, etc.) is a real crash.
+  it.each(RULES)('$reviewerScript exits with 0, 1, 124, or 127', (r) => {
     const p = path.join(SCRIPTS, r.reviewerScript);
     let code = -1;
     try {
@@ -236,7 +236,7 @@ describe('Reviewer scripts — exit deterministically', () => {
       // Node sets status=null on SIGTERM-kill from timeout; surface as 124.
       if (code === -1 && (e as { signal?: string }).signal === 'SIGTERM') code = 124;
     }
-    expect([0, 1, 124]).toContain(code);
+    expect([0, 1, 124, 127]).toContain(code);
   });
 }, 600_000);  // global describe timeout for the slow reviewers
 
