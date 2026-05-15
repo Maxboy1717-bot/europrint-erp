@@ -5,7 +5,7 @@
 
 import { lazy } from "react";
 
-const Stub = lazy(() => import("@/pages/StubPage"));
+// Note: StubPage import removed — no routes use it anymore.
 
 // ── Stub → real (session 2026-05-12) ─────────────────────────────────────────
 const AgentsHubPage            = lazy(() => import("@/pages/agents/AgentsHub"));
@@ -56,15 +56,10 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/pos/mini-app',              POSDashboardPage],         // POS dashboard
   ['/video-progress',            LessonPlayerPage],         // Video lesson player
 
-  // ── Still Stub (no real backend/page built yet) ───────────────────────────
-  ['/auth',                      Stub],   // auth handled by auth system
-  ['/export',                    Stub],   // export module not yet built
-  ['/gpt',                       Stub],   // external GPT, deferred
-  ['/micro-modules',             Stub],   // LMS micro-modules, deferred
-  ['/modules',                   Stub],   // module manager, deferred
-  ['/pos/printer-config',        Stub],   // printer HW config, deferred
-  ['/sap',                       Stub],   // SAP integration, deferred
-  ['/v2/pos/printer-config',     Stub],   // duplicate, deferred
+  // ── Stub routes removed — users were seeing empty "Tez orada" pages.
+  // Re-add a route here only AFTER the corresponding page is implemented.
+  // Removed in this session: /auth, /export, /gpt, /micro-modules, /modules,
+  //                          /pos/printer-config, /sap, /v2/pos/printer-config
 
   // ── Real pages (prior sessions) ───────────────────────────────────────────
   ['/3way-match',                ThreeWayMatchPage],
