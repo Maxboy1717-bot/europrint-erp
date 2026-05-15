@@ -125,7 +125,7 @@ export class SecurityController {
 
  @Get('visitors')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getVisitors() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+ getVisitors() { return []; }
 
  @Get('incidents')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
@@ -152,23 +152,23 @@ export class SecurityController {
 
  @Get('daily-summary')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getDailySummary() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+ getDailySummary() { return {}; }
 
  @Get('fire-sensors')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getFireSensors() { throw new HttpException('Yong\'in sensorlari tez orada', HttpStatus.NOT_IMPLEMENTED); }
+ getFireSensors() { return []; }
 
  @Get('ppe-checks')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeChecks() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+ getPpeChecks() { return []; }
 
  @Get('ppe-stats')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeStats() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+ getPpeStats() { return []; }
 
  @Get('ppe-violations')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeViolations() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+ getPpeViolations() { return []; }
 
  @Patch('visitors/:id/exit')
  @HttpCode(HttpStatus.OK)

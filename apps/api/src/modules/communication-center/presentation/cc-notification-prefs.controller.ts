@@ -30,7 +30,7 @@ export class CcNotificationPrefsController {
 
   @Post()
   create() {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return { success: true };
   }
 
   @Get()

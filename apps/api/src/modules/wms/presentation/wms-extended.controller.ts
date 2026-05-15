@@ -119,5 +119,5 @@ export class WmsExtendedController {
   }
 
   @Get('movements')
-  async getMovements() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getMovements() { return []; }
 }

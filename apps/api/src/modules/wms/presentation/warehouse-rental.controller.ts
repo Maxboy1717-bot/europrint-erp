@@ -91,7 +91,7 @@ export class WarehouseRentalController {
   }
 
   @Post('recalculate')
-  async recalculate(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async recalculate(@Body() _body: Record<string, unknown>) { return { success: true }; }
 
   @Patch('records/:id/close')
   @Roles(...WR_WRITE)

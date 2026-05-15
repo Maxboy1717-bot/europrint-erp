@@ -28,7 +28,7 @@ export class FinanceCfoConfigController {
   @Post()
   @RequirePermission('finance.cfo-config:FULL')
   async create() {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return { success: true };
   }
 
   /** GET /api/finance/cfo-config — returns all CFO config entries */

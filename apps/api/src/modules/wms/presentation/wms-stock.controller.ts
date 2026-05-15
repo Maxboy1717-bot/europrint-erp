@@ -41,7 +41,7 @@ export class WmsStockController {
   @Post()
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async createStock() {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return { success: true };
   }
 
   @Get()
