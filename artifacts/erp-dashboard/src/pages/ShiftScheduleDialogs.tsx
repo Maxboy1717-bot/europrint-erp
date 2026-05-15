@@ -124,6 +124,7 @@ export function SwapRequestDialog({
   onSend,
   isPending,
 }: SwapDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={!!swapDialog?.open} onOpenChange={open => !open && onClose()}>
       <DialogContent>

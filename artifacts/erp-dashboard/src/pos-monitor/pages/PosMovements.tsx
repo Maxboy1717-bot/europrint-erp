@@ -165,7 +165,7 @@ function MovementCard({
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
           <span style={{ fontSize: 18 }}>{TYPE_ICON[mov.movementType] ?? "📋"}</span>
           <span style={{
-            fontSize: 13, fontWeight: 600, color: "#1F2937",
+            fontSize: 13, fontWeight: 600,
             textDecoration: isDone && mov.status === "cancelled" ? "line-through" : "none",
             color: isDone && mov.status === "cancelled" ? "#9CA3AF" : "#1F2937",
           }}>

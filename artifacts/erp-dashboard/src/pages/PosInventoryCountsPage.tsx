@@ -65,8 +65,7 @@ export default function PosInventoryCountsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
-      const res = await apiRequest("GET", `/api/pos/inventory-counts?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/pos/inventory-counts?${params}`);
     },
   });
 
@@ -76,8 +75,7 @@ export default function PosInventoryCountsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/pos/inventory-counts", dto);
-      return res.json();
+      return await apiRequest("POST", "/api/pos/inventory-counts", dto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

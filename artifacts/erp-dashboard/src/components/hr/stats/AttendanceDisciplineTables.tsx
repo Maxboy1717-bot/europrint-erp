@@ -21,14 +21,16 @@ interface AttendanceDisciplineTablesProps {
 }
 
 export function AttendanceDisciplineTables({
-  attendance,
-  discipline,
+  attendance = [],
+  discipline = [],
   getAttendanceStatusBadge,
   getDisciplineTypeBadge,
   onOpenAttendanceDialog,
   onOpenDisciplineDialog,
 }: AttendanceDisciplineTablesProps) {
   const { t } = useTranslation("common");
+  const safeAttendance = Array.isArray(attendance) ? attendance : [];
+  const safeDiscipline = Array.isArray(discipline) ? discipline : [];
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Attendance Table */}
@@ -55,7 +57,7 @@ export function AttendanceDisciplineTables({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(attendance) ? attendance : []).slice(0, 5).map((record: AttendanceRecord) => {
+              {safeAttendance.slice(0, 5).map((record: AttendanceRecord) => {
                 const badge = getAttendanceStatusBadge(record.status);
                 return (
                   <TableRow key={record.id} data-testid={`row-attendance-${record.id}`} className="hover:bg-muted/40 transition-colors">
@@ -67,7 +69,7 @@ export function AttendanceDisciplineTables({
                   </TableRow>
                 );
               })}
-              {attendance.length === 0 && (
+              {safeAttendance.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     {t("noData")}
@@ -103,7 +105,7 @@ export function AttendanceDisciplineTables({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(discipline) ? discipline : []).slice(0, 5).map((record: DisciplineRecord) => {
+              {safeDiscipline.slice(0, 5).map((record: DisciplineRecord) => {
                 const badge = getDisciplineTypeBadge(record.type);
                 return (
                   <TableRow key={record.id} data-testid={`row-discipline-${record.id}`} className="hover:bg-muted/40 transition-colors">
@@ -115,7 +117,7 @@ export function AttendanceDisciplineTables({
                   </TableRow>
                 );
               })}
-              {discipline.length === 0 && (
+              {safeDiscipline.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     {t("noData")}

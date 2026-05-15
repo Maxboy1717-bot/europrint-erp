@@ -30,7 +30,7 @@ interface ColumnShape {
 }
 
 interface BoardDialogsProps {
-  t:                    KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
   showCreateBoard:      boolean;
   setShowCreateBoard:   (show: boolean) => void;
   newBoardName:         string;

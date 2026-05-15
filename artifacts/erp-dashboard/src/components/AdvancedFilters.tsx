@@ -254,11 +254,12 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
                     <Label>{t("boshlanish")}</Label>
                     <Input
                       type="date"
-                      value={filters.dateRange.start}
+                      value={filters.dateRange?.start ?? ''}
                       onChange={(e) => {
-                        const newFilters = {
+                        const prev = filters.dateRange ?? { start: '', end: '' };
+                        const newFilters: FilterConfig = {
                           ...filters,
-                          dateRange: { ...filters.dateRange ?? {}, start: e.target.value },
+                          dateRange: { start: e.target.value, end: prev.end ?? '' },
                         };
                         setFilters(newFilters);
                         onFilterChange(newFilters);
@@ -271,16 +272,17 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
                     <Label>{t("tugash")}</Label>
                     <Input
                       type="date"
-                      value={filters.dateRange.end}
+                      value={filters.dateRange?.end ?? ''}
                       onChange={(e) => {
-                        const newFilters = {
+                        const prev = filters.dateRange ?? { start: '', end: '' };
+                        const newFilters: FilterConfig = {
                           ...filters,
-                          dateRange: { ...filters.dateRange ?? {}, end: e.target.value },
+                          dateRange: { start: prev.start ?? '', end: e.target.value },
                         };
                         setFilters(newFilters);
                         onFilterChange(newFilters);
                       }}
-                      min={filters.dateRange.start || "2000-01-01"}
+                      min={filters.dateRange?.start || "2000-01-01"}
                       max={new Date().toISOString().split('T')[0]}
                     />
                   </div>

@@ -46,16 +46,14 @@ export default function AiAutomationPage() {
   const { data, isLoading, isError, refetch } = useQuery<AutomationStatus>({
     queryKey: ["/api/ai/automation/status"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/ai/automation/status");
-      return res.json();
+      return await apiRequest("GET", "/api/ai/automation/status");
     },
     refetchInterval: 30_000,
   });
 
   const runMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/ai/automation/run-all-pending");
-      return res.json();
+      return await apiRequest("POST", "/api/ai/automation/run-all-pending");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/automation/status"] });

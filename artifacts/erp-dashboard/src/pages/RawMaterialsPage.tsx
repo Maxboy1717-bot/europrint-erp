@@ -45,8 +45,7 @@ export default function RawMaterialsPage() {
     queryFn: async () => {
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (search) params.set("search", search);
-      const res = await apiRequest("GET", `/api/raw-materials?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/raw-materials?${params}`);
     },
   });
 

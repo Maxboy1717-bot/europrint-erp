@@ -24,7 +24,7 @@ export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
   const { data: mes, isLoading } = useQuery<MesSummary>({
     queryKey: ["/api/integration/employee-mes-summary", employeeId],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/integration/employee-mes-summary/${employeeId}?months=3`);
+      const res = (await apiRequest("GET", `/api/integration/employee-mes-summary/${employeeId}?months=3`)) as unknown as Response;
       if (!res.ok) return null;
       return res.json();
     },
@@ -34,7 +34,7 @@ export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
   const { data: mes6 } = useQuery<MesSummary>({
     queryKey: ["/api/integration/employee-mes-summary", employeeId, 6],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/integration/employee-mes-summary/${employeeId}?months=6`);
+      const res = (await apiRequest("GET", `/api/integration/employee-mes-summary/${employeeId}?months=6`)) as unknown as Response;
       if (!res.ok) return null;
       return res.json();
     },

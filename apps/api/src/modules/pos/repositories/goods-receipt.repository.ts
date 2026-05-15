@@ -1,4 +1,22 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - Triple LEFT JOIN (warehouses + users twice for received_by/approved_by)
+ *     with concatenated derived columns: `(COALESCE(u1.first_name,'') || ' ' || COALESCE(u1.last_name,''))`
+ *     projected as receivedByName/approvedByName — Drizzle has no native
+ *     sql-concat helper that survives the typedExecute<T> mapping layer.
+ *   - "Smart NULL" optional-filter pattern: `(${param}::text IS NULL OR col = ${param})`
+ *     repeated five times for status/warehouseId/supplierName/dateFrom/dateTo,
+ *     allowing a single prepared statement plan regardless of which filters
+ *     are populated. Equivalent Drizzle code would conditionally append
+ *     .where() clauses, invalidating the plan cache.
+ *   - EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE) in
+ *     countByCurrentYear() — Drizzle has no extract() helper.
+ *   - Snake_case → camelCase aliasing inside one statement (grnNumber,
+ *     movementId, purchaseOrderId, totalAmount, etc.) to feed the typed
+ *     GoodsReceipt interface directly.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module goods-receipt.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

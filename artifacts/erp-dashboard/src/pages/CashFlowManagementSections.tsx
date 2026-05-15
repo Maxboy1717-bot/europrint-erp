@@ -14,7 +14,6 @@ import {
 import { formatCurrency } from "@/lib/format";
 import type { DailySummary, CashForecast, CashPositionData, CashFlowTransaction } from "./CashFlowManagementTypes";
 import { formatShortCurrency, categoryLabels, typeLabels } from "./CashFlowManagementTypes";
-import { useTranslation } from "@/lib/i18n";
 
 interface SummaryCardsProps {
   todaySummary: { inflow: number; outflow: number; netFlow: number };
@@ -172,7 +171,6 @@ export function TransactionsTable({
   transactions, transactionsLoading, filterType, setFilterType,
   filterCategory, setFilterCategory, t, tCommon,
 }: TransactionsTableProps) {
-  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6">
       <div className="flex flex-col md:flex-row gap-4 mb-6">

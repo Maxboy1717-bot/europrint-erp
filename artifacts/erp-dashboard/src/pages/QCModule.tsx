@@ -72,7 +72,7 @@ export default function QCModule() {
   const { data: ordersData } = useQuery<PapkaOrder[]>({
     queryKey: ["/api/papka-orders"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/papka-orders?limit=50");
+      const res = (await apiRequest('GET', "/api/papka-orders?limit=50")) as unknown as Response;
       if (!res.ok) return [];
       const d = await res.json();
       return Array.isArray(d) ? d : (d.items ?? d.data ?? d.orders ?? []);
@@ -82,7 +82,7 @@ export default function QCModule() {
   const { data: materialsData } = useQuery<MaterialCard[]>({
     queryKey: ["/api/materials/cards"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/materials/cards");
+      const res = (await apiRequest('GET', "/api/materials/cards")) as unknown as Response;
       if (!res.ok) return [];
       return res.json();
     },
@@ -91,7 +91,7 @@ export default function QCModule() {
   const { data: testsData, isLoading: testsLoading } = useQuery<QcMaterialTest[]>({
     queryKey: ["/api/qc/tests/recent"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/qc/tests/recent?limit=20");
+      const res = (await apiRequest('GET', "/api/qc/tests/recent?limit=20")) as unknown as Response;
       if (!res.ok) return [];
       return res.json();
     },

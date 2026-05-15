@@ -120,6 +120,7 @@ interface AdvancePanelProps {
 }
 
 export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
+  const { t } = useTranslation("common");
   const safeOrders = Array.isArray(advanceOrders) ? advanceOrders : [];
 
   return (

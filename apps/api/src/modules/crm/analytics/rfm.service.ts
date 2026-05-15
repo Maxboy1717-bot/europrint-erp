@@ -131,36 +131,37 @@ export class RfmService {
     if (!customers.length) {
       return Err({ code: 'BAD_REQUEST', message: 'Mijozlar ro\'yxati bo\'sh' });
     }
+    const { rScores, fScores, mScores } = this.computeAxisScores(customers);
+    const results = customers.map((c, i) => this.buildSingleResult(c, rScores[i], fScores[i], mScores[i]));
+    return Ok(results);
+  }
 
-    const recencies  = customers.map(c => safeNum(c.recencyDays));
+  private computeAxisScores(customers: RfmCustomer[]): { rScores: number[]; fScores: number[]; mScores: number[] } {
+    const recencies   = customers.map(c => safeNum(c.recencyDays));
     const frequencies = customers.map(c => safeNum(c.frequency));
     const monetaries  = customers.map(c => safeNum(c.monetary));
-
     // WHY `6 - s`: assignQuintile sorts ascending — for recencyDays that means
     // "smallest days = quintile 1". But marketing wants "most-recent = 5", so
     // we invert the recency axis here only.
-    const rScores = assignQuintile(recencies).map(s => 6 - s);
-    const fScores = assignQuintile(frequencies);
-    const mScores = assignQuintile(monetaries);
+    return {
+      rScores: assignQuintile(recencies).map(s => 6 - s),
+      fScores: assignQuintile(frequencies),
+      mScores: assignQuintile(monetaries),
+    };
+  }
 
-    const results: RfmResult[] = customers.map((c, i) => {
-      const r = rScores[i];
-      const f = fScores[i];
-      const ms = mScores[i];
-      return {
-        customerId: c.customerId,
-        recencyDays: safeNum(c.recencyDays),
-        frequency: safeNum(c.frequency),
-        monetary: safeNum(c.monetary),
-        rScore: r,
-        fScore: f,
-        mScore: ms,
-        rfmScore: r * 100 + f * 10 + ms,
-        segment: classify(r, f, ms),
-      };
-    });
-
-    return Ok(results);
+  private buildSingleResult(c: RfmCustomer, r: number, f: number, ms: number): RfmResult {
+    return {
+      customerId: c.customerId,
+      recencyDays: safeNum(c.recencyDays),
+      frequency: safeNum(c.frequency),
+      monetary: safeNum(c.monetary),
+      rScore: r,
+      fScore: f,
+      mScore: ms,
+      rfmScore: r * 100 + f * 10 + ms,
+      segment: classify(r, f, ms),
+    };
   }
 
   /**

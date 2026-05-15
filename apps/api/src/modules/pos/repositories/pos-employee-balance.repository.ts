@@ -1,4 +1,21 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - Signed-sum ledger aggregation: SUM(CASE WHEN entry_type='DEBIT' THEN qty
+ *     ELSE -qty END) AS balance + parallel SUM(CASE...) AS total_value over
+ *     quantity::numeric * unit_price::numeric — Drizzle has no native
+ *     CASE-inside-SUM helper that preserves the ::numeric cast needed so the
+ *     driver returns numbers instead of pg's default text-for-numeric.
+ *   - HAVING SUM(CASE WHEN entry_type='DEBIT' THEN qty ELSE -qty END) > 0
+ *     filter on the same expression as the SELECT, with no Drizzle alias
+ *     re-use in HAVING (would have to be duplicated as sql template anyway).
+ *   - UNION of material_cards.barcode and pos_batches.batch_number lookups
+ *     for barcodeExists() — Drizzle's union() requires identical column
+ *     shapes from select() builders rather than the trivial SELECT 1 pattern.
+ *   - GREATEST(0, COALESCE(reserved_qty, 0) - ${qty}) clamp in releaseStock()
+ *     UPDATE — Drizzle has no greatest()/least() helpers.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module pos-employee-balance.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

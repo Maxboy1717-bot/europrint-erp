@@ -11,11 +11,9 @@ import { User, AlertTriangle, ChevronRight, Star } from "lucide-react";
 import { IotLang, CompletionReportData } from "./iot-types";
 import { CompletionStep, StarRatingProps } from "./IoTCompletionReportTypes";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 // ─── Star Rating ──────────────────────────────────────────────────────────────
 export function StarRating({ value, onChange, label, lang }: StarRatingProps) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   const labels: Record<number, [string, string]> = {
     1: ["Yomon", "Плохо"], 2: ["Qoniqarsiz", "Неудовл."], 3: ["O'rta", "Средне"],
@@ -82,7 +80,6 @@ export function ResultsStep({
   completionReport: CompletionReportData;
   onNext: () => void;
 }) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <>

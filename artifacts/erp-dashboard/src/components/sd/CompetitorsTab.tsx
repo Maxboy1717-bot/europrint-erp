@@ -65,7 +65,8 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
 
   if (!competitors) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
-  const items = competitors.list || (Array.isArray(competitors) ? competitors : []);
+  const rawItems = competitors?.list || (Array.isArray(competitors) ? competitors : []);
+  const items = Array.isArray(rawItems) ? rawItems : [];
 
   return (
     <div className="space-y-4">
@@ -145,8 +146,8 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="font-semibold text-sm">{c.competitor_name || c.competitorName}</span>
-                    {c.product_type && <Badge variant="outline" className="text-[10px]">{c.product_type}</Badge>}
-                    {c.product && <Badge variant="outline" className="text-[10px]">{c.product}</Badge>}
+                    {!!c.product_type && <Badge variant="outline" className="text-[10px]">{String(c.product_type)}</Badge>}
+                    {!!c.product && <Badge variant="outline" className="text-[10px]">{String(c.product)}</Badge>}
                     {pot && <Badge className={`text-[10px] ${pot.cls}`}>{pot.label}</Badge>}
                   </div>
                   {c.estimated_share_percent && (

@@ -84,8 +84,7 @@ export default function TestDetail() {
 
   const deleteQuestionMutation = useMutation({
     mutationFn: async (questionId: string) => {
-      const response = await apiRequest("DELETE", `/api/questions/${questionId}`);
-      return response.json();
+      return await apiRequest("DELETE", `/api/questions/${questionId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tests", id, "questions"] });

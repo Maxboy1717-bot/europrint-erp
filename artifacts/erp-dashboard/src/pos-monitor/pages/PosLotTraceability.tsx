@@ -55,6 +55,7 @@ export default function PosLotTraceability() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // NOTE: POS uses its own pos_session token, not access_token — keep raw fetch
       const movements = await fetch("/api/pos/movements?limit=100", {
         headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem("pos_session") ?? "{}")?.token ?? ""}` }
       }).then(r => r.json()).catch(() => []);

@@ -52,8 +52,7 @@ export default function OrgDepartmentsPage() {
 
   const createMutation = useMutation({
     mutationFn: async ({ name, code }: { name: string; code: string }) => {
-      const res = await apiRequest("POST", "/api/core/departments", { name, code });
-      return res.json();
+      return await apiRequest("POST", "/api/core/departments", { name, code });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/core/departments"] });
@@ -69,8 +68,7 @@ export default function OrgDepartmentsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest("DELETE", `/api/core/departments/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/core/departments/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/core/departments"] });

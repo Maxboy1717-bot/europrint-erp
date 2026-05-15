@@ -47,15 +47,20 @@ import { DocumentWorkflowV2Controller }  from './document-workflow-v2.controller
 import { DocumentWorkflowV2Service }     from './document-workflow-v2.service';
 import { PosWarehouseIntegrationController } from './pos-warehouse-integration.controller';
 import { PosWarehouseIntegrationService }    from './pos-warehouse-integration.service';
+import { PosWarehouseIntegrationQueriesService } from './pos-warehouse-integration-queries.service';
+import { PosWarehouseIntegrationMovementService } from './pos-warehouse-integration-movement.service';
 
 import { EmployeesCompatService }          from './employees-compat.service';
 import { EmployeesCompatSubService }       from './employees-compat-sub.service';
 import { EmployeesListExtendedService }    from './employees-list-extended.service';
 import { EmployeesCompatProfileService }   from './employees-compat-profile.service';
+import { EmployeesCompatProfileRawService } from './employees-compat-profile-raw.service';
+import { EmployeesCompatProfileOrmService } from './employees-compat-profile-orm.service';
 import { EmployeesCompatFinancialsService } from './employees-compat-financials.service';
 import { UsersCompatService }            from './users-compat.service';
 import { BarcodeWarehouseCompatService } from './barcode-warehouse.service';
 import { CfoCompatService }              from './cfo.service';
+import { CfoRiskService }                from './cfo-risk.service';
 import { EuroprintControlCompatService } from './europrint-control.service';
 import { EuroprintControlDirectorService } from './europrint-control-director.service';
 import { CrmExtendedCompatService }      from './crm-extended.service';
@@ -139,6 +144,8 @@ import { AuthModule }                 from '../auth/auth.module';
     LabelService,
     LabelExtService,
     EmployeesCompatProfileService,
+    EmployeesCompatProfileRawService,
+    EmployeesCompatProfileOrmService,
     EmployeesCompatFinancialsService,
     EmployeesCompatService,
     EmployeesCompatSubService,
@@ -147,6 +154,7 @@ import { AuthModule }                 from '../auth/auth.module';
     BarcodeWarehouseCompatService,
     BarcodeWarehouseDebtService,
     CfoCompatService,
+    CfoRiskService,
     EuroprintControlCompatService,
     EuroprintControlDirectorService,
     CrmExtendedCompatService,
@@ -177,6 +185,8 @@ import { AuthModule }                 from '../auth/auth.module';
     AssetManagementRepo,
     DocumentWorkflowV2Service,
     PosWarehouseIntegrationService,
+    PosWarehouseIntegrationQueriesService,
+    PosWarehouseIntegrationMovementService,
   ],
 })
 export class CompatibilityModule {}

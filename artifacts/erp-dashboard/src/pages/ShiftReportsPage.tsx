@@ -82,8 +82,7 @@ export default function ShiftReportsPage() {
   >({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/production/shift-reports?page=1&limit=50");
-      return res.json();
+      return await apiRequest("GET", "/api/production/shift-reports?page=1&limit=50");
     },
   });
 
@@ -95,13 +94,12 @@ export default function ShiftReportsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/production/shift-reports", {
+      return await apiRequest("POST", "/api/production/shift-reports", {
         ...dto,
         planned_qty: dto.planned_qty ? parseInt(dto.planned_qty) : 0,
         actual_qty:  dto.actual_qty  ? parseInt(dto.actual_qty)  : 0,
         defect_qty:  dto.defect_qty  ? parseInt(dto.defect_qty)  : 0,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

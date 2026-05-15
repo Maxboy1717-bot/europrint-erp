@@ -28,7 +28,6 @@ import {
 import { Link } from "wouter";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 interface QualityDefect {
   id: number;
   cameraId: string;
@@ -66,7 +65,6 @@ const actionLabels: Record<string, { uz: string; ru: string }> = {
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'];
 
 export default function CameraQuality() {
-  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
   const { data: defects, isLoading: defectsLoading, isError, refetch} = useQuery<QualityDefect[]>({
@@ -137,8 +135,8 @@ export default function CameraQuality() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("sifatNazorati")}</b></>}
-        title={t("sifatNazorati")}
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
+        title={t.title}
         subtitle={t.subtitle}
       />
         </div>

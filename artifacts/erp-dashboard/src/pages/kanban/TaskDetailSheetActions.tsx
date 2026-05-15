@@ -23,7 +23,6 @@ import {
   Paperclip, MessageSquare,
 } from "lucide-react";
 import { TONE, type ActionBtnProps, type TaskDetailSheetActionsProps } from "./TaskDetailSheetTypes";
-import { useTranslation } from '@/lib/i18n';
 
 // ── ActionBtn ─────────────────────────────────────────────────────────────────
 
@@ -36,7 +35,6 @@ export function ActionBtn({
   label,
   "data-testid": testId,
 }: ActionBtnProps) {
-  const { t } = useTranslation("common");
   return (
     <button
       onClick={onClick}
@@ -76,7 +74,6 @@ export function TaskDetailSheetActions({
   onConfirmComplete,
   t,
 }: TaskDetailSheetActionsProps) {
-  const { t } = useTranslation("common");
   return (
     <>
       {/* ── 5-button action bar ──────────────────────────────────────────── */}

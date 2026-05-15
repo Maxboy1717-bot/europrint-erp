@@ -149,41 +149,41 @@ export class ChurnService {
     }
 
     const activeCoef = await this.loadActiveModel();
-
-    let logit: number;
-    let modelSource: 'db' | 'default';
-
-    if (activeCoef) {
-      // Build feature vector matching FEATURE_NAMES:
-      // ['intercept', 'r_norm', 'f_norm', 'm_norm', 'complaints', 'days_contact', 'tickets']
-      const rNorm = (rfm - 1) / 4;                          // normalize 1-5 → 0-1
-      const featureVec = [
-        1,                                                    // intercept
-        rNorm,                                               // r_norm
-        0.5,                                                 // f_norm — not in ChurnFeatures, use neutral
-        0.5,                                                 // m_norm — not in ChurnFeatures, use neutral
-        safeNum(features.complaintCount),                    // complaints
-        safeNum(features.daysSinceLastContact),              // days_contact
-        safeNum(features.supportTicketCount),                // tickets
-      ];
-      logit = (Array.isArray(activeCoef) ? activeCoef : []).reduce((s, b, i) => s + b * (featureVec[i] ?? 0), 0);
-      modelSource = 'db';
-    } else {
-      const c = DEFAULT_CHURN_COEFFICIENTS;
-      logit = safeSum([
-        c.intercept,
-        c.rfmRecency    * rfm,
-        c.complaints    * safeNum(features.complaintCount),
-        c.daysSinceContact * safeNum(features.daysSinceLastContact),
-        c.supportTickets * safeNum(features.supportTicketCount),
-        c.paymentLate   * safeNum(features.paymentLateCount),
-      ]);
-      modelSource = 'default';
-    }
+    const { logit, modelSource } = activeCoef
+      ? { logit: this.logitFromDbModel(activeCoef, features, rfm), modelSource: 'db' as const }
+      : { logit: this.logitFromDefaults(features, rfm), modelSource: 'default' as const };
 
     const probability = this.sigmoid(logit);
     const risk: ChurnRisk = probability > 0.7 ? 'HIGH' : probability > 0.4 ? 'MEDIUM' : 'LOW';
-
     return Ok({ probability, risk, logit, requiresAlert: risk === 'HIGH', features, modelSource });
+  }
+
+  private logitFromDbModel(activeCoef: number[], features: ChurnFeatures, rfm: number): number {
+    // Build feature vector matching FEATURE_NAMES:
+    // ['intercept', 'r_norm', 'f_norm', 'm_norm', 'complaints', 'days_contact', 'tickets']
+    const rNorm = (rfm - 1) / 4; // normalize 1-5 → 0-1
+    const featureVec = [
+      1,                                          // intercept
+      rNorm,                                      // r_norm
+      0.5,                                        // f_norm — not in ChurnFeatures, neutral
+      0.5,                                        // m_norm — not in ChurnFeatures, neutral
+      safeNum(features.complaintCount),
+      safeNum(features.daysSinceLastContact),
+      safeNum(features.supportTicketCount),
+    ];
+    const coefs = Array.isArray(activeCoef) ? activeCoef : [];
+    return coefs.reduce((s, b, i) => s + b * (featureVec[i] ?? 0), 0);
+  }
+
+  private logitFromDefaults(features: ChurnFeatures, rfm: number): number {
+    const c = DEFAULT_CHURN_COEFFICIENTS;
+    return safeSum([
+      c.intercept,
+      c.rfmRecency       * rfm,
+      c.complaints       * safeNum(features.complaintCount),
+      c.daysSinceContact * safeNum(features.daysSinceLastContact),
+      c.supportTickets   * safeNum(features.supportTicketCount),
+      c.paymentLate      * safeNum(features.paymentLateCount),
+    ]);
   }
 }

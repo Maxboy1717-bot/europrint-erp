@@ -49,7 +49,7 @@ export function AbcAnalysisTab({ t, period, setPeriod }: AbcAnalysisTabProps) {
     queryKey: ["/api/warehouse/reports/abc-analysis", period],
     queryFn: async () => {
       const params = new URLSearchParams({ period });
-      const res = await apiRequest('GET', `/api/warehouse/reports/abc-analysis?${params}`);
+      const res = await apiRequest('GET', `/api/warehouse/reports/abc-analysis?${params}`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },

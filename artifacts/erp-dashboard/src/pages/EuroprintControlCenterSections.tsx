@@ -37,7 +37,7 @@ export function CompanyStatePanel() {
   const { data, isLoading, isError, refetch } = useQuery<CompanyStateCurrent>({
     queryKey: ["/api/company-state/current"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/company-state/current");
+      const res = (await apiRequest('GET', "/api/company-state/current")) as unknown as Response;
       if (!res.ok) throw new Error("company-state/current failed");
       return res.json() as Promise<CompanyStateCurrent>;
     },

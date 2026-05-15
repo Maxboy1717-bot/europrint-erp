@@ -39,9 +39,7 @@ export default function ProductionOrder360() {
   const { data, isLoading } = useQuery<Production360Response>({
     queryKey: ["/api/production/orders", id, "360-card"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/production/orders/${id}/360-card`);
-      if (!res.ok) throw new Error("Xato");
-      return res.json();
+      return await apiRequest('GET', `/api/production/orders/${id}/360-card`);
     },
     enabled: !!id,
   });

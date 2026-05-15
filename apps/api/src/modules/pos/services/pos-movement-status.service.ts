@@ -1,6 +1,9 @@
 /**
  * @module pos-movement-status.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ *   Transition table, status→step/decision maps, QC maps and DIRECTION_MAP live in
+ *   pos-movement-status.constants.ts (Rule 16 — 300 line cap).
  */
 
 import { TashkentTimeService } from '@common/time';
@@ -14,50 +17,20 @@ import { EmployeeLedgerService }     from '../employee-ledger.service';
 import { PosAuditService }           from './pos-audit.service';
 import { StockLedgerService }        from './stock-ledger.service';
 import { PosNotificationsService }   from './pos-notifications.service';
-import { UpdateMovementStatusDto, MovementStatus, QcDecisionDto, QcDecision } from '../dto/movement.dto';
+import { UpdateMovementStatusDto, QcDecisionDto } from '../dto/movement.dto';
 import { PosMovementStatusRepository } from './pos-movement-status.repository';
-import { movementConfirmations } from '@workspace/db';
-
-type ConfirmStep     = typeof movementConfirmations.$inferInsert['step'];
-type ConfirmDecision = typeof movementConfirmations.$inferInsert['decision'];
-
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  draft:        ['karantin', 'qc_pending', 'pending', 'cancelled'],
-  karantin:     ['qc_pending', 'cancelled'],
-  qc_pending:   ['qc_approved', 'qc_rework', 'qc_rejected'],
-  qc_approved:  ['pending', 'cancelled'],
-  qc_rework:    ['qc_pending'],
-  qc_rejected:  ['cancelled'],
-  pending:      ['approved', 'cancelled'],
-  approved:     ['ai_processing', 'completed'],
-  ai_processing:['completed', 'cancelled'],
-  completed:    [],
-  cancelled:    [],
-};
-
-function isTransitionAllowed(from: string, to: string): boolean {
-  return VALID_TRANSITIONS[from]?.includes(to) ?? false;
-}
-
-/** Map movement status to pos_confirm_step_enum value */
-function statusToConfirmStep(status: string): ConfirmStep | null {
-  const map: Record<string, ConfirmStep> = {
-    qc_approved:    'QC',
-    qc_rejected:    'QC',
-    qc_rework:      'QC',
-    approved:       'OMBOR',
-    ai_processing:  'AI_GL',
-    completed:      'FINANCE',
-  };
-  return map[status] ?? null;
-}
-
-/** Map movement status or decision to pos_confirm_decision_enum value */
-function statusToConfirmDecision(status: string): ConfirmDecision {
-  if (status === 'qc_rejected' || status === 'cancelled') return 'REJECTED';
-  if (status === 'qc_rework') return 'REWORK';
-  return 'APPROVED';
-}
+import {
+  ConfirmDecision,
+  isTransitionAllowed,
+  statusToConfirmStep,
+  statusToConfirmDecision,
+  STATUS_NOTIF_MAP,
+  QC_STATUS_MAP,
+  QC_DECISION_MAP,
+  QC_TITLE_MAP,
+  QC_TYPE_MAP,
+  DIRECTION_MAP,
+} from './pos-movement-status.constants';
 
 @Injectable()
 export class PosMovementStatusService {
@@ -108,73 +81,32 @@ export class PosMovementStatusService {
         entityId: movementId, oldValue: { status: oldStatus }, newValue: { status: dto.status, reason: dto.reason }, ipAddress,
       });
 
-      const movNum = String(movement.movementNumber ?? movementId);
-      const createdBy = Number(movement.createdBy ?? updatedById);
-
-      const notifMap: Record<string, { type: string; title: string; body: string }> = {
-        pending: {
-          type: 'MOVEMENT_SUBMITTED',
-          title: 'Harakat yuborildi',
-          body: `Harakat ${movNum} tasdiqlash uchun yuborildi`,
-        },
-        qc_pending: {
-          type: 'MOVEMENT_QC_PENDING',
-          title: 'QC tekshiruvi kutilmoqda',
-          body: `Harakat ${movNum} sifat nazoratiga yuborildi`,
-        },
-        qc_approved: {
-          type: 'MOVEMENT_QC_PASSED',
-          title: "QC tekshiruvi o'tdi",
-          body: `Harakat ${movNum} sifat nazoratidan otdi`,
-        },
-        qc_rework: {
-          type: 'MOVEMENT_QC_REWORK',
-          title: 'QC qayta ishlash',
-          body: `Harakat ${movNum} qayta ishlash uchun qaytarildi${dto.reason ? `: ${dto.reason}` : ''}`,
-        },
-        qc_rejected: {
-          type: 'MOVEMENT_QC_REJECTED',
-          title: 'QC rad etildi',
-          body: `Harakat ${movNum} sifat nazoratidan rad etildi${dto.reason ? `: ${dto.reason}` : ''}`,
-        },
-        approved: {
-          type: 'MOVEMENT_APPROVED',
-          title: 'Harakat tasdiqlandi',
-          body: `Harakat ${movNum} ombor mudiri tomonidan tasdiqlandi`,
-        },
-        ai_processing: {
-          type: 'MOVEMENT_AI_PROCESSING',
-          title: 'AI qayta ishlash',
-          body: `Harakat ${movNum} AI tomonidan qayta ishlanmoqda`,
-        },
-        completed: {
-          type: 'MOVEMENT_COMPLETED',
-          title: 'Harakat yakunlandi',
-          body: `Harakat ${movNum} muvaffaqiyatli yakunlandi`,
-        },
-        cancelled: {
-          type: 'MOVEMENT_CANCELLED',
-          title: 'Harakat bekor qilindi',
-          body: `Harakat ${movNum} bekor qilindi${dto.reason ? `: ${dto.reason}` : ''}`,
-        },
-      };
-
-      const notif = notifMap[dto.status];
-      if (notif) {
-        await this.notifications.sendNotification(
-          createdBy, notif.type, notif.title, notif.body, 'pos_movements', movementId,
-        );
-        if (dto.status === 'pending') {
-          await this.notifications.broadcastNotification(
-            'MOVEMENT_PENDING_APPROVAL', 'Tasdiqlash kutilmoqda',
-            `Harakat ${movNum} tasdiqlash uchun kutmoqda`, 'pos_movements', movementId,
-          );
-        }
-      }
+      await this._sendStatusNotification(movement, movementId, dto, updatedById);
 
       this.eventEmitter.emit(`pos.movement.data.${dto.status}`, { movementId, movementNumber: movement.movementNumber, oldStatus, newStatus: dto.status, updatedById });
       return updated;
     });
+  }
+
+  private async _sendStatusNotification(
+    movement: Record<string, unknown>,
+    movementId: number,
+    dto: UpdateMovementStatusDto,
+    updatedById: number,
+  ) {
+    const movNum = String(movement.movementNumber ?? movementId);
+    const createdBy = Number(movement.createdBy ?? updatedById);
+    const notif = STATUS_NOTIF_MAP[dto.status];
+    if (!notif) return;
+    await this.notifications.sendNotification(
+      createdBy, notif.type, notif.title, notif.bodyFmt(movNum, dto.reason), 'pos_movements', movementId,
+    );
+    if (dto.status === 'pending') {
+      await this.notifications.broadcastNotification(
+        'MOVEMENT_PENDING_APPROVAL', 'Tasdiqlash kutilmoqda',
+        `Harakat ${movNum} tasdiqlash uchun kutmoqda`, 'pos_movements', movementId,
+      );
+    }
   }
 
   async recordQcDecision(dto: QcDecisionDto, qcInspectorId: number, ipAddress?: string) {
@@ -183,27 +115,17 @@ export class PosMovementStatusService {
     const movement = movementR.data as Record<string, unknown>;
     if (movement.status !== 'qc_pending') throw new BadRequestException('QC faqat qc_pending holatida amalga oshiriladi');
 
-    const statusMap: Record<QcDecision, MovementStatus> = {
-      [QcDecision.APPROVED]: MovementStatus.QC_APPROVED,
-      [QcDecision.REWORK]: MovementStatus.QC_REWORK,
-      [QcDecision.REJECTED]: MovementStatus.QC_REJECTED,
-    };
-    const newStatus = statusMap[dto.decision];
+    const newStatus = QC_STATUS_MAP[dto.decision];
 
     const updated = await this.repo.updateQcDecision(dto.movementId, {
       status: newStatus,
-      qcStatus: dto.decision === QcDecision.APPROVED ? 'APPROVED' : dto.decision === QcDecision.REWORK ? 'REWORK' : 'REJECTED',
+      qcStatus: QC_DECISION_MAP[dto.decision],
       qcCompletedAt: _time.now(), qcCompletedBy: qcInspectorId, updatedAt: _time.now(),
     });
 
-    const decisionMap: Record<QcDecision, ConfirmDecision> = {
-      [QcDecision.APPROVED]: 'APPROVED',
-      [QcDecision.REWORK]:   'REWORK',
-      [QcDecision.REJECTED]: 'REJECTED',
-    };
     await this.stockLedger.recordConfirmation(
       dto.movementId, 'QC', qcInspectorId,
-      decisionMap[dto.decision],
+      QC_DECISION_MAP[dto.decision],
       dto.notes ?? dto.rejectionReason,
       ipAddress,
     );
@@ -215,18 +137,8 @@ export class PosMovementStatusService {
 
     const movCreatedBy = Number((movement as Record<string, unknown>).createdBy ?? qcInspectorId);
     const movNum = String((movement as Record<string, unknown>).movementNumber ?? dto.movementId);
-    const qcTitleMap: Record<QcDecision, string> = {
-      [QcDecision.APPROVED]: 'QC tasdiqladi',
-      [QcDecision.REWORK]:   'QC qayta ishlash',
-      [QcDecision.REJECTED]: 'QC rad etdi',
-    };
-    const qcTypeMap: Record<QcDecision, string> = {
-      [QcDecision.APPROVED]: 'QC_APPROVED',
-      [QcDecision.REWORK]:   'QC_REWORK',
-      [QcDecision.REJECTED]: 'QC_REJECTED',
-    };
     await this.notifications.sendNotification(
-      movCreatedBy, qcTypeMap[dto.decision], qcTitleMap[dto.decision],
+      movCreatedBy, QC_TYPE_MAP[dto.decision], QC_TITLE_MAP[dto.decision],
       `Harakat ${movNum}: QC ${dto.decision}${dto.rejectionReason ? ` — ${dto.rejectionReason}` : ''}`,
       'pos_movements', dto.movementId,
     );
@@ -235,21 +147,10 @@ export class PosMovementStatusService {
     return updated;
   }
 
-  private static readonly DIRECTION_MAP: Record<string, 'in' | 'out' | 'transfer'> = {
-    EXTERNAL_IN:          'in',
-    INTERNAL_RETURN:      'in',
-    INVENTORY_ADJ_PLUS:   'in',
-    EXTERNAL_OUT:         'out',
-    INTERNAL_ISSUE:       'out',
-    DAMAGE:               'out',
-    INVENTORY_ADJ_MINUS:  'out',
-    INTERNAL_TRANSFER:    'transfer',
-  };
-
   private async _processCompletedMovement(movement: Record<string, unknown>, processedById: number) {
     const lines = await this.repo.getMovementLines(Number(movement.id));
     const code = String(movement.movementType ?? '');
-    const direction = PosMovementStatusService.DIRECTION_MAP[code] ?? null;
+    const direction = DIRECTION_MAP[code] ?? null;
     const movType = { direction, code };
 
     for (const line of (lines.ok ? lines.data as Record<string, unknown>[] : [])) {
@@ -292,7 +193,7 @@ export class PosMovementStatusService {
     }
 
     await this.stockLedger.recordConfirmation(
-      Number(movement.id), 'FINANCE', processedById, 'APPROVED',
+      Number(movement.id), 'FINANCE', processedById, 'APPROVED' as ConfirmDecision,
       `Movement ${String(movement.movementNumber)} completed`,
     );
 

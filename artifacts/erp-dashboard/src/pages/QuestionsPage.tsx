@@ -46,8 +46,7 @@ export default function QuestionsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searched) params.set("testId", searched);
-      const res = await apiRequest("GET", `/api/questions?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/questions?${params}`);
     },
   });
 
@@ -58,12 +57,11 @@ export default function QuestionsPage() {
   // ── Mutations ───────────────────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: async (dto: QuestionFormState) => {
-      const res = await apiRequest("POST", "/api/questions", {
+      return await apiRequest("POST", "/api/questions", {
         ...dto,
         points: dto.points ? parseInt(dto.points) : 1,
         testId: dto.test_id || undefined,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -77,8 +75,7 @@ export default function QuestionsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await apiRequest("DELETE", `/api/questions/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/questions/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

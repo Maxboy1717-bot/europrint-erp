@@ -146,7 +146,7 @@ function SalaryTypeLabel({ salaryType }: { salaryType: string }) {
   return <p className="font-medium">{salaryType}</p>;
 }
 
-export function WorkConditionsCard({ employee, t: _t, tCommon }: SectionProps) {
+export function WorkConditionsCard({ employee, t, tCommon }: SectionProps) {
   const zoneLabel = employee.workshopZone || employee.departmentName || tCommon("notSpecified");
 
   return (

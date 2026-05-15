@@ -114,6 +114,7 @@ interface FineDialogProps {
 }
 
 export function FineDialog({ tCommon, open, onOpenChange, form, setForm, mutation }: FineDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>

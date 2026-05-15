@@ -43,8 +43,7 @@ export default function RaciCrisisPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
-      const res = await apiRequest("GET", `/api/raci-crisis/tasks?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/raci-crisis/tasks?${params}`);
     },
     enabled: tab === "tasks",
   });
@@ -57,8 +56,7 @@ export default function RaciCrisisPage() {
   } = useQuery<Crisis[] | { data?: Crisis[] }>({
     queryKey: CRISIS_QUERY_KEY,
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/raci-crisis/crises");
-      return res.json();
+      return await apiRequest("GET", "/api/raci-crisis/crises");
     },
     enabled: tab === "crises",
   });
@@ -73,8 +71,7 @@ export default function RaciCrisisPage() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (dto: TaskFormState) => {
-      const res = await apiRequest("POST", "/api/raci-crisis/tasks", dto);
-      return res.json();
+      return await apiRequest("POST", "/api/raci-crisis/tasks", dto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEY });

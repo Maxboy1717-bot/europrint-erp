@@ -1,4 +1,14 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   single-scan multi-bucket aggregation with 12+ COALESCE(SUM(CASE WHEN ...))
+ *   conditional pivots across account_type and code LIKE patterns (cash, inventory,
+ *   current assets/liabilities), plus INSERT ... ON CONFLICT (period) DO UPDATE SET
+ *   ... = EXCLUDED.* snapshot upsert. The single-pass GL scan is intentional —
+ *   re-querying per ratio would be 12x more expensive.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * @module financial-ratios.service
  * @description CFO-dashboard ratio calculator. Reads period balance-sheet
  *   and P&L rows and computes the four canonical ratio families:

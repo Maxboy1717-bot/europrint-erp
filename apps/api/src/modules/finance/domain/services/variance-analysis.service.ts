@@ -1,4 +1,14 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   EXTRACT(EPOCH FROM (completed_at - started_at)) / 3600.0 timestamp arithmetic
+ *   for actual-hours computation, ABS(quantity) + AVG(cost_price::numeric) co-aggregate
+ *   on stock_movements joined with stock_items, and enum-cast comparisons
+ *   (status::text IN ('OUT','CONSUMPTION')) needed for variance MPV/MQV/LRV/LEV/OV
+ *   inputs in a single round-trip per order.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * @module variance-analysis.service
  * @description Standard-cost vs. actual-cost variance analysis per production
  *   order. Decomposes the gap between what we *planned* a job should cost
@@ -56,30 +66,8 @@ import { CfoConfigService } from './cfo-config.service';
 
 const VARIANCE_AUDIT_THRESHOLD_PCT = 20;
 
-export interface VarianceResult {
-  orderId: number;
-  orderNumber: string;
-  productName: string;
-  productId: number | null;
-  plannedQty: number;
-  mpv: number;
-  mqv: number;
-  lrv: number;
-  lev: number;
-  ov: number;
-  totalVariance: number;
-  standardTotalCost: number;
-  actualTotalCost: number;
-  variancePct: number;
-  needsAudit: boolean;
-  details: {
-    mpvLabel: 'Favourable' | 'Unfavourable' | 'Neutral';
-    mqvLabel: 'Favourable' | 'Unfavourable' | 'Neutral';
-    lrvLabel: 'Favourable' | 'Unfavourable' | 'Neutral';
-    levLabel: 'Favourable' | 'Unfavourable' | 'Neutral';
-    ovLabel: 'Under-applied' | 'Over-applied' | 'Neutral';
-  };
-}
+export type { VarianceResult } from './variance-analysis.types';
+import type { VarianceResult } from './variance-analysis.types';
 
 type Row = Record<string, unknown>;
 

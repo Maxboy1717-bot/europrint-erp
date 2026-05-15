@@ -47,7 +47,6 @@ import {
 } from "recharts";
 import { apiRequest } from '@/lib/queryClient';
 import { EPErrorState, EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
@@ -70,7 +69,6 @@ interface TopEmployee {
 }
 
 export default function CameraReports() {
-  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   const [reportPeriod, setReportPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -116,7 +114,7 @@ export default function CameraReports() {
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-      const response = await apiRequest('GET', `/api/camera-reports/generate-pdf?period=${reportPeriod}`);
+      const response = (await apiRequest('GET', `/api/camera-reports/generate-pdf?period=${reportPeriod}`)) as unknown as Response;
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -137,7 +135,7 @@ export default function CameraReports() {
   const generateExcel = async () => {
     setIsGenerating(true);
     try {
-      const response = await apiRequest('GET', `/api/camera-reports/generate-excel?period=${reportPeriod}`);
+      const response = (await apiRequest('GET', `/api/camera-reports/generate-excel?period=${reportPeriod}`)) as unknown as Response;
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -220,8 +218,8 @@ export default function CameraReports() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("aiKameraHisobotlari")}</b></>}
-        title={t("aiKameraHisobotlari")}
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
+        title={t.title}
         subtitle={t.subtitle}
       />
         </div>

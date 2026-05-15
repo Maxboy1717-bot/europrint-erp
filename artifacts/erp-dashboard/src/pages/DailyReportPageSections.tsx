@@ -69,6 +69,7 @@ export function SubmitForm({
   onChange,
   onSubmit,
 }: SubmitFormProps) {
+  const { t } = useTranslation("common");
   if (todayReport?.status === "submitted") {
     return (
       <Card className="bg-green-900/20 border-green-700/50 max-w-3xl">

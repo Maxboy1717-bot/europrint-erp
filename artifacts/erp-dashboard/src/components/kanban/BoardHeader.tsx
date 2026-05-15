@@ -112,7 +112,7 @@ function IconBtn({
 }
 
 interface BoardHeaderProps {
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
   viewMode: ViewMode;
   setViewMode: (v: ViewMode) => void;
   templates: KanbanTemplate[];

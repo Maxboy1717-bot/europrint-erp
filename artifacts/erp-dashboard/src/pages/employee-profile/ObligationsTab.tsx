@@ -41,7 +41,7 @@ export function ObligationsTab({ employeeId, cashAdvances = [], loadingCashAdvan
     queryKey: ["/api/finance/loans", employeeId],
     queryFn: async () => {
       try {
-        const r = await apiRequest('GET', `/api/finance/loans?userId=${employeeId}`);
+        const r = (await apiRequest('GET', `/api/finance/loans?userId=${employeeId}`)) as unknown as Response;
         if (!r.ok) return [];
         return r.json();
       } catch { return []; }

@@ -37,7 +37,7 @@ export default function DesignApproval() {
   const { data: rawOrders, isLoading } = useQuery<unknown>({
     queryKey: ["/api/papka-orders", { status: "pending_design" }],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/papka-orders?status=pending_design");
+      const res = (await apiRequest('GET', "/api/papka-orders?status=pending_design")) as unknown as Response;
       if (!res.ok) throw new Error("Failed");
       const d = await res.json();
       return Array.isArray(d) ? d : (d.items ?? d.data ?? d.orders ?? []);

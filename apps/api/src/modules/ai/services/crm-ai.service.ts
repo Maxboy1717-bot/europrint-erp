@@ -29,20 +29,35 @@ export class CrmAiService {
     return safeCall(async () => {
       const lead = await this.dataRepo.getLeadById(leadId);
       if (!lead) throw new InternalServerErrorException(`Lead #${leadId} topilmadi`);
-  
-      const prompt = `
+      const prompt = this.buildLeadScorePrompt(lead);
+      const aiResult = await this.ai.call({ taskType: 'crm.lead_score', prompt, maxTokens: AI_SHORT_MAX_TOKENS, temperature: 0.3, userId });
+      if (isErr(aiResult)) {
+        this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+        return { score: 50, grade: 'WARM', reasoning: '', suggestedActions: [] };
+      }
+      const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = safeJsonParse<LeadScoreResult>(jsonMatch[0]);
+        if (parsed) return parsed;
+      }
+      return { score: 50, grade: 'WARM', reasoning: aiResult.data.text, suggestedActions: [] };
+    });
+  }
+
+  private buildLeadScorePrompt(lead: Record<string, unknown>): string {
+    return `
   EuroPrint CRM: Lead sifatini baholang.
-  
+
   LEAD MA'LUMOTLARI:
-  Nomi: ${lead.title ?? lead.name ?? 'noma\'lum'}
-  Kompaniya: ${lead.companyTitle ?? 'ko\'rsatilmagan'}
-  Manba: ${lead.sourceId ?? 'noma\'lum'}
-  Status: ${lead.statusId ?? 'NEW'}
-  Izoh: ${lead.description ?? 'yo\'q'}
-  
+  Nomi: ${(lead.title as string | null | undefined) ?? (lead.name as string | null | undefined) ?? 'noma\'lum'}
+  Kompaniya: ${(lead.companyTitle as string | null | undefined) ?? 'ko\'rsatilmagan'}
+  Manba: ${(lead.sourceId as string | number | null | undefined) ?? 'noma\'lum'}
+  Status: ${(lead.statusId as string | number | null | undefined) ?? 'NEW'}
+  Izoh: ${(lead.description as string | null | undefined) ?? 'yo\'q'}
+
   EuroPrint bosma mahsulotlar va dizayn kompaniyasi.
   B2B va B2C segmentlar.
-  
+
   JSON formatda:
   {
     "score": <0-100>,
@@ -52,27 +67,6 @@ export class CrmAiService {
     "estimatedDealValue": <UZS yoki null>
   }
   `;
-  
-      const aiResult = await this.ai.call({
-        taskType: 'crm.lead_score',
-        prompt,
-        maxTokens: AI_SHORT_MAX_TOKENS,
-        temperature: 0.3,
-        userId,
-      });
-      if (isErr(aiResult)) {
-        this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
-        return { score: 50, grade: 'WARM', reasoning: '', suggestedActions: [] };
-      }
-  
-      const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = safeJsonParse<LeadScoreResult>(jsonMatch[0]);
-        if (parsed) return parsed;
-      }
-  
-      return { score: 50, grade: 'WARM', reasoning: aiResult.data.text, suggestedActions: [] };
-    });
   }
 
   // ─── Deal Probability ────────────────────────────────────────────────────
@@ -80,17 +74,31 @@ export class CrmAiService {
   async predictDealProbability(dealId: number, userId: number): Promise<DealProbabilityResult> {
     const deal = await this.dataRepo.getDealById(dealId);
     if (!deal) throw new InternalServerErrorException(`Deal #${dealId} topilmadi`);
+    const prompt = this.buildDealProbabilityPrompt(deal);
+    const aiResult = await this.ai.call({ taskType: 'crm.deal_probability', prompt, maxTokens: AI_SHORT_MAX_TOKENS, temperature: 0.3, userId });
+    if (isErr(aiResult)) {
+      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+      return { probability: 50, expectedCloseDate: '', riskFactors: [], successFactors: [], recommendation: '' };
+    }
+    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = safeJsonParse<DealProbabilityResult>(jsonMatch[0]);
+      if (parsed) return parsed;
+    }
+    return { probability: 50, expectedCloseDate: '', riskFactors: [], successFactors: [], recommendation: aiResult.data.text };
+  }
 
-    const prompt = `
+  private buildDealProbabilityPrompt(deal: Record<string, unknown>): string {
+    return `
 EuroPrint CRM: Bitim yopilish ehtimolini bashorat qiling.
 
 BITIM:
-Nomi: ${deal.title}
-Qiymati: ${deal.amount ?? 0} UZS
-Status: ${deal.statusId ?? 'noma\'lum'}
-Bosqich: ${deal.stageId ?? 'noma\'lum'}
-Yopilish sanasi: ${deal.closeDate ?? 'belgilanmagan'}
-Izoh: ${deal.description ?? 'yo\'q'}
+Nomi: ${(deal.title as string | null | undefined) ?? ''}
+Qiymati: ${(deal.amount as number | null | undefined) ?? 0} UZS
+Status: ${(deal.statusId as string | number | null | undefined) ?? 'noma\'lum'}
+Bosqich: ${(deal.stageId as string | number | null | undefined) ?? 'noma\'lum'}
+Yopilish sanasi: ${(deal.closeDate as string | null | undefined) ?? 'belgilanmagan'}
+Izoh: ${(deal.description as string | null | undefined) ?? 'yo\'q'}
 
 EuroPrint bosma mahsulotlar kompaniyasi.
 
@@ -103,44 +111,32 @@ JSON formatda:
   "recommendation": "..."
 }
 `;
-
-    const aiResult = await this.ai.call({
-      taskType: 'crm.deal_probability',
-      prompt,
-      maxTokens: AI_SHORT_MAX_TOKENS,
-      temperature: 0.3,
-      userId,
-    });
-    if (isErr(aiResult)) {
-      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
-      return { probability: 50, expectedCloseDate: '', riskFactors: [], successFactors: [], recommendation: '' };
-    }
-
-    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = safeJsonParse<DealProbabilityResult>(jsonMatch[0]);
-      if (parsed) return parsed;
-    }
-
-    return {
-      probability: 50,
-      expectedCloseDate: '',
-      riskFactors: [],
-      successFactors: [],
-      recommendation: aiResult.data.text,
-    };
   }
 
   // ─── Churn Risk ──────────────────────────────────────────────────────────
 
   async assessChurnRisk(contactId: number, activityData: Record<string, unknown>, userId: number): Promise<ChurnRiskResult> {
     const contact = await this.dataRepo.getContactById(contactId);
+    const prompt = this.buildChurnRiskPrompt(contact, contactId, activityData);
+    const aiResult = await this.ai.call({ taskType: 'crm.churn_risk', prompt, maxTokens: AI_SHORT_MAX_TOKENS, temperature: 0.3, userId });
+    if (isErr(aiResult)) {
+      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+      return { riskLevel: 'MEDIUM', riskScore: 50, mainReasons: [], retentionActions: [] };
+    }
+    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = safeJsonParse<ChurnRiskResult>(jsonMatch[0]);
+      if (parsed) return parsed;
+    }
+    return { riskLevel: 'MEDIUM', riskScore: 50, mainReasons: [], retentionActions: [] };
+  }
 
-    const prompt = `
+  private buildChurnRiskPrompt(contact: Record<string, unknown> | null | undefined, contactId: number, activityData: Record<string, unknown>): string {
+    return `
 EuroPrint CRM: Mijoz ketish xavfini baholang.
 
-MIJOZ: ${contact?.name ?? `ID:${contactId}`}
-KOMPANIYA: ${contact?.company ?? 'noma\'lum'}
+MIJOZ: ${(contact?.name as string | null | undefined) ?? `ID:${contactId}`}
+KOMPANIYA: ${(contact?.company as string | null | undefined) ?? 'noma\'lum'}
 
 FAOLLIK MA'LUMOTLARI:
 ${JSON.stringify(activityData, null, 2)}
@@ -153,26 +149,6 @@ JSON formatda:
   "retentionActions": ["...", "...", "..."]
 }
 `;
-
-    const aiResult = await this.ai.call({
-      taskType: 'crm.churn_risk',
-      prompt,
-      maxTokens: AI_SHORT_MAX_TOKENS,
-      temperature: 0.3,
-      userId,
-    });
-    if (isErr(aiResult)) {
-      this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
-      return { riskLevel: 'MEDIUM', riskScore: 50, mainReasons: [], retentionActions: [] };
-    }
-
-    const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = safeJsonParse<ChurnRiskResult>(jsonMatch[0]);
-      if (parsed) return parsed;
-    }
-
-    return { riskLevel: 'MEDIUM', riskScore: 50, mainReasons: [], retentionActions: [] };
   }
 
   // ─── Email Template ──────────────────────────────────────────────────────

@@ -64,8 +64,7 @@ export default function HRZnoPage() {
     queryKey: ["/api/hr/zno", statusFilter],
     queryFn: async () => {
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-      const res = await apiRequest("GET", `/api/hr/zno${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/hr/zno${params}`);
     },
   });
 
@@ -77,11 +76,10 @@ export default function HRZnoPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/hr/zno", {
+      return await apiRequest("POST", "/api/hr/zno", {
         ...dto,
         amount: parseFloat(dto.amount),
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/zno"] });
@@ -96,8 +94,7 @@ export default function HRZnoPage() {
 
   const approveMutation = useMutation({
     mutationFn: async ({ id, comment }: { id: string | number; comment: string }) => {
-      const res = await apiRequest("PATCH", `/api/hr/zno/${id}/approve`, { comment: comment || null });
-      return res.json();
+      return await apiRequest("PATCH", `/api/hr/zno/${id}/approve`, { comment: comment || null });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/zno"] });
@@ -112,8 +109,7 @@ export default function HRZnoPage() {
 
   const rejectMutation = useMutation({
     mutationFn: async ({ id, comment }: { id: string | number; comment: string }) => {
-      const res = await apiRequest("PATCH", `/api/hr/zno/${id}/reject`, { comment: comment || null });
-      return res.json();
+      return await apiRequest("PATCH", `/api/hr/zno/${id}/reject`, { comment: comment || null });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/zno"] });

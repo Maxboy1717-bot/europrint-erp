@@ -142,7 +142,7 @@ export default function EmployeeProfile() {
     enabled: !!id, 
     retry: false, 
     queryFn: async () => { 
-      const res = await apiRequest('GET', `/api/employees/${id}/passport`); 
+      const res = (await apiRequest('GET', `/api/employees/${id}/passport`)) as unknown as Response; 
       if (res.status === 404) return null; 
       if (!res.ok) throw new Error('Failed to fetch passport'); 
       return res.json(); 
@@ -194,7 +194,7 @@ export default function EmployeeProfile() {
   const { data: skillGapData, isLoading: loadingSkillGap } = useQuery<SkillGapData>({
     queryKey: ['/api/integration/skill-gap', id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/integration/skill-gap/${id}`);
+      const res = (await apiRequest('GET', `/api/integration/skill-gap/${id}`)) as unknown as Response;
       if (!res.ok) return null;
       const json = await res.json();
       // Unwrap { ok: true, data: {...} } or { data: {...} } envelopes
@@ -208,7 +208,7 @@ export default function EmployeeProfile() {
   const { data: mentorshipData, isLoading: loadingMentorship } = useQuery<MentorshipData>({ 
     queryKey: ['/api/integration/employee-mentorships', id], 
     queryFn: async () => { 
-      const res = await apiRequest('GET', `/api/integration/employee-mentorships/${id}`); 
+      const res = (await apiRequest('GET', `/api/integration/employee-mentorships/${id}`)) as unknown as Response; 
       if (!res.ok) return { asMentor: [], asMentee: [] }; 
       return res.json(); 
     }, 
@@ -217,7 +217,7 @@ export default function EmployeeProfile() {
   const { data: mesSummary, isLoading: loadingMes } = useQuery<MesSummary>({
     queryKey: ['/api/integration/employee-mes-summary', id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/integration/employee-mes-summary/${id}?months=3`);
+      const res = (await apiRequest('GET', `/api/integration/employee-mes-summary/${id}?months=3`)) as unknown as Response;
       if (!res.ok) return null;
       const json = await res.json();
       const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);
@@ -230,7 +230,7 @@ export default function EmployeeProfile() {
   const { data: wmsSummary, isLoading: loadingWms } = useQuery<WmsSummary>({
     queryKey: ['/api/integration/employee-wms-summary', id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/integration/employee-wms-summary/${id}`);
+      const res = (await apiRequest('GET', `/api/integration/employee-wms-summary/${id}`)) as unknown as Response;
       if (!res.ok) return null;
       const json = await res.json();
       const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);
@@ -244,7 +244,7 @@ export default function EmployeeProfile() {
   const { data: payrollSummary } = useQuery<any | null>({ 
     queryKey: ['/api/employees', id, 'payroll-summary'], 
     queryFn: async () => { 
-      const res = await apiRequest('GET', `/api/employees/${id}/payroll-summary`); 
+      const res = (await apiRequest('GET', `/api/employees/${id}/payroll-summary`)) as unknown as Response; 
       if (!res.ok) return null; 
       return res.json(); 
     }, 
@@ -255,7 +255,7 @@ export default function EmployeeProfile() {
   const { data: corpInfoForMachine } = useQuery<{ is_machine_operator?: boolean }>({ 
     queryKey: ['/api/hr/employee-corp', id], 
     queryFn: async () => { 
-      const res = await apiRequest('GET', `/api/hr/employee-corp/${id}`); 
+      const res = (await apiRequest('GET', `/api/hr/employee-corp/${id}`)) as unknown as Response; 
       if (!res.ok) return {}; 
       return res.json(); 
     }, 

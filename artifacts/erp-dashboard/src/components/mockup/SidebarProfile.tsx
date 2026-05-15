@@ -17,11 +17,11 @@ export function SidebarProfile() {
   const { user } = useAuth();
   const [tab, setTab] = useState<'personal' | 'all'>('personal');
 
-  const displayName = user?.full_name ?? user?.username ?? "Foydalanuvchi";
+  const displayName = user?.fullName ?? user?.username ?? "Foydalanuvchi";
   const role = user?.role ?? "Xodim";
   const initials = displayName
     .split(/\s+/)
-    .map((s) => s[0]?.toUpperCase() ?? "")
+    .map((s: string) => s[0]?.toUpperCase() ?? "")
     .slice(0, 2)
     .join("") || "?";
 

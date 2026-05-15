@@ -20,7 +20,7 @@ export function QCBolimi() {
   const { data: qcMateriallar, isLoading } = useQuery<QcBarcodeItem[]>({
     queryKey: ["/api/barcode-warehouse/barcodes", { status: "QC_HOLD" }],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/barcode-warehouse/barcodes?status=QC_HOLD");
+      const res = await apiRequest('GET', "/api/barcode-warehouse/barcodes?status=QC_HOLD") as unknown as Response;
       if (!res.ok) return [];
       const data = await res.json();
       return Array.isArray(data) ? data : [];
@@ -29,7 +29,7 @@ export function QCBolimi() {
 
   const qcMutation = useMutation({
     mutationFn: async ({ id, passed, notes }: { id: string | number; passed: boolean; notes?: string }) => {
-      const res = await apiRequest("PATCH", `/api/barcode-warehouse/qc/${id}`, { passed, notes });
+      const res = await apiRequest<{ status?: string; message?: string }>("PATCH", `/api/barcode-warehouse/qc/${id}`, { passed, notes });
       return res;
     },
     onSuccess: (data) => {

@@ -16,7 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { TaskNotification } from "@shared/schema";
 import { type T, type NotificationCategory } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export function NotificationsPanel({
   open,
@@ -25,9 +24,8 @@ export function NotificationsPanel({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>("all");
   const [selectedNotification, setSelectedNotification] = useState<TaskNotification | null>(null);

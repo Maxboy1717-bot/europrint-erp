@@ -59,9 +59,7 @@ export default function GoalsKPI() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertGoal) => {
-      const res = await apiRequest('POST', "/api/goals", data);
-      if (!res.ok) throw new Error("Failed to create goal");
-      return res.json();
+      return await apiRequest('POST', "/api/goals", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
@@ -76,9 +74,7 @@ export default function GoalsKPI() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertGoal> }) => {
-      const res = await apiRequest('PATCH', `/api/goals/${id}`, data);
-      if (!res.ok) throw new Error("Failed to update goal");
-      return res.json();
+      return await apiRequest('PATCH', `/api/goals/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
@@ -91,7 +87,7 @@ export default function GoalsKPI() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest('DELETE', `/api/goals/${id}`);
+      const res = (await apiRequest('DELETE', `/api/goals/${id}`)) as unknown as Response;
       if (!res.ok) throw new Error("Failed to delete goal");
       return id;
     },

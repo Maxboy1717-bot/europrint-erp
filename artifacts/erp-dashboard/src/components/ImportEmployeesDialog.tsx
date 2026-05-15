@@ -36,10 +36,10 @@ export function ImportEmployeesDialog({
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await apiRequest('POST', "/api/employees/import");
+      const response = await apiRequest('POST', "/api/employees/import") as unknown as Response;
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json() as { error?: string };
         throw new Error(error.error || "Import xatolik");
       }
 
@@ -49,7 +49,7 @@ export function ImportEmployeesDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       toast({
         title: "Muvaffaqiyatli",
-        description: `${data.imported} ta xodim import qilindi`,
+        description: `${(data as { imported?: number })?.imported ?? 0} ta xodim import qilindi`,
       });
       setFile(null);
       onOpenChange(false);

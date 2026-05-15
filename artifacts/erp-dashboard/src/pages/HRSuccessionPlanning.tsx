@@ -122,7 +122,7 @@ export default function HRSuccessionPlanning() {
                 form={newPlanForm}
                 onFormChange={setNewPlanForm}
                 isPending={createPlanMutation.isPending}
-                onSubmit={() => createPlanMutation.mutate(newPlanForm as Record<string, string>)}
+                onSubmit={() => createPlanMutation.mutate(newPlanForm as unknown as Record<string, string>)}
               />
             </CardHeader>
             <CareerPlansTab plans={careerPlans} isLoading={plansLoading} />

@@ -1,11 +1,12 @@
 /**
  * @module hr-dashboard.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * Stub/placeholder routes are kept in HrDashboardStubsController (same `hr` prefix, separate file).
  */
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -114,42 +115,11 @@ export class HrDashboardController {
     return unwrapOrInternal(await this.svc.getAdaptationAtRisk());
   }
 
-  @Get('adaptation/:id')
-  getAdaptationById(@Param('id') _id: string) {
-    return { adaptation: null };
-  }
-
   @Get('alumni')
   async getAlumni() {
     const rows = await this.svc.getAlumni();
     const alumni = unwrapOrInternal(rows);
     return { alumni: Array.isArray(alumni) ? alumni : [] };
-  }
-
-  @Get('alumni/:id')
-  getAlumniById(@Param('id') _id: string) {
-    return { alumni: null };
-  }
-
-  @Post('alumni/:id/invite')
-  @HttpCode(HttpStatus.OK)
-  inviteAlumni(@Param('id') _id: string, @Body() _body: unknown) {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
-  }
-
-  @Get('daily-reports')
-  getDailyReports(@Query('date') _date?: string) {
-    return { items: [], total: 0 };
-  }
-
-  @Get('daily-reports/department')
-  getDailyReportsByDept(@Query('departmentId') _departmentId?: string) {
-    return { items: [], total: 0 };
-  }
-
-  @Get('daily-reports/my')
-  getDailyReportsMy() {
-    return { items: [], total: 0 };
   }
 
   @Post('daily-reports')
@@ -165,138 +135,10 @@ export class HrDashboardController {
     return result.ok ? result.data : { created: false };
   }
 
-  @Get('offboarding/cases')
-  getOffboardingCases() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('offboarding/questions')
-  getOffboardingQuestions() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('onboarding-checklists')
-  getOnboardingChecklists() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('fp-cycle')
-  getFpCycle() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('hrc-tests/employee')
-  getHrcTestsEmployee() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('hrc-tests/public')
-  getHrcTestsPublic() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('hrc-tests/stats')
-  getHrcTestsStats() {
-    return { stats: null };
-  }
-
-  @Get('360/reviewable')
-  get360Reviewable() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('birthdays/settings')
-  getBirthdaySettings() {
-    return { settings: null };
-  }
-
   @Post('birthdays/settings')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(HrBirthdaySettingsSchema))
   saveBirthdaySettings(@Body() _body: HrBirthdaySettingsDto) {
     return { saved: true };
-  }
-
-  @Get('birthdays/settings/:id')
-  getBirthdaySettingsById(@Param('id') _id: string) {
-    return { settings: null };
-  }
-
-  @Get('ai-interview/session')
-  getAiInterviewSession() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('ai-interview/session/:id/review')
-  getAiInterviewSessionReview(@Param('id') _id: string) {
-    return { review: null };
-  }
-
-  @Get('documents/employee')
-  getEmployeeDocuments() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('documents/my')
-  getMyDocuments() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('documents/pending')
-  getPendingDocuments() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('employee-corp')
-  getEmployeeCorp() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('employees/operator-stats')
-  getEmployeeOperatorStats() {
-    return { stats: null };
-  }
-
-  @Get('enps/surveys/results')
-  getEnpsSurveyResults() {
-    return { items: [], total: 0 };
-  }
-
-  @Get('abc-analysis/:id/calculate')
-  calculateAbcAnalysis(@Param('id') _id: string) {
-    return { result: null };
-  }
-
-  @Post('abc-analysis/:id/calculate')
-  @HttpCode(HttpStatus.OK)
-  postCalculateAbcAnalysis(@Param('id') _id: string) {
-    return { result: null };
-  }
-
-  @Patch('adaptation/:id')
-  patchAdaptation(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return { adaptation: null, updated: true };
-  }
-
-  @Patch('ai-interview/session/:id/review')
-  patchAiInterviewSessionReview(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return { review: null, updated: true };
-  }
-
-  @Put('birthdays/settings/:id')
-  putBirthdaySettingsById(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return { settings: null, updated: true };
-  }
-
-  @Post('offboarding/cases')
-  @HttpCode(HttpStatus.CREATED)
-  createOffboardingCase(@Body() body: Record<string, unknown>) {
-    return { id: Date.now(), ...body, created: true };
-  }
-
-  @Post('onboarding-checklists')
-  @HttpCode(HttpStatus.CREATED)
-  createOnboardingChecklist(@Body() body: Record<string, unknown>) {
-    return { id: Date.now(), ...body, created: true };
   }
 }

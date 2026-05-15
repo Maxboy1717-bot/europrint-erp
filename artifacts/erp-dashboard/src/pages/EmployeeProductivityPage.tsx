@@ -54,8 +54,7 @@ export default function EmployeeProductivityPage() {
   >({
     queryKey: ["/api/employee-productivity"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/employee-productivity");
-      return res.json();
+      return await apiRequest("GET", "/api/employee-productivity");
     },
   });
 

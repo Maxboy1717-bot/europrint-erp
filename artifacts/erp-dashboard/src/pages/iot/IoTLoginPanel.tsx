@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { User, Languages } from "lucide-react";
 import { IotLang } from "./iot-types";
 import { EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 interface IoTLoginPanelProps {
   lang: IotLang;
@@ -23,7 +22,6 @@ interface IoTLoginPanelProps {
 }
 
 export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, workerPassword, setWorkerPassword, handleLogin }: IoTLoginPanelProps) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
 
   return (

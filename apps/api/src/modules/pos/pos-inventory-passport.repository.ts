@@ -1,4 +1,18 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - Dynamic AND-list filter composition via sql.join(filters, sql` AND `)
+ *     inlined into a `WHERE 1=1 ${whereClause}` skeleton — Drizzle's typed
+ *     query builder requires up-front knowledge of every filter column and
+ *     cannot interpolate a pre-built AND chain produced from optional inputs.
+ *   - NOW() - INTERVAL '1 hour' * ${hours} expired-quarantine arithmetic in
+ *     WHERE clause (interval-times-scalar expression has no Drizzle helper).
+ *   - 'CURRENT_DATE' SQL literal default for arrival_date passed as a value
+ *     parameter — Drizzle would bind it as a string instead of evaluating it.
+ *   - ILIKE supplier_name '%' || ${param} || '%' fuzzy matching with the
+ *     concatenated wildcards parameterized server-side.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module pos-inventory-passport.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

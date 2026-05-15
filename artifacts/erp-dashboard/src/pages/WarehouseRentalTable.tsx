@@ -28,6 +28,7 @@ import { useTranslation } from '@/lib/i18n';
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function statusBadge(status: string) {
+  const { t } = useTranslation("common");
   if (status === "active")
     return (
       <EPStatusPill tone="info">

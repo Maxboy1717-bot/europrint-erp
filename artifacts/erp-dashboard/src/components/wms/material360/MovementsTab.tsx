@@ -18,8 +18,10 @@ import { useTranslation } from '@/lib/i18n';
 export function MovementsTab({ movements, basic }: { movements: MovementsInfo; basic: BasicInfo }) {
   const { t } = useTranslation("common");
   const [filter, setFilter] = useState("all");
-  const recent = (movements.recent || []).filter(t => filter === "all" || t.transactionType === filter);
-  const monthlyData = (movements.monthlyTrend || []).map(m => ({ month: String(m.month).slice(5), kirim: m.totalIn, chiqim: m.totalOut }));
+  const rawRecent = movements?.recent;
+  const rawMonthly = movements?.monthlyTrend;
+  const recent = (Array.isArray(rawRecent) ? rawRecent : []).filter(t => filter === "all" || t.transactionType === filter);
+  const monthlyData = (Array.isArray(rawMonthly) ? rawMonthly : []).map(m => ({ month: String(m.month).slice(5), kirim: m.totalIn, chiqim: m.totalOut }));
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">

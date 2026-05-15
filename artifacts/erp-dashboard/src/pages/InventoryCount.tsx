@@ -37,10 +37,8 @@ import { CreateUpdateCountDialog } from "@/components/wms/inventory/CreateUpdate
 import { InventoryStats } from "@/components/wms/inventory/InventoryStats";
 import { CountDetailHeader } from "@/components/wms/inventory/CountDetailHeader";
 import { EPErrorState } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export default function InventoryCount() {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { language, setLanguage } = useLanguage();
   const t = useInventoryCountTranslations();

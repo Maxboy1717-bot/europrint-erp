@@ -89,8 +89,7 @@ export default function SDQuotations() {
 
   const handleViewDetails = async (quotation: Quotation) => {
     try {
-      const response = await apiRequest('GET', `/api/sd/quotations/${quotation.id}`);
-      const data = await response.json();
+      const data = (await apiRequest('GET', `/api/sd/quotations/${quotation.id}`)) as Record<string, any>;
       setSelectedQuotation(data);
       setDetailSheetOpen(true);
     } catch {
@@ -130,7 +129,7 @@ export default function SDQuotations() {
 
   const updateItem = (index: number, field: keyof QuotationLineItem, value: string | number) => {
     const newItems = [...items];
-    (newItems[index] as Record<string, string | number>)[field] = value;
+    (newItems[index] as unknown as Record<string, string | number>)[field] = value;
     if (field === "productId" && value) {
       const product = (Array.isArray(products) ? products : []).find((p) => p.id === value);
       if (product) {

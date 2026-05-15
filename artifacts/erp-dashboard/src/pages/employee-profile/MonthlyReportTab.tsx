@@ -27,7 +27,7 @@ export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
   const { data: report, isLoading, isError } = useQuery<MonthlyReport>({
     queryKey: ["/api/employees", employeeId, "monthly-report", selectedMonth],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/employees/${employeeId}/monthly-report?month=${selectedMonth}`);
+      const res = (await apiRequest("GET", `/api/employees/${employeeId}/monthly-report?month=${selectedMonth}`)) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch report");
       const json = await res.json();
       const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);

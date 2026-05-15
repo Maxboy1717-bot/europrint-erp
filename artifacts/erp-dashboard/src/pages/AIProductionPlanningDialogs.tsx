@@ -217,6 +217,7 @@ interface ConfigDialogProps {
 export function ConfigDialog({
   open, onOpenChange, threshold, onThresholdChange, onSave, isPending,
 }: ConfigDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm p-6">

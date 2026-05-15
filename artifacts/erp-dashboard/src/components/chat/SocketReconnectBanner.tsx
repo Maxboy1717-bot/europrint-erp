@@ -7,11 +7,12 @@ import { useState, useEffect } from "react";
 import { useChatSocketContext } from "@/hooks/chat/ChatSocketProvider";
 import { Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 import { EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 export function SocketReconnectBanner() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
+
   const { connected } = useChatSocketContext();
   const [showDisconnected, setShowDisconnected] = useState(false);
   const [showReconnected, setShowReconnected] = useState(false);
@@ -23,13 +24,13 @@ export function SocketReconnectBanner() {
       if (showDisconnected) {
         setShowDisconnected(false);
         setShowReconnected(true);
-        const t = setTimeout(() => setShowReconnected(false), 2500);
-        return () => clearTimeout(t);
+        const timer = setTimeout(() => setShowReconnected(false), 2500);
+        return () => clearTimeout(timer);
       }
       return undefined;
     } else if (wasEverConnected) {
-      const t = setTimeout(() => setShowDisconnected(true), 1500);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setShowDisconnected(true), 1500);
+      return () => clearTimeout(timer);
     }
     return undefined;
   }, [connected, wasEverConnected, showDisconnected]);

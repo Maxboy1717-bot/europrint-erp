@@ -19,7 +19,7 @@ interface EPLoaderProps extends React.HTMLAttributes<HTMLDivElement> {
   tone?: "primary" | "muted" | "white";
 }
 
-export function EPLoader({ size = 16, tone = "primary", className, ...props }: EPLoaderProps) {
+export function EPLoader({ size = 16, tone = "primary", className }: EPLoaderProps) {
   const colorClass =
     tone === "white" ? "text-white" :
     tone === "muted" ? "text-muted-foreground" :
@@ -28,7 +28,6 @@ export function EPLoader({ size = 16, tone = "primary", className, ...props }: E
     <Loader2
       className={cn(colorClass, "animate-spin", className)}
       style={{ width: size, height: size }}
-      {...props}
     />
   );
 }

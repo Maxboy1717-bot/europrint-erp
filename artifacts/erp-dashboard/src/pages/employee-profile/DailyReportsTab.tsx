@@ -153,6 +153,7 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
 }
 
 function OfficeReportCard({ report }: { report: DailyReport }) {
+  const { t } = useTranslation("common");
   const date = new Date(report.report_date);
   const dateStr = date.toLocaleDateString("uz-UZ", { weekday: "short", day: "numeric", month: "short" });
 

@@ -70,8 +70,7 @@ export default function MachineStatusPage() {
   } = useQuery<MachineStatus[] | { data?: MachineStatus[] }>({
     queryKey: ["/api/iot/machine-status"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/iot/machine-status");
-      return res.json();
+      return await apiRequest("GET", "/api/iot/machine-status");
     },
     enabled: tab === "current",
     refetchInterval: 30_000,
@@ -85,8 +84,7 @@ export default function MachineStatusPage() {
   } = useQuery<MachineLog[] | { data?: MachineLog[] }>({
     queryKey: ["/api/iot/machine-status-logs"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/iot/machine-status-logs?limit=50");
-      return res.json();
+      return await apiRequest("GET", "/api/iot/machine-status-logs?limit=50");
     },
     enabled: tab === "logs",
   });

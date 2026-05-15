@@ -224,7 +224,7 @@ export function OverviewTab({
             <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  {headers.map((h) => (
+                  {(Array.isArray(headers) ? headers : []).map((h) => (
                     <TableHead key={h.key} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h.label}</TableHead>
                   ))}
                 </TableRow>

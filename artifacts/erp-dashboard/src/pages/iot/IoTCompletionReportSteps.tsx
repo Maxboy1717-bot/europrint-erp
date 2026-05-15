@@ -11,7 +11,6 @@ import { CheckCircle, Star, Package, RotateCcw } from "lucide-react";
 import { IotLang, CompletionReportData } from "./iot-types";
 import { StarRating } from "./IoTCompletionReportSections";
 import { EPStatusPill, EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 // ─── Evaluation Step ──────────────────────────────────────────────────────────
 export function EvaluationStep({
@@ -36,7 +35,6 @@ export function EvaluationStep({
   evalSubmitting: boolean;
   onSubmit: () => void;
 }) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <>
@@ -98,7 +96,6 @@ export function MaterialReturnStep({
   returnSubmitting: boolean;
   onSubmit: () => void;
 }) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <>
@@ -160,7 +157,6 @@ export function DoneStep({
   returnDone: boolean;
   onClose: () => void;
 }) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   return (
     <>

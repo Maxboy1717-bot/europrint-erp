@@ -34,7 +34,7 @@ export function WeeklyReportsTab() {
   const { data, isLoading, refetch } = useQuery<{ stats: WeeklyStat[] }>({
     queryKey: ["/api/production/reports/weekly", start, end],
     queryFn: async () => {
-      const r = await apiRequest('GET', `/api/production/reports/weekly?start=${start}&end=${end}`);
+      const r = await apiRequest('GET', `/api/production/reports/weekly?start=${start}&end=${end}`) as unknown as Response;
       if (!r.ok) throw new Error("Xato");
       return r.json();
     },

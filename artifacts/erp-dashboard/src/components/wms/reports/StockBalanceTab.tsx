@@ -45,8 +45,6 @@ import { formatCurrency } from "@/lib/format";
 import { safeArray } from "@/lib/queryClient";
 import { StockBalanceData, StockBalanceItem, TranslationType, STATUS_COLORS, PIE_COLORS } from "./types";
 import { apiRequest } from '@/lib/queryClient';
-import { useTranslation } from '@/lib/i18n';
-
 interface StockBalanceTabProps {
   t: TranslationType;
   category: string;
@@ -62,21 +60,20 @@ export function StockBalanceTab({
   lowStockOnly,
   setLowStockOnly,
 }: StockBalanceTabProps) {
-  const { t } = useTranslation("common");
   const { data: stockBalanceData, isLoading: isLoadingStock, refetch: refetchStock } = useQuery<StockBalanceData>({
     queryKey: ["/api/warehouse/reports/stock-balance", category, lowStockOnly],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (category !== 'all') params.set('category', category);
       if (lowStockOnly) params.set('lowStockOnly', 'true');
-      const res = await apiRequest('GET', `/api/warehouse/reports/stock-balance?${params}`);
+      const res = await apiRequest('GET', `/api/warehouse/reports/stock-balance?${params}`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },
   });
 
   const top10ByValue = useMemo(() => {
-    return safeArray(stockBalanceData?.data)
+    return safeArray<StockBalanceItem>(stockBalanceData?.data)
       .slice()
       .sort((a: StockBalanceItem, b: StockBalanceItem) => b.value - a.value)
       .slice(0, 10)
@@ -117,9 +114,9 @@ export function StockBalanceTab({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t.common.allCategories}</SelectItem>
-              <SelectItem value="xom_ashyo">{t("xomAshyo")}</SelectItem>
-              <SelectItem value="tayyor_mahsulot">{t("tayyorMahsulot")}</SelectItem>
-              <SelectItem value="ehtiyot_qism">{t("ehtiyotQism")}</SelectItem>
+              <SelectItem value="xom_ashyo">{"Xom ashyo"}</SelectItem>
+              <SelectItem value="tayyor_mahsulot">{"Tayyor mahsulot"}</SelectItem>
+              <SelectItem value="ehtiyot_qism">{"Ehtiyot qism"}</SelectItem>
             </SelectContent>
           </Select>
         </div>

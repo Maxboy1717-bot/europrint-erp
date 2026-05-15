@@ -25,7 +25,6 @@ import { DEADLINE_COLUMNS } from "@/components/kanban/types";
 
 import type { KanbanT } from "./KanbanBoardTypes";
 import type { useKanbanBoard } from "@/hooks/useKanbanBoard";
-import { useTranslation } from '@/lib/i18n';
 
 type BoardHook = ReturnType<typeof useKanbanBoard>;
 
@@ -44,7 +43,6 @@ export function EmptyBoardState({
   onQuickStart,
   onCreateBoard,
 }: EmptyBoardStateProps) {
-  const { t } = useTranslation("common");
   return (
     <div
       className="flex flex-col items-center justify-center text-center"
@@ -199,7 +197,6 @@ export function BoardContent({
   t,
   setQuickTaskType,
 }: BoardContentProps) {
-  const { t } = useTranslation("common");
   if (boardLoading) {
     return (
       <div className="flex gap-4">

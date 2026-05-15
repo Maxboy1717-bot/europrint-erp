@@ -185,7 +185,7 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
                 <span className="text-muted-foreground">{t("songgiMuloqot")}</span>
                 <span className="font-medium">{internalIntelligence.lastInteraction.type}</span>
                 <span className="text-muted-foreground text-xs">{fmtDate(String(internalIntelligence.lastInteraction.date ?? ""))}</span>
-                {internalIntelligence.lastInteraction.by && (
+                {!!internalIntelligence.lastInteraction.by && (
                   <span className="text-xs text-muted-foreground">({String(internalIntelligence.lastInteraction.by)})</span>
                 )}
               </div>
@@ -211,9 +211,9 @@ export function SegmentationTab({ segmentation, journey, internalIntelligence }:
                     <Star className="h-3.5 w-3.5 text-[var(--ep-yellow)] shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <span>{String(a.action ?? "")}</span>
-                      {a.date && <span className="text-xs text-muted-foreground ml-2">{fmtDate(String(a.date))}</span>}
+                      {!!a.date && <span className="text-xs text-muted-foreground ml-2">{fmtDate(String(a.date))}</span>}
                     </div>
-                    {a.by && <span className="text-xs text-muted-foreground shrink-0">{String(a.by)}</span>}
+                    {!!a.by && <span className="text-xs text-muted-foreground shrink-0">{String(a.by)}</span>}
                   </div>
                 ))}
               </div>

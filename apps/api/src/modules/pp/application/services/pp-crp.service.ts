@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   GREATEST/LEAST clamping inside SELECT projection, regex-pattern date
+ *   validation on text column (planned_start_date ~ '^[0-9]{4}-...'),
+ *   conditional CAST after regex check, and INTERVAL arithmetic with a
+ *   parameterised day-count (CURRENT_DATE + INTERVAL '1 day' * ${days}).
+ *   These appear in loadWorkCenters/loadPlannedOrders which feed the CRP math.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module pp-crp.service
  * @description Capacity Requirements Planning. Takes the planned-orders
  *   from MRP and loads them against each work-center's available capacity
@@ -114,7 +123,7 @@ export class PpCrpService {
       WHERE is_active = true AND deleted_at IS NULL
       ORDER BY id
     `);
-    return r.rows ?? [];
+    return Array.isArray(r?.rows) ? r.rows : (Array.isArray(r) ? r : []);
   }
 
   private async loadRoutingOps(): Promise<Record<string, unknown>[]> {
@@ -129,7 +138,7 @@ export class PpCrpService {
       WHERE is_active = true
         AND work_center_id IS NOT NULL
     `);
-    return r.rows ?? [];
+    return Array.isArray(r?.rows) ? r.rows : (Array.isArray(r) ? r : []);
   }
 
   private async loadPlannedOrders(): Promise<Record<string, unknown>[]> {
@@ -145,7 +154,7 @@ export class PpCrpService {
       ORDER BY planned_start_date
       LIMIT 200
     `);
-    return r.rows ?? [];
+    return Array.isArray(r?.rows) ? r.rows : (Array.isArray(r) ? r : []);
   }
 
   private computeLoads(

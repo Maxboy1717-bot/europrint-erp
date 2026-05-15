@@ -42,7 +42,7 @@ interface ReceivingListProps {
 }
 
 export function ReceivingList({
-  receipts,
+  receipts = [],
   isLoading,
   searchQuery,
   setSearchQuery,
@@ -55,6 +55,7 @@ export function ReceivingList({
   onViewDetail,
 }: ReceivingListProps) {
   const t = useGoodsReceivingTranslations();
+  const safeReceipts = Array.isArray(receipts) ? receipts : [];
 
   return (
     <div className="bg-card rounded-xl p-6">
@@ -126,7 +127,7 @@ export function ReceivingList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(receipts) ? receipts : []).map((receipt) => (
+              {safeReceipts.map((receipt) => (
                 <TableRow key={receipt.id} data-testid={`row-receipt-${receipt.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{receipt.receiptNumber}</TableCell>
                   <TableCell>{receipt.receiptDate}</TableCell>
@@ -153,7 +154,7 @@ export function ReceivingList({
                   </TableCell>
                 </TableRow>
               ))}
-              {receipts.length === 0 && (
+              {safeReceipts.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                     {t.noDataFound}

@@ -77,20 +77,30 @@ export class AiPlannerService {
   }
 
   cpm(tasks: CpmTask[]): CpmResult[] {
-    const map  = new Map(tasks.map((t) => [t.id, t]));
-    const es:  Record<string, number> = {};
-    const ef:  Record<string, number> = {};
+    const { es, ef } = this.cpmForwardPass(tasks);
+    const maxEf = Math.max(...Object.values(ef));
+    const { ls, lf } = this.cpmBackwardPass(tasks, ls0 => ls0, maxEf);
+    return tasks.map((task) => this.buildCpmResult(task, es, ef, ls, lf));
+  }
 
+  private cpmForwardPass(tasks: CpmTask[]): { es: Record<string, number>; ef: Record<string, number> } {
+    const es: Record<string, number> = {};
+    const ef: Record<string, number> = {};
     for (const task of tasks) {
       const predEf = task.predecessors.map((pid) => ef[pid] ?? 0);
-      es[task.id]  = predEf.length > 0 ? Math.max(...predEf) : 0;
-      ef[task.id]  = es[task.id] + task.duration;
+      es[task.id] = predEf.length > 0 ? Math.max(...predEf) : 0;
+      ef[task.id] = es[task.id] + task.duration;
     }
+    return { es, ef };
+  }
 
-    const maxEf  = Math.max(...Object.values(ef));
+  private cpmBackwardPass(
+    tasks: CpmTask[],
+    _seed: (x: Record<string, number>) => Record<string, number>,
+    maxEf: number,
+  ): { ls: Record<string, number>; lf: Record<string, number> } {
     const lf: Record<string, number> = {};
     const ls: Record<string, number> = {};
-
     for (const task of [...tasks].reverse()) {
       const succLs = tasks
         .filter((t) => t.predecessors.includes(task.id))
@@ -98,20 +108,27 @@ export class AiPlannerService {
       lf[task.id] = succLs.length > 0 ? Math.min(...succLs) : maxEf;
       ls[task.id] = lf[task.id] - task.duration;
     }
+    return { ls, lf };
+  }
 
-    return tasks.map((task) => {
-      const tf = ls[task.id] - es[task.id];
-      return {
-        taskId:      task.id,
-        es:          es[task.id] ?? 0,
-        ef:          ef[task.id] ?? 0,
-        ls:          ls[task.id] ?? 0,
-        lf:          lf[task.id] ?? 0,
-        totalFloat:  tf,
-        isCritical:  tf === 0,
-        isAtRisk:    tf <= 1 && tf > 0,
-      };
-    });
+  private buildCpmResult(
+    task: CpmTask,
+    es: Record<string, number>,
+    ef: Record<string, number>,
+    ls: Record<string, number>,
+    lf: Record<string, number>,
+  ): CpmResult {
+    const tf = ls[task.id] - es[task.id];
+    return {
+      taskId:     task.id,
+      es:         es[task.id] ?? 0,
+      ef:         ef[task.id] ?? 0,
+      ls:         ls[task.id] ?? 0,
+      lf:         lf[task.id] ?? 0,
+      totalFloat: tf,
+      isCritical: tf === 0,
+      isAtRisk:   tf <= 1 && tf > 0,
+    };
   }
 
   calcEoq(annualDemand: number, orderingCostUzs: number, holdingCostPct: number, unitCostUzs: number): EoqResult {

@@ -147,6 +147,7 @@ interface BudgetSectionProps {
   stats: DashboardStats | undefined;
 }
 export function BudgetSection({ stats }: BudgetSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 mb-6">
       <div className="flex items-center gap-2 mb-4">

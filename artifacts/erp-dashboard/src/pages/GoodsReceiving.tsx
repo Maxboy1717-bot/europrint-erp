@@ -25,12 +25,10 @@ import {
   useGoodsReceivingLookups,
 } from "@/components/wms/receiving/useGoodsReceivingHooks";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export default function GoodsReceiving() {
-  const { t } = useTranslation("common");
   const { language, setLanguage } = useLanguage();
-  const t = useGoodsReceivingTranslations();
+  const t = useGoodsReceivingTranslations() as ReturnType<typeof useGoodsReceivingTranslations> & ((key: string) => string);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");

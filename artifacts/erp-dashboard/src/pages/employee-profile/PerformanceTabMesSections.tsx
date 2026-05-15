@@ -116,6 +116,7 @@ function MesKpiCards({ mesSummary }: { mesSummary: MesSummary }) {
 }
 
 function MesStatsRow({ mesSummary }: { mesSummary: MesSummary }) {
+  const { t } = useTranslation("common");
   const { summary, mostFrequentReason } = mesSummary;
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -223,6 +224,7 @@ function MesCharts({ mesSummary }: { mesSummary: MesSummary }) {
 }
 
 function MesRecentStoppages({ mesSummary }: { mesSummary: MesSummary }) {
+  const { t } = useTranslation("common");
   if (!mesSummary.recentStoppages.length) return null;
   return (
     <Card>

@@ -121,6 +121,7 @@ interface QFormState { question: string; question_ru: string; question_en: strin
 interface AddQuestionFormProps { qForm: QFormState; setQForm: (f: QFormState) => void; onSubmit: (e: React.FormEvent) => void; isPending: boolean; onCancel: () => void; }
 
 export function AddQuestionForm({ qForm, setQForm, onSubmit, isPending, onCancel }: AddQuestionFormProps) {
+  const { t } = useTranslation("common");
   return (
     <Card data-testid="card-add-question">
       <CardHeader><CardTitle className="text-base">{t("yangiSavolQoshish")}</CardTitle></CardHeader>

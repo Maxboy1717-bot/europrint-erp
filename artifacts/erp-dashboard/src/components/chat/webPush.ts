@@ -22,7 +22,7 @@ export async function registerWebPush(vapidPublicKey: string): Promise<boolean> 
 
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer,
     });
     await sendSubscription(subscription);
     return true;

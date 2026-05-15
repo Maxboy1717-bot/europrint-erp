@@ -125,6 +125,7 @@ interface CashAdvanceDialogProps {
 }
 
 export function CashAdvanceDialog({ tCommon, open, onOpenChange, form, setForm, mutation }: CashAdvanceDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>

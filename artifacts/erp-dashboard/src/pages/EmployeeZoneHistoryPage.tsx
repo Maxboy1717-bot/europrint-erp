@@ -56,8 +56,7 @@ export default function EmployeeZoneHistoryPage() {
       const params = new URLSearchParams({ employeeId: searched });
       if (fromDate) params.set("from", fromDate);
       if (toDate)   params.set("to",   toDate);
-      const res = await apiRequest("GET", `/api/employee-zone-history?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/employee-zone-history?${params}`);
     },
     enabled: !!searched,
   });

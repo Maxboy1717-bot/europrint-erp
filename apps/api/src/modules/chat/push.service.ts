@@ -89,17 +89,7 @@ export class PushService {
   private async sendWebPush(sub: Record<string, unknown>, payload: PushPayload): Promise<boolean> {
     const endpoint = String(sub['endpoint'] ?? '');
     if (!endpoint) return false;
-
-    const vapidPublic  = this.config.get<string>('VAPID_PUBLIC_KEY');
-    const vapidPrivate = this.config.get<string>('VAPID_PRIVATE_KEY');
-    const vapidSubject = this.config.get<string>('VAPID_SUBJECT') ?? 'mailto:admin@europrint.uz';
-
-    if (!vapidPublic || !vapidPrivate) {
-      this.logger.warn('VAPID keys not configured — WEB_PUSH skipped');
-      return false;
-    }
-
-    webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
+    if (!this.configureVapid()) return false;
 
     const subscription: webpush.PushSubscription = {
       endpoint,
@@ -108,7 +98,6 @@ export class PushService {
         auth:   String(sub['auth'] ?? ''),
       },
     };
-
     const body = JSON.stringify({
       title: payload.title,
       body:  payload.body,
@@ -116,9 +105,20 @@ export class PushService {
       icon:  payload.icon ?? '/icons/icon-192.png',
       data:  payload.data ?? {},
     });
-
     await webpush.sendNotification(subscription, body);
     this.logger.log(`WEB_PUSH delivered → ${endpoint.slice(0, 40)}...`);
+    return true;
+  }
+
+  private configureVapid(): boolean {
+    const vapidPublic  = this.config.get<string>('VAPID_PUBLIC_KEY');
+    const vapidPrivate = this.config.get<string>('VAPID_PRIVATE_KEY');
+    const vapidSubject = this.config.get<string>('VAPID_SUBJECT') ?? 'mailto:admin@europrint.uz';
+    if (!vapidPublic || !vapidPrivate) {
+      this.logger.warn('VAPID keys not configured — WEB_PUSH skipped');
+      return false;
+    }
+    webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
     return true;
   }
 

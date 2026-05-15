@@ -1,6 +1,14 @@
 /**
  * Agent harakatlari audit log
  */
+
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: `::jsonb` cast on JSON.stringify results for input_summary /
+ *   output_summary jsonb columns, and the target table `agents_audit_log` is
+ *   not present in the Drizzle schema barrel.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';

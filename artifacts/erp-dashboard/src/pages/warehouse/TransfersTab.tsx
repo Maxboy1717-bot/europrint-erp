@@ -88,7 +88,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
 
   const handleViewTransfer = async (transfer: TransferData) => {
     try {
-      const res = await apiRequest('GET', `/api/warehouse/transfers/${transfer.id}`);
+      const res = (await apiRequest('GET', `/api/warehouse/transfers/${transfer.id}`)) as unknown as Response;
       if (res.ok) {
         setSelectedTransfer(await res.json());
         setIsDetailOpen(true);

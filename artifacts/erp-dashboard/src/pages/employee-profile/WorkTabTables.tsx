@@ -31,13 +31,12 @@ import type {
   TranslationFn,
 } from "./WorkTabTypes";
 import { CONTRACT_TYPE_COLORS, buildChangeTypeLabels, buildContractTypeLabels } from "./WorkTabTypes";
-import { useTranslation } from "@/lib/i18n";
 
 // ─── Single contract card ─────────────────────────────────────────────────────
 
 interface ContractCardProps {
   contract: EmploymentContract;
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
 }
 
@@ -144,7 +143,7 @@ export function ContractCard({ contract, t, tCommon }: ContractCardProps) {
 // ─── Salary history table ─────────────────────────────────────────────────────
 
 interface SalaryHistoryTableProps {
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
   loadingSalaryHistory: boolean;
   salaryHistory: SalaryHistoryRecord[] | undefined;
@@ -156,7 +155,6 @@ export function SalaryHistoryTable({
   loadingSalaryHistory,
   salaryHistory,
 }: SalaryHistoryTableProps) {
-  const { t } = useTranslation("common");
   if (loadingSalaryHistory) {
     return (
       <div className="space-y-3">
@@ -231,7 +229,7 @@ export function SalaryHistoryTable({
 // ─── Position transfers card ──────────────────────────────────────────────────
 
 interface TransfersCardProps {
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
   transfers: TransferRecord[] | undefined;
 }

@@ -15,6 +15,7 @@ import {
   Package, AlertTriangle,
   ArrowUpCircle,
   RefreshCw, Search,
+  List, Settings2,
 } from "lucide-react";
 
 import {

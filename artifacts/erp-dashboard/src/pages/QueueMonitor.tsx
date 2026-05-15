@@ -36,16 +36,14 @@ export default function QueueMonitor() {
     queryKey: ["/api/admin/queues/failed", selectedQueue],
     queryFn: async () => {
       if (!selectedQueue) return { queue: "", total: 0, jobs: [] };
-      const res = await apiRequest("GET", `/api/admin/queues/failed/${selectedQueue}`);
-      return res.json();
+      return await apiRequest("GET", `/api/admin/queues/failed/${selectedQueue}`);
     },
     enabled: !!selectedQueue,
   });
 
   const retryMutation = useMutation({
     mutationFn: async ({ queueName, jobId }: { queueName: string; jobId: string }) => {
-      const res = await apiRequest("POST", `/api/admin/queues/retry/${queueName}/${jobId}`);
-      return res.json();
+      return await apiRequest("POST", `/api/admin/queues/retry/${queueName}/${jobId}`);
     },
     onSuccess: () => {
       toast({ title: "Muvaffaqiyatli", description: "Job qayta ishga tushirildi" });
@@ -59,8 +57,7 @@ export default function QueueMonitor() {
 
   const clearFailedMutation = useMutation({
     mutationFn: async (queueName: string) => {
-      const res = await apiRequest("DELETE", `/api/admin/queues/failed/${queueName}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/admin/queues/failed/${queueName}`);
     },
     onSuccess: (_, queueName) => {
       toast({ title: "Tozalandi", description: `${queueName} failed jobs tozalandi` });

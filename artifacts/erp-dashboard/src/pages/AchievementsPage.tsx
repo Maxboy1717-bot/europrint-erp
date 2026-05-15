@@ -49,8 +49,7 @@ export default function AchievementsPage() {
   const { data: rawData, isLoading, isError, refetch } = useQuery<Achievement[] | { data?: Achievement[]; achievements?: Achievement[] }>({
     queryKey: ["/api/achievements"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/achievements");
-      return res.json();
+      return await apiRequest("GET", "/api/achievements");
     },
   });
 

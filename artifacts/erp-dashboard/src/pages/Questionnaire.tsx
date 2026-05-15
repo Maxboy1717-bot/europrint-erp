@@ -132,7 +132,7 @@ export default function Questionnaire() {
 
   const handleDownloadWord = async (responseId: string, fullName: string) => {
     try {
-      const res = await apiRequest('GET', `/api/questionnaire/responses/${responseId}/export`);
+      const res = (await apiRequest('GET', `/api/questionnaire/responses/${responseId}/export`)) as unknown as Response;
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();

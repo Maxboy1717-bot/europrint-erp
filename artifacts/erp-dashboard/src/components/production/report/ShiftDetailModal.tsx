@@ -54,7 +54,7 @@ export function ShiftDetailModal({ reportId, open, onClose }: ShiftDetailModalPr
   }>({
     queryKey: ["/api/production/shift-reports", reportId],
     queryFn: async () => {
-      const r = await apiRequest('GET', `/api/production/shift-reports/${reportId}`);
+      const r = await apiRequest('GET', `/api/production/shift-reports/${reportId}`) as unknown as Response;
       if (!r.ok) throw new Error("Xato");
       return r.json();
     },

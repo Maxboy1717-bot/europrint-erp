@@ -30,6 +30,16 @@ interface PublicDocVerify {
   isValid:        boolean;
 }
 
+interface PublicDocRow {
+  id: string; document_number: string; subject: string; workflow_state: string;
+  template_name: string; sender_name: string | null; created_at: string; archived_at: string | null;
+}
+
+interface PublicApprovalRow {
+  step_order: number; approver_name: string | null; state: string;
+  signed_at: string | null; signature_hash: string | null;
+}
+
 @Throttle({ default: { limit: 10, ttl: 60_000 } })   // 10 req/min — siqiq limit (enumeration hujumidan himoya)
 @Controller('cc/verify')
 export class CcPublicController {
@@ -39,11 +49,25 @@ export class CcPublicController {
    */
   @Get(':id')
   async verify(@Param('id') id: string): Promise<PublicDocVerify> {
-    // Hujjat
-    const docRes = await runQuery<{
-      id: string; document_number: string; subject: string; workflow_state: string;
-      template_name: string; sender_name: string | null; created_at: string; archived_at: string | null;
-    }>(sql`
+    const doc = await this.loadDocRow(id);
+    const apprRows = await this.loadApprovalRows(id);
+    const signatures = this.mapSignatures(apprRows);
+
+    return {
+      documentNumber: doc.document_number,
+      subject:        doc.subject,
+      workflowState:  doc.workflow_state,
+      templateName:   doc.template_name,
+      senderName:     doc.sender_name,
+      createdAt:      doc.created_at,
+      approvedAt:     this.latestSignedAt(signatures),
+      signatures,
+      isValid:        doc.workflow_state === 'approved' || doc.workflow_state === 'archived',
+    };
+  }
+
+  private async loadDocRow(id: string): Promise<PublicDocRow> {
+    const docRes = await runQuery<PublicDocRow>(sql`
       SELECT
         d.id::text                                  AS id,
         d.document_number                           AS document_number,
@@ -60,12 +84,11 @@ export class CcPublicController {
     `);
     const doc = docRes.rows[0];
     if (!doc) throw new NotFoundException('Hujjat topilmadi yoki QR kod noto\'g\'ri');
+    return doc;
+  }
 
-    // Imzolar zanjiri
-    const apprRes = await runQuery<{
-      step_order: number; approver_name: string | null; state: string;
-      signed_at: string | null; signature_hash: string | null;
-    }>(sql`
+  private async loadApprovalRows(id: string): Promise<PublicApprovalRow[]> {
+    const apprRes = await runQuery<PublicApprovalRow>(sql`
       SELECT
         a.step_order,
         NULLIF(TRIM(COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')), '') AS approver_name,
@@ -77,8 +100,11 @@ export class CcPublicController {
       WHERE a.document_id = ${id}
       ORDER BY a.step_order ASC, a.created_at ASC
     `);
+    return apprRes.rows;
+  }
 
-    const signatures: PublicSignature[] = apprRes.rows.map((row) => ({
+  private mapSignatures(rows: PublicApprovalRow[]): PublicSignature[] {
+    return rows.map((row) => ({
       stepOrder:     row.step_order,
       approverName:  row.approver_name,
       state:         row.state,
@@ -86,20 +112,12 @@ export class CcPublicController {
       // Faqat oxirgi 12 belgi (privacy) — to'liq hash audit ichida qoladi
       signatureHash: row.signature_hash ? '...' + row.signature_hash.slice(-12) : null,
     }));
+  }
 
-    return {
-      documentNumber: doc.document_number,
-      subject:        doc.subject,
-      workflowState:  doc.workflow_state,
-      templateName:   doc.template_name,
-      senderName:     doc.sender_name,
-      createdAt:      doc.created_at,
-      approvedAt:     signatures.reduce<string | null>((latest, s) => {
-        if (!s.signedAt) return latest;
-        return !latest || s.signedAt > latest ? s.signedAt : latest;
-      }, null),
-      signatures,
-      isValid:        doc.workflow_state === 'approved' || doc.workflow_state === 'archived',
-    };
+  private latestSignedAt(signatures: PublicSignature[]): string | null {
+    return signatures.reduce<string | null>((latest, s) => {
+      if (!s.signedAt) return latest;
+      return !latest || s.signedAt > latest ? s.signedAt : latest;
+    }, null);
   }
 }

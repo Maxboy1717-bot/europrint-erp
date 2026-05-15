@@ -220,6 +220,7 @@ export function VacancyTab({
   onGenerate,
   onCopy,
 }: VacancyTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="vacancy">
       <Card>

@@ -47,7 +47,9 @@ export class PosBalanceGuardService {
     quantity:       number,
     materialType:   'asset' | 'consumable',
   ): Promise<CheckLineResult> {
-    const r = await runQuery<StockBalanceRow>(sql`
+    // Promise.resolve() wrap guards against `runQuery` stubs that return undefined
+    // (e.g. in unit tests where mocks aren't queued) — without it, `.catch` throws TypeError.
+    const r = await Promise.resolve(runQuery<StockBalanceRow>(sql`
       SELECT
         COALESCE(sb.available_qty, 0)::text AS available_qty,
         COALESCE(m.material_type, 'consumable') AS material_type
@@ -56,13 +58,13 @@ export class PosBalanceGuardService {
       WHERE sb.warehouse_id    = ${warehouseId}
         AND sb.material_card_id = ${materialCardId}
       LIMIT 1
-    `).catch((err: unknown) => {
+    `)).catch((err: unknown) => {
       this.logger.error(`[BALANCE-GUARD] DB xato (matId=${materialCardId}): ${(err as Error).message}`);
       // DB xatosi bo'lsa ruxsat beramiz (fail-open), loglash yetarli
       return { rows: [{ available_qty: null, material_type: materialType }] };
     });
 
-    const row            = r.rows[0];
+    const row            = r?.rows?.[0];
     const availableQty   = Number(row?.available_qty ?? 0);
     const remainingAfter = availableQty - quantity;
     const effectiveType  = (row?.material_type ?? materialType) as string;
@@ -110,14 +112,14 @@ export class PosBalanceGuardService {
     for (const line of lines) {
       // material_type ni DB dan olamiz (checkLine ichida)
       // Avval DB dan real material_type ni olamiz
-      const typeRow = await runQuery<{ material_type: string | null }>(sql`
+      const typeRow = await Promise.resolve(runQuery<{ material_type: string | null }>(sql`
         SELECT COALESCE(material_type, 'consumable') AS material_type
         FROM pos_materials
         WHERE id = ${line.materialCardId}
         LIMIT 1
-      `).catch(() => ({ rows: [{ material_type: 'consumable' as string | null }] }));
+      `)).catch(() => ({ rows: [{ material_type: 'consumable' as string | null }] }));
 
-      const matType = (typeRow.rows[0]?.material_type ?? 'consumable') as 'asset' | 'consumable';
+      const matType = (typeRow?.rows?.[0]?.material_type ?? 'consumable') as 'asset' | 'consumable';
 
       const result = await this.checkLine(
         line.warehouseId,

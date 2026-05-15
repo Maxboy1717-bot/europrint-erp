@@ -106,34 +106,38 @@ export class ResourcesCompatService {
     return safeCall(async () => {
       const lim = Math.min(si(limit, 200), MAX_LARGE_QUERY_LIMIT);
       const off = (Math.max(1, si(page, 1)) - 1) * lim;
-      const result = await rawSql(sql`
-        SELECT
-          od.id::text                                   AS id,
-          COALESCE(od.name, '')                         AS name,
-          od.name_ru                                    AS "nameRu",
-          od.tskp                                       AS tskp,
-          od.tskp_ru                                    AS "tskpRu",
-          od.hierarchy_level                            AS "hierarchyLevel",
-          COALESCE(od.node_type, 'department')          AS "nodeType",
-          od.parent_id                                  AS "parentId",
-          od.head_user_id::text                         AS "headUserId",
-          (u.first_name || ' ' || u.last_name)          AS "headUserName",
-          u.employee_id                                 AS "headEmployeeId",
-          od.color                                      AS color,
-          od.description                                AS description,
-          (SELECT COUNT(*)::int
-             FROM employee_org_departments eod
-             JOIN users eu ON eu.id = eod.user_id
-            WHERE eod.org_department_id = od.id)        AS "employeeCount"
-        FROM org_departments od
-        LEFT JOIN users u
-          ON u.id = od.head_user_id
-        WHERE od.is_active = true
-        ORDER BY od.level NULLS FIRST, od.sort_order, od.id
-        LIMIT ${lim} OFFSET ${off}
-      `);
+      const result = await this.queryOrgDepartments(lim, off);
       return dbRows(result);
     });
+  }
+
+  private queryOrgDepartments(lim: number, off: number) {
+    return rawSql(sql`
+      SELECT
+        od.id::text                                   AS id,
+        COALESCE(od.name, '')                         AS name,
+        od.name_ru                                    AS "nameRu",
+        od.tskp                                       AS tskp,
+        od.tskp_ru                                    AS "tskpRu",
+        od.hierarchy_level                            AS "hierarchyLevel",
+        COALESCE(od.node_type, 'department')          AS "nodeType",
+        od.parent_id                                  AS "parentId",
+        od.head_user_id::text                         AS "headUserId",
+        (u.first_name || ' ' || u.last_name)          AS "headUserName",
+        u.employee_id                                 AS "headEmployeeId",
+        od.color                                      AS color,
+        od.description                                AS description,
+        (SELECT COUNT(*)::int
+           FROM employee_org_departments eod
+           JOIN users eu ON eu.id = eod.user_id
+          WHERE eod.org_department_id = od.id)        AS "employeeCount"
+      FROM org_departments od
+      LEFT JOIN users u
+        ON u.id = od.head_user_id
+      WHERE od.is_active = true
+      ORDER BY od.level NULLS FIRST, od.sort_order, od.id
+      LIMIT ${lim} OFFSET ${off}
+    `);
   }
 
   async getDepartment(id: string){

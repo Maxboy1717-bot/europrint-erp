@@ -3,6 +3,17 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: CASE WHEN expression in SET clause (atomic increment +
+ *   conditional lockout: `failed_login_attempts + 1` with `CASE WHEN ... >= 5
+ *   THEN NOW() + INTERVAL '15 minutes' ELSE locked_until END`), column-to-
+ *   column self-reference in UPDATE (`failed_login_attempts = failed_login_attempts + 1`),
+ *   `ON CONFLICT (token) DO UPDATE SET is_revoked = true`, and dynamic SQL
+ *   fragment composition (variable WHERE clause via `${where}` SQL param).
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
 import { createHash } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { IAuthRepo } from '../../domain/repositories/i-auth.repo';

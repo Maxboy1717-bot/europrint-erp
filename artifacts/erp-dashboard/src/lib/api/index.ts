@@ -21,8 +21,8 @@ export * from "./ai";
 export * from "./chat";
 export * from "./misc";
 
-export * from "./lms";
+export { lmsApi } from "./lms";
 export * from "./erp";
-export * from "./camera";
+export { cameraApi } from "./camera";
 export * from "./inventory";
 export * from "./operations";

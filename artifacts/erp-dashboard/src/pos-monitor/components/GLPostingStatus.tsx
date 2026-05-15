@@ -6,8 +6,6 @@
 import { useState, useEffect } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { glApi } from "../api/pos-monitor.api";
-import { useTranslation } from '@/lib/i18n';
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface GlEntry {
   id: number;
@@ -73,7 +71,7 @@ function FullCard({
   onApproved: () => void;
   t: (k: string) => string;
 }) {
-  const { t } = useTranslation("common");
+
   const [busy, setBusy]   = useState(false);
   const [err, setErr]     = useState("");
   const isFinance = getPosRole().includes("finance") || getPosRole().includes("admin");

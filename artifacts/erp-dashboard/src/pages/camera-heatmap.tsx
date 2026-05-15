@@ -36,10 +36,8 @@ import { EmployeeTabContent } from "./camera-heatmap-employee";
 import { ZoneTabContent }     from "./camera-heatmap-zone";
 import { apiRequest } from '@/lib/queryClient';
 import { EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export default function CameraHeatmap() {
-  const { t } = useTranslation("common");
   const { isAuthenticated } = useAuth();
 
   const [language, setLanguage]                         = useState<Language>("uz");
@@ -58,9 +56,7 @@ export default function CameraHeatmap() {
   const { data: heatmapResponse, isLoading } = useQuery<HeatmapData>({
     queryKey: ["/api/camera-heatmap/data", selectedPeriod, selectedMetric],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/camera-heatmap/data?period=${selectedPeriod}&metric=${selectedMetric}`);
-      if (!res.ok) throw new Error("Failed to fetch heatmap data");
-      return res.json();
+      return await apiRequest('GET', `/api/camera-heatmap/data?period=${selectedPeriod}&metric=${selectedMetric}`);
     },
     enabled: !!isAuthenticated,
   });
@@ -73,9 +69,7 @@ export default function CameraHeatmap() {
   const { data: employeeHeatmap, isLoading: employeeLoading } = useQuery<EmployeeHeatmapData>({
     queryKey: ["/api/camera-heatmap/employee", selectedEmployeeId, selectedPeriod],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/camera-heatmap/employee/${selectedEmployeeId}?period=${selectedPeriod}`);
-      if (!res.ok) throw new Error("Failed to fetch employee heatmap");
-      return res.json();
+      return await apiRequest('GET', `/api/camera-heatmap/employee/${selectedEmployeeId}?period=${selectedPeriod}`);
     },
     enabled: !!isAuthenticated && !!selectedEmployeeId && viewMode === "employee",
   });
@@ -89,9 +83,7 @@ export default function CameraHeatmap() {
     useQuery<ZoneActivityResponse>({
       queryKey: ["/api/erp/team-analytics/zone-activity", selectedDepartmentId, selectedPeriod],
       queryFn: async () => {
-        const res = await apiRequest('GET', `/api/erp/team-analytics/zone-activity/${selectedDepartmentId}?period=${selectedPeriod}`);
-        if (!res.ok) throw new Error("Failed to fetch zone activity data");
-        return res.json();
+        return await apiRequest('GET', `/api/erp/team-analytics/zone-activity/${selectedDepartmentId}?period=${selectedPeriod}`);
       },
       enabled: !!isAuthenticated && !!selectedDepartmentId && viewMode === "zone",
     });
@@ -142,8 +134,8 @@ export default function CameraHeatmap() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("issiqlikXaritasi")}</b></>}
-        title={t("issiqlikXaritasi")}
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
+        title={t.title}
         subtitle={t.subtitle}
       />
         </div>

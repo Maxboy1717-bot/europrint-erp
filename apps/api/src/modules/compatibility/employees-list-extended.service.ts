@@ -133,38 +133,42 @@ export class EmployeesListExtendedService {
     return safeCall(async () => {
       const numericId = parseInt(id, 10);
       if (!Number.isFinite(numericId)) return null;
-      const rows = await rawSql(sql`
-        SELECT
-          e.id::text                                                     AS id,
-          COALESCE(e.employee_code, '')                                  AS "employeeId",
-          TRIM(COALESCE(e.first_name, '') || ' ' || COALESCE(e.last_name, '')) AS "fullName",
-          COALESCE(e.email_work, e.email_personal, '')                   AS email,
-          COALESCE(e.status, 'active')                                   AS status,
-          e.phone_number                                                 AS phone,
-          e.hire_date::text                                              AS "hireDate",
-          e.birth_date::text                                             AS "birthDate",
-          e.address_actual                                               AS address,
-          e.telegram_chat_id                                             AS "telegramChatId",
-          e.photo_url                                                    AS "profileImageUrl",
-          NULL::text                                                     AS "attestationDate",
-          e.department_id::text                                          AS "departmentId",
-          e.position_id::text                                            AS "positionId",
-          COALESCE(d.name_uz, d.name)                                    AS "departmentName",
-          COALESCE(p.name_uz, p.name, '')                                AS "positionName",
-          NULL::text                                                     AS "orgDepartmentName",
-          NULL::text                                                     AS "orgPositionName",
-          0 AS "coursesTotal", 0 AS "rating", 0 AS "bonusAmount",
-          0 AS "failedTests", 0 AS "disciplineCount"
-        FROM employees e
-        LEFT JOIN departments d ON d.id = e.department_id
-        LEFT JOIN positions p   ON p.id = e.position_id
-        WHERE e.id = ${numericId} AND e.deleted_at IS NULL
-        LIMIT 1
-      `);
+      const rows = await this.fetchEmployeeByIdRows(numericId);
       const data = dbRows<EmployeeListRow>(rows);
       const safe = Array.isArray(data) ? data : [];
       return safe[0] ?? null;
     });
+  }
+
+  private fetchEmployeeByIdRows(numericId: number) {
+    return rawSql(sql`
+      SELECT
+        e.id::text                                                     AS id,
+        COALESCE(e.employee_code, '')                                  AS "employeeId",
+        TRIM(COALESCE(e.first_name, '') || ' ' || COALESCE(e.last_name, '')) AS "fullName",
+        COALESCE(e.email_work, e.email_personal, '')                   AS email,
+        COALESCE(e.status, 'active')                                   AS status,
+        e.phone_number                                                 AS phone,
+        e.hire_date::text                                              AS "hireDate",
+        e.birth_date::text                                             AS "birthDate",
+        e.address_actual                                               AS address,
+        e.telegram_chat_id                                             AS "telegramChatId",
+        e.photo_url                                                    AS "profileImageUrl",
+        NULL::text                                                     AS "attestationDate",
+        e.department_id::text                                          AS "departmentId",
+        e.position_id::text                                            AS "positionId",
+        COALESCE(d.name_uz, d.name)                                    AS "departmentName",
+        COALESCE(p.name_uz, p.name, '')                                AS "positionName",
+        NULL::text                                                     AS "orgDepartmentName",
+        NULL::text                                                     AS "orgPositionName",
+        0 AS "coursesTotal", 0 AS "rating", 0 AS "bonusAmount",
+        0 AS "failedTests", 0 AS "disciplineCount"
+      FROM employees e
+      LEFT JOIN departments d ON d.id = e.department_id
+      LEFT JOIN positions p   ON p.id = e.position_id
+      WHERE e.id = ${numericId} AND e.deleted_at IS NULL
+      LIMIT 1
+    `);
   }
 
   /**

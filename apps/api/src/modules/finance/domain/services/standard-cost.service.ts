@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   INSERT ... ON CONFLICT (product_name, period) DO UPDATE SET ... = EXCLUDED.*
+ *   composite-key upsert (used in two code paths depending on whether product_id is
+ *   known), plus computed select column `std_material_uzs + std_labor_uzs +
+ *   std_overhead_uzs AS std_total_uzs` returned alongside its components.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * @module standard-cost.service
  * @description Maintains and queries the "standard cost" reference table —
  *   the expected per-unit cost of a product before any real production

@@ -13,8 +13,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Translations } from "./types";
-
-import { useTranslation } from '@/lib/i18n';
 interface AddBatchDialogProps {
   t: Translations;
   lang: "uz" | "ru";
@@ -47,7 +45,6 @@ export function AddBatchDialog({t,
   handleAddBatch,
   isPending,
 }: AddBatchDialogProps) {
-  const { t } = useTranslation("common");
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
@@ -107,7 +104,7 @@ export function AddBatchDialog({t,
                   <SelectItem value="m2">m2</SelectItem>
                   <SelectItem value="dona">dona</SelectItem>
                   <SelectItem value="rulon">rulon</SelectItem>
-                  <SelectItem value="list">{t('list')}</SelectItem>
+                  <SelectItem value="list">{"list"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

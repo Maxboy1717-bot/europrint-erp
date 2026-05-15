@@ -91,7 +91,7 @@ export function OrdersTab({ orders }: { orders: SdOrdersData }) {
                     <tr key={o.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-2.5 text-xs">{fmtDate(o.created_at || o.createdAt)}</td>
                       <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
-                        {o.order_number || o.orderNumber || String(o.id || "").slice(0, 8)}
+                        {String(o.order_number || o.orderNumber || String(o.id || "").slice(0, 8))}
                       </td>
                       <td className="px-4 py-2.5 font-medium">{fmtMoney(o.total_amount || o.totalAmount)}</td>
                       <td className="px-4 py-2.5">

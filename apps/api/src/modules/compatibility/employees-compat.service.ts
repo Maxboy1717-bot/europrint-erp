@@ -4,7 +4,7 @@
  * Core CRUD + org methods only. Sub-resource methods live in employees-compat-sub.service.ts.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { MAX_QUERY_LIMIT, MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db, rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -17,9 +17,13 @@ import {
   syncEmployeeOrgAssignments,
   ensureUserForEmployee,
 } from './employees-org-assignment.helper';
+import {
+  type Row, si, resolveOrCreateUserForEmployee, insertEmployeeRow,
+  updateEmployeeRow, syncOrgAssignmentsIfUserExists,
+} from './employees-compat.helpers';
 
-type Row = Record<string, unknown>;
-const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
+// Re-export Row so consumers importing from this module keep working
+export type { Row } from './employees-compat.helpers';
 
 @Injectable()
 export class EmployeesCompatService {
@@ -110,66 +114,53 @@ export class EmployeesCompatService {
     return safeCall(async () => {
       const empId = si(id);
       const orgIdsRaw = body.orgDepartmentIds ?? body.org_department_ids;
-      const hasOrgIds = Array.isArray(orgIdsRaw);
-
-      if (hasOrgIds) {
-        const orgIds = parseOrgDepartmentIds(body as Record<string, unknown>);
-        await validateOrgDepartmentsExist(orgIds);
-
-        return await db.transaction(async (tx) => {
-          const empCheck = await tx.execute(sql`SELECT id FROM employees WHERE id = ${empId} LIMIT 1`);
-          if (dbRows(empCheck).length === 0) throw new NotFoundException(`Employee ${id} not found`);
-
-          const userResult = await tx.execute(sql`
-            SELECT id FROM users WHERE employee_id = ${empId} AND deleted_at IS NULL LIMIT 1
-          `);
-          let userId: number;
-          const userRow = dbRows(userResult)[0];
-          if (userRow) {
-            userId = Number(userRow['id']);
-          } else {
-            const emp = await tx.execute(sql`
-              SELECT first_name, last_name, email_personal, phone_number,
-                     position_id, department_id, hire_date::text AS hire_date
-              FROM employees WHERE id = ${empId}
-            `);
-            const e = dbRows(emp)[0] as Row;
-            userId = await ensureUserForEmployee(tx, {
-              employeeId: empId,
-              firstName: String(e['first_name'] ?? ''),
-              lastName: String(e['last_name'] ?? ''),
-              email: (e['email_personal'] as string | null) ?? null,
-              phone: (e['phone_number'] as string | null) ?? null,
-              hireDate: (e['hire_date'] as string | null) ?? null,
-              positionId: e['position_id'] ? Number(e['position_id']) : null,
-              departmentId: e['department_id'] ? Number(e['department_id']) : null,
-            });
-          }
-
-          await syncEmployeeOrgAssignments(tx, userId, orgIds);
-
-          return {
-            id: String(empId),
-            userId: String(userId),
-            assignedOrgDepartmentIds: orgIds,
-            count: orgIds.length,
-          } as Row;
-        });
+      if (Array.isArray(orgIdsRaw)) {
+        return this.assignOrgDepartments(id, empId, body);
       }
-
-      // Legacy: departmentId/positionId only
-      const r = await rawSql(sql`
-        UPDATE employees
-        SET department_id = COALESCE(${body.departmentId ?? null}, department_id),
-            position_id   = COALESCE(${body.positionId ? si(body.positionId) : null}, position_id),
-            updated_at    = NOW()
-        WHERE id = ${empId}
-        RETURNING id, department_id, position_id, updated_at
-      `);
-      const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new NotFoundException(`Employee ${id} not found`);
-      return item;
+      return this.assignLegacyDeptPosition(id, empId, body);
     });
+  }
+
+  private async assignOrgDepartments(
+    id: string,
+    empId: number,
+    body: { orgDepartmentIds?: Array<number | string>; org_department_ids?: Array<number | string> },
+  ): Promise<Row> {
+    const orgIds = parseOrgDepartmentIds(body as Record<string, unknown>);
+    await validateOrgDepartmentsExist(orgIds);
+
+    return await db.transaction(async (tx) => {
+      const empCheck = await tx.execute(sql`SELECT id FROM employees WHERE id = ${empId} LIMIT 1`);
+      if (dbRows(empCheck).length === 0) throw new NotFoundException(`Employee ${id} not found`);
+
+      const userId = await resolveOrCreateUserForEmployee(tx, empId);
+      await syncEmployeeOrgAssignments(tx, userId, orgIds);
+
+      return {
+        id: String(empId),
+        userId: String(userId),
+        assignedOrgDepartmentIds: orgIds,
+        count: orgIds.length,
+      } as Row;
+    });
+  }
+
+  private async assignLegacyDeptPosition(
+    id: string,
+    empId: number,
+    body: { departmentId?: string | number; positionId?: string | number },
+  ): Promise<Row> {
+    const r = await rawSql(sql`
+      UPDATE employees
+      SET department_id = COALESCE(${body.departmentId ?? null}, department_id),
+          position_id   = COALESCE(${body.positionId ? si(body.positionId) : null}, position_id),
+          updated_at    = NOW()
+      WHERE id = ${empId}
+      RETURNING id, department_id, position_id, updated_at
+    `);
+    const item = dbRows(r)[0] as Row | undefined;
+    if (!item) throw new NotFoundException(`Employee ${id} not found`);
+    return item;
   }
 
   async createEmployee(body: Record<string, unknown>): Promise<Result<Row, AppError>> {
@@ -183,21 +174,7 @@ export class EmployeesCompatService {
       await validateEmployeeFks(a);
 
       return await db.transaction(async (tx) => {
-        const empResult = await tx.execute(sql`
-          INSERT INTO employees (
-            first_name, last_name, email_personal, department_id, position_id,
-            employee_code, status, hire_date, birth_date, phone_number,
-            telegram_chat_id, address_actual
-          )
-          VALUES (
-            ${a.firstName}, ${a.lastName}, ${a.email}, ${a.departmentId}, ${a.positionId},
-            ${a.employeeCode}, ${a.status}, ${a.hireDate}, ${a.birthDate}, ${a.phoneNumber},
-            ${a.telegramChatId}, ${a.address}
-          )
-          RETURNING id::text AS id, id AS num_id, first_name, last_name, employee_code, status
-        `);
-        const emp = dbRows(empResult)[0] as Row | undefined;
-        if (!emp) throw new InternalServerErrorException('Employee creation failed');
+        const emp = await insertEmployeeRow(tx, a);
         const empNumId = Number(emp['num_id']);
         const userId = await ensureUserForEmployee(tx, {
           employeeId: empNumId,
@@ -209,7 +186,6 @@ export class EmployeesCompatService {
           positionId: a.positionId,
           departmentId: a.departmentId,
         });
-
         await syncEmployeeOrgAssignments(tx, userId, orgIds);
         delete emp['num_id'];
         return emp;
@@ -230,36 +206,8 @@ export class EmployeesCompatService {
       }
 
       return await db.transaction(async (tx) => {
-        const r = await tx.execute(sql`
-          UPDATE employees
-          SET first_name        = COALESCE(${a.firstName}, first_name),
-              last_name         = COALESCE(${a.lastName}, last_name),
-              email_personal    = COALESCE(${a.email}, email_personal),
-              department_id     = COALESCE(${a.departmentId}, department_id),
-              position_id       = COALESCE(${a.positionId}, position_id),
-              status            = COALESCE(${a.status}, status),
-              hire_date         = COALESCE(${a.hireDate}, hire_date),
-              birth_date        = COALESCE(${a.birthDate}, birth_date),
-              phone_number      = COALESCE(${a.phoneNumber}, phone_number),
-              telegram_chat_id  = COALESCE(${a.telegramChatId}, telegram_chat_id),
-              address_actual    = COALESCE(${a.address}, address_actual),
-              employee_code     = COALESCE(${a.employeeCode}, employee_code),
-              updated_at        = NOW()
-          WHERE id = ${si(id)}
-          RETURNING id::text AS id, first_name, last_name, employee_code, status, updated_at
-        `);
-        const found = dbRows(r)[0] as Row | undefined;
-        if (!found) throw new NotFoundException('Record not found');
-
-        if (willUpdateOrg) {
-          const userResult = await tx.execute(sql`
-            SELECT id FROM users WHERE employee_id = ${si(id)} AND deleted_at IS NULL LIMIT 1
-          `);
-          const userRow = dbRows(userResult)[0];
-          if (userRow) {
-            await syncEmployeeOrgAssignments(tx, Number(userRow['id']), orgIds);
-          }
-        }
+        const found = await updateEmployeeRow(tx, id, a);
+        if (willUpdateOrg) await syncOrgAssignmentsIfUserExists(tx, id, orgIds);
         return found;
       });
     });

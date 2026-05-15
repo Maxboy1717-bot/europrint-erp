@@ -8,17 +8,18 @@ import uz from "./uz.json";
 import ru from "./ru.json";
 
 type Lang = "uz" | "ru";
-type DeepRecord = { [key: string]: string | DeepRecord };
+type DeepRecord = { [key: string]: string | string[] | DeepRecord };
 
-const TRANSLATIONS: Record<Lang, DeepRecord> = { uz, ru };
+const TRANSLATIONS: Record<Lang, DeepRecord> = { uz: uz as unknown as DeepRecord, ru: ru as unknown as DeepRecord };
 
 function getNestedValue(obj: DeepRecord, path: string): string {
   const parts = path.split(".");
-  let current: string | DeepRecord = obj;
+  let current: string | string[] | DeepRecord = obj;
   for (const part of parts) {
-    if (typeof current !== "object" || current === null) return path;
-    current = (current as DeepRecord)[part];
-    if (current === undefined) return path;
+    if (typeof current !== "object" || current === null || Array.isArray(current)) return path;
+    const next: string | string[] | DeepRecord | undefined = (current as DeepRecord)[part];
+    if (next === undefined) return path;
+    current = next;
   }
   return typeof current === "string" ? current : path;
 }

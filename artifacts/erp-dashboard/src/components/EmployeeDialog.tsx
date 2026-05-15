@@ -205,9 +205,9 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       }
     }
     // Org functions — JSON, Authorization header bilan
-    const orgRes = await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
+    const orgRes = await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts }) as unknown as Response;
     if (!orgRes.ok) {
-      const orgError = await orgRes.json().catch(() => ({ error: "Funktsiyalarni saqlashda xatolik" }));
+      const orgError = await orgRes.json().catch(() => ({ error: "Funktsiyalarni saqlashda xatolik" })) as { message?: string; error?: string };
       toast({
         title: "Ogohlantirish",
         description: orgError.message || orgError.error || "Tashkiliy funksiyalarni saqlashda xatolik",

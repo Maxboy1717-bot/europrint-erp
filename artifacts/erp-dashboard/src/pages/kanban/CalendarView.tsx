@@ -12,7 +12,6 @@ import {
   startOfMonth, endOfMonth, eachDayOfInterval, getDay, addDays,
 } from "date-fns";
 import { type CardWithOwner, type T, PRIORITY_CONFIG } from "./kanban-types";
-import { useTranslation } from '@/lib/i18n';
 
 export function CalendarView({
   cards,
@@ -23,9 +22,8 @@ export function CalendarView({
   cards: CardWithOwner[];
   onCardClick: (card: CardWithOwner) => void;
   onCreateTask: (date: Date) => void;
-  t: typeof T.uz;
+  t: (key: string) => string;
 }) {
-  const { t } = useTranslation("common");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const monthStart = startOfMonth(currentMonth);

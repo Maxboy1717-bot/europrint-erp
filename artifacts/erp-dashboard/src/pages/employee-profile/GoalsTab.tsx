@@ -65,7 +65,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
   const { data: goals, isLoading } = useQuery<Goal[]>({
     queryKey: [`/api/hr/employees/${userId}/goals`],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/hr/employees/${userId}/goals`);
+      const res = (await apiRequest('GET', `/api/hr/employees/${userId}/goals`)) as unknown as Response;
       if (res.status === 404 || res.status === 204) return [];
       if (!res.ok) return [];
       const data = await res.json();
@@ -200,7 +200,7 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
                   goal.status === "active" &&
                   goal.targetDate &&
                   new Date(goal.targetDate) < new Date();
-                const progressValue = Math.min(Math.max((goal as Record<string, unknown>).progress_pct as number ?? goal.progress ?? 0, 0), 100);
+                const progressValue = Math.min(Math.max((goal as unknown as Record<string, unknown>).progress_pct as number ?? goal.progress ?? 0, 0), 100);
 
                 return (
                   <div

@@ -27,20 +27,18 @@ import {
 import { CameraStatsCards, CameraTable } from "./cameras-management-sections";
 import { AddCameraDialog, EditCameraDialog } from "./cameras-management-dialogs";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
 export default function CamerasManagement() {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [language, setLanguage] = useState<Language>("uz");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCamera, setEditingCamera] = useState<CameraData | null>(null);
 
-  const t = buildTranslations(language);
+  const t = buildTranslations(language) as ReturnType<typeof buildTranslations> & ((key: string) => string);
 
   // -------------------------------------------------------------------------
   // Queries

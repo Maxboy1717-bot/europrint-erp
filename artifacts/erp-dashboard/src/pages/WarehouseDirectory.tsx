@@ -36,7 +36,7 @@ export default function WarehouseDirectory() {
       let lowStockCount = 0;
       for (const wh of warehouses) {
         try {
-          const res = await apiRequest('GET', `/api/warehouse/warehouses/${wh.id}/stats`);
+          const res = (await apiRequest('GET', `/api/warehouse/warehouses/${wh.id}/stats`)) as unknown as Response;
           if (res.ok) {
             const stats = await res.json();
             totalMaterials += stats.materialCount || 0;

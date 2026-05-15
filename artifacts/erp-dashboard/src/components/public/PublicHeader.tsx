@@ -14,7 +14,7 @@ export default function PublicHeader() {
   const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   const navItems = [
     { href: '/site/catalog', labelKey: 'nav.products' },

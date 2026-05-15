@@ -145,6 +145,10 @@ export interface SdGrowthData {
   growthRate: number;
   yearlyTrend: SdTrendItem[];
   riskSignals: string[];
+  totalOrders?: number;
+  totalRevenue?: number;
+  avgOrderValue?: number;
+  trend?: string;
 }
 
 export interface SdOrderItem {

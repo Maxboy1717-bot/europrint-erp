@@ -167,6 +167,7 @@ interface CustomerTableProps {
 }
 
 export function CustomerTable({ customers, filtered, isLoading, onSelect }: CustomerTableProps) {
+  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="space-y-2">

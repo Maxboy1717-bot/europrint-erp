@@ -84,7 +84,7 @@ export function DealForm({
         assignedById: data.assignedById || null,
         comments: data.comments || null,
       };
-      return apiRequest("POST", "/api/crm/deals/quick", payload);
+      return apiRequest<Record<string, unknown>>("POST", "/api/crm/deals/quick", payload);
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/deals"] });

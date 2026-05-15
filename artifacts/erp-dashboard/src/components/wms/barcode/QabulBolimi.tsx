@@ -47,7 +47,7 @@ export function QabulBolimi() {
 
   const qabulMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      const res = await apiRequest("POST", "/api/barcode-warehouse/receive", data);
+      const res = await apiRequest<{ status?: string; message?: string; barcodeId?: string; printedLabels?: number }>("POST", "/api/barcode-warehouse/receive", data);
       return res;
     },
     onSuccess: (data) => {

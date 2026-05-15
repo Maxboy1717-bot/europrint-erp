@@ -69,16 +69,14 @@ export default function WastePage() {
   const { data: dashRaw, isLoading: loadingDash } = useQuery<WasteDashboard>({
     queryKey: ["/api/waste/dashboard"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/waste/dashboard");
-      return res.json();
+      return await apiRequest("GET", "/api/waste/dashboard");
     },
   });
 
   const { data: rawData, isLoading, isError, refetch } = useQuery<WasteRecord[] | { data?: WasteRecord[] }>({
     queryKey: ["/api/waste/records"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/waste/records");
-      return res.json();
+      return await apiRequest("GET", "/api/waste/records");
     },
   });
 
@@ -90,12 +88,11 @@ export default function WastePage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/waste/records", {
+      return await apiRequest("POST", "/api/waste/records", {
         ...dto,
         quantity: dto.quantity ? parseFloat(dto.quantity) : 0,
         cost:     dto.cost     ? parseFloat(dto.cost)     : 0,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/waste/records"] });

@@ -1,4 +1,12 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   COALESCE-based dynamic ORDER BY (date_create vs created_at fallback) combined
+ *   with parallel count+data fetch on a wide-row table whose camelCase ↔ snake_case
+ *   mapping is fully owned by this repo (no Drizzle schema binding).
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * @module drizzle-crm-deals.repo
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

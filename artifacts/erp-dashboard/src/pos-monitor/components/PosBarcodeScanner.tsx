@@ -21,6 +21,7 @@ interface ScanResult {
 
 interface Props {
   onResult?: (result: ScanResult) => void;
+  onDetected?: (code: string) => void;
   onClose?: () => void;
 }
 

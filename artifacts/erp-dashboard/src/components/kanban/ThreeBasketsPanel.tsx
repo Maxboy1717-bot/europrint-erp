@@ -57,7 +57,7 @@ const INITIAL_ITEMS: BasketItem[] = [
 
 // ── Savat ustuni ───────────────────────────────────────────────────────────
 function BasketColumn({
-  columnKey, title, icon: Icon, items, actions, onMove, emptyLabel,
+  columnKey, title, icon: Icon, items = [], actions, onMove, emptyLabel,
 }: {
   columnKey: BasketKey;
   title: string;
@@ -68,6 +68,7 @@ function BasketColumn({
   emptyLabel: string;
 }) {
   const accent = ACCENT[columnKey as keyof typeof ACCENT] ?? ACCENT.incoming;
+  const safeItems = Array.isArray(items) ? items : [];
 
   return (
     <div
@@ -103,13 +104,13 @@ function BasketColumn({
           background: hexToRgba(accent, 0.13),
           padding: "2px 7px", borderRadius: 7, flexShrink: 0,
         }}>
-          {items.length}
+          {safeItems.length}
         </span>
       </div>
 
       {/* Kartalar */}
       <div style={{ flex: 1, padding: "0 10px" }}>
-        {items.length === 0 ? (
+        {safeItems.length === 0 ? (
           <div style={{
             minHeight: 60,
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -118,7 +119,7 @@ function BasketColumn({
           }}>
             {emptyLabel}
           </div>
-        ) : items.map(item => (
+        ) : safeItems.map(item => (
           <div
             key={item.id}
             data-testid={`basket-item-${item.id}`}

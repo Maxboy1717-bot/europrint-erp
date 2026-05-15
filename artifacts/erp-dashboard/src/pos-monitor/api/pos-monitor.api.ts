@@ -65,12 +65,12 @@ async function posReq<T = unknown>(method: string, path: string, body?: unknown)
     "ok" in (json as Record<string, unknown>) &&
     typeof (json as Record<string, unknown>).ok === "boolean"
   ) {
-    const wrapped = json as { ok: boolean; data?: T; error?: { message?: string } | string };
+    const wrapped = json as unknown as { ok: boolean; data?: T; error?: { message?: string } | string };
     if (wrapped.ok) {
       // Recursive unwrap (double-wrap holatlar uchun)
       const inner = wrapped.data;
       if (inner && typeof inner === "object" && "ok" in (inner as Record<string, unknown>)) {
-        const innerWrapped = inner as { ok: boolean; data?: T };
+        const innerWrapped = inner as unknown as { ok: boolean; data?: T };
         if (innerWrapped.ok) return innerWrapped.data as T;
       }
       return inner as T;

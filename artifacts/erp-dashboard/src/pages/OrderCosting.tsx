@@ -66,8 +66,7 @@ export default function OrderCosting() {
 
   const createCostingMutation = useMutation({
     mutationFn: async (data: CostingFormData) => {
-      const res = await apiRequest("POST", "/api/order-costing", data);
-      return res.json();
+      return await apiRequest("POST", "/api/order-costing", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/order-costing"] });

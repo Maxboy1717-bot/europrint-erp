@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
 import { WorkflowDoc, DocDetail, STATUS_COLORS, STATUS_LABEL_KEYS } from "./DocumentWorkflowPageTypes";
 import { DeadlineBadge, docTypeLabel } from "./DocumentWorkflowPageHelpers";
-import { useTranslation } from '@/lib/i18n';
 
 type TFn = (key: string) => string;
 
@@ -30,7 +29,6 @@ export function DocDetailTab({
   approveIsPending, rejectIsPending, t,
   onApproveNotesChange, onApprove, onRejectSubmit, onRejectReasonChange,
 }: DocDetailTabProps) {
-  const { t } = useTranslation("common");
   const doc = docDetail.document;
 
   return (

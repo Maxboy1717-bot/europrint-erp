@@ -155,7 +155,7 @@ export default function PosReports() {
               </div>
             )}
             {loading && <div style={{ textAlign: "center", padding: 48, color: "var(--pos-text-muted)" }}><div className="pos-live" style={{ fontSize: 32, marginBottom: 12 }}>⏳</div><div>{t("common.loading")}</div></div>}
-            {data && !loading && (
+            {!!data && !loading && (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ fontWeight: 600, fontSize: 15 }}>{REPORT_ICON[selected]} {REPORT_LABELS[selected]}</div>

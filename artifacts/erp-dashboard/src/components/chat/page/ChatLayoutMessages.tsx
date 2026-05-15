@@ -51,6 +51,7 @@ function RoomHeader({
   | "onVideoCall"
   | "onTaskFromLastMsg"
 > & { activeRoomType: string }) {
+  const { t } = useTranslation('common');
   return (
     <div className="flex items-center gap-3 px-4 h-[56px] bg-[var(--tg-header-bg)] border-b border-[var(--tg-border)] flex-shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       {/* Mobile back button */}
@@ -298,7 +299,7 @@ function EditIndicator({
 
 /** Empty state shown when no room is selected. */
 function EmptyState() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-5 bg-[var(--tg-chat-bg)]">
       <div className="w-full sm:w-[120px] h-[120px] rounded-full bg-[var(--tg-sidebar-active)]/10 flex items-center justify-center">
@@ -409,7 +410,7 @@ export function ChatLayoutMessages({ activeRoom, activeRoomId, memberCount, canP
 
           {/* Edit indicator */}
           {editingMsg && (
-            <EditIndicator content={editingMsg.content} onCancel={onCancelEdit} />
+            <EditIndicator content={editingMsg.content ?? ''} onCancel={onCancelEdit} />
           )}
 
           {/* Message input */}

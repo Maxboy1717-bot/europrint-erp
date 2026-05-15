@@ -47,41 +47,9 @@ export class HrAiService {
 
   async screenCandidate(candidateId: number, userId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
-      const candidateResult = await this.hrAiRepo.getCandidateById(candidateId);
-      if (!candidateResult.ok) throw new InternalServerErrorException(candidateResult.error.message);
-      if (!candidateResult.data) throw new InternalServerErrorException(`Nomzod #${candidateId} topilmadi`);
-      const candidate = candidateResult.data as Record<string, unknown>;
-  
-      let vacancyInfo = '';
-      if (candidate['vacancyId']) {
-        const vacResult = await this.hrAiRepo.getVacancyById(Number(candidate['vacancyId']));
-        if (vacResult.ok && vacResult.data) {
-          const vac = vacResult.data as Record<string, unknown>;
-          vacancyInfo = `Vakansiya: ${vac['title']}\n${vac['description'] ?? ''}`;
-        }
-      }
-  
-      const prompt = `Sen EuroPrint kompaniyasi uchun HR rekruter AI asisentiasan (HR CAPITAL metodologiyasi).
-  
-  NOMZOD MA'LUMOTLARI:
-  Ism: ${candidate['fullName']}
-  Telefon: ${candidate['phone']}
-  Email: ${candidate['email'] ?? 'ko\'rsatilmagan'}
-  Manba: ${candidate['source'] ?? 'noma\'lum'}
-  Izohlar: ${candidate['notes'] ?? 'yo\'q'}
-  ${vacancyInfo}
-  
-  HR CAPITAL metodologiyasiga asoslanib ushbu nomzodni baholа va JSON formatda javob ber:
-  {
-    "score": <0-100>,
-    "recommendation": "PASS|REJECT|HOLD",
-    "strengths": ["...", "..."],
-    "weaknesses": ["...", "..."],
-    "productivityCategory": "FLAGMAN|PROTSESSNIK|TRABLDAYKER|UNKNOWN",
-    "suggestedNextStep": "...",
-    "aiNotes": "..."
-  }`;
-  
+      const candidate = await this.loadCandidate(candidateId);
+      const vacancyInfo = await this.loadVacancyInfo(candidate);
+      const prompt = this.buildScreeningPrompt(candidate, vacancyInfo);
       const aiResult = await this.ai.call({
         taskType: 'hr.evaluate_candidate',
         prompt,
@@ -92,15 +60,67 @@ export class HrAiService {
       });
       if (isErr(aiResult)) {
         this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
-        return { score: 50, recommendation: 'HOLD', strengths: ['Ma\'lumot yetarli emas'], weaknesses: ['Qo\'shimcha baholash kerak'], productivityCategory: 'UNKNOWN', suggestedNextStep: 'Qo\'shimcha ma\'lumot to\'plang va qayta baholang', aiNotes: '' };
+        return this.buildScreeningFallback('');
       }
-      const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = safeJsonParse<CandidateScreeningResult>(jsonMatch[0]);
-        if (parsed) return parsed;
-      }
-      return { score: 50, recommendation: 'HOLD', strengths: ['Ma\'lumot yetarli emas'], weaknesses: ['Qo\'shimcha baholash kerak'], productivityCategory: 'UNKNOWN', suggestedNextStep: 'Qo\'shimcha ma\'lumot to\'plang va qayta baholang', aiNotes: aiResult.data.text.substring(0, 300) };
+      const parsed = this.parseScreeningJson(aiResult.data.text);
+      return parsed ?? this.buildScreeningFallback(aiResult.data.text.substring(0, 300));
     });
+  }
+
+  private async loadCandidate(candidateId: number): Promise<Record<string, unknown>> {
+    const candidateResult = await this.hrAiRepo.getCandidateById(candidateId);
+    if (!candidateResult.ok) throw new InternalServerErrorException(candidateResult.error.message);
+    if (!candidateResult.data) throw new InternalServerErrorException(`Nomzod #${candidateId} topilmadi`);
+    return candidateResult.data as Record<string, unknown>;
+  }
+
+  private async loadVacancyInfo(candidate: Record<string, unknown>): Promise<string> {
+    if (!candidate['vacancyId']) return '';
+    const vacResult = await this.hrAiRepo.getVacancyById(Number(candidate['vacancyId']));
+    if (!vacResult.ok || !vacResult.data) return '';
+    const vac = vacResult.data as Record<string, unknown>;
+    return `Vakansiya: ${vac['title']}\n${vac['description'] ?? ''}`;
+  }
+
+  private buildScreeningPrompt(c: Record<string, unknown>, vacancyInfo: string): string {
+    return `Sen EuroPrint kompaniyasi uchun HR rekruter AI asisentiasan (HR CAPITAL metodologiyasi).
+
+  NOMZOD MA'LUMOTLARI:
+  Ism: ${c['fullName']}
+  Telefon: ${c['phone']}
+  Email: ${c['email'] ?? 'ko\'rsatilmagan'}
+  Manba: ${c['source'] ?? 'noma\'lum'}
+  Izohlar: ${c['notes'] ?? 'yo\'q'}
+  ${vacancyInfo}
+
+  HR CAPITAL metodologiyasiga asoslanib ushbu nomzodni baholа va JSON formatda javob ber:
+  {
+    "score": <0-100>,
+    "recommendation": "PASS|REJECT|HOLD",
+    "strengths": ["...", "..."],
+    "weaknesses": ["...", "..."],
+    "productivityCategory": "FLAGMAN|PROTSESSNIK|TRABLDAYKER|UNKNOWN",
+    "suggestedNextStep": "...",
+    "aiNotes": "..."
+  }`;
+  }
+
+  private parseScreeningJson(text: string): CandidateScreeningResult | null {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    return safeJsonParse<CandidateScreeningResult>(jsonMatch[0]) ?? null;
+  }
+
+  private buildScreeningFallback(aiNotes: string): CandidateScreeningResult {
+    return {
+      score: 50,
+      recommendation: 'HOLD',
+      strengths: ['Ma\'lumot yetarli emas'],
+      weaknesses: ['Qo\'shimcha baholash kerak'],
+      productivityCategory: 'UNKNOWN',
+      suggestedNextStep: 'Qo\'shimcha ma\'lumot to\'plang va qayta baholang',
+      aiNotes,
+    };
   }
 
   async classifyProductivity(

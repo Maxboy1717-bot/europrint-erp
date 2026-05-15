@@ -53,7 +53,7 @@ export function QuotationsTab() {
   });
 
   const calcMut = useMutation({
-    mutationFn: (body: typeof calcForm) => apiRequest("POST", "/api/sd/calculate-price", body),
+    mutationFn: (body: typeof calcForm) => apiRequest<SdPriceResult>("POST", "/api/sd/calculate-price", body),
     onSuccess: (data: SdPriceResult) => setPriceResult(data),
     onError: () => toast({ title: "Hisoblashda xatolik", variant: "destructive" }),
   });

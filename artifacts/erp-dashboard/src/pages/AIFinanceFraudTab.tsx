@@ -19,6 +19,7 @@ import { riskColor } from "./AIFinancePageTypes";
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 function riskBadge(s: string) {
+  const { t } = useTranslation("common");
   if (s === "HIGH")   return <Badge variant="error">{t("yuqoriXavf")}</Badge>;
   if (s === "MEDIUM") return <Badge variant="warning">{t("ortaXavf")}</Badge>;
   return                     <Badge variant="success">{t("pastXavf")}</Badge>;

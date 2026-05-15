@@ -198,7 +198,7 @@ export const hrApi = {
     apiRequest("DELETE", `/api/hr/documents/${id}`),
   createDisciplineRecord: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/discipline-records", data),
-  createDailyReport: (data: Record<string, unknown>) =>
+  createHrDailyReport: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/hr/daily-reports", data),
   updateBirthdaySettings: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/hr/birthdays/settings", data),

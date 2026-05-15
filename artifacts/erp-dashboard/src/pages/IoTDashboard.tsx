@@ -25,6 +25,8 @@ export default function IoTDashboard() {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const { t, language, setLanguage } = useTranslation('iot');
+  const { t: tProd } = useTranslation('production');
+  const { t: tCommon } = useTranslation('common');
 
   /* ── Dashboard summary ── */
   const { data: dashboardData, isLoading: dashLoading, isError: dashError, refetch: refetchDash } = useQuery({

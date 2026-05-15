@@ -92,6 +92,7 @@ interface ReportsTableCardProps {
 }
 
 export function ReportsTableCard({ reports, isLoading, isError, onRetry, onEdit, onDelete }: ReportsTableCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

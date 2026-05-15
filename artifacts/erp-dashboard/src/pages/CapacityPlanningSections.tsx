@@ -16,7 +16,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { queryClient } from "@/lib/queryClient";
 import type { LoadAnalysis, WorkCenterLoad, ChartRow } from "./CapacityPlanningTypes";
 import { EPStatusPill, EPLoader } from "@/components/ep";
-import { useTranslation } from "@/lib/i18n";
 
 // ---------------------------------------------------------------------------
 // DateRangeCard
@@ -104,7 +103,6 @@ export function AnalysisTabContent({
   t,
   tCommon,
 }: AnalysisTabContentProps) {
-  const { t } = useTranslation("common");
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">

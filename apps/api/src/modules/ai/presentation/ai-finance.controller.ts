@@ -25,6 +25,13 @@ import {
 import { unwrapOrInternal } from '@common/http-result';
 import { isErr } from '@common/result';
 
+interface AiFinanceAnomalyData {
+  hasAnomalies?: boolean;
+  anomalies?: Array<{ description: string; severity: string; amount?: number }>;
+  overallRiskScore?: number;
+  recommendation?: string;
+}
+
 // AiFinanceInsight shape expected by DailyKPIDashboard
 interface AiFinanceInsight {
   id: string;
@@ -75,56 +82,61 @@ export class AiFinanceController {
   async getInsights(@CurrentUser() user: AuthenticatedUser): Promise<{ insights: AiFinanceInsight[]; generatedAt: string }> {
     const today = _time.now().toISOString().slice(0, 10);
     const result = await this.financeAi.detectAnomalies(30, user.id);
-
     if (isErr(result)) {
       return { insights: [], generatedAt: _time.now().toISOString() };
     }
+    const anomalyData = result.data as AiFinanceAnomalyData;
+    const insights = this.buildInsightsFromAnomalies(anomalyData, today);
+    return { insights, generatedAt: _time.now().toISOString() };
+  }
 
-    const anomalyData = result.data as {
-      hasAnomalies?: boolean;
-      anomalies?: Array<{ description: string; severity: string; amount?: number }>;
-      overallRiskScore?: number;
-      recommendation?: string;
-    };
-
+  private buildInsightsFromAnomalies(anomalyData: AiFinanceAnomalyData, today: string): AiFinanceInsight[] {
     const insights: AiFinanceInsight[] = [];
-
-    // Convert anomalies to insight cards
     const anomalies = anomalyData.anomalies ?? [];
     for (const a of anomalies.slice(0, 5)) {
-      insights.push({
-        id: `anomaly-${insights.length}`,
-        insightType: 'anomaly',
-        segment: 'moliya',
-        insightDate: today,
-        confidence: anomalyData.overallRiskScore ?? 75,
-        priority: SEVERITY_TO_PRIORITY[a.severity] ?? 'medium',
-        title: `Anomaliya aniqlandi`,
-        description: a.description,
-        impact: a.amount != null ? `Miqdor: ${a.amount.toLocaleString()} UZS` : undefined,
-        recommendation: anomalyData.recommendation,
-        actionRequired: a.severity === 'HIGH',
-        actionTaken: false,
-      });
+      insights.push(this.buildAnomalyInsight(a, anomalyData, today, insights.length));
     }
-
-    // Add overall risk insight if there are no anomalies but score is notable
     if (anomalies.length === 0 && (anomalyData.overallRiskScore ?? 0) > 0) {
-      insights.push({
-        id: 'risk-overview',
-        insightType: 'forecast',
-        segment: 'moliya',
-        insightDate: today,
-        confidence: 100 - (anomalyData.overallRiskScore ?? 0),
-        priority: 'low',
-        title: 'Moliyaviy holat barqaror',
-        description: anomalyData.recommendation ?? 'So\'nggi 30 kunda muhim anomaliyalar aniqlanmadi.',
-        actionRequired: false,
-        actionTaken: false,
-      });
+      insights.push(this.buildStableRiskInsight(anomalyData, today));
     }
+    return insights;
+  }
 
-    return { insights, generatedAt: _time.now().toISOString() };
+  private buildAnomalyInsight(
+    a: { description: string; severity: string; amount?: number },
+    anomalyData: AiFinanceAnomalyData,
+    today: string,
+    index: number,
+  ): AiFinanceInsight {
+    return {
+      id: `anomaly-${index}`,
+      insightType: 'anomaly',
+      segment: 'moliya',
+      insightDate: today,
+      confidence: anomalyData.overallRiskScore ?? 75,
+      priority: SEVERITY_TO_PRIORITY[a.severity] ?? 'medium',
+      title: 'Anomaliya aniqlandi',
+      description: a.description,
+      impact: a.amount != null ? `Miqdor: ${a.amount.toLocaleString()} UZS` : undefined,
+      recommendation: anomalyData.recommendation,
+      actionRequired: a.severity === 'HIGH',
+      actionTaken: false,
+    };
+  }
+
+  private buildStableRiskInsight(anomalyData: AiFinanceAnomalyData, today: string): AiFinanceInsight {
+    return {
+      id: 'risk-overview',
+      insightType: 'forecast',
+      segment: 'moliya',
+      insightDate: today,
+      confidence: 100 - (anomalyData.overallRiskScore ?? 0),
+      priority: 'low',
+      title: 'Moliyaviy holat barqaror',
+      description: anomalyData.recommendation ?? 'So\'nggi 30 kunda muhim anomaliyalar aniqlanmadi.',
+      actionRequired: false,
+      actionTaken: false,
+    };
   }
 
   @Post('cashflow-forecast')

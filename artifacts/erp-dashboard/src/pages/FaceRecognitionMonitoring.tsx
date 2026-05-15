@@ -33,9 +33,7 @@ export default function FaceRecognitionMonitoring() {
       if (filter === "recognized")   params.set("isRecognized", "true");
       if (filter === "unrecognized") params.set("isRecognized", "false");
       if (filter === "flagged")      params.set("flaggedAs", "false_positive");
-      const res = await apiRequest("GET", `/api/camera/recognition-logs?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch logs");
-      return res.json();
+      return await apiRequest("GET", `/api/camera/recognition-logs?${params}`);
     },
     enabled: !!isAuthenticated,
   });

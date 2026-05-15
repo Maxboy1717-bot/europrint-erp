@@ -28,7 +28,7 @@ export function AiCheckPanel({ orderId }: { orderId: string }) {
   const run = async () => {
     setLoading(true);
     try {
-      const res = await apiRequest('POST', `/api/technology/orders/${orderId}/ai-check`, {});
+      const res = (await apiRequest('POST', `/api/technology/orders/${orderId}/ai-check`, {})) as unknown as Response;
       if (res.ok) setResult(await res.json());
     } finally {
       setLoading(false);
@@ -116,9 +116,7 @@ export function ApprovalHistory({ orderId }: { orderId: string }) {
   const { data: log } = useQuery<ApprovalLog>({
     queryKey: ["/api/technology/orders", orderId, "approval-log"],
     queryFn: async () => {
-      const r = await apiRequest('GET', `/api/technology/orders/${orderId}/approval-log`);
-      if (!r.ok) throw new Error("Log topilmadi");
-      return r.json();
+      return await apiRequest('GET', `/api/technology/orders/${orderId}/approval-log`);
     },
   });
 
@@ -188,8 +186,7 @@ export function MaterialAlternatives() {
   }>({
     queryKey: ["/api/technology/materials/alternatives", material],
     queryFn: async () => {
-      const r = await apiRequest('GET', `/api/technology/materials/alternatives?material=${encodeURIComponent(material)}`);
-      return r.json();
+      return await apiRequest('GET', `/api/technology/materials/alternatives?material=${encodeURIComponent(material)}`);
     },
     enabled: false,
   });

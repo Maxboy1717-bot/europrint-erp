@@ -20,8 +20,6 @@ import {
   Sparkles, Zap, ShieldCheck, TrendingUp, Send, CheckCircle, AlertTriangle, Clock,
 } from "lucide-react";
 import { OptimizationResult, Translations } from "./types";
-
-import { useTranslation } from '@/lib/i18n';
 interface AIReservationTabProps {
   t: Translations;
   aiForm: {
@@ -55,7 +53,6 @@ export function AIReservationTab({t,
   GRADE_COLORS,
   onClearRecommendation,
 }: AIReservationTabProps) {
-  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
@@ -117,7 +114,7 @@ export function AIReservationTab({t,
                   <SelectItem value="m2">m2</SelectItem>
                   <SelectItem value="dona">dona</SelectItem>
                   <SelectItem value="rulon">rulon</SelectItem>
-                  <SelectItem value="list">{t('list1')}</SelectItem>
+                  <SelectItem value="list">{"list"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

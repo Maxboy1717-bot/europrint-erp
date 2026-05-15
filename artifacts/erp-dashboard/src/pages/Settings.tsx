@@ -94,9 +94,7 @@ export default function Settings() {
   // ── Mutations ─────────────────────────────────────────────────────────────
   const uploadMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest('POST', "/api/guidelines");
-      if (!response.ok) throw new Error("Upload failed");
-      return response.json();
+      return await apiRequest('POST', "/api/guidelines");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/guidelines"] });
@@ -136,11 +134,10 @@ export default function Settings() {
 
   const testGptMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/gpt/test", {
+      return await apiRequest("POST", "/api/gpt/test", {
         model: settingsForm.gptModel,
         promptTemplate: settingsForm.promptTemplate,
       });
-      return response.json();
     },
     onSuccess: (data) => toastSuccess(`GPT: ${data.score}/100`),
     onError: (error: Error) => toastError(error.message),

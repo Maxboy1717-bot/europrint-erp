@@ -6,70 +6,32 @@
  * business logikaga ta'sir qilmaydi — faqat side-effect tinglaydi.
  *
  * Eventlar: 'pos.movement.data.completed', 'pos.movement.data.created'
+ *
+ *   Type definitions, constants and the warehouse_stock upsert helper live in
+ *   pos-wms-sync.helpers.ts (Rule 16 — 300 line cap).
+ *
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - Cross-module reads on `pos_movements` / `pos_movement_lines` and writes to
+ *     `warehouse_transactions` / `warehouse_stock` (WMS schema), bridging POS↔WMS
+ *     without coupling either module's Drizzle schema surface to the other
+ *   - SELECT available_quantity::text AS qty cast for socket payload precision
+ *   - INSERT into warehouse_transactions with mixed parameter types (uom/bulim
+ *     nullable text, numeric qty, NOW() server timestamp) in a single statement
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { broadcastPosEvent } from '../pos.gateway';
-
-// ---------------------------------------------------------------------------
-// POS movement_type → WMS transaction_type xaritalash
-// ---------------------------------------------------------------------------
-const MOVEMENT_TYPE_MAP: Record<string, string> = {
-  EXTERNAL_IN:       'kirim',
-  INTERNAL_RETURN:   'kirim',
-  EXTERNAL_OUT:      'chiqim',
-  INTERNAL_ISSUE:    'chiqim',
-  DAMAGE:            'chiqim',
-  INTERNAL_TRANSFER: 'transfer',
-  INVENTORY_ADJUST:  'adjustment',
-  INVENTORY_ADJ_PLUS:  'kirim',
-  INVENTORY_ADJ_MINUS: 'chiqim',
-};
-
-// ---------------------------------------------------------------------------
-// Incoming event shapes
-// ---------------------------------------------------------------------------
-interface PosMovementCompletedEvent {
-  movementId:     number | string;
-  movementNumber: string | null;
-  oldStatus:      string;
-  newStatus:      string;
-  updatedById:    number;
-}
-
-interface PosMovementCreatedEvent {
-  movementId:     number | string;
-  movementNumber: string | null;
-  oldStatus:      string;
-  newStatus:      string;
-  updatedById:    number;
-}
-
-// ---------------------------------------------------------------------------
-// Internal row shapes
-// ---------------------------------------------------------------------------
-interface MovementRow {
-  id:               string | number;
-  movement_type:    string | null;
-  from_warehouse_id: string | null;
-  to_warehouse_id:  string | null;
-  movement_number:  string | null;
-  bulim:            string | null;
-}
-
-interface MovementLineRow {
-  material_card_id: string | number | null;
-  quantity:         string | null;
-  unit_of_measure:  string | null;
-}
-
-interface StockUpdateRow {
-  warehouse_id:    string;
-  material_card_id: string | number;
-  new_qty:         string | null;
-}
+import {
+  MOVEMENT_TYPE_MAP,
+  PosMovementCompletedEvent,
+  PosMovementCreatedEvent,
+  MovementRow,
+  MovementLineRow,
+  upsertWarehouseStock,
+} from './pos-wms-sync.helpers';
 
 @Injectable()
 export class PosWmsSyncService {
@@ -134,22 +96,17 @@ export class PosWmsSyncService {
 
         if (!matId || qty <= 0) continue;
 
-        // ----------------------------------------------------------------
-        // warehouse_stock — upsert
-        // delta: +qty for 'in', -qty for 'out', handled per-warehouse
-        // ----------------------------------------------------------------
+        // warehouse_stock — upsert (delta: +qty for 'in', -qty for 'out')
         if (isIn && toWh) {
-          await this._upsertWarehouseStock(toWh, matId, qty);
+          await upsertWarehouseStock(toWh, matId, qty);
         } else if (!isIn && !isTransfer && fromWh) {
-          await this._upsertWarehouseStock(fromWh, matId, -qty);
+          await upsertWarehouseStock(fromWh, matId, -qty);
         } else if (isTransfer) {
-          if (fromWh) await this._upsertWarehouseStock(fromWh, matId, -qty);
-          if (toWh)   await this._upsertWarehouseStock(toWh,   matId, +qty);
+          if (fromWh) await upsertWarehouseStock(fromWh, matId, -qty);
+          if (toWh)   await upsertWarehouseStock(toWh,   matId, +qty);
         }
 
-        // ----------------------------------------------------------------
         // warehouse_transactions — insert
-        // ----------------------------------------------------------------
         const txDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
         try {
           await runQuery(sql`
@@ -166,9 +123,7 @@ export class PosWmsSyncService {
           );
         }
 
-        // ----------------------------------------------------------------
         // Emit Socket.IO — 'warehouse.stock.updated'
-        // ----------------------------------------------------------------
         const targetWarehouseId = (isIn ? toWh : fromWh) ?? null;
         if (targetWarehouseId) {
           try {
@@ -261,51 +216,6 @@ export class PosWmsSyncService {
       this.logger.log(`[PosWmsSync] Recorded draft tx for movement id=${movId} — ${lines.length} line(s)`);
     } catch (err) {
       this.logger.error(`[PosWmsSync] onMovementCreated failed: ${String(err)}`);
-    }
-  }
-
-  // =========================================================================
-  // Private helpers
-  // =========================================================================
-
-  /**
-   * Upserts warehouse_stock.  delta > 0 → stock in, delta < 0 → stock out.
-   * Uses ON CONFLICT to increment/decrement in place.
-   */
-  private async _upsertWarehouseStock(
-    warehouseId: string,
-    materialCardId: string | number,
-    delta: number,
-  ): Promise<void> {
-    const matIdStr = String(materialCardId);
-    const absDelta = Math.abs(delta);
-
-    if (delta >= 0) {
-      // Stock IN — add to quantities
-      await runQuery<StockUpdateRow>(sql`
-        INSERT INTO warehouse_stock
-          (warehouse_id, material_card_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at)
-        VALUES
-          (${warehouseId}, ${matIdStr}, ${absDelta}, 0, ${absDelta}, NOW(), NOW())
-        ON CONFLICT (warehouse_id, material_card_id)
-        DO UPDATE SET
-          quantity           = warehouse_stock.quantity + ${absDelta},
-          available_quantity = warehouse_stock.available_quantity + ${absDelta},
-          last_updated_at    = NOW()
-      `);
-    } else {
-      // Stock OUT — subtract, floor at 0
-      await runQuery<StockUpdateRow>(sql`
-        INSERT INTO warehouse_stock
-          (warehouse_id, material_card_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at)
-        VALUES
-          (${warehouseId}, ${matIdStr}, 0, 0, 0, NOW(), NOW())
-        ON CONFLICT (warehouse_id, material_card_id)
-        DO UPDATE SET
-          quantity           = GREATEST(0, warehouse_stock.quantity - ${absDelta}),
-          available_quantity = GREATEST(0, warehouse_stock.available_quantity - ${absDelta}),
-          last_updated_at    = NOW()
-      `);
     }
   }
 }

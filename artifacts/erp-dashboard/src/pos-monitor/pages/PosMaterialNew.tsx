@@ -89,7 +89,7 @@ export default function PosMaterialNew() {
         description:     form.description || undefined,
         supplier_name:   form.supplier_name || undefined,
         token,
-      });
+      }) as unknown as Response;
       const data = await res.json() as { id?: number; message?: string };
       if (!res.ok) throw new Error(data?.message ?? `HTTP ${res.status}`);
       alert(`✅ Material yaratildi! ID: ${data.id}`);

@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Calculator, Printer, RefreshCw, Box, Package, CheckCircle, AlertTriangle } from "lucide-react";
 import type { MaterialKit, MaterialKitItem, PapkaOrder } from "./WarehouseMaterialKitsTypes";
 import { MATERIAL_ICONS, MATERIAL_COLORS } from "./WarehouseMaterialKitsTypes";
-import { useTranslation } from '@/lib/i18n';
 
 // ── Helper components ────────────────────────────────────────────────────────
 
@@ -118,7 +117,6 @@ interface CreateKitDialogProps {
 export function CreateKitDialog({
   open, onOpenChange, pendingOrders, selectedOrderId, onSelectOrder, onCalculate, isPending, t,
 }: CreateKitDialogProps) {
-  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">

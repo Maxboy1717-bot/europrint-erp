@@ -33,8 +33,8 @@ export interface CandidateCardProps {
   expandedCard: number | null;
   setExpandedCard: (id: number | null) => void;
   cpPanelOpen: Set<number>;
-  setCpPanelOpen: React.Dispatch<React.SetStateAction<Set<number>>>;
-  updateMutation: { mutate: (args: { id: number; funnel_stage: string }) => void; isPending: boolean };
+  setCpPanelOpen: (val: Set<number>) => void;
+  updateMutation: import("@tanstack/react-query").UseMutationResult<unknown, unknown, { id: number; funnel_stage: import("./types").FunnelStage }, unknown>;
   rejectMutation: { mutate: (id: number) => void; isPending: boolean };
   setInterviewEntry: (e: PipelineEntry | null) => void;
   setJobOfferEntry: (e: PipelineEntry | null) => void;
@@ -167,7 +167,7 @@ export function CandidateCard({entry, stage, aiSessions, vacancyMap,
             const SHARTNOMA_LABELS: Record<string, string> = { unlimited: "Muddatsiz", limited: "Muddatli", gpc: "GPC", ip: "IP" };
             return (
               <div className="border border-sky-500/30 rounded-lg bg-sky-500/5 overflow-hidden">
-                <button type="button" onClick={() => setCpPanelOpen((prev: Set<number>) => { const next = new Set(prev); if (next.has(entry.id)) next.delete(entry.id); else next.add(entry.id); return next; })} className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-[var(--ep-blue)]/90/10 transition-colors">
+                <button type="button" onClick={() => { const next = new Set(cpPanelOpen); if (next.has(entry.id)) next.delete(entry.id); else next.add(entry.id); setCpPanelOpen(next); }} className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-[var(--ep-blue)]/90/10 transition-colors">
                   <span className="text-[10px] font-semibold text-sky-400 flex items-center gap-1">💬 Kandidatga aytiladi (IV bo'lim)</span>
                   <span className="text-[10px] text-sky-400">{isOpen ? "▲" : "▼"}</span>
                 </button>

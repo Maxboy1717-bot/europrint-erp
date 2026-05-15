@@ -67,8 +67,7 @@ export default function CourseDetail() {
 
   const deleteModuleMutation = useMutation({
     mutationFn: async (moduleId: string) => {
-      const response = await apiRequest("DELETE", `/api/modules/${moduleId}`);
-      return response.json();
+      return await apiRequest("DELETE", `/api/modules/${moduleId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses", id] });
@@ -81,8 +80,7 @@ export default function CourseDetail() {
 
   const deleteLessonMutation = useMutation({
     mutationFn: async (lessonId: string) => {
-      const response = await apiRequest("DELETE", `/api/lessons/${lessonId}`);
-      return response.json();
+      return await apiRequest("DELETE", `/api/lessons/${lessonId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses", id] });
@@ -95,8 +93,7 @@ export default function CourseDetail() {
 
   const deleteCourseMutation = useMutation({
     mutationFn: async (courseId: string) => {
-      const response = await apiRequest("DELETE", `/api/courses/${courseId}`);
-      return response.json();
+      return await apiRequest("DELETE", `/api/courses/${courseId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses"] });

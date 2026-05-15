@@ -66,7 +66,7 @@ export default function HRAssetManagement() {
   const { data: rawAssets, isLoading, refetch } = useQuery<Asset[]>({
     queryKey: ["/api/assets", search, filterCategory, filterStatus, filterDepartment],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/assets?${params.toString()}`);
+      const res = (await apiRequest('GET', `/api/assets?${params.toString()}`)) as unknown as Response;
       if (!res.ok) throw new Error("Failed");
       const d: unknown = await res.json();
       return Array.isArray(d)
@@ -82,7 +82,7 @@ export default function HRAssetManagement() {
   const { data: employees } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/employees?limit=500");
+      const res = (await apiRequest('GET', "/api/employees?limit=500")) as unknown as Response;
       if (!res.ok) return [];
       const data: unknown = await res.json();
       return Array.isArray(data)
@@ -94,7 +94,7 @@ export default function HRAssetManagement() {
   const { data: departments } = useQuery<Department[]>({
     queryKey: ["/api/departments"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/departments");
+      const res = (await apiRequest('GET', "/api/departments")) as unknown as Response;
       if (!res.ok) return [];
       const data: unknown = await res.json();
       return Array.isArray(data) ? (data as Department[]) : [];
@@ -158,7 +158,7 @@ export default function HRAssetManagement() {
   // ---------------------------------------------------------------------------
 
   const openDetail = async (asset: Asset) => {
-    const res = await apiRequest('GET', `/api/assets/${asset.id}`);
+    const res = (await apiRequest('GET', `/api/assets/${asset.id}`)) as unknown as Response;
     if (res.ok) {
       const data = await res.json() as Asset;
       setDetailAsset(data);

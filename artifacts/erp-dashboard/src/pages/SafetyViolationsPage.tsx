@@ -55,8 +55,7 @@ export default function SafetyViolationsPage() {
       const params = new URLSearchParams({ limit: "50" });
       if (severityFilter !== "all") params.set("severity", severityFilter);
       if (statusFilter   !== "all") params.set("status",   statusFilter);
-      const res = await apiRequest("GET", `/api/safety-violations?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/safety-violations?${params}`);
     },
   });
 

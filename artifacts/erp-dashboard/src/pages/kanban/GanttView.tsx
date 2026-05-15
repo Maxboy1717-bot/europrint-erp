@@ -15,7 +15,6 @@ import {
 import type { KanbanColumn } from "@shared/schema";
 import { type CardWithOwner, type T, PRIORITY_CONFIG } from "./kanban-types";
 import { getProp } from "./kanban-utils";
-import { useTranslation } from '@/lib/i18n';
 
 export function GanttView({
   cards,
@@ -26,9 +25,8 @@ export function GanttView({
   cards: CardWithOwner[];
   columns: KanbanColumn[];
   onCardClick: (card: CardWithOwner) => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
-  const { t } = useTranslation("common");
   const [startDate, setStartDate] = useState(() => {
     const today = startOfDay(new Date());
     return addDays(today, -7);

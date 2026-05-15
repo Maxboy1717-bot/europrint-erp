@@ -86,14 +86,32 @@ function trainLogReg(samples: TrainSample[]): { coefficients: number[]; auc: num
   return { coefficients: beta, auc };
 }
 
+const AUC_THRESHOLD = 0.70;
+
 @Injectable()
 export class ChurnRetrainService {
   @Calculation('crm.churn.retrain')
   async retrain(samples: TrainSample[]): Promise<Result<RetrainResult, AppError>> {
+    const validationErr = this.validateSamples(samples);
+    if (validationErr) return validationErr;
+
+    const { coefficients, auc } = trainLogReg(samples);
+    if (auc < AUC_THRESHOLD) {
+      return Err({
+        code: 'BAD_REQUEST',
+        message: `Model AUC ${auc.toFixed(4)} < ${AUC_THRESHOLD} — deploy bloklanadi. Ko'proq yoki sifatli namunalar bilan qayta urinib ko'ring.`,
+      });
+    }
+
+    const nextVersion = await this.computeNextVersion();
+    await this.persistModel(nextVersion, coefficients, auc, samples.length);
+    return Ok({ coefficients, featureNames: FEATURE_NAMES, auc, sampleSize: samples.length, version: nextVersion });
+  }
+
+  private validateSamples(samples: TrainSample[]): Result<RetrainResult, AppError> | null {
     if (!Array.isArray(samples) || samples.length < 10) {
       return Err({ code: 'BAD_REQUEST', message: 'Qayta o\'qitish uchun kamida 10 ta namuna kerak' });
     }
-
     const expectedDim = FEATURE_NAMES.length;
     const badSamples = samples.filter(s => s.features.length !== expectedDim);
     if (badSamples.length > 0) {
@@ -102,24 +120,19 @@ export class ChurnRetrainService {
         message: `Barcha namunalarda aniq ${expectedDim} ta xususiyat bo'lishi kerak (FEATURE_NAMES bilan mos kelishi uchun). ${badSamples.length} ta namuna mos kelmadi.`,
       });
     }
+    return null;
+  }
 
-    const { coefficients, auc } = trainLogReg(samples);
-
-    const AUC_THRESHOLD = 0.70;
-    if (auc < AUC_THRESHOLD) {
-      return Err({
-        code: 'BAD_REQUEST',
-        message: `Model AUC ${auc.toFixed(4)} < ${AUC_THRESHOLD} — deploy bloklanadi. Ko'proq yoki sifatli namunalar bilan qayta urinib ko'ring.`,
-      });
-    }
-
+  private async computeNextVersion(): Promise<number> {
     const maxVersion = await runQuery<{ v: number }>(sql`
       SELECT COALESCE(MAX(version), 0) AS v FROM churn_model_params
     `);
-    const nextVersion = safeNum((maxVersion[0] ?? { v: 0 }).v) + 1;
+    return safeNum((maxVersion[0] ?? { v: 0 }).v) + 1;
+  }
+
+  private async persistModel(version: number, coefficients: number[], auc: number, sampleSize: number): Promise<void> {
     const coefJson    = JSON.stringify({ values: coefficients });
     const featuresSql = sql.join(FEATURE_NAMES.map(f => sql`${f}`), sql`, `);
-
     await db.transaction(async (tx) => {
       await tx.execute(sql`
         UPDATE churn_model_params SET is_active = false WHERE is_active = true
@@ -127,13 +140,8 @@ export class ChurnRetrainService {
       await tx.execute(sql`
         INSERT INTO churn_model_params (version, coefficients, feature_names, auc, trained_at, is_active, sample_size)
         VALUES (
-          ${nextVersion},
-          ${coefJson}::jsonb,
-          ARRAY[${featuresSql}]::text[],
-          ${auc},
-          NOW(),
-          true,
-          ${samples.length}
+          ${version}, ${coefJson}::jsonb, ARRAY[${featuresSql}]::text[],
+          ${auc}, NOW(), true, ${sampleSize}
         )
         ON CONFLICT (version) DO UPDATE SET
           coefficients = EXCLUDED.coefficients,
@@ -143,7 +151,5 @@ export class ChurnRetrainService {
           sample_size  = EXCLUDED.sample_size
       `);
     });
-
-    return Ok({ coefficients, featureNames: FEATURE_NAMES, auc, sampleSize: samples.length, version: nextVersion });
   }
 }

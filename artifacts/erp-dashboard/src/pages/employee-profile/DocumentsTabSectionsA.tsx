@@ -110,6 +110,7 @@ interface EmployeeDocsSectionProps {
 export function EmployeeDocsSection({
   empDocs, isAdminOrHrManager, deletingDocId, onAddDocClick, onDeleteDocClick,
 }: EmployeeDocsSectionProps) {
+  const { t } = useTranslation("common");
   const docs = Array.isArray(empDocs) ? empDocs : [];
 
   return (

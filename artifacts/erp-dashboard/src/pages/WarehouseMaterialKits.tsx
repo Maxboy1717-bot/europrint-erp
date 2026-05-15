@@ -13,10 +13,8 @@ import type { PapkaOrder, MaterialKit, MaterialKitItem } from "./WarehouseMateri
 import { SummaryCards, KitsTable } from "./WarehouseMaterialKitsSections";
 import { CreateKitDialog, KitDetailsDialog } from "./WarehouseMaterialKitsDialogs";
 import { EPErrorState } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export default function WarehouseMaterialKits() {
-  const { t } = useTranslation("common");
   const [lang, setLang] = useState<"uz" | "ru">("uz");
   const [selectedTab, setSelectedTab] = useState("pending");
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,8 +43,7 @@ export default function WarehouseMaterialKits() {
 
   const calculateBom = useMutation({
     mutationFn: async (orderId: number) => {
-      const res = await apiRequest("POST", `/api/iot-enhanced/orders/${orderId}/calculate-bom`);
-      return res.json();
+      return await apiRequest("POST", `/api/iot-enhanced/orders/${orderId}/calculate-bom`);
     },
     onSuccess: () => {
       toast({ title: t("Material to'plami yaratildi!", "Комплект материалов создан!") });
@@ -60,8 +57,7 @@ export default function WarehouseMaterialKits() {
 
   const prepareKit = useMutation({
     mutationFn: async (kitId: number) => {
-      const res = await apiRequest("PATCH", `/api/iot/material-kits/${kitId}/prepare`);
-      return res.json();
+      return await apiRequest("PATCH", `/api/iot/material-kits/${kitId}/prepare`);
     },
     onSuccess: () => {
       toast({ title: t("To'plam tayyorlanmoqda", "Комплект готовится") });
@@ -71,8 +67,7 @@ export default function WarehouseMaterialKits() {
 
   const markReady = useMutation({
     mutationFn: async (kitId: number) => {
-      const res = await apiRequest("PATCH", `/api/iot/material-kits/${kitId}/ready`);
-      return res.json();
+      return await apiRequest("PATCH", `/api/iot/material-kits/${kitId}/ready`);
     },
     onSuccess: () => {
       toast({ title: t("To'plam tayyor!", "Комплект готов!") });
@@ -82,7 +77,7 @@ export default function WarehouseMaterialKits() {
 
   const fetchKitItems = async (kitId: number) => {
     try {
-      const res = await apiRequest("GET", `/api/iot-enhanced/material-kits/${kitId}/items`);
+      const res = (await apiRequest("GET", `/api/iot-enhanced/material-kits/${kitId}/items`)) as unknown as Response;
       if (res.ok) {
         const data = await res.json();
         setKitItems(data);

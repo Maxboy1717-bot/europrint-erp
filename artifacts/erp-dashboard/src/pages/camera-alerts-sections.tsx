@@ -29,7 +29,7 @@ interface StatCardsProps {
   totalAlerts: number;
   unresolvedAlerts: number;
   criticalAlerts: number;
-  t: AlertTranslations;
+  t: AlertTranslations & ((key: string) => string);
 }
 
 export function AlertStatCards({ totalAlerts, unresolvedAlerts, criticalAlerts, t }: StatCardsProps) {
@@ -61,7 +61,7 @@ export function AlertStatCards({ totalAlerts, unresolvedAlerts, criticalAlerts, 
 }
 
 interface PageHeaderProps {
-  t: AlertTranslations;
+  t: AlertTranslations & ((key: string) => string);
   language: Language;
   onLanguageChange: (lang: Language) => void;
 }
@@ -111,7 +111,7 @@ export function AlertPageHeader({ t, language, onLanguageChange }: PageHeaderPro
 interface AlertsTableProps {
   filteredAlerts: CameraAlert[];
   language: Language;
-  t: AlertTranslations;
+  t: AlertTranslations & ((key: string) => string);
   searchTerm: string;
   onSearchChange: (v: string) => void;
   filterType: string;

@@ -54,7 +54,7 @@ export function TaskDetailSheet({
   columns:      KanbanColumn[];
   onUpdate:     (data: Partial<KanbanCard>) => void;
   onDelete:     () => void;
-  t:            typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
   // ── UI state ──────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab]                       = useState("main");

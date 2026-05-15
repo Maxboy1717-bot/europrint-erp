@@ -15,8 +15,10 @@ interface LearningHistoryTablesProps {
   certificates: Certificate[];
 }
 
-export function LearningHistoryTables({ assignments, certificates }: LearningHistoryTablesProps) {
+export function LearningHistoryTables({ assignments = [], certificates = [] }: LearningHistoryTablesProps) {
   const { t } = useTranslation("common");
+  const safeAssignments = Array.isArray(assignments) ? assignments : [];
+  const safeCertificates = Array.isArray(certificates) ? certificates : [];
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Course Assignments Table */}
@@ -38,7 +40,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(assignments) ? assignments : []).slice(0, 5).map((assignment: Assignment) => (
+              {safeAssignments.slice(0, 5).map((assignment: Assignment) => (
                 <TableRow key={assignment.id} data-testid={`row-assignment-${assignment.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{assignment.courseName}</TableCell>
                   <TableCell>{assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString('uz-UZ') : "—"}</TableCell>
@@ -51,7 +53,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
                   </TableCell>
                 </TableRow>
               ))}
-              {assignments.length === 0 && (
+              {safeAssignments.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     {t("noData")}
@@ -82,7 +84,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(certificates) ? certificates : []).slice(0, 5).map((certificate: Certificate) => (
+              {safeCertificates.slice(0, 5).map((certificate: Certificate) => (
                 <TableRow key={certificate.id} data-testid={`row-certificate-${certificate.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{certificate.courseName}</TableCell>
                   <TableCell>{certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString('uz-UZ') : "—"}</TableCell>
@@ -91,7 +93,7 @@ export function LearningHistoryTables({ assignments, certificates }: LearningHis
                   </TableCell>
                 </TableRow>
               ))}
-              {certificates.length === 0 && (
+              {safeCertificates.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4 text-[13px] text-muted-foreground">
                     {t("noData")}

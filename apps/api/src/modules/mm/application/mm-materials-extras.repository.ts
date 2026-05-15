@@ -27,8 +27,8 @@ export class MmMaterialsExtrasRepository {
   try {  
       const pat = search ? `%${search}%` : null;
       return pat
-        ? exec(sql`SELECT mc.id, mc.xom_ashyo, mc.unit, mc.min_stock, mc.category_id, 'raw_material' AS type FROM material_cards mc WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
-        : exec(sql`SELECT mc.id, mc.xom_ashyo, mc.unit, mc.min_stock, mc.category_id, 'raw_material' AS type FROM material_cards mc WHERE mc.is_active = true ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+        ? exec(sql`SELECT mc.id, mc.xom_ashyo, mc.unit_of_measure AS unit, mc.min_stock, mc.category AS category_id, 'raw_material' AS type FROM material_cards mc WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
+        : exec(sql`SELECT mc.id, mc.xom_ashyo, mc.unit_of_measure AS unit, mc.min_stock, mc.category AS category_id, 'raw_material' AS type FROM material_cards mc WHERE mc.is_active = true ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 

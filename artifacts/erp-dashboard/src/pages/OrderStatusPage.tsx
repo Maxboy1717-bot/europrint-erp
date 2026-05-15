@@ -67,8 +67,7 @@ export default function OrderStatusPage() {
     useQuery<StatusChain | string[]>({
       queryKey: ["/api/order-status/chain"],
       queryFn: async () => {
-        const res = await apiRequest("GET", "/api/order-status/chain");
-        return res.json();
+        return await apiRequest("GET", "/api/order-status/chain");
       },
       enabled: tab === "chain",
     });
@@ -77,8 +76,7 @@ export default function OrderStatusPage() {
     useQuery<Record<string, string[]> | StatusTransition[]>({
       queryKey: ["/api/order-status/transitions"],
       queryFn: async () => {
-        const res = await apiRequest("GET", "/api/order-status/transitions");
-        return res.json();
+        return await apiRequest("GET", "/api/order-status/transitions");
       },
       enabled: tab === "chain",
     });
@@ -87,8 +85,7 @@ export default function OrderStatusPage() {
     useQuery<StatusLog[] | { data?: StatusLog[] }>({
       queryKey: ["/api/order-status/log", searched],
       queryFn: async () => {
-        const res = await apiRequest("GET", `/api/order-status/${searched}/log`);
-        return res.json();
+        return await apiRequest("GET", `/api/order-status/${searched}/log`);
       },
       enabled: tab === "log" && !!searched,
     });

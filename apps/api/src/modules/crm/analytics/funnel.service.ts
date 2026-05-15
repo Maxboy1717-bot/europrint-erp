@@ -214,45 +214,41 @@ export class FunnelService {
     velocity: PipelineVelocityResult | { velocity: number; opportunities: number; winRateFraction: number; avgDealSize: number; avgSalesCycleDays: number; winRate: number };
     rawStages: StageRow[];
   }> {
-    const [rows, vRow] = await Promise.all([
-      this.getStageData(pipelineId),
-      this.getVelocityData(),
-    ]);
+    const [rows, vRow] = await Promise.all([this.getStageData(pipelineId), this.getVelocityData()]);
+    const winRateData = await this.computeWinRateBlock(rows);
+    const funnel = await this.computeFunnelBlock(rows);
+    const velocity = await this.computeVelocityBlock(vRow);
+    return { winRate: winRateData, funnel, velocity, rawStages: rows };
+  }
 
-    const won   = rows.filter(r => r.is_won).reduce((s, r) => s + safeNum(r.count), 0);
-    const lost  = rows.filter(r => r.is_lost).reduce((s, r) => s + safeNum(r.count), 0);
+  private async computeWinRateBlock(rows: StageRow[]) {
+    const won  = rows.filter(r => r.is_won).reduce((s, r) => s + safeNum(r.count), 0);
+    const lost = rows.filter(r => r.is_lost).reduce((s, r) => s + safeNum(r.count), 0);
     const total = won + lost;
-
-    const winRateData = total > 0
+    return total > 0
       ? unwrapResult(await this.calculateWinRate({ won, lost }), { won, lost, total, winRate: 0, lossRate: 0 })
       : { won, lost, total, winRate: 0, lossRate: 0 };
+  }
 
+  private async computeFunnelBlock(rows: StageRow[]): Promise<FunnelConversionResult> {
     const stageRows = rows.length
-      ? rows.map((r, i) => ({
-          name:        r.stage_name,
-          entered:     safeNum(r.count),
-          movedToNext: safeNum(rows[i + 1]?.count ?? 0),
-        }))
+      ? rows.map((r, i) => ({ name: r.stage_name, entered: safeNum(r.count), movedToNext: safeNum(rows[i + 1]?.count ?? 0) }))
       : [{ name: 'Ma\'lumot yo\'q', entered: 0, movedToNext: 0 }];
-
-    const funnel = unwrapResult(await this.calculateConversion(stageRows), {
+    return unwrapResult(await this.calculateConversion(stageRows), {
       stages: stageRows.map(s => ({ ...s, conversionRate: 0 })),
       overallConversion: 0,
     });
+  }
 
-    const opportunities   = safeNum(vRow.active_deals);
-    const winRateFraction = safeNum(vRow.closed_count) > 0
-      ? safeNum(vRow.won_count) / safeNum(vRow.closed_count)
-      : 0;
-    const avgDealSize   = safeNum(vRow.avg_deal_size);
-    const avgCycleDays  = Math.max(safeNum(vRow.avg_cycle_days), 1);
-
+  private async computeVelocityBlock(vRow: VelocityRow) {
+    const opportunities = safeNum(vRow.active_deals);
+    const winRateFraction = safeNum(vRow.closed_count) > 0 ? safeNum(vRow.won_count) / safeNum(vRow.closed_count) : 0;
+    const avgDealSize = safeNum(vRow.avg_deal_size);
+    const avgCycleDays = Math.max(safeNum(vRow.avg_cycle_days), 1);
     const velocityInput = { opportunities, winRateFraction, avgDealSize, avgSalesCycleDays: avgCycleDays };
-    const velocity = winRateFraction > 0 && avgDealSize > 0
+    return winRateFraction > 0 && avgDealSize > 0
       ? unwrapResult(await this.calculateVelocity(velocityInput), { velocity: 0, ...velocityInput, winRate: 0 })
       : { velocity: 0, ...velocityInput, winRate: winRateFraction * 100 };
-
-    return { winRate: winRateData, funnel, velocity, rawStages: rows };
   }
 
   async getVelocityData(): Promise<VelocityRow> {

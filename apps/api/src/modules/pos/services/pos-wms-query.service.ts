@@ -9,115 +9,36 @@
  *   LEFT JOIN current_stock cs ON cs.warehouse_id::text = w.id::text
  *   WHERE w.is_active = true
  *   GROUP BY w.id ORDER BY w.name
+ *
+ * Type definitions live in `pos-wms-query.types.ts` so this file stays under
+ * 300 lines (Rule 16). All previously exported interfaces are re-exported
+ * below to preserve existing import paths.
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { safeCall, Result, AppError } from '@common/result';
+import {
+  WmsWarehouse,
+  WmsStockView,
+  WmsMovementHistory,
+  LowStockItem,
+  WarehouseRow,
+  MaterialSearchRow,
+  StockRow,
+  MovementRow,
+  LowStockRow,
+  DEFAULT_MOVEMENT_LIMIT,
+} from './pos-wms-query.types';
 
-// ---------------------------------------------------------------------------
-// Return types
-// ---------------------------------------------------------------------------
-export interface WmsWarehouse {
-  id:             string;
-  code:           string | null;
-  name:           string | null;
-  type:           string | null;
-  isActive:       boolean;
-  totalMaterials: number;
-  totalQty:       number;
-  departmentCode: string | null;
-}
-
-export interface WmsStockView {
-  materialCardId: string | number;
-  materialCode:   string | null;
-  materialName:   string | null;
-  unit:           string | null;
-  availableQty:   number;
-  reservedQty:    number;
-  totalQty:       number;
-  lastUpdated:    Date | string | null;
-}
-
-export interface WmsMovementHistory {
-  id:             string | number;
-  movementNumber: string | null;
-  movementType:   string | null;
-  status:         string | null;
-  createdAt:      Date | string | null;
-  completedAt:    Date | string | null;
-  createdByName:  string | null;
-}
-
-export interface LowStockItem {
-  materialCardId: string | number;
-  materialCode:   string | null;
-  materialName:   string | null;
-  unit:           string | null;
-  availableQty:   number;
-  minStock:       number;
-  warehouseId:    string | null;
-}
-
-// ---------------------------------------------------------------------------
-// Internal raw row shapes
-// ---------------------------------------------------------------------------
-interface WarehouseRow {
-  id:              string | number;
-  code:            string | null;
-  name:            string | null;
-  type:            string | null;
-  is_active:       boolean | null;
-  department_code: string | null;
-  total_materials: string | number | null;
-  total_qty:       string | number | null;
-}
-
-export interface MaterialSearchRow {
-  id:                  string | number;
-  code:                string | null;
-  name:                string | null;
-  category:            string | null;
-  unit:                string | null;
-  material_type:       string | null;
-  available_qty:       string | number | null;
-  warehouse_id:        string | null;
-  last_purchase_price: string | null;
-}
-
-interface StockRow {
-  material_card_id: string | number;
-  material_code:    string | null;
-  material_name:    string | null;
-  unit:             string | null;
-  available_qty:    string | number | null;
-  reserved_qty:     string | number | null;
-  total_qty:        string | number | null;
-  last_updated:     string | null;
-}
-
-interface MovementRow {
-  id:               string | number;
-  movement_number:  string | null;
-  movement_type:    string | null;
-  status:           string | null;
-  created_at:       string | null;
-  completed_at:     string | null;
-  created_by_name:  string | null;
-}
-
-interface LowStockRow {
-  material_card_id: string | number;
-  material_code:    string | null;
-  material_name:    string | null;
-  unit:             string | null;
-  available_qty:    string | number | null;
-  min_stock:        string | number | null;
-  warehouse_id:     string | null;
-}
-
-const DEFAULT_MOVEMENT_LIMIT = 100;
+// Re-export public types so consumers can keep importing from this module.
+export type {
+  WmsWarehouse,
+  WmsStockView,
+  WmsMovementHistory,
+  LowStockItem,
+  MaterialSearchRow,
+} from './pos-wms-query.types';
 
 @Injectable()
 export class PosWmsQueryService {

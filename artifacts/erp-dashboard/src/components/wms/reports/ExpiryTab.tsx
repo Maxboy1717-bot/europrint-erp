@@ -42,7 +42,7 @@ export function ExpiryTab({ t, daysAhead, setDaysAhead }: ExpiryTabProps) {
     queryKey: ["/api/warehouse/reports/expiry", daysAhead],
     queryFn: async () => {
       const params = new URLSearchParams({ daysAhead });
-      const res = await apiRequest('GET', `/api/warehouse/reports/expiry?${params}`);
+      const res = await apiRequest('GET', `/api/warehouse/reports/expiry?${params}`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },

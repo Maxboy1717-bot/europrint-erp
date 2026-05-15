@@ -64,7 +64,8 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
 
   if (!complaints) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
-  const items = complaints.recent || (Array.isArray(complaints) ? complaints : []);
+  const rawItems = complaints?.recent || (Array.isArray(complaints) ? complaints : []);
+  const items = Array.isArray(rawItems) ? rawItems : [];
   const totalCount = complaints.totalCount ?? items.length;
   const resolvedCount = complaints.resolvedCount ?? items.filter((c: Record<string, unknown>) => c.status === "resolved").length;
   const openCount = complaints.openCount ?? items.filter((c: Record<string, unknown>) => c.status !== "resolved" && c.status !== "closed").length;
@@ -145,7 +146,7 @@ export function ComplaintsTab({ customerId, complaints }: { customerId: number; 
                   <Badge variant="outline" className="text-[10px]">{typeLabel[c.type] || c.type}</Badge>
                   <ComplaintStatusBadge status={c.status} />
                 </div>
-                <p className="text-sm">{c.description || c.notes}</p>
+                <p className="text-sm">{String(c.description || c.notes || '')}</p>
                 {c.resolution && (
                   <p className="text-xs text-[var(--ep-green)] dark:text-emerald-400 mt-1.5 flex items-center gap-1">
                     <CheckCircle className="h-3 w-3" />Yechim: {c.resolution}

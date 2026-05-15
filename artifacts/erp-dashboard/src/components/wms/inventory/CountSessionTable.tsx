@@ -24,8 +24,9 @@ interface CountSessionTableProps {
   onView: (count: InventoryCountData) => void;
 }
 
-export function CountSessionTable({ counts, onEdit, onView }: CountSessionTableProps) {
+export function CountSessionTable({ counts = [], onEdit, onView }: CountSessionTableProps) {
   const t = useInventoryCountTranslations();
+  const safeCounts = Array.isArray(counts) ? counts : [];
 
   return (
     <div className="rounded-md border">
@@ -44,14 +45,14 @@ export function CountSessionTable({ counts, onEdit, onView }: CountSessionTableP
           </TableRow>
         </TableHeader>
         <TableBody>
-          {counts.length === 0 ? (
+          {safeCounts.length === 0 ? (
             <TableRow>
               <TableCell colSpan={9} className="h-24 text-center">
                 {t.noDataFound}
               </TableCell>
             </TableRow>
           ) : (
-            (Array.isArray(counts) ? counts : []).map((count) => (
+            safeCounts.map((count) => (
               <TableRow key={count.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium">{count.countNumber}</TableCell>
                 <TableCell>{format(new Date(count.countDate), "dd.MM.yyyy")}</TableCell>

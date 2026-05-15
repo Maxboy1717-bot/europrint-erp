@@ -55,33 +55,31 @@ export class CrmAutoLeadService {
       const rResult = await this.repo.getChurnRisk(entityType, eid);
       const r = (rResult.ok ? rResult.data : null) as Record<string, unknown> | null;
       if (!r) return null;
-
-      const updatedAt = r['updated_at'] ? new Date(r['updated_at'] as string) : new Date(r['created_at'] as string);
-      const daysSinceUpdate = Math.floor((Date.now() - updatedAt.getTime()) / MS_PER_DAY);
-      const riskLevel = daysSinceUpdate > 30 ? 'yuqori' : daysSinceUpdate > 14 ? "o'rta" : 'past';
-      const riskScore = Math.min(100, Math.round((daysSinceUpdate / 45) * 100));
-
-      return {
-        entity_type: entityType,
-        entity_id: eid,
-        riskLevel,
-        riskScore,
-        riskFactors: [
-          ...(daysSinceUpdate > 14 ? [`${daysSinceUpdate} kun davomida yangilanmagan`] : []),
-          ...(r['status'] === 'stalled' ? ["Jarayon to'xtagan"] : []),
-        ],
-        rescueScenario: {
-          actions: [
-            "Shaxsiy qo'ng'iroq qilish",
-            'Maxsus taklif yuborish',
-            'Yuqori rahbariyat bilan aloqa',
-          ],
-          timeline: '3-5 kun',
-          successProbability: Math.max(20, 80 - riskScore),
-          keyMessage: "Sizning ehtiyojlaringiz bizga muhim, birgalikda yechim topamiz",
-        },
-        retentionOffer: riskLevel === 'yuqori' ? '10% chegirma + bepul yetkazib berish' : null,
-      };
+      return this.buildRescuePlan(entityType, eid, r);
     });
+  }
+
+  private buildRescuePlan(entityType: string, eid: number, r: Record<string, unknown>): object {
+    const updatedAt = r['updated_at'] ? new Date(r['updated_at'] as string) : new Date(r['created_at'] as string);
+    const daysSinceUpdate = Math.floor((Date.now() - updatedAt.getTime()) / MS_PER_DAY);
+    const riskLevel = daysSinceUpdate > 30 ? 'yuqori' : daysSinceUpdate > 14 ? "o'rta" : 'past';
+    const riskScore = Math.min(100, Math.round((daysSinceUpdate / 45) * 100));
+    return {
+      entity_type: entityType,
+      entity_id: eid,
+      riskLevel,
+      riskScore,
+      riskFactors: [
+        ...(daysSinceUpdate > 14 ? [`${daysSinceUpdate} kun davomida yangilanmagan`] : []),
+        ...(r['status'] === 'stalled' ? ["Jarayon to'xtagan"] : []),
+      ],
+      rescueScenario: {
+        actions: ["Shaxsiy qo'ng'iroq qilish", 'Maxsus taklif yuborish', 'Yuqori rahbariyat bilan aloqa'],
+        timeline: '3-5 kun',
+        successProbability: Math.max(20, 80 - riskScore),
+        keyMessage: "Sizning ehtiyojlaringiz bizga muhim, birgalikda yechim topamiz",
+      },
+      retentionOffer: riskLevel === 'yuqori' ? '10% chegirma + bepul yetkazib berish' : null,
+    };
   }
 }

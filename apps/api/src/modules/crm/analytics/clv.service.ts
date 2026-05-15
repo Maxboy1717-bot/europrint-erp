@@ -84,8 +84,13 @@ export class ClvService {
    */
   @Calculation('crm.clv.simple')
   async calculateSimple(input: SimpleClvInput): Promise<Result<SimpleClvResult, AppError>> {
-    const { avgOrderValue, purchaseFrequencyPerYear, grossMarginRate, churnRate } = input;
+    const validationErr = this.validateSimpleInput(input);
+    if (validationErr) return validationErr;
+    return Ok(this.buildSimpleResult(input));
+  }
 
+  private validateSimpleInput(input: SimpleClvInput): Result<SimpleClvResult, AppError> | null {
+    const { avgOrderValue, purchaseFrequencyPerYear, grossMarginRate, churnRate } = input;
     if (safeNum(grossMarginRate) < 0 || safeNum(grossMarginRate) > 1) {
       return Err({ code: 'BAD_REQUEST', message: 'grossMarginRate 0..1 oralig\'ida bo\'lishi kerak' });
     }
@@ -97,25 +102,24 @@ export class ClvService {
     if (safeNum(avgOrderValue) < 0 || safeNum(purchaseFrequencyPerYear) < 0) {
       return Err({ code: 'BAD_REQUEST', message: 'avgOrderValue va purchaseFrequency musbat bo\'lishi kerak' });
     }
+    return null;
+  }
 
-    const aov = safeNum(avgOrderValue);
-    const freq = safeNum(purchaseFrequencyPerYear);
-    const margin = safeNum(grossMarginRate);
-    const churn = safeNum(churnRate);
-
+  private buildSimpleResult(input: SimpleClvInput): SimpleClvResult {
+    const aov = safeNum(input.avgOrderValue);
+    const freq = safeNum(input.purchaseFrequencyPerYear);
+    const margin = safeNum(input.grossMarginRate);
+    const churn = safeNum(input.churnRate);
     const annualRevenue = aov * freq;
     const annualMargin = annualRevenue * margin;
-    const avgLifespanYears = safeDiv(1, churn);   // geometric mean lifetime
-    const clv = safeDiv(annualMargin, churn);     // perpetuity formula, no discount
-
-    return Ok({
-      clv,
+    return {
+      clv: safeDiv(annualMargin, churn),
       avgOrderValue: aov,
       annualRevenue,
       annualMargin,
       churnRate: churn,
-      avgLifespanYears,
-    });
+      avgLifespanYears: safeDiv(1, churn),
+    };
   }
 
   /**

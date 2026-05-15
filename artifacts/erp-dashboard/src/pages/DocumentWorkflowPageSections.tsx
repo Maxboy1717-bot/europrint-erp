@@ -13,7 +13,6 @@ import {
   STATUS_COLORS, STATUS_LABEL_KEYS, DOC_TYPES_KEYS,
 } from "./DocumentWorkflowPageTypes";
 import { DeadlineBadge, docTypeLabel } from "./DocumentWorkflowPageHelpers";
-import { useTranslation } from "@/lib/i18n";
 
 type TFn = (key: string) => string;
 
@@ -194,7 +193,6 @@ interface CreateDocumentFormProps {
 export function CreateDocumentForm({
   form, createIsPending, t, tCommon, onFormChange, onSubmit, onCancel,
 }: CreateDocumentFormProps) {
-  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-primary max-w-2xl">
       <CardHeader>

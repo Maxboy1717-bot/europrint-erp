@@ -72,7 +72,9 @@ export class ChatService {
       return parsed;
     }
     try {
-      const usernameResult = await this.roomRepo.findUserByAdminId(rawId)
+      // Promise.resolve() defends against repo stubs that return undefined/void
+      // (e.g. in narrow unit tests) — without it, `.catch` on undefined throws TypeError.
+      const usernameResult = await Promise.resolve(this.roomRepo.findUserByAdminId(rawId))
         .catch((e: unknown) => { this.logger.debug('findUserByAdminId failed', String(e)); });
       const username = usernameResult?.ok ? usernameResult.data : null;
       if (username) {
@@ -80,7 +82,7 @@ export class ChatService {
         const numId = numIdResult.ok ? numIdResult.data : null;
         if (numId && !isNaN(numId)) { this._userIdCache.set(rawId, numId); return numId; }
       }
-      const numId2Result = await this.roomRepo.findUserById(rawId)
+      const numId2Result = await Promise.resolve(this.roomRepo.findUserById(rawId))
         .catch((e: unknown) => { this.logger.debug('findUserById failed', String(e)); });
       const numId2 = numId2Result?.ok ? numId2Result.data : null;
       if (numId2 && !isNaN(numId2)) { this._userIdCache.set(rawId, numId2); return numId2; }

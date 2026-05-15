@@ -29,7 +29,6 @@ import {
 import { Link } from "wouter";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 interface EmployeeProductivity {
   id: number;
   userId: string;
@@ -57,7 +56,6 @@ interface TopEmployee {
 }
 
 export default function CameraEmployees() {
-  const { t } = useTranslation("common");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
   const { data: productivity, isLoading: productivityLoading, isError, refetch} = useQuery<EmployeeProductivity[]>({
@@ -143,8 +141,8 @@ export default function CameraEmployees() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimKuzatuvi")}</b></>}
-        title={t("xodimKuzatuvi")}
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
+        title={t.title}
         subtitle={t.subtitle}
       />
         </div>

@@ -56,6 +56,7 @@ import { HrAttendanceController } from './presentation/hr-attendance.controller'
 import { HrPayrollController } from './presentation/hr-payroll.controller';
 import { HrLeaveController } from './presentation/hr-leave.controller';
 import { HrDashboardController } from './presentation/hr-dashboard.controller';
+import { HrDashboardStubsController } from './presentation/hr-dashboard-stubs.controller';
 import { HrDashboardExtraController, HrCapitalController } from './presentation/hr-dashboard-extra.controller';
 import { HrShiftsCompatController } from './presentation/hr-shifts-compat.controller';
 import { HrCompatAController } from './presentation/hr-compat-a.controller';
@@ -77,6 +78,7 @@ import { OnboardingController } from './onboarding/onboarding.controller';
 import { OnboardingService } from './onboarding/onboarding.service';
 import { OnboardingJobService } from './onboarding/onboarding-job.service';
 import { RecruitmentController } from './recruitment/recruitment.controller';
+import { RecruitmentOffersController } from './recruitment/recruitment-offers.controller';
 import { RecruitmentService } from './recruitment/recruitment.service';
 import { RecruitmentFunnelService } from './recruitment/recruitment-funnel.service';
 import { RecruitmentAssessmentService } from './recruitment/recruitment-assessment.service';
@@ -99,9 +101,10 @@ import { HR_ONBOARDING_REPO } from './onboarding/repos/i-hr-onboarding.repo';
 import { DrizzleHrOnboardingRepository } from './onboarding/repos/drizzle-hr-onboarding.repo';
 import { HR_RECRUITMENT_FUNNEL_REPO } from './recruitment/repos/i-hr-recruitment-funnel.repo';
 import { DrizzleHrRecruitmentFunnelRepository } from './recruitment/repos/drizzle-hr-recruitment-funnel.repo';
-import { HrVacanciesController } from './recruitment/hr-vacancies.controller';
+import { HrVacanciesController, HrVacanciesPipelineController } from './recruitment/hr-vacancies.controller';
 import { HrVacanciesService } from './recruitment/hr-vacancies.service';
 import { DrizzleHrVacanciesRepository } from './recruitment/repos/drizzle-hr-vacancies.repo';
+import { DrizzleHrVacanciesFunnelRepository } from './recruitment/repos/drizzle-hr-vacancies-funnel.repo';
 import { HrSafetyController } from './safety/hr-safety.controller';
 import { HrSafetyService } from './safety/hr-safety.service';
 import { HrSafetyRepository } from './safety/hr-safety.repository';
@@ -160,6 +163,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
   ],
   controllers: [
     HrDashboardController,
+    HrDashboardStubsController,
     HrDashboardExtraController,
     HrCapitalController,
     HrShiftsCompatController,
@@ -172,7 +176,9 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrLeaveController,
     OnboardingController,
     RecruitmentController,
+    RecruitmentOffersController,
     HrVacanciesController,
+    HrVacanciesPipelineController,
     HrSafetyController,
     HrOffboardingController,
     HrGsdController,
@@ -222,6 +228,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrAttendanceService,
     HrVacanciesService,
     DrizzleHrVacanciesRepository,
+    DrizzleHrVacanciesFunnelRepository,
     HrSafetyService,
     HrSafetyRepository,
     HrOffboardingService,

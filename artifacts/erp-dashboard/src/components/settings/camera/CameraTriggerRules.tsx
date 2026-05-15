@@ -41,7 +41,7 @@ export function CameraTriggerRules() {
     triggerRules: TriggerRule[];
   }>({
     queryKey: ["/api/camera-ai/cameras", selectedCameraId, "trigger-rules"],
-    queryFn: () => apiRequest('GET', `/api/camera-ai/cameras/${selectedCameraId}/trigger-rules`).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/camera-ai/cameras/${selectedCameraId}/trigger-rules`).then(r => (r as unknown as Response).json()),
     enabled: !!selectedCameraId,
   });
 

@@ -13,7 +13,7 @@ import { GetCampaignsHandler } from './application/queries/get-campaigns.handler
 import { GetCampaignHandler } from './application/queries/get-campaign.handler';
 import { MarketingController } from './presentation/marketing.controller';
 import { MarketingContentController } from './presentation/marketing-content.controller';
-import { MarketingAnalyticsController } from './presentation/marketing-analytics.controller';
+import { MarketingAnalyticsController, MarketingAnalyticsStubsController } from './presentation/marketing-analytics.controller';
 import { MarketingExtService } from './application/marketing-ext.service';
 import { DrizzleMarketingExtRepository } from './infrastructure/repositories/drizzle-marketing-ext.repo';
 import { LeadsService } from './leads/leads.service';
@@ -34,7 +34,7 @@ const repositories = [
 
 @Module({
   imports: [CqrsModule, AuthModule],
-  controllers: [MarketingController, MarketingContentController, MarketingAnalyticsController],
+  controllers: [MarketingController, MarketingContentController, MarketingAnalyticsController, MarketingAnalyticsStubsController],
   providers: [...commandHandlers, ...queryHandlers, ...repositories, DrizzleMarketingExtRepository, MarketingExtService, LeadsRepository, LeadsService, CampaignsRepository, CampaignsService],
   exports: [CAMPAIGN_REPO],
 })

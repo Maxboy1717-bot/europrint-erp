@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   SUM(ABS(quantity)) * (52.0 / GREATEST(COUNT(DISTINCT DATE_TRUNC('week',
+ *   created_at)), 1)) annual-demand normalisation, regex predicate
+ *   ~ '^[0-9]+$' to validate integer-coerceable text product_id, and
+ *   INSERT ... ON CONFLICT (material_id) DO UPDATE SET ... = EXCLUDED.* for
+ *   the material_recommendation upsert path.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module wms-eoq.service
  * @description Economic Order Quantity (EOQ) recalculation engine. For every
  *   material, computes the order quantity that minimises (setup + holding)
@@ -137,8 +146,11 @@ export class WmsEoqService {
           AND created_at >= NOW() - INTERVAL '52 weeks'
         GROUP BY product_id::integer
       `);
+      const demandRows = Array.isArray(demandResult?.rows)
+        ? demandResult.rows
+        : (Array.isArray(demandResult) ? demandResult : []);
       const demandByMaterial = new Map<number, number>();
-      for (const d of demandResult.rows ?? []) {
+      for (const d of demandRows) {
         demandByMaterial.set(Number(d['material_id']), safeNum(d['annual_demand']));
       }
 
@@ -148,15 +160,21 @@ export class WmsEoqService {
         ORDER BY material_id, min_qty
       `);
 
+      const tierRows = Array.isArray(tiersResult?.rows)
+        ? tiersResult.rows
+        : (Array.isArray(tiersResult) ? tiersResult : []);
       const tiersByMaterial = new Map<number, PriceTier[]>();
-      for (const t of tiersResult.rows ?? []) {
+      for (const t of tierRows) {
         const mid = safeNum(t.material_id);
         const arr = tiersByMaterial.get(mid) ?? [];
         arr.push({ minQty: safeNum(t.min_qty), maxQty: t.max_qty ?? undefined, unitPrice: safeNum(t.unit_price) });
         tiersByMaterial.set(mid, arr);
       }
 
-      for (const m of materialsResult.rows ?? []) {
+      const materialRows = Array.isArray(materialsResult?.rows)
+        ? materialsResult.rows
+        : (Array.isArray(materialsResult) ? materialsResult : []);
+      for (const m of materialRows) {
         processed++;
         const matId = safeNum(m.id);
         const unitPrice = safeNum(m.unit_price);

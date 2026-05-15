@@ -83,9 +83,7 @@ export default function KnowledgeBasePage() {
   // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: KnowledgeBasePayload) => {
-      const res = await apiRequest('POST', "/api/knowledge-base", data);
-      if (!res.ok) throw new Error("Failed to create");
-      return res.json();
+      return await apiRequest('POST', "/api/knowledge-base", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-base"] });
@@ -99,9 +97,7 @@ export default function KnowledgeBasePage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: KnowledgeBasePayload }) => {
-      const res = await apiRequest('PATCH', `/api/knowledge-base/${id}`, data);
-      if (!res.ok) throw new Error("Failed to update");
-      return res.json();
+      return await apiRequest('PATCH', `/api/knowledge-base/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-base"] });
@@ -116,9 +112,7 @@ export default function KnowledgeBasePage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest('DELETE', `/api/knowledge-base/${id}`);
-      if (!res.ok) throw new Error("Failed to delete");
-      return res.json();
+      return await apiRequest('DELETE', `/api/knowledge-base/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-base"] });
@@ -131,9 +125,7 @@ export default function KnowledgeBasePage() {
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await apiRequest('POST', "/api/knowledge-base/upload");
-      if (!res.ok) throw new Error("Failed to upload");
-      return res.json();
+      return await apiRequest('POST', "/api/knowledge-base/upload");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-base"] });

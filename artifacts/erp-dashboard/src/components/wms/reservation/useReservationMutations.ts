@@ -25,7 +25,7 @@ export function useReservationMutations({
 
   const optimizeMutation = useMutation({
     mutationFn: async (params: { materialType: string; quantity: number }) => {
-      const res = await apiRequest('GET', `/api/ai-reservation/optimize?materialType=${encodeURIComponent(params.materialType)}&quantity=${params.quantity}`);
+      const res = await apiRequest('GET', `/api/ai-reservation/optimize?materialType=${encodeURIComponent(params.materialType)}&quantity=${params.quantity}`) as unknown as Response;
       if (!res.ok) throw new Error("Optimization failed");
       return res.json();
     },

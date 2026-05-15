@@ -123,6 +123,7 @@ interface QuestionDialogProps {
 }
 
 export function QuestionDialog({ open, onOpenChange, editingQuestion, onClose }: QuestionDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [questionForm, setQuestionForm] = useState({
     indicator: "A", text_uz: "", text_ru: "", weight: "1",

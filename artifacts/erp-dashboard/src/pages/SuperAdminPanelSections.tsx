@@ -23,7 +23,36 @@ export function PlatformStatsCards({ platformStats, statsLoading, formatUptime }
 
 // ── Expiry Alerts ───────────────────────────────────────────────────────────── 
 
-export function ExpiryAlertsCard({ expiryData }: { expiryData: ExpiryAlertsData | undefined }) { if ((expiryData?.total ?? 0) === 0) return null; return ( <Card className="border-amber-500/40"> <CardHeader className="pb-3"> <CardTitle className="flex items-center gap-2 text-[var(--ep-yellow)] dark:text-amber-400"><AlertTriangle className="w-5 h-5" />{t("litsenziyaMuddatiYaqinlashmoqda")}</CardTitle> <CardDescription>{expiryData?.expired ?? 0} ta muddati o'tgan, {expiryData?.expiring ?? 0} ta 30 kun ichida tugaydi</CardDescription> </CardHeader> <CardContent> <div className="space-y-2"> {expiryData?.tenants?.map(t => ( <div key={t.id} className="flex items-center justify-between p-3 rounded-md bg-muted/50" data-testid={`expiry-alert-${t.id}`}> <div className="flex items-center gap-3"> <div className={`w-2 h-2 rounded-full ${t.isExpired ? "bg-red-500" : t.daysRemaining <= 7 ? "bg-amber-500" : "bg-yellow-400"}`} /> <div><p className="font-medium text-sm">{t.name}</p><p className="text-xs text-muted-foreground">{t.plan} · {t.expiresAt}</p></div> </div> <div className="flex items-center gap-2"> <Badge variant={t.isExpired ? "destructive" : "outline"}><Clock className="w-3 h-3 mr-1" />{t.isExpired ? "Muddati o'tgan" : `${t.daysRemaining} kun qoldi`}</Badge> {t.contactPhone && <span className="text-xs text-muted-foreground">{t.contactPhone}</span>} </div> </div> ))} </div> </CardContent> </Card> ); } 
+export function ExpiryAlertsCard({ expiryData }: { expiryData: ExpiryAlertsData | undefined }) {
+  const { t } = useTranslation("common");
+  if ((expiryData?.total ?? 0) === 0) return null;
+  return (
+    <Card className="border-amber-500/40">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-[var(--ep-yellow)] dark:text-amber-400">
+          <AlertTriangle className="w-5 h-5" />{t("litsenziyaMuddatiYaqinlashmoqda")}
+        </CardTitle>
+        <CardDescription>{expiryData?.expired ?? 0} ta muddati o'tgan, {expiryData?.expiring ?? 0} ta 30 kun ichida tugaydi</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {expiryData?.tenants?.map(tenant => (
+            <div key={tenant.id} className="flex items-center justify-between p-3 rounded-md bg-muted/50" data-testid={`expiry-alert-${tenant.id}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${tenant.isExpired ? "bg-red-500" : tenant.daysRemaining <= 7 ? "bg-amber-500" : "bg-yellow-400"}`} />
+                <div><p className="font-medium text-sm">{tenant.name}</p><p className="text-xs text-muted-foreground">{tenant.plan} · {tenant.expiresAt}</p></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={tenant.isExpired ? "destructive" : "outline"}><Clock className="w-3 h-3 mr-1" />{tenant.isExpired ? "Muddati o'tgan" : `${tenant.daysRemaining} kun qoldi`}</Badge>
+                {tenant.contactPhone && <span className="text-xs text-muted-foreground">{tenant.contactPhone}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 // ── Tenants Tab ─────────────────────────────────────────────────────────────── 
 
@@ -39,25 +68,25 @@ export function TenantsTab({ tenants, tenantsLoading, onboardMutation, updateSta
             <div className="ep-table-scroll"><Table>
               <TableHeader className="sticky top-0 z-10 bg-card"><TableRow><TableHead>{t("name")}</TableHead><TableHead>{t("domain")}</TableHead><TableHead>{t("reja")}</TableHead><TableHead>{t('status19')}</TableHead><TableHead>{t("foydalanuvchilar")}</TableHead><TableHead>{t("modullar")}</TableHead><TableHead>{t("muddati")}</TableHead><TableHead>{t("Amallar")}</TableHead></TableRow></TableHeader>
               <TableBody>
-                {(Array.isArray(tenants) ? tenants : []).map(t => (
-                  <TableRow key={t.id} data-testid={`row-tenant-${t.id}`} className="hover:bg-muted/40 transition-colors">
-                    <TableCell><div><p className="font-medium">{t.name}</p>{t.contactEmail && <p className="text-xs text-muted-foreground">{t.contactEmail}</p>}</div></TableCell>
-                    <TableCell className="font-mono text-sm">{t.domain}</TableCell>
-                    <TableCell><Badge variant="outline">{PLAN_LABELS[t.plan]}</Badge></TableCell>
-                    <TableCell><Badge variant={STATUS_COLORS[t.status]}>{STATUS_LABELS[t.status]}</Badge></TableCell>
-                    <TableCell>{t.usersCount}</TableCell>
-                    <TableCell><EPStatusPill tone="neutral">{t.modulesEnabled.length} modul</EPStatusPill></TableCell>
+                {(Array.isArray(tenants) ? tenants : []).map(tenant => (
+                  <TableRow key={tenant.id} data-testid={`row-tenant-${tenant.id}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell><div><p className="font-medium">{tenant.name}</p>{tenant.contactEmail && <p className="text-xs text-muted-foreground">{tenant.contactEmail}</p>}</div></TableCell>
+                    <TableCell className="font-mono text-sm">{tenant.domain}</TableCell>
+                    <TableCell><Badge variant="outline">{PLAN_LABELS[tenant.plan]}</Badge></TableCell>
+                    <TableCell><Badge variant={STATUS_COLORS[tenant.status]}>{STATUS_LABELS[tenant.status]}</Badge></TableCell>
+                    <TableCell>{tenant.usersCount}</TableCell>
+                    <TableCell><EPStatusPill tone="neutral">{tenant.modulesEnabled.length} modul</EPStatusPill></TableCell>
                     <TableCell className="text-sm">
-                      {t.expiresAt ? (<div><p>{t.expiresAt}</p>{(() => { const d = Math.ceil((new Date(t.expiresAt).getTime() - Date.now()) / 86400000); if (d < 0) return <EPStatusPill tone="danger" className="text-xs mt-1">{t("otgan1")}</EPStatusPill>; if (d <= 14) return <Badge variant="outline" className="text-xs mt-1 text-[var(--ep-yellow)]">{d}k qoldi</Badge>; return null; })()}</div>) : <span className="text-muted-foreground">—</span>}
+                      {tenant.expiresAt ? (<div><p>{tenant.expiresAt}</p>{(() => { const d = Math.ceil((new Date(tenant.expiresAt).getTime() - Date.now()) / 86400000); if (d < 0) return <EPStatusPill tone="danger" className="text-xs mt-1">{t("otgan1")}</EPStatusPill>; if (d <= 14) return <Badge variant="outline" className="text-xs mt-1 text-[var(--ep-yellow)]">{d}k qoldi</Badge>; return null; })()}</div>) : <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" title={t("onboarding")} data-testid={`button-onboard-${t.id}`} onClick={() => onboardMutation.mutate(t.id)} disabled={onboardMutation.isPending}><Rocket className="w-3 h-3" /></Button>
-                        <Button size="icon" variant="ghost" title={t("modullarniTahrirlash")} data-testid={`button-edit-modules-${t.id}`} onClick={() => onEditModules(t)}><Zap className="w-3 h-3" /></Button>
-                        {t.status === "active"
-                          ? <Button size="icon" variant="ghost" title={t("toxtatish")} data-testid={`button-suspend-${t.id}`} onClick={() => updateStatusMutation.mutate({ id: t.id, status: "suspended" })}><XCircle className="w-3 h-3 text-[var(--ep-red)]" /></Button>
-                          : <Button size="icon" variant="ghost" title={t("faollashtirish")} data-testid={`button-activate-${t.id}`} onClick={() => updateStatusMutation.mutate({ id: t.id, status: "active" })}><CheckCircle className="w-3 h-3 text-[var(--ep-green)]" /></Button>}
-                        <Button size="icon" variant="ghost" title={t("delete")} data-testid={`button-delete-tenant-${t.id}`} onClick={() => onDeleteTenant(t.id)}><Trash2 className="w-3 h-3 text-muted-foreground" /></Button>
+                        <Button size="icon" variant="ghost" title={t("onboarding")} data-testid={`button-onboard-${tenant.id}`} onClick={() => onboardMutation.mutate(tenant.id)} disabled={onboardMutation.isPending}><Rocket className="w-3 h-3" /></Button>
+                        <Button size="icon" variant="ghost" title={t("modullarniTahrirlash")} data-testid={`button-edit-modules-${tenant.id}`} onClick={() => onEditModules(tenant)}><Zap className="w-3 h-3" /></Button>
+                        {tenant.status === "active"
+                          ? <Button size="icon" variant="ghost" title={t("toxtatish")} data-testid={`button-suspend-${tenant.id}`} onClick={() => updateStatusMutation.mutate({ id: tenant.id, status: "suspended" })}><XCircle className="w-3 h-3 text-[var(--ep-red)]" /></Button>
+                          : <Button size="icon" variant="ghost" title={t("faollashtirish")} data-testid={`button-activate-${tenant.id}`} onClick={() => updateStatusMutation.mutate({ id: tenant.id, status: "active" })}><CheckCircle className="w-3 h-3 text-[var(--ep-green)]" /></Button>}
+                        <Button size="icon" variant="ghost" title={t("delete")} data-testid={`button-delete-tenant-${tenant.id}`} onClick={() => onDeleteTenant(tenant.id)}><Trash2 className="w-3 h-3 text-muted-foreground" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>

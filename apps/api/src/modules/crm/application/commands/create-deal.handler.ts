@@ -31,19 +31,30 @@ export class CreateDealHandler implements ICommandHandler<CreateDealCommand> {
   ) {}
 
   async execute(command: CreateDealCommand): Promise<Result<Deal>> {
+    const propsR = this.buildDealProps(command);
+    if (isErr(propsR)) return Err(propsR.error);
+    const deal = Deal.create(propsR.data);
+    const saveResult = await this.dealRepo.save(deal);
+    if (isErr(saveResult)) {
+      this.logger.error({ msg: 'Failed to save deal', error: saveResult.error.message });
+      return Err(AppErr('INTERNAL', 'Failed to save deal'));
+    }
+    this.logger.log({ msg: 'Deal created successfully', dealId: saveResult.data.getId(), companyId: command.companyId });
+    return Ok(saveResult.data);
+  }
+
+  private buildDealProps(command: CreateDealCommand): Result<DealCreateProps> {
     let money: Money;
     try {
       money = Money.of(command.totalAmount, command.currency);
     } catch {
       return Err(AppErr('VALIDATION', 'Invalid deal amount'));
     }
-
     const statusResult = DealStatus.create('qualification');
     if (!statusResult.ok || !statusResult.data) {
       return Err(AppErr('VALIDATION', 'Invalid deal status'));
     }
-
-    const dealProps: DealCreateProps = {
+    return Ok({
       leadId: command.leadId,
       companyId: command.companyId,
       dealNumber: `DEAL-${Date.now()}`,
@@ -54,17 +65,6 @@ export class CreateDealHandler implements ICommandHandler<CreateDealCommand> {
       createdBy: command.createdBy,
       description: command.description,
       expectedClosureDate: command.expectedClosureDate,
-    };
-
-    const deal = Deal.create(dealProps);
-
-    const saveResult = await this.dealRepo.save(deal);
-    if (isErr(saveResult)) {
-      this.logger.error({ msg: 'Failed to save deal', error: saveResult.error.message });
-      return Err(AppErr('INTERNAL', 'Failed to save deal'));
-    }
-
-    this.logger.log({ msg: 'Deal created successfully', dealId: saveResult.data.getId(), companyId: command.companyId });
-    return Ok(saveResult.data);
+    });
   }
 }

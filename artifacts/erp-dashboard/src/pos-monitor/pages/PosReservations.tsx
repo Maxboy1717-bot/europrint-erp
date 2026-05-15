@@ -41,6 +41,7 @@ export default function PosReservations() {
       const token = JSON.parse(localStorage.getItem("pos_session") ?? "{}")?.token ?? "";
       // Backend endpoint kerak: /api/pos/reservations
       // Hozircha — stock_reservations dan o'qiymiz
+      // NOTE: POS uses its own pos_session token, not access_token — keep raw fetch
       const r = await fetch("/api/pos/stock", {
         headers: { Authorization: `Bearer ${token}` },
       }).then(r => r.json()).catch(() => []);

@@ -15,7 +15,6 @@ import { Play, Barcode, Package, Users, CheckCircle, Clock, ScanLine, ClipboardC
 import { UseMutationResult } from "@tanstack/react-query";
 import { ChecklistMaterial, Employee, CrewAssignment, ProductionSession, IotLang } from "./iot-types";
 import { EPStatusPill, EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 interface IoTChecklistModalProps {
   lang: IotLang;
@@ -36,7 +35,6 @@ export function IoTChecklistModal({
   lang, open, onOpenChange, checklistKitBarcode, checklistMaterials, crewAssignment,
   setCrewAssignment, employees, scanningItemId, scanMaterial, startProductionFromChecklist, activeSession,
 }: IoTChecklistModalProps) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   const allScanned = (Array.isArray(checklistMaterials) ? checklistMaterials : []).every(m => m.isScanned);
 

@@ -65,7 +65,8 @@ export function ContractsTab({ customerId, contracts }: { customerId: number; co
 
   if (!contracts) return <div className="text-sm text-muted-foreground py-8 text-center">{t("malumotYuklanmadi")}</div>;
 
-  const allDocs = contracts.allDocuments || contracts.contracts || (Array.isArray(contracts) ? contracts : []);
+  const rawDocs = contracts?.allDocuments || contracts?.contracts || (Array.isArray(contracts) ? contracts : []);
+  const allDocs = Array.isArray(rawDocs) ? rawDocs : [];
   const contractDocs = (contracts.contracts || []);
   const expiringSoon = contracts.expiringSoon || [];
   const today = new Date();

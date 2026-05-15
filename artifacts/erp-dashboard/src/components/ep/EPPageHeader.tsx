@@ -51,6 +51,27 @@ interface EPPageHeaderProps {
   /** Status pill shown next to the title (e.g. live indicator). */
   status?: React.ReactNode;
   className?: string;
+  /** Optional icon rendered alongside title. */
+  icon?: React.ReactNode;
+  /** Extra children rendered after header (e.g. tabs row). */
+  children?: React.ReactNode;
+  /** Optional refresh handler (renders refresh button when supplied). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onRefresh?: (...args: never[]) => unknown;
+  /** Optional create handler (renders create button when supplied). */
+  onOpenCreate?: () => void;
+  /** Optional create dialog slot rendered after actions. */
+  createDialogSlot?: React.ReactNode;
+  /** Optional translation map (legacy callers). */
+  text?: unknown;
+  /** Optional auxiliary boolean flag (legacy callers). */
+  modelsLoaded?: boolean;
+  /** Optional language code (legacy callers). */
+  lang?: string;
+  /** Optional language toggle (legacy callers). */
+  onToggleLang?: () => void;
+  /** Optional test id. */
+  "data-testid"?: string;
 }
 
 export function EPPageHeader({

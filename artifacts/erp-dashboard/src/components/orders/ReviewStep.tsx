@@ -5,8 +5,6 @@
 
 import { AlertTriangle } from "lucide-react";
 import { FormData, Translation, BomHeader, Product } from "./types";
-import { useTranslation } from '@/lib/i18n';
-
 interface ReviewStepProps {
   formData: FormData;
   t: Translation;
@@ -20,7 +18,7 @@ export function ReviewStep({
   selectedBom,
   insufficientCount,
 }: ReviewStepProps) {
-  const { t } = useTranslation("common");
+
   return (
     <div className="space-y-8 animate-in fade-in zoom-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -59,7 +57,7 @@ export function ReviewStep({
           <AlertTriangle className="h-6 w-6 text-[var(--ep-red)] shrink-0" />
           <div>
             <p className="text-[var(--ep-red)] font-bold">{t.insufficientMaterials}</p>
-            <p className="text-[var(--ep-red)]/80 text-sm mt-1">{t("baziMateriallarYetarliEmasShunga")}</p>
+            <p className="text-[var(--ep-red)]/80 text-sm mt-1">{"Ba'zi materiallar yetarli emas. Shunga e'tibor bering."}</p>
           </div>
         </div>
       )}

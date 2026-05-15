@@ -103,7 +103,7 @@ export default function CRMWorkspace() {
       {/* KPI Cards */}
       {showKpi && (
         <CRMKpiCards
-          items={filteredItems as { id: number; [key: string]: unknown }[]}
+          items={filteredItems as unknown as { id: number; [key: string]: unknown }[]}
           stages={stages}
           activeEntity={activeEntity}
           stageValues={stageValues}

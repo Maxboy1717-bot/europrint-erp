@@ -160,6 +160,7 @@ interface StoppageAnalysisProps {
 }
 
 export function StoppageAnalysis({ mes }: StoppageAnalysisProps) {
+  const { t } = useTranslation("common");
   const history = mes?.stoppageHistory ?? [];
   if (history.length === 0) return null;
 

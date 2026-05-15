@@ -25,7 +25,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { t } = useTranslation("common");
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('uz-UZ').format(value);

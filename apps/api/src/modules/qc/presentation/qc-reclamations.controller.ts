@@ -1,4 +1,12 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   COUNT(*) FILTER (WHERE ...) aggregate-filter clauses for multi-status
+ *   tallies in a single round-trip, AVG(EXTRACT(EPOCH FROM (resolved_at -
+ *   created_at)) / 86400) FILTER (WHERE resolved_at IS NOT NULL) for
+ *   conditional resolution-time average, all rolled into one stats query.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module qc-reclamations.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */

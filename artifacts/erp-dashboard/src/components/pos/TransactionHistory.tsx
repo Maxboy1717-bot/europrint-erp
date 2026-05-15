@@ -25,13 +25,14 @@ interface TransactionHistoryProps {
 }
 
 export function TransactionHistory({
-  transactions,
+  transactions = [],
   setViewTransaction,
   refundMutation,
   paymentMethodLabels,
 }: TransactionHistoryProps) {
   const { t } = useTranslation('finance');
   const { t: tCommon } = useTranslation('common');
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const [confirmRefundId, setConfirmRefundId] = useState<string | null>(null);
 
   return (
@@ -51,14 +52,14 @@ export function TransactionHistory({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.length === 0 ? (
+            {safeTransactions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">
                   {t("tranzaksiyalarMavjudEmas")}
                 </TableCell>
               </TableRow>
             ) : (
-              (Array.isArray(transactions) ? transactions : []).map((tx) => (
+              safeTransactions.map((tx) => (
                 <TableRow key={tx.id} data-testid={`row-transaction-${tx.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-mono text-xs">{tx.transactionNumber}</TableCell>
                   <TableCell className="text-xs">{formatDateTime(tx.createdAt)}</TableCell>

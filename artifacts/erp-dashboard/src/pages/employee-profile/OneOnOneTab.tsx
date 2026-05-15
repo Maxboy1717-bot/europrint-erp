@@ -72,7 +72,7 @@ export function OneOnOneTab({ userId, tCommon }: OneOnOneTabProps) {
   const { data: meetings, isLoading } = useQuery<OneOnOneRecord[]>({
     queryKey: [`/api/hr/employees/${userId}/one-on-ones`],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/hr/employees/${userId}/one-on-ones`);
+      const res = (await apiRequest('GET', `/api/hr/employees/${userId}/one-on-ones`)) as unknown as Response;
       if (res.status === 404 || res.status === 204) return [];
       if (!res.ok) return [];
       const data = await res.json();

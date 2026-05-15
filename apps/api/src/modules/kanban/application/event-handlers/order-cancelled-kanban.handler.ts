@@ -1,4 +1,15 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   the "bekor" column lookup uses an INNER JOIN from kanban_columns back to
+ *   kanban_cards (board_id ↔ board_id) with LOWER(c.name) LIKE '%bekor%' OR
+ *   '%cancel%' fuzzy match, and the subsequent UPDATE appends to description
+ *   via `description = COALESCE(description,'') || E'\n[Bekor qilindi: ...]'`
+ *   string-concat with E'...' escape literal — neither is reachable through
+ *   Drizzle column expressions.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * order-cancelled-kanban.handler.ts
  *
  * Buyurtma bekor qilinganda bog'liq kanban kartalarni

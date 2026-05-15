@@ -109,7 +109,7 @@ interface CameraCheckSectionProps {
   cameraReady: boolean;
   micReady: boolean;
   cameraRejections: number;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   onCheckDevices: () => void;
   onProceed: () => void;
 }

@@ -20,11 +20,12 @@ export function useRooms() {
 }
 
 export function useRoomMembers(roomId: string | null) {
-  return useQuery({
+  return useQuery<unknown[]>({
     queryKey: ["chat-room-members", roomId],
     enabled: !!roomId,
     queryFn: async () => {
-      return await apiRequest('GET', `/api/chat/rooms/${roomId}/members`);
+      const data = await apiRequest<unknown>('GET', `/api/chat/rooms/${roomId}/members`);
+      return Array.isArray(data) ? data : [];
     },
     staleTime: 60_000,
     refetchOnWindowFocus: false,

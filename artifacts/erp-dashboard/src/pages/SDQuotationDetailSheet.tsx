@@ -18,6 +18,7 @@ import { useTranslation } from '@/lib/i18n';
 // ---------------------------------------------------------------------------
 
 function getStatusBadge(status: string) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "draft":
       return (
