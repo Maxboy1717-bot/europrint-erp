@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { DrizzleIotMainRepo } from '../infrastructure/repositories/drizzle-iot-main.repo';
 import { DrizzleIotOeeRepo } from '../infrastructure/repositories/drizzle-iot-oee.repo';
@@ -21,6 +21,8 @@ type ShiftReportData = Extract<
 
 @Injectable()
 export class IotMainService {
+  private readonly logger = new Logger(IotMainService.name);
+
   constructor(
     private readonly repo: DrizzleIotMainRepo,
     private readonly oeeRepo: DrizzleIotOeeRepo,
@@ -113,20 +115,36 @@ export class IotMainService {
   async getProductionMetrics(
     shift?: string,
   ): Promise<Result<{ shift: string; metrics: ProductionMetricData }>> {
-    const r = await this.oeeRepo.findProductionMetrics();
-    return r.ok ? Ok({ shift: shift ?? 'current', metrics: r.data }) : Err(r.error);
+    try {
+      const r = await this.oeeRepo.findProductionMetrics();
+      return r.ok ? Ok({ shift: shift ?? 'current', metrics: r.data }) : Err(r.error);
+    } catch (error) {
+      this.logger.error(
+        { method: 'getProductionMetrics', shift, error },
+        'Database query failed',
+      );
+      return Err(`Failed to fetch production metrics: ${(error as Error).message}`);
+    }
   }
 
   async getShiftReport(
     shift: string | undefined,
     date: string | undefined,
   ): Promise<Result<{ date: string; shift: string; report: ShiftReportData }>> {
-    const targetDate = date ? `${date}T00:00:00Z` : new Date(_time.now().setHours(0, 0, 0, 0)).toISOString();
-    const endDate = date ? `${date}T23:59:59Z` : new Date(_time.now().setHours(23, 59, 59, 999)).toISOString();
-    const r = await this.oeeRepo.findShiftReport(targetDate, endDate);
-    return r.ok
-      ? Ok({ date: date ?? _time.now().toISOString().slice(0, 10), shift: shift ?? 'all', report: r.data })
-      : Err(r.error);
+    try {
+      const targetDate = date ? `${date}T00:00:00Z` : new Date(_time.now().setHours(0, 0, 0, 0)).toISOString();
+      const endDate = date ? `${date}T23:59:59Z` : new Date(_time.now().setHours(23, 59, 59, 999)).toISOString();
+      const r = await this.oeeRepo.findShiftReport(targetDate, endDate);
+      return r.ok
+        ? Ok({ date: date ?? _time.now().toISOString().slice(0, 10), shift: shift ?? 'all', report: r.data })
+        : Err(r.error);
+    } catch (error) {
+      this.logger.error(
+        { method: 'getShiftReport', shift, date, error },
+        'Database query failed',
+      );
+      return Err(`Failed to fetch shift report: ${(error as Error).message}`);
+    }
   }
 
   getDashboard(): ReturnType<DrizzleIotMainRepo['findDashboard']> {
