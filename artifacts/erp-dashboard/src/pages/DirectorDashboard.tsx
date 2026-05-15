@@ -28,6 +28,7 @@ import { MetricCard } from "@/components/director/MetricCard";
 import { AlertFeed } from "@/components/director/AlertFeed";
 import { AIAdvisor } from "@/components/director/AIAdvisor";
 import { ModuleHealthGrid } from "@/components/director/ModuleHealthGrid";
+import { AishaChatPanel } from "@/components/aisha/AishaChatPanel";
 import { Inbox, AlertTriangle, Package, Activity, Sparkles } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
 import type {
@@ -216,6 +217,9 @@ export default function DirectorDashboard() {
         </span>
         <span className="ml-auto">{t("europrintErpDirektorPanelV3")}</span>
       </div>
+
+      {/* ── AIsha AI Yordamchi — floating chat panel ── */}
+      <AishaChatPanel isDirector />
     </div>
   );
 }

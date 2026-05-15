@@ -36,6 +36,7 @@ import uzDesign        from '../../locales/uz/design.json';
 import uzLogistics     from '../../locales/uz/logistics.json';
 import uzPos           from '../../locales/uz/pos.json';
 import uzAi            from '../../locales/uz/ai.json';
+import uzAisha         from '../../locales/uz/aisha.json';
 import uzCoordination  from '../../locales/uz/coordination.json';
 import uzPrint         from '../../locales/uz/print.json';
 import uzBarcode       from '../../locales/uz/barcode.json';
@@ -86,6 +87,7 @@ import ruDesign        from '../../locales/ru/design.json';
 import ruLogistics     from '../../locales/ru/logistics.json';
 import ruPos           from '../../locales/ru/pos.json';
 import ruAi            from '../../locales/ru/ai.json';
+import ruAisha         from '../../locales/ru/aisha.json';
 import ruCoordination  from '../../locales/ru/coordination.json';
 import ruPrint         from '../../locales/ru/print.json';
 import ruBarcode       from '../../locales/ru/barcode.json';
@@ -138,6 +140,7 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     logistics:     uzLogistics     as unknown as TranslationModule,
     pos:           uzPos           as unknown as TranslationModule,
     ai:            uzAi            as unknown as TranslationModule,
+    aisha:         uzAisha         as unknown as TranslationModule,
     coordination:  uzCoordination  as unknown as TranslationModule,
     print:         uzPrint         as unknown as TranslationModule,
     barcode:       uzBarcode       as unknown as TranslationModule,
@@ -189,6 +192,7 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     logistics:     ruLogistics     as unknown as TranslationModule,
     pos:           ruPos           as unknown as TranslationModule,
     ai:            ruAi            as unknown as TranslationModule,
+    aisha:         ruAisha         as unknown as TranslationModule,
     coordination:  ruCoordination  as unknown as TranslationModule,
     print:         ruPrint         as unknown as TranslationModule,
     barcode:       ruBarcode       as unknown as TranslationModule,
