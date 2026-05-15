@@ -5,6 +5,7 @@
 
 import 'module-alias/register';
 import 'reflect-metadata';
+import { initSentry, SentryInterceptor } from './common/monitoring/sentry.config';
 import { register as promRegister } from 'prom-client';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
@@ -19,6 +20,12 @@ import { ensureDbInvariants, ensureSchemaAdditions } from './shared/db/invariant
 import { seedPosMovementTypes } from './shared/db/seed-pos-movement-types';
 
 import { DEFAULT_PORT, SECONDS_PER_YEAR, MS_PER_SECOND, MAX_FILE_SIZE } from '@common/constants/app.constants';
+
+// Initialise Sentry as early as possible — its `process.on('uncaughtException')`
+// hook must be attached BEFORE bootstrap() runs.  `initSentry()` is a no-op
+// (with warn log) when SENTRY_DSN is empty (graceful degradation, matches
+// AishaConfig).  Module-level call runs synchronously on first import.
+initSentry();
 
 const BLOCKED_HTTP_METHODS = ['CONNECT', 'TRACE', 'PROPFIND'] as const;
 type RawFastify = {
@@ -55,11 +62,7 @@ function configureBlockedMethods(app: NestFastifyApplication): void {
     done?.();
   });
 
-  const CONNECT_RESPONSE =
-    'HTTP/1.1 405 Method Not Allowed\r\n' +
-    'Allow: GET, POST, PUT, PATCH, DELETE, OPTIONS\r\n' +
-    'Content-Length: 0\r\n' +
-    'Connection: close\r\n\r\n';
+  const CONNECT_RESPONSE = 'HTTP/1.1 405 Method Not Allowed\r\nAllow: GET, POST, PUT, PATCH, DELETE, OPTIONS\r\nContent-Length: 0\r\nConnection: close\r\n\r\n';
 
   const httpServer = app.getHttpServer() as import('net').Server;
   httpServer.on('connect', (_req: unknown, socket: import('net').Socket) => {
@@ -121,6 +124,9 @@ function configureAppMiddleware(app: NestFastifyApplication): void {
   // stripped (Zod default) rather than rejected — all DTO schemas are fully migrated.
   // class-validator/class-transformer packages are retained as @nestjs/swagger peer deps.
   app.useGlobalPipes(new ZodValidationPipe());
+  // Sentry interceptor MUST be registered BEFORE GlobalExceptionFilter so the
+  // exception is captured before the filter converts it into an HTTP response.
+  app.useGlobalInterceptors(new SentryInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
 }
 
