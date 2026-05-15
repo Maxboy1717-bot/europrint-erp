@@ -121,8 +121,18 @@ export class AgentsController {
   @Get('supplier/risks')                          supplierRisks()                                  { return this.supplier.detectDeliveryRisks(); }
 
   // ── HR ────────────────────────────────────────────────────────────
+  @Get('hr/performance')                          perfDefault(@Query('id') id?: string)            { return this.hr.analyzePerformance(Number(id ?? 1)); }
   @Get('hr/performance/:id')                      perf(@Param('id') id: string)                    { return this.hr.analyzePerformance(Number(id)); }
+  @Get('hr/churn')                                hrChurnDefault(@Query('id') id?: string)         { return this.hr.predictChurn(Number(id ?? 1)); }
   @Get('hr/churn/:id')                            hrChurn(@Param('id') id: string)                 { return this.hr.predictChurn(Number(id)); }
+  @Get('hr/bonus')
+  bonusDefault(@Query('id') id?: string, @Query('base') b?: string) {
+    const base = Number(b);
+    if (!b || isNaN(base) || base < 0) {
+      throw new BadRequestException("Base maosh to'g'ri kiritilmagan");
+    }
+    return this.hr.calculateBonus(Number(id ?? 1), base);
+  }
   @Get('hr/bonus/:id')
   bonus(@Param('id') id: string, @Query('base') b: string) {
     const base = Number(b);
@@ -153,6 +163,7 @@ export class AgentsController {
   @Get('lms/expiry')                              lmsExpiry()                                      { return this.lms.checkCertificateExpiry(); }
 
   // ── IOT ───────────────────────────────────────────────────────────
+  @Get('iot/sensor')                              iotSensorDefault(@Query('machineId') m?: string) { return this.iot.collectSensorData(m ?? 'MACHINE_001'); }
   @Get('iot/sensor/:machineId')                   iotSensor(@Param('machineId') m: string)         { return this.iot.collectSensorData(m); }
   @Get('iot/anomaly/:machineId')                  iotAnomaly(@Param('machineId') m: string)        { return this.iot.detectAnomalies(m); }
   @Get('iot/rul/:machineId')                      iotRul(@Param('machineId') m: string)            { return this.iot.predictFailure(m); }

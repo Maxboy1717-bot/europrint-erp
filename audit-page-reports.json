@@ -19,10 +19,8 @@
     "route": "/super-admin",
     "page": "SuperAdminPanel",
     "fileExists": true,
-    "apiCallCount": 11,
-    "missingApis": [
-      "/api/admin/audit-filtered?:id"
-    ],
+    "apiCallCount": 10,
+    "missingApis": [],
     "file": "AdminRoutes.tsx"
   },
   {
@@ -37,10 +35,8 @@
     "route": "/admin/exceptions",
     "page": "ExceptionLog",
     "fileExists": true,
-    "apiCallCount": 3,
-    "missingApis": [
-      "/api/exceptions?:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "AdminRoutes.tsx"
   },
   {
@@ -233,20 +229,16 @@
     "route": "/courses",
     "page": "Courses",
     "fileExists": true,
-    "apiCallCount": 4,
-    "missingApis": [
-      "/api/courses?:id"
-    ],
+    "apiCallCount": 3,
+    "missingApis": [],
     "file": "AnalyticsRoutes.tsx"
   },
   {
     "route": "/lessons",
     "page": "Courses",
     "fileExists": true,
-    "apiCallCount": 4,
-    "missingApis": [
-      "/api/courses?:id"
-    ],
+    "apiCallCount": 3,
+    "missingApis": [],
     "file": "AnalyticsRoutes.tsx"
   },
   {
@@ -384,10 +376,7 @@
     "page": "camera-reports",
     "fileExists": true,
     "apiCallCount": 6,
-    "missingApis": [
-      "/api/camera-reports/generate-pdf?period=:id",
-      "/api/camera-reports/generate-excel?period=:id"
-    ],
+    "missingApis": [],
     "file": "CameraRoutes.tsx"
   },
   {
@@ -402,42 +391,32 @@
     "route": "/camera-heatmap",
     "page": "camera-heatmap",
     "fileExists": true,
-    "apiCallCount": 8,
-    "missingApis": [
-      "/api/camera-heatmap/data?period=:id&metric=:id",
-      "/api/camera-heatmap/employee/:id?period=:id",
-      "/api/erp/team-analytics/zone-activity/:id?period=:id"
-    ],
+    "apiCallCount": 7,
+    "missingApis": [],
     "file": "CameraRoutes.tsx"
   },
   {
     "route": "/camera-employee-ratings",
     "page": "camera-employee-ratings",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/camera-employee-ratings?period=:id"
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "CameraRoutes.tsx"
   },
   {
     "route": "/camera-live-monitoring",
     "page": "CameraLiveMonitoring",
     "fileExists": true,
-    "apiCallCount": 4,
-    "missingApis": [
-      "/api/erp/cameras/live-detections?cameraId=:id"
-    ],
+    "apiCallCount": 3,
+    "missingApis": [],
     "file": "CameraRoutes.tsx"
   },
   {
     "route": "/camera/monitoring",
     "page": "FaceRecognitionMonitoring",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/camera/recognition-logs?:id"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "CameraRoutes.tsx"
   },
   {
@@ -452,10 +431,8 @@
     "route": "/attendance-monitor",
     "page": "AttendanceMonitorPage",
     "fileExists": true,
-    "apiCallCount": 3,
-    "missingApis": [
-      "/api/hr/attendance/territory/logs?:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "CameraRoutes.tsx"
   },
   {
@@ -550,10 +527,8 @@
     "route": "/sd/customers",
     "page": "SDCustomers",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/sd/customers?:id"
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
@@ -568,40 +543,32 @@
     "route": "/sd/sales-orders",
     "page": "SDSalesOrders",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/sd/orders?:id"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
     "route": "/sd/sales-payments",
     "page": "SDSalesPayments",
     "fileExists": true,
-    "apiCallCount": 6,
-    "missingApis": [
-      "/api/sd/payments?:id"
-    ],
+    "apiCallCount": 5,
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
     "route": "/sd/kpi",
     "page": "SDKpi",
     "fileExists": true,
-    "apiCallCount": 3,
-    "missingApis": [
-      "/api/sd/kpi/team?year=:id&month=:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
     "route": "/sd/contracts",
     "page": "SDContracts",
     "fileExists": true,
-    "apiCallCount": 3,
-    "missingApis": [
-      "/api/sd/contracts?:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
@@ -645,6 +612,14 @@
     "file": "CRMRoutes.tsx"
   },
   {
+    "route": "/sd/quota-dashboard",
+    "page": "SDQuotaDashboard",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
     "route": "/marketing/dashboard",
     "page": "MarketingDashboard",
     "fileExists": true,
@@ -682,10 +657,8 @@
     "route": "/marketing/calendar",
     "page": "MarketingCalendar",
     "fileExists": true,
-    "apiCallCount": 3,
-    "missingApis": [
-      "/api/marketing/calendar?month=:id&year=:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
@@ -726,10 +699,8 @@
     "route": "/marketing/social-inbox",
     "page": "MarketingSocialInbox",
     "fileExists": true,
-    "apiCallCount": 7,
-    "missingApis": [
-      "/api/marketing/inbox/conversations?:id"
-    ],
+    "apiCallCount": 6,
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
@@ -785,10 +756,7 @@
     "page": "agents/AgentsHub",
     "fileExists": true,
     "apiCallCount": 16,
-    "missingApis": [
-      "/api/agents/hr/performance/1",
-      "/api/agents/iot/sensor/MACHINE_001"
-    ],
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
@@ -804,12 +772,7 @@
     "page": "agents/HRPerformanceDashboard",
     "fileExists": true,
     "apiCallCount": 6,
-    "missingApis": [
-      "/api/agents/hr/performance",
-      "/api/agents/hr/churn",
-      "/api/agents/hr/bonus",
-      "/api/agents/hr/bonus/:id?base=:id"
-    ],
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
@@ -848,10 +811,8 @@
     "route": "/warehouse/rolls",
     "page": "warehouse/RollManagementPage",
     "fileExists": true,
-    "apiCallCount": 4,
-    "missingApis": [
-      "/api/agents/inventory/rolls/fifo?articleCode=:id"
-    ],
+    "apiCallCount": 3,
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
@@ -859,10 +820,7 @@
     "page": "agents/AgentsHub",
     "fileExists": true,
     "apiCallCount": 16,
-    "missingApis": [
-      "/api/agents/hr/performance/1",
-      "/api/agents/iot/sensor/MACHINE_001"
-    ],
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
@@ -895,31 +853,26 @@
     "route": "/europrint/strategic",
     "page": "StrategicTasksPanel",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/strategic/tasks?:id"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
     "route": "/strategic-tasks",
     "page": "StrategicTasksPanel",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/strategic/tasks?:id"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
     "route": "/europrint/employee-kpi",
     "page": "EmployeeDailyKPIPanel",
     "fileExists": true,
-    "apiCallCount": 5,
+    "apiCallCount": 4,
     "missingApis": [
-      "/api/employee-kpi?dateFrom=:id&dateTo=:id",
-      "/api/employee-kpi/summary/top-performers?dateFrom=:id&dateTo=:id",
-      "/api/employee-kpi/summary/department?dateFrom=:id&dateTo=:id"
+      "/api/employee-kpi/summary/top-performers",
+      "/api/employee-kpi/summary/department"
     ],
     "file": "DirectorRoutes.tsx"
   },
@@ -935,10 +888,8 @@
     "route": "/europrint/reports-hub",
     "page": "ReportsHub",
     "fileExists": true,
-    "apiCallCount": 9,
-    "missingApis": [
-      "/api/reports-hub/definitions?categoryId=:id"
-    ],
+    "apiCallCount": 8,
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
@@ -977,21 +928,16 @@
     "route": "/finance/cashflow",
     "page": "CashFlowManagement",
     "fileExists": true,
-    "apiCallCount": 6,
-    "missingApis": [
-      "/api/cashflow/transactions?:id",
-      "/api/cashflow/daily-summary?startDate=:id&endDate=:id"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "FinanceRoutes.tsx"
   },
   {
     "route": "/finance/budgets",
     "page": "BudgetManagement",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/budgets${qs ? "
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "FinanceRoutes.tsx"
   },
   {
@@ -1015,10 +961,7 @@
     "page": "ProductProfitability",
     "fileExists": true,
     "apiCallCount": 5,
-    "missingApis": [
-      "/api/finance/profitability/recalculate",
-      "/api/reports/profitability/export"
-    ],
+    "missingApis": [],
     "file": "FinanceRoutes.tsx"
   },
   {
@@ -1099,21 +1042,16 @@
     "route": "/pos/dashboard",
     "page": "POSDashboard",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/pos/products?search=:id&active=true"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "FinanceRoutes.tsx"
   },
   {
     "route": "/pos/inventory",
     "page": "POSInventoryPage",
     "fileExists": true,
-    "apiCallCount": 7,
-    "missingApis": [
-      "/api/pos/inventory/movements?type=:id&limit=100",
-      "/api/pos/products?search=:id&active=all"
-    ],
+    "apiCallCount": 5,
+    "missingApis": [],
     "file": "FinanceRoutes.tsx"
   },
   {
@@ -1216,11 +1154,9 @@
     "route": "/employees/:id",
     "page": "EmployeeProfile",
     "fileExists": true,
-    "apiCallCount": 42,
+    "apiCallCount": 41,
     "missingApis": [
-      "/api/hr/employee-corp/:id",
-      "/api/integration/swap-requests?requestedBy=:id",
-      "/api/integration/employee-mes-summary/:id?months=3"
+      "/api/hr/employee-corp/:id"
     ],
     "file": "HRRoutes.tsx"
   },
@@ -1228,10 +1164,8 @@
     "route": "/hr-map",
     "page": "HRMap",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/hr-map/employees?departmentId=:id"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1322,10 +1256,8 @@
     "route": "/shift-schedule",
     "page": "ShiftSchedule",
     "fileExists": true,
-    "apiCallCount": 9,
-    "missingApis": [
-      "/api/hr/shifts/schedule?:id"
-    ],
+    "apiCallCount": 8,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1340,7 +1272,7 @@
     "route": "/hr-dashboard",
     "page": "HRDashboard",
     "fileExists": true,
-    "apiCallCount": 22,
+    "apiCallCount": 23,
     "missingApis": [],
     "file": "HRRoutes.tsx"
   },
@@ -1373,9 +1305,7 @@
     "page": "HROnboarding",
     "fileExists": true,
     "apiCallCount": 5,
-    "missingApis": [
-      "/api/hr/onboarding-checklists/:id"
-    ],
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1398,10 +1328,8 @@
     "route": "/hr/offboarding",
     "page": "HROffboarding",
     "fileExists": true,
-    "apiCallCount": 3,
-    "missingApis": [
-      "/api/hr/offboarding/cases?status=:id&search=:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1448,10 +1376,8 @@
     "route": "/hr/gamification",
     "page": "GamificationPage",
     "fileExists": true,
-    "apiCallCount": 6,
-    "missingApis": [
-      "/api/hr/gamification/leaderboard?period=:id"
-    ],
+    "apiCallCount": 5,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1459,22 +1385,15 @@
     "page": "ReceptionPage",
     "fileExists": true,
     "apiCallCount": 6,
-    "missingApis": [
-      "/api/hr-v2/reception/badge/:id"
-    ],
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
     "route": "/hr/daily-reports",
     "page": "DailyReportPage",
     "fileExists": true,
-    "apiCallCount": 10,
-    "missingApis": [
-      "/api/hr-v2/daily-reports/employee?employeeId=:id&limit=14",
-      "/api/hr-v2/daily-reports/stats?date=:id",
-      "/api/hr-v2/daily-reports/department/:id?date=:id",
-      "/api/hr-v2/daily-reports/by-date?date=:id&type=:id&limit=100"
-    ],
+    "apiCallCount": 8,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1482,9 +1401,7 @@
     "page": "PIPPage",
     "fileExists": true,
     "apiCallCount": 5,
-    "missingApis": [
-      "/api/hr-v2/pip/:id/complete"
-    ],
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1499,20 +1416,16 @@
     "route": "/hr/documents",
     "page": "DocumentWorkflowPage",
     "fileExists": true,
-    "apiCallCount": 12,
-    "missingApis": [
-      "/api/hr-v2/documents?status=pending&employeeId=:id"
-    ],
+    "apiCallCount": 11,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
     "route": "/hr/assets",
     "page": "HRAssetManagement",
     "fileExists": true,
-    "apiCallCount": 8,
-    "missingApis": [
-      "/api/assets?:id"
-    ],
+    "apiCallCount": 7,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1520,9 +1433,7 @@
     "page": "ReferralPage",
     "fileExists": true,
     "apiCallCount": 3,
-    "missingApis": [
-      "/api/hr/referrals/:id"
-    ],
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1553,18 +1464,15 @@
     "route": "/weekly-plan",
     "page": "WeeklyPlanPage",
     "fileExists": true,
-    "apiCallCount": 4,
-    "missingApis": [
-      "/api/weekly-plans?week=:id",
-      "/api/weekly-plans?employee_id=:id&week=:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
     "route": "/hr/inspection",
     "page": "InspectionPage",
     "fileExists": true,
-    "apiCallCount": 1,
+    "apiCallCount": 2,
     "missingApis": [],
     "file": "HRRoutes.tsx"
   },
@@ -1588,10 +1496,9 @@
     "route": "/production/orders",
     "page": "ProductionReport",
     "fileExists": true,
-    "apiCallCount": 3,
+    "apiCallCount": 2,
     "missingApis": [
-      "/api/production/orders?page=:id&limit=10${status !== \"all\" ? ",
-      "/api/production/orders/report/excel?${status !== \"all\" ? "
+      "/api/production/orders/report/excel"
     ],
     "file": "ProductionRoutes.tsx"
   },
@@ -1607,11 +1514,8 @@
     "route": "/planning",
     "page": "PlanningBoard",
     "fileExists": true,
-    "apiCallCount": 13,
-    "missingApis": [
-      "/api/planning/operations?:id",
-      "/api/planning/schedule?:id"
-    ],
+    "apiCallCount": 11,
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -1659,9 +1563,7 @@
     "page": "BOMManagement",
     "fileExists": true,
     "apiCallCount": 6,
-    "missingApis": [
-      "/api/erp/bom-headers/:id/explosion?quantity=1"
-    ],
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -1676,10 +1578,8 @@
     "route": "/erp/pp/capacity",
     "page": "CapacityPlanning",
     "fileExists": true,
-    "apiCallCount": 6,
-    "missingApis": [
-      "/api/erp/capacity/load-analysis?:id"
-    ],
+    "apiCallCount": 5,
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -1973,6 +1873,38 @@
     "file": "ProductionRoutes.tsx"
   },
   {
+    "route": "/qc-module",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/tests",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/parameters",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/standards",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
     "route": "/qc/approval",
     "page": "QCApproval",
     "fileExists": true,
@@ -2190,10 +2122,8 @@
     "route": "/mro/spare-parts",
     "page": "mro/SparePartsPage",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/mro/spare-parts${search ? "
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -2312,10 +2242,8 @@
     "route": "/iot/dashboard",
     "page": "IoTDashboard",
     "fileExists": true,
-    "apiCallCount": 11,
-    "missingApis": [
-      "/api/iot-sensors/oee?from=:id"
-    ],
+    "apiCallCount": 10,
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -2331,10 +2259,7 @@
     "page": "agents/AgentsHub",
     "fileExists": true,
     "apiCallCount": 16,
-    "missingApis": [
-      "/api/agents/hr/performance/1",
-      "/api/agents/iot/sensor/MACHINE_001"
-    ],
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
@@ -2421,20 +2346,16 @@
     "route": "/pos/mini-app",
     "page": "POSDashboard",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/pos/products?search=:id&active=true"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
     "route": "/video-progress",
     "page": "LessonPlayer",
     "fileExists": true,
-    "apiCallCount": 5,
-    "missingApis": [
-      "/api/lms/progress/my?courseId=:id"
-    ],
+    "apiCallCount": 4,
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
@@ -2449,10 +2370,8 @@
     "route": "/daily-attendance",
     "page": "AttendanceMonitorPage",
     "fileExists": true,
-    "apiCallCount": 3,
-    "missingApis": [
-      "/api/hr/attendance/territory/logs?:id"
-    ],
+    "apiCallCount": 2,
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
@@ -2467,10 +2386,8 @@
     "route": "/employee-zone-history",
     "page": "EmployeeZoneHistoryPage",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/employee-zone-history?:id"
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
@@ -2511,7 +2428,7 @@
     "fileExists": true,
     "apiCallCount": 1,
     "missingApis": [
-      "/api/pos/stock/movements?:id"
+      "/api/pos/stock/movements"
     ],
     "file": "StubRoutes.tsx"
   },
@@ -2519,10 +2436,8 @@
     "route": "/pos/requests",
     "page": "PosRequestsPage",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/pos/requests?:id"
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
@@ -2545,20 +2460,16 @@
     "route": "/quality-defects-camera",
     "page": "QualityDefectsCameraPage",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/iot/quality-defects?:id"
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
     "route": "/users",
     "page": "UsersPage",
     "fileExists": true,
-    "apiCallCount": 4,
-    "missingApis": [
-      "/api/admin/users?:id"
-    ],
+    "apiCallCount": 3,
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
@@ -2677,10 +2588,8 @@
     "route": "/wms/rental",
     "page": "WarehouseRental",
     "fileExists": true,
-    "apiCallCount": 7,
-    "missingApis": [
-      "/api/warehouse-rental/records${statusFilter ? "
-    ],
+    "apiCallCount": 6,
+    "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
   {
@@ -2727,7 +2636,7 @@
     "route": "/wms/barcodes-queue",
     "page": "WarehouseBarcodeQueue",
     "fileExists": true,
-    "apiCallCount": 1,
+    "apiCallCount": 2,
     "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
@@ -2736,9 +2645,7 @@
     "page": "WarehouseInventoryPassport",
     "fileExists": true,
     "apiCallCount": 1,
-    "missingApis": [
-      "/api/pos/inventory-passport?:id"
-    ],
+    "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
   {
@@ -2761,7 +2668,7 @@
     "route": "/wms/kirim-new",
     "page": "WarehouseKirimWizard",
     "fileExists": true,
-    "apiCallCount": 3,
+    "apiCallCount": 4,
     "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
@@ -2778,9 +2685,7 @@
     "page": "WarehouseAuditLog",
     "fileExists": true,
     "apiCallCount": 1,
-    "missingApis": [
-      "/api/pos/reports/audit?:id"
-    ],
+    "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
   {
@@ -2797,20 +2702,16 @@
     "route": "/inventory/materials",
     "page": "WMSMaterials",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/inventory/materials?:id"
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
   {
     "route": "/inventory/materials/:id",
     "page": "WMSMaterials",
     "fileExists": true,
-    "apiCallCount": 2,
-    "missingApis": [
-      "/api/inventory/materials?:id"
-    ],
+    "apiCallCount": 1,
+    "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
   {

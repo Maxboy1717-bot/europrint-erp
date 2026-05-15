@@ -91,6 +91,23 @@ export class PipService {
     });
   }
 
+  async complete(pipId: number, result: 'PASSED' | 'FAILED'): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const pip = await this.repo.getPip(pipId);
+      if (!pip.ok || !pip.data) throw new NotFoundException(`PIP #${pipId} not found`);
+
+      if (result === 'PASSED') {
+        await this.repo.markCompleted(pipId);
+        this.eventEmitter.emit(HrV2Events.PIP_COMPLETED, { pipId, employeeId: pip.data.employee_id });
+      } else {
+        await this.repo.markFailed(pipId);
+        this.eventEmitter.emit(HrV2Events.PIP_FAILED, { pipId, employeeId: pip.data.employee_id });
+      }
+
+      return { pipId, result, completedAt: _time.now().toISOString() };
+    });
+  }
+
   async getById(pipId: number) {
     return safeCall(async () => {
       const pip = await this.repo.getByIdWithEmployee(pipId);

@@ -55,12 +55,34 @@ for (const page of routes) {
   const content = fs.readFileSync(pagePath, 'utf8');
   // Find /api/... patterns
   const apis = new Set();
-  for (const m of content.matchAll(/['"`](\/api\/[a-zA-Z0-9\-_/${}:]+)['"`]/g)) {
-    apis.add(m[1].replace(/\$\{[^}]+\}/g, ':id'));
+  // Helper: collapse interpolations and drop urls with unresolved nested
+  // template literals (e.g. `/api/budgets${qs ? `?${qs}` : ''}` is ambiguous —
+  // the nested backtick closes the outer regex early and produces a malformed
+  // URL like `/api/budgets${qs ?`. Skip those.
+  const sanitize = (raw) => {
+    if (!raw.startsWith('/api/')) return null;
+    // Replace `${...}` interpolations with `:id` placeholder
+    let u = raw.replace(/\$\{[^}]+\}/g, ':id');
+    // After replacement, if a `${` remains, the URL was malformed — skip.
+    if (u.includes('${')) return null;
+    // Strip query string for matching purposes (handled by Query in NestJS)
+    u = u.replace(/\?.*$/, '');
+    // If `:id` appears NOT after a `/` (e.g. `/api/foo:id` from a nested
+    // template like `/api/foo${qs ? ...}`), drop everything from that point —
+    // the real call is the path up to that point.
+    u = u.replace(/([^/]):id.*$/, '$1');
+    return u;
+  };
+  for (const m of content.matchAll(/['"`](\/api\/[a-zA-Z0-9\-_/${}:?=&]+)['"`]/g)) {
+    const u = sanitize(m[1]);
+    if (u) apis.add(u);
   }
-  // Also pick up TS template literals like `/api/foo/${id}`
-  for (const m of content.matchAll(/`(\/api\/[^`]+)`/g)) {
-    apis.add(m[1].replace(/\$\{[^}]+\}/g, ':id'));
+  // Also pick up TS template literals like `/api/foo/${id}`. Use a non-greedy
+  // match that stops at the first non-template backtick, but tolerates nested
+  // `${ ... }` chunks by consuming them whole.
+  for (const m of content.matchAll(/`(\/api\/(?:[^`$]|\$\{[^}]*\})+)`/g)) {
+    const u = sanitize(m[1]);
+    if (u) apis.add(u);
   }
   pageApiCalls[page.page] = { apis: [...apis] };
 }
@@ -119,8 +141,15 @@ for (const f of walk(API_DIR, '.ts')) {
 console.log(`Endpoints: ${endpoints.length}`);
 
 // ─── PART 4: Cross-reference ──────────────────────────────────────────
-// Normalize endpoint URL for matching (replace :id with placeholder)
-const normalizeUrl = (u) => u.replace(/:[a-zA-Z]+/g, ':param').toLowerCase();
+// Normalize endpoint URL for matching (replace :id with placeholder).
+// Strip query strings — backend endpoints declare path only; query params are
+// handled inside the handler via @Query() and do not affect routing.
+// Include underscore in param name capture so `:badge_number` collapses to `:param`
+// (otherwise the trailing `_number` survives and breaks the match).
+const normalizeUrl = (u) =>
+  u.replace(/\?.*$/, '')
+   .replace(/:[a-zA-Z_]+/g, ':param')
+   .toLowerCase();
 
 const endpointsByUrl = new Map();
 for (const e of endpoints) {

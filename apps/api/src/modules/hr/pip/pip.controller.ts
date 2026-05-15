@@ -89,4 +89,11 @@ export class PipController {
   async acknowledge(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.acknowledge(id));
   }
+
+  @Patch(':id/complete')
+  async complete(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const schema = z.object({ result: z.enum(['PASSED', 'FAILED']).optional() });
+    const dto = schema.parse(body ?? {});
+    return unwrapOrInternal(await this.svc.complete(id, dto.result ?? 'PASSED'));
+  }
 }
