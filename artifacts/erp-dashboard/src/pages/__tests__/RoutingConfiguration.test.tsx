@@ -37,6 +37,21 @@ import {
 } from './_testKit';
 
 const responses = {
+  // Routing list must be non-empty, otherwise the page short-circuits to
+  // RoutingEmptyState (no buttons) and the "create button after load"
+  // assertions fail. Provide a minimal valid row.
+  '/api/erp/routings': [
+    {
+      routing: {
+        id: 'r-1',
+        routingNumber: 'R-001',
+        name: 'Default routing',
+        productId: 'p-1',
+      },
+      product: { id: 'p-1', code: 'P001', name: 'Test product' },
+    },
+  ],
+  '/api/erp/routing-operations': [],
   '/api/pp/routings': [],
   '/api/pp/operations': [],
   '/api/erp/products': [],

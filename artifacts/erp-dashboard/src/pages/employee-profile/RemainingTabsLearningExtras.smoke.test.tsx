@@ -9,7 +9,13 @@ import { SkillGapCard as Page } from './RemainingTabsLearningExtras';
 
 describe('RemainingTabsLearningExtras smoke', () => {
   it('renders without throwing', () => {
-    const { container } = render(<Page />, { wrapper: TestProviders });
+    // The card returns null when there are no skill gaps. Pass either
+    // loadingSkillGap=true or a non-empty gaps array so the render path
+    // produces real DOM.
+    const { container } = render(
+      <Page loadingSkillGap={true} />,
+      { wrapper: TestProviders },
+    );
     expect(container.firstChild).not.toBeNull();
   });
 });

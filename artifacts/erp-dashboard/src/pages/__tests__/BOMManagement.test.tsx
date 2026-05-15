@@ -30,8 +30,21 @@ import {
 } from './_testKit';
 
 const responses = {
-  '/api/erp/bom-headers': [],
-  '/api/erp/products': [],
+  // Non-empty data prevents the page from short-circuiting to the empty
+  // state (which renders no buttons), so the "after data resolves" assertion
+  // can find actual interactive controls.
+  '/api/erp/bom-headers': [
+    {
+      id: 'b-1',
+      bomNumber: 'BOM-001',
+      productId: 'p-1',
+      version: 1,
+      status: 'active',
+    },
+  ],
+  '/api/erp/products': [
+    { id: 'p-1', code: 'P001', name: 'Test product' },
+  ],
   '/api/erp/bom-items': [],
 };
 

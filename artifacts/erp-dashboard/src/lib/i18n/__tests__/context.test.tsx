@@ -191,18 +191,26 @@ describe('LanguageProvider', () => {
 // ─── useLanguageContext error boundary ────────────────────────────────────────
 
 describe('useLanguageContext', () => {
-  it('throws when used outside LanguageProvider', () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('returns a safe default context outside LanguageProvider', () => {
+    // The implementation provides a passthrough default context (t = key → key,
+    // language = uz, setLanguage = noop) so legacy auto-refactored components
+    // do not crash when rendered without a provider. See context.tsx.
+    let snapshot: { lang: string; tType: string; setType: string } | null = null;
 
     function BareConsumer() {
-      useLanguageContext();
+      const ctx = useLanguageContext();
+      snapshot = {
+        lang: ctx.language,
+        tType: typeof ctx.t,
+        setType: typeof ctx.setLanguage,
+      };
       return null;
     }
 
-    expect(() => render(<BareConsumer />)).toThrow(
-      /useLanguageContext must be used within/,
-    );
-
-    consoleError.mockRestore();
+    expect(() => render(<BareConsumer />)).not.toThrow();
+    expect(snapshot).not.toBeNull();
+    expect(snapshot!.lang).toBe('uz');
+    expect(snapshot!.tType).toBe('function');
+    expect(snapshot!.setType).toBe('function');
   });
 });

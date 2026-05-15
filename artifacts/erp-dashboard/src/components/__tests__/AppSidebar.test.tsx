@@ -90,6 +90,20 @@ vi.mock('@/components/ui/tooltip', () => {
   };
 });
 
+// Also mock the underlying Radix primitive in case the module cache fails to
+// rewire `@/components/ui/tooltip` for any sub-import path (defensive).
+vi.mock('@radix-ui/react-tooltip', () => {
+  const passthrough = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+  return {
+    Root: passthrough,
+    Trigger: passthrough,
+    Content: passthrough,
+    Provider: passthrough,
+    Portal: passthrough,
+    Arrow: () => null,
+  };
+});
+
 import { AppSidebar } from '../AppSidebar';
 
 describe('AppSidebar', () => {
@@ -122,6 +136,10 @@ describe('AppSidebar', () => {
 
   it('hides item labels when sidebar collapses on toggle', () => {
     sidebarState.current = 'collapsed';
+    // The Tooltip module mock above already passes through Radix.
+    // We just verify the version label "ERP System v2.0" is absent in
+    // the collapsed sidebar state; the menu items themselves still render
+    // through the mocked SidebarMenuButton + Tooltip passthroughs.
     render(<AppSidebar activePage="analytics" />, { wrapper: TestProviders });
     expect(screen.queryByText('ERP System v2.0')).toBeNull();
   });
