@@ -68,6 +68,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { AiAgentsModule } from './modules/ai-agents/ai-agents.module';
 import { BotGatewayModule } from './modules/bot-gateway/bot-gateway.module';
 import { DirectorModule } from './modules/director/director.module';
+import { AishaModule } from './modules/aisha/aisha.module';
 import { CommunicationCenterModule } from './modules/communication-center/communication-center.module';
 import { AgentsModule } from './modules/agents/agents.module';
 import { PosModule } from './modules/pos/pos.module';
@@ -169,7 +170,9 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
       },
       resolvers: [
         { use: QueryResolver, options: ['lang'] },
-        new HeaderResolver(['x-lang', 'accept-language']),
+        // HeaderResolver only for custom 'x-lang' header — 'accept-language' is
+        // handled by AcceptLanguageResolver (supports RFC4647 quality values).
+        new HeaderResolver(['x-lang']),
         AcceptLanguageResolver,
       ],
       typesOutputPath: path.join(__dirname, '../src/generated/i18n.generated.ts'),
@@ -208,6 +211,7 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     AiAgentsModule,
     BotGatewayModule,
     DirectorModule,
+    AishaModule,
     CommunicationCenterModule,
     AgentsModule,
     PosModule,

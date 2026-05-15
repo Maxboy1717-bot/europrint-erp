@@ -95,13 +95,39 @@ export function safeArray<T = unknown>(data: unknown, key?: string): T[] {
  *   const { data = [] } = useQuery({ queryKey: [...], select: selectArray<T> });
  * Bu query layer da noto'g'ri shakl (null, object, undefined) ni xavfsiz [] ga aylantiradi.
  */
-export function selectArray<T = unknown>(data: unknown): T[] {
-  return safeArray<T>(data);
+export function selectArray<T = unknown>(data: unknown, key?: string): T[] {
+  return safeArray<T>(data, key);
 }
 
 // ─── QueryClient ──────────────────────────────────────────────────────────────
 
+import { QueryCache } from "@tanstack/react-query";
+
+/**
+ * Global query error log — every failed query writes here so any error UI
+ * (e.g. EPErrorState) can fetch the last error/url/status without each page
+ * having to wire it up manually. Keyed by stringified queryKey.
+ */
+export const queryErrorLog = new Map<string, { error: unknown; url?: string; ts: number }>();
+
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      // Log to console with rich context — visible in DevTools instantly.
+      const url = (error as { url?: string })?.url;
+      const status = (error as { status?: number })?.status;
+      // eslint-disable-next-line no-console
+      console.error(
+        `[Query failed]`,
+        { status, url, queryKey: query.queryKey, message: (error as Error)?.message },
+      );
+      queryErrorLog.set(JSON.stringify(query.queryKey), {
+        error,
+        url: url ?? String(query.queryKey[0] ?? ''),
+        ts: Date.now(),
+      });
+    },
+  }),
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "returnNull" }),

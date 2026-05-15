@@ -68,16 +68,16 @@ import {
 } from './auth-refresh';
 
 export class HttpError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public url?: string) {
     super(message);
     this.name = "HttpError";
   }
 }
 
-async function throwIfResNotOk(res: Response) {
+async function throwIfResNotOk(res: Response, url?: string) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    throw new HttpError(res.status, `${res.status}: ${text}`, url);
   }
 }
 
@@ -140,7 +140,7 @@ export async function apiRequest<T = unknown>(
     }
   }
 
-  await throwIfResNotOk(res);
+  await throwIfResNotOk(res, url);
 
   const contentType = res.headers.get("content-type");
   if (res.status === 204 || !contentType?.includes("application/json")) {
@@ -271,7 +271,7 @@ export function getQueryFn<T>(options: {
       throw new AuthError(403, "Ruxsat yo'q");
     }
 
-    await throwIfResNotOk(res);
+    await throwIfResNotOk(res, url);
     const json = await res.json();
     if (json === null) return null as unknown as T;
 
