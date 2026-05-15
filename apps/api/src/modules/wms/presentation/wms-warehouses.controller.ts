@@ -118,7 +118,7 @@ export class WmsWarehousesController {
         FROM warehouse_stock ws
         LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
         WHERE ws.warehouse_id = ${id}
-        ORDER BY mc.name ASC
+        ORDER BY mc.xom_ashyo ASC
         LIMIT 200
       `);
       const items = (r as { rows?: Record<string, unknown>[] }).rows ?? [];

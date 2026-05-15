@@ -1,6 +1,10 @@
 /**
  * @module wms-gateway-warehouses.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ *
+ * Zones / Bins / Lots sub-routes are handled by:
+ *   - WmsGatewayWarehouseLotsController (./wms-gateway-warehouse-lots.controller.ts)
+ * Both are registered in `wms.module.ts`.
  */
 
 import {
@@ -23,8 +27,7 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 
 /**
  * WmsGatewayWarehousesController
- * Routes: /warehouse/warehouses/*, /warehouse/warehouses/:id/*
- * Warehouses CRUD, stock, stats, zones, bins, lots.
+ * Routes: /warehouse/warehouses, /warehouse/warehouses/:id (CRUD), stock, stats.
  */
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -146,7 +149,7 @@ export class WmsGatewayWarehousesController {
           FROM warehouse_stock ws
           LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
           WHERE ws.warehouse_id = ${wid}
-          ORDER BY mc.name ASC LIMIT 500
+          ORDER BY mc.xom_ashyo ASC LIMIT 500
         `);
         const items = Array.isArray(rows) ? rows : [];
         return { totalItems: items.length, items };
@@ -187,138 +190,6 @@ export class WmsGatewayWarehousesController {
         lowStockCount:     Number(s.low_stock_count    ?? 0),
       };
     } catch { return { id, materialCount: 0, totalQuantity: 0 }; }
-  }
-
-  @Get('warehouses/:id/zones')
-  @Roles(...WH_READ)
-  async getWarehouseZones(@Param('id') id: string) {
-    try {
-      const r = await rawSql(sql`
-        SELECT z.id::text AS id, z.code, z.name, z.name_ru AS "nameRu",
-               z.zone_type AS "zoneType", z.warehouse_id::text AS "warehouseId",
-               z.capacity, z.is_active AS "isActive", z.created_at AS "createdAt",
-               COUNT(b.id)::int AS "binCount",
-               COALESCE(SUM(b.current_occupancy), 0)::numeric AS "totalOccupancy"
-        FROM warehouse_zones z
-        LEFT JOIN warehouse_bins b ON b.zone_id = z.id AND b.deleted_at IS NULL
-        WHERE z.warehouse_id = ${parseInt(id, 10)} AND z.deleted_at IS NULL
-        GROUP BY z.id, z.code, z.name, z.name_ru, z.zone_type, z.warehouse_id, z.capacity, z.is_active, z.created_at
-        ORDER BY z.code
-      `);
-      return (r as { rows?: unknown[] }).rows ?? [];
-    } catch (e) { this.logger.warn(`getWarehouseZones failed: ${(e as Error).message}`); throw e; }
-  }
-
-  @Get('warehouses/:id/bins')
-  @Roles(...WH_READ)
-  async getWarehouseBins(
-    @Param('id') id: string,
-    @Query('zone_id') zoneId?: string,
-  ) {
-    try {
-      const r = await rawSql(sql`
-        SELECT b.id, b.bin_code AS "binCode", b.row, b.shelf, b.level, b.bin_type AS "binType",
-               b.max_weight AS "maxWeight", b.max_volume AS "maxVolume",
-               b.current_occupancy AS "currentOccupancy", b.is_active AS "isActive",
-               b.zone_id AS "zoneId", z.name AS "zoneName",
-               CASE WHEN b.max_volume > 0 THEN ROUND((b.current_occupancy / b.max_volume * 100)::numeric, 1) ELSE 0 END AS "occupancyPct"
-        FROM warehouse_bins b
-        LEFT JOIN warehouse_zones z ON z.id = b.zone_id
-        WHERE b.warehouse_id = ${parseInt(id, 10)}
-          AND b.deleted_at IS NULL AND b.is_active = true
-          AND (${zoneId ?? null}::int IS NULL OR b.zone_id = ${zoneId ? parseInt(zoneId, 10) : null}::int)
-        ORDER BY b.row, b.shelf, b.level, b.bin_code LIMIT 500
-      `);
-      return (r as { rows?: unknown[] }).rows ?? [];
-    } catch (e) { this.logger.warn(`getWarehouseBins failed: ${(e as Error).message}`); throw e; }
-  }
-
-  @Get('warehouses/:id/lots')
-  @Roles(...WH_READ)
-  async getWarehouseLots(
-    @Param('id') id: string,
-    @Query('status') status?: string,
-  ) {
-    try {
-      const r = await rawSql(sql`
-        SELECT bl.id, COALESCE(bl.lot_number, bl.batch_number) AS lot_number, bl.batch_number,
-               bl.quantity, bl.remaining_quantity AS available_quantity,
-               bl.unit, bl.quality_status AS status, bl.expiry_date, bl.production_date,
-               COALESCE(bl.received_date, bl.created_at) AS received_date,
-               bl.supplier_batch_number, bl.cost_per_unit, bl.defect_reason,
-               bl.quarantine_reason, bl.serial_number, bl.is_fifo_locked,
-               wb.bin_code, wb.row AS bin_row, wb.shelf AS bin_shelf,
-               mc.xom_ashyo AS material_name, mc.kod AS material_code, mc.unit_of_measure,
-               mc.grammage, mc.format_a, mc.format_b,
-               EXTRACT(DAY FROM NOW() - COALESCE(bl.production_date, bl.created_at))::int AS age_days,
-               CASE WHEN bl.expiry_date IS NOT NULL
-                    THEN EXTRACT(DAY FROM bl.expiry_date - NOW())::int
-                    ELSE NULL END AS days_until_expiry
-        FROM batch_lots bl
-        LEFT JOIN warehouse_bins wb ON wb.id = bl.bin_location_id
-        LEFT JOIN material_cards mc ON mc.id = bl.material_id
-        WHERE bl.warehouse_id = ${parseInt(id, 10)} AND bl.is_active = true
-          AND (${status ?? null}::text IS NULL OR bl.quality_status = ${status ?? null})
-        ORDER BY COALESCE(bl.production_date, bl.created_at) ASC LIMIT 300
-      `);
-      const rows = (r as { rows?: Record<string, unknown>[] }).rows ?? [];
-      const fifoWarnings   = rows.filter(lot => Number(lot.age_days) > 30 && Number(lot.available_quantity) > 0);
-      const expiryWarnings = rows.filter(lot => lot.days_until_expiry !== null && Number(lot.days_until_expiry) <= 30 && Number(lot.days_until_expiry) >= 0);
-      return { data: rows, total: rows.length, fifoWarnings: fifoWarnings.length, expiryWarnings: expiryWarnings.length };
-    } catch (e) {
-      this.logger.warn(`getWarehouseLots failed: ${(e as Error).message}`);
-      return { data: [], total: 0, fifoWarnings: 0, expiryWarnings: 0 };
-    }
-  }
-
-  @Post('warehouses/:id/lots')
-  @Roles(...WH_WRITE)
-  async createLot(
-    @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
-    @CurrentUser() _user: AuthenticatedUser,
-  ) {
-    try {
-      const batchNum = body.batch_number ?? body.lot_number ?? `LOT-${Date.now()}`;
-      const r = await rawSql(sql`
-        INSERT INTO batch_lots
-          (batch_number, lot_number, material_id, warehouse_id, quantity, remaining_quantity,
-           unit, quality_status, supplier_batch_number, cost_per_unit,
-           defect_reason, quarantine_reason, serial_number, received_date, notes, is_active)
-        VALUES
-          (${batchNum}, ${body.lot_number ?? batchNum}, ${body.material_id ?? null},
-           ${parseInt(id, 10)}, ${Number(body.quantity ?? 0)}, ${Number(body.quantity ?? 0)},
-           ${body.unit ?? 'dona'}, ${body.quality_status ?? 'pending'},
-           ${body.supplier_batch_number ?? null}, ${Number(body.cost_per_unit ?? 0)},
-           ${body.defect_reason ?? null}, ${body.quarantine_reason ?? null},
-           ${body.serial_number ?? null}, NOW(), ${body.notes ?? null}, true)
-        RETURNING id, batch_number, lot_number, quantity, quality_status, created_at
-      `);
-      return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? { ok: true };
-    } catch (e) { throw new BadRequestException((e as Error).message); }
-  }
-
-  @Patch('warehouses/:id/lots/:lotId')
-  @Roles(...WH_WRITE)
-  async updateLotStatus(
-    @Param('id') id: string,
-    @Param('lotId') lotId: string,
-    @Body() body: Record<string, unknown>,
-  ) {
-    try {
-      const r = await rawSql(sql`
-        UPDATE batch_lots SET
-          quality_status    = COALESCE(${body.quality_status    ?? null}, quality_status),
-          defect_reason     = COALESCE(${body.defect_reason     ?? null}, defect_reason),
-          quarantine_reason = COALESCE(${body.quarantine_reason ?? null}, quarantine_reason),
-          bin_location_id   = COALESCE(${body.bin_location_id ? parseInt(String(body.bin_location_id), 10) : null}::int, bin_location_id),
-          notes             = COALESCE(${body.notes    ?? null}, notes),
-          is_active         = COALESCE(${body.is_active ?? null}::boolean, is_active)
-        WHERE id = ${parseInt(lotId, 10)} AND warehouse_id = ${parseInt(id, 10)}
-        RETURNING id, batch_number, lot_number, quality_status
-      `);
-      return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? { ok: true };
-    } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
   @Get('warehouses/:id')
