@@ -1,0 +1,4313 @@
+[
+  {
+    "method": "GET",
+    "url": "/api/adaptation/dashboard",
+    "controller": "adaptation.controller",
+    "file": "apps\\api\\src\\modules\\adaptation\\adaptation.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/adaptation/records",
+    "controller": "adaptation.controller",
+    "file": "apps\\api\\src\\modules\\adaptation\\adaptation.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/adaptation/cases",
+    "controller": "adaptation.controller",
+    "file": "apps\\api\\src\\modules\\adaptation\\adaptation.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/cron-status",
+    "controller": "admin-cron-status.controller",
+    "file": "apps\\api\\src\\modules\\admin\\presentation\\controllers\\admin-cron-status.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/roles",
+    "controller": "admin-extra.controller",
+    "file": "apps\\api\\src\\modules\\admin\\presentation\\controllers\\admin-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/logs",
+    "controller": "admin-extra.controller",
+    "file": "apps\\api\\src\\modules\\admin\\presentation\\controllers\\admin-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/system",
+    "controller": "admin-extra.controller",
+    "file": "apps\\api\\src\\modules\\admin\\presentation\\controllers\\admin-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/system/alerts/:id",
+    "controller": "admin-extra.controller",
+    "file": "apps\\api\\src\\modules\\admin\\presentation\\controllers\\admin-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/admin/login",
+    "controller": "admin-extra.controller",
+    "file": "apps\\api\\src\\modules\\admin\\presentation\\controllers\\admin-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/agents/crm/proposal/:leadId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/production/shift-report/:shiftId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/inventory/forecast/:materialId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/inventory/abc",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/agents/inventory/rolls/use",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/inventory/rolls/qr/:dbId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/finance/overdue",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/finance/fraud",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/security/audit-anomalies",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/marketing/roi/:campaignId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/agents/marketing/content",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/lms/progress/:id",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/iot/sensor/:machineId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/iot/anomaly/:machineId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/iot/rul/:machineId",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/ai/director/executive-summary",
+    "controller": "ai-director.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\ai-director.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/ai-planning/plans/:id",
+    "controller": "ai-planning.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\ai-planning.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/ai-planning/plans/:id/batch-groups",
+    "controller": "ai-planning.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\ai-planning.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/ai/budget",
+    "controller": "ai.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\ai.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/forecast/:id/ema",
+    "controller": "forecast-ext.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\forecast-ext.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/forecast/:id/hw",
+    "controller": "forecast-ext.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\forecast-ext.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/forecast/:id/croston",
+    "controller": "forecast-ext.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\forecast-ext.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/forecast/:id/ensemble",
+    "controller": "forecast-ext.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\forecast-ext.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/gpt/status",
+    "controller": "gpt.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\gpt.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/gpt/chat",
+    "controller": "gpt.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\gpt.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/insights/dashboard",
+    "controller": "insights.controller",
+    "file": "apps\\api\\src\\modules\\ai\\presentation\\insights.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/ai-agents/sales/evaluate",
+    "controller": "ai-agents.controller",
+    "file": "apps\\api\\src\\modules\\ai-agents\\presentation\\ai-agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/ai-agents/planning/plan",
+    "controller": "ai-agents.controller",
+    "file": "apps\\api\\src\\modules\\ai-agents\\presentation\\ai-agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/ai-agents/mes/oee",
+    "controller": "ai-agents.controller",
+    "file": "apps\\api\\src\\modules\\ai-agents\\presentation\\ai-agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/ai-agents/mes/anomaly",
+    "controller": "ai-agents.controller",
+    "file": "apps\\api\\src\\modules\\ai-agents\\presentation\\ai-agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/ai-agents/qc/vision-analyze",
+    "controller": "ai-agents.controller",
+    "file": "apps\\api\\src\\modules\\ai-agents\\presentation\\ai-agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/ai-agents/logistics/vrp",
+    "controller": "ai-agents.controller",
+    "file": "apps\\api\\src\\modules\\ai-agents\\presentation\\ai-agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/api/aisha/voice/transcribe",
+    "controller": "voice.controller",
+    "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\voice.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/api/aisha/voice/synthesize",
+    "controller": "voice.controller",
+    "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\voice.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/api/aisha/wake/config",
+    "controller": "wake-config.controller",
+    "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\wake-config.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/api/aisha/wake/sensitivity",
+    "controller": "wake-config.controller",
+    "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\wake-config.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/auth/health",
+    "controller": "auth.controller",
+    "file": "apps\\api\\src\\modules\\auth\\presentation\\auth.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/bot/:bot/webhook",
+    "controller": "bot-gateway.controller",
+    "file": "apps\\api\\src\\modules\\bot-gateway\\bot-gateway.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/ai-camera/dashboard",
+    "controller": "ai-camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/ai-camera/events",
+    "controller": "ai-camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/ai-camera/alerts",
+    "controller": "ai-camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera/status",
+    "controller": "camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera/list",
+    "controller": "camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera/events",
+    "controller": "camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera/zones",
+    "controller": "camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/camera/violations/:id/auto-discipline",
+    "controller": "camera.controller",
+    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/chat/rooms/:roomId/pinned",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/chat/messages/:id/reactions",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/hr-v2/chat/messages/:id/pin",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/chat/polls",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/chat/polls/:pollId/vote",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/chat/messages/:id/thread",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/chat/messages/:id/thread",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/chat/messages/:id/forward",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/chat/upload/request-url",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/chat/upload/complete",
+    "controller": "chat-advanced.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-advanced.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/chat/admin/rooms/:roomId/members",
+    "controller": "chat-ext.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-ext.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "DELETE",
+    "url": "/api/chat/push/unsubscribe",
+    "controller": "chat-uploads.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-uploads.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/chat/upload/complete",
+    "controller": "chat-uploads.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-uploads.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/chat/video/token",
+    "controller": "chat-uploads.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat-uploads.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/chat/rooms/:roomId",
+    "controller": "chat.controller",
+    "file": "apps\\api\\src\\modules\\chat\\chat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/cc/baskets/stats/kpi",
+    "controller": "cc-baskets.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-baskets.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/baskets/:id/move",
+    "controller": "cc-baskets.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-baskets.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/cc/documents/:id/pdf",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/pin",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/cc/pin/status",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/documents/draft",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/documents/:id/approve",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/documents/:id/reject",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/documents/:id/resubmit",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/documents/:id/cancel",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/documents/:id/complaint",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/documents/:id/print",
+    "controller": "cc-documents.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-documents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/notification-prefs",
+    "controller": "cc-notification-prefs.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-notification-prefs.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/cc/notification-prefs",
+    "controller": "cc-notification-prefs.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-notification-prefs.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PUT",
+    "url": "/api/cc/notification-prefs",
+    "controller": "cc-notification-prefs.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-notification-prefs.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/cc/verify/:id",
+    "controller": "cc-public.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-public.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/cc/webhooks/:source",
+    "controller": "cc-webhook.controller",
+    "file": "apps\\api\\src\\modules\\communication-center\\presentation\\cc-webhook.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/approval-workflow/:type/:docId/requests",
+    "controller": "approval-workflow.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\approval-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/approval-workflow/:id",
+    "controller": "approval-workflow.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\approval-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/barcode-warehouse/barcodes/scan/:id",
+    "controller": "barcode-warehouse.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\barcode-warehouse.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/supervisor/dashboard",
+    "controller": "crm-extended.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/ai/extended/insights",
+    "controller": "crm-extended.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/crm/chat",
+    "controller": "crm-extended.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/crm/auto-tasks",
+    "controller": "crm-extended.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/workflow/routes",
+    "controller": "document-workflow-v2.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\document-workflow-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/workflow/initiate",
+    "controller": "document-workflow-v2.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\document-workflow-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/workflow/:instanceId/approve",
+    "controller": "document-workflow-v2.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\document-workflow-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr-v2/workflow/:instanceId/reject",
+    "controller": "document-workflow-v2.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\document-workflow-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/workflow/employee/:employeeId/documents",
+    "controller": "document-workflow-v2.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\document-workflow-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/workflow/pending",
+    "controller": "document-workflow-v2.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\document-workflow-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/employee-kpi/employee-zone-history",
+    "controller": "employee-kpi-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employee-kpi-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/employee-kpi/daily-attendance",
+    "controller": "employee-kpi-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employee-kpi-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/employees/:id/swap-requests",
+    "controller": "employees-compat-sub.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employees-compat-sub.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/employees/:id/assessment-skips",
+    "controller": "employees-compat-sub.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employees-compat-sub.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/employees/for-face",
+    "controller": "employees-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employees-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/employees/:id/org-departments",
+    "controller": "employees-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employees-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/europrint-control/logs",
+    "controller": "europrint-control.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\europrint-control.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/europrint-control/menus/:role",
+    "controller": "europrint-control.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\europrint-control.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-map/attendance-today",
+    "controller": "hr-map-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\hr-map-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-map/zones",
+    "controller": "hr-map-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\hr-map-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh/barcode/:barcode",
+    "controller": "pos-warehouse-integration.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\pos-warehouse-integration.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/label/batches",
+    "controller": "warehouse-label.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\warehouse-label.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/label/history",
+    "controller": "warehouse-label.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\warehouse-label.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/core/departments/org-chart",
+    "controller": "departments.controller",
+    "file": "apps\\api\\src\\modules\\core\\presentation\\departments.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/activities/today",
+    "controller": "crm-activities.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-activities.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/ai/autofill/:entityType/:id",
+    "controller": "crm-ai-extended.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-ai-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/ai/leads",
+    "controller": "crm-ai-extended.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-ai-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/ai/nba",
+    "controller": "crm-ai-extended.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-ai-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/ai/quick-score/:entityType/:id",
+    "controller": "crm-ai-extended.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-ai-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/dashboard-analysis",
+    "controller": "crm-ai.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-ai.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/crm/churn/predict",
+    "controller": "crm-analytics.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-analytics.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/crm/churn/retrain",
+    "controller": "crm-analytics.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-analytics.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/supervisor-dashboard",
+    "controller": "crm-auto-lead.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-auto-lead.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm/nba",
+    "controller": "crm-extras.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-extras.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/crm",
+    "controller": "crm-extras.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-extras.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/crm/leads/:id/pipeline-stage",
+    "controller": "crm-leads-ops.controller",
+    "file": "apps\\api\\src\\modules\\crm\\presentation\\crm-leads-ops.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/design/orders/:orderId/revisions",
+    "controller": "design-extended.controller",
+    "file": "apps\\api\\src\\modules\\design\\presentation\\design-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/design/:id/mockup",
+    "controller": "design-extended.controller",
+    "file": "apps\\api\\src\\modules\\design\\presentation\\design-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/design/:id",
+    "controller": "design.controller",
+    "file": "apps\\api\\src\\modules\\design\\presentation\\design.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/approvals/pending",
+    "controller": "approvals.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\approvals.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/approvals/stats",
+    "controller": "approvals.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\approvals.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/approvals/history",
+    "controller": "approvals.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\approvals.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/dashboard/kpis",
+    "controller": "dashboard.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/dashboard/production-summary",
+    "controller": "dashboard.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/dashboard/finance-summary",
+    "controller": "dashboard.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/dashboard/hr-summary",
+    "controller": "dashboard.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/company-state",
+    "controller": "director-extended.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\director-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/director/kpi",
+    "controller": "director-root.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\director-root.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/kaizen/suggestions/:id/status",
+    "controller": "kaizen.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\kaizen.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/okr/dashboard",
+    "controller": "okr.controller",
+    "file": "apps\\api\\src\\modules\\director\\presentation\\okr.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/customers",
+    "controller": "ecommerce-customers.controller",
+    "file": "apps\\api\\src\\modules\\ecommerce\\ecommerce-customers.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/ecommerce/stats",
+    "controller": "ecommerce-customers.controller",
+    "file": "apps\\api\\src\\modules\\ecommerce\\ecommerce-customers.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/admin/customer-orders",
+    "controller": "ecommerce-orders.controller",
+    "file": "apps\\api\\src\\modules\\ecommerce\\ecommerce-orders.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/public/categories",
+    "controller": "ecommerce-public.controller",
+    "file": "apps\\api\\src\\modules\\ecommerce\\ecommerce-public.controller.ts",
+    "hasAuth": true,
+    "isPublic": true,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/public/products/:slug",
+    "controller": "ecommerce-public.controller",
+    "file": "apps\\api\\src\\modules\\ecommerce\\ecommerce-public.controller.ts",
+    "hasAuth": true,
+    "isPublic": true,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/public/contact",
+    "controller": "ecommerce-public.controller",
+    "file": "apps\\api\\src\\modules\\ecommerce\\ecommerce-public.controller.ts",
+    "hasAuth": true,
+    "isPublic": true,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/360/dashboard",
+    "controller": "feedback-360.controller",
+    "file": "apps\\api\\src\\modules\\feedback-360\\feedback-360.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/360/feedback",
+    "controller": "feedback-360.controller",
+    "file": "apps\\api\\src\\modules\\feedback-360\\feedback-360.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/360/assessments",
+    "controller": "feedback-360.controller",
+    "file": "apps\\api\\src\\modules\\feedback-360\\feedback-360.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/360/responses",
+    "controller": "feedback-360.controller",
+    "file": "apps\\api\\src\\modules\\feedback-360\\feedback-360.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/kassa",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/ombor",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/debitorlar",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/kreditorlar",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/balans",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/ishlab-chiqarish",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/analytics",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/dashboard",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/alerts/overstock",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/financial-reports/alerts/overdue-debts",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/financial-reports/alerts/send-report",
+    "controller": "financial-reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\financial-reports\\presentation\\financial-reports.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/accounting/dashboard",
+    "controller": "finance-accounting.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-accounting.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/accounting/accounts",
+    "controller": "finance-accounting.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-accounting.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/advances/pending",
+    "controller": "finance-advance.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-advance.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/budgets/stats",
+    "controller": "finance-budgets.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-budgets.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/budgets/:id",
+    "controller": "finance-budgets.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-budgets.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/budgets/:id/variance",
+    "controller": "finance-budgets.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-budgets.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance-extended/asset-inventory/:id",
+    "controller": "finance-extended.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance-extended/insurance",
+    "controller": "finance-extended.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance-extended/ai-finance-insights",
+    "controller": "finance-extended.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/gl",
+    "controller": "finance-gl.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/gl/trial-balance",
+    "controller": "finance-gl.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/gl/ledger/:accountCode",
+    "controller": "finance-gl.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/invoices/:invoiceId",
+    "controller": "finance-invoices.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-invoices.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/transactions",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/budget",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/accounts",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/expenses",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/expense-reports",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/expense-reports/:id",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/loans/:id",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/payments/:invoiceId/outstanding",
+    "controller": "finance-payments.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-payments.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/payroll/by-department",
+    "controller": "finance-payroll.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-payroll.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/payroll/by-brigade",
+    "controller": "finance-payroll.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-payroll.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/payroll/tax-summary",
+    "controller": "finance-payroll.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-payroll.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/standard-cost/:productId",
+    "controller": "finance-standard-cost.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-standard-cost.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/standard-cost/name/:productName",
+    "controller": "finance-standard-cost.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-standard-cost.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/finance/standard-cost/name/:productName/periods",
+    "controller": "finance-standard-cost.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-standard-cost.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/finance/standard-cost/name/:productName/calculate",
+    "controller": "finance-standard-cost.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-standard-cost.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pricing/tiers/:productName",
+    "controller": "pricing.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\pricing.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/reports/weekly-summary/current-week",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/ai-interview/stats",
+    "controller": "ai-interview-v2.controller",
+    "file": "apps\\api\\src\\modules\\hr\\ai-interview-v2\\ai-interview-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/ai-interview/questions/for-job",
+    "controller": "ai-interview-v2.controller",
+    "file": "apps\\api\\src\\modules\\hr\\ai-interview-v2\\ai-interview-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr/attendance/territory",
+    "controller": "attendance-face.controller",
+    "file": "apps\\api\\src\\modules\\hr\\attendance\\attendance-face.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/attendance/face/health",
+    "controller": "attendance-face.controller",
+    "file": "apps\\api\\src\\modules\\hr\\attendance\\attendance-face.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/attendance/late-arrivals/today",
+    "controller": "attendance-face.controller",
+    "file": "apps\\api\\src\\modules\\hr\\attendance\\attendance-face.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/career-path/department/:id/ladder",
+    "controller": "career-path.controller",
+    "file": "apps\\api\\src\\modules\\hr\\career-path\\career-path.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/career-path/employee/:id",
+    "controller": "career-path.controller",
+    "file": "apps\\api\\src\\modules\\hr\\career-path\\career-path.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/daily-reports/employee/:id",
+    "controller": "daily-report.controller",
+    "file": "apps\\api\\src\\modules\\hr\\daily-report\\daily-report.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/daily-reports/:id/pdf",
+    "controller": "daily-report.controller",
+    "file": "apps\\api\\src\\modules\\hr\\daily-report\\daily-report.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/discipline/check/:employeeId",
+    "controller": "discipline-v2.controller",
+    "file": "apps\\api\\src\\modules\\hr\\discipline-v2\\discipline-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/discipline/employee/:id",
+    "controller": "discipline-v2.controller",
+    "file": "apps\\api\\src\\modules\\hr\\discipline-v2\\discipline-v2.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/documents/:id",
+    "controller": "document-workflow.controller",
+    "file": "apps\\api\\src\\modules\\hr\\document-workflow\\document-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/enps/:id/results",
+    "controller": "enps.controller",
+    "file": "apps\\api\\src\\modules\\hr\\enps\\enps.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/gamification/my/badges",
+    "controller": "gamification.controller",
+    "file": "apps\\api\\src\\modules\\hr\\gamification\\gamification.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/gamification/my/points",
+    "controller": "gamification.controller",
+    "file": "apps\\api\\src\\modules\\hr\\gamification\\gamification.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/gamification/employee/:id/points",
+    "controller": "gamification.controller",
+    "file": "apps\\api\\src\\modules\\hr\\gamification\\gamification.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/gamification/employee/:id/badges",
+    "controller": "gamification.controller",
+    "file": "apps\\api\\src\\modules\\hr\\gamification\\gamification.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr/inspection/manual",
+    "controller": "inspection.controller",
+    "file": "apps\\api\\src\\modules\\hr\\inspection\\inspection.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/inspection/checklist-pdf/:id",
+    "controller": "inspection.controller",
+    "file": "apps\\api\\src\\modules\\hr\\inspection\\inspection.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/onboarding/plans/:id",
+    "controller": "onboarding.controller",
+    "file": "apps\\api\\src\\modules\\hr\\onboarding\\onboarding.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/onboarding/employee/:employeeId",
+    "controller": "onboarding.controller",
+    "file": "apps\\api\\src\\modules\\hr\\onboarding\\onboarding.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/pip/active",
+    "controller": "pip.controller",
+    "file": "apps\\api\\src\\modules\\hr\\pip\\pip.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/pip/employee/:id",
+    "controller": "pip.controller",
+    "file": "apps\\api\\src\\modules\\hr\\pip\\pip.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/attendance/today",
+    "controller": "hr-attendance.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-attendance.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/attendance/:employeeId/summary/:period",
+    "controller": "hr-attendance.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-attendance.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/vacancies",
+    "controller": "hr-compat-a.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-compat-a.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/payroll-runs",
+    "controller": "hr-compat-a.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-compat-a.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/payroll-periods",
+    "controller": "hr-compat-a.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-compat-a.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/documents",
+    "controller": "hr-compat-safety.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-compat-safety.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/documents/admin/workflow-routes",
+    "controller": "hr-compat-safety.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-compat-safety.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/resignation-stats/:lang",
+    "controller": "hr-dashboard-extra.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/safety",
+    "controller": "hr-dashboard-extra.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/contracts",
+    "controller": "hr-dashboard-extra.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-extra.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/alumni/:id",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr/alumni/:id/invite",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/daily-reports/department",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/daily-reports/my",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/ai-interview/session/:id/review",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/documents/employee",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/documents/my",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/enps/surveys/results",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/hr/ai-interview/session/:id/review",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/birthdays",
+    "controller": "hr-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/monthly-trend/:lang",
+    "controller": "hr-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/pip",
+    "controller": "hr-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/enps/surveys",
+    "controller": "hr-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/daily-reports/stats",
+    "controller": "hr-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/hr/employees/:id/goals/:goalId",
+    "controller": "hr-employee-goals.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-employee-goals.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/employees/:employeeId/swap-requests",
+    "controller": "hr-employees-ext.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-employees-ext.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/employees/:employeeId/assessment-skips",
+    "controller": "hr-employees-ext.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-employees-ext.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/employees/:employeeId/kpi",
+    "controller": "hr-employees.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-employees.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/leave/stats",
+    "controller": "hr-leave.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-leave.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/leave/balance/:employeeId",
+    "controller": "hr-leave.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-leave.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/leave/:id",
+    "controller": "hr-leave.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-leave.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "DELETE",
+    "url": "/api/hr/leave/:id",
+    "controller": "hr-leave.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-leave.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/payroll/summary/:period",
+    "controller": "hr-payroll.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-payroll.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/reception",
+    "controller": "reception.controller",
+    "file": "apps\\api\\src\\modules\\hr\\reception\\reception.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/reception/badge/:badge_number",
+    "controller": "reception.controller",
+    "file": "apps\\api\\src\\modules\\hr\\reception\\reception.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr/recruitment/pipeline/:id/nda-request",
+    "controller": "hr-vacancies-pipeline.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\hr-vacancies-pipeline.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr/recruitment/pipeline/:id/offer",
+    "controller": "hr-vacancies-pipeline.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\hr-vacancies-pipeline.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr/recruitment/internal-apply/:id",
+    "controller": "hr-vacancies-pipeline.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\hr-vacancies-pipeline.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/hr/recruitment/vacancies/:id/publish",
+    "controller": "hr-vacancies.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\hr-vacancies.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment/references-check/funnel/:funnelId",
+    "controller": "recruitment-offers.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment-offers.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment/job-offer/candidate/:candidateId",
+    "controller": "recruitment-offers.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment-offers.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment/job-offer/:id",
+    "controller": "recruitment-offers.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment-offers.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment",
+    "controller": "recruitment.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment/funnel/kanban",
+    "controller": "recruitment.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment/funnel/:id",
+    "controller": "recruitment.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment/statistics/weekly",
+    "controller": "recruitment.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/recruitment/health-check",
+    "controller": "recruitment.controller",
+    "file": "apps\\api\\src\\modules\\hr\\recruitment\\recruitment.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/shifts/schedule",
+    "controller": "shift.controller",
+    "file": "apps\\api\\src\\modules\\hr\\shift\\shift.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/skills-matrix/employee/:id",
+    "controller": "skills-matrix.controller",
+    "file": "apps\\api\\src\\modules\\hr\\skills-matrix\\skills-matrix.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/telegram-bots/status",
+    "controller": "telegram-bots.controller",
+    "file": "apps\\api\\src\\modules\\hr\\telegram-bots\\telegram-bots.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/assets/:id/assign",
+    "controller": "hr-assets.controller",
+    "file": "apps\\api\\src\\modules\\hr-assets\\hr-assets.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/assets/:id/return",
+    "controller": "hr-assets.controller",
+    "file": "apps\\api\\src\\modules\\hr-assets\\hr-assets.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/assets/:id/report",
+    "controller": "hr-assets.controller",
+    "file": "apps\\api\\src\\modules\\hr-assets\\hr-assets.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/integration/employee-rating/ratings/:year/:month",
+    "controller": "integration-extended-hr.controller",
+    "file": "apps\\api\\src\\modules\\integration\\integration-extended-hr.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/integration/pm-upcoming",
+    "controller": "integration-extended-hr.controller",
+    "file": "apps\\api\\src\\modules\\integration\\integration-extended-hr.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/integration/expense/expense-requests/all",
+    "controller": "integration-extended.controller",
+    "file": "apps\\api\\src\\modules\\integration\\integration-extended.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/integration/mro/budgets",
+    "controller": "integration-mro.controller",
+    "file": "apps\\api\\src\\modules\\integration\\integration-mro.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera-dashboard/attendance-stats",
+    "controller": "camera-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\camera-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera-dashboard/production-stats",
+    "controller": "camera-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\camera-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera/cameras/:cameraId/zones",
+    "controller": "iot-camera.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-camera.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/dashboard",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/safety-violations",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/employee-productivity",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/devices/:id/stats",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/production-metrics",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/oee",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/maintenance-schedule",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/production-sessions/:id/crew",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/iot/production-sessions/:id/start",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/iot/production-sessions/:id/stop",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/iot/production-sessions/:id/defect",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/iot/production-sessions/:id/inline-qc",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot-sensors/trends",
+    "controller": "iot-sensors-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-sensors-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot-sensors/:id/history",
+    "controller": "iot-sensors-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-sensors-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/sensors/:id/oee",
+    "controller": "iot-sensors.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-sensors.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/cards/:id/time-entries",
+    "controller": "kanban-card-files.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-card-files.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/chat-messages/:id/files",
+    "controller": "kanban-cards.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-cards.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/kanban/chat-messages/:id/files",
+    "controller": "kanban-cards.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-cards.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/sprint",
+    "controller": "kanban-checklist.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-checklist.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/cards/overdue",
+    "controller": "kanban-checklist.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-checklist.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/cards/by-employee/:employeeId",
+    "controller": "kanban-checklist.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-checklist.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/members",
+    "controller": "kanban-checklist.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-checklist.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/boards/:boardId/flows",
+    "controller": "kanban-core.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-core.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/reports/productivity",
+    "controller": "kanban-reports.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/reports/overdue",
+    "controller": "kanban-reports.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/kanban/analytics/summary",
+    "controller": "kanban-reports.controller",
+    "file": "apps\\api\\src\\modules\\kanban\\presentation\\kanban-reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/courses/completion-trend/:lang",
+    "controller": "courses.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\courses.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/lms/attempts/:id/submit",
+    "controller": "lms-attempts.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-attempts.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/lms/certificates/operator/:operatorId",
+    "controller": "lms-certificates.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-certificates.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/lms/certificates/:employeeId",
+    "controller": "lms-certificates.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-certificates.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/lms/recent-activity/:lang",
+    "controller": "lms-core.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-core.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/lms/enrollments/my",
+    "controller": "lms-enrollments.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-enrollments.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/lms/enrollments/stats",
+    "controller": "lms-enrollments.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-enrollments.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/lms/enrollments/expiring-certificates",
+    "controller": "lms-enrollments.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-enrollments.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/progress/user/:id",
+    "controller": "lms-misc.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-misc.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/questionnaire-templates/:id",
+    "controller": "lms-questionnaire.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-questionnaire.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PUT",
+    "url": "/api/questionnaire-templates/:id",
+    "controller": "lms-questionnaire.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-questionnaire.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "DELETE",
+    "url": "/api/questionnaire-templates/:id",
+    "controller": "lms-questionnaire.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-questionnaire.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/logistics/:id",
+    "controller": "logistics.controller",
+    "file": "apps\\api\\src\\modules\\logistics\\presentation\\logistics.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/analytics/overview",
+    "controller": "marketing-analytics.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/analytics/campaigns",
+    "controller": "marketing-analytics.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/analytics/audience",
+    "controller": "marketing-analytics.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/analytics/conversion",
+    "controller": "marketing-analytics.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/reports",
+    "controller": "marketing-analytics.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/reports/:id",
+    "controller": "marketing-analytics.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/content/calendar",
+    "controller": "marketing-content.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-content.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/marketing/content/analytics",
+    "controller": "marketing-content.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-content.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/marketing/campaigns/:id/launch",
+    "controller": "marketing.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mes/sos/history",
+    "controller": "mes-maintenance.controller",
+    "file": "apps\\api\\src\\modules\\mes\\presentation\\mes-maintenance.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mes/operations",
+    "controller": "mes-operations.controller",
+    "file": "apps\\api\\src\\modules\\mes\\presentation\\mes-operations.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mes/operations/downtime/summary",
+    "controller": "mes-operations.controller",
+    "file": "apps\\api\\src\\modules\\mes\\presentation\\mes-operations.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mes/operations/reason-codes",
+    "controller": "mes-operations.controller",
+    "file": "apps\\api\\src\\modules\\mes\\presentation\\mes-operations.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mes/operations/oee",
+    "controller": "mes-operations.controller",
+    "file": "apps\\api\\src\\modules\\mes\\presentation\\mes-operations.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mes/sessions/:id",
+    "controller": "mes-sessions.controller",
+    "file": "apps\\api\\src\\modules\\mes\\presentation\\mes-sessions.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mes/shifts/evaluations",
+    "controller": "mes-shifts-stats.controller",
+    "file": "apps\\api\\src\\modules\\mes\\presentation\\mes-shifts-stats.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mm/materials/:id/suppliers",
+    "controller": "mm-dashboard.controller",
+    "file": "apps\\api\\src\\modules\\mm\\presentation\\mm-dashboard.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/materials/cards/:id",
+    "controller": "mm-material-cards.controller",
+    "file": "apps\\api\\src\\modules\\mm\\presentation\\mm-material-cards.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mm/materials/stats",
+    "controller": "mm-materials.controller",
+    "file": "apps\\api\\src\\modules\\mm\\presentation\\mm-materials.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mro",
+    "controller": "mro.controller",
+    "file": "apps\\api\\src\\modules\\mro\\presentation\\mro.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mro/:id",
+    "controller": "mro.controller",
+    "file": "apps\\api\\src\\modules\\mro\\presentation\\mro.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/order-workflow/orders",
+    "controller": "order-workflow.controller",
+    "file": "apps\\api\\src\\modules\\order-workflow\\presentation\\order-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/order-workflow/orders/:id/status",
+    "controller": "order-workflow.controller",
+    "file": "apps\\api\\src\\modules\\order-workflow\\presentation\\order-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/order-workflow/orders/:id/payment-plan",
+    "controller": "order-workflow.controller",
+    "file": "apps\\api\\src\\modules\\order-workflow\\presentation\\order-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/order-workflow/orders/:id/saga-status",
+    "controller": "order-workflow.controller",
+    "file": "apps\\api\\src\\modules\\order-workflow\\presentation\\order-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/order-workflow/orders",
+    "controller": "order-workflow.controller",
+    "file": "apps\\api\\src\\modules\\order-workflow\\presentation\\order-workflow.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/org-structure/employees/:userId/folder",
+    "controller": "org-structure.controller",
+    "file": "apps\\api\\src\\modules\\org-structure\\org-structure.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/org-structure/nodes/:nodeId/approval-chain",
+    "controller": "org-structure.controller",
+    "file": "apps\\api\\src\\modules\\org-structure\\org-structure.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/org-structure/nodes/:nodeId/direct-manager",
+    "controller": "org-structure.controller",
+    "file": "apps\\api\\src\\modules\\org-structure\\org-structure.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/org-structure/nodes/:nodeId/telegram-group",
+    "controller": "org-structure.controller",
+    "file": "apps\\api\\src\\modules\\org-structure\\org-structure.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/barcode/ai-suggestion/pending",
+    "controller": "barcode.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\barcode.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/scan/:barcode",
+    "controller": "cash-register.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\cash-register.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/receipt/:id",
+    "controller": "cash-register.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\cash-register.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/employees/:userId/balance",
+    "controller": "employee.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\employee.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/employees/me/balance",
+    "controller": "employee.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\employee.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/employees/department/:code/balance",
+    "controller": "employee.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\employee.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/employees/:userId/statement",
+    "controller": "employee.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\employee.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/employees/me/checklist",
+    "controller": "employee.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\employee.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/employees/me/return",
+    "controller": "employee.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\employee.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/employees/:id/hr-check",
+    "controller": "employee.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\employee.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/gl/movement/:id",
+    "controller": "gl.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/gl/approve/:movementId",
+    "controller": "gl.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/gl/entry/:id/approve",
+    "controller": "gl.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/gl/entry/:id/reject",
+    "controller": "gl.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/gl/pending",
+    "controller": "gl.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/gl/journal",
+    "controller": "gl.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\gl.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/inventory-counts/:id/variance",
+    "controller": "inventory-count.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\inventory-count.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/inventory-counts/:id/pdf",
+    "controller": "inventory-count.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\inventory-count.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/inventory-passport/quarantine",
+    "controller": "inventory-passport.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\inventory-passport.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/inventory-passport/:movementId",
+    "controller": "inventory-passport.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\inventory-passport.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/inventory-passport/:movementId/qc-decision",
+    "controller": "inventory-passport.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\inventory-passport.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/mini-app/history",
+    "controller": "mini-app-history.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\mini-app-history.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/mini-app/pending-approvals",
+    "controller": "mini-app-history.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\mini-app-history.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/mini-app/warehouses",
+    "controller": "mini-app-history.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\mini-app-history.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/mini-app/materials",
+    "controller": "mini-app.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\mini-app.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/movements/:id",
+    "controller": "movements.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\movements.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/movements/:id/pdf",
+    "controller": "movements.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\movements.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/movements/:id/confirmations",
+    "controller": "movements.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\movements.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/movements/:id/history",
+    "controller": "movements.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\movements.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/auth/login",
+    "controller": "pos-auth.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\pos-auth.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/auth/validate",
+    "controller": "pos-auth.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\pos-auth.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/auth/ping",
+    "controller": "pos-auth.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\pos-auth.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wms/warehouse/:warehouseId/stock",
+    "controller": "pos-wms.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\pos-wms.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wms/warehouse/:warehouseId/movements",
+    "controller": "pos-wms.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\pos-wms.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wms/low-stock",
+    "controller": "pos-wms.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\pos-wms.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/printer-config/active",
+    "controller": "printer-config.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\printer-config.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/kpi",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/stock",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/movement-stats",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/top-materials",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/three-way-match",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/liabilities",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/abc-analysis",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/reports/inactive-materials",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/requests/:id",
+    "controller": "requests.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\requests.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/stock/low-alerts",
+    "controller": "stock.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\stock.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/stock/expiry-alerts",
+    "controller": "stock.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\stock.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/stock/:warehouseId/:materialId",
+    "controller": "stock.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\stock.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/sync/push",
+    "controller": "sync.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\sync.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/sync/pull",
+    "controller": "sync.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\sync.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/warehouse/:warehouseId/employees",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/user/:userId/warehouses",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/warehouse/:warehouseId/employees",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "DELETE",
+    "url": "/api/pos/wh-features/employees/:assignmentId",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/movement/:movementId/auto-barcode",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/movement/:movementId/barcodes",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/material/:materialId/profile",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/movement/:movementId/gl-post",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/movement/:movementId/gl-postings",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/gl/journal",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/kpi/warehouses",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/kpi/system",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/grn",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/grn",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/grn/:id/approve",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/movement/:id/move-to-quarantine",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/wh-features/three-way-match/variances",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/three-way-match",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/pos/wh-features/three-way-match/auto",
+    "controller": "warehouse-features.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\warehouse-features.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/warehouse-access/:userId",
+    "controller": "pos.controller",
+    "file": "apps\\api\\src\\modules\\pos\\pos.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/movements/stats",
+    "controller": "pos.controller",
+    "file": "apps\\api\\src\\modules\\pos\\pos.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/movements/:id",
+    "controller": "pos.controller",
+    "file": "apps\\api\\src\\modules\\pos\\pos.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/passports/:id",
+    "controller": "pos.controller",
+    "file": "apps\\api\\src\\modules\\pos\\pos.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/barcodes/lookup",
+    "controller": "pos.controller",
+    "file": "apps\\api\\src\\modules\\pos\\pos.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos/pdf-templates/:id",
+    "controller": "pos.controller",
+    "file": "apps\\api\\src\\modules\\pos\\pos.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos-v2/reports/movements",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos-v2\\presentation\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos-v2/reports/employee-activity",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos-v2\\presentation\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pos-v2/reports/low-stock",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\pos-v2\\presentation\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pp/mps",
+    "controller": "pp-intelligence.controller",
+    "file": "apps\\api\\src\\modules\\pp\\presentation\\pp-intelligence.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pp/learning-curve/:productId",
+    "controller": "pp-intelligence.controller",
+    "file": "apps\\api\\src\\modules\\pp\\presentation\\pp-intelligence.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pp/orders/:id",
+    "controller": "pp-orders.controller",
+    "file": "apps\\api\\src\\modules\\pp\\presentation\\pp-orders.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pp/orders/plan/:startDate/:endDate",
+    "controller": "pp-orders.controller",
+    "file": "apps\\api\\src\\modules\\pp\\presentation\\pp-orders.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/pp/work-centers/stats",
+    "controller": "pp-work-centers.controller",
+    "file": "apps\\api\\src\\modules\\pp\\presentation\\pp-work-centers.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/print/spoilage/:jobId",
+    "controller": "print.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\print.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/print/spoilage",
+    "controller": "print.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\print.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/qc/defects/:id",
+    "controller": "qc-defects.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-defects.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/qc/dpmo/:processId",
+    "controller": "qc-dpmo.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-dpmo.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/qc/dpmo",
+    "controller": "qc-dpmo.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-dpmo.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/exceptions/:id",
+    "controller": "exception-log.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\exception-log.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/exceptions/:id",
+    "controller": "exception-log.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\exception-log.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "DELETE",
+    "url": "/api/exceptions/:id",
+    "controller": "exception-log.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\exception-log.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/fi/invoices",
+    "controller": "fi.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\fi.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/material-balance/:materialId/history",
+    "controller": "material-balance.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\material-balance.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/reports-hub/categories",
+    "controller": "reports-hub.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\reports-hub.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/reports-hub/runs/:runId",
+    "controller": "reports-hub.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\reports-hub.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/weekly-plans/stats/summary",
+    "controller": "weekly-plan.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\weekly-plan.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/sd/customers/:id/internal",
+    "controller": "sd-customers.controller",
+    "file": "apps\\api\\src\\modules\\sd\\presentation\\sd-customers.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/sd/deliveries/:id",
+    "controller": "sd-deliveries.controller",
+    "file": "apps\\api\\src\\modules\\sd\\presentation\\sd-deliveries.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/sd/invoices/:id",
+    "controller": "sd-invoices.controller",
+    "file": "apps\\api\\src\\modules\\sd\\presentation\\sd-invoices.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/sd/leads/export",
+    "controller": "sd-leads.controller",
+    "file": "apps\\api\\src\\modules\\sd\\presentation\\sd-leads.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/sd/orders/pending-advance",
+    "controller": "sd-orders.controller",
+    "file": "apps\\api\\src\\modules\\sd\\presentation\\sd-orders.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/sd/orders/:id",
+    "controller": "sd-orders.controller",
+    "file": "apps\\api\\src\\modules\\sd\\presentation\\sd-orders.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/sd/kpi-targets",
+    "controller": "sd-quotations.controller",
+    "file": "apps\\api\\src\\modules\\sd\\presentation\\sd-quotations.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/raci-crisis/tasks/:id/assignments",
+    "controller": "raci.controller",
+    "file": "apps\\api\\src\\modules\\security\\presentation\\raci.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/security",
+    "controller": "security.controller",
+    "file": "apps\\api\\src\\modules\\security\\presentation\\security.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PUT",
+    "url": "/api/storage/upload",
+    "controller": "storage.controller",
+    "file": "apps\\api\\src\\modules\\storage\\storage.controller.ts",
+    "hasAuth": true,
+    "isPublic": true,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/storage/*",
+    "controller": "storage.controller",
+    "file": "apps\\api\\src\\modules\\storage\\storage.controller.ts",
+    "hasAuth": true,
+    "isPublic": true,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/technology/orders/:id/tech-card",
+    "controller": "technology.controller",
+    "file": "apps\\api\\src\\modules\\technology\\technology.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/technology/cards/:id",
+    "controller": "technology.controller",
+    "file": "apps\\api\\src\\modules\\technology\\technology.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/website/settings",
+    "controller": "website.controller",
+    "file": "apps\\api\\src\\modules\\website\\website.controller.ts",
+    "hasAuth": true,
+    "isPublic": true,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/inventory/advanced/analytics",
+    "controller": "inventory-advanced.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\inventory-advanced.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/inventory/advanced/counts",
+    "controller": "inventory-advanced.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\inventory-advanced.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/inventory/advanced/barcodes",
+    "controller": "inventory-advanced.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\inventory-advanced.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/inventory/materials/low-stock",
+    "controller": "inventory-materials.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\inventory-materials.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/material-kits/:id",
+    "controller": "iot-material-kits.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\iot-material-kits.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/material-kits/:id/items",
+    "controller": "iot-material-kits.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\iot-material-kits.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/warehouse/material-kits/:id/status",
+    "controller": "wms-barcode.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-barcode.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/material-kits/:id/items",
+    "controller": "wms-barcode.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-barcode.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/orders-by-date/:date",
+    "controller": "wms-catalog.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-catalog.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/wms/batches",
+    "controller": "wms-counts.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-counts.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/wms/production-supply",
+    "controller": "wms-counts.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-counts.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/wms/eoq/calculate",
+    "controller": "wms-eoq.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-eoq.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/wms/eoq/recalculate-all",
+    "controller": "wms-eoq.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-eoq.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/wms/materials/:id/fifo-cost",
+    "controller": "wms-extended.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/wms/alerts",
+    "controller": "wms-extended.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/warehouses/:id/lots",
+    "controller": "wms-gateway-warehouse-lots.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-gateway-warehouse-lots.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/warehouse/warehouses/:id/lots",
+    "controller": "wms-gateway-warehouse-lots.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-gateway-warehouse-lots.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/warehouse/warehouses/:id/lots/:lotId",
+    "controller": "wms-gateway-warehouse-lots.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-gateway-warehouse-lots.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/warehouses/stats/total",
+    "controller": "wms-gateway-warehouses.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-gateway-warehouses.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/warehouses/:id/stock",
+    "controller": "wms-gateway-warehouses.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-gateway-warehouses.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/warehouses/:id/stats",
+    "controller": "wms-gateway-warehouses.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-gateway-warehouses.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/wms/inventory",
+    "controller": "wms-inventory.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-inventory.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/wms/inventory",
+    "controller": "wms-inventory.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-inventory.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/wms/inventory/low-stock",
+    "controller": "wms-inventory.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-inventory.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/warehouse/transfers/:id",
+    "controller": "wms-warehouse-gateway.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-warehouse-gateway.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/wms/warehouses/:id/inventory",
+    "controller": "wms-warehouses.controller",
+    "file": "apps\\api\\src\\modules\\wms\\presentation\\wms-warehouses.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  }
+]
