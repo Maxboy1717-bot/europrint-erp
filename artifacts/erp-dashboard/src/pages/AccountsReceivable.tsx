@@ -59,7 +59,7 @@ export default function AccountsReceivable() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ar/aging"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ar/overdue"] });
-      toast({ title: tCommon('success'), description: "Yozuv muvaffaqiyatli qo'shildi" });
+      toast({ title: tCommon('success'), description: t('entryAddedSuccessfully') });
       setArForm(EMPTY_AR_FORM);
       setAddOpen(false);
     },
@@ -102,17 +102,17 @@ export default function AccountsReceivable() {
 
   const handleExport = () => {
     if (overdueInvoices && overdueInvoices.length > 0) {
-      exportToCSV(overdueInvoices as Record<string, unknown>[], "debitorlik_qarzi", [
-        { key: "customerName", label: "Mijoz" },
-        { key: "invoiceNumber", label: "Hisob-faktura" },
-        { key: "totalAmount", label: "Summa" },
-        { key: "paidAmount", label: "To'langan" },
-        { key: "remainingAmount", label: "Qoldiq" },
-        { key: "dueDate", label: "Muddat" },
-        { key: "daysOverdue", label: "Kechikish (kun)" },
+      exportToCSV(overdueInvoices as unknown as Record<string, unknown>[], "debitorlik_qarzi", [
+        { key: "customerName", label: t('customer') },
+        { key: "invoiceNumber", label: t('invoice') },
+        { key: "totalAmount", label: t('amount') },
+        { key: "paidAmount", label: t('paid') },
+        { key: "remainingAmount", label: t('remaining') },
+        { key: "dueDate", label: t('dueDate') },
+        { key: "daysOverdue", label: t('daysOverdueLabel') },
       ]);
     } else {
-      toast({ title: "Ma'lumot yo'q", description: "Eksport uchun ma'lumot topilmadi" });
+      toast({ title: t('noData'), description: t('noDataForExport') });
     }
   };
 

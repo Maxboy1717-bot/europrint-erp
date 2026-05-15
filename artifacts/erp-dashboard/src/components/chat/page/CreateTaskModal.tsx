@@ -58,10 +58,10 @@ export function CreateTaskModal({message, open, onClose }: Props) {
         assignedTo: assignedTo || undefined,
         dueDate: dueDate || undefined,
       });
-      toast({ title: "Task yaratildi!", description: title.trim() });
+      toast({ title: t("taskCreated"), description: title.trim() });
       onClose();
     } catch {
-      toast({ title: "Xatolik", variant: "destructive" });
+      toast({ title: t("xato"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ export function CreateTaskModal({message, open, onClose }: Props) {
               </div>
             )}
             {assignedTo && (
-              <p className="text-xs text-primary">Tanlandi: {(Array.isArray(employees) ? employees : []).find((e: Employee) => e.id === assignedTo)?.fullName ?? assignedTo}</p>
+              <p className="text-xs text-primary">{t("selected")}: {(Array.isArray(employees) ? employees : []).find((e: Employee) => e.id === assignedTo)?.fullName ?? assignedTo}</p>
             )}
           </div>
 
@@ -154,7 +154,7 @@ export function CreateTaskModal({message, open, onClose }: Props) {
             disabled={loading || !title.trim()}
             className="text-sm"
           >
-            {loading ? "Yaratilmoqda..." : "Task yaratish"}
+            {loading ? t("creating") : t("createTask")}
           </Button>
         </DialogFooter>
       </DialogContent>

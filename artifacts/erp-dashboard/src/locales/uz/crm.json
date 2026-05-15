@@ -15,7 +15,9 @@
   "leadUpdated": "Lead yangilandi",
   "leadsDeleted": "Lidlar o'chirildi",
   "contacts": "Kontaktlar",
-  "contact": "Kontakt",
+  "contact": {
+    "email": "Электронная почта"
+  },
   "addContact": "Kontakt qo'shish",
   "searchContact": "Kontakt qidirish...",
   "contactsNotFound": "Kontaktlar topilmadi",
@@ -416,5 +418,13 @@
   "natija": "Natija qiymati",
   "natijaniTanlang": "Natijani tanlang",
   "yangiBosqich": "Yangi bosqich",
-  "yopishSanasi": "Yopish sanasi"
+  "yopishSanasi": "Yopish sanasi",
+  "companyDataUpdated": "Kompaniya ma'lumotlari yangilandi",
+  "dataUpdateError": "Ma'lumotlarni yangilashda xatolik",
+  "activity": {
+    "email": "Электронная почта"
+  },
+  "activityType": {
+    "email": "Электронная почта"
+  }
 }

@@ -18,7 +18,7 @@
   "invoices": "Hisob-fakturalar",
   "createInvoice": "Hisob-faktura yaratish",
   "invoiceNumber": "Hisob-faktura raqami",
-  "dueDate": "To'lov muddati",
+  "dueDate": "Muddat",
   "payment": "To'lov",
   "payments": "To'lovlar",
   "paymentMethod": "To'lov usuli",
@@ -424,7 +424,7 @@
   "netCashFlow": "Sof pul oqimi",
   "incomeExpense": "income Expense",
   "currentPeriod": "current Period",
-  "vendor": "Ta'minotchi",
+  "vendor": "Yetkazuvchi",
   "budgetLines": "Byudjet Lines",
   "budgetManagement": "Byudjet Management",
   "periodType": "Period Turi",
@@ -562,5 +562,19 @@
   "yearly": "Yillik hisobot",
   "yil": "Yil turi",
   "zaxira1": "Zaxira 1",
-  "zaxiradaKamQolgan": "Zaxirada kam qolgan"
+  "zaxiradaKamQolgan": "Zaxirada kam qolgan",
+  "entryAddedSuccessfully": "Yozuv muvaffaqiyatli qo'shildi",
+  "daysOverdueLabel": "Kechikish (kun)",
+  "noData": "Ma'lumot yo'q",
+  "noDataForExport": "Eksport uchun ma'lumot topilmadi",
+  "cfo": {
+    "altman": {
+      "de": "D/E",
+      "title": "Altman Z-Score",
+      "roa": "ROA"
+    },
+    "cashflow": {
+      "mSuffix": "млн"
+    }
+  }
 }

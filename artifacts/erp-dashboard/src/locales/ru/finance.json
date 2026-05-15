@@ -18,7 +18,7 @@
   "invoices": "Счета-фактуры",
   "createInvoice": "Создать счёт-фактуру",
   "invoiceNumber": "Номер счёта",
-  "dueDate": "Срок оплаты",
+  "dueDate": "Срок",
   "payment": "Оплата",
   "payments": "Платежи",
   "paymentMethod": "Способ оплаты",
@@ -562,5 +562,19 @@
   "yearly": "Ежегодно",
   "yil": "Год",
   "zaxira1": "Резерв",
-  "zaxiradaKamQolgan": "Мало осталось в резерве"
+  "zaxiradaKamQolgan": "Мало осталось в резерве",
+  "entryAddedSuccessfully": "Запись успешно добавлена",
+  "daysOverdueLabel": "Просрочка (дней)",
+  "noData": "Нет данных",
+  "noDataForExport": "Нет данных для экспорта",
+  "cfo": {
+    "altman": {
+      "de": "D/E",
+      "title": "Altman Z-Score",
+      "roa": "ROA"
+    },
+    "cashflow": {
+      "mSuffix": "млн"
+    }
+  }
 }

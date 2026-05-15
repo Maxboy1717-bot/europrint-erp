@@ -29,6 +29,7 @@ interface CourseSettingsFormProps {
 
 export function CourseSettingsForm({ formData, setFormData }: CourseSettingsFormProps) {
   const { t } = useTranslation("common");
+  const { t: tLms } = useTranslation("lms");
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -61,7 +62,7 @@ export function CourseSettingsForm({ formData, setFormData }: CourseSettingsForm
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Label htmlFor="startDate">Boshlanish sanasi (ixtiyoriy)</Label>
+          <Label htmlFor="startDate">{tLms("startDateOptional")}</Label>
           <Input
             id="startDate"
             type="date"
@@ -74,7 +75,7 @@ export function CourseSettingsForm({ formData, setFormData }: CourseSettingsForm
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="endDate">Tugash sanasi (ixtiyoriy)</Label>
+          <Label htmlFor="endDate">{tLms("endDateOptional")}</Label>
           <Input
             id="endDate"
             type="date"

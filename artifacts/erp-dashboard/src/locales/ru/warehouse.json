@@ -1,7 +1,9 @@
 {
   "warehouse": "Склад",
   "warehouses": "Склады",
-  "inventory": "Инвентарь",
+  "inventory": {
+    "sku": "SKU"
+  },
   "stock": "Запас",
   "stockLevel": "Уровень запасов",
   "locations": "Места хранения",

@@ -41,6 +41,7 @@ interface AddCourseDialogProps {
 
 export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogProps) {
   const { t } = useTranslation("common");
+  const { t: tLms } = useTranslation("lms");
   const { toast } = useToast();
   const isEditMode = !!course;
   const [showMentorForm, setShowMentorForm] = useState(false);
@@ -119,7 +120,7 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
 
   const createMentorMutation = useMutation({
     mutationFn: async (data: typeof mentorData) => {
-      return await apiRequest("POST", "/api/mentors", data);
+      return await apiRequest<{ id: string }>("POST", "/api/mentors", data);
     },
     onSuccess: (newMentor) => {
       queryClient.invalidateQueries({ queryKey: ["/api/mentors"] });
@@ -135,14 +136,14 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
         userId: "",
       });
       toast({
-        title: "Muvaffaqiyat",
-        description: "Mentor muvaffaqiyatli qo'shildi",
+        title: t("muvaffaqiyatli"),
+        description: tLms("mentorAddedSuccessfully"),
       });
     },
     onError: () => {
       toast({
-        title: "Xatolik",
-        description: "Mentor qo'shishda xatolik yuz berdi",
+        title: t("xato"),
+        description: tLms("mentorAddError"),
         variant: "destructive",
       });
     },
@@ -164,8 +165,8 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
       toast({
-        title: "Muvaffaqiyat",
-        description: isEditMode ? "Kurs muvaffaqiyatli yangilandi" : "Kurs muvaffaqiyatli yaratildi",
+        title: t("muvaffaqiyatli"),
+        description: isEditMode ? tLms("courseUpdatedSuccessfully") : tLms("courseCreatedSuccessfully"),
       });
       onOpenChange(false);
       setFormData({
@@ -185,8 +186,8 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
     },
     onError: () => {
       toast({
-        title: "Xatolik",
-        description: isEditMode ? "Kurs yangilanishda xatolik yuz berdi" : "Kurs yaratishda xatolik yuz berdi",
+        title: t("xato"),
+        description: isEditMode ? tLms("courseUpdateError") : tLms("courseCreateError"),
         variant: "destructive",
       });
     },
@@ -206,9 +207,9 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{isEditMode ? "Kursni tahrirlash" : "Yangi kurs qo'shish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{isEditMode ? tLms("editCourse") : tLms("addNewCourse")}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? "Kurs ma'lumotlarini yangilang" : "Yangi o'quv kursini yaratish uchun quyidagi ma'lumotlarni kiriting"}
+            {isEditMode ? tLms("updateCourseInfo") : tLms("createCourseHint")}
           </DialogDescription>
         </DialogHeader>
 
@@ -246,7 +247,7 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
             </Button>
             <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit">
               {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
-              {isEditMode ? "Yangilash" : "Saqlash"}
+              {isEditMode ? t("update") : t("save")}
             </Button>
           </DialogFooter>
         </form>

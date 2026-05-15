@@ -52,7 +52,7 @@ export function MessageBubble({
 
   const handleStar = useCallback(async () => {
     try {
-      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`);
+      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`) as unknown as Response;
       if (res.ok) {
         const data = await res.json() as { starred: boolean };
         setIsStarred(data.starred);
@@ -196,7 +196,7 @@ export function MessageBubble({
                       "p-1.5 rounded-md hover:bg-[var(--tg-hover)] transition-colors",
                       msg.isPinned ? "text-[var(--tg-sidebar-active)]" : "text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)]"
                     )}
-                    title={msg.isPinned ? "Pinni olib tashlash" : "Pin"}
+                    title={msg.isPinned ? t("unpin") : t("pin")}
                   >
                     <Pin className="w-[15px] h-[15px]" />
                   </button>
@@ -218,7 +218,7 @@ export function MessageBubble({
                     "p-1.5 rounded-md hover:bg-[var(--tg-hover)] transition-colors",
                     isStarred ? "text-[var(--ep-yellow)]" : "text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)]"
                   )}
-                  title={isStarred ? "Yulduzchani olib tashlash" : "Yulduzcha"}
+                  title={isStarred ? t("unstar") : t("star")}
                 >
                   <Star className={cn("w-[15px] h-[15px]", isStarred && "fill-yellow-500")} />
                 </button>
@@ -311,7 +311,7 @@ export function MessageBubble({
                     >
                       <img
                         src={msg.fileUrl}
-                        alt={msg.fileName || "Rasm"}
+                        alt={msg.fileName || t("image")}
                         className="max-w-full max-h-[320px] rounded-[18px] object-cover hover:opacity-95 transition-opacity"
                         loading="lazy"
                       />
@@ -343,7 +343,7 @@ export function MessageBubble({
                         <Paperclip className="w-5 h-5 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[14px] font-medium truncate">{msg.fileName || "Fayl"}</p>
+                        <p className="text-[14px] font-medium truncate">{msg.fileName || t("file")}</p>
                         {msg.fileSize && (
                           <p className="text-[12px] text-[var(--tg-text-secondary)]">
                             {(msg.fileSize / 1024).toFixed(0)} KB
@@ -365,7 +365,7 @@ export function MessageBubble({
                 !isImage && !isMe && "text-[var(--tg-time-color)]"
               )}>
                 {msg.isEdited && (
-                  <span className="mr-0.5">tahr.</span>
+                  <span className="mr-0.5">{t("editedShort")}</span>
                 )}
                 {formatMsgTime(msg.createdAt)}
                 {isMe && (
@@ -398,7 +398,7 @@ export function MessageBubble({
               className="flex items-center gap-1 mt-0.5 px-2 py-0.5 text-[12px] text-[var(--tg-sidebar-active)] hover:underline"
             >
               <MessageSquare className="w-3 h-3" />
-              {msg.threadCount} javob
+              {msg.threadCount} {t("replies")}
             </button>
           )}
         </div>

@@ -29,6 +29,7 @@ interface CourseBasicInfoFormProps {
 
 export function CourseBasicInfoForm({formData, setFormData, orgDepartments }: CourseBasicInfoFormProps) {
   const { t } = useTranslation('common');
+  const { t: tLms } = useTranslation('lms');
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -63,7 +64,7 @@ export function CourseBasicInfoForm({formData, setFormData, orgDepartments }: Co
       </div>
 
       <div className="space-y-1">
-          <Label htmlFor="title">Kurs nomi (O'zbek) *</Label>
+          <Label htmlFor="title">{tLms("courseNameUz")} *</Label>
         <Input
           id="title"
           placeholder={t("bosmaMashinalaridaIshlashAsoslari")}
@@ -75,10 +76,10 @@ export function CourseBasicInfoForm({formData, setFormData, orgDepartments }: Co
       </div>
 
       <div className="space-y-1">
-          <Label htmlFor="titleRu">Kurs nomi (Rus) *</Label>
+          <Label htmlFor="titleRu">{tLms("courseNameRu")} *</Label>
         <Input
           id="titleRu"
-          placeholder="Основы работы на печатных машинах"
+          placeholder={tLms("courseTitleRuPlaceholder")}
           value={formData.titleRu}
           onChange={(e) => setFormData({ ...formData, titleRu: e.target.value })}
           required

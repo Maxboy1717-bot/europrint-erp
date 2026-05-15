@@ -15,7 +15,9 @@
   "leadUpdated": "Лид обновлён",
   "leadsDeleted": "Лиды удалены",
   "contacts": "Контакты",
-  "contact": "Контакт",
+  "contact": {
+    "email": "Электронная почта"
+  },
   "addContact": "Добавить контакт",
   "searchContact": "Поиск контакта...",
   "contactsNotFound": "Контакты не найдены",
@@ -150,7 +152,7 @@
   "selectSource": "Выберите источник",
   "callSource": "Телефон",
   "webSource": "Сайт",
-  "emailSource": "Email",
+  "emailSource": "Электронная почта",
   "referralSource": "Рекомендация",
   "partnerSource": "Партнёр",
   "otherSource": "Другое",
@@ -243,7 +245,7 @@
   "callType": "Звонок",
   "meetingType": "Встреча",
   "taskType": "Задача",
-  "emailType": "Email",
+  "emailType": "Электронная почта",
   "videoCallType": "Видеозвонок",
   "subject": "Тема",
   "allActivities": "Все",
@@ -286,7 +288,7 @@
   "calendarModeDesc": "Просмотр календаря скоро будет добавлен",
   "created": "Создано",
   "dealsCount": "сделка",
-  "email": "Email",
+  "email": "Электронная почта",
   "employees": "сотрудник",
   "middleName": "Отчество",
   "more": "Ещё",
@@ -416,5 +418,13 @@
   "natija": "Результат",
   "natijaniTanlang": "Выберите результат",
   "yangiBosqich": "Новый этап",
-  "yopishSanasi": "Дата закрытия"
+  "yopishSanasi": "Дата закрытия",
+  "companyDataUpdated": "Данные компании обновлены",
+  "dataUpdateError": "Ошибка обновления данных",
+  "activity": {
+    "email": "Электронная почта"
+  },
+  "activityType": {
+    "email": "Электронная почта"
+  }
 }

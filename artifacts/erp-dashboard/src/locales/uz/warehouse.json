@@ -1,7 +1,9 @@
 {
   "warehouse": "Ombor",
   "warehouses": "Omborlar",
-  "inventory": "Inventar",
+  "inventory": {
+    "sku": "SKU"
+  },
   "stock": "Zaxira",
   "stockLevel": "Zaxira darajasi",
   "locations": "Joylar",

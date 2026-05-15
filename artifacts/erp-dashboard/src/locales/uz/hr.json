@@ -197,7 +197,9 @@
   "workHistory": "Ish tarixi",
   "workSchedule": "Ish jadvali",
   "years": "Yillar",
-  "employee": "Xodim",
+  "employee": {
+    "email": "Электронная почта"
+  },
   "oralWarning": "Og'zaki",
   "writtenWarning": "Yozma",
   "finalWarning": "Oxirgi ogohlantirish",
@@ -561,5 +563,15 @@
   "tashkiliyTuzilmaMavjudEmas": "Tashkiliy tuzilma mavjud emas",
   "vazifaQoshish": "Vazifa qoshish",
   "view": "Ko'rish",
-  "xodimProfili": "Xodim profili"
+  "xodimProfili": "Xodim profili",
+  "disciplineAdded": "Intizom yozuvi muvaffaqiyatli qo'shildi",
+  "disciplineAddError": "Intizom yozuvi qo'shishda xatolik yuz berdi",
+  "amountSom": "Summa (so'm)",
+  "penaltyAmount": "Jarima summasi",
+  "rewardAmount": "Mukofot summasi",
+  "optional": "Ixtiyoriy",
+  "reasonUz": "Sabab (O'zbek)",
+  "reasonRu": "Sabab (Rus)",
+  "reasonRuPlaceholder": "Причина и подробности...",
+  "selectHrAdmin": "HR/Admin tanlang"
 }

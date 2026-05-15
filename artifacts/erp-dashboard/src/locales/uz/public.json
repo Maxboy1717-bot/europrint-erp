@@ -148,5 +148,17 @@
   "news.title": "So'nggi yangiliklardan xabardor bo'ling",
   "cta.ready": "Buyurtma berishga tayyormisiz?",
   "cta.contact": "Biz bilan bog'laning va bepul maslahat oling",
-  "catalog.title": "Katalog"
+  "catalog.title": "Katalog",
+  "contact": {
+    "email": "Электронная почта",
+    "form": {
+      "email": "Электронная почта"
+    }
+  },
+  "login": {
+    "email": "Электронная почта"
+  },
+  "order": {
+    "email": "Электронная почта"
+  }
 }

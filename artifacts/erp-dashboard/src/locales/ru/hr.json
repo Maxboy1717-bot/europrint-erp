@@ -193,7 +193,9 @@
   "workHistory": "Трудовая история",
   "workSchedule": "Рабочий график",
   "years": "лет",
-  "employee": "Сотрудник",
+  "employee": {
+    "email": "Электронная почта"
+  },
   "oralWarning": "Устное",
   "writtenWarning": "Письменное",
   "finalWarning": "Последнее предупреждение",
@@ -592,5 +594,15 @@
   "tashkiliyTuzilmaMavjudEmas": "Организационной структуры нет",
   "vazifaQoshish": "Добавить задачу",
   "view": "Просмотр",
-  "xodimProfili": "Профиль сотрудника"
+  "xodimProfili": "Профиль сотрудника",
+  "disciplineAdded": "Запись о дисциплине успешно добавлена",
+  "disciplineAddError": "Ошибка при добавлении записи о дисциплине",
+  "amountSom": "Сумма (сум)",
+  "penaltyAmount": "Сумма штрафа",
+  "rewardAmount": "Сумма вознаграждения",
+  "optional": "Необязательно",
+  "reasonUz": "Причина (узбек)",
+  "reasonRu": "Причина (русский)",
+  "reasonRuPlaceholder": "Причина и подробности...",
+  "selectHrAdmin": "Выберите HR/Admin"
 }

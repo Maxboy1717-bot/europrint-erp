@@ -25,6 +25,7 @@ interface AddDisciplineDialogProps {
 
 export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplineDialogProps) {
   const { t } = useTranslation("common");
+  const { t: tHr } = useTranslation("hr");
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     userId: userId || "",
@@ -53,8 +54,8 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discipline-records"] });
       toast({
-        title: "Muvaffaqiyat",
-        description: "Intizom yozuvi muvaffaqiyatli qo'shildi",
+        title: t("muvaffaqiyatli"),
+        description: tHr("disciplineAdded"),
       });
       onOpenChange(false);
       setFormData({
@@ -68,8 +69,8 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
     },
     onError: (error: Error) => {
       toast({
-        title: "Xatolik",
-        description: error?.message || "Intizom yozuvi qo'shishda xatolik yuz berdi",
+        title: t("xato"),
+        description: error?.message || tHr("disciplineAddError"),
         variant: "destructive",
       });
     },
@@ -125,7 +126,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="amount">Summa (so'm)</Label>
+          <Label htmlFor="amount">{tHr("amountSom")}</Label>
               <Input
                 id="amount"
                 type="number"
@@ -136,13 +137,13 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
                 data-testid="input-amount"
               />
               <p className="text-xs text-muted-foreground">
-                {formData.type === "penalty" ? "Jarima summasi" : formData.type === "reward" ? "Mukofot summasi" : "Ixtiyoriy"}
+                {formData.type === "penalty" ? tHr("penaltyAmount") : formData.type === "reward" ? tHr("rewardAmount") : tHr("optional")}
               </p>
             </div>
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="reason">Sabab (O'zbek) *</Label>
+          <Label htmlFor="reason">{tHr("reasonUz")} *</Label>
             <Textarea
               id="reason"
               placeholder={t("sababVaTafsilot")}
@@ -155,10 +156,10 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="reasonRu">Sabab (Rus)</Label>
+          <Label htmlFor="reasonRu">{tHr("reasonRu")}</Label>
             <Textarea
               id="reasonRu"
-              placeholder="Причина и подробности..."
+              placeholder={tHr("reasonRuPlaceholder")}
               value={formData.reasonRu}
               onChange={(e) => setFormData({ ...formData, reasonRu: e.target.value })}
               rows={3}
@@ -170,7 +171,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
           <Label htmlFor="givenBy">{t("kimBerdi")}</Label>
             <Select value={formData.givenBy} onValueChange={(value) => setFormData({ ...formData, givenBy: value })}>
               <SelectTrigger data-testid="select-given-by" className="h-9">
-                <SelectValue placeholder="HR/Admin tanlang" />
+                <SelectValue placeholder={tHr("selectHrAdmin")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(employees) ? employees : []).filter(emp => emp.role === "admin" || emp.role === "hr")
@@ -198,7 +199,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
               data-testid="button-submit"
             >
               {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
-              Saqlash
+              {t("save")}
             </Button>
           </DialogFooter>
         </form>

@@ -45,6 +45,7 @@ interface CompanyEditFormProps {
 
 export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditFormProps) {
   const { t } = useTranslation('common');
+  const { t: tCrm } = useTranslation('crm');
   const { toast } = useToast();
 
   const form = useForm<UpdateCompanyForm>({
@@ -74,11 +75,11 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/companies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/crm/companies", company.id] });
-      toast({ title: "Muvaffaqiyatli", description: "Kompaniya ma'lumotlari yangilandi" });
+      toast({ title: t("muvaffaqiyatli"), description: tCrm("companyDataUpdated") });
       onSuccess();
     },
     onError: (error: Error) => {
-      toast({ title: "Xatolik", description: error.message || "Ma'lumotlarni yangilashda xatolik", variant: "destructive" });
+      toast({ title: t("error"), description: error.message || tCrm("dataUpdateError"), variant: "destructive" });
     },
   });
 
@@ -288,7 +289,7 @@ export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditForm
         <div className="flex gap-2">
           <Button type="submit" disabled={updateMutation.isPending} className="flex-1 gap-2" data-testid="button-save">
             <Check className="h-4 w-4" />
-            {updateMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            {updateMutation.isPending ? t("saving") : t("save")}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-edit">
             <X className="h-4 w-4 mr-2" />
