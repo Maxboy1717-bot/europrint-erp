@@ -21,11 +21,7 @@ export function IdealVsActualPanel() {
   const { t } = useTranslation("common");
   const { data, isLoading } = useQuery<IdealVsActual>({
     queryKey: ["/api/director/ideal-vs-actual"],
-    queryFn: async () => {
-      const res = await apiRequest('GET', "/api/director/ideal-vs-actual") as unknown as Response;
-      if (!res.ok) throw new Error("ideal-vs-actual failed");
-      return res.json() as Promise<IdealVsActual>;
-    },
+    queryFn: () => apiRequest<IdealVsActual>('GET', "/api/director/ideal-vs-actual"),
     refetchInterval: 120_000,
   });
 
