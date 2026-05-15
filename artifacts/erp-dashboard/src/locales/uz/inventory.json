@@ -2,13 +2,13 @@
   "newPlan": "Yangi reja",
   "scheduledFor": "Rejalashtirildi",
   "title": "Sarlavha",
-  "plans": "Plans",
+  "plans": "Rejalar",
   "activeCount": "active Count",
-  "variances": "Variances",
+  "variances": "Farqlar ro'yxati",
   "planNo": "Plan Yo'q",
   "systemQty": "system Qty",
   "actualQty": "actual Qty",
-  "difference": "Difference",
-  "shortage": "Shortage",
-  "surplus": "Surplus"
+  "difference": "Farq miqdori",
+  "shortage": "Kamomad",
+  "surplus": "Ortiqcha"
 }

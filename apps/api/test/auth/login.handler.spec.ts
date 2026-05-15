@@ -9,7 +9,6 @@ jest.mock('@shared/db', () => ({ runQuery: jest.fn().mockResolvedValue({ rows: [
 
 import { LoginHandler } from '../../src/modules/auth/application/commands/login.handler';
 import { JwtService } from '@nestjs/jwt';
-import { AuthErrorCode } from '../../src/modules/auth/domain/types';
 
 interface FakeUser {
   getId: () => number;
@@ -69,6 +68,15 @@ function makeJwt() {
   } as unknown as JwtService;
 }
 
+// Mock I18nService — returns the key itself so tests stay deterministic
+// without loading translation JSON files.
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 describe('LoginHandler', () => {
   const cmdBase = {
     username: 'alice',
@@ -83,48 +91,50 @@ describe('LoginHandler', () => {
 
   it('returns UNAUTHORIZED / USER_NOT_FOUND when user does not exist', async () => {
     const repo = makeRepo(null);
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.error.code).toBe('UNAUTHORIZED');
-      expect(r.error.message).toBe(AuthErrorCode.USER_NOT_FOUND);
+      // After i18n migration, the error message is a localised string resolved
+      // via I18nService. In tests the mock i18n returns the key itself.
+      expect(r.error.message).toBe('auth.invalidCredentials');
     }
   });
 
   it('returns UNAUTHORIZED / ACCOUNT_LOCKED for locked accounts', async () => {
     const user = makeFakeUser({ locked: true });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.message).toBe(AuthErrorCode.ACCOUNT_LOCKED);
+    if (!r.ok) expect(r.error.message).toBe('auth.accountLocked');
   });
 
   it('returns UNAUTHORIZED / ACCOUNT_INACTIVE for inactive accounts', async () => {
     const user = makeFakeUser({ active: false });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.message).toBe(AuthErrorCode.ACCOUNT_INACTIVE);
+    if (!r.ok) expect(r.error.message).toBe('auth.accountInactive');
   });
 
   it('returns UNAUTHORIZED / INVALID_CREDENTIALS on bad password', async () => {
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.message).toBe(AuthErrorCode.INVALID_CREDENTIALS);
+    if (!r.ok) expect(r.error.message).toBe('auth.invalidCredentials');
     // Side-effect: failed attempt persisted
     expect(repo.incrementFailedAttempts).toHaveBeenCalledWith(42);
   });
@@ -133,7 +143,7 @@ describe('LoginHandler', () => {
     const user = makeFakeUser();
     const repo = makeRepo(user);
     const jwt = makeJwt();
-    const handler = new LoginHandler(repo as never, jwt);
+    const handler = new LoginHandler(repo as never, jwt, makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -156,7 +166,7 @@ describe('LoginHandler', () => {
   it('resets failed-attempt counter and updates last-login on success', async () => {
     const user = makeFakeUser({ failedAttempts: 3 });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
 
     await handler.execute(cmdBase);
 
@@ -170,11 +180,11 @@ describe('LoginHandler', () => {
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db gone'));
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.message).toBe(AuthErrorCode.INVALID_CREDENTIALS);
+    if (!r.ok) expect(r.error.message).toBe('auth.invalidCredentials');
   });
 });

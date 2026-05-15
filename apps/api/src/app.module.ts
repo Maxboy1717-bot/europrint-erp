@@ -11,6 +11,13 @@ import { FastifyThrottlerGuard } from './common/guards/fastify-throttler.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
+import {
+  I18nModule,
+  AcceptLanguageResolver,
+  HeaderResolver,
+  QueryResolver,
+} from 'nestjs-i18n';
+import * as path from 'path';
 
 // Sprint 3 startup migration
 import { Sprint3MigrationService } from './modules/common/services/sprint3-migration.service';
@@ -146,6 +153,26 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
         level: process.env.LOG_LEVEL || 'info',
         transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined,
       },
+    }),
+
+    // ── i18n: lokalizatsiya (Backend Task Group 3) ───────────────────────────
+    // Frontend Accept-Language: uz/ru sarlavhasini yuboradi. nestjs-i18n
+    // resolveri tilni aniqlaydi va I18nService.t(key) lokalizatsiyalangan
+    // matn qaytaradi. Fallback til — uz.
+    // Resolvers tartibi (yuqori prioritet birinchi): ?lang=ru → x-lang header
+    // → accept-language header.
+    I18nModule.forRoot({
+      fallbackLanguage: 'uz',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: process.env.NODE_ENV !== 'production',
+      },
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        new HeaderResolver(['x-lang', 'accept-language']),
+        AcceptLanguageResolver,
+      ],
+      typesOutputPath: path.join(__dirname, '../src/generated/i18n.generated.ts'),
     }),
 
     // ── Infrastructure ────────────────────────────────────────────────────────

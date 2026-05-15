@@ -54,7 +54,7 @@ function useWarehouses(enabled: boolean): WarehouseRow[] {
     if (!enabled) return;
     let cancelled = false;
     apiRequest('GET', "/api/warehouse/warehouses?limit=100&isActive=true")
-      .then(r => r.ok ? r.json() : { data: [] })
+      .then(r => (r as unknown as Response).ok ? (r as unknown as Response).json() : { data: [] })
       .then((resp: unknown) => {
         if (cancelled) return;
         const obj = resp as Record<string, unknown>;
@@ -86,20 +86,22 @@ export function ModuleSidebar({ activeModule, onModuleChange }: ModuleSidebarPro
 
   const warehouseItems = useMemo((): MenuItem[] => {
     if (activeModule !== "tz08" || warehouses.length === 0) return [];
+    const warehousesHeader = `${t("warehousesHeader", "OMBORLAR")} (${warehouses.length})`;
+    const warehouseFallback = t("warehouseFallback", "Ombor");
     return [
       {
-        title: `OMBORLAR (${warehouses.length})`,
+        title: warehousesHeader,
         url: "",
         icon: Warehouse,
         separator: true,
       },
       ...warehouses.map(wh => ({
-        title: wh.name ?? wh.code ?? `Ombor #${wh.id}`,
+        title: wh.name ?? wh.code ?? `${warehouseFallback} #${wh.id}`,
         url: `warehouse/hub/${wh.code ?? wh.id}`,
         icon: WH_TYPE_ICON[(wh.type ?? "").toUpperCase()] ?? Store,
       })),
     ];
-  }, [activeModule, warehouses]);
+  }, [activeModule, warehouses, t]);
 
   if (!group) return null;
 
