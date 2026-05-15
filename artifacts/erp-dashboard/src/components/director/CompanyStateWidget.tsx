@@ -20,20 +20,12 @@ export function CompanyStateWidget() {
   const { t: td } = useTranslation("director");
   const { data: currentState, isLoading: currentLoad, isError: currentError, refetch: refetchCurrent } = useQuery<CompanyStateCurrent>({
     queryKey: ["/api/company-state/current"],
-    queryFn: async () => {
-      const res = await apiRequest('GET', "/api/company-state/current") as unknown as Response;
-      if (!res.ok) throw new Error("company-state/current failed");
-      return res.json() as Promise<CompanyStateCurrent>;
-    },
+    queryFn: () => apiRequest<CompanyStateCurrent>('GET', "/api/company-state/current"),
     refetchInterval: 120_000,
   });
   const { data: historyData } = useQuery<CompanyStateHistory>({
     queryKey: ["/api/director/company-state/history"],
-    queryFn: async () => {
-      const res = await apiRequest('GET', "/api/director/company-state/history") as unknown as Response;
-      if (!res.ok) throw new Error("history failed");
-      return res.json() as Promise<CompanyStateHistory>;
-    },
+    queryFn: () => apiRequest<CompanyStateHistory>('GET', "/api/director/company-state/history"),
     refetchInterval: 300_000,
   });
 

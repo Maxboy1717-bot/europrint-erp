@@ -40,7 +40,15 @@ interface StatsRowProps {
 }
 
 export function StatsRow({ totalCount, activeCount, completedCount, lang }: StatsRowProps) {
-  const t = TRANSLATIONS[lang] as typeof TRANSLATIONS[Lang] & ((key: string) => string);
+  // Callable carrier: TRANSLATIONS[lang] is a plain object at runtime, but the
+  // legacy JSX uses BOTH `t.search` (key access) and `t("key")` (function call).
+  // Object.assign makes the function itself an object that also carries all keys.
+  const tMap = TRANSLATIONS[lang] as Record<string, unknown>;
+  const tFn = ((key: string): string => {
+    const v = tMap?.[key];
+    return typeof v === 'string' ? v : key;
+  }) as ((key: string) => string);
+  const t = Object.assign(tFn, tMap) as typeof TRANSLATIONS[Lang] & ((key: string) => string);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <div className="bg-card rounded-lg p-5">
@@ -92,7 +100,15 @@ export function OrdersList({
   orders, lang, searchQuery, statusFilter,
   onSearchChange, onStatusFilterChange, onEdit, onDelete, isDeletePending,
 }: OrdersListProps) {
-  const t = TRANSLATIONS[lang] as typeof TRANSLATIONS[Lang] & ((key: string) => string);
+  // Callable carrier: TRANSLATIONS[lang] is a plain object at runtime, but the
+  // legacy JSX uses BOTH `t.search` (key access) and `t("key")` (function call).
+  // Object.assign makes the function itself an object that also carries all keys.
+  const tMap = TRANSLATIONS[lang] as Record<string, unknown>;
+  const tFn = ((key: string): string => {
+    const v = tMap?.[key];
+    return typeof v === 'string' ? v : key;
+  }) as ((key: string) => string);
+  const t = Object.assign(tFn, tMap) as typeof TRANSLATIONS[Lang] & ((key: string) => string);
   return (
     <div className="bg-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-4">

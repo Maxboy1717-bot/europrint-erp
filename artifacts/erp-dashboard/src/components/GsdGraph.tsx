@@ -80,11 +80,7 @@ export function GsdGraph({ employeeId, canEdit = false }: GsdGraphProps) {
   const { data, isLoading } = useQuery<GsdData>({
     queryKey: [`/api/hr/gsd/employees/${employeeId}/history`],
     enabled: !!employeeId,
-    queryFn: async () => {
-      const res = await apiRequest('GET', `/api/hr/gsd/employees/${employeeId}/history?months=12`) as unknown as Response;
-      if (!res.ok) throw new Error("GSD tarix yuklanmadi");
-      return res.json() as Promise<GsdData>;
-    },
+    queryFn: () => apiRequest<GsdData>('GET', `/api/hr/gsd/employees/${employeeId}/history?months=12`),
   });
 
   const submitMutation = useMutation({
