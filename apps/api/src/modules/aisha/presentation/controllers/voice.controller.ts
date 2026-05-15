@@ -19,7 +19,7 @@ const SynthesizeSchema = z.object({
   voiceId: z.string().optional(),
 });
 
-@Controller('api/aisha/voice')
+@Controller('aisha/voice')
 @UseGuards(JwtAuthGuard)
 export class VoiceController {
   constructor(
