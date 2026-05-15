@@ -58,6 +58,24 @@ function makeJwt() {
   } as unknown as JwtService;
 }
 
+// i18n mock — returns the lookup key so tests stay deterministic and do not
+// depend on the translation JSON files being loaded into the runtime.
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
+// Map AuthErrorCode → the i18n key that LoginHandler now resolves to.
+// Keeps the existing parametric test table small and readable.
+const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
+  [AuthErrorCode.USER_NOT_FOUND]: 'auth.invalidCredentials',
+  [AuthErrorCode.INVALID_CREDENTIALS]: 'auth.invalidCredentials',
+  [AuthErrorCode.ACCOUNT_LOCKED]: 'auth.accountLocked',
+  [AuthErrorCode.ACCOUNT_INACTIVE]: 'auth.accountInactive',
+};
+
 function makeReflector(value: unknown): Reflector {
   return { getAllAndOverride: jest.fn().mockReturnValue(value) } as unknown as Reflector;
 }
@@ -79,7 +97,7 @@ const ROLES = ['admin', 'super_admin', 'hr', 'cfo', 'sales_manager', 'operator',
 describe('LoginHandler — every role can log in successfully', () => {
   it.each(ROLES)('role=%s', async (role) => {
     const user = makeUser({ role });
-    const handler = new LoginHandler(makeRepo(user) as never, makeJwt());
+    const handler = new LoginHandler(makeRepo(user) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'jest' });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.user.role).toBe(role);
@@ -95,10 +113,12 @@ describe('LoginHandler — failure scenarios', () => {
   ];
 
   it.each(cases)('%s', async (_, user, expectedMsg) => {
-    const handler = new LoginHandler(makeRepo(user) as never, makeJwt());
+    const handler = new LoginHandler(makeRepo(user) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'j' });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.message).toBe(expectedMsg);
+    // After i18n migration, the message is an i18n key (mock returns the key
+    // verbatim). Translate the legacy AuthErrorCode via ERROR_CODE_TO_I18N_KEY.
+    if (!r.ok) expect(r.error.message).toBe(ERROR_CODE_TO_I18N_KEY[expectedMsg]);
   });
 });
 
@@ -114,21 +134,21 @@ describe('LoginHandler — token issuance details', () => {
     ['with hyphen', 'first-last'],
   ])('issues tokens for username "%s"', async (_, username) => {
     const user = makeUser({ username });
-    const handler = new LoginHandler(makeRepo(user) as never, makeJwt());
+    const handler = new LoginHandler(makeRepo(user) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username, password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });
 
   it('access token expires in 8h', async () => {
     const jwt = makeJwt();
-    const handler = new LoginHandler(makeRepo(makeUser()) as never, jwt);
+    const handler = new LoginHandler(makeRepo(makeUser()) as never, jwt, makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '8h' });
   });
 
   it('refresh token expires in 30d with separate secret', async () => {
     const jwt = makeJwt();
-    const handler = new LoginHandler(makeRepo(makeUser()) as never, jwt);
+    const handler = new LoginHandler(makeRepo(makeUser()) as never, jwt, makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     const refreshCall = (jwt.sign as jest.Mock).mock.calls[1][1];
     expect(refreshCall.expiresIn).toBe('30d');
@@ -137,14 +157,14 @@ describe('LoginHandler — token issuance details', () => {
 
   it('failed-attempt counter is incremented in repo on bad password', async () => {
     const repo = makeRepo(makeUser({ passwordOk: false }));
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.incrementFailedAttempts).toHaveBeenCalledWith(1);
   });
 
   it('counter resets and last-login updates on success', async () => {
     const repo = makeRepo(makeUser({ failedAttempts: 4 }));
-    const handler = new LoginHandler(repo as never, makeJwt());
+    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.resetFailedAttempts).toHaveBeenCalled();
     expect(repo.updateLastLogin).toHaveBeenCalled();
@@ -153,7 +173,7 @@ describe('LoginHandler — token issuance details', () => {
   it('audit log failure does not break login flow', async () => {
     const { runQuery } = await import('@shared/db');
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db'));
-    const handler = new LoginHandler(makeRepo(makeUser()) as never, makeJwt());
+    const handler = new LoginHandler(makeRepo(makeUser()) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });

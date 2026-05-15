@@ -17,7 +17,7 @@
   "requestApproved": "So'rov tasdiqlandi",
   "requestRejected": "So'rov rad etildi",
   "materialIssued": "Material berildi",
-  "material": "Material",
+  "material": "Material zaxirasi",
   "materials": "Materiallar",
   "materialCode": "Material kodi",
   "materialName": "Material nomi",
@@ -76,8 +76,8 @@
   "jamiMateriallar": "Jami materiallar",
   "kamQolganlar": "Kam qolganlar",
   "materialBalans1": "Material balans 1",
-  "tuganganlar": "Tuganganlar",
-  "umumiy": "Umumiy",
+  "tuganganlar": "Tugagan vazifalar",
+  "umumiy": "Umumiy ko'rsatkich",
   "umumiyQiymat": "Umumiy qiymat",
   "xomAshyoZaxirasiVaIchki": "Xom ashyo zaxirasi va ichki"
 }

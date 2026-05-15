@@ -36,14 +36,20 @@ import { safeStorage } from '@/lib/safeStorage';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface NavItem {
+  /** UZ source string. Retained for grep-ability / dev fallback. */
   title: string;
+  /** i18n key in `navigation` namespace — preferred over `title`. */
+  titleKey: string;
   url: string;
   icon: React.ElementType;
   badge?: number;
 }
 
 interface NavSection {
+  /** UZ source label (dev fallback). */
   label: string;
+  /** i18n key in `navigation` namespace. */
+  labelKey: string;
   items: NavItem[];
 }
 
@@ -61,31 +67,33 @@ interface AppSidebarRedesignProps {
 
 const MAIN_NAV: NavSection = {
   label: "Asosiy",
+  labelKey: "mainSection",
   items: [
-    { title: "Dashboard",    url: "analytics",            icon: LayoutDashboard },
-    { title: "Kurslar",      url: "courses",              icon: BookOpen        },
-    { title: "Xodimlar",     url: "employees",            icon: Users           },
-    { title: "Tashkiliy",    url: "org-structure/hierarchy", icon: Network      },
-    { title: "Testlar",      url: "tests",                icon: ClipboardList   },
-    { title: "AI Imtihonlar",url: "ai-exams",             icon: BrainCircuit    },
-    { title: "Barcha imtihon", url: "all-exams",          icon: FileCheck       },
-    { title: "Anketa",       url: "questionnaire",        icon: FileQuestion    },
-    { title: "Sertifikatlar",url: "certificates",         icon: Award, badge: 3 },
-    { title: "Ko'nikmalar",  url: "skills-matrix",        icon: Target          },
-    { title: "Tadbirlar",    url: "events-calendar",      icon: Calendar        },
-    { title: "Mentorlik",    url: "mentorship",           icon: UserCheck       },
-    { title: "Arizalar",     url: "applications",         icon: FileText        },
-    { title: "Statistika",   url: "stats",                icon: BarChart3       },
-    { title: "Kaizen",       url: "kaizen",               icon: Lightbulb       },
-    { title: "Buyruqlar",    url: "orders-registry",      icon: ScrollText      },
+    { title: "Dashboard",      titleKey: "dashboard",         url: "analytics",               icon: LayoutDashboard },
+    { title: "Kurslar",        titleKey: "courses",           url: "courses",                 icon: BookOpen        },
+    { title: "Xodimlar",       titleKey: "employees",         url: "employees",               icon: Users           },
+    { title: "Tashkiliy",      titleKey: "orgStructure",      url: "org-structure/hierarchy", icon: Network         },
+    { title: "Testlar",        titleKey: "tests",             url: "tests",                   icon: ClipboardList   },
+    { title: "AI Imtihonlar",  titleKey: "aiExams",           url: "ai-exams",                icon: BrainCircuit    },
+    { title: "Barcha imtihon", titleKey: "allExams",          url: "all-exams",               icon: FileCheck       },
+    { title: "Anketa",         titleKey: "questionnaire",     url: "questionnaire",           icon: FileQuestion    },
+    { title: "Sertifikatlar",  titleKey: "certificates",      url: "certificates",            icon: Award, badge: 3 },
+    { title: "Ko'nikmalar",    titleKey: "skills",            url: "skills-matrix",           icon: Target          },
+    { title: "Tadbirlar",      titleKey: "events",            url: "events-calendar",         icon: Calendar        },
+    { title: "Mentorlik",      titleKey: "mentorship",        url: "mentorship",              icon: UserCheck       },
+    { title: "Arizalar",       titleKey: "applications",      url: "applications",            icon: FileText        },
+    { title: "Statistika",     titleKey: "statistics",        url: "stats",                   icon: BarChart3       },
+    { title: "Kaizen",         titleKey: "kaizen",            url: "kaizen",                  icon: Lightbulb       },
+    { title: "Buyruqlar",      titleKey: "ordersRegistry",    url: "orders-registry",         icon: ScrollText      },
   ],
 };
 
 const SYSTEM_NAV: NavSection = {
   label: "Tizim",
+  labelKey: "systemSection",
   items: [
-    { title: "Sozlamalar", url: "settings", icon: Settings  },
-    { title: "Yordam",     url: "help",     icon: HelpCircle },
+    { title: "Sozlamalar", titleKey: "settings", url: "settings", icon: Settings   },
+    { title: "Yordam",     titleKey: "help",     url: "help",     icon: HelpCircle },
   ],
 };
 
@@ -103,19 +111,24 @@ function getRoleBadgeClass(role: string) {
   return ROLE_COLORS[role] ?? "bg-muted text-muted-foreground border-border";
 }
 
-function getRoleLabel(role: string) {
-  const labels: Record<string, string> = {
-    super_admin: "Super Admin",
-    director: "Direktor",
-    hr_specialist: "HR Mutaxassis",
-    sales_manager: "Savdo Menejer",
-    finance: "Moliyachi",
-    technologist: "Texnolog",
-    operator: "Operator",
-    warehouse_keeper: "Omborchi",
-    qc_specialist: "QC Mutaxassis",
+/**
+ * Role → i18n key in `navigation` namespace. The translation file maps
+ * `roleSuperAdmin` etc. to the localized label. Unknown roles fall back
+ * to the raw role string.
+ */
+function getRoleKey(role: string): string {
+  const keys: Record<string, string> = {
+    super_admin:      "roleSuperAdmin",
+    director:         "roleDirector",
+    hr_specialist:    "roleHrSpecialist",
+    sales_manager:    "roleSalesManager",
+    finance:          "roleFinance",
+    technologist:     "roleTechnologist",
+    operator:         "roleOperator",
+    warehouse_keeper: "roleWarehouseKeeper",
+    qc_specialist:    "roleQcSpecialist",
   };
-  return labels[role] ?? role;
+  return keys[role] ?? role;
 }
 
 // ─── Nav Item Component ───────────────────────────────────────────────────────
@@ -130,7 +143,7 @@ interface NavItemButtonProps {
 function NavItemButton({ item, isActive, isCollapsed, onClick }: NavItemButtonProps) {
   const Icon = item.icon;
   const { t } = useTranslation("navigation");
-  const label = t(item.title);
+  const label = t(item.titleKey, item.title);
 
   const button = (
     <SidebarMenuButton
@@ -192,7 +205,7 @@ export function AppSidebarRedesign({
   user,
 }: AppSidebarRedesignProps) {
   const { t } = useTranslation("navigation");
-  const resolvedUser = user ?? { name: t("Foydalanuvchi"), role: "hr_specialist" };
+  const resolvedUser = user ?? { name: t("user", "Foydalanuvchi"), role: "hr_specialist" };
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [darkMode, setDarkMode] = useState(() =>
@@ -230,10 +243,10 @@ export function AppSidebarRedesign({
     if (visibleItems.length === 0) return null;
 
     return (
-      <SidebarGroup key={section.label}>
+      <SidebarGroup key={section.labelKey}>
         {!isCollapsed && (
           <SidebarGroupLabel className="uppercase text-[10px] tracking-widest font-medium text-muted-foreground px-3 mb-1">
-            {t(section.label)}
+            {t(section.labelKey, section.label)}
           </SidebarGroupLabel>
         )}
         <SidebarGroupContent>
@@ -265,7 +278,7 @@ export function AppSidebarRedesign({
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <EuroprintLogo height={18} />
-              <span className="text-[10px] text-muted-foreground">{t("ERP System v2.0")}</span>
+              <span className="text-[10px] text-muted-foreground">{t("appVersion", "ERP System v2.0")}</span>
             </div>
           )}
         </div>
@@ -289,7 +302,7 @@ export function AppSidebarRedesign({
                   getRoleBadgeClass(resolvedUser.role)
                 )}
               >
-                {t(getRoleLabel(resolvedUser.role))}
+                {t(getRoleKey(resolvedUser.role), resolvedUser.role)}
               </span>
             </div>
           </div>
@@ -311,7 +324,7 @@ export function AppSidebarRedesign({
         <button
           type="button"
           onClick={toggleDark}
-          aria-label={darkMode ? t("Kunduzgi rejim") : t("Tungi rejim")}
+          aria-label={darkMode ? t("lightMode", "Kunduzgi rejim") : t("darkMode", "Tungi rejim")}
           className={cn(
             "w-full flex items-center gap-2.5 px-3 h-9 rounded-lg text-sm font-medium",
             "text-sidebar-foreground hover:bg-sidebar-accent",
@@ -323,7 +336,7 @@ export function AppSidebarRedesign({
             : <Moon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           }
           {!isCollapsed && (
-            <span>{darkMode ? t("Kunduzgi rejim") : t("Tungi rejim")}</span>
+            <span>{darkMode ? t("lightMode", "Kunduzgi rejim") : t("darkMode", "Tungi rejim")}</span>
           )}
         </button>
 
@@ -334,7 +347,7 @@ export function AppSidebarRedesign({
             safeStorage.clear();
             window.location.href = "/";
           }}
-          aria-label={t("Tizimdan chiqish")}
+          aria-label={t("logoutFromSystem", "Tizimdan chiqish")}
           className={cn(
             "w-full flex items-center gap-2.5 px-3 h-9 rounded-lg text-sm font-medium",
             "text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
@@ -342,7 +355,7 @@ export function AppSidebarRedesign({
           )}
         >
           <LogOut className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-          {!isCollapsed && <span>{t("Chiqish")}</span>}
+          {!isCollapsed && <span>{t("logout", "Chiqish")}</span>}
         </button>
       </SidebarFooter>
     </Sidebar>
