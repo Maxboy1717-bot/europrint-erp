@@ -95,7 +95,7 @@ export function AssessmentTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>📊 Savol Qiyinligi (p-value)</CardTitle>
+            <CardTitle>{t("questionDifficultyPValue")}</CardTitle>
             <CardDescription>{t("engOsonVaEngQiyin")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -108,7 +108,7 @@ export function AssessmentTab({
                       <div className="flex-1 min-w-0">
                         <p className="text-xs truncate">{q.question}</p>
                         <p className="text-xs text-muted-foreground">
-                          {q.totalAttempts} urinish
+                          {q.totalAttempts} {t("attempts")}
                         </p>
                       </div>
                       <Badge variant="outline" className="ml-2 bg-green-50">
@@ -125,7 +125,7 @@ export function AssessmentTab({
                       <div className="flex-1 min-w-0">
                         <p className="text-xs truncate">{q.question}</p>
                         <p className="text-xs text-muted-foreground">
-                          {q.totalAttempts} urinish
+                          {q.totalAttempts} {t("attempts")}
                         </p>
                       </div>
                       <Badge variant="outline" className="ml-2 bg-red-50">
@@ -170,7 +170,7 @@ export function AssessmentTab({
         <Card>
           <CardHeader>
             <CardTitle>{t("discriminatsiyaIndeksi")}</CardTitle>
-            <CardDescription>Savol farqlash qobiliyati (top 27% vs bottom 27%)</CardDescription>
+            <CardDescription>{t("questionDiscriminationAbility")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {discriminationData ? (
@@ -184,8 +184,8 @@ export function AssessmentTab({
                         <Badge className="ml-2">{q.discriminationIndex}%</Badge>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Top 27%: {q.topCorrect}%</span>
-                        <span>Bottom 27%: {q.bottomCorrect}%</span>
+                        <span>{t("top27Label")} {q.topCorrect}%</span>
+                        <span>{t("bottom27Label")} {q.bottomCorrect}%</span>
                       </div>
                     </div>
                   )) || <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>}
@@ -202,8 +202,8 @@ export function AssessmentTab({
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Top 27%: {q.topCorrect}%</span>
-                        <span>Bottom 27%: {q.bottomCorrect}%</span>
+                        <span>{t("top27Label")} {q.topCorrect}%</span>
+                        <span>{t("bottom27Label")} {q.bottomCorrect}%</span>
                       </div>
                     </div>
                   )) || <p className="text-sm text-muted-foreground">{t("malumotYoq")}</p>}
@@ -221,7 +221,7 @@ export function AssessmentTab({
                     <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="DI" fill="hsl(var(--primary))" name="Discriminatsiya %" />
+                    <Bar dataKey="DI" fill="hsl(var(--primary))" name={t("discriminationPercentLabel")} />
                   </BarChart>
                 </ResponsiveContainer>
                 </div>
@@ -261,8 +261,8 @@ export function AssessmentTab({
                     </div>
                     <Progress value={test.kr20} className="h-2" />
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{test.totalQuestions} savol</span>
-                      <span>{test.totalAttempts} urinish</span>
+                      <span>{test.totalQuestions} {t("questionsCountLabel")}</span>
+                      <span>{test.totalAttempts} {t("attempts")}</span>
                     </div>
                   </div>
                 ))}
@@ -282,7 +282,7 @@ export function AssessmentTab({
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="kr20" fill="hsl(var(--chart-1))" name="KR-20 %" />
+                  <Bar dataKey="kr20" fill="hsl(var(--chart-1))" name={t("kr20PercentLabel")} />
                 </BarChart>
               </ResponsiveContainer>
               </div>

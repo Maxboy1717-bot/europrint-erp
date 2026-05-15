@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import {
   insertWebsiteSettingSchema, insertWebsitePageSchema,
   insertWebsiteBannerSchema, insertPortfolioItemSchema,
@@ -15,7 +16,10 @@ import { WebsiteRepository } from './website.repository';
 export class WebsiteService {
   private readonly logger = new Logger(WebsiteService.name);
 
-  constructor(private readonly repo: WebsiteRepository) {}
+  constructor(
+    private readonly repo: WebsiteRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getSettings(category?: string): Promise<Result<object, AppError>> {
     const r = await this.repo.getSettings(category);
@@ -56,10 +60,11 @@ export class WebsiteService {
   }
 
   async updatePage(id: number, body: Record<string, unknown>) {
+    const pageNotFoundMsg = await this.i18n.t('errors.pageNotFound');
     return safeCall(async () => {
       const validatedData = insertWebsitePageSchema.partial().parse(body);
       const updated = await this.repo.updatePage(id, validatedData as Parameters<typeof this.repo.updatePage>[1]);
-      if (!updated) throw new NotFoundException('Sahifa topilmadi');
+      if (!updated) throw new NotFoundException(pageNotFoundMsg);
       return updated;
     });
   }
@@ -90,10 +95,11 @@ export class WebsiteService {
   }
 
   async updateBanner(id: number, body: Record<string, unknown>) {
+    const bannerNotFoundMsg = await this.i18n.t('errors.bannerNotFound');
     return safeCall(async () => {
       const validatedData = insertWebsiteBannerSchema.partial().parse(body);
       const updated = await this.repo.updateBanner(id, validatedData as Parameters<typeof this.repo.updateBanner>[1]);
-      if (!updated) throw new NotFoundException('Banner topilmadi');
+      if (!updated) throw new NotFoundException(bannerNotFoundMsg);
       return updated;
     });
   }
@@ -115,10 +121,11 @@ export class WebsiteService {
   }
 
   async updatePortfolioItem(id: number, body: Record<string, unknown>) {
+    const portfolioNotFoundMsg = await this.i18n.t('errors.portfolioNotFound');
     return safeCall(async () => {
       const validatedData = insertPortfolioItemSchema.partial().parse(body);
       const updated = await this.repo.updatePortfolioItem(id, validatedData as Parameters<typeof this.repo.updatePortfolioItem>[1]);
-      if (!updated) throw new NotFoundException('Portfolio elementi topilmadi');
+      if (!updated) throw new NotFoundException(portfolioNotFoundMsg);
       return updated;
     });
   }

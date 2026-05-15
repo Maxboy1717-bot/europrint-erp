@@ -25,6 +25,7 @@
 import {
   Injectable, Logger, BadRequestException, ForbiddenException, NotFoundException, InternalServerErrorException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { isOk } from '@common/result';
@@ -34,6 +35,7 @@ import type { TemplateRow } from '../infrastructure/repositories/cc-documents/ty
 import { CcDocumentNumberService } from './cc-document-number.service';
 import type { Language } from '../domain/types';
 import { AiQuestion, SessionRow, buildFinalizePrompts, extractSubject } from './cc-ai-interview.types';
+import { validateAnswer } from './cc-ai-interview.helpers';
 
 // Re-export the public types so existing imports keep working
 export { AiQuestion } from './cc-ai-interview.types';
@@ -46,6 +48,7 @@ export class CcAiInterviewService {
     private readonly ai:      AiRouterCallService,
     private readonly docs:    CcDocumentsRepository,
     private readonly numbers: CcDocumentNumberService,
+    private readonly i18n:    I18nService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────
@@ -58,8 +61,8 @@ export class CcAiInterviewService {
     channel?: 'web' | 'telegram';
   }): Promise<{ sessionId: string; question: AiQuestion | null; total: number }> {
     const tmplRes = await this.docs.getTemplate(args.templateId);
-    if (!isOk(tmplRes) || !tmplRes.data) throw new NotFoundException('Hujjat shabloni topilmadi');
-    if (!tmplRes.data.isActive) throw new BadRequestException('Bu shablon faol emas');
+    if (!isOk(tmplRes) || !tmplRes.data) throw new NotFoundException(await this.i18n.t('errors.templateNotFound'));
+    if (!tmplRes.data.isActive) throw new BadRequestException(await this.i18n.t('errors.templateInactive'));
 
     const existing = await this.findExistingSession(args.userId, args.templateId);
     const { sessionId, questionIdx } = existing
@@ -111,13 +114,13 @@ export class CcAiInterviewService {
     value: unknown;
   }): Promise<{ question: AiQuestion | null; isCompleted: boolean; total: number; index: number }> {
     const sess = await this.getSession(args.sessionId, args.userId);
-    if (sess.is_completed) throw new BadRequestException('Sessiya allaqachon yakunlangan');
+    if (sess.is_completed) throw new BadRequestException(await this.i18n.t('errors.sessionCompleted'));
 
     const questions = await this.loadQuestions(sess.template_id);
     const cur = questions[sess.current_question_idx];
     if (!cur) throw new InternalServerErrorException('Joriy savol topilmadi');
 
-    this.validateAnswer(cur, args.value);
+    validateAnswer(cur, args.value);
 
     const newAnswers = { ...sess.answers, [cur.key]: args.value };
     const newIdx     = sess.current_question_idx + 1;
@@ -131,19 +134,6 @@ export class CcAiInterviewService {
       total:       questions.length,
       index:       newIdx,
     };
-  }
-
-  private validateAnswer(cur: AiQuestion, value: unknown): void {
-    if (cur.required && (value === null || value === undefined || value === '')) {
-      throw new BadRequestException(`"${cur.qUz}" maydon majburiy`);
-    }
-    if (cur.type === 'number' && value !== null && value !== '' && Number.isNaN(Number(value))) {
-      throw new BadRequestException(`"${cur.qUz}" raqam bo'lishi kerak`);
-    }
-    if (cur.type === 'choice' && cur.choices && cur.choices.length > 0
-        && !cur.choices.includes(String(value))) {
-      throw new BadRequestException(`Tanlangan qiymat ruxsat etilgan ro'yxatda yo'q`);
-    }
   }
 
   private async persistAnswer(
@@ -172,13 +162,13 @@ export class CcAiInterviewService {
     senderPosition?: string;
   }): Promise<{ sessionId: string; draftDocumentId: string; aiBody: string; subject: string }> {
     const sess = await this.getSession(args.sessionId, args.userId);
-    if (!sess.is_completed) throw new BadRequestException('Avval barcha savollarga javob bering');
+    if (!sess.is_completed) throw new BadRequestException(await this.i18n.t('errors.answerAllQuestions'));
 
     const cached = await this.findCachedDraft(sess);
     if (cached) return cached;
 
     const tmplRes = await this.docs.getTemplate(sess.template_id);
-    if (!isOk(tmplRes) || !tmplRes.data) throw new NotFoundException('Shablon topilmadi');
+    if (!isOk(tmplRes) || !tmplRes.data) throw new NotFoundException(await this.i18n.t('errors.templateNotFound'));
     const tmpl = tmplRes.data;
 
     const aiText = await this.generateAiText(sess, tmpl, args);
@@ -290,10 +280,10 @@ export class CcAiInterviewService {
       FROM cc_ai_sessions WHERE id = ${sessionId} LIMIT 1
     `);
     const row = r.rows[0];
-    if (!row) throw new NotFoundException('AI sessiyasi topilmadi');
-    if (row.user_id !== userId) throw new ForbiddenException('Sizning sessiyangiz emas');
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.aiSessionNotFound'));
+    if (row.user_id !== userId) throw new ForbiddenException(await this.i18n.t('errors.notYourSession'));
     if (row.expires_at && new Date(row.expires_at) < new Date()) {
-      throw new BadRequestException('Sessiya muddati tugagan');
+      throw new BadRequestException(await this.i18n.t('errors.sessionExpired'));
     }
     return row;
   }

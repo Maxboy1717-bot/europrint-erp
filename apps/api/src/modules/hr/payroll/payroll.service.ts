@@ -41,6 +41,7 @@
  */
 
 import { Injectable, InternalServerErrorException, BadRequestException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IHrPayrollRepository, HR_PAYROLL_REPO } from './i-hr-payroll.repo';
 import { safeCall, Result, AppError } from '@common/result';
 import { hasAnyOrgAssignment } from '../../compatibility/employees-org-assignment.helper';
@@ -49,7 +50,10 @@ import { hasAnyOrgAssignment } from '../../compatibility/employees-org-assignmen
 export class PayrollService {
   private readonly logger = new Logger(PayrollService.name);
 
-  constructor(@Inject(HR_PAYROLL_REPO) private readonly hrPayrollRepo: IHrPayrollRepository) {}
+  constructor(
+    @Inject(HR_PAYROLL_REPO) private readonly hrPayrollRepo: IHrPayrollRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -63,16 +67,18 @@ export class PayrollService {
     });}
 
   async create(dto: Record<string, unknown>){
+    const userIdRequiredMsg = await this.i18n.t('errors.userIdRequired');
+    const userIdInvalidMsg = await this.i18n.t('errors.userIdInvalid');
     return safeCall(async () => {
       // Biznes qoida: oylik kiritishdan oldin xodim org-structure'da biriktirilgan bo'lishi shart.
       // Aks holda: lavozim/funksiya yo'q → oylik bazaga kirmaydi.
       const userId = dto['userId'] ?? dto['user_id'];
       if (userId === undefined || userId === null) {
-        throw new BadRequestException('userId majburiy (oylik egasi)');
+        throw new BadRequestException(userIdRequiredMsg);
       }
       const userIdNum = Number(userId);
       if (!Number.isFinite(userIdNum) || userIdNum <= 0) {
-        throw new BadRequestException('userId noto\'g\'ri formatda');
+        throw new BadRequestException(userIdInvalidMsg);
       }
 
       const isAssigned = await hasAnyOrgAssignment(userIdNum);

@@ -31,7 +31,7 @@ export function QuestionRow({ question: q, index, onUpdate, onRemove }: Question
     <Card className="p-4">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Savol {index + 1}</span>
+          <span className="text-sm font-medium">{t("questionLabel")} {index + 1}</span>
           <Button
             type="button"
             variant="ghost"
@@ -45,13 +45,13 @@ export function QuestionRow({ question: q, index, onUpdate, onRemove }: Question
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
-            placeholder="Savol matni (O'zbek)"
+            placeholder={t("questionTextUz")}
             value={q.question}
             onChange={(e) => onUpdate(q.id, "question", e.target.value)}
             data-testid={`input-question-text-${index}`}
           />
           <Input
-            placeholder="Savol matni (Rus)"
+            placeholder={t("questionTextRu")}
             value={q.questionRu}
             onChange={(e) => onUpdate(q.id, "questionRu", e.target.value)}
             data-testid={`input-question-text-ru-${index}`}
@@ -85,7 +85,7 @@ export function QuestionRow({ question: q, index, onUpdate, onRemove }: Question
 
         {q.type === "choice" && (
           <Textarea
-            placeholder="Variantlar (har birini yangi qatordan yozing)"
+            placeholder={t("optionsNewLinePlaceholder")}
             value={q.options?.join("\n") || ""}
             onChange={(e) =>
               onUpdate(q.id, "options", e.target.value.split("\n").filter(Boolean))
@@ -161,7 +161,7 @@ export function CreateFormCard({
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="title">Ariza nomi (O'zbek) *</Label>
+          <Label htmlFor="title">{t("applicationNameUz")} *</Label>
               <Input
                 id="title"
                 value={title}
@@ -171,12 +171,12 @@ export function CreateFormCard({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="titleRu">Ariza nomi (Rus)</Label>
+          <Label htmlFor="titleRu">{t("applicationNameRu")}</Label>
               <Input
                 id="titleRu"
                 value={titleRu}
                 onChange={(e) => onTitleRuChange(e.target.value)}
-                placeholder="Например: Заявление на отпуск"
+                placeholder={t("vacationApplicationPlaceholder")}
                 data-testid="input-application-title-ru"
               />
             </div>
@@ -184,7 +184,7 @@ export function CreateFormCard({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="description">Tavsif (O'zbek)</Label>
+          <Label htmlFor="description">{t("descriptionUz")}</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -195,12 +195,12 @@ export function CreateFormCard({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="descriptionRu">Tavsif (Rus)</Label>
+          <Label htmlFor="descriptionRu">{t("descriptionRu")}</Label>
               <Textarea
                 id="descriptionRu"
                 value={descriptionRu}
                 onChange={(e) => onDescriptionRuChange(e.target.value)}
-                placeholder="Краткая информация о заявлении..."
+                placeholder={t("applicationInfoPlaceholder")}
                 rows={3}
                 data-testid="textarea-application-description-ru"
               />
@@ -209,7 +209,7 @@ export function CreateFormCard({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="department">Bo'lim (ixtiyoriy)</Label>
+          <Label htmlFor="department">{t("departmentOptional")}</Label>
               <Select
                 value={departmentId || "all"}
                 onValueChange={(val) => onDepartmentChange(val === "all" ? "" : val)}
@@ -228,7 +228,7 @@ export function CreateFormCard({
               </Select>
             </div>
             <div className="space-y-1">
-          <Label htmlFor="position">Lavozim (ixtiyoriy)</Label>
+          <Label htmlFor="position">{t("positionOptional")}</Label>
               <Select
                 value={positionId || "all"}
                 onValueChange={(val) => onPositionChange(val === "all" ? "" : val)}
@@ -247,7 +247,7 @@ export function CreateFormCard({
               </Select>
             </div>
             <div className="space-y-1">
-          <Label htmlFor="dueDays">Ko'rib chiqish muddati (ish kunlari, ixtiyoriy)</Label>
+          <Label htmlFor="dueDays">{t("reviewDeadlineWorkingDays")}</Label>
               <Input
                 id="dueDays"
                 type="number"
@@ -293,7 +293,7 @@ export function CreateFormCard({
             disabled={isSubmitting}
             data-testid="button-create-application"
           >
-            {isSubmitting ? "Yaratilmoqda..." : "Yaratish"}
+            {isSubmitting ? t("creating") : t("create")}
           </Button>
         </form>
       </CardContent>

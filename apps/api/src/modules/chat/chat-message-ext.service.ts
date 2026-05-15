@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, InternalServerErrorException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { ChatMessageRepository } from './repositories/chat-message.repository';
 
@@ -11,7 +12,10 @@ import { ChatMessageRepository } from './repositories/chat-message.repository';
 export class ChatMessageExtService {
   private readonly logger = new Logger(ChatMessageExtService.name);
 
-  constructor(private readonly msgRepo: ChatMessageRepository) {}
+  constructor(
+    private readonly msgRepo: ChatMessageRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async forwardMessage(messageId: string | number, targetRoomId: string | number, senderId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
@@ -20,32 +24,51 @@ export class ChatMessageExtService {
       const targetRoomIdStr = String(targetRoomId);
       const senderIdStr = String(senderId);
 
-      const origResult = await this.msgRepo.findMessageForForward(msgIdStr);
-      if (!origResult.ok) throw new Error(origResult.error.message);
-      const orig = origResult.data as Record<string, unknown> | null;
-      if (!orig) throw new InternalServerErrorException('Message not found');
-
-      const isMemberResult = await this.msgRepo.checkMembership(targetRoomIdStr, senderIdStr);
-      const isMember = isMemberResult.ok && isMemberResult.data;
-      if (!isMember) throw new InternalServerErrorException('Not a member of target room');
+      const orig = await this.loadOriginalMessage(msgIdStr);
+      await this.assertMembership(targetRoomIdStr, senderIdStr, 'Not a member of target room');
 
       const msgResult = await this.msgRepo.insertForwardedMessage(targetRoomIdStr, senderIdStr, orig, msgIdStr);
       if (!msgResult.ok) throw new Error(msgResult.error.message);
       const msg = msgResult.data as Record<string, unknown>;
-
-      const userResult = await this.msgRepo.findUserInfo(senderId);
-      const user = (userResult.ok ? userResult.data : undefined) as Record<string, unknown> | undefined;
-
-      return {
-        id: String(msg['id']), roomId: String(msg['room_id']), senderId: String(msg['sender_id']),
-        content: msg['content'] || msg['text'], fileUrl: msg['file_url'], fileName: msg['file_name'],
-        fileType: msg['file_type'], messageType: String(msg['message_type'] ?? '').toLowerCase(),
-        isDeleted: false, forwardFromId: msgIdStr,
-        forwardFrom: { id: msgIdStr, senderName: orig['senderName'], content: orig['msg_content'] },
-        createdAt: msg['created_at'], senderName: user?.['full_name'],
-        senderAvatar: user?.['profile_image_url'], senderEmployeeId: user?.['employee_id'], reactions: [],
-      };
+      const user = await this.findUserInfoOrUndef(senderId);
+      return this.buildForwardedResult(msg, orig, msgIdStr, user);
     });
+  }
+
+  private async loadOriginalMessage(msgIdStr: string): Promise<Record<string, unknown>> {
+    const origResult = await this.msgRepo.findMessageForForward(msgIdStr);
+    if (!origResult.ok) throw new Error(origResult.error.message);
+    const orig = origResult.data as Record<string, unknown> | null;
+    if (!orig) throw new InternalServerErrorException('Message not found');
+    return orig;
+  }
+
+  private async assertMembership(roomId: string, userId: string, errMsg: string): Promise<void> {
+    const isMemberResult = await this.msgRepo.checkMembership(roomId, userId);
+    const isMember = isMemberResult.ok && isMemberResult.data;
+    if (!isMember) throw new InternalServerErrorException(errMsg);
+  }
+
+  private async findUserInfoOrUndef(senderId: number): Promise<Record<string, unknown> | undefined> {
+    const userResult = await this.msgRepo.findUserInfo(senderId);
+    return (userResult.ok ? userResult.data : undefined) as Record<string, unknown> | undefined;
+  }
+
+  private buildForwardedResult(
+    msg: Record<string, unknown>,
+    orig: Record<string, unknown>,
+    msgIdStr: string,
+    user: Record<string, unknown> | undefined,
+  ): Record<string, unknown> {
+    return {
+      id: String(msg['id']), roomId: String(msg['room_id']), senderId: String(msg['sender_id']),
+      content: msg['content'] || msg['text'], fileUrl: msg['file_url'], fileName: msg['file_name'],
+      fileType: msg['file_type'], messageType: String(msg['message_type'] ?? '').toLowerCase(),
+      isDeleted: false, forwardFromId: msgIdStr,
+      forwardFrom: { id: msgIdStr, senderName: orig['senderName'], content: orig['msg_content'] },
+      createdAt: msg['created_at'], senderName: user?.['full_name'],
+      senderAvatar: user?.['profile_image_url'], senderEmployeeId: user?.['employee_id'], reactions: [],
+    };
   }
 
   async getThreadMessages(rootMessageId: string | number, userId: number): Promise<Record<string, unknown>[]> {
@@ -59,7 +82,7 @@ export class ChatMessageExtService {
 
     const isMemberResult = await this.msgRepo.checkMembership(roomId, userIdStr);
     const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new ForbiddenException('Guruh a\'zosi emassiz');
+    if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notGroupMember'));
 
     const rowsResult = await this.msgRepo.findThreadMessages(rootMsgIdStr);
     const rows = (rowsResult.ok ? rowsResult.data : []) as Record<string, unknown>[];
@@ -73,14 +96,8 @@ export class ChatMessageExtService {
     const rootMsgIdStr = String(rootMessageId);
     const senderIdStr = String(senderId);
 
-    const rootRowResult = await this.msgRepo.findRootMessageRoomId(rootMsgIdStr, true);
-    const rootRow = (rootRowResult.ok ? rootRowResult.data : null) as Record<string, unknown> | null;
-    if (!rootRow) throw new InternalServerErrorException('Root message not found');
-    const roomId = rootRow['room_id'];
-
-    const isMemberResult = await this.msgRepo.checkMembership(String(roomId), senderIdStr);
-    const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new InternalServerErrorException('Not a member');
+    const roomId = await this.resolveThreadRoomId(rootMsgIdStr);
+    await this.assertMembership(String(roomId), senderIdStr, 'Not a member');
 
     const msgResult = await this.msgRepo.insertThreadMessage(roomId, senderIdStr, content, rootMsgIdStr);
     if (!msgResult.ok) throw new Error(msgResult.error.message);
@@ -89,9 +106,7 @@ export class ChatMessageExtService {
     await this.msgRepo.incrementThreadCount(rootMsgIdStr);
     const threadCountResult = await this.msgRepo.countThreadMessages(rootMsgIdStr);
     const threadCount = threadCountResult.ok ? threadCountResult.data : 0;
-
-    const userResult = await this.msgRepo.findUserInfo(senderId);
-    const user = (userResult.ok ? userResult.data : undefined) as Record<string, unknown> | undefined;
+    const user = await this.findUserInfoOrUndef(senderId);
 
     return {
       msg: {
@@ -102,6 +117,13 @@ export class ChatMessageExtService {
       },
       threadCount, rootMessageId: rootMsgIdStr, roomId: String(roomId),
     };
+  }
+
+  private async resolveThreadRoomId(rootMsgIdStr: string): Promise<unknown> {
+    const rootRowResult = await this.msgRepo.findRootMessageRoomId(rootMsgIdStr, true);
+    const rootRow = (rootRowResult.ok ? rootRowResult.data : null) as Record<string, unknown> | null;
+    if (!rootRow) throw new InternalServerErrorException('Root message not found');
+    return rootRow['room_id'];
   }
 
   async uploadFileAndSendMessage(
@@ -142,7 +164,7 @@ export class ChatMessageExtService {
 
     const isMemberResult = await this.msgRepo.checkMembership(roomId, userIdStr);
     const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new ForbiddenException('Guruh a\'zosi emassiz');
+    if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notGroupMember'));
 
     const hasReactionResult = await this.msgRepo.findReaction(msgIdStr, userIdStr, emoji);
     const hasReaction = hasReactionResult.ok && hasReactionResult.data;
@@ -207,7 +229,7 @@ export class ChatMessageExtService {
 
     const isMemberResult = await this.msgRepo.checkMembership(roomId, userIdStr);
     const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new ForbiddenException('Guruh a\'zosi emassiz');
+    if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notGroupMember'));
     await this.msgRepo.deleteReaction(msgIdStr, userIdStr, emoji);
     return this.getReactions(messageId);
   }
@@ -216,33 +238,49 @@ export class ChatMessageExtService {
     const pollIdStr = String(pollId);
     const userIdStr = String(userId);
 
+    const poll = await this.loadAndValidatePoll(pollIdStr, userIdStr, optionIndices);
+    await this.replaceVotes(pollIdStr, userIdStr, optionIndices);
+
+    const votes = await this.fetchPollVotes(pollIdStr);
+    const voteCounts = this.tallyVotes(votes, poll['is_anonymous'] as boolean | undefined);
+    return {
+      pollId: pollIdStr, messageId: String(poll['message_id']), roomId: String(poll['room_id']),
+      votes: voteCounts, totalVotes: votes.length, myVotes: optionIndices, userId: userIdStr,
+    };
+  }
+
+  private async loadAndValidatePoll(pollIdStr: string, userIdStr: string, optionIndices: number[]): Promise<Record<string, unknown>> {
     const pollResult = await this.msgRepo.findPollWithRoom(pollIdStr);
     const poll = (pollResult.ok ? pollResult.data : null) as Record<string, unknown> | null;
     if (!poll) throw new InternalServerErrorException('Poll not found');
 
     const isMemberResult = await this.msgRepo.checkMembership(String(poll['room_id']), userIdStr);
     const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new ForbiddenException('Bu pollga ovoz berish uchun xona a\'zosi bo\'lishingiz kerak');
-
+    if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notPollRoomMember'));
     if (!poll['is_multiple'] && optionIndices.length > 1) throw new InternalServerErrorException('This poll allows only one vote');
+    return poll;
+  }
 
+  private async replaceVotes(pollIdStr: string, userIdStr: string, optionIndices: number[]): Promise<void> {
     await this.msgRepo.deletePollVotes(pollIdStr, userIdStr);
     for (const idx of optionIndices) {
       await this.msgRepo.insertPollVote(pollIdStr, userIdStr, idx);
     }
+  }
 
+  private async fetchPollVotes(pollIdStr: string): Promise<Record<string, unknown>[]> {
     const votesResult = await this.msgRepo.findPollVotes(pollIdStr);
-    const votes = (votesResult.ok ? votesResult.data : []) as Record<string, unknown>[];
+    return (votesResult.ok ? votesResult.data : []) as Record<string, unknown>[];
+  }
+
+  private tallyVotes(votes: Record<string, unknown>[], isAnonymous: boolean | undefined): Record<number, { count: number; users: string[] }> {
     const voteCounts: Record<number, { count: number; users: string[] }> = {};
     for (const v of votes) {
-      const idx = v['option_index'];
-      if (!voteCounts[Number(idx)]) voteCounts[Number(idx)] = { count: 0, users: [] };
-      voteCounts[Number(idx)].count++;
-      if (!poll['is_anonymous']) voteCounts[Number(idx)].users.push(String(v['full_name'] || 'Unknown'));
+      const idx = Number(v['option_index']);
+      if (!voteCounts[idx]) voteCounts[idx] = { count: 0, users: [] };
+      voteCounts[idx].count++;
+      if (!isAnonymous) voteCounts[idx].users.push(String(v['full_name'] || 'Unknown'));
     }
-    return {
-      pollId: pollIdStr, messageId: String(poll['message_id']), roomId: String(poll['room_id']),
-      votes: voteCounts, totalVotes: votes.length, myVotes: optionIndices, userId: userIdStr,
-    };
+    return voteCounts;
   }
 }

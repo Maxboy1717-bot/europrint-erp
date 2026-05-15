@@ -4,6 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Ok, Err, Result, isErr } from '@common/result';
 import { OtpSessionRepository } from '../../infrastructure/repositories/otp-session.repository';
 import { randomInt } from 'crypto';
@@ -19,7 +20,10 @@ function generateOtp(): string {
 
 @Injectable()
 export class ResendOtpHandler {
-  constructor(private readonly otpRepo: OtpSessionRepository) {}
+  constructor(
+    private readonly otpRepo: OtpSessionRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async execute(command: ResendOtpCommand): Promise<Result<{ success: boolean; message: string; sessionId: string; expiresIn: number }>> {
     const code = generateOtp();
@@ -28,6 +32,6 @@ export class ResendOtpHandler {
     if (isErr(invalidateResult)) return Err(invalidateResult.error);
     const insertResult = await this.otpRepo.insert(command.ipAddress, code, expiresAt);
     if (isErr(insertResult)) return Err(insertResult.error);
-    return Ok({ success: true, message: 'Yangi OTP kodi yaratildi', sessionId: insertResult.data, expiresIn: 180 });
+    return Ok({ success: true, message: await this.i18n.t('auth.otpResent'), sessionId: insertResult.data, expiresIn: 180 });
   }
 }

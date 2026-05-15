@@ -9,6 +9,7 @@
 
 import { GL } from "../domain/constants/gl-accounts.constants";
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IFinanceGlRepository, FINANCE_GL_REPO } from './i-finance-gl.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -16,7 +17,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class GlService {
   private readonly logger = new Logger(GlService.name);
 
-  constructor(@Inject(FINANCE_GL_REPO) private readonly financeGlRepo: IFinanceGlRepository) {}
+  constructor(
+    @Inject(FINANCE_GL_REPO) private readonly financeGlRepo: IFinanceGlRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   /**
    * Paginated list of GL documents.
@@ -57,15 +61,16 @@ export class GlService {
    *   Result.err('NOT_FOUND') so the controller produces a clean 404.
    */
   async findAccountById(id: number){
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
     const result = await this.financeGlRepo.findAccountById(id);
     if (!result.ok) {
       this.logger.warn(`findAccountById(${id}): ${result.error}`);
-      throw new NotFoundException(`GL hisob #${id} topilmadi`);
+      throw new NotFoundException(notFoundMsg);
     }
-    if (!result.data) throw new NotFoundException(`GL hisob #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(notFoundMsg);
     return result.data;
-  
+
     });}
 
   /**
@@ -78,14 +83,15 @@ export class GlService {
    * @throws (via wrapped safeCall → Result.err) BadRequestException-equivalent when unbalanced
    */
   async postDocument(dto: Record<string, unknown>){
+    const debitCreditMismatchMsg = await this.i18n.t('errors.debitCreditMismatch');
     return safeCall(async () => {
     if (dto.totalDebit !== dto.totalCredit) {
-      throw new BadRequestException('Debet va kredit mos kelishi kerak');
+      throw new BadRequestException(debitCreditMismatchMsg);
     }
     const result = await this.financeGlRepo.postDocument(dto);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
   /**

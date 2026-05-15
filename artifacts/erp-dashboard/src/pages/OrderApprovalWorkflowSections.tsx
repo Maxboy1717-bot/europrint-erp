@@ -84,29 +84,29 @@ export function StageFields({ stage, form }: { stage: string; form: UseFormRetur
   const { t } = useTranslation("common");
   if (stage === "design") return (
     <>
-      <FormField control={form.control} name="designFileUrl" render={({ field }) => (<FormItem><FormLabel>Dizayn fayli URL / Ссылка на файл дизайна</FormLabel><FormControl><Input placeholder="https://..." {...field} data-testid="input-design-url" /></FormControl><FormMessage /></FormItem>)} />
-      <FormField control={form.control} name="designVersion" render={({ field }) => (<FormItem><FormLabel>Versiya / Версия</FormLabel><FormControl><Input placeholder="1.0" {...field} data-testid="input-design-version" /></FormControl><FormMessage /></FormItem>)} />
+      <FormField control={form.control} name="designFileUrl" render={({ field }) => (<FormItem><FormLabel>{t("designFileUrl")}</FormLabel><FormControl><Input placeholder="https://..." {...field} data-testid="input-design-url" /></FormControl><FormMessage /></FormItem>)} />
+      <FormField control={form.control} name="designVersion" render={({ field }) => (<FormItem><FormLabel>{t("version")}</FormLabel><FormControl><Input placeholder="1.0" {...field} data-testid="input-design-version" /></FormControl><FormMessage /></FormItem>)} />
     </>
   );
   if (stage === "technical") return (
     <>
-      <FormField control={form.control} name="bomApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-bom" /></FormControl><FormLabel>BOM tasdiqlandi / BOM утверждён</FormLabel></FormItem>)} />
-      <FormField control={form.control} name="routingApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-routing" /></FormControl><FormLabel>Marshrutlash tasdiqlandi / Маршрутизация утверждена</FormLabel></FormItem>)} />
-      <FormField control={form.control} name="techCardApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-techcard" /></FormControl><FormLabel>Texnologik karta tasdiqlandi / Тех. карта утверждена</FormLabel></FormItem>)} />
+      <FormField control={form.control} name="bomApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-bom" /></FormControl><FormLabel>{t("bomApproved")}</FormLabel></FormItem>)} />
+      <FormField control={form.control} name="routingApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-routing" /></FormControl><FormLabel>{t("routingApproved")}</FormLabel></FormItem>)} />
+      <FormField control={form.control} name="techCardApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-techcard" /></FormControl><FormLabel>{t("techCardApproved")}</FormLabel></FormItem>)} />
     </>
   );
   if (stage === "qc") return (
     <>
-      <FormField control={form.control} name="qcTestId" render={({ field }) => (<FormItem><FormLabel>QC Test ID (ixtiyoriy / необязательно)</FormLabel><FormControl><Input placeholder={t("testId")} {...field} data-testid="input-qc-test-id" /></FormControl><FormMessage /></FormItem>)} />
-      <FormField control={form.control} name="materialApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-material" /></FormControl><FormLabel>Material sifati tasdiqlandi / Качество материала утверждено</FormLabel></FormItem>)} />
+      <FormField control={form.control} name="qcTestId" render={({ field }) => (<FormItem><FormLabel>{t("qcTestIdOptional")}</FormLabel><FormControl><Input placeholder={t("testId")} {...field} data-testid="input-qc-test-id" /></FormControl><FormMessage /></FormItem>)} />
+      <FormField control={form.control} name="materialApproved" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-material" /></FormControl><FormLabel>{t("materialQualityApproved")}</FormLabel></FormItem>)} />
     </>
   );
   if (stage === "finance") return (
     <>
-      <FormField control={form.control} name="advancePercentage" render={({ field }) => (<FormItem><FormLabel>Oldindan to'lov % / Предоплата %</FormLabel><FormControl><Input type="number" min={0} max={100} {...field} onChange={(e) => field.onChange(Number(e.target.value))} data-testid="input-advance-pct" /></FormControl><FormMessage /></FormItem>)} />
-      <FormField control={form.control} name="advanceAmount" render={({ field }) => (<FormItem><FormLabel>Oldindan to'lov summasi / Сумма предоплаты</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={(e) => field.onChange(Number(e.target.value))} data-testid="input-advance-amount" /></FormControl><FormMessage /></FormItem>)} />
-      <FormField control={form.control} name="creditLimitOk" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-credit" /></FormControl><FormLabel>Kredit limiti OK / Кредитный лимит OK</FormLabel></FormItem>)} />
-      <FormField control={form.control} name="debtStatusOk" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-debt" /></FormControl><FormLabel>Qarz holati OK / Статус задолженности OK</FormLabel></FormItem>)} />
+      <FormField control={form.control} name="advancePercentage" render={({ field }) => (<FormItem><FormLabel>{t("advancePaymentPercent")}</FormLabel><FormControl><Input type="number" min={0} max={100} {...field} onChange={(e) => field.onChange(Number(e.target.value))} data-testid="input-advance-pct" /></FormControl><FormMessage /></FormItem>)} />
+      <FormField control={form.control} name="advanceAmount" render={({ field }) => (<FormItem><FormLabel>{t("advancePaymentAmount")}</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={(e) => field.onChange(Number(e.target.value))} data-testid="input-advance-amount" /></FormControl><FormMessage /></FormItem>)} />
+      <FormField control={form.control} name="creditLimitOk" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-credit" /></FormControl><FormLabel>{t("creditLimitOk")}</FormLabel></FormItem>)} />
+      <FormField control={form.control} name="debtStatusOk" render={({ field }) => (<FormItem className="flex items-center gap-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} data-testid="checkbox-debt" /></FormControl><FormLabel>{t("debtStatusOk")}</FormLabel></FormItem>)} />
     </>
   );
   return null;
@@ -122,21 +122,22 @@ export function PendingApprovalsPanel({
   pendingLoading: boolean; pendingApprovals: ApprovalItem[];
   onApprove: (item: ApprovalItem) => void; onReject: (item: ApprovalItem) => void; onView: (orderId: string) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
-      <CardHeader><CardTitle>Kutilayotgan tasdiqlar / Ожидающие утверждения</CardTitle><CardDescription>{t("tasdiqlashYokiRadEtishKerak")}</CardDescription></CardHeader>
+      <CardHeader><CardTitle>{t("pendingApprovals")}</CardTitle><CardDescription>{t("tasdiqlashYokiRadEtishKerak")}</CardDescription></CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <Select value={filterStage} onValueChange={setFilterStage}>
-              <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-filter-stage"><SelectValue placeholder="Bosqich tanlang / Выберите этап" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-filter-stage"><SelectValue placeholder={t("selectStage")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha bosqichlar / Все этапы</SelectItem>
-                <SelectItem value="design">Dizayn / Дизайн</SelectItem>
-                <SelectItem value="technical">Texnolog / Технолог</SelectItem>
-                <SelectItem value="qc">Sifat nazorati / КК</SelectItem>
-                <SelectItem value="finance">Moliya / Финансы</SelectItem>
+                <SelectItem value="all">{t("allStages")}</SelectItem>
+                <SelectItem value="design">{t("stageDesign")}</SelectItem>
+                <SelectItem value="technical">{t("stageTechnical")}</SelectItem>
+                <SelectItem value="qc">{t("stageQc")}</SelectItem>
+                <SelectItem value="finance">{t("stageFinance")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -144,11 +145,11 @@ export function PendingApprovalsPanel({
             <div className="flex items-center justify-center py-12"><EPLoader tone="muted" className="w-6 h-6" /></div>
           ) : pendingApprovals.length === 0 ? (
             <div className="text-center py-12 text-[13px] text-muted-foreground" data-testid="empty-state-pending">
-              <Package className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>Kutilayotgan tasdiqlar yo'q / Нет ожидающих утверждений</p>
+              <Package className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>{t("noPendingApprovals")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table data-testid="table-pending-approvals">
-              <TableHeader><TableRow><TableHead>{t("papka2")}</TableHead><TableHead>Mijoz / Клиент</TableHead><TableHead>Mahsulot / Продукт</TableHead><TableHead>Tiraj / Тираж</TableHead><TableHead>Bosqich / Этап</TableHead><TableHead>Sana / Дата</TableHead><TableHead className="text-right">Harakatlar / Действия</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("papka2")}</TableHead><TableHead>{t("client")}</TableHead><TableHead>{t("product")}</TableHead><TableHead>{t("runVolume")}</TableHead><TableHead>{t("stage")}</TableHead><TableHead>{t("date")}</TableHead><TableHead className="text-right">{t("actions")}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(pendingApprovals) ? pendingApprovals : []).map((item) => (
                   <TableRow key={item.id} data-testid={`row-approval-${item.id}`} className="hover:bg-muted/40 transition-colors">
@@ -189,28 +190,28 @@ export function HistoryPanel({
   const { t } = useTranslation("common");
   return (
     <Card>
-      <CardHeader><CardTitle>Tasdiqlash tarixi / История утверждений</CardTitle><CardDescription>{t("barchaTasdiqlashVaRadEtishlar")}</CardDescription></CardHeader>
+      <CardHeader><CardTitle>{t("approvalHistoryTitle")}</CardTitle><CardDescription>{t("barchaTasdiqlashVaRadEtishlar")}</CardDescription></CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <Select value={filterStage} onValueChange={setFilterStage}>
-              <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-history-stage"><SelectValue placeholder="Bosqich / Этап" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-history-stage"><SelectValue placeholder={t("stage")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi / Все</SelectItem>
-                <SelectItem value="design">Dizayn / Дизайн</SelectItem>
-                <SelectItem value="technical">Texnolog / Технолог</SelectItem>
-                <SelectItem value="qc">Sifat nazorati / КК</SelectItem>
-                <SelectItem value="finance">Moliya / Финансы</SelectItem>
+                <SelectItem value="all">{t("all")}</SelectItem>
+                <SelectItem value="design">{t("stageDesign")}</SelectItem>
+                <SelectItem value="technical">{t("stageTechnical")}</SelectItem>
+                <SelectItem value="qc">{t("stageQc")}</SelectItem>
+                <SelectItem value="finance">{t("stageFinance")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-history-status"><SelectValue placeholder="Holat / Статус" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-history-status"><SelectValue placeholder={t("status")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi / Все</SelectItem>
-                <SelectItem value="pending">Kutilmoqda / Ожидание</SelectItem>
-                <SelectItem value="approved">Tasdiqlangan / Одобрено</SelectItem>
-                <SelectItem value="rejected">Rad etilgan / Отклонено</SelectItem>
+                <SelectItem value="all">{t("all")}</SelectItem>
+                <SelectItem value="pending">{t("pending")}</SelectItem>
+                <SelectItem value="approved">{t("approved")}</SelectItem>
+                <SelectItem value="rejected">{t("rejected")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -218,11 +219,11 @@ export function HistoryPanel({
             <div className="flex items-center justify-center py-12"><EPLoader tone="muted" className="w-6 h-6" /></div>
           ) : historyData.length === 0 ? (
             <div className="text-center py-12 text-[13px] text-muted-foreground" data-testid="empty-state-history">
-              <History className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>Tarix mavjud emas / Нет истории</p>
+              <History className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>{t("noHistory")}</p>
             </div>
           ) : (
             <div className="ep-table-scroll"><Table data-testid="table-approval-history">
-              <TableHeader><TableRow><TableHead>{t("papka2")}</TableHead><TableHead>Mijoz / Клиент</TableHead><TableHead>Bosqich / Этап</TableHead><TableHead>Holat / Статус</TableHead><TableHead>Tasdiqlagan / Утвердил</TableHead><TableHead>Sana / Дата</TableHead><TableHead>Izoh / Комментарий</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t("papka2")}</TableHead><TableHead>{t("client")}</TableHead><TableHead>{t("stage")}</TableHead><TableHead>{t("status")}</TableHead><TableHead>{t("approver")}</TableHead><TableHead>{t("date")}</TableHead><TableHead>{t("comment")}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {(Array.isArray(historyData) ? historyData : []).map((item) => (
                   <TableRow key={item.id} data-testid={`row-history-${item.id}`} className="hover:bg-muted/40 transition-colors">
@@ -250,23 +251,24 @@ export function OrderDetailDialog({ selectedOrderId, workflowData, workflowLoadi
   selectedOrderId: string | null; workflowData: WorkflowData | undefined;
   workflowLoading: boolean; onClose: () => void;
 }) {
+  const { t } = useTranslation("common");
   if (!selectedOrderId) return null;
   return (
     <Dialog open={!!selectedOrderId} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-2xl p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Buyurtma tafsilotlari / Детали заказа</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("orderDetailsTitle")}</DialogTitle></DialogHeader>
         {workflowLoading ? (<div className="flex items-center justify-center py-8"><EPLoader className="w-6 h-6" /></div>
         ) : workflowData ? (
           <div className="space-y-6" data-testid="order-details-panel">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><span className="text-muted-foreground">{t("papka")}</span><span className="ml-2 font-medium" data-testid="text-detail-papka">{workflowData.order.papkaNo}</span></div>
-              <div><span className="text-muted-foreground">Mijoz / Клиент:</span><span className="ml-2 font-medium">{workflowData.order.mijozNomi}</span></div>
-              <div><span className="text-muted-foreground">Mahsulot / Продукт:</span><span className="ml-2 font-medium">{workflowData.order.mahsulotNomi}</span></div>
-              <div><span className="text-muted-foreground">Tiraj / Тираж:</span><span className="ml-2 font-medium">{workflowData.order.tiraj?.toLocaleString()}</span></div>
+              <div><span className="text-muted-foreground">{t("clientLabel")}</span><span className="ml-2 font-medium">{workflowData.order.mijozNomi}</span></div>
+              <div><span className="text-muted-foreground">{t("productLabel")}</span><span className="ml-2 font-medium">{workflowData.order.mahsulotNomi}</span></div>
+              <div><span className="text-muted-foreground">{t("runVolumeLabel")}</span><span className="ml-2 font-medium">{workflowData.order.tiraj?.toLocaleString()}</span></div>
             </div>
             <Separator />
             <div>
-              <h4 className="font-semibold mb-4">Tasdiqlash jarayoni / Процесс утверждения</h4>
+              <h4 className="font-semibold mb-4">{t("approvalProcess")}</h4>
               <div className="space-y-3">
                 {(Array.isArray(workflowData.workflow) ? workflowData.workflow : []).map((item) => (
                   <div key={item.stage} className={`flex items-start gap-4 p-3 rounded-md ${!item.approval ? "opacity-50 bg-muted/30" : item.approval.status === "approved" ? "bg-green-500/5" : item.approval.status === "rejected" ? "bg-red-500/5" : "bg-muted/30"}`} data-testid={`detail-stage-${item.stage}`}>
@@ -282,14 +284,14 @@ export function OrderDetailDialog({ selectedOrderId, workflowData, workflowLoadi
                       {item.approver && <p className="text-sm text-muted-foreground mt-1">{item.approver.fullName}</p>}
                       {item.approval?.approvedAt && <p className="text-xs text-muted-foreground">{formatDate(item.approval.approvedAt)}</p>}
                       {item.approval?.comments && <p className="text-sm mt-1 italic text-muted-foreground">"{item.approval.comments}"</p>}
-                      {item.approval?.rejectionReason && <p className="text-sm mt-1 text-destructive">Sabab / Причина: {item.approval.rejectionReason}</p>}
+                      {item.approval?.rejectionReason && <p className="text-sm mt-1 text-destructive">{t("reasonLabel")} {item.approval.rejectionReason}</p>}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        ) : (<p className="text-muted-foreground text-center py-8">Ma'lumot topilmadi / Данные не найдены</p>)}
+        ) : (<p className="text-muted-foreground text-center py-8">{t("noDataFound")}</p>)}
       </DialogContent>
     </Dialog>
   );
@@ -301,21 +303,22 @@ export function ApprovalDialog({ open, onOpenChange, approvalItem, form, isPendi
   open: boolean; onOpenChange: (open: boolean) => void; approvalItem: ApprovalItem | null;
   form: UseFormReturn<ApprovalFormValues>; isPending: boolean; onSubmit: (data: ApprovalFormValues) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Tasdiqlash / Утверждение - {approvalItem?.stageLabel?.uz || approvalItem?.stage}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("approval")} - {approvalItem?.stageLabel?.uz || approvalItem?.stage}</DialogTitle>
           <DialogDescription>{approvalItem?.order?.papkaNo} - {approvalItem?.order?.mijozNomi}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {approvalItem && <StageFields stage={approvalItem.stage} form={form} />}
-            <FormField control={form.control} name="comments" render={({ field }) => (<FormItem><FormLabel>Izohlar / Комментарии</FormLabel><FormControl><Textarea placeholder="Qo'shimcha izohlar... / Дополнительные комментарии..." {...field} data-testid="input-approval-comments" /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="comments" render={({ field }) => (<FormItem><FormLabel>{t("comments")}</FormLabel><FormControl><Textarea placeholder={t("additionalCommentsPlaceholder")} {...field} data-testid="input-approval-comments" /></FormControl><FormMessage /></FormItem>)} />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-approval">Bekor qilish / Отмена</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-approval">{t("cancel")}</Button>
               <Button type="submit" disabled={isPending} data-testid="button-confirm-approval">
-                {isPending && <EPLoader className="w-4 h-4 mr-1" />}<CheckCircle2 className="w-4 h-4 mr-1" />Tasdiqlash / Утвердить
+                {isPending && <EPLoader className="w-4 h-4 mr-1" />}<CheckCircle2 className="w-4 h-4 mr-1" />{t("approve")}
               </Button>
             </DialogFooter>
           </form>
@@ -331,21 +334,22 @@ export function RejectionDialog({ open, onOpenChange, rejectionItem, form, isPen
   open: boolean; onOpenChange: (open: boolean) => void; rejectionItem: ApprovalItem | null;
   form: UseFormReturn<RejectionFormValues>; isPending: boolean; onSubmit: (data: RejectionFormValues) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Rad etish / Отклонение - {rejectionItem?.stageLabel?.uz || rejectionItem?.stage}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("rejection")} - {rejectionItem?.stageLabel?.uz || rejectionItem?.stage}</DialogTitle>
           <DialogDescription>{rejectionItem?.order?.papkaNo} - {rejectionItem?.order?.mijozNomi}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField control={form.control} name="rejectionReason" render={({ field }) => (<FormItem><FormLabel>Rad etish sababi / Причина отклонения *</FormLabel><FormControl><Textarea placeholder="Sababni kiriting... / Укажите причину..." {...field} data-testid="input-rejection-reason" /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="comments" render={({ field }) => (<FormItem><FormLabel>Qo'shimcha izoh / Дополнительный комментарий</FormLabel><FormControl><Textarea placeholder="Izohlar... / Комментарии..." {...field} data-testid="input-rejection-comments" /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="rejectionReason" render={({ field }) => (<FormItem><FormLabel>{t("rejectionReasonRequired")}</FormLabel><FormControl><Textarea placeholder={t("enterReasonPlaceholder")} {...field} data-testid="input-rejection-reason" /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="comments" render={({ field }) => (<FormItem><FormLabel>{t("additionalComment")}</FormLabel><FormControl><Textarea placeholder={t("commentsPlaceholder")} {...field} data-testid="input-rejection-comments" /></FormControl><FormMessage /></FormItem>)} />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-rejection">Bekor qilish / Отмена</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-rejection">{t("cancel")}</Button>
               <Button type="submit" variant="destructive" disabled={isPending} data-testid="button-confirm-rejection">
-                {isPending && <EPLoader className="w-4 h-4 mr-1" />}<XCircle className="w-4 h-4 mr-1" />Rad etish / Отклонить
+                {isPending && <EPLoader className="w-4 h-4 mr-1" />}<XCircle className="w-4 h-4 mr-1" />{t("reject")}
               </Button>
             </DialogFooter>
           </form>

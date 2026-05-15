@@ -4,21 +4,26 @@
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { DrizzleMmGoodsRepository } from '../infrastructure/repositories/drizzle-mm-goods.repo';
 
 @Injectable()
 export class MmGoodsService {
-  constructor(private readonly repo: DrizzleMmGoodsRepository) {}
+  constructor(
+    private readonly repo: DrizzleMmGoodsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async listGoodsReceipts(pid: number | null, status: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return safeCall(async () => this.repo.listGoodsReceipts(pid, status, lim, off));
   }
 
   async getGoodsReceipt(gid: number) {
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
       const { receipt, items } = await this.repo.getGoodsReceipt(gid);
-      if (!receipt) throw new NotFoundException(`Qabul #${gid} topilmadi`);
+      if (!receipt) throw new NotFoundException(notFoundMsg);
       return { ...receipt, items };
     });
   }
@@ -47,9 +52,10 @@ export class MmGoodsService {
   }
 
   async getGoodsIssue(gid: number) {
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
       const { issue, items } = await this.repo.getGoodsIssue(gid);
-      if (!issue) throw new NotFoundException(`Berilish #${gid} topilmadi`);
+      if (!issue) throw new NotFoundException(notFoundMsg);
       return { ...issue, items };
     });
   }

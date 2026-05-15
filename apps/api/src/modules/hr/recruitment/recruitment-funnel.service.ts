@@ -5,7 +5,8 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IHrRecruitmentFunnelRepository, HR_RECRUITMENT_FUNNEL_REPO } from './repos/i-hr-recruitment-funnel.repo';
 import type { FunnelStage, ProductivityCategory } from './dto/create-funnel.dto';
 import type { CreateFunnelDto, MoveFunnelStageDto, QuickScreeningDto, ListFunnelDto } from './dto/create-funnel.dto';
@@ -30,7 +31,10 @@ export const VALID_TRANSITIONS: Record<FunnelStage, FunnelStage[]> = {
 export class RecruitmentFunnelService {
   private readonly logger = new Logger(RecruitmentFunnelService.name);
 
-  constructor(@Inject(HR_RECRUITMENT_FUNNEL_REPO) private readonly hrRecruitmentFunnelRepo: IHrRecruitmentFunnelRepository) {}
+  constructor(
+    @Inject(HR_RECRUITMENT_FUNNEL_REPO) private readonly hrRecruitmentFunnelRepo: IHrRecruitmentFunnelRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async createFunnel(dto: CreateFunnelDto, createdById: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -89,12 +93,15 @@ export class RecruitmentFunnelService {
     });}
 
   async moveFunnelStage(funnelId: number, dto: MoveFunnelStageDto, changedById: number){
+    const funnelNotFoundMsg = await this.i18n.t('errors.notFound');
+    const funnelClosedMsg = await this.i18n.t('errors.funnelClosed');
+    const referencesRequiredMsg = await this.i18n.t('errors.referencesRequired');
     return safeCall(async () => {
     const funnelResult = await this.hrRecruitmentFunnelRepo.getFunnelById(funnelId);
     if (!funnelResult.ok) throw new InternalServerErrorException(funnelResult.error);
-    if (!funnelResult.data) throw new NotFoundException(`Funnel #${funnelId} topilmadi`);
+    if (!funnelResult.data) throw new NotFoundException(funnelNotFoundMsg);
     const funnel = funnelResult.data;
-    if (!funnel.isActive) throw new BadRequestException('Funnel yopilgan');
+    if (!funnel.isActive) throw new BadRequestException(funnelClosedMsg);
 
     const currentStage = funnel.funnelStage as FunnelStage;
     const allowed = VALID_TRANSITIONS[currentStage] ?? [];
@@ -109,7 +116,7 @@ export class RecruitmentFunnelService {
       const countResult = await this.hrRecruitmentFunnelRepo.countReferencesChecks(funnelId);
       if (!countResult.ok) throw new InternalServerErrorException(countResult.error);
       if (countResult.data === 0) {
-        throw new BadRequestException('REFERENCES_CHECK bosqichiga o\'tish uchun kamida 1 ta navedenie spravok yozuvi kerak.');
+        throw new BadRequestException(referencesRequiredMsg);
       }
     }
 

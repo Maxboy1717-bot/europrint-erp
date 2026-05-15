@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -19,6 +20,7 @@ function ean13(numericId: number): string {
 
 @Injectable()
 export class WarehouseBarcodeOpsService {
+  constructor(private readonly i18n: I18nService) {}
 
   async generateBarcode(type: string, entityId: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -112,7 +114,7 @@ export class WarehouseBarcodeOpsService {
       LEFT JOIN warehouses w ON w.id = wb.warehouse_id WHERE wb.id = ${id}
     `);
     const row = dbRows(result)[0];
-    if (!row) throw new NotFoundException('Barcode topilmadi');
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.barcodeNotFound'));
     return {
       type: 'batch', barcode: row['barcode'], batchNumber: row['batchNumber'],
       materialName: row['materialName'], materialCode: row['materialCode'],
@@ -129,7 +131,7 @@ export class WarehouseBarcodeOpsService {
       FROM material_cards mc WHERE mc.id = ${parseInt(id, 10)}
     `);
     const row = dbRows(result)[0];
-    if (!row) throw new NotFoundException('Material topilmadi');
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.materialNotFound'));
     return { type: 'material', barcode: row['barcode'], materialName: row['materialName'], materialCode: row['materialCode'], unitOfMeasure: row['unitOfMeasure'] };
   }
 }
