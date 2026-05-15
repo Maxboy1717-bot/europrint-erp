@@ -80,6 +80,11 @@ function describeError(error: unknown): { title: string; description: string; se
     description: "Bu endpoint backend'da yo'q yoki yo'q qilingan. Sahifa hali tayyor emas.",
     severity: 'warning',
   };
+  if (status === 501) return {
+    title: "Tez orada tayyor bo'ladi",
+    description: "Bu funksiya hali ishga tushirilmagan — backend stub javob qaytaryapti. Yaqin orada to'liq ishlaydi.",
+    severity: 'warning',
+  };
   if (status === 500 || status === 502 || status === 503) return {
     title: `Server xatosi (${status})`,
     description: msg.length > 200 ? msg.slice(0, 200) + '…' : msg,

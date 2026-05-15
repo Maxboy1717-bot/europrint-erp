@@ -63,9 +63,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // invoices va boshqalar) uchun haqiqiy xato qaytariladi — UI "Yuklashda xato"
     // xabarini ko'rsata olishi uchun. 404 va 422 ham haqiqiy xato sifatida qaytadi
     // (avval ular ham maskirovka qilingan edi — bu xato edi).
+    //
+    // ⚠ 501 NOT_IMPLEMENTED ALOHIDA: bu intent — endpoint atayin stub. Frontend
+    // bu javobni "Tez orada amalga oshiriladi" sifatida ko'rsatishi kerak,
+    // 503 "server uzilgan" maskasiga aylantirilmaydi.
     if (
       request.method === 'GET' &&
-      status >= HttpStatus.INTERNAL_SERVER_ERROR  // faqat 5xx — 4xx haqiqiy
+      status >= HttpStatus.INTERNAL_SERVER_ERROR &&  // faqat 5xx — 4xx haqiqiy
+      status !== HttpStatus.NOT_IMPLEMENTED          // 501 — stub javobi, maskirovka qilinmaydi
     ) {
       const url = request.url || ''
       // Strict regex: faqat aniq stats/dashboard endpointlar
@@ -95,6 +100,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
 
   private getLogLevel(status: number): LogLevel {
+    // 501 NOT_IMPLEMENTED — intent, stub javobi, kritik xato emas
+    if (status === HttpStatus.NOT_IMPLEMENTED) return 'INFO'
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) return 'CRITICAL'
     if (status >= HttpStatus.BAD_REQUEST) return 'WARNING'
     return 'INFO'
@@ -110,6 +117,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       [HttpStatus.UNPROCESSABLE_ENTITY]: 'VALIDATION_ERROR',
       [HttpStatus.TOO_MANY_REQUESTS]: 'TOO_MANY_REQUESTS',
       [HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_SERVER_ERROR',
+      [HttpStatus.NOT_IMPLEMENTED]: 'NOT_IMPLEMENTED',
+      [HttpStatus.SERVICE_UNAVAILABLE]: 'SERVICE_UNAVAILABLE',
     }
     return codeMap[status] || 'UNKNOWN_ERROR'
   }
